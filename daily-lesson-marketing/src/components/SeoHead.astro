@@ -1,0 +1,94 @@
+---
+import type { LocaleDictionary, RouteKey } from '@lib/i18n/types';
+
+interface AlternateLink {
+  locale: string;
+  href: string;
+}
+
+interface Props {
+  title: string;
+  description: string;
+  dictionary: LocaleDictionary;
+  locale: string;
+  nonce: string;
+  canonical: string;
+  alternate: AlternateLink[];
+  routeKey: RouteKey;
+}
+
+const { title, description, dictionary, locale, nonce, canonical, alternate, routeKey } = Astro.props as Props;
+
+const breadcrumbs = [
+  {
+    '@type': 'ListItem',
+    position: 1,
+    name: dictionary.nav.find((item) => item.key === 'home')?.label ?? 'Home',
+    item: canonical
+  }
+];
+
+if (routeKey !== 'home') {
+  const matched = dictionary.nav.find((item) => item.key === routeKey);
+  if (matched) {
+    breadcrumbs.push({
+      '@type': 'ListItem',
+      position: 2,
+      name: matched.label,
+      item: new URL(matched.href, canonical).toString()
+    });
+  }
+}
+
+const organization = {
+  '@context': 'https://schema.org',
+  '@type': 'Organization',
+  name: 'Curious Kelly',
+  url: canonical,
+  logo: 'https://www.thedailylesson.com/favicons/favicon.svg',
+  sameAs: ['https://www.linkedin.com/company/curiouskelly', 'https://www.instagram.com/curiouskelly']
+};
+
+const website = {
+  '@context': 'https://schema.org',
+  '@type': 'WebSite',
+  name: 'Curious Kelly',
+  url: canonical,
+  potentialAction: {
+    '@type': 'SearchAction',
+    target: `${canonical}?s={search_term_string}`,
+    'query-input': 'required name=search_term_string'
+  }
+};
+
+const breadcrumbList = {
+  '@context': 'https://schema.org',
+  '@type': 'BreadcrumbList',
+  itemListElement: breadcrumbs
+};
+---
+
+<title>{title}</title>
+<meta name="description" content={description} />
+<meta name="keywords" content={dictionary.meta.keywords.join(', ')} />
+<link rel="canonical" href={canonical} />
+{alternate.map((link) => (
+  <link rel="alternate" hreflang={link.locale.toLowerCase()} href={link.href} />
+))}
+<meta property="og:type" content="website" />
+<meta property="og:title" content={title} />
+<meta property="og:description" content={description} />
+<meta property="og:url" content={canonical} />
+<meta property="og:site_name" content="Curious Kelly" />
+<meta property="og:locale" content={locale.replace('-', '_')} />
+<meta name="twitter:card" content="summary_large_image" />
+<meta name="twitter:title" content={title} />
+<meta name="twitter:description" content={description} />
+<meta name="twitter:site" content="@CuriousKelly" />
+<script type="application/ld+json" nonce={nonce} is:inline>{JSON.stringify(organization)}</script>
+<script type="application/ld+json" nonce={nonce} is:inline>{JSON.stringify(website)}</script>
+<script type="application/ld+json" nonce={nonce} is:inline>{JSON.stringify(breadcrumbList)}</script>
+
+
+
+

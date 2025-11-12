@@ -1,0 +1,57 @@
+name: Flutter Format & Analyze
+
+on:
+  push:
+    branches: [ master, main ]
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  format:
+    name: Format & Analyze
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+      
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.x'
+          channel: 'stable'
+          cache: true
+      
+      - name: Format check
+        working-directory: apps/kelly_app_flutter
+        run: dart format --set-exit-if-changed .
+      
+      - name: Analyze
+        working-directory: apps/kelly_app_flutter
+        run: flutter analyze
+      
+      - name: Get dependencies
+        working-directory: apps/kelly_app_flutter
+        run: flutter pub get
+      
+      - name: Build web (optional)
+        working-directory: apps/kelly_app_flutter
+        run: flutter build web --release
+        continue-on-error: true
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

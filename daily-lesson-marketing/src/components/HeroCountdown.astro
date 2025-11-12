@@ -1,0 +1,71 @@
+---
+import type { CountdownCopy } from '@lib/i18n/types';
+
+interface Props {
+  copy: CountdownCopy;
+  endDate: string;
+  nonce: string;
+}
+
+const { copy, endDate, nonce } = Astro.props as Props;
+---
+
+<section class="countdown" data-countdown data-end-date={endDate}>
+  <div class="countdown__unit">
+    <div class="countdown__value" data-countdown-days>00</div>
+    <div class="countdown__label">{copy.units.days}</div>
+  </div>
+  <div class="countdown__unit">
+    <div class="countdown__value" data-countdown-hours>00</div>
+    <div class="countdown__label">{copy.units.hours}</div>
+  </div>
+  <div class="countdown__unit">
+    <div class="countdown__value" data-countdown-minutes>00</div>
+    <div class="countdown__label">{copy.units.minutes}</div>
+  </div>
+  <div class="countdown__unit">
+    <div class="countdown__value" data-countdown-seconds>00</div>
+    <div class="countdown__label">{copy.units.seconds}</div>
+  </div>
+  <span class="fw-semibold small text-uppercase text-primary ms-3" data-countdown-label>
+    {copy.labelActive}
+  </span>
+</section>
+<script type="module" nonce={nonce} is:inline>
+  import { startCountdown, formatCountdownValue } from '@lib/countdown';
+
+  const container = document.querySelector('[data-countdown]');
+  if (container) {
+    const endDate = container.getAttribute('data-end-date');
+    const labelEl = container.querySelector('[data-countdown-label]');
+    const daysEl = container.querySelector('[data-countdown-days]');
+    const hoursEl = container.querySelector('[data-countdown-hours]');
+    const minutesEl = container.querySelector('[data-countdown-minutes]');
+    const secondsEl = container.querySelector('[data-countdown-seconds]');
+    const offerEndedCta = {JSON.stringify(copy.offerEndedCta)};
+    const labelActive = {JSON.stringify(copy.labelActive)};
+    const labelEnded = {JSON.stringify(copy.labelEnded)};
+
+    const stop = startCountdown(endDate ?? '', (state) => {
+      if (daysEl) daysEl.textContent = formatCountdownValue(state.days);
+      if (hoursEl) hoursEl.textContent = formatCountdownValue(state.hours);
+      if (minutesEl) minutesEl.textContent = formatCountdownValue(state.minutes);
+      if (secondsEl) secondsEl.textContent = formatCountdownValue(state.seconds);
+      if (!state.active) {
+        labelEl && (labelEl.textContent = labelEnded);
+        const event = new CustomEvent('countdown:ended', {
+          detail: { ctaLabel: offerEndedCta }
+        });
+        container.dispatchEvent(event);
+      } else {
+        labelEl && (labelEl.textContent = labelActive);
+      }
+    });
+
+    document.addEventListener('astro:before-preload', () => stop());
+  }
+</script>
+
+
+
+

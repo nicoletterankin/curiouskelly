@@ -1,0 +1,138 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Reinmaker Tribe Pack",
+  "description": "Curriculum-aligned configuration for a Reinmaker tribe and its tier progression.",
+  "type": "object",
+  "required": [
+    "id",
+    "tribe",
+    "lensId",
+    "color",
+    "ageDifficulty",
+    "tiers"
+  ],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Versioned tribe identifier.",
+      "pattern": "^tribe\\.(light|stone|metal|code|air|water|fire)\\.v[0-9]+$"
+    },
+    "tribe": {
+      "type": "string",
+      "enum": ["Light", "Stone", "Metal", "Code", "Air", "Water", "Fire"]
+    },
+    "lensId": {
+      "type": "string",
+      "enum": [
+        "lens.ui_composition",
+        "lens.system_design",
+        "lens.mech_proto",
+        "lens.alg_reasoning",
+        "lens.dialogue_empathy",
+        "lens.meta_reflection",
+        "lens.challenge_mastery"
+      ]
+    },
+    "color": {
+      "type": "string",
+      "description": "Primary UI color hex (#RRGGBB).",
+      "pattern": "^#([A-Fa-f0-9]{6})$"
+    },
+    "icon": {
+      "type": "string",
+      "description": "Asset key for the tribe icon (relative path).",
+      "pattern": "^assets/reinmaker/icons/[a-z_]+\\.(png|webp)$"
+    },
+    "featuredQuoteKey": {
+      "type": "string",
+      "description": "Localization key for the featured quote displayed in the hall.",
+      "pattern": "^reinmaker\\.tribes\\.[a-z_]+\\.quote$"
+    },
+    "ageDifficulty": {
+      "type": "object",
+      "description": "Difficulty + hint cadence tuning per age bucket.",
+      "required": ["2-5", "6-12", "13-17", "18-35", "36-60", "61-102"],
+      "additionalProperties": false,
+      "properties": {
+        "2-5": { "$ref": "#/definitions/ageDifficulty" },
+        "6-12": { "$ref": "#/definitions/ageDifficulty" },
+        "13-17": { "$ref": "#/definitions/ageDifficulty" },
+        "18-35": { "$ref": "#/definitions/ageDifficulty" },
+        "36-60": { "$ref": "#/definitions/ageDifficulty" },
+        "61-102": { "$ref": "#/definitions/ageDifficulty" }
+      }
+    },
+    "tiers": {
+      "type": "array",
+      "minItems": 3,
+      "maxItems": 3,
+      "items": { "$ref": "#/definitions/tier" }
+    },
+    "finaleStoneId": {
+      "type": "string",
+      "description": "Stone required to unlock the finale for this tribe (usually mastery).",
+      "pattern": "^(light|stone|metal|code|air|water|fire)\\.(spark|craft|mastery)$"
+    }
+  },
+  "definitions": {
+    "ageDifficulty": {
+      "type": "object",
+      "required": ["difficulty", "hintCadence"],
+      "additionalProperties": false,
+      "properties": {
+        "difficulty": {
+          "type": "string",
+          "enum": ["spark", "craft", "mastery"]
+        },
+        "hintCadence": {
+          "type": "string",
+          "enum": ["frequent", "moderate", "minimal"]
+        }
+      }
+    },
+    "tier": {
+      "type": "object",
+      "required": ["tier", "stoneId", "quests"],
+      "additionalProperties": false,
+      "properties": {
+        "tier": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 3
+        },
+        "stoneId": {
+          "type": "string",
+            "pattern": "^(light|stone|metal|code|air|water|fire)\\.(spark|craft|mastery)$"
+        },
+        "quests": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string",
+            "pattern": "^q\\.(light|stone|metal|code|air|water|fire)\\.[0-9]{3}$"
+          },
+          "uniqueItems": true
+        },
+        "lessonRefs": {
+          "type": "array",
+          "description": "Associated lesson IDs from lesson DNA.",
+          "items": {
+            "type": "string",
+            "pattern": "^[a-z0-9-]+$"
+          },
+          "uniqueItems": true
+        },
+        "boosts": {
+          "type": "array",
+          "description": "Optional cosmetic or XP boosts unlocked at this tier.",
+          "items": {
+            "type": "string",
+            "pattern": "^badge\\.[a-z_]+\\.(spark|craft|mastery)$"
+          }
+        }
+      }
+    }
+  }
+}
+
+

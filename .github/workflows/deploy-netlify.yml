@@ -1,0 +1,43 @@
+name: Deploy to Netlify
+
+on:
+  workflow_dispatch:
+    inputs:
+      production:
+        description: 'Deploy to production? (true/false)'
+        required: true
+        default: 'false'
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    if: ${{ secrets.NETLIFY_AUTH_TOKEN != '' && secrets.NETLIFY_SITE_ID != '' }}
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: 18
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm install
+
+      - name: Build
+        run: npm run build
+        env:
+          PUBLIC_SITE_URL: ${{ secrets.PUBLIC_SITE_URL || 'https://curiouskelly.com' }}
+
+      - name: Deploy with Netlify CLI
+        uses: netlify/actions/cli@v4
+        with:
+          args: deploy --dir=dist ${{ github.event.inputs.production == 'true' && '--prod' || '' }}
+        env:
+          NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+          NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+
+
+
+

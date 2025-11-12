@@ -1,0 +1,32 @@
+name: Smoke Production
+
+on:
+  schedule:
+    - cron: "0 * * * *"
+  workflow_dispatch:
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Synthetic join
+        env:
+          API_BASE_URL: ${{ secrets.SMOKE_API_BASE_URL }}
+          SMOKE_TOKEN: ${{ secrets.SMOKE_API_TOKEN }}
+        run: |
+          if [ -z "$API_BASE_URL" ] || [ -z "$SMOKE_TOKEN" ]; then
+            echo "Smoke test skipped: missing SMOKE_API_BASE_URL or SMOKE_API_TOKEN"
+            exit 0
+          fi
+          NOW=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+          RESPONSE=$(curl -s -o /tmp/resp.json -w "%{http_code}" \
+            -H "Authorization: Bearer ${SMOKE_TOKEN}" \
+            -H "Content-Type: application/json" \
+            -X POST "${API_BASE_URL}/v1/join" \
+            -d "{\"slotId\":\"00000000-0000-0000-0000-000000000000\"}")
+          cat /tmp/resp.json
+          if [ "$RESPONSE" -ge 400 ]; then
+            echo "Join smoke failed with status $RESPONSE at $NOW"
+            exit 1
+          fi
+

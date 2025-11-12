@@ -1,0 +1,145 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quick Audio Test - Voice Library</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; }
+        .audio-test { margin: 20px 0; padding: 20px; border: 1px solid #ccc; }
+        .audio-test h3 { color: #333; }
+        audio { width: 100%; margin: 10px 0; }
+        .status { padding: 10px; margin: 10px 0; border-radius: 5px; }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>🎵 Quick Audio Test - Voice Library Manager</h1>
+    
+    <div class="audio-test">
+        <h3>Test Audio Files</h3>
+        <p>Testing basic synthesis samples:</p>
+        <audio controls onloadstart="logStatus('Loading test audio 1...')" onerror="logError('Failed to load test audio 1')">
+            <source src="test_audio_output/basic_synthesis/basic_sample_1.wav" type="audio/wav">
+            Your browser does not support the audio element.
+        </audio>
+        
+        <audio controls onloadstart="logStatus('Loading test audio 2...')" onerror="logError('Failed to load test audio 2')">
+            <source src="test_audio_output/basic_synthesis/basic_sample_2.wav" type="audio/wav">
+            Your browser does not support the audio element.
+        </audio>
+        
+        <audio controls onloadstart="logStatus('Loading test audio 3...')" onerror="logError('Failed to load test audio 3')">
+            <source src="test_audio_output/basic_synthesis/basic_sample_3.wav" type="audio/wav">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+    
+    <div class="audio-test">
+        <h3>Real Audio Files</h3>
+        <p>Testing real synthesis samples:</p>
+        <audio controls onloadstart="logStatus('Loading real audio 1...')" onerror="logError('Failed to load real audio 1')">
+            <source src="real_audio_output/basic_synthesis/basic_voice_1_1.wav" type="audio/wav">
+            Your browser does not support the audio element.
+        </audio>
+        
+        <audio controls onloadstart="logStatus('Loading real audio 2...')" onerror="logError('Failed to load real audio 2')">
+            <source src="real_audio_output/basic_synthesis/basic_voice_2_1.wav" type="audio/wav">
+            Your browser does not support the audio element.
+        </audio>
+    </div>
+    
+    <div class="audio-test">
+        <h3>JSON Data Test</h3>
+        <p>Testing if voice library data loads:</p>
+        <button onclick="testJSON()">Load Voice Library Data</button>
+        <div id="json-status"></div>
+    </div>
+    
+    <div id="status-log"></div>
+    
+    <script>
+        function logStatus(message) {
+            const log = document.getElementById('status-log');
+            const div = document.createElement('div');
+            div.className = 'status success';
+            div.textContent = new Date().toLocaleTimeString() + ': ' + message;
+            log.appendChild(div);
+            console.log(message);
+        }
+        
+        function logError(message) {
+            const log = document.getElementById('status-log');
+            const div = document.createElement('div');
+            const div2 = document.createElement('div');
+            div.className = 'status error';
+            div.textContent = new Date().toLocaleTimeString() + ': ' + message;
+            div2.textContent = 'Check browser console for more details';
+            log.appendChild(div);
+            log.appendChild(div2);
+            console.error(message);
+        }
+        
+        function testJSON() {
+            const statusDiv = document.getElementById('json-status');
+            statusDiv.innerHTML = '<p>Loading JSON data...</p>';
+            
+            fetch('voice_library_data.json')
+                .then(response => {
+                    if (!response.ok) {
+                        throw new Error(`HTTP error! status: ${response.status}`);
+                    }
+                    return response.json();
+                })
+                .then(data => {
+                    statusDiv.innerHTML = `
+                        <div class="status success">
+                            <h4>✅ JSON Data Loaded Successfully!</h4>
+                            <p>Total voices: ${data.voices.length}</p>
+                            <p>Categories: ${data.statistics.categories}</p>
+                            <p>First voice: ${data.voices[0].name}</p>
+                            <p>First voice path: ${data.voices[0].filepath}</p>
+                        </div>
+                    `;
+                    logStatus(`JSON loaded: ${data.voices.length} voices`);
+                })
+                .catch(error => {
+                    statusDiv.innerHTML = `
+                        <div class="status error">
+                            <h4>❌ Failed to Load JSON Data</h4>
+                            <p>Error: ${error.message}</p>
+                        </div>
+                    `;
+                    logError(`JSON load failed: ${error.message}`);
+                });
+        }
+        
+        // Test audio file accessibility
+        function testAudioAccess() {
+            const audioFiles = [
+                'test_audio_output/basic_synthesis/basic_sample_1.wav',
+                'real_audio_output/basic_synthesis/basic_voice_1_1.wav'
+            ];
+            
+            audioFiles.forEach((file, index) => {
+                fetch(file)
+                    .then(response => {
+                        if (response.ok) {
+                            logStatus(`✅ Audio file ${index + 1} accessible: ${file}`);
+                        } else {
+                            logError(`❌ Audio file ${index + 1} not accessible: ${file} (Status: ${response.status})`);
+                        }
+                    })
+                    .catch(error => {
+                        logError(`❌ Audio file ${index + 1} error: ${file} - ${error.message}`);
+                    });
+            });
+        }
+        
+        // Run tests when page loads
+        window.onload = function() {
+            logStatus('Page loaded, testing audio accessibility...');
+            testAudioAccess();
+        };
+    </script>
+</body>
+</html>

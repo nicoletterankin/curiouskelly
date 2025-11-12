@@ -1,0 +1,695 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reinmaker - Best Generated Assets Gallery</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0d1117 0%, #161b22 100%);
+            color: #c9d1d9;
+            line-height: 1.6;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            padding: 40px 20px;
+            margin-bottom: 40px;
+        }
+        
+        h1 {
+            color: #58a6ff;
+            font-size: 3em;
+            margin-bottom: 10px;
+            text-shadow: 0 2px 10px rgba(88, 166, 255, 0.3);
+        }
+        
+        .subtitle {
+            color: #8b949e;
+            font-size: 1.3em;
+            margin-top: 10px;
+        }
+        
+        .hero-badge {
+            display: inline-block;
+            background: linear-gradient(135deg, #238636 0%, #2ea043 100%);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-size: 0.9em;
+            margin-top: 15px;
+            font-weight: bold;
+        }
+        
+        .category-section {
+            margin-bottom: 50px;
+        }
+        
+        .category-title {
+            color: #79c0ff;
+            font-size: 2em;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 3px solid #30363d;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .category-icon {
+            font-size: 1.2em;
+        }
+        
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+        
+        .asset-card {
+            background: #0d1117;
+            border: 2px solid #30363d;
+            border-radius: 12px;
+            overflow: hidden;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.3);
+        }
+        
+        .asset-card:hover {
+            transform: translateY(-8px);
+            border-color: #58a6ff;
+            box-shadow: 0 12px 24px rgba(88, 166, 255, 0.3);
+        }
+        
+        .asset-card.featured {
+            border-color: #f0883e;
+            border-width: 3px;
+        }
+        
+        .asset-card.featured::before {
+            content: "⭐ FEATURED";
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #f0883e;
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75em;
+            font-weight: bold;
+            z-index: 10;
+        }
+        
+        .image-wrapper {
+            width: 100%;
+            height: 300px;
+            background: #161b22;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .image-wrapper img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            transition: transform 0.4s;
+        }
+        
+        .asset-card:hover .image-wrapper img {
+            transform: scale(1.05);
+        }
+        
+        .asset-info {
+            padding: 20px;
+        }
+        
+        .asset-name {
+            color: #58a6ff;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+        
+        .asset-file {
+            color: #8b949e;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9em;
+            margin-bottom: 12px;
+            word-break: break-all;
+        }
+        
+        .asset-details {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            margin-top: 15px;
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: bold;
+        }
+        
+        .badge-success {
+            background: #238636;
+            color: white;
+        }
+        
+        .badge-info {
+            background: #1f6feb;
+            color: white;
+        }
+        
+        .badge-warning {
+            background: #d29922;
+            color: white;
+        }
+        
+        .full-width-card {
+            grid-column: 1 / -1;
+        }
+        
+        .full-width-card .image-wrapper {
+            height: 500px;
+        }
+        
+        .kelly-section {
+            background: linear-gradient(135deg, rgba(88, 166, 255, 0.1) 0%, rgba(249, 136, 62, 0.1) 100%);
+            border: 2px solid #58a6ff;
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 40px;
+        }
+        
+        .kelly-section h2 {
+            color: #58a6ff;
+            font-size: 2.5em;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .kelly-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 30px;
+        }
+        
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.95);
+            overflow: auto;
+        }
+        
+        .modal-content {
+            margin: auto;
+            padding: 40px;
+            max-width: 90%;
+            max-height: 90%;
+            text-align: center;
+        }
+        
+        .modal-content img {
+            max-width: 100%;
+            max-height: 80vh;
+            border-radius: 8px;
+            box-shadow: 0 8px 32px rgba(88, 166, 255, 0.3);
+        }
+        
+        .close {
+            color: #aaa;
+            float: right;
+            font-size: 28px;
+            font-weight: bold;
+            position: absolute;
+            right: 30px;
+            top: 20px;
+            cursor: pointer;
+        }
+        
+        .close:hover {
+            color: #fff;
+        }
+        
+        .stats-bar {
+            background: #161b22;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 40px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            text-align: center;
+        }
+        
+        .stat-item {
+            padding: 15px;
+        }
+        
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #58a6ff;
+            margin-bottom: 5px;
+        }
+        
+        .stat-label {
+            color: #8b949e;
+            font-size: 0.9em;
+        }
+        
+        .no-image {
+            color: #8b949e;
+            font-size: 1.1em;
+            text-align: center;
+            padding: 40px;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            margin-top: 60px;
+            border-top: 1px solid #30363d;
+            color: #8b949e;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎨 Reinmaker Asset Gallery</h1>
+            <p class="subtitle">Insanely Great Quality - Generated Assets Showcase</p>
+            <span class="hero-badge">✨ Character Consistency System Active</span>
+        </header>
+        
+        <!-- Stats Bar -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-number">13</div>
+                <div class="stat-label">Total Assets</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">5</div>
+                <div class="stat-label">New Today</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">4</div>
+                <div class="stat-label">Kelly Assets</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-number">7</div>
+                <div class="stat-label">Knowledge Stones</div>
+            </div>
+        </div>
+        
+        <!-- Kelly Assets Section -->
+        <div class="kelly-section">
+            <h2>👤 Kelly Rein - Character Assets</h2>
+            <div class="gallery-grid">
+                <div class="asset-card featured">
+                    <div class="image-wrapper">
+                        <img src="assets/player.png" alt="Kelly Player" onclick="openModal(this.src)">
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-name">A1. Player: Kelly (Runner)</div>
+                        <div class="asset-file">assets/player.png</div>
+                        <div class="asset-details">
+                            <span class="badge badge-success">1024x1280px</span>
+                            <span class="badge badge-info">Reinmaker Variant</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="asset-card featured">
+                    <div class="image-wrapper">
+                        <img src="marketing/splash_intro.png" alt="Opening Splash" onclick="openModal(this.src)">
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-name">E1. Opening Splash</div>
+                        <div class="asset-file">marketing/splash_intro.png</div>
+                        <div class="asset-details">
+                            <span class="badge badge-success">1280x720px</span>
+                            <span class="badge badge-info">Cinematic</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="asset-card featured full-width-card">
+                    <div class="image-wrapper">
+                        <img src="marketing/itch-banner-1920x480.png" alt="Itch.io Banner" onclick="openModal(this.src)">
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-name">F1. Itch.io Banner</div>
+                        <div class="asset-file">marketing/itch-banner-1920x480.png</div>
+                        <div class="asset-details">
+                            <span class="badge badge-success">1920x480px</span>
+                            <span class="badge badge-info">Marketing</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Core Gameplay Assets -->
+        <div class="category-section">
+            <h2 class="category-title">
+                <span class="category-icon">🎮</span>
+                Core Gameplay Assets
+            </h2>
+            <div class="gallery-grid">
+                <div class="asset-card">
+                    <div class="image-wrapper">
+                        <img src="assets/obstacle.png" alt="Obstacle" onclick="openModal(this.src)">
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-name">A2. Obstacle: Knowledge Shard</div>
+                        <div class="asset-file">assets/obstacle.png</div>
+                        <div class="asset-details">
+                            <span class="badge badge-success">512x512px</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="asset-card">
+                    <div class="image-wrapper">
+                        <img src="assets/coin.png" alt="Coin" onclick="openModal(this.src)">
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-name">G1. Coin Pickup</div>
+                        <div class="asset-file">assets/coin.png</div>
+                        <div class="asset-details">
+                            <span class="badge badge-success">24x24px</span>
+                            <span class="badge badge-warning">New Today</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Knowledge Stones -->
+        <div class="category-section">
+            <h2 class="category-title">
+                <span class="category-icon">💎</span>
+                Knowledge Stones (7 Tribes)
+            </h2>
+            <div class="gallery-grid">
+                <div class="asset-card">
+                    <div class="image-wrapper">
+                        <img src="assets/stones/stone_light.png" alt="Light Stone" onclick="openModal(this.src)">
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-name">Light Tribe</div>
+                        <div class="asset-file">assets/stones/stone_light.png</div>
+                        <div class="asset-details">
+                            <span class="badge badge-success">64x64px</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="asset-card">
+                    <div class="image-wrapper">
+                        <img src="assets/stones/stone_stone.png" alt="Stone Stone" onclick="openModal(this.src)">
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-name">Stone Tribe</div>
+                        <div class="asset-file">assets/stones/stone_stone.png</div>
+                        <div class="asset-details">
+                            <span class="badge badge-success">64x64px</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="asset-card">
+                    <div class="image-wrapper">
+                        <img src="assets/stones/stone_metal.png" alt="Metal Stone" onclick="openModal(this.src)">
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-name">Metal Tribe</div>
+                        <div class="asset-file">assets/stones/stone_metal.png</div>
+                        <div class="asset-details">
+                            <span class="badge badge-success">64x64px</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="asset-card">
+                    <div class="image-wrapper">
+                        <img src="assets/stones/stone_code.png" alt="Code Stone" onclick="openModal(this.src)">
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-name">Code Tribe</div>
+                        <div class="asset-file">assets/stones/stone_code.png</div>
+                        <div class="asset-details">
+                            <span class="badge badge-success">64x64px</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="asset-card">
+                    <div class="image-wrapper">
+                        <img src="assets/stones/stone_air.png" alt="Air Stone" onclick="openModal(this.src)">
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-name">Air Tribe</div>
+                        <div class="asset-file">assets/stones/stone_air.png</div>
+                        <div class="asset-details">
+                            <span class="badge badge-success">64x64px</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="asset-card">
+                    <div class="image-wrapper">
+                        <img src="assets/stones/stone_water.png" alt="Water Stone" onclick="openModal(this.src)">
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-name">Water Tribe</div>
+                        <div class="asset-file">assets/stones/stone_water.png</div>
+                        <div class="asset-details">
+                            <span class="badge badge-success">64x64px</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="asset-card">
+                    <div class="image-wrapper">
+                        <img src="assets/stones/stone_fire.png" alt="Fire Stone" onclick="openModal(this.src)">
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-name">Fire Tribe</div>
+                        <div class="asset-file">assets/stones/stone_fire.png</div>
+                        <div class="asset-details">
+                            <span class="badge badge-success">64x64px</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Tribe Banners -->
+        <div class="category-section">
+            <h2 class="category-title">
+                <span class="category-icon">🚩</span>
+                Tribe Banners (New Today)
+            </h2>
+            <div class="gallery-grid">
+                <div class="asset-card">
+                    <div class="image-wrapper">
+                        <img src="assets/banners/banner_light.png" alt="Light Banner" onclick="openModal(this.src)">
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-name">Light Tribe Banner</div>
+                        <div class="asset-file">assets/banners/banner_light.png</div>
+                        <div class="asset-details">
+                            <span class="badge badge-success">128x256px</span>
+                            <span class="badge badge-warning">New Today</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="asset-card">
+                    <div class="image-wrapper">
+                        <img src="assets/banners/banner_stone.png" alt="Stone Banner" onclick="openModal(this.src)">
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-name">Stone Tribe Banner</div>
+                        <div class="asset-file">assets/banners/banner_stone.png</div>
+                        <div class="asset-details">
+                            <span class="badge badge-success">128x256px</span>
+                            <span class="badge badge-warning">New Today</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="asset-card">
+                    <div class="image-wrapper">
+                        <img src="assets/banners/banner_air.png" alt="Air Banner" onclick="openModal(this.src)">
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-name">Air Tribe Banner</div>
+                        <div class="asset-file">assets/banners/banner_air.png</div>
+                        <div class="asset-details">
+                            <span class="badge badge-success">128x256px</span>
+                            <span class="badge badge-warning">New Today</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="asset-card">
+                    <div class="image-wrapper">
+                        <img src="assets/banners/banner_water.png" alt="Water Banner" onclick="openModal(this.src)">
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-name">Water Tribe Banner</div>
+                        <div class="asset-file">assets/banners/banner_water.png</div>
+                        <div class="asset-details">
+                            <span class="badge badge-success">128x256px</span>
+                            <span class="badge badge-warning">New Today</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Background & Environment -->
+        <div class="category-section">
+            <h2 class="category-title">
+                <span class="category-icon">🌆</span>
+                Background & Environment
+            </h2>
+            <div class="gallery-grid">
+                <div class="asset-card full-width-card">
+                    <div class="image-wrapper">
+                        <img src="assets/bg.png" alt="Parallax Skyline" onclick="openModal(this.src)">
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-name">B1. Parallax Skyline</div>
+                        <div class="asset-file">assets/bg.png</div>
+                        <div class="asset-details">
+                            <span class="badge badge-success">1024x256px</span>
+                            <span class="badge badge-info">Seamless</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="asset-card">
+                    <div class="image-wrapper">
+                        <img src="assets/gameover_bg.png" alt="Game Over Panel" onclick="openModal(this.src)">
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-name">E2. Game Over Panel</div>
+                        <div class="asset-file">assets/gameover_bg.png</div>
+                        <div class="asset-details">
+                            <span class="badge badge-success">960x540px</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- UI & Meta -->
+        <div class="category-section">
+            <h2 class="category-title">
+                <span class="category-icon">🎨</span>
+                UI & Meta Assets
+            </h2>
+            <div class="gallery-grid">
+                <div class="asset-card full-width-card">
+                    <div class="image-wrapper">
+                        <img src="marketing/cover-1280x720.png" alt="Logo Title Card" onclick="openModal(this.src)">
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-name">C1. Logo / Title Card</div>
+                        <div class="asset-file">marketing/cover-1280x720.png</div>
+                        <div class="asset-details">
+                            <span class="badge badge-success">1280x720px</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="asset-card">
+                    <div class="image-wrapper">
+                        <img src="assets/favicon.png" alt="Favicon" onclick="openModal(this.src)">
+                    </div>
+                    <div class="asset-info">
+                        <div class="asset-name">C2. Favicon</div>
+                        <div class="asset-file">assets/favicon.png</div>
+                        <div class="asset-details">
+                            <span class="badge badge-success">256x256px</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Modal for full-size images -->
+        <div id="imageModal" class="modal">
+            <span class="close" onclick="closeModal()">&times;</span>
+            <div class="modal-content">
+                <img id="modalImage" src="" alt="Full size image">
+            </div>
+        </div>
+        
+        <footer>
+            <p><strong>Reinmaker Asset Gallery</strong></p>
+            <p>Generated with Insanely Great Quality - Character Consistency System Active</p>
+            <p style="margin-top: 10px; color: #58a6ff;">✨ Updated Hair Specification: Soft Cohesive Waves</p>
+        </footer>
+    </div>
+    
+    <script>
+        function openModal(src) {
+            const modal = document.getElementById('imageModal');
+            const modalImg = document.getElementById('modalImage');
+            modal.style.display = 'block';
+            modalImg.src = src;
+        }
+        
+        function closeModal() {
+            document.getElementById('imageModal').style.display = 'none';
+        }
+        
+        // Close modal when clicking outside the image
+        window.onclick = function(event) {
+            const modal = document.getElementById('imageModal');
+            if (event.target == modal) {
+                modal.style.display = 'none';
+            }
+        }
+        
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(event) {
+            if (event.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
+

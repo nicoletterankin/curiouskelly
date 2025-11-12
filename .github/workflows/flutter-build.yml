@@ -1,0 +1,158 @@
+name: Flutter Build & Release
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'curious-kellly/mobile/**'
+      - 'digital-kelly/apps/kelly_app_flutter/**'
+      - '.github/workflows/flutter-build.yml'
+  pull_request:
+    branches: [main]
+    paths:
+      - 'curious-kellly/mobile/**'
+      - 'digital-kelly/apps/kelly_app_flutter/**'
+  workflow_dispatch:
+    inputs:
+      platform:
+        description: 'Platform to build (ios/android/both)'
+        required: true
+        default: 'both'
+        type: choice
+        options:
+          - ios
+          - android
+          - both
+      release:
+        description: 'Create release?'
+        type: boolean
+        default: false
+
+jobs:
+  build-ios:
+    if: |
+      github.event.inputs.platform == 'ios' || 
+      github.event.inputs.platform == 'both' || 
+      (github.event_name == 'push' && contains(github.event.head_commit.message, '[ios]')) ||
+      (github.event_name == 'pull_request' && contains(github.event.pull_request.title, '[ios]'))
+    runs-on: macos-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: |
+          cd curious-kellly/mobile
+          flutter pub get
+
+      - name: Analyze code
+        run: |
+          cd curious-kellly/mobile
+          flutter analyze
+
+      - name: Run tests
+        run: |
+          cd curious-kellly/mobile
+          flutter test
+
+      - name: Build iOS (no codesign)
+        run: |
+          cd curious-kellly/mobile
+          flutter build ios --release --no-codesign
+
+      - name: Upload iOS artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ios-release
+          path: curious-kellly/mobile/build/ios/iphoneos/Runner.app
+          retention-days: 30
+
+  build-android:
+    if: |
+      github.event.inputs.platform == 'android' || 
+      github.event.inputs.platform == 'both' || 
+      (github.event_name == 'push' && contains(github.event.head_commit.message, '[android]')) ||
+      (github.event_name == 'pull_request' && contains(github.event.pull_request.title, '[android]'))
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup Flutter
+        uses: subosito/flutter-action@v2
+        with:
+          flutter-version: '3.24.0'
+          channel: 'stable'
+
+      - name: Install dependencies
+        run: |
+          cd curious-kellly/mobile
+          flutter pub get
+
+      - name: Analyze code
+        run: |
+          cd curious-kellly/mobile
+          flutter analyze
+
+      - name: Run tests
+        run: |
+          cd curious-kellly/mobile
+          flutter test
+
+      - name: Build Android APK
+        run: |
+          cd curious-kellly/mobile
+          flutter build apk --release
+
+      - name: Build Android AAB
+        run: |
+          cd curious-kellly/mobile
+          flutter build appbundle --release
+
+      - name: Upload Android APK artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-apk
+          path: curious-kellly/mobile/build/app/outputs/flutter-apk/app-release.apk
+          retention-days: 30
+
+      - name: Upload Android AAB artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: android-aab
+          path: curious-kellly/mobile/build/app/outputs/bundle/release/*.aab
+          retention-days: 30
+
+  # Future: Add release job for App Store / Play Store upload
+  # release-ios:
+  #   needs: build-ios
+  #   if: github.event.inputs.release == 'true'
+  #   runs-on: macos-latest
+  #   steps:
+  #     - name: Upload to App Store Connect
+  #       uses: apple-actions/upload-testflight-build@v1
+  #       with:
+  #         app-path: curious-kellly/mobile/build/ios/iphoneos/Runner.app
+  #         issuer-id: ${{ secrets.APPLE_ISSUER_ID }}
+  #         api-key-id: ${{ secrets.APPLE_KEY_ID }}
+  #         api-private-key: ${{ secrets.APPLE_KEY_CONTENT }}
+
+  # release-android:
+  #   needs: build-android
+  #   if: github.event.inputs.release == 'true'
+  #   runs-on: ubuntu-latest
+  #   steps:
+  #     - name: Upload to Play Store
+  #       uses: r0adkll/upload-google-play@v1
+  #       with:
+  #         serviceAccountJsonPlainText: ${{ secrets.GOOGLE_SERVICE_ACCOUNT_JSON }}
+  #         packageName: com.curiouskelly.app
+  #         releaseFiles: curious-kellly/mobile/build/app/outputs/bundle/release/*.aab
+  #         track: internal
+

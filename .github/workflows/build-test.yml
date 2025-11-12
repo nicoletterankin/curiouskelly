@@ -1,0 +1,83 @@
+name: Build & Test
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  ci:
+    runs-on: ubuntu-latest
+    services:
+      redis:
+        image: redis:7-alpine
+        ports:
+          - 6379:6379
+    env:
+      NODE_ENV: test
+      REDIS_URL: redis://127.0.0.1:6379
+      DATABASE_URL: postgresql://postgres:postgres@127.0.0.1:5432/app
+      LIVEKIT_WEBHOOK_SECRET: test_webhook_secret
+      STRIPE_SECRET_KEY: sk_test_123
+      STRIPE_WEBHOOK_SECRET: whsec_test
+      CLICKHOUSE_URL: http://localhost:8123
+      MEILISEARCH_HOST: http://localhost:7700
+      MEILISEARCH_API_KEY: masterKey
+      R2_ENDPOINT: https://example.r2.cloudflarestorage.com
+      R2_ACCESS_KEY_ID: local
+      R2_SECRET_ACCESS_KEY: local
+      R2_BUCKET: lesson-packs
+      JWT_SECRET: super_secret_dev_jwt_value_super_secret_dev_jwt_value
+      LIVEKIT_HOST: http://localhost:7880
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9.9.0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: "pnpm"
+
+      - name: Install dependencies
+        run: pnpm install --no-frozen-lockfile
+
+      - name: Lint
+        run: pnpm lint
+
+      - name: Unit tests
+        run: pnpm test:unit
+
+      - name: Integration tests
+        run: pnpm test:integration
+
+      - name: Build gateway
+        run: pnpm --filter @acme/gateway build
+
+      - name: Start gateway for e2e
+        run: |
+          PORT=4010 REDIS_URL=${{ env.REDIS_URL }} pnpm --filter @acme/gateway start &
+          pnpm dlx wait-on http://127.0.0.1:4010/health
+
+      - name: E2E tests
+        env:
+          API_BASE_URL: http://127.0.0.1:4010
+        run: pnpm test:e2e
+
+      - name: Load smoke (non-blocking)
+        if: github.ref == 'refs/heads/main'
+        env:
+          API_BASE_URL: http://127.0.0.1:4010
+        run: pnpm test:load
+        continue-on-error: true
+
+      - name: Stop gateway
+        if: always()
+        run: pkill -f "dist/index.js" || true
+

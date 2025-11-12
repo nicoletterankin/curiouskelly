@@ -1,0 +1,1143 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelly Baseline Validation - Complete Review</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: #0d1117;
+            color: #c9d1d9;
+            line-height: 1.6;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1800px;
+            margin: 0 auto;
+        }
+
+        h1 {
+            color: #58a6ff;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+            text-align: center;
+            border-bottom: 3px solid #58a6ff;
+            padding-bottom: 15px;
+            margin-bottom: 30px;
+        }
+
+        h2 {
+            color: #58a6ff;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            font-size: 1.8em;
+            border-bottom: 2px solid #30363d;
+            padding-bottom: 10px;
+        }
+
+        h3 {
+            color: #79c0ff;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+
+        .asset-section {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 25px;
+            margin-bottom: 30px;
+        }
+
+        .asset-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #30363d;
+        }
+
+        .asset-title {
+            font-size: 1.5em;
+            color: #58a6ff;
+            font-weight: bold;
+        }
+
+        .asset-info {
+            color: #8b949e;
+            font-size: 0.9em;
+        }
+
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 25px;
+        }
+
+        .image-container {
+            background: #0d1117;
+            border: 2px solid #30363d;
+            border-radius: 8px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .image-container h4 {
+            color: #79c0ff;
+            margin-bottom: 10px;
+            font-size: 1.1em;
+        }
+
+        .image-container img {
+            max-width: 100%;
+            height: auto;
+            border-radius: 4px;
+            border: 1px solid #30363d;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+
+        .image-container img:hover {
+            transform: scale(1.05);
+            border-color: #58a6ff;
+        }
+
+        .validation-checklist {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+        }
+
+        .checklist-item {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            margin-bottom: 10px;
+            background: #161b22;
+            border-radius: 6px;
+            border-left: 4px solid #30363d;
+            transition: all 0.2s;
+        }
+
+        .checklist-item:hover {
+            border-left-color: #58a6ff;
+            background: #1c2128;
+        }
+
+        .checklist-item label {
+            flex: 1;
+            color: #c9d1d9;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .checklist-item input[type="number"] {
+            width: 60px;
+            padding: 6px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            color: #c9d1d9;
+            text-align: center;
+            font-size: 1em;
+        }
+
+        .checklist-item input[type="number"]:focus {
+            outline: none;
+            border-color: #58a6ff;
+            box-shadow: 0 0 0 2px rgba(88, 166, 255, 0.2);
+        }
+
+        .checklist-item textarea {
+            flex: 1;
+            padding: 8px;
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 4px;
+            color: #c9d1d9;
+            font-family: inherit;
+            font-size: 0.9em;
+            resize: vertical;
+            min-height: 40px;
+        }
+
+        .score-display {
+            background: #161b22;
+            border: 2px solid #30363d;
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .score-item {
+            text-align: center;
+        }
+
+        .score-label {
+            color: #8b949e;
+            font-size: 0.9em;
+            margin-bottom: 5px;
+        }
+
+        .score-value {
+            font-size: 2em;
+            font-weight: bold;
+            color: #58a6ff;
+        }
+
+        .quality-level {
+            font-size: 1.2em;
+            font-weight: bold;
+            padding: 8px 15px;
+            border-radius: 6px;
+            text-align: center;
+            margin-top: 10px;
+        }
+
+        .unacceptable { background: #da3633; color: #fff; }
+        .acceptable { background: #f85149; color: #fff; }
+        .good { background: #f0883e; color: #fff; }
+        .great { background: #3fb950; color: #fff; }
+        .insanely-great { background: #58a6ff; color: #fff; }
+
+        .actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 20px;
+            border-top: 2px solid #30363d;
+        }
+
+        button {
+            padding: 12px 24px;
+            background: #238636;
+            color: #fff;
+            border: none;
+            border-radius: 6px;
+            font-size: 1em;
+            cursor: pointer;
+            transition: background 0.2s;
+            font-weight: 600;
+        }
+
+        button:hover {
+            background: #2ea043;
+        }
+
+        button.secondary {
+            background: #30363d;
+        }
+
+        button.secondary:hover {
+            background: #484f58;
+        }
+
+        .reference-section {
+            background: #161b22;
+            border: 1px solid #30363d;
+            border-radius: 8px;
+            padding: 20px;
+            margin-bottom: 30px;
+        }
+
+        .reference-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 15px;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.9);
+            cursor: pointer;
+        }
+
+        .modal-content {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 90%;
+            max-height: 90%;
+        }
+
+        .modal-content img {
+            max-width: 100%;
+            max-height: 90vh;
+            border-radius: 8px;
+        }
+
+        .close-modal {
+            position: absolute;
+            top: 20px;
+            right: 30px;
+            color: #fff;
+            font-size: 40px;
+            font-weight: bold;
+            cursor: pointer;
+        }
+
+        .summary-section {
+            background: #161b22;
+            border: 2px solid #58a6ff;
+            border-radius: 8px;
+            padding: 25px;
+            margin-top: 40px;
+        }
+
+        .summary-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .summary-card {
+            background: #0d1117;
+            border: 1px solid #30363d;
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .summary-label {
+            color: #8b949e;
+            font-size: 0.9em;
+            margin-bottom: 8px;
+        }
+
+        .summary-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #58a6ff;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎯 Kelly Baseline Validation - Complete Review</h1>
+
+        <!-- Reference Images Section -->
+        <div class="reference-section">
+            <h2>📸 Character Reference Images</h2>
+            <p style="color: #8b949e; margin-bottom: 15px;">Compare assets against these CHARACTER references (face, hair, skin tone) - NOT wardrobe references</p>
+            <div class="reference-grid">
+                <div class="image-container">
+                    <h4>headshot2-kelly-base169 101225.png</h4>
+                    <img src="C:/iLearnStudio/projects/Kelly/Ref/headshot2-kelly-base169 101225.png" alt="Primary Character Reference" onclick="openModal(this.src)" onerror="this.onerror=null; this.src='file:///C:/iLearnStudio/projects/Kelly/Ref/headshot2-kelly-base169 101225.png';">
+                    <p style="color: #8b949e; font-size: 0.85em; margin-top: 8px;">⭐ PRIMARY CHARACTER REFERENCE<br>Face, Hair, Skin Tone</p>
+                </div>
+                <div class="image-container">
+                    <h4>kelly_directors_chair_8k_light (2).png</h4>
+                    <img src="C:/iLearnStudio/projects/Kelly/Ref/kelly_directors_chair_8k_light (2).png" alt="8K Character Reference" onclick="openModal(this.src)" onerror="this.onerror=null; this.src='file:///C:/iLearnStudio/projects/Kelly/Ref/kelly_directors_chair_8k_light (2).png';">
+                    <p style="color: #8b949e; font-size: 0.85em; margin-top: 8px;">⭐ EXCELLENT CHARACTER REFERENCE (8K)<br>Face, Hair, Skin Tone - Highest Quality</p>
+                </div>
+                <div class="image-container">
+                    <h4>reinmaker kelly outfit base.png</h4>
+                    <img src="C:/iLearnStudio/projects/Kelly/Ref/reinmaker kelly outfit base.png" alt="Wardrobe Reference" onclick="openModal(this.src)" onerror="this.onerror=null; this.src='file:///C:/iLearnStudio/projects/Kelly/Ref/reinmaker kelly outfit base.png';">
+                    <p style="color: #8b949e; font-size: 0.85em; margin-top: 8px;">⚠️ WARDROBE REFERENCE ONLY<br>Clothing/Outfit - NOT for character appearance</p>
+                </div>
+            </div>
+            <div style="background: #1e1e1e; padding: 15px; border-radius: 8px; margin-top: 20px; border-left: 4px solid #f0883e;">
+                <p style="color: #c9d1d9; line-height: 1.8;">
+                    <strong style="color: #f0883e;">⚠️ CRITICAL:</strong> Character consistency uses CHARACTER references (face, hair, skin tone) - NOT wardrobe references.<br>
+                    Wardrobe references are used ONLY for clothing design, not character appearance.
+                </p>
+            </div>
+        </div>
+
+        <!-- Asset 1: Player -->
+        <div class="asset-section" id="asset-player">
+            <div class="asset-header">
+                <div>
+                    <div class="asset-title">A1. Player: Kelly (Runner)</div>
+                    <div class="asset-info">assets\player.png • Expected Variant: Reinmaker • Dimensions: 1024x1280</div>
+                </div>
+            </div>
+
+            <div class="comparison-grid">
+                <div class="image-container">
+                    <h4>Generated Asset</h4>
+                    <img src="assets/player.png" alt="Player Asset" onclick="openModal(this.src)">
+                </div>
+                <div class="image-container">
+                    <h4>Character Reference: Primary</h4>
+                    <img src="C:/iLearnStudio/projects/Kelly/Ref/headshot2-kelly-base169 101225.png" alt="Character Reference" onclick="openModal(this.src)" onerror="this.src='iLearnStudio/projects/Kelly/Ref/headshot2-kelly-base169 101225.png'; this.onerror=null;">
+                </div>
+                <div class="image-container">
+                    <h4>Character Reference: 8K Quality</h4>
+                    <img src="C:/iLearnStudio/projects/Kelly/Ref/kelly_directors_chair_8k_light (2).png" alt="Character Reference 8K" onclick="openModal(this.src)" onerror="this.src='iLearnStudio/projects/Kelly/Ref/kelly_directors_chair_8k_light (2).png'; this.onerror=null;">
+                </div>
+            </div>
+
+            <div class="validation-checklist">
+                <h3>Character Consistency Checklist</h3>
+                <p style="color: #8b949e; margin-bottom: 15px;">Score each item 1-5 (5 = perfect match)</p>
+                
+                <div class="checklist-item">
+                    <label>
+                        <span>Face Shape: Oval (not round, not square)</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="character" data-item="faceShape">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="faceShape"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Skin Tone: Warm light-medium (not pale, not dark, not cool-toned)</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="character" data-item="skinTone">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="skinTone"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Eye Color: Warm brown, almond-shaped (not blue, not round)</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="character" data-item="eyeColor">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="eyeColor"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Hair Color: Medium brown with caramel/honey-blonde highlights</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="character" data-item="hairColor">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="hairColor"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Hair Texture: Soft waves that fall together cohesively (NOT frizzy, NOT whispy, NOT curly - hair stays together)</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="character" data-item="hairTexture">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="hairTexture"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Expression: Genuine warm smile with straight white teeth</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="character" data-item="expression">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="expression"></textarea>
+                </div>
+
+                <h3 style="margin-top: 25px;">Brand Alignment Checklist</h3>
+                
+                <div class="checklist-item">
+                    <label>
+                        <span>Wardrobe: Matches Reinmaker variant reference</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="brand" data-item="wardrobe">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="wardrobe"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Colors: Matches brand restrictions (no bright colors, no reds/yellows)</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="brand" data-item="colors">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="colors"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Style: Photorealistic (not cartoon, not stylized)</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="brand" data-item="style">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="style"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Quality: Professional photography quality</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="brand" data-item="quality">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="quality"></textarea>
+                </div>
+
+                <h3 style="margin-top: 25px;">Technical Quality Checklist</h3>
+                
+                <div class="checklist-item">
+                    <label>
+                        <span>Resolution: Matches requested dimensions (1024x1280)</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="technical" data-item="resolution">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="resolution"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Artifacts: No compression artifacts, no noise</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="technical" data-item="artifacts">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="artifacts"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Blur: No blur, no pixelation</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="technical" data-item="blur">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="blur"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Colors: Natural, not oversaturated</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="technical" data-item="colorNatural">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="colorNatural"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Watermarks: No watermarks, no text overlays, no logos</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="technical" data-item="watermarks">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="watermarks"></textarea>
+                </div>
+
+                <div class="score-display" id="scores-player">
+                    <div class="score-item">
+                        <div class="score-label">Character Consistency</div>
+                        <div class="score-value" id="char-score-player">0.0</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Brand Alignment</div>
+                        <div class="score-value" id="brand-score-player">0.0</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Technical Quality</div>
+                        <div class="score-value" id="tech-score-player">0.0</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Overall Score</div>
+                        <div class="score-value" id="overall-score-player">0.0</div>
+                    </div>
+                </div>
+
+                <div id="quality-level-player" class="quality-level" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Asset 2: Splash -->
+        <div class="asset-section" id="asset-splash">
+            <div class="asset-header">
+                <div>
+                    <div class="asset-title">E1. Opening Splash</div>
+                    <div class="asset-info">marketing\splash_intro.png • Expected Variant: Reinmaker • Dimensions: 1280x720</div>
+                </div>
+            </div>
+
+            <div class="comparison-grid">
+                <div class="image-container">
+                    <h4>Generated Asset</h4>
+                    <img src="marketing/splash_intro.png" alt="Splash Asset" onclick="openModal(this.src)">
+                </div>
+                <div class="image-container">
+                    <h4>Character Reference: Primary</h4>
+                    <img src="C:/iLearnStudio/projects/Kelly/Ref/headshot2-kelly-base169 101225.png" alt="Character Reference" onclick="openModal(this.src)" onerror="this.src='iLearnStudio/projects/Kelly/Ref/headshot2-kelly-base169 101225.png'; this.onerror=null;">
+                </div>
+                <div class="image-container">
+                    <h4>Character Reference: 8K Quality</h4>
+                    <img src="C:/iLearnStudio/projects/Kelly/Ref/kelly_directors_chair_8k_light (2).png" alt="Character Reference 8K" onclick="openModal(this.src)" onerror="this.src='iLearnStudio/projects/Kelly/Ref/kelly_directors_chair_8k_light (2).png'; this.onerror=null;">
+                </div>
+            </div>
+
+            <div class="validation-checklist">
+                <h3>Character Consistency Checklist</h3>
+                <p style="color: #8b949e; margin-bottom: 15px;">Score each item 1-5 (5 = perfect match)</p>
+                
+                <div class="checklist-item">
+                    <label>
+                        <span>Face Shape: Oval (not round, not square)</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="character" data-item="faceShape" data-asset="splash">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="faceShape" data-asset="splash"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Skin Tone: Warm light-medium (not pale, not dark, not cool-toned)</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="character" data-item="skinTone" data-asset="splash">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="skinTone" data-asset="splash"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Eye Color: Warm brown, almond-shaped (not blue, not round)</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="character" data-item="eyeColor" data-asset="splash">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="eyeColor" data-asset="splash"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Hair Color: Medium brown with caramel/honey-blonde highlights</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="character" data-item="hairColor" data-asset="splash">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="hairColor" data-asset="splash"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Hair Texture: Soft waves that fall together cohesively (NOT frizzy, NOT whispy, NOT curly - hair stays together)</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="character" data-item="hairTexture" data-asset="splash">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="hairTexture" data-asset="splash"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Expression: Genuine warm smile with straight white teeth</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="character" data-item="expression" data-asset="splash">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="expression" data-asset="splash"></textarea>
+                </div>
+
+                <h3 style="margin-top: 25px;">Brand Alignment Checklist</h3>
+                
+                <div class="checklist-item">
+                    <label>
+                        <span>Wardrobe: Matches Reinmaker variant reference</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="brand" data-item="wardrobe" data-asset="splash">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="wardrobe" data-asset="splash"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Colors: Matches brand restrictions (no bright colors, no reds/yellows)</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="brand" data-item="colors" data-asset="splash">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="colors" data-asset="splash"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Style: Photorealistic (not cartoon, not stylized)</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="brand" data-item="style" data-asset="splash">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="style" data-asset="splash"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Quality: Professional photography quality</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="brand" data-item="quality" data-asset="splash">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="quality" data-asset="splash"></textarea>
+                </div>
+
+                <h3 style="margin-top: 25px;">Technical Quality Checklist</h3>
+                
+                <div class="checklist-item">
+                    <label>
+                        <span>Resolution: Matches requested dimensions (1280x720)</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="technical" data-item="resolution" data-asset="splash">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="resolution" data-asset="splash"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Artifacts: No compression artifacts, no noise</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="technical" data-item="artifacts" data-asset="splash">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="artifacts" data-asset="splash"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Blur: No blur, no pixelation</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="technical" data-item="blur" data-asset="splash">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="blur" data-asset="splash"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Colors: Natural, not oversaturated</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="technical" data-item="colorNatural" data-asset="splash">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="colorNatural" data-asset="splash"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Watermarks: No watermarks, no text overlays, no logos</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="technical" data-item="watermarks" data-asset="splash">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="watermarks" data-asset="splash"></textarea>
+                </div>
+
+                <div class="score-display" id="scores-splash">
+                    <div class="score-item">
+                        <div class="score-label">Character Consistency</div>
+                        <div class="score-value" id="char-score-splash">0.0</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Brand Alignment</div>
+                        <div class="score-value" id="brand-score-splash">0.0</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Technical Quality</div>
+                        <div class="score-value" id="tech-score-splash">0.0</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Overall Score</div>
+                        <div class="score-value" id="overall-score-splash">0.0</div>
+                    </div>
+                </div>
+
+                <div id="quality-level-splash" class="quality-level" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Asset 3: Banner -->
+        <div class="asset-section" id="asset-banner">
+            <div class="asset-header">
+                <div>
+                    <div class="asset-title">F1. Itch.io Banner</div>
+                    <div class="asset-info">marketing\itch-banner-1920x480.png • Expected Variant: Reinmaker • Dimensions: 1920x480</div>
+                </div>
+            </div>
+
+            <div class="comparison-grid">
+                <div class="image-container">
+                    <h4>Generated Asset</h4>
+                    <img src="marketing/itch-banner-1920x480.png" alt="Banner Asset" onclick="openModal(this.src)">
+                </div>
+                <div class="image-container">
+                    <h4>Character Reference: Primary</h4>
+                    <img src="C:/iLearnStudio/projects/Kelly/Ref/headshot2-kelly-base169 101225.png" alt="Character Reference" onclick="openModal(this.src)" onerror="this.src='iLearnStudio/projects/Kelly/Ref/headshot2-kelly-base169 101225.png'; this.onerror=null;">
+                </div>
+                <div class="image-container">
+                    <h4>Character Reference: 8K Quality</h4>
+                    <img src="C:/iLearnStudio/projects/Kelly/Ref/kelly_directors_chair_8k_light (2).png" alt="Character Reference 8K" onclick="openModal(this.src)" onerror="this.src='iLearnStudio/projects/Kelly/Ref/kelly_directors_chair_8k_light (2).png'; this.onerror=null;">
+                </div>
+            </div>
+
+            <div class="validation-checklist">
+                <h3>Character Consistency Checklist</h3>
+                <p style="color: #8b949e; margin-bottom: 15px;">Score each item 1-5 (5 = perfect match)</p>
+                
+                <div class="checklist-item">
+                    <label>
+                        <span>Face Shape: Oval (not round, not square)</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="character" data-item="faceShape" data-asset="banner">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="faceShape" data-asset="banner"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Skin Tone: Warm light-medium (not pale, not dark, not cool-toned)</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="character" data-item="skinTone" data-asset="banner">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="skinTone" data-asset="banner"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Eye Color: Warm brown, almond-shaped (not blue, not round)</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="character" data-item="eyeColor" data-asset="banner">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="eyeColor" data-asset="banner"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Hair Color: Medium brown with caramel/honey-blonde highlights</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="character" data-item="hairColor" data-asset="banner">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="hairColor" data-asset="banner"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Hair Texture: Soft waves that fall together cohesively (NOT frizzy, NOT whispy, NOT curly - hair stays together)</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="character" data-item="hairTexture" data-asset="banner">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="hairTexture" data-asset="banner"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Expression: Genuine warm smile with straight white teeth</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="character" data-item="expression" data-asset="banner">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="expression" data-asset="banner"></textarea>
+                </div>
+
+                <h3 style="margin-top: 25px;">Brand Alignment Checklist</h3>
+                
+                <div class="checklist-item">
+                    <label>
+                        <span>Wardrobe: Matches Reinmaker variant reference</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="brand" data-item="wardrobe" data-asset="banner">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="wardrobe" data-asset="banner"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Colors: Matches brand restrictions (no bright colors, no reds/yellows)</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="brand" data-item="colors" data-asset="banner">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="colors" data-asset="banner"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Style: Photorealistic (not cartoon, not stylized)</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="brand" data-item="style" data-asset="banner">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="style" data-asset="banner"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Quality: Professional photography quality</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="brand" data-item="quality" data-asset="banner">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="quality" data-asset="banner"></textarea>
+                </div>
+
+                <h3 style="margin-top: 25px;">Technical Quality Checklist</h3>
+                
+                <div class="checklist-item">
+                    <label>
+                        <span>Resolution: Matches requested dimensions (1920x480)</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="technical" data-item="resolution" data-asset="banner">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="resolution" data-asset="banner"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Artifacts: No compression artifacts, no noise</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="technical" data-item="artifacts" data-asset="banner">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="artifacts" data-asset="banner"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Blur: No blur, no pixelation</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="technical" data-item="blur" data-asset="banner">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="blur" data-asset="banner"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Colors: Natural, not oversaturated</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="technical" data-item="colorNatural" data-asset="banner">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="colorNatural" data-asset="banner"></textarea>
+                </div>
+
+                <div class="checklist-item">
+                    <label>
+                        <span>Watermarks: No watermarks, no text overlays, no logos</span>
+                        <input type="number" min="1" max="5" value="0" class="score-input" data-category="technical" data-item="watermarks" data-asset="banner">
+                    </label>
+                    <textarea placeholder="Notes..." class="notes-input" data-item="watermarks" data-asset="banner"></textarea>
+                </div>
+
+                <div class="score-display" id="scores-banner">
+                    <div class="score-item">
+                        <div class="score-label">Character Consistency</div>
+                        <div class="score-value" id="char-score-banner">0.0</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Brand Alignment</div>
+                        <div class="score-value" id="brand-score-banner">0.0</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Technical Quality</div>
+                        <div class="score-value" id="tech-score-banner">0.0</div>
+                    </div>
+                    <div class="score-item">
+                        <div class="score-label">Overall Score</div>
+                        <div class="score-value" id="overall-score-banner">0.0</div>
+                    </div>
+                </div>
+
+                <div id="quality-level-banner" class="quality-level" style="display: none;"></div>
+            </div>
+        </div>
+
+        <!-- Summary Section -->
+        <div class="summary-section">
+            <h2>📊 Baseline Summary</h2>
+            <div class="summary-grid">
+                <div class="summary-card">
+                    <div class="summary-label">Average Character Consistency</div>
+                    <div class="summary-value" id="avg-character">0.0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Average Brand Alignment</div>
+                    <div class="summary-value" id="avg-brand">0.0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Average Technical Quality</div>
+                    <div class="summary-value" id="avg-technical">0.0</div>
+                </div>
+                <div class="summary-card">
+                    <div class="summary-label">Overall Average Score</div>
+                    <div class="summary-value" id="avg-overall">0.0</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Actions -->
+        <div class="actions">
+            <button onclick="saveScores()">💾 Save Scores</button>
+            <button onclick="exportResults()" class="secondary">📥 Export Results</button>
+            <button onclick="resetScores()" class="secondary">🔄 Reset</button>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="imageModal" class="modal" onclick="closeModal()">
+        <span class="close-modal">&times;</span>
+        <div class="modal-content">
+            <img id="modalImage" src="" alt="Enlarged view">
+        </div>
+    </div>
+
+    <script>
+        const assets = ['player', 'splash', 'banner'];
+        const categories = {
+            character: ['faceShape', 'skinTone', 'eyeColor', 'hairColor', 'hairTexture', 'expression'],
+            brand: ['wardrobe', 'colors', 'style', 'quality'],
+            technical: ['resolution', 'artifacts', 'blur', 'colorNatural', 'watermarks']
+        };
+
+        function calculateScores(asset) {
+            const scores = { character: [], brand: [], technical: [] };
+            
+            Object.keys(categories).forEach(category => {
+                categories[category].forEach(item => {
+                    const input = document.querySelector(`.score-input[data-category="${category}"][data-item="${item}"][data-asset="${asset}"], .score-input[data-category="${category}"][data-item="${item}"]:not([data-asset])`);
+                    if (input && input.value > 0) {
+                        scores[category].push(parseFloat(input.value));
+                    }
+                });
+            });
+
+            const charAvg = scores.character.length > 0 ? scores.character.reduce((a, b) => a + b, 0) / scores.character.length : 0;
+            const brandAvg = scores.brand.length > 0 ? scores.brand.reduce((a, b) => a + b, 0) / scores.brand.length : 0;
+            const techAvg = scores.technical.length > 0 ? scores.technical.reduce((a, b) => a + b, 0) / scores.technical.length : 0;
+            const overall = (charAvg + brandAvg + techAvg) / 3;
+
+            document.getElementById(`char-score-${asset}`).textContent = charAvg.toFixed(1);
+            document.getElementById(`brand-score-${asset}`).textContent = brandAvg.toFixed(1);
+            document.getElementById(`tech-score-${asset}`).textContent = techAvg.toFixed(1);
+            document.getElementById(`overall-score-${asset}`).textContent = overall.toFixed(1);
+
+            const qualityLevel = document.getElementById(`quality-level-${asset}`);
+            if (overall > 0) {
+                qualityLevel.style.display = 'block';
+                if (overall >= 4.9) {
+                    qualityLevel.textContent = '⭐ Insanely Great';
+                    qualityLevel.className = 'quality-level insanely-great';
+                } else if (overall >= 4.0) {
+                    qualityLevel.textContent = '⭐ Great';
+                    qualityLevel.className = 'quality-level great';
+                } else if (overall >= 3.0) {
+                    qualityLevel.textContent = '✓ Good';
+                    qualityLevel.className = 'quality-level good';
+                } else if (overall >= 2.0) {
+                    qualityLevel.textContent = '⚠ Acceptable';
+                    qualityLevel.className = 'quality-level acceptable';
+                } else {
+                    qualityLevel.textContent = '❌ Unacceptable';
+                    qualityLevel.className = 'quality-level unacceptable';
+                }
+            } else {
+                qualityLevel.style.display = 'none';
+            }
+
+            updateSummary();
+        }
+
+        function updateSummary() {
+            const totals = { character: 0, brand: 0, technical: 0, overall: 0 };
+            let count = 0;
+
+            assets.forEach(asset => {
+                const char = parseFloat(document.getElementById(`char-score-${asset}`).textContent);
+                const brand = parseFloat(document.getElementById(`brand-score-${asset}`).textContent);
+                const tech = parseFloat(document.getElementById(`tech-score-${asset}`).textContent);
+                const overall = parseFloat(document.getElementById(`overall-score-${asset}`).textContent);
+
+                if (overall > 0) {
+                    totals.character += char;
+                    totals.brand += brand;
+                    totals.technical += tech;
+                    totals.overall += overall;
+                    count++;
+                }
+            });
+
+            if (count > 0) {
+                document.getElementById('avg-character').textContent = (totals.character / count).toFixed(1);
+                document.getElementById('avg-brand').textContent = (totals.brand / count).toFixed(1);
+                document.getElementById('avg-technical').textContent = (totals.technical / count).toFixed(1);
+                document.getElementById('avg-overall').textContent = (totals.overall / count).toFixed(1);
+            }
+        }
+
+        function openModal(src) {
+            document.getElementById('modalImage').src = src;
+            document.getElementById('imageModal').style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('imageModal').style.display = 'none';
+        }
+
+        function saveScores() {
+            const data = {};
+            assets.forEach(asset => {
+                data[asset] = {
+                    scores: {
+                        character: parseFloat(document.getElementById(`char-score-${asset}`).textContent),
+                        brand: parseFloat(document.getElementById(`brand-score-${asset}`).textContent),
+                        technical: parseFloat(document.getElementById(`tech-score-${asset}`).textContent),
+                        overall: parseFloat(document.getElementById(`overall-score-${asset}`).textContent)
+                    },
+                    notes: {}
+                };
+                
+                Object.keys(categories).forEach(category => {
+                    categories[category].forEach(item => {
+                        const input = document.querySelector(`.score-input[data-category="${category}"][data-item="${item}"][data-asset="${asset}"], .score-input[data-category="${category}"][data-item="${item}"]:not([data-asset])`);
+                        const notes = document.querySelector(`.notes-input[data-item="${item}"][data-asset="${asset}"], .notes-input[data-item="${item}"]:not([data-asset])`);
+                        if (input && notes) {
+                            data[asset].notes[item] = notes.value;
+                        }
+                    });
+                });
+            });
+
+            localStorage.setItem('kellyValidationScores', JSON.stringify(data));
+            alert('Scores saved to browser storage!');
+        }
+
+        function exportResults() {
+            const data = {
+                date: new Date().toISOString(),
+                summary: {
+                    avgCharacter: document.getElementById('avg-character').textContent,
+                    avgBrand: document.getElementById('avg-brand').textContent,
+                    avgTechnical: document.getElementById('avg-technical').textContent,
+                    avgOverall: document.getElementById('avg-overall').textContent
+                },
+                assets: {}
+            };
+
+            assets.forEach(asset => {
+                data.assets[asset] = {
+                    scores: {
+                        character: document.getElementById(`char-score-${asset}`).textContent,
+                        brand: document.getElementById(`brand-score-${asset}`).textContent,
+                        technical: document.getElementById(`tech-score-${asset}`).textContent,
+                        overall: document.getElementById(`overall-score-${asset}`).textContent
+                    },
+                    notes: {}
+                };
+                
+                Object.keys(categories).forEach(category => {
+                    categories[category].forEach(item => {
+                        const input = document.querySelector(`.score-input[data-category="${category}"][data-item="${item}"][data-asset="${asset}"], .score-input[data-category="${category}"][data-item="${item}"]:not([data-asset])`);
+                        const notes = document.querySelector(`.notes-input[data-item="${item}"][data-asset="${asset}"], .notes-input[data-item="${item}"]:not([data-asset])`);
+                        if (input && notes) {
+                            data.assets[asset].notes[item] = {
+                                score: input.value,
+                                notes: notes.value
+                            };
+                        }
+                    });
+                });
+            });
+
+            const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `kelly_baseline_validation_${new Date().toISOString().split('T')[0]}.json`;
+            a.click();
+        }
+
+        function resetScores() {
+            if (confirm('Are you sure you want to reset all scores?')) {
+                document.querySelectorAll('.score-input').forEach(input => input.value = 0);
+                document.querySelectorAll('.notes-input').forEach(textarea => textarea.value = '');
+                assets.forEach(asset => {
+                    calculateScores(asset);
+                });
+            }
+        }
+
+        // Load saved scores
+        window.addEventListener('DOMContentLoaded', () => {
+            const saved = localStorage.getItem('kellyValidationScores');
+            if (saved) {
+                try {
+                    const data = JSON.parse(saved);
+                    // Could restore scores here if needed
+                } catch (e) {
+                    console.error('Failed to load saved scores:', e);
+                }
+            }
+
+            // Add event listeners
+            document.querySelectorAll('.score-input').forEach(input => {
+                input.addEventListener('input', () => {
+                    const asset = input.getAttribute('data-asset') || 'player';
+                    calculateScores(asset);
+                });
+            });
+        });
+
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                closeModal();
+            }
+        });
+    </script>
+</body>
+</html>
+

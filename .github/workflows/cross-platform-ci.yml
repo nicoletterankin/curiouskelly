@@ -1,0 +1,307 @@
+name: Cross-Platform CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+  schedule:
+    - cron: '0 2 * * *'  # Daily at 2 AM UTC
+
+env:
+  PYTHON_VERSION: '3.11'
+  NODE_VERSION: '18'
+
+jobs:
+  # Security and Code Quality
+  security-audit:
+    name: Security Audit
+    runs-on: ubuntu-latest
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Full history for security analysis
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install security tools
+      run: |
+        pip install bandit safety semgrep
+        npm install -g @githubnext/github-copilot-cli
+    
+    - name: Run Bandit security scan
+      run: |
+        bandit -r synthetic_tts/ -f json -o bandit-report.json
+        bandit -r synthetic_tts/ -f txt
+    
+    - name: Run Safety check
+      run: |
+        safety check --json --output safety-report.json
+        safety check
+    
+    - name: Run Semgrep security scan
+      run: |
+        semgrep --config=auto synthetic_tts/ --json --output=semgrep-report.json
+        semgrep --config=auto synthetic_tts/
+    
+    - name: Upload security reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: security-reports
+        path: |
+          bandit-report.json
+          safety-report.json
+          semgrep-report.json
+
+  # Cross-Platform Testing
+  test-matrix:
+    name: Test on ${{ matrix.os }} Python ${{ matrix.python }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      fail-fast: false
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        python: ['3.8', '3.9', '3.10', '3.11']
+        include:
+          - os: windows-latest
+            python: '3.11'
+            test_tts: true
+          - os: ubuntu-latest
+            python: '3.11'
+            test_tts: true
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python ${{ matrix.python }}
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ matrix.python }}
+    
+    - name: Cache pip dependencies
+      uses: actions/cache@v3
+      with:
+        path: ~/.cache/pip
+        key: ${{ runner.os }}-pip-${{ matrix.python }}-${{ hashFiles('**/requirements*.txt') }}
+        restore-keys: |
+          ${{ runner.os }}-pip-${{ matrix.python }}-
+          ${{ runner.os }}-pip-
+    
+    - name: Install system dependencies
+      run: |
+        if [ "$RUNNER_OS" == "Linux" ]; then
+          sudo apt-get update
+          sudo apt-get install -y ffmpeg libsndfile1 libasound2-dev
+        elif [ "$RUNNER_OS" == "macOS" ]; then
+          brew install ffmpeg libsndfile
+        elif [ "$RUNNER_OS" == "Windows" ]; then
+          choco install ffmpeg
+        fi
+    
+    - name: Install Python dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r requirements.txt
+        if [ -f requirements-${{ matrix.os }}.txt ]; then
+          pip install -r requirements-${{ matrix.os }}.txt
+        fi
+        pip install -r requirements-dev.txt
+    
+    - name: Run linting
+      run: |
+        flake8 synthetic_tts/ --max-line-length=100 --ignore=E203,W503
+        black --check synthetic_tts/
+        isort --check-only synthetic_tts/
+    
+    - name: Run type checking
+      run: |
+        mypy synthetic_tts/ --ignore-missing-imports
+    
+    - name: Run unit tests
+      run: |
+        pytest tests/unit/ -v --cov=synthetic_tts --cov-report=xml --cov-report=html
+    
+    - name: Run integration tests
+      run: |
+        pytest tests/integration/ -v
+    
+    - name: Run TTS functionality tests
+      if: matrix.test_tts == true
+      run: |
+        python scripts/test_tts_cross_platform.py
+    
+    - name: Run security hardening tests
+      run: |
+        python scripts/security_hardening.py
+    
+    - name: Upload coverage reports
+      uses: codecov/codecov-action@v3
+      with:
+        file: ./coverage.xml
+        flags: unittests
+        name: codecov-umbrella
+        fail_ci_if_error: false
+
+  # Performance Testing
+  performance-test:
+    name: Performance Tests
+    runs-on: ubuntu-latest
+    needs: test-matrix
+    if: github.event_name == 'push' && github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Python
+      uses: actions/setup-python@v4
+      with:
+        python-version: ${{ env.PYTHON_VERSION }}
+    
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+        pip install -r requirements-dev.txt
+        pip install pytest-benchmark memory-profiler
+    
+    - name: Run performance tests
+      run: |
+        pytest tests/performance/ -v --benchmark-only --benchmark-save=performance
+    
+    - name: Run memory profiling
+      run: |
+        python scripts/memory_profiling.py
+    
+    - name: Upload performance reports
+      uses: actions/upload-artifact@v3
+      with:
+        name: performance-reports
+        path: |
+          .benchmarks/
+          memory_profile.txt
+
+  # Docker Multi-Platform Build
+  docker-build:
+    name: Docker Multi-Platform Build
+    runs-on: ubuntu-latest
+    needs: [security-audit, test-matrix]
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+    
+    - name: Set up Docker Buildx
+      uses: docker/setup-buildx-action@v3
+    
+    - name: Login to Docker Hub
+      uses: docker/login-action@v3
+      with:
+        username: ${{ secrets.DOCKER_USERNAME }}
+        password: ${{ secrets.DOCKER_PASSWORD }}
+    
+    - name: Build and push multi-platform image
+      uses: docker/build-push-action@v5
+      with:
+        context: .
+        file: ./Dockerfile
+        platforms: linux/amd64,linux/arm64
+        push: true
+        tags: |
+          ${{ secrets.DOCKER_USERNAME }}/tts-system:latest
+          ${{ secrets.DOCKER_USERNAME }}/tts-system:${{ github.sha }}
+        cache-from: type=gha
+        cache-to: type=gha,mode=max
+
+  # Deployment
+  deploy-staging:
+    name: Deploy to Staging
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+    if: github.ref == 'refs/heads/develop'
+    environment: staging
+    
+    steps:
+    - name: Deploy to staging
+      run: |
+        echo "Deploying to staging environment..."
+        # Add your staging deployment commands here
+        # kubectl apply -f k8s/staging/
+        # helm upgrade --install tts-staging ./helm/tts-system
+
+  deploy-production:
+    name: Deploy to Production
+    runs-on: ubuntu-latest
+    needs: [docker-build]
+    if: github.ref == 'refs/heads/main'
+    environment: production
+    
+    steps:
+    - name: Deploy to production
+      run: |
+        echo "Deploying to production environment..."
+        # Add your production deployment commands here
+        # kubectl apply -f k8s/production/
+        # helm upgrade --install tts-production ./helm/tts-system
+
+  # Notification
+  notify:
+    name: Notify Results
+    runs-on: ubuntu-latest
+    needs: [security-audit, test-matrix, performance-test]
+    if: always()
+    
+    steps:
+    - name: Notify on success
+      if: needs.security-audit.result == 'success' && needs.test-matrix.result == 'success'
+      run: |
+        echo "✅ All tests passed! Pipeline successful."
+        # Add notification logic here (Slack, email, etc.)
+    
+    - name: Notify on failure
+      if: needs.security-audit.result == 'failure' || needs.test-matrix.result == 'failure'
+      run: |
+        echo "❌ Pipeline failed. Check the logs."
+        # Add failure notification logic here
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

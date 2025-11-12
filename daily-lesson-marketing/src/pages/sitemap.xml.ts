@@ -1,0 +1,19 @@
+---
+import { generateSitemap, generateSitemapRoutes } from '../lib/sitemap';
+
+const site = Astro.site?.href || 'https://thedailylesson.com';
+const routes = generateSitemapRoutes(Astro);
+const sitemap = generateSitemap(site, routes);
+---
+
+{sitemap}
+
+
+
+
+
+
+
+
+
+

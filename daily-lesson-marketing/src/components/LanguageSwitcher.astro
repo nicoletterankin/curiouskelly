@@ -1,0 +1,66 @@
+---
+import { buildLocalizedPath, normaliseLocale } from '@lib/i18n';
+import type { LocaleCode } from '@lib/i18n/types';
+
+interface LocaleOption {
+  code: LocaleCode;
+  label: string;
+  prefix: string;
+}
+
+interface Props {
+  locale: string;
+  currentPath: string;
+  locales: LocaleOption[];
+  nonce: string;
+}
+
+const { locale, currentPath, locales, nonce } = Astro.props as Props;
+const activeLocale = normaliseLocale(locale);
+---
+
+<div class="dropdown">
+  <button
+    class="btn btn-outline-primary rounded-pill dropdown-toggle"
+    type="button"
+    id="locale-switcher"
+    data-bs-toggle="dropdown"
+    aria-haspopup="true"
+    aria-expanded="false"
+  >
+    {locales.find((item) => item.code === activeLocale)?.label ?? activeLocale}
+  </button>
+  <div class="dropdown-menu dropdown-menu-end shadow" aria-labelledby="locale-switcher">
+    {locales.map((option) => {
+      const href = buildLocalizedPath(currentPath, option.code);
+      return (
+        <a
+          class:list={[
+            'dropdown-item',
+            { active: option.code === activeLocale }
+          ]}
+          href={href}
+          data-locale={option.code}
+        >
+          {option.label}
+        </a>
+      );
+    })}
+  </div>
+</div>
+<script type="module" nonce={nonce} is:inline>
+  document.addEventListener('click', (event) => {
+    const target = event.target;
+    if (!(target instanceof HTMLAnchorElement)) {
+      return;
+    }
+    if (target.matches('[data-locale]')) {
+      const locale = target.getAttribute('data-locale');
+      document.cookie = `localeChoice=${locale};path=/;max-age=${60 * 60 * 24 * 365}`;
+    }
+  });
+</script>
+
+
+
+

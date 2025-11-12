@@ -1,0 +1,694 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Asset Status Viewer - Rein Maker's Daughter</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+            background: linear-gradient(135deg, #1e1e1e 0%, #2a2a2a 100%);
+            color: #e0e0e0;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            background: #2a2a2a;
+            border-radius: 12px;
+            padding: 30px;
+            border: 1px solid #444;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+        h1 {
+            color: #58a6ff;
+            text-align: center;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        .subtitle {
+            text-align: center;
+            color: #888;
+            margin-bottom: 30px;
+            font-size: 1.1em;
+        }
+        .status-summary {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 30px;
+        }
+        .stat-card {
+            background: #333;
+            padding: 20px;
+            border-radius: 8px;
+            text-align: center;
+            border: 2px solid #444;
+        }
+        .stat-card.updated {
+            border-color: #4caf50;
+        }
+        .stat-card.needs-update {
+            border-color: #ff9800;
+        }
+        .stat-number {
+            font-size: 2.5em;
+            font-weight: bold;
+            margin-bottom: 5px;
+        }
+        .stat-card.updated .stat-number {
+            color: #4caf50;
+        }
+        .stat-card.needs-update .stat-number {
+            color: #ff9800;
+        }
+        .stat-label {
+            color: #aaa;
+            font-size: 0.9em;
+        }
+        .asset-section {
+            margin-bottom: 40px;
+        }
+        .section-header {
+            background: linear-gradient(135deg, #495057 0%, #343a40 100%);
+            padding: 15px 20px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            border-left: 4px solid #58a6ff;
+        }
+        .section-header h2 {
+            color: #fff;
+            font-size: 1.8em;
+            margin-bottom: 5px;
+        }
+        .section-header .description {
+            color: #ccc;
+            font-size: 0.95em;
+        }
+        .asset-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .asset-card {
+            background: #333;
+            border-radius: 8px;
+            overflow: hidden;
+            border: 2px solid #444;
+            transition: transform 0.2s, box-shadow 0.2s;
+            cursor: pointer;
+        }
+        .asset-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(88, 166, 255, 0.3);
+        }
+        .asset-card.updated {
+            border-color: #4caf50;
+        }
+        .asset-card.needs-update {
+            border-color: #ff9800;
+        }
+        .asset-header {
+            padding: 15px;
+            background: #2a2a2a;
+            border-bottom: 1px solid #444;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .asset-title {
+            font-weight: bold;
+            color: #fff;
+            font-size: 1.1em;
+        }
+        .status-badge {
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.85em;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        .status-badge.updated {
+            background: #4caf50;
+            color: #fff;
+        }
+        .status-badge.needs-update {
+            background: #ff9800;
+            color: #fff;
+        }
+        .asset-preview {
+            padding: 15px;
+            text-align: center;
+            background: #1e1e1e;
+            min-height: 200px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .asset-preview img {
+            max-width: 100%;
+            max-height: 200px;
+            border-radius: 4px;
+            background: #555;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.3);
+        }
+        .asset-preview .placeholder {
+            color: #666;
+            font-size: 0.9em;
+        }
+        .asset-info {
+            padding: 15px;
+            background: #2a2a2a;
+            border-top: 1px solid #444;
+        }
+        .asset-info code {
+            background: #1e1e1e;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 0.85em;
+            color: #58a6ff;
+            display: block;
+            margin-bottom: 8px;
+            word-break: break-all;
+        }
+        .asset-note {
+            font-size: 0.85em;
+            color: #aaa;
+            margin-top: 8px;
+            padding: 8px;
+            background: #1e1e1e;
+            border-radius: 4px;
+            border-left: 3px solid #58a6ff;
+        }
+        .legend {
+            background: #333;
+            padding: 20px;
+            border-radius: 8px;
+            margin-bottom: 30px;
+            border: 1px solid #444;
+        }
+        .legend h3 {
+            color: #58a6ff;
+            margin-bottom: 15px;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        .legend-color {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+            margin-right: 10px;
+            border: 2px solid;
+        }
+        .legend-color.updated {
+            background: #4caf50;
+            border-color: #4caf50;
+        }
+        .legend-color.needs-update {
+            background: #ff9800;
+            border-color: #ff9800;
+        }
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            z-index: 1000;
+            left: 0;
+            top: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0,0,0,0.95);
+            overflow: auto;
+            animation: fadeIn 0.3s;
+        }
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        .modal-content {
+            background: #2a2a2a;
+            margin: 2% auto;
+            padding: 30px;
+            border: 2px solid #58a6ff;
+            border-radius: 12px;
+            width: 90%;
+            max-width: 1200px;
+            max-height: 90vh;
+            overflow-y: auto;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.5);
+        }
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid #444;
+        }
+        .modal-header h2 {
+            color: #58a6ff;
+            margin: 0;
+            font-size: 2em;
+        }
+        .close {
+            color: #aaa;
+            font-size: 35px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: color 0.3s;
+            line-height: 1;
+        }
+        .close:hover {
+            color: #fff;
+        }
+        .modal-image-container {
+            text-align: center;
+            margin-bottom: 25px;
+            background: #1e1e1e;
+            padding: 20px;
+            border-radius: 8px;
+        }
+        .modal-image-container img {
+            max-width: 100%;
+            max-height: 600px;
+            border-radius: 8px;
+            box-shadow: 0 4px 16px rgba(0,0,0,0.5);
+        }
+        .modal-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+        .detail-section {
+            background: #333;
+            padding: 20px;
+            border-radius: 8px;
+            border-left: 4px solid #58a6ff;
+        }
+        .detail-section h3 {
+            color: #58a6ff;
+            margin-bottom: 15px;
+            font-size: 1.3em;
+        }
+        .detail-section code {
+            background: #1e1e1e;
+            padding: 8px 12px;
+            border-radius: 4px;
+            display: block;
+            margin-bottom: 10px;
+            word-break: break-all;
+            color: #58a6ff;
+            font-size: 0.9em;
+        }
+        .detail-section ul {
+            margin-left: 20px;
+            color: #ccc;
+            line-height: 1.8;
+        }
+        .detail-section li {
+            margin-bottom: 8px;
+        }
+        .prompt-preview {
+            background: #1e1e1e;
+            padding: 15px;
+            border-radius: 8px;
+            margin-top: 20px;
+            border: 1px solid #444;
+        }
+        .prompt-preview h4 {
+            color: #58a6ff;
+            margin-bottom: 10px;
+        }
+        .prompt-text {
+            color: #ccc;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            line-height: 1.6;
+            max-height: 400px;
+            overflow-y: auto;
+            padding: 15px;
+            background: #000;
+            border-radius: 4px;
+            white-space: pre-wrap;
+            word-wrap: break-word;
+        }
+        .click-hint {
+            color: #58a6ff;
+            font-size: 0.9em;
+            font-style: italic;
+            margin-top: 8px;
+        }
+        @media (max-width: 768px) {
+            .modal-details {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>The Rein Maker's Daughter</h1>
+        <p class="subtitle">Asset Status Viewer - Character Consistency System</p>
+
+        <div class="legend">
+            <h3>Status Legend</h3>
+            <div class="legend-item">
+                <div class="legend-color updated"></div>
+                <span><strong>Updated:</strong> Uses Build-KellyPrompt function with character consistency locked in</span>
+            </div>
+            <div class="legend-item">
+                <div class="legend-color needs-update"></div>
+                <span><strong>No Update Needed:</strong> Non-character assets (backgrounds, UI, collectibles)</span>
+            </div>
+        </div>
+
+        <div class="status-summary" id="statusSummary">
+            <!-- Will be populated by JavaScript -->
+        </div>
+
+        <!-- A. Core Gameplay Sprites -->
+        <div class="asset-section">
+            <div class="section-header">
+                <h2>A. Core Gameplay Sprites</h2>
+                <div class="description">Player character and obstacles</div>
+            </div>
+            <div class="asset-grid">
+                <div class="asset-card updated" data-category="sprites" onclick="showAssetDetails('A1', 'A1. Player: Kelly (Runner)', 'assets/player.png', 'updated', ['Uses Build-KellyPrompt with Reinmaker armor', 'Includes complete enhanced character description', 'Photorealistic style enforced', 'Negative prompts block cartoons/stylized'], 'Full-body photorealistic view of Kelly in neutral running pose, facing right, maintaining complete character consistency', '1024x1280', 'Reinmaker')">
+                    <div class="asset-header">
+                        <div class="asset-title">A1. Player: Kelly (Runner)</div>
+                        <span class="status-badge updated">Updated</span>
+                    </div>
+                    <div class="asset-preview">
+                        <img src="assets/player.png" alt="Player Sprite" onerror="this.parentElement.innerHTML='<div class=\'placeholder\'>Image not found or failed to load</div>'">
+                    </div>
+                    <div class="asset-info">
+                        <code>assets/player.png</code>
+                        <div class="asset-note">
+                            ✓ Uses Build-KellyPrompt with Reinmaker armor<br>
+                            ✓ Includes complete enhanced character description<br>
+                            ✓ Photorealistic style enforced<br>
+                            ✓ Negative prompts block cartoons/stylized<br>
+                            <span class="click-hint">Click to view full details</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="asset-card needs-update" data-category="sprites" onclick="showAssetDetails('A2', 'A2. Obstacle: Knowledge Shard', 'assets/obstacle.png', 'needs-update', ['Non-character asset', 'No Kelly appearance needed'], 'Stylized game obstacle: vertical circuit-rein shard totem', '512x512', 'N/A')">
+                    <div class="asset-header">
+                        <div class="asset-title">A2. Obstacle: Knowledge Shard</div>
+                        <span class="status-badge needs-update">No Update Needed</span>
+                    </div>
+                    <div class="asset-preview">
+                        <img src="assets/obstacle.png" alt="Obstacle Sprite" onerror="this.parentElement.innerHTML='<div class=\'placeholder\'>Image not found or failed to load</div>'">
+                    </div>
+                    <div class="asset-info">
+                        <code>assets/obstacle.png</code>
+                        <div class="asset-note">
+                            Non-character asset (no Kelly appearance needed)<br>
+                            <span class="click-hint">Click to view details</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- E. Narrative Inserts -->
+        <div class="asset-section">
+            <div class="section-header">
+                <h2>E. Narrative Inserts</h2>
+                <div class="description">Story and narrative assets</div>
+            </div>
+            <div class="asset-grid">
+                <div class="asset-card updated" data-category="narrative" onclick="showAssetDetails('E1', 'E1. Opening Splash', 'marketing/splash_intro.png', 'updated', ['Uses Build-KellyPrompt with Reinmaker armor', 'Includes complete enhanced character description', 'Photorealistic style enforced', 'Negative prompts block painterly/vector styles'], 'Cinematic splash art: Kelly stepping out from a grand dark forge into the light', '1280x720', 'Reinmaker')">
+                    <div class="asset-header">
+                        <div class="asset-title">E1. Opening Splash</div>
+                        <span class="status-badge updated">Updated</span>
+                    </div>
+                    <div class="asset-preview">
+                        <img src="marketing/splash_intro.png" alt="Opening Splash" onerror="this.parentElement.innerHTML='<div class=\'placeholder\'>Image not found or failed to load</div>'">
+                    </div>
+                    <div class="asset-info">
+                        <code>marketing/splash_intro.png</code>
+                        <div class="asset-note">
+                            ✓ Uses Build-KellyPrompt with Reinmaker armor<br>
+                            ✓ Includes complete enhanced character description<br>
+                            ✓ Photorealistic style enforced<br>
+                            ✓ Negative prompts block painterly/vector styles<br>
+                            <span class="click-hint">Click to view full details</span>
+                        </div>
+                    </div>
+                </div>
+                <div class="asset-card needs-update" data-category="narrative" onclick="showAssetDetails('E2', 'E2. Game Over Panel', 'assets/gameover_bg.png', 'needs-update', ['Background panel', 'No character appearance'], 'Soft, dark, low-contrast vignette background panel', '960x540', 'N/A')">
+                    <div class="asset-header">
+                        <div class="asset-title">E2. Game Over Panel</div>
+                        <span class="status-badge needs-update">No Update Needed</span>
+                    </div>
+                    <div class="asset-preview">
+                        <img src="assets/gameover_bg.png" alt="Game Over Background" onerror="this.parentElement.innerHTML='<div class=\'placeholder\'>Image not found or failed to load</div>'">
+                    </div>
+                    <div class="asset-info">
+                        <code>assets/gameover_bg.png</code>
+                        <div class="asset-note">
+                            Background panel (no character appearance)<br>
+                            <span class="click-hint">Click to view details</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- F. Marketing -->
+        <div class="asset-section">
+            <div class="section-header">
+                <h2>F. Marketing</h2>
+                <div class="description">Marketing and promotional assets</div>
+            </div>
+            <div class="asset-grid">
+                <div class="asset-card updated" data-category="marketing" onclick="showAssetDetails('F1', 'F1. Itch.io Banner', 'marketing/itch-banner-1920x480.png', 'updated', ['Uses Build-KellyPrompt with Reinmaker armor', 'Includes complete enhanced character description', 'Photorealistic style enforced', 'Negative prompts block stylized sprite/cartoon styles'], 'Wide marketing banner montage: on the right, photorealistic Kelly in full running pose', '1920x480', 'Reinmaker')">
+                    <div class="asset-header">
+                        <div class="asset-title">F1. Itch.io Banner</div>
+                        <span class="status-badge updated">Updated</span>
+                    </div>
+                    <div class="asset-preview">
+                        <img src="marketing/itch-banner-1920x480.png" alt="Itch.io Banner" onerror="this.parentElement.innerHTML='<div class=\'placeholder\'>Image not found or failed to load</div>'">
+                    </div>
+                    <div class="asset-info">
+                        <code>marketing/itch-banner-1920x480.png</code>
+                        <div class="asset-note">
+                            ✓ Uses Build-KellyPrompt with Reinmaker armor<br>
+                            ✓ Includes complete enhanced character description<br>
+                            ✓ Photorealistic style enforced<br>
+                            ✓ Negative prompts block stylized sprite/cartoon styles<br>
+                            <span class="click-hint">Click to view full details</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- Character Consistency Info -->
+        <div class="asset-section">
+            <div class="section-header">
+                <h2>Character Consistency System</h2>
+                <div class="description">Enhanced character description based on reference images</div>
+            </div>
+            <div style="background: #333; padding: 20px; border-radius: 8px; margin-top: 20px;">
+                <h3 style="color: #58a6ff; margin-bottom: 15px;">✅ Regeneration Complete!</h3>
+                <div style="background: #1e1e1e; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #4caf50;">
+                    <p style="color: #ccc; line-height: 1.8;">
+                        <strong style="color: #4caf50;">All Kelly assets regenerated on November 1, 2025</strong><br>
+                        <strong>API:</strong> Vertex AI with OAuth2 authentication<br>
+                        <strong>Reference Images:</strong> 0 (enhanced prompts only - add reference images for better consistency)<br>
+                        <strong>Backup Location:</strong> assets/backup_20251101_123758<br>
+                        <strong>Status:</strong> ✅ All assets successfully regenerated with enhanced character consistency
+                    </p>
+                </div>
+                <h3 style="color: #58a6ff; margin-top: 25px; margin-bottom: 15px;">Enhanced Character Description:</h3>
+                <div style="background: #1e1e1e; padding: 15px; border-radius: 8px; margin-bottom: 15px; border-left: 4px solid #58a6ff;">
+                    <p style="color: #ccc; line-height: 1.8;">
+                        <strong style="color: #58a6ff;">Kelly Rein</strong> - Photorealistic digital human, modern timeless "Apple Genius" aesthetic.<br>
+                        <strong>Face:</strong> Oval face, clear smooth complexion with natural glow, warm light-medium skin tone, healthy radiant skin.<br>
+                        <strong>Eyes:</strong> Warm brown almond-shaped eyes, bright and engaging, well-defined dark brown eyebrows with natural arch, long dark eyelashes.<br>
+                        <strong>Hair:</strong> Medium brown hair with subtle caramel/honey-blonde highlights, soft wavy to slightly curly texture, parted slightly off-center or down the middle, cascades over shoulders, rich and voluminous.<br>
+                        <strong>Expression:</strong> Full lips with natural rosy-pink color, genuine warm smile showing straight white teeth, natural smile lines (nasolabial folds), slight crinkles at outer corners of eyes when smiling.<br>
+                        <strong>Build:</strong> Late 20s to early 30s, athletic build, strong capable presence, approachable and professional demeanor.
+                    </p>
+                </div>
+                <h3 style="color: #58a6ff; margin-top: 25px; margin-bottom: 15px;">Wardrobe Variants:</h3>
+                <ul style="color: #ccc; margin-left: 20px; line-height: 2;">
+                    <li><strong>Reinmaker:</strong> Dark gray ribbed turtleneck base layer, form-fitting dark charcoal-gray tactical garment with structured seams and panels, metallic dark steel-colored shoulder pauldrons, wide dark gray fabric sash, multiple dark utilitarian belts, dark gray tactical pants.</li>
+                    <li><strong>Daily Lesson:</strong> Light blue ribbed knit sweater with crew neck, soft muted blue color, seated in classic director's chair with dark brown wooden frame and black canvas seat/backrest, clean bright white studio background.</li>
+                </ul>
+                <h3 style="color: #58a6ff; margin-top: 25px; margin-bottom: 15px;">To Improve Consistency:</h3>
+                <p style="color: #ccc; margin-bottom: 10px;">
+                    Add reference images to <code style="background: #1e1e1e; padding: 2px 6px; border-radius: 3px;">iLearnStudio/projects/Kelly/Ref/</code>:
+                </p>
+                <ul style="color: #ccc; margin-left: 20px; line-height: 2;">
+                    <li><code>kelly_front.png</code> - Front view (Daily Lesson variant preferred)</li>
+                    <li><code>kelly_profile.png</code> - Profile view</li>
+                    <li><code>kelly_three_quarter.png</code> - Three-quarter view</li>
+                </ul>
+                <p style="color: #ccc; margin-top: 15px;">
+                    Then re-run <code style="background: #1e1e1e; padding: 2px 6px; border-radius: 3px;">.\regenerate_kelly_assets.ps1</code> to regenerate with reference images.
+                </p>
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal -->
+    <div id="assetModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modalTitle"></h2>
+                <span class="close" onclick="closeModal()">&times;</span>
+            </div>
+            <div class="modal-image-container">
+                <img id="modalImage" src="" alt="Asset preview">
+            </div>
+            <div class="modal-details">
+                <div class="detail-section">
+                    <h3>File Information</h3>
+                    <code id="modalFilePath"></code>
+                    <ul>
+                        <li><strong>Dimensions:</strong> <span id="modalDimensions"></span></li>
+                        <li><strong>Status:</strong> <span id="modalStatus"></span></li>
+                        <li><strong>Wardrobe:</strong> <span id="modalWardrobe"></span></li>
+                    </ul>
+                </div>
+                <div class="detail-section">
+                    <h3>Character Consistency</h3>
+                    <ul id="modalConsistency"></ul>
+                </div>
+            </div>
+            <div class="prompt-preview">
+                <h4>Scene Description</h4>
+                <div class="prompt-text" id="modalPrompt"></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Asset data with full prompts
+        const assetData = {
+            'A1': {
+                title: 'A1. Player: Kelly (Runner)',
+                file: 'assets/player.png',
+                status: 'updated',
+                dimensions: '1024x1280',
+                wardrobe: 'Reinmaker',
+                consistency: [
+                    'Uses Build-KellyPrompt with Reinmaker armor',
+                    'Includes complete enhanced character description',
+                    'Photorealistic style enforced',
+                    'Negative prompts block cartoons/stylized'
+                ],
+                prompt: `Full-body photorealistic view of Kelly in neutral running pose, facing right, maintaining complete character consistency, featuring Kelly Rein, photorealistic digital human, modern timeless "Apple Genius" aesthetic. Oval face, clear smooth complexion with natural glow, warm light-medium skin tone, healthy radiant skin. Warm brown almond-shaped eyes, bright and engaging, well-defined dark brown eyebrows with natural arch, long dark eyelashes. Medium brown hair with subtle caramel/honey-blonde highlights, soft wavy to slightly curly texture, parted slightly off-center or down the middle, cascades over shoulders, rich and voluminous. Full lips with natural rosy-pink color, genuine warm smile showing straight white teeth, natural smile lines (nasolabial folds), slight crinkles at outer corners of eyes when smiling. Late 20s to early 30s, athletic build, strong capable presence, approachable and professional demeanor. Wearing Reinmaker armor: dark gray ribbed turtleneck base layer, form-fitting dark charcoal-gray tactical garment with structured seams and panels, metallic dark steel-colored shoulder pauldrons (multi-layered, riveted, curved protective design), wide dark gray fabric sash draped diagonally from left shoulder to right hip secured by dark metallic straps, wide dark metallic horizontal strap across chest, multiple dark utilitarian belts around waist with rectangular metallic buckle, long form-fitting sleeves with fingerless glove-like covering on left hand, textured wrapped detailing on right forearm, dark gray tactical pants matching upper garment. Color palette: dark grays, charcoal, metallic steel, dark browns. NO bright colors, NO reds, NO yellows, NO light browns, NO Roman/ancient elements. Running pose, dynamic movement, readable silhouette, action-ready stance, orthographic camera view, soft forge key light from lower-left, cool rim light upper-right, transparent background, game-ready asset format, photorealistic digital human, modern timeless aesthetic, professional photography quality, high detail, realistic skin textures, realistic fabric textures, realistic metallic surfaces. Avoid: cartoon, stylized, anime, illustration, drawing, sketch, fantasy, medieval, Roman, ancient, historical, exaggerated features, unrealistic proportions, memes, internet humor, casual style, second person, extra people, multiple faces, bright colors, red, yellow, orange, light browns, tan, beige, leather straps, Roman armor, ornate decorations, jewelry, low quality, blurry, pixelated, compression artifacts, oversaturated colors, unrealistic lighting, watermark, text overlay, logo, CGI, 3D render, game asset, sprite, stylized, cel-shaded, painterly texture, pixel art, low resolution, game sprite aesthetic, non-photorealistic, cartoon rendering`
+            },
+            'E1': {
+                title: 'E1. Opening Splash',
+                file: 'marketing/splash_intro.png',
+                status: 'updated',
+                dimensions: '1280x720',
+                wardrobe: 'Reinmaker',
+                consistency: [
+                    'Uses Build-KellyPrompt with Reinmaker armor',
+                    'Includes complete enhanced character description',
+                    'Photorealistic style enforced',
+                    'Negative prompts block painterly/vector styles'
+                ],
+                prompt: `Cinematic splash art: Kelly stepping out from a grand dark forge into the light, on the dark side old leather reins hang like chains, on the light side the air is clean, she carries a small glowing circuit-rein token that illuminates her determined face, high contrast between shadow and light, dusk palette, the glowing token is the focal point, featuring Kelly Rein, photorealistic digital human, modern timeless "Apple Genius" aesthetic. Oval face, clear smooth complexion with natural glow, warm light-medium skin tone, healthy radiant skin. Warm brown almond-shaped eyes, bright and engaging, well-defined dark brown eyebrows with natural arch, long dark eyelashes. Medium brown hair with subtle caramel/honey-blonde highlights, soft wavy to slightly curly texture, parted slightly off-center or down the middle, cascades over shoulders, rich and voluminous. Full lips with natural rosy-pink color, determined expression, slight crinkles at outer corners of eyes. Late 20s to early 30s, athletic build, strong capable presence. Wearing Reinmaker armor: dark gray ribbed turtleneck base layer, form-fitting dark charcoal-gray tactical garment with structured seams and panels, metallic dark steel-colored shoulder pauldrons (multi-layered, riveted, curved protective design), wide dark gray fabric sash draped diagonally from left shoulder to right hip secured by dark metallic straps, wide dark metallic horizontal strap across chest, multiple dark utilitarian belts around waist with rectangular metallic buckle, long form-fitting sleeves with fingerless glove-like covering on left hand, textured wrapped detailing on right forearm, dark gray tactical pants matching upper garment. Color palette: dark grays, charcoal, metallic steel, dark browns. NO bright colors, NO reds, NO yellows, NO light browns, NO Roman/ancient elements. Stepping forward, determined expression, holding glowing circuit-rein token, cinematic lighting, high contrast between dark forge interior and bright exterior, token provides warm key light on face, photorealistic digital human, modern timeless aesthetic, professional photography quality, high detail, realistic skin textures, realistic fabric textures, realistic metallic surfaces. Avoid: cartoon, stylized, anime, illustration, drawing, sketch, fantasy, medieval, Roman, ancient, historical, exaggerated features, unrealistic proportions, memes, internet humor, casual style, second person, extra people, multiple faces, bright colors, red, yellow, orange, light browns, tan, beige, leather straps, Roman armor, ornate decorations, jewelry, low quality, blurry, pixelated, compression artifacts, oversaturated colors, unrealistic lighting, watermark, text overlay, logo, CGI, 3D render, game asset, sprite, painterly, vector style, illustration, non-photorealistic`
+            },
+            'F1': {
+                title: 'F1. Itch.io Banner',
+                file: 'marketing/itch-banner-1920x480.png',
+                status: 'updated',
+                dimensions: '1920x480',
+                wardrobe: 'Reinmaker',
+                consistency: [
+                    'Uses Build-KellyPrompt with Reinmaker armor',
+                    'Includes complete enhanced character description',
+                    'Photorealistic style enforced',
+                    'Negative prompts block stylized sprite/cartoon styles'
+                ],
+                prompt: `Wide marketing banner montage: on the right, photorealistic Kelly in full running pose; on the left, the game's bold logo ('The Rein Maker's Daughter'); in the background is the parallax skyline of the Hall of the Seven Tribes at dusk, featuring Kelly Rein, photorealistic digital human, modern timeless "Apple Genius" aesthetic. Oval face, clear smooth complexion with natural glow, warm light-medium skin tone, healthy radiant skin. Warm brown almond-shaped eyes, bright and engaging, well-defined dark brown eyebrows with natural arch, long dark eyelashes. Medium brown hair with subtle caramel/honey-blonde highlights, soft wavy to slightly curly texture, parted slightly off-center or down the middle, cascades over shoulders, rich and voluminous. Full lips with natural rosy-pink color, genuine warm smile showing straight white teeth, natural smile lines (nasolabial folds), slight crinkles at outer corners of eyes when smiling. Late 20s to early 30s, athletic build, strong capable presence, approachable and professional demeanor. Wearing Reinmaker armor: dark gray ribbed turtleneck base layer, form-fitting dark charcoal-gray tactical garment with structured seams and panels, metallic dark steel-colored shoulder pauldrons (multi-layered, riveted, curved protective design), wide dark gray fabric sash draped diagonally from left shoulder to right hip secured by dark metallic straps, wide dark metallic horizontal strap across chest, multiple dark utilitarian belts around waist with rectangular metallic buckle, long form-fitting sleeves with fingerless glove-like covering on left hand, textured wrapped detailing on right forearm, dark gray tactical pants matching upper garment. Color palette: dark grays, charcoal, metallic steel, dark browns. NO bright colors, NO reds, NO yellows, NO light browns, NO Roman/ancient elements. Full running pose, dynamic action, facing right, dynamic composition lighting, dusk palette, cinematic banner aesthetic, photorealistic digital human, modern timeless aesthetic, professional photography quality, high detail, realistic skin textures, realistic fabric textures, realistic metallic surfaces. Avoid: cartoon, stylized, anime, illustration, drawing, sketch, fantasy, medieval, Roman, ancient, historical, exaggerated features, unrealistic proportions, memes, internet humor, casual style, second person, extra people, multiple faces, bright colors, red, yellow, orange, light browns, tan, beige, leather straps, Roman armor, ornate decorations, jewelry, low quality, blurry, pixelated, compression artifacts, oversaturated colors, unrealistic lighting, watermark, text overlay, logo, CGI, 3D render, game asset, sprite, stylized sprite, illustration, non-photorealistic character, cartoon, game asset style`
+            }
+        };
+
+        function showAssetDetails(id, title, file, status, consistency, prompt, dimensions, wardrobe) {
+            const modal = document.getElementById('assetModal');
+            const data = assetData[id] || {
+                title: title,
+                file: file,
+                status: status,
+                dimensions: dimensions || 'N/A',
+                wardrobe: wardrobe || 'N/A',
+                consistency: consistency || [],
+                prompt: prompt || 'No prompt available'
+            };
+
+            document.getElementById('modalTitle').textContent = data.title;
+            document.getElementById('modalImage').src = data.file;
+            document.getElementById('modalImage').alt = data.title;
+            document.getElementById('modalFilePath').textContent = data.file;
+            document.getElementById('modalDimensions').textContent = data.dimensions;
+            document.getElementById('modalStatus').textContent = status === 'updated' ? 'Updated with Character Consistency' : 'No Update Needed';
+            document.getElementById('modalWardrobe').textContent = data.wardrobe;
+            
+            const consistencyList = document.getElementById('modalConsistency');
+            consistencyList.innerHTML = '';
+            data.consistency.forEach(item => {
+                const li = document.createElement('li');
+                li.textContent = item;
+                li.style.color = '#ccc';
+                consistencyList.appendChild(li);
+            });
+
+            document.getElementById('modalPrompt').textContent = data.prompt;
+            modal.style.display = 'block';
+        }
+
+        function closeModal() {
+            document.getElementById('assetModal').style.display = 'none';
+        }
+
+        // Close modal when clicking outside
+        window.onclick = function(event) {
+            const modal = document.getElementById('assetModal');
+            if (event.target === modal) {
+                closeModal();
+            }
+        }
+
+        // Calculate summary statistics
+        const updatedCards = document.querySelectorAll('.asset-card.updated');
+        const needsUpdateCards = document.querySelectorAll('.asset-card.needs-update');
+        
+        const summaryHTML = `
+            <div class="stat-card updated">
+                <div class="stat-number">${updatedCards.length}</div>
+                <div class="stat-label">Assets Updated<br>with Character Consistency</div>
+            </div>
+            <div class="stat-card needs-update">
+                <div class="stat-number">${needsUpdateCards.length}</div>
+                <div class="stat-label">Assets (No Update Needed)<br>Non-character assets</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-number">${updatedCards.length + needsUpdateCards.length}</div>
+                <div class="stat-label">Total Assets</div>
+            </div>
+        `;
+        
+        document.getElementById('statusSummary').innerHTML = summaryHTML;
+    </script>
+</body>
+</html>

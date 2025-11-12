@@ -1,0 +1,172 @@
+---
+import type { LocaleDictionary } from '@lib/i18n/types';
+
+interface Props {
+  dictionary: LocaleDictionary;
+  nonce: string;
+  enabled: boolean;
+}
+
+const { dictionary, nonce, enabled } = Astro.props as Props;
+---
+
+{enabled ? (
+  <>
+    <section class="cookie-banner" data-consent-banner hidden>
+      <div class="container">
+        <div class="row align-items-center g-3">
+          <div class="col-lg-7">
+            <h2 class="h6 mb-2">{dictionary.consent.title}</h2>
+            <p class="mb-0 text-white-50">{dictionary.consent.description}</p>
+          </div>
+          <div class="col-lg-5 text-lg-end">
+            <div class="d-flex flex-column flex-lg-row gap-2 justify-content-lg-end">
+              <button type="button" class="btn btn-outline-light" data-consent-reject>
+                {dictionary.consent.rejectAll}
+              </button>
+              <button type="button" class="btn btn-light text-primary fw-semibold" data-consent-accept>
+                {dictionary.consent.acceptAll}
+              </button>
+              <button type="button" class="btn btn-link text-white" data-consent-manage>
+                {dictionary.consent.manageLabel}
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+    <div class="modal fade" id="consent-modal" tabindex="-1" role="dialog" aria-labelledby="consent-modal-title">
+      <div class="modal-dialog modal-dialog-centered" role="document">
+        <div class="modal-content rounded-4">
+          <div class="modal-header">
+            <h2 class="modal-title h5" id="consent-modal-title">{dictionary.consent.modalTitle}</h2>
+            <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+          </div>
+          <div class="modal-body">
+            <div class="mb-3">
+              <div class="d-flex justify-content-between align-items-center">
+                <div>
+                  <p class="mb-1 fw-semibold">{dictionary.consent.categories.strictlyNecessary.label}</p>
+                  <p class="mb-0 text-muted small">{dictionary.consent.categories.strictlyNecessary.description}</p>
+                </div>
+                <span class="badge bg-success">On</span>
+              </div>
+            </div>
+            <hr />
+            <div class="form-check form-switch mb-3">
+              <input class="form-check-input" type="checkbox" role="switch" id="analytics-toggle" data-consent-toggle="analytics" />
+              <label class="form-check-label" for="analytics-toggle">
+                <span class="fw-semibold d-block">{dictionary.consent.categories.analytics.label}</span>
+                <span class="small text-muted">{dictionary.consent.categories.analytics.description}</span>
+              </label>
+            </div>
+            <div class="form-check form-switch">
+              <input class="form-check-input" type="checkbox" role="switch" id="marketing-toggle" data-consent-toggle="marketing" />
+              <label class="form-check-label" for="marketing-toggle">
+                <span class="fw-semibold d-block">{dictionary.consent.categories.marketing.label}</span>
+                <span class="small text-muted">{dictionary.consent.categories.marketing.description}</span>
+              </label>
+            </div>
+          </div>
+          <div class="modal-footer">
+            <button type="button" class="btn btn-primary w-100" data-consent-save>
+              {dictionary.consent.save}
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    <script type="module" nonce={nonce} is:inline>
+      import {
+        exposeConsentApi,
+        loadConsent,
+        updateConsent,
+        onConsentChange
+      } from '@lib/consent';
+      import { trackConsentChange } from '@lib/analytics';
+
+      const banner = document.querySelector('[data-consent-banner]');
+      const acceptButton = document.querySelector('[data-consent-accept]');
+      const rejectButton = document.querySelector('[data-consent-reject]');
+      const manageButton = document.querySelector('[data-consent-manage]');
+      const analyticsToggle = document.querySelector('[data-consent-toggle="analytics"]');
+      const marketingToggle = document.querySelector('[data-consent-toggle="marketing"]');
+      const saveButton = document.querySelector('[data-consent-save]');
+      const modalElement = document.getElementById('consent-modal');
+
+      const bootstrapReady = () => window.bootstrap ?? null;
+
+      const consentKey = 'curious_kelly_consent';
+      const existing = window.localStorage.getItem(consentKey);
+
+      const consentApi = exposeConsentApi();
+      const modalInstance = () => {
+        const bootstrap = bootstrapReady();
+        if (!bootstrap) {
+          return null;
+        }
+        return bootstrap.Modal.getOrCreateInstance(modalElement);
+      };
+
+      const syncToggles = (state) => {
+        if (analyticsToggle instanceof HTMLInputElement) {
+          analyticsToggle.checked = Boolean(state.analytics);
+        }
+        if (marketingToggle instanceof HTMLInputElement) {
+          marketingToggle.checked = Boolean(state.marketing);
+        }
+      };
+
+      const showBanner = () => {
+        if (banner instanceof HTMLElement) {
+          banner.hidden = false;
+        }
+      };
+
+      if (!existing) {
+        showBanner();
+      } else {
+        syncToggles(loadConsent());
+      }
+
+      acceptButton?.addEventListener('click', () => {
+        const state = updateConsent({ analytics: true, marketing: true });
+        banner?.setAttribute('hidden', 'true');
+        modalInstance()?.hide();
+        trackConsentChange(state);
+      });
+
+      rejectButton?.addEventListener('click', () => {
+        const state = updateConsent({ analytics: false, marketing: false });
+        banner?.setAttribute('hidden', 'true');
+        modalInstance()?.hide();
+        trackConsentChange(state);
+      });
+
+      manageButton?.addEventListener('click', () => {
+        syncToggles(loadConsent());
+        modalInstance()?.show();
+      });
+
+      saveButton?.addEventListener('click', () => {
+        const analyticsAllowed = analyticsToggle instanceof HTMLInputElement ? analyticsToggle.checked : false;
+        const marketingAllowed = marketingToggle instanceof HTMLInputElement ? marketingToggle.checked : false;
+        const state = updateConsent({ analytics: analyticsAllowed, marketing: marketingAllowed });
+        banner?.setAttribute('hidden', 'true');
+        modalInstance()?.hide();
+        trackConsentChange(state);
+      });
+
+      onConsentChange((state) => {
+        syncToggles(state);
+      });
+
+      // expose for debugging
+      window.__consent__ = consentApi;
+    </script>
+  </>
+) : null}
+
+
+
+

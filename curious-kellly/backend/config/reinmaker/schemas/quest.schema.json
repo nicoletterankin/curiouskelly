@@ -1,0 +1,253 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Reinmaker Quest",
+  "description": "Quest configuration describing steps, rewards, and accessibility metadata.",
+  "type": "object",
+  "required": [
+    "id",
+    "tribe",
+    "tier",
+    "ageBuckets",
+    "kind",
+    "steps",
+    "successCriteria",
+    "rewards"
+  ],
+  "additionalProperties": false,
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^q\\.(light|stone|metal|code|air|water|fire)\\.[0-9]{3}$"
+    },
+    "tribe": {
+      "type": "string",
+      "enum": ["Light", "Stone", "Metal", "Code", "Air", "Water", "Fire"]
+    },
+    "tier": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 3
+    },
+    "kind": {
+      "type": "string",
+      "enum": ["dialogue", "puzzle", "builder", "empathy"]
+    },
+    "ageBuckets": {
+      "type": "array",
+      "items": {
+        "type": "string",
+        "enum": ["2-5", "6-12", "13-17", "18-35", "36-60", "61-102"]
+      },
+      "uniqueItems": true,
+      "minItems": 1
+    },
+    "lessonRef": {
+      "type": "string",
+      "description": "Optional lesson DNA id aligned with this quest.",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "localizationKey": {
+      "type": "string",
+      "description": "Key prefix in locales files for quest strings.",
+      "pattern": "^reinmaker\\.quests\\.[a-z0-9_]+$"
+    },
+    "estimatedDurationMin": {
+      "type": "integer",
+      "minimum": 3,
+      "maximum": 12
+    },
+    "steps": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "required": ["type"],
+        "oneOf": [
+          { "$ref": "#/definitions/dialogueStep" },
+          { "$ref": "#/definitions/puzzleStep" },
+          { "$ref": "#/definitions/builderStep" },
+          { "$ref": "#/definitions/empathyStep" }
+        ]
+      }
+    },
+    "successCriteria": {
+      "type": "object",
+      "required": ["scoreMin", "timeMaxSec"],
+      "additionalProperties": false,
+      "properties": {
+        "scoreMin": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1
+        },
+        "timeMaxSec": {
+          "type": "integer",
+          "minimum": 120,
+          "maximum": 900
+        }
+      }
+    },
+    "rewards": {
+      "type": "object",
+      "required": ["xp"],
+      "additionalProperties": false,
+      "properties": {
+        "xp": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 500
+        },
+        "cosmetics": {
+          "type": "array",
+          "items": {
+            "type": "string",
+            "pattern": "^(badge|frame)\\.[a-z_]+\\.[a-z_]+$"
+          },
+          "uniqueItems": true
+        },
+        "stoneId": {
+          "type": "string",
+          "pattern": "^(light|stone|metal|code|air|water|fire)\\.(spark|craft|mastery)$"
+        }
+      }
+    },
+    "captions": {
+      "type": "object",
+      "description": "Caption cue files per locale.",
+      "properties": {
+        "en": { "$ref": "#/definitions/captionFile" },
+        "es": { "$ref": "#/definitions/captionFile" },
+        "fr": { "$ref": "#/definitions/captionFile" }
+      },
+      "additionalProperties": false
+    },
+    "audio": {
+      "type": "object",
+      "description": "Optional precomputed audio cue mapping.",
+      "patternProperties": {
+        "^[a-z0-9_]+$": {
+          "type": "object",
+          "properties": {
+            "2-5": { "$ref": "#/definitions/audioFile" },
+            "6-12": { "$ref": "#/definitions/audioFile" },
+            "13-17": { "$ref": "#/definitions/audioFile" },
+            "18-35": { "$ref": "#/definitions/audioFile" },
+            "36-60": { "$ref": "#/definitions/audioFile" },
+            "61-102": { "$ref": "#/definitions/audioFile" }
+          },
+          "additionalProperties": false
+        }
+      }
+    }
+  },
+  "definitions": {
+    "captionFile": {
+      "type": "string",
+      "pattern": "^captions/[a-z0-9_.-]+\\.(vtt|json)$"
+    },
+    "audioFile": {
+      "type": "string",
+      "pattern": "^audio/[a-z0-9_.-]+\\.(mp3|wav)$"
+    },
+    "dialogueStep": {
+      "type": "object",
+      "required": ["type", "npc", "cue"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "dialogue" },
+        "npc": { "type": "string", "minLength": 1 },
+        "cue": { "type": "string", "pattern": "^[a-z0-9_.-]+$" },
+        "text": { "type": "string" },
+        "emotion": {
+          "type": "string",
+          "enum": ["calm", "curious", "excited", "focused", "encouraging"]
+        },
+        "choices": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["text", "outcome"],
+            "additionalProperties": false,
+            "properties": {
+              "text": { "type": "string" },
+              "outcome": { "type": "string", "pattern": "^[a-z0-9_.-]+$" },
+              "score": { "type": "number", "minimum": 0, "maximum": 1 }
+            }
+          }
+        }
+      }
+    },
+    "puzzleStep": {
+      "type": "object",
+      "required": ["type", "spec"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "puzzle" },
+        "spec": {
+          "type": "string",
+          "enum": [
+            "grid_select",
+            "sequence",
+            "match_pairs",
+            "pattern_composer",
+            "signal_trace"
+          ]
+        },
+        "goal": { "type": "string" },
+        "data": { "type": "object" }
+      }
+    },
+    "builderStep": {
+      "type": "object",
+      "required": ["type", "template", "goal"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "builder" },
+        "template": { "type": "string", "pattern": "^[a-z0-9_.-]+$" },
+        "goal": { "type": "string" },
+        "palette": {
+          "type": "array",
+          "items": { "type": "string", "minLength": 1 },
+          "minItems": 1
+        }
+      }
+    },
+    "empathyStep": {
+      "type": "object",
+      "required": ["type", "npc", "branches"],
+      "additionalProperties": false,
+      "properties": {
+        "type": { "const": "empathy" },
+        "npc": { "type": "string", "minLength": 1 },
+        "branches": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "object",
+            "required": ["prompt", "responses"],
+            "additionalProperties": false,
+            "properties": {
+              "prompt": { "type": "string" },
+              "responses": {
+                "type": "array",
+                "minItems": 2,
+                "items": {
+                  "type": "object",
+                  "required": ["text", "impact"],
+                  "additionalProperties": false,
+                  "properties": {
+                    "text": { "type": "string" },
+                    "impact": { "type": "string", "enum": ["positive", "neutral", "growth"] },
+                    "next": { "type": "integer", "minimum": 0 }
+                  }
+                }
+              }
+            }
+          }
+        }
+      }
+    }
+  }
+}
+
+

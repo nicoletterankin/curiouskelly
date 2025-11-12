@@ -1,0 +1,377 @@
+---
+import { countries } from '@lib/countries';
+import { buildLocalizedPath, normaliseLocale } from '@lib/i18n';
+import type { LocaleDictionary, RouteKey } from '@lib/i18n/types';
+
+interface Props {
+  dictionary: LocaleDictionary;
+  locale: string;
+  routeKey: RouteKey;
+  nonce: string;
+}
+
+const { dictionary, locale, routeKey, nonce } = Astro.props as Props;
+const localeCode = normaliseLocale(locale);
+const journey = routeKey;
+const turnstileSiteKey = import.meta.env.TURNSTILE_SITE_KEY ?? '';
+const recaptchaSiteKey = import.meta.env.PUBLIC_RECAPTCHA_SITE_KEY ?? '';
+const antiBotPreference = turnstileSiteKey ? 'turnstile' : recaptchaSiteKey ? 'recaptcha' : 'none';
+---
+
+<div class="lead-form-card" data-lead-card>
+  <h2 class="h4 mb-3">{dictionary.leadForm.title}</h2>
+  <p class="text-muted mb-4">{dictionary.leadForm.subtitle}</p>
+  <form class="row g-3" data-lead-form novalidate>
+    <div class="col-md-6">
+      <label class="form-label" for="first_name">{dictionary.leadForm.fields.firstName.label}</label>
+      <input
+        class="form-control"
+        id="first_name"
+        name="first_name"
+        type="text"
+        placeholder={dictionary.leadForm.fields.firstName.placeholder}
+        autocomplete="given-name"
+        required
+      />
+      <div class="invalid-feedback" data-error-for="first_name"></div>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label" for="last_name">{dictionary.leadForm.fields.lastName.label}</label>
+      <input
+        class="form-control"
+        id="last_name"
+        name="last_name"
+        type="text"
+        placeholder={dictionary.leadForm.fields.lastName.placeholder}
+        autocomplete="family-name"
+        required
+      />
+      <div class="invalid-feedback" data-error-for="last_name"></div>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label" for="email">{dictionary.leadForm.fields.email.label}</label>
+      <input
+        class="form-control"
+        id="email"
+        name="email"
+        type="email"
+        placeholder={dictionary.leadForm.fields.email.placeholder}
+        autocomplete="email"
+        required
+      />
+      <div class="invalid-feedback" data-error-for="email"></div>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label" for="phone">{dictionary.leadForm.fields.phone.label}</label>
+      <input
+        class="form-control"
+        id="phone"
+        name="phone"
+        type="tel"
+        placeholder={dictionary.leadForm.fields.phone.placeholder}
+        autocomplete="tel"
+        required
+      />
+      {dictionary.leadForm.fields.phone.helpText ? (
+        <small class="form-text text-muted">{dictionary.leadForm.fields.phone.helpText}</small>
+      ) : null}
+      <div class="invalid-feedback" data-error-for="phone"></div>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label" for="country">{dictionary.leadForm.fields.country.label}</label>
+      <select class="form-select" id="country" name="country" required>
+        <option value="">{dictionary.leadForm.fields.country.placeholder}</option>
+        {countries.map((country) => (
+          <option value={country.code}>{country.name}</option>
+        ))}
+      </select>
+      <div class="invalid-feedback" data-error-for="country"></div>
+    </div>
+    <div class="col-md-6">
+      <label class="form-label" for="region">{dictionary.leadForm.fields.region.label}</label>
+      <select class="form-select" id="region" name="region" required disabled>
+        <option value="">{dictionary.leadForm.fields.region.placeholder}</option>
+      </select>
+      <div class="invalid-feedback" data-error-for="region"></div>
+    </div>
+    <div class="col-12">
+      <div class="form-check">
+        <input
+          class="form-check-input"
+          id="marketing_opt_in"
+          type="checkbox"
+          name="marketing_opt_in"
+          value="true"
+        />
+        <label class="form-check-label" for="marketing_opt_in">
+          <span class="fw-semibold d-block">{dictionary.leadForm.fields.marketingOptIn.label}</span>
+          <span class="text-muted small">{dictionary.leadForm.fields.marketingOptIn.description}</span>
+        </label>
+      </div>
+    </div>
+    {antiBotPreference === 'turnstile' ? (
+      <div class="col-12">
+        <div class="cf-turnstile" data-sitekey={turnstileSiteKey}></div>
+      </div>
+    ) : null}
+    {antiBotPreference === 'recaptcha' ? (
+      <div class="col-12">
+        <div class="g-recaptcha" data-sitekey={recaptchaSiteKey} data-size="invisible"></div>
+      </div>
+    ) : null}
+    <input type="hidden" name="locale" value={localeCode} />
+    <input type="hidden" name="journey" value={journey} />
+    <div class="col-12">
+      <div class="alert alert-danger d-none" role="alert" data-error-summary></div>
+      <div class="alert alert-success d-none" role="status" data-success-message>
+        <h3 class="h6">{dictionary.leadForm.successHeading}</h3>
+        <p class="mb-0">{dictionary.leadForm.successBody}</p>
+      </div>
+    </div>
+    <div class="col-12 d-grid">
+      <button type="submit" class="btn btn-gradient" data-submit>
+        {dictionary.leadForm.submitLabel}
+      </button>
+    </div>
+  </form>
+  <noscript>
+    <p class="mt-3 text-muted">
+      JavaScript is required to submit the form. Email
+      <a href="mailto:concierge@curiouskelly.com">concierge@curiouskelly.com</a> to reserve your spot.
+    </p>
+  </noscript>
+</div>
+<script type="module" nonce={nonce} is:inline>
+  import intlTelInput from 'intl-tel-input';
+  import { countries as countryData } from '@lib/countries';
+  import { validateLead, hasErrors } from '@lib/validation';
+  import { trackLeadError, trackLeadSubmitted } from '@lib/analytics';
+  import { buildLocalizedPath } from '@lib/i18n';
+
+  const form = document.querySelector('[data-lead-form]');
+  if (!form) {
+    throw new Error('Lead form not found');
+  }
+
+  const card = document.querySelector('[data-lead-card]');
+  const submitButton = form.querySelector('[data-submit]');
+  const errorSummary = form.querySelector('[data-error-summary]');
+  const successMessage = form.querySelector('[data-success-message]');
+  const countrySelect = form.querySelector('#country');
+  const regionSelect = form.querySelector('#region');
+  const phoneInput = form.querySelector('#phone');
+  const locale = {JSON.stringify(localeCode)};
+  const journey = {JSON.stringify(journey)};
+  const copy = {JSON.stringify(dictionary.leadForm)};
+  const thankYouHref = buildLocalizedPath('/thank-you/', locale);
+  const antiBot = {JSON.stringify(antiBotPreference)};
+  const recaptchaSiteKey = {JSON.stringify(recaptchaSiteKey)};
+
+  const iti = intlTelInput(phoneInput, {
+    initialCountry: 'auto',
+    nationalMode: false,
+    autoPlaceholder: 'aggressive'
+  });
+
+  const populateRegions = (countryCode) => {
+    if (!(regionSelect instanceof HTMLSelectElement)) return;
+    const entry = countryData.find((c) => c.code === countryCode);
+    regionSelect.innerHTML = '';
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = copy.fields.region.placeholder;
+    regionSelect.appendChild(placeholder);
+
+    if (!entry) {
+      regionSelect.disabled = true;
+      return;
+    }
+
+    entry.regions.forEach((region) => {
+      const option = document.createElement('option');
+      option.value = region.code;
+      option.textContent = region.name;
+      regionSelect.appendChild(option);
+    });
+    regionSelect.disabled = false;
+  };
+
+  countrySelect?.addEventListener('change', (event) => {
+    const value = event.target.value;
+    populateRegions(value);
+  });
+
+  const displayErrors = (errors) => {
+    Object.entries(errors).forEach(([field, message]) => {
+      const input = form.querySelector(`[name="${field}"]`);
+      const feedback = form.querySelector(`[data-error-for="${field}"]`);
+      if (input instanceof HTMLElement) {
+        input.classList.add('is-invalid');
+      }
+      if (feedback instanceof HTMLElement) {
+        feedback.textContent = String(message);
+      }
+    });
+  };
+
+  const clearErrors = () => {
+    form.querySelectorAll('.is-invalid').forEach((el) => el.classList.remove('is-invalid'));
+    form.querySelectorAll('[data-error-for]').forEach((el) => {
+      el.textContent = '';
+    });
+    if (errorSummary instanceof HTMLElement) {
+      errorSummary.classList.add('d-none');
+      errorSummary.textContent = '';
+    }
+  };
+
+  const setSubmitting = (submitting) => {
+    if (!(submitButton instanceof HTMLButtonElement)) return;
+    submitButton.disabled = submitting;
+    submitButton.textContent = submitting ? copy.submittingLabel : copy.submitLabel;
+  };
+
+  const getTurnstileToken = async () => {
+    if (antiBot !== 'turnstile') {
+      return '';
+    }
+    if (!window.turnstile) {
+      console.warn('Turnstile script missing');
+      return '';
+    }
+    const widget = document.querySelector('.cf-turnstile');
+    if (!widget) {
+      return '';
+    }
+    return new Promise((resolve) => {
+      window.turnstile.render(widget, {
+        sitekey: widget.getAttribute('data-sitekey'),
+        callback(token) {
+          resolve(token);
+        }
+      });
+    });
+  };
+
+  const getRecaptchaToken = async () => {
+    if (antiBot !== 'recaptcha') {
+      return '';
+    }
+    if (!window.grecaptcha) {
+      await new Promise((resolve) => {
+        window.__onRecaptchaLoaded = resolve;
+      });
+    }
+    return window.grecaptcha.execute(recaptchaSiteKey, { action: 'submit' });
+  };
+
+  const handleCountdownEnded = (event) => {
+    if (!(submitButton instanceof HTMLButtonElement)) return;
+    submitButton.disabled = true;
+    submitButton.textContent = event.detail?.ctaLabel ?? copy.submitLabel;
+  };
+
+  document.querySelector('[data-countdown]')?.addEventListener('countdown:ended', handleCountdownEnded);
+
+  form.addEventListener('submit', async (event) => {
+    event.preventDefault();
+    clearErrors();
+
+    if (!(phoneInput instanceof HTMLInputElement)) return;
+    const payload = {
+      first_name: form.first_name.value?.trim(),
+      last_name: form.last_name.value?.trim(),
+      email: form.email.value?.trim(),
+      phone: iti.getNumber() || phoneInput.value,
+      country: form.country.value,
+      region: form.region.value,
+      marketing_opt_in: form.marketing_opt_in.checked,
+      locale,
+      journey
+    };
+
+    const errors = validateLead(payload, copy);
+    if (hasErrors(errors)) {
+      displayErrors(errors);
+      if (errorSummary instanceof HTMLElement) {
+        errorSummary.textContent = copy.errors.generic;
+        errorSummary.classList.remove('d-none');
+      }
+      trackLeadError(locale, 'validation_failed');
+      return;
+    }
+
+    setSubmitting(true);
+
+    try {
+      let antiBotToken = '';
+      if (antiBot === 'turnstile') {
+        antiBotToken = await getTurnstileToken();
+      } else if (antiBot === 'recaptcha') {
+        antiBotToken = await getRecaptchaToken();
+      }
+
+      const response = await fetch('/api/lead', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ...payload,
+          turnstile_token: antiBot === 'turnstile' ? antiBotToken : undefined,
+          recaptcha_token: antiBot === 'recaptcha' ? antiBotToken : undefined
+        })
+      });
+
+      if (!response.ok) {
+        const data = await response.json().catch(() => ({}));
+        const message = data?.message ?? copy.errors.generic;
+        if (errorSummary instanceof HTMLElement) {
+          errorSummary.textContent = message;
+          errorSummary.classList.remove('d-none');
+        }
+        trackLeadError(locale, message);
+      } else {
+        trackLeadSubmitted(locale, journey);
+        if (successMessage instanceof HTMLElement) {
+          successMessage.classList.remove('d-none');
+        }
+        window.setTimeout(() => {
+          window.location.href = thankYouHref;
+        }, 800);
+      }
+    } catch (error) {
+      console.error(error);
+      if (errorSummary instanceof HTMLElement) {
+        errorSummary.textContent = copy.errors.generic;
+        errorSummary.classList.remove('d-none');
+      }
+      trackLeadError(locale, 'network_error');
+    } finally {
+      setSubmitting(false);
+    }
+  });
+
+  if (antiBot === 'recaptcha') {
+    window.__onRecaptchaLoaded =
+      window.__onRecaptchaLoaded ||
+      (() => {
+        // placeholder
+      });
+    const script = document.createElement('script');
+    script.src = `https://www.google.com/recaptcha/api.js?render=${recaptchaSiteKey}&onload=__onRecaptchaLoaded`;
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+  }
+
+  if (antiBot === 'turnstile') {
+    const script = document.createElement('script');
+    script.src = 'https://challenges.cloudflare.com/turnstile/v0/api.js';
+    script.async = true;
+    script.defer = true;
+    document.head.appendChild(script);
+  }
+</script>
+
+
+
+

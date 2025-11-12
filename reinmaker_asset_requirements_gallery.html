@@ -1,0 +1,1142 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ReinMaker Runner Game - Asset Requirements Gallery</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #0B1020 0%, #1B1E22 100%);
+            color: #F2F7FA;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        header {
+            text-align: center;
+            margin-bottom: 40px;
+            padding: 30px;
+            background: rgba(77, 171, 247, 0.1);
+            border-radius: 12px;
+            border: 1px solid rgba(77, 171, 247, 0.3);
+        }
+        
+        h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+            background: linear-gradient(135deg, #4dabf7 0%, #0BB39C 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .subtitle {
+            color: #adb5bd;
+            font-size: 1.1em;
+        }
+        
+        .category {
+            margin-bottom: 50px;
+            background: rgba(33, 37, 41, 0.8);
+            border-radius: 12px;
+            padding: 30px;
+            border: 1px solid rgba(77, 171, 247, 0.2);
+        }
+        
+        .category-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 25px;
+            padding-bottom: 15px;
+            border-bottom: 2px solid rgba(77, 171, 247, 0.3);
+        }
+        
+        .category-icon {
+            font-size: 2em;
+            margin-right: 15px;
+        }
+        
+        .category-title {
+            font-size: 1.8em;
+            font-weight: 600;
+        }
+        
+        .category-description {
+            color: #adb5bd;
+            margin-left: 55px;
+            margin-bottom: 20px;
+        }
+        
+        .asset-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+        
+        .asset-card {
+            background: rgba(21, 21, 21, 0.6);
+            border-radius: 10px;
+            padding: 20px;
+            border: 2px solid rgba(77, 171, 247, 0.2);
+            transition: all 0.3s ease;
+        }
+        
+        .asset-card:hover {
+            border-color: rgba(77, 171, 247, 0.5);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(77, 171, 247, 0.2);
+        }
+        
+        .asset-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 15px;
+        }
+        
+        .asset-id {
+            font-weight: 600;
+            color: #4dabf7;
+            font-size: 1.1em;
+        }
+        
+        .asset-status {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+        }
+        
+        .status-exists {
+            background: rgba(11, 179, 156, 0.2);
+            color: #0BB39C;
+            border: 1px solid rgba(11, 179, 156, 0.4);
+        }
+        
+        .status-missing {
+            background: rgba(242, 95, 92, 0.2);
+            color: #F25F5C;
+            border: 1px solid rgba(242, 95, 92, 0.4);
+        }
+        
+        .status-character {
+            background: rgba(216, 162, 74, 0.2);
+            color: #D8A24A;
+            border: 1px solid rgba(216, 162, 74, 0.4);
+        }
+        
+        .asset-preview {
+            width: 100%;
+            height: 200px;
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 2px dashed rgba(77, 171, 247, 0.3);
+            overflow: hidden;
+        }
+        
+        .asset-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+        }
+        
+        .asset-preview[style*="grid"] {
+            background: rgba(0, 0, 0, 0.4);
+            border-radius: 8px;
+            border: 2px dashed rgba(77, 171, 247, 0.3);
+        }
+        
+        .asset-preview[style*="grid"] img {
+            width: 100%;
+            height: auto;
+            border: 1px solid rgba(77, 171, 247, 0.2);
+        }
+        
+        .preview-placeholder {
+            color: #adb5bd;
+            font-size: 0.9em;
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .asset-info {
+            margin-bottom: 15px;
+        }
+        
+        .info-row {
+            display: flex;
+            margin-bottom: 8px;
+            font-size: 0.9em;
+        }
+        
+        .info-label {
+            color: #adb5bd;
+            min-width: 100px;
+            font-weight: 500;
+        }
+        
+        .info-value {
+            color: #F2F7FA;
+            flex: 1;
+        }
+        
+        .requirements {
+            background: rgba(77, 171, 247, 0.1);
+            border-left: 3px solid #4dabf7;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .requirements-title {
+            font-weight: 600;
+            color: #4dabf7;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+        
+        .requirement-item {
+            margin-bottom: 8px;
+            font-size: 0.9em;
+            color: #F2F7FA;
+        }
+        
+        .requirement-item strong {
+            color: #adb5bd;
+        }
+        
+        .why-section {
+            background: rgba(11, 179, 156, 0.1);
+            border-left: 3px solid #0BB39C;
+            padding: 15px;
+            border-radius: 5px;
+            margin-bottom: 15px;
+        }
+        
+        .why-title {
+            font-weight: 600;
+            color: #0BB39C;
+            margin-bottom: 10px;
+            font-size: 1em;
+        }
+        
+        .why-text {
+            font-size: 0.9em;
+            color: #F2F7FA;
+            line-height: 1.5;
+        }
+        
+        .file-path {
+            background: rgba(33, 37, 41, 0.8);
+            padding: 8px 12px;
+            border-radius: 5px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.85em;
+            color: #D8A24A;
+            word-break: break-all;
+            margin-top: 10px;
+        }
+        
+        .file-input-wrapper {
+            margin-top: 15px;
+        }
+        
+        .file-input-label {
+            display: block;
+            padding: 10px 15px;
+            background: rgba(77, 171, 247, 0.2);
+            border: 2px dashed rgba(77, 171, 247, 0.4);
+            border-radius: 8px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            font-size: 0.9em;
+            color: #4dabf7;
+        }
+        
+        .file-input-label:hover {
+            background: rgba(77, 171, 247, 0.3);
+            border-color: rgba(77, 171, 247, 0.6);
+        }
+        
+        .file-input-label input {
+            display: none;
+        }
+        
+        .legend {
+            background: rgba(33, 37, 41, 0.8);
+            border-radius: 10px;
+            padding: 20px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(77, 171, 247, 0.2);
+        }
+        
+        .legend-title {
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: #4dabf7;
+        }
+        
+        .legend-items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+        }
+        
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.9em;
+        }
+        
+        .legend-badge {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🎮 ReinMaker Runner Game</h1>
+            <p class="subtitle">Complete Asset Requirements & Replacement Guide</p>
+            <p style="margin-top: 10px; color: #adb5bd;">Replace each asset below with your final files. Requirements and rationale are included for each.</p>
+        </header>
+        
+        <div class="legend">
+            <div class="legend-title">Status Legend</div>
+            <div class="legend-items">
+                <div class="legend-item">
+                    <span class="legend-badge status-exists"></span>
+                    <span>Exists - Ready to replace</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-badge status-missing"></span>
+                    <span>Missing - Needs creation</span>
+                </div>
+                <div class="legend-item">
+                    <span class="legend-badge status-character"></span>
+                    <span>Character Asset - Requires Kelly consistency</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CATEGORY A: Core Gameplay Sprites -->
+        <div class="category">
+            <div class="category-header">
+                <span class="category-icon">🎯</span>
+                <span class="category-title">A. Core Gameplay Sprites</span>
+            </div>
+            <div class="category-description">
+                Essential gameplay elements that players interact with directly. These determine core game feel and responsiveness.
+            </div>
+            
+            <div class="asset-grid">
+                <!-- A1. Player -->
+                <div class="asset-card">
+                    <div class="asset-header">
+                        <span class="asset-id">A1. Player: Kelly (Runner)</span>
+                        <span class="asset-status status-character">CHARACTER</span>
+                    </div>
+                    <div class="asset-preview">
+                        <img src="assets/player.png" alt="Player Sprite" onerror="this.parentElement.innerHTML='<div class=\'preview-placeholder\'>Player Sprite Preview<br><small>1024x1280px → 52x64px</small></div>'">
+                    </div>
+                    <div class="asset-info">
+                        <div class="info-row">
+                            <span class="info-label">File:</span>
+                            <span class="info-value">assets/player.png</span>
+                        </div>
+                        <div class="file-path">assets/player.png</div>
+                    </div>
+                    <div class="requirements">
+                        <div class="requirements-title">📋 Exact Requirements</div>
+                        <div class="requirement-item"><strong>Master Size:</strong> 1024x1280px (for downscaling)</div>
+                        <div class="requirement-item"><strong>Final Size:</strong> ~52x64px (in-game)</div>
+                        <div class="requirement-item"><strong>Format:</strong> PNG with transparent background</div>
+                        <div class="requirement-item"><strong>Pivot Point:</strong> Bottom-center (for proper ground alignment)</div>
+                        <div class="requirement-item"><strong>Orientation:</strong> Facing right (runner direction)</div>
+                        <div class="requirement-item"><strong>Style:</strong> Cel-shaded, painterly texture pass</div>
+                        <div class="requirement-item"><strong>Wardrobe:</strong> Reinmaker variant (dark gray tactical armor)</div>
+                        <div class="requirement-item"><strong>Pose:</strong> Neutral run pose, readable silhouette</div>
+                    </div>
+                    <div class="why-section">
+                        <div class="why-title">💡 Why These Requirements</div>
+                        <div class="why-text">
+                            <strong>Master Size (1024x1280):</strong> High resolution allows clean downscaling to multiple sizes without quality loss. The 4:5 aspect ratio matches character proportions.<br><br>
+                            <strong>Pivot Bottom-Center:</strong> Ensures character's feet align perfectly with ground level regardless of jump height. Critical for consistent collision detection.<br><br>
+                            <strong>Transparent BG:</strong> Required for layering over backgrounds and parallax scrolling effects.<br><br>
+                            <strong>Facing Right:</strong> Runner games scroll left-to-right, so character must face movement direction for visual clarity.<br><br>
+                            <strong>Kelly Consistency:</strong> Must match Kelly's character design exactly - facial features, hair, and Reinmaker armor variant. Players will see this sprite constantly.
+                        </div>
+                    </div>
+                    <div class="file-input-wrapper">
+                        <label class="file-input-label">
+                            📤 Replace Player Sprite
+                            <input type="file" accept="image/png" data-asset="A1">
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- A2. Obstacle -->
+                <div class="asset-card">
+                    <div class="asset-header">
+                        <span class="asset-id">A2. Obstacle: Knowledge Shards</span>
+                        <span class="asset-status status-exists">EXISTS</span>
+                    </div>
+                    <div class="asset-preview">
+                        <img src="assets/obstacle.png" alt="Obstacle Sprite" onerror="this.parentElement.innerHTML='<div class=\'preview-placeholder\'>Obstacle Sprite Preview<br><small>512px tall → 40/60/80px variants</small></div>'">
+                    </div>
+                    <div class="asset-info">
+                        <div class="info-row">
+                            <span class="info-label">File:</span>
+                            <span class="info-value">assets/obstacle.png</span>
+                        </div>
+                        <div class="file-path">assets/obstacle.png</div>
+                    </div>
+                    <div class="requirements">
+                        <div class="requirements-title">📋 Exact Requirements</div>
+                        <div class="requirement-item"><strong>Master Size:</strong> 512px tall (width scales proportionally)</div>
+                        <div class="requirement-item"><strong>Final Variants:</strong> 40px, 60px, 80px tall (for difficulty variation)</div>
+                        <div class="requirement-item"><strong>Format:</strong> PNG with transparent background</div>
+                        <div class="requirement-item"><strong>Pivot Point:</strong> Bottom-center</div>
+                        <div class="requirement-item"><strong>Style:</strong> Vertical circuit-rein shard totem, forged brass/steel</div>
+                        <div class="requirement-item"><strong>Color:</strong> Glowing teal inlay (#0BB39C)</div>
+                        <div class="requirement-item"><strong>Geometry:</strong> Simple sharp edges, clean silhouette</div>
+                    </div>
+                    <div class="why-section">
+                        <div class="why-title">💡 Why These Requirements</div>
+                        <div class="why-text">
+                            <strong>Variable Heights:</strong> Three size variants create visual variety and difficulty progression. Larger shards are easier to see but harder to time.<br><br>
+                            <strong>Bottom-Center Pivot:</strong> Aligns obstacle base with ground, ensuring consistent collision detection regardless of height variant.<br><br>
+                            <strong>Sharp Geometry:</strong> Clean edges read clearly at small sizes (40px) and maintain visual clarity during fast scrolling.<br><br>
+                            <strong>Teal Glow:</strong> Matches game's color palette (#0BB39C) and provides visual contrast against dark backgrounds. Glow helps players spot obstacles from distance.
+                        </div>
+                    </div>
+                    <div class="file-input-wrapper">
+                        <label class="file-input-label">
+                            📤 Replace Obstacle Sprite
+                            <input type="file" accept="image/png" data-asset="A2">
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- A3. Ground Stripe -->
+                <div class="asset-card">
+                    <div class="asset-header">
+                        <span class="asset-id">A3. Ground Stripe</span>
+                        <span class="asset-status status-missing">MISSING</span>
+                    </div>
+                    <div class="asset-preview">
+                        <img src="assets/ground_stripe.png" alt="Ground Stripe" onerror="this.parentElement.innerHTML='<div class=\'preview-placeholder\'>Ground Stripe Preview<br><small>60x6px</small></div>'">
+                    </div>
+                    <div class="asset-info">
+                        <div class="info-row">
+                            <span class="info-label">File:</span>
+                            <span class="info-value">assets/ground_stripe.png</span>
+                        </div>
+                        <div class="file-path">assets/ground_stripe.png</div>
+                    </div>
+                    <div class="requirements">
+                        <div class="requirements-title">📋 Exact Requirements</div>
+                        <div class="requirement-item"><strong>Size:</strong> 60x6px exactly</div>
+                        <div class="requirement-item"><strong>Format:</strong> PNG with transparent background</div>
+                        <div class="requirement-item"><strong>Color:</strong> Off-white #F2F7FA</div>
+                        <div class="requirement-item"><strong>Shape:</strong> Rounded ends (pill shape)</div>
+                        <div class="requirement-item"><strong>Style:</strong> Flat fill, no gradient, no shadow</div>
+                        <div class="requirement-item"><strong>Opacity:</strong> Fully opaque (not semi-transparent)</div>
+                    </div>
+                    <div class="why-section">
+                        <div class="why-title">💡 Why These Requirements</div>
+                        <div class="why-text">
+                            <strong>60x6px:</strong> Road dash marker dimensions. Small enough to tile seamlessly but large enough to be visible at game speed. Matches standard road marking proportions.<br><br>
+                            <strong>Rounded Ends:</strong> Soft edges prevent visual artifacts when tiling. Sharp corners would create visible seams.<br><br>
+                            <strong>Off-White (#F2F7FA):</strong> Provides subtle contrast against dark ground texture without being distracting. Matches game's muted color palette.<br><br>
+                            <strong>Flat Fill:</strong> No gradients or shadows keeps file size minimal and ensures consistent appearance when tiled repeatedly.<br><br>
+                            <strong>Transparent BG:</strong> Allows stripe to sit on top of ground texture without white background bleeding through.
+                        </div>
+                    </div>
+                    <div class="file-input-wrapper">
+                        <label class="file-input-label">
+                            📤 Upload Ground Stripe
+                            <input type="file" accept="image/png" data-asset="A3">
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CATEGORY B: Background & Environment -->
+        <div class="category">
+            <div class="category-header">
+                <span class="category-icon">🌆</span>
+                <span class="category-title">B. Background & Environment</span>
+            </div>
+            <div class="category-description">
+                Visual environment assets that create atmosphere and depth through parallax scrolling.
+            </div>
+            
+            <div class="asset-grid">
+                <!-- B1. Parallax Skyline -->
+                <div class="asset-card">
+                    <div class="asset-header">
+                        <span class="asset-id">B1. Parallax Skyline Strip</span>
+                        <span class="asset-status status-exists">EXISTS</span>
+                    </div>
+                    <div class="asset-preview">
+                        <img src="assets/bg.png" alt="Parallax Skyline" onerror="this.parentElement.innerHTML='<div class=\'preview-placeholder\'>Skyline Preview<br><small>1024x256px seamless</small></div>'">
+                    </div>
+                    <div class="asset-info">
+                        <div class="info-row">
+                            <span class="info-label">File:</span>
+                            <span class="info-value">assets/bg.png</span>
+                        </div>
+                        <div class="file-path">assets/bg.png</div>
+                    </div>
+                    <div class="requirements">
+                        <div class="requirements-title">📋 Exact Requirements</div>
+                        <div class="requirement-item"><strong>Size:</strong> 1024x256px exactly</div>
+                        <div class="requirement-item"><strong>Format:</strong> PNG (opaque, no transparency needed)</div>
+                        <div class="requirement-item"><strong>Seamless:</strong> Must tile perfectly horizontally (left edge matches right edge)</div>
+                        <div class="requirement-item"><strong>Content:</strong> Silhouettes of Hall of the Seven Tribes in distance</div>
+                        <div class="requirement-item"><strong>Banners:</strong> Faint vertical banners in 7 colors (red, blue, green, yellow, purple, orange, white)</div>
+                        <div class="requirement-item"><strong>Sky Color:</strong> #0B1020 (night steel sky)</div>
+                        <div class="requirement-item"><strong>Horizon:</strong> Ember-colored accents (#D8A24A)</div>
+                        <div class="requirement-item"><strong>Style:</strong> Silhouette-based, no foreground details</div>
+                    </div>
+                    <div class="why-section">
+                        <div class="why-title">💡 Why These Requirements</div>
+                        <div class="why-text">
+                            <strong>1024x256px:</strong> Wide aspect ratio (4:1) optimized for horizontal scrolling. Width of 1024px provides good detail while keeping file size manageable.<br><br>
+                            <strong>Seamless Tiling:</strong> Critical for infinite scrolling effect. When player runs, background loops seamlessly without visible seams or jumps.<br><br>
+                            <strong>Silhouette Style:</strong> Simple silhouettes read clearly at distance and don't distract from gameplay. Parallax layers move slower than foreground, so detail isn't needed.<br><br>
+                            <strong>Seven Colored Banners:</strong> Represents the Seven Tribes visually. Faint colors provide world-building without overwhelming gameplay.<br><br>
+                            <strong>Dark Sky (#0B1020):</strong> Creates depth and contrast. Dark background makes foreground elements pop and reduces eye strain during extended play.
+                        </div>
+                    </div>
+                    <div class="file-input-wrapper">
+                        <label class="file-input-label">
+                            📤 Replace Skyline Background
+                            <input type="file" accept="image/png" data-asset="B1">
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- B2. Ground Texture -->
+                <div class="asset-card">
+                    <div class="asset-header">
+                        <span class="asset-id">B2. Ground Texture</span>
+                        <span class="asset-status status-missing">MISSING</span>
+                    </div>
+                    <div class="asset-preview">
+                        <img src="assets/ground_tex.png" alt="Ground Texture" onerror="this.parentElement.innerHTML='<div class=\'preview-placeholder\'>Ground Texture Preview<br><small>512x64px seamless tile</small></div>'">
+                    </div>
+                    <div class="asset-info">
+                        <div class="info-row">
+                            <span class="info-label">File:</span>
+                            <span class="info-value">assets/ground_tex.png</span>
+                        </div>
+                        <div class="file-path">assets/ground_tex.png</div>
+                    </div>
+                    <div class="requirements">
+                        <div class="requirements-title">📋 Exact Requirements</div>
+                        <div class="requirement-item"><strong>Size:</strong> 512x64px exactly</div>
+                        <div class="requirement-item"><strong>Format:</strong> PNG with transparent background</div>
+                        <div class="requirement-item"><strong>Seamless:</strong> Must tile perfectly horizontally (left = right)</div>
+                        <div class="requirement-item"><strong>Texture:</strong> Dark steel-stone with very faint forge specks</div>
+                        <div class="requirement-item"><strong>Contrast:</strong> Low contrast (subtle, not distracting)</div>
+                        <div class="requirement-item"><strong>Style:</strong> Orthographic view, no perspective</div>
+                    </div>
+                    <div class="why-section">
+                        <div class="why-title">💡 Why These Requirements</div>
+                        <div class="why-text">
+                            <strong>512x64px:</strong> 8:1 aspect ratio optimized for horizontal scrolling. Width of 512px provides good texture detail while 64px height matches typical ground strip height.<br><br>
+                            <strong>Seamless Tiling:</strong> Required for infinite scrolling ground. Texture repeats without visible seams as player runs.<br><br>
+                            <strong>Low Contrast:</strong> Ground texture should be subtle background element. High contrast would distract from gameplay and make obstacles harder to see.<br><br>
+                            <strong>Dark Steel-Stone:</strong> Matches game's industrial/forge aesthetic. Faint forge specks add world-building detail without visual noise.<br><br>
+                            <strong>Transparent BG:</strong> Allows texture to be layered with ground stripe markers and other elements for visual depth.
+                        </div>
+                    </div>
+                    <div class="file-input-wrapper">
+                        <label class="file-input-label">
+                            📤 Upload Ground Texture
+                            <input type="file" accept="image/png" data-asset="B2">
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CATEGORY C: UI & Meta -->
+        <div class="category">
+            <div class="category-header">
+                <span class="category-icon">🎨</span>
+                <span class="category-title">C. UI & Meta</span>
+            </div>
+            <div class="category-description">
+                Branding and UI elements used across game, menus, and app stores.
+            </div>
+            
+            <div class="asset-grid">
+                <!-- C1. Logo -->
+                <div class="asset-card">
+                    <div class="asset-header">
+                        <span class="asset-id">C1. Logo / Title Card</span>
+                        <span class="asset-status status-exists">EXISTS (1/2)</span>
+                    </div>
+                    <div class="asset-preview" style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px;">
+                        <div style="text-align: center;">
+                            <img src="marketing/cover-1280x720.png" alt="Logo 1280x720" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\'color: #adb5bd;\'>1280x720 ✅</div>'">
+                            <div style="color: #adb5bd; font-size: 0.8em; margin-top: 5px;">1280x720 ✅</div>
+                        </div>
+                        <div style="text-align: center;">
+                            <img src="marketing/square-600.png" alt="Logo 600x600" onerror="this.style.display='none'; this.parentElement.innerHTML='<div style=\'color: #F25F5C;\'>600x600 ❌</div>'">
+                            <div style="color: #adb5bd; font-size: 0.8em; margin-top: 5px;">600x600 <span id="square-status">❌</span></div>
+                        </div>
+                    </div>
+                    <script>
+                        // Check if square logo exists
+                        const squareImg = new Image();
+                        squareImg.onload = () => document.getElementById('square-status').textContent = '✅';
+                        squareImg.onerror = () => document.getElementById('square-status').textContent = '❌';
+                        squareImg.src = 'marketing/square-600.png';
+                    </script>
+                    <div class="asset-info">
+                        <div class="info-row">
+                            <span class="info-label">Files:</span>
+                            <span class="info-value">marketing/cover-1280x720.png ✅<br>marketing/square-600.png ❌</span>
+                        </div>
+                        <div class="file-path">marketing/cover-1280x720.png<br>marketing/square-600.png</div>
+                    </div>
+                    <div class="requirements">
+                        <div class="requirements-title">📋 Exact Requirements</div>
+                        <div class="requirement-item"><strong>Variant 1:</strong> 1280x720px (16:9 landscape) ✅</div>
+                        <div class="requirement-item"><strong>Variant 2:</strong> 600x600px (1:1 square) ❌ MISSING</div>
+                        <div class="requirement-item"><strong>Format:</strong> PNG with transparent background</div>
+                        <div class="requirement-item"><strong>Text:</strong> "The Rein Maker's Daughter"</div>
+                        <div class="requirement-item"><strong>Emblem:</strong> Broken leather rein → glowing circuit loop</div>
+                        <div class="requirement-item"><strong>Colors:</strong> Brass/ember (#D8A24A) accents, deep blue steel (#495057) background</div>
+                        <div class="requirement-item"><strong>Style:</strong> Cinematic, high contrast, crisp</div>
+                    </div>
+                    <div class="why-section">
+                        <div class="why-title">💡 Why These Requirements</div>
+                        <div class="why-text">
+                            <strong>Two Variants:</strong> 16:9 for banners/headers, 1:1 for social media and app icons. Different platforms require different aspect ratios.<br><br>
+                            <strong>Transparent BG:</strong> Logo can be placed on any background color for marketing flexibility.<br><br>
+                            <strong>High Contrast:</strong> Must read clearly at small sizes (app icons) and large sizes (banners). High contrast ensures legibility.<br><br>
+                            <strong>Emblem Design:</strong> Broken rein → circuit loop represents core brand metaphor visually. Immediate brand recognition.<br><br>
+                            <strong>Cinematic Style:</strong> Conveys premium, story-driven game quality. Sets expectations for immersive experience.
+                        </div>
+                    </div>
+                    <div class="file-input-wrapper">
+                        <label class="file-input-label">
+                            📤 Replace Logo (1280x720)
+                            <input type="file" accept="image/png" data-asset="C1a">
+                        </label>
+                        <label class="file-input-label" style="margin-top: 10px;">
+                            📤 Upload Square Logo (600x600)
+                            <input type="file" accept="image/png" data-asset="C1b">
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- C2. Favicon -->
+                <div class="asset-card">
+                    <div class="asset-header">
+                        <span class="asset-id">C2. Favicon / App Icon</span>
+                        <span class="asset-status status-exists">EXISTS</span>
+                    </div>
+                    <div class="asset-preview">
+                        <img src="assets/favicon.png" alt="Favicon" onerror="this.parentElement.innerHTML='<div class=\'preview-placeholder\'>Favicon Preview<br><small>256x256px → 32/64px</small></div>'">
+                    </div>
+                    <div class="asset-info">
+                        <div class="info-row">
+                            <span class="info-label">File:</span>
+                            <span class="info-value">assets/favicon.png</span>
+                        </div>
+                        <div class="file-path">assets/favicon.png</div>
+                    </div>
+                    <div class="requirements">
+                        <div class="requirements-title">📋 Exact Requirements</div>
+                        <div class="requirement-item"><strong>Master Size:</strong> 256x256px</div>
+                        <div class="requirement-item"><strong>Export Sizes:</strong> 32x32px, 64x64px (for different contexts)</div>
+                        <div class="requirement-item"><strong>Format:</strong> PNG with transparent background</div>
+                        <div class="requirement-item"><strong>Design:</strong> Glowing circuit-rein emblem only (no text)</div>
+                        <div class="requirement-item"><strong>Colors:</strong> Teal (#0BB39C) and graphite (#1B1E22)</div>
+                        <div class="requirement-item"><strong>Style:</strong> Simple, clean silhouette, readable at tiny sizes</div>
+                        <div class="requirement-item"><strong>Centering:</strong> Perfectly centered</div>
+                    </div>
+                    <div class="why-section">
+                        <div class="why-title">💡 Why These Requirements</div>
+                        <div class="why-text">
+                            <strong>256x256px Master:</strong> High resolution allows clean downscaling to 32px and 64px without quality loss. 32px is standard browser favicon size.<br><br>
+                            <strong>No Text:</strong> Text becomes illegible at small sizes. Icon-only design ensures recognition at any scale.<br><br>
+                            <strong>Simple Silhouette:</strong> Complex details disappear at 32px. Clean, bold shapes remain recognizable.<br><br>
+                            <strong>High Contrast:</strong> Teal (#0BB39C) on dark (#1B1E22) ensures visibility against both light and dark browser backgrounds.<br><br>
+                            <strong>Circuit-Rein Emblem:</strong> Core brand symbol. Instantly recognizable and reinforces brand identity even at tiny sizes.
+                        </div>
+                    </div>
+                    <div class="file-input-wrapper">
+                        <label class="file-input-label">
+                            📤 Replace Favicon
+                            <input type="file" accept="image/png" data-asset="C2">
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CATEGORY D: Lore Collectibles -->
+        <div class="category">
+            <div class="category-header">
+                <span class="category-icon">💎</span>
+                <span class="category-title">D. Lore Collectibles</span>
+            </div>
+            <div class="category-description">
+                Collectible items that represent the Seven Tribes and provide world-building depth.
+            </div>
+            
+            <div class="asset-grid">
+                <!-- D1. Knowledge Stones -->
+                <div class="asset-card">
+                    <div class="asset-header">
+                        <span class="asset-id">D1. Knowledge Stones (7)</span>
+                        <span class="asset-status status-exists">EXISTS</span>
+                    </div>
+                    <div class="asset-preview" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px;">
+                        <img src="assets/stones/stone_light.png" alt="Light Stone" onerror="this.style.display='none'">
+                        <img src="assets/stones/stone_stone.png" alt="Stone Stone" onerror="this.style.display='none'">
+                        <img src="assets/stones/stone_metal.png" alt="Metal Stone" onerror="this.style.display='none'">
+                        <img src="assets/stones/stone_code.png" alt="Code Stone" onerror="this.style.display='none'">
+                        <img src="assets/stones/stone_air.png" alt="Air Stone" onerror="this.style.display='none'">
+                        <img src="assets/stones/stone_water.png" alt="Water Stone" onerror="this.style.display='none'">
+                        <img src="assets/stones/stone_fire.png" alt="Fire Stone" onerror="this.style.display='none'">
+                    </div>
+                    <div class="asset-info">
+                        <div class="info-row">
+                            <span class="info-label">Files:</span>
+                            <span class="info-value">assets/stones/stone_{tribe}.png</span>
+                        </div>
+                        <div class="file-path">
+                            stone_light.png ✅<br>
+                            stone_stone.png ✅<br>
+                            stone_metal.png ✅<br>
+                            stone_code.png ✅<br>
+                            stone_air.png ✅<br>
+                            stone_water.png ✅<br>
+                            stone_fire.png ✅
+                        </div>
+                    </div>
+                    <div class="requirements">
+                        <div class="requirements-title">📋 Exact Requirements</div>
+                        <div class="requirement-item"><strong>Size:</strong> 64x64px each (all 7 stones)</div>
+                        <div class="requirement-item"><strong>Format:</strong> PNG with transparent background</div>
+                        <div class="requirement-item"><strong>Style:</strong> Stylized gem icon with etched symbol</div>
+                        <div class="requirement-item"><strong>Symbols:</strong> Eye (Light), Mountain (Stone), Gear (Metal), &lt;&gt; (Code), Feather (Air), Wave (Water), Flame (Fire)</div>
+                        <div class="requirement-item"><strong>Colors:</strong> Match tribe colors exactly</div>
+                        <div class="requirement-item"><strong>Effect:</strong> Soft inner glow</div>
+                        <div class="requirement-item"><strong>Silhouette:</strong> Clean, readable at small size</div>
+                    </div>
+                    <div class="why-section">
+                        <div class="why-title">💡 Why These Requirements</div>
+                        <div class="why-text">
+                            <strong>64x64px:</strong> Standard icon size. Large enough to show detail and color, small enough for UI overlays without overwhelming screen.<br><br>
+                            <strong>Seven Stones:</strong> One per Tribe. Visual representation of game's core lore system. Players collect these as progression markers.<br><br>
+                            <strong>Tribe Colors:</strong> Each stone uses its tribe's signature color for instant recognition. Color coding helps players associate stones with tribes.<br><br>
+                            <strong>Inner Glow:</strong> Soft glow makes stones feel magical and valuable. Draws player attention and reinforces collectible value.<br><br>
+                            <strong>Symbols:</strong> Each etched symbol represents tribe's core concept. Visual shorthand for complex lore concepts.
+                        </div>
+                    </div>
+                    <div class="file-input-wrapper">
+                        <label class="file-input-label">
+                            📤 Replace All Stones (ZIP)
+                            <input type="file" accept=".zip,image/png" data-asset="D1" multiple>
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- D2. Tribe Banners -->
+                <div class="asset-card">
+                    <div class="asset-header">
+                        <span class="asset-id">D2. Tribe Banners (7)</span>
+                        <span class="asset-status status-missing">MISSING</span>
+                    </div>
+                    <div class="asset-preview" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 5px; padding: 10px;">
+                        <img src="assets/banners/banner_light.png" alt="Light Banner" onerror="this.parentElement.innerHTML='<div class=\'preview-placeholder\'>Banners Preview<br><small>7 banners × 128x256px</small></div>'">
+                        <img src="assets/banners/banner_stone.png" alt="Stone Banner" onerror="this.style.display='none'">
+                        <img src="assets/banners/banner_metal.png" alt="Metal Banner" onerror="this.style.display='none'">
+                        <img src="assets/banners/banner_code.png" alt="Code Banner" onerror="this.style.display='none'">
+                        <img src="assets/banners/banner_air.png" alt="Air Banner" onerror="this.style.display='none'">
+                        <img src="assets/banners/banner_water.png" alt="Water Banner" onerror="this.style.display='none'">
+                        <img src="assets/banners/banner_fire.png" alt="Fire Banner" onerror="this.style.display='none'">
+                    </div>
+                    <div class="asset-info">
+                        <div class="info-row">
+                            <span class="info-label">Files:</span>
+                            <span class="info-value">assets/banners/banner_{tribe}.png</span>
+                        </div>
+                        <div class="file-path">
+                            banner_light.png ❌<br>
+                            banner_stone.png ❌<br>
+                            banner_metal.png ❌<br>
+                            banner_code.png ❌<br>
+                            banner_air.png ❌<br>
+                            banner_water.png ❌<br>
+                            banner_fire.png ❌
+                        </div>
+                    </div>
+                    <div class="requirements">
+                        <div class="requirements-title">📋 Exact Requirements</div>
+                        <div class="requirement-item"><strong>Size:</strong> 128x256px each (all 7 banners)</div>
+                        <div class="requirement-item"><strong>Format:</strong> PNG with transparent background</div>
+                        <div class="requirement-item"><strong>Orientation:</strong> Vertical (portrait)</div>
+                        <div class="requirement-item"><strong>Tiling:</strong> Must tile seamlessly vertically</div>
+                        <div class="requirement-item"><strong>Texture:</strong> Fabric weave texture</div>
+                        <div class="requirement-item"><strong>Symbols:</strong> Bold tribe symbol (same as Knowledge Stones)</div>
+                        <div class="requirement-item"><strong>Colors:</strong> Match tribe base colors with subtle gold trim</div>
+                        <div class="requirement-item"><strong>Style:</strong> Orthographic, clean edges</div>
+                    </div>
+                    <div class="why-section">
+                        <div class="why-title">💡 Why These Requirements</div>
+                        <div class="why-text">
+                            <strong>128x256px:</strong> 1:2 aspect ratio matches traditional banner proportions. Tall enough to show detail, narrow enough for parallax background use.<br><br>
+                            <strong>Vertical Tiling:</strong> Banners appear in parallax skyline background. Seamless vertical tiling allows banners to extend infinitely in height without visible seams.<br><br>
+                            <strong>Fabric Texture:</strong> Weave texture adds realism and depth. Makes banners feel like physical objects in game world rather than flat graphics.<br><br>
+                            <strong>Gold Trim:</strong> Subtle gold trim adds elegance and unifies all banners visually. Creates cohesive visual language across tribes.<br><br>
+                            <strong>Bold Symbols:</strong> Large, clear symbols ensure banners are recognizable even when small in parallax background. Reinforces tribe identity.
+                        </div>
+                    </div>
+                    <div class="file-input-wrapper">
+                        <label class="file-input-label">
+                            📤 Upload All Banners (ZIP)
+                            <input type="file" accept=".zip,image/png" data-asset="D2" multiple>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CATEGORY E: Narrative Inserts -->
+        <div class="category">
+            <div class="category-header">
+                <span class="category-icon">🎬</span>
+                <span class="category-title">E. Narrative Inserts</span>
+            </div>
+            <div class="category-description">
+                Story moments and UI backgrounds that enhance narrative immersion.
+            </div>
+            
+            <div class="asset-grid">
+                <!-- E1. Opening Splash -->
+                <div class="asset-card">
+                    <div class="asset-header">
+                        <span class="asset-id">E1. Opening Panel (Splash)</span>
+                        <span class="asset-status status-character">CHARACTER</span>
+                    </div>
+                    <div class="asset-preview">
+                        <img src="marketing/splash_intro.png" alt="Opening Splash" onerror="this.parentElement.innerHTML='<div class=\'preview-placeholder\'>Splash Art Preview<br><small>1280x720px</small></div>'">
+                    </div>
+                    <div class="asset-info">
+                        <div class="info-row">
+                            <span class="info-label">File:</span>
+                            <span class="info-value">marketing/splash_intro.png</span>
+                        </div>
+                        <div class="file-path">marketing/splash_intro.png</div>
+                    </div>
+                    <div class="requirements">
+                        <div class="requirements-title">📋 Exact Requirements</div>
+                        <div class="requirement-item"><strong>Size:</strong> 1280x720px exactly (16:9)</div>
+                        <div class="requirement-item"><strong>Format:</strong> PNG (opaque or transparent)</div>
+                        <div class="requirement-item"><strong>Content:</strong> Kelly stepping from dark forge into light</div>
+                        <div class="requirement-item"><strong>Focal Point:</strong> Glowing circuit-rein token (illuminates face)</div>
+                        <div class="requirement-item"><strong>Lighting:</strong> High contrast (shadow vs light)</div>
+                        <div class="requirement-item"><strong>Palette:</strong> Dusk palette</div>
+                        <div class="requirement-item"><strong>Style:</strong> Painterly-meets-vector, cinematic</div>
+                        <div class="requirement-item"><strong>Wardrobe:</strong> Reinmaker variant (dark tactical armor)</div>
+                    </div>
+                    <div class="why-section">
+                        <div class="why-title">💡 Why These Requirements</div>
+                        <div class="why-text">
+                            <strong>1280x720px:</strong> Standard HD resolution (720p). Works well for game splash screens and marketing materials.<br><br>
+                            <strong>Kelly Consistency:</strong> Must match Kelly's character design exactly. This is first impression players get - character consistency is critical.<br><br>
+                            <strong>High Contrast:</strong> Dramatic shadow/light contrast creates visual impact and tells story visually (dark past → bright future).<br><br>
+                            <strong>Glowing Token:</strong> Focal point draws eye and represents core game mechanic (circuit-rein transformation). Light source creates visual interest.<br><br>
+                            <strong>Cinematic Style:</strong> Sets premium quality expectations. Painterly-meets-vector creates unique visual identity that stands out.
+                        </div>
+                    </div>
+                    <div class="file-input-wrapper">
+                        <label class="file-input-label">
+                            📤 Replace Opening Splash
+                            <input type="file" accept="image/png" data-asset="E1">
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- E2. Game Over Panel -->
+                <div class="asset-card">
+                    <div class="asset-header">
+                        <span class="asset-id">E2. Game-Over Panel</span>
+                        <span class="asset-status status-exists">EXISTS</span>
+                    </div>
+                    <div class="asset-preview">
+                        <img src="assets/gameover_bg.png" alt="Game Over Background" onerror="this.parentElement.innerHTML='<div class=\'preview-placeholder\'>Game Over BG Preview<br><small>960x540px low contrast</small></div>'">
+                    </div>
+                    <div class="asset-info">
+                        <div class="info-row">
+                            <span class="info-label">File:</span>
+                            <span class="info-value">assets/gameover_bg.png</span>
+                        </div>
+                        <div class="file-path">assets/gameover_bg.png</div>
+                    </div>
+                    <div class="requirements">
+                        <div class="requirements-title">📋 Exact Requirements</div>
+                        <div class="requirement-item"><strong>Size:</strong> 960x540px exactly (16:9)</div>
+                        <div class="requirement-item"><strong>Format:</strong> PNG (opaque or transparent)</div>
+                        <div class="requirement-item"><strong>Contrast:</strong> Low contrast (subtle, not distracting)</div>
+                        <div class="requirement-item"><strong>Content:</strong> Shattered rein fragments reforming into circuit loop</div>
+                        <div class="requirement-item"><strong>Style:</strong> Soft vignette, very subtle</div>
+                        <div class="requirement-item"><strong>Purpose:</strong> Background for text overlay (score, restart button)</div>
+                    </div>
+                    <div class="why-section">
+                        <div class="why-title">💡 Why These Requirements</div>
+                        <div class="why-text">
+                            <strong>960x540px:</strong> Slightly smaller than full screen. Provides comfortable padding for UI elements. 16:9 matches game aspect ratio.<br><br>
+                            <strong>Low Contrast:</strong> Background must not compete with UI text and buttons. Subtle imagery supports mood without distracting.<br><br>
+                            <strong>Reforming Circuit:</strong> Visual metaphor reinforces core theme (transformation). Shows progress even in failure state.<br><br>
+                            <strong>Vignette Style:</strong> Soft edges draw eye to center where UI elements will be placed. Creates focus without harsh boundaries.<br><br>
+                            <strong>Subtle Design:</strong> Game over screen should feel calm, not frustrating. Low contrast and soft imagery reduce negative emotional response.
+                        </div>
+                    </div>
+                    <div class="file-input-wrapper">
+                        <label class="file-input-label">
+                            📤 Replace Game Over Panel
+                            <input type="file" accept="image/png" data-asset="E2">
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CATEGORY F: Marketing -->
+        <div class="category">
+            <div class="category-header">
+                <span class="category-icon">📢</span>
+                <span class="category-title">F. Marketing & Storefront</span>
+            </div>
+            <div class="category-description">
+                Marketing assets for app stores, websites, and promotional materials.
+            </div>
+            
+            <div class="asset-grid">
+                <!-- F1. Itch.io Banner -->
+                <div class="asset-card">
+                    <div class="asset-header">
+                        <span class="asset-id">F1. Itch.io Banner (Wide)</span>
+                        <span class="asset-status status-character">CHARACTER</span>
+                    </div>
+                    <div class="asset-preview">
+                        <img src="marketing/itch-banner-1920x480.png" alt="Itch.io Banner" onerror="this.parentElement.innerHTML='<div class=\'preview-placeholder\'>Banner Preview<br><small>1920x480px</small></div>'">
+                    </div>
+                    <div class="asset-info">
+                        <div class="info-row">
+                            <span class="info-label">File:</span>
+                            <span class="info-value">marketing/itch-banner-1920x480.png</span>
+                        </div>
+                        <div class="file-path">marketing/itch-banner-1920x480.png</div>
+                    </div>
+                    <div class="requirements">
+                        <div class="requirements-title">📋 Exact Requirements</div>
+                        <div class="requirement-item"><strong>Size:</strong> 1920x480px exactly (4:1 aspect ratio)</div>
+                        <div class="requirement-item"><strong>Format:</strong> PNG or JPG (opaque)</div>
+                        <div class="requirement-item"><strong>Layout:</strong> Kelly sprite (right) + Logo (left) + Skyline (background)</div>
+                        <div class="requirement-item"><strong>Kelly:</strong> Full run pose, Reinmaker variant, facing right</div>
+                        <div class="requirement-item"><strong>Logo:</strong> "The Rein Maker's Daughter" text</div>
+                        <div class="requirement-item"><strong>Background:</strong> Hall of the Seven Tribes skyline at dusk</div>
+                        <div class="requirement-item"><strong>Style:</strong> Clean, dynamic composition</div>
+                    </div>
+                    <div class="why-section">
+                        <div class="why-title">💡 Why These Requirements</div>
+                        <div class="why-text">
+                            <strong>1920x480px:</strong> Standard Itch.io banner dimensions. 4:1 aspect ratio works well for wide headers and promotional graphics.<br><br>
+                            <strong>Kelly Consistency:</strong> Must match Kelly's character design exactly. This is primary marketing image - character consistency builds brand recognition.<br><br>
+                            <strong>Three-Element Layout:</strong> Character (right) + Logo (left) + Skyline (background) creates balanced composition. Each element reinforces brand identity.<br><br>
+                            <strong>Dynamic Composition:</strong> Action pose (running) conveys game genre. Energy and movement attract attention in crowded marketplace.<br><br>
+                            <strong>Skyline Background:</strong> Reinforces world-building and creates depth. Shows players the game world they'll explore.
+                        </div>
+                    </div>
+                    <div class="file-input-wrapper">
+                        <label class="file-input-label">
+                            📤 Replace Itch.io Banner
+                            <input type="file" accept="image/png,image/jpg,image/jpeg" data-asset="F1">
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- CATEGORY G: Stretch Goals -->
+        <div class="category">
+            <div class="category-header">
+                <span class="category-icon">⭐</span>
+                <span class="category-title">G. Stretch Goals (Optional)</span>
+            </div>
+            <div class="category-description">
+                Additional gameplay features that enhance replayability but aren't required for launch.
+            </div>
+            
+            <div class="asset-grid">
+                <!-- G1. Coin -->
+                <div class="asset-card">
+                    <div class="asset-header">
+                        <span class="asset-id">G1. Coin Pickup</span>
+                        <span class="asset-status status-missing">MISSING</span>
+                    </div>
+                    <div class="asset-preview">
+                        <img src="assets/coin.png" alt="Coin Pickup" onerror="this.parentElement.innerHTML='<div class=\'preview-placeholder\'>Coin Preview<br><small>24x24px</small></div>'">
+                    </div>
+                    <div class="asset-info">
+                        <div class="info-row">
+                            <span class="info-label">File:</span>
+                            <span class="info-value">assets/coin.png</span>
+                        </div>
+                        <div class="file-path">assets/coin.png</div>
+                    </div>
+                    <div class="requirements">
+                        <div class="requirements-title">📋 Exact Requirements</div>
+                        <div class="requirement-item"><strong>Size:</strong> 24x24px exactly</div>
+                        <div class="requirement-item"><strong>Format:</strong> PNG with transparent background</div>
+                        <div class="requirement-item"><strong>Shape:</strong> Circular</div>
+                        <div class="requirement-item"><strong>Design:</strong> Abstract circuit pattern inside</div>
+                        <div class="requirement-item"><strong>Colors:</strong> Teal (#0BB39C) and amber (#D8A24A) blend</div>
+                        <div class="requirement-item"><strong>Effect:</strong> Glowing</div>
+                        <div class="requirement-item"><strong>Silhouette:</strong> Clean, readable at tiny size</div>
+                    </div>
+                    <div class="why-section">
+                        <div class="why-title">💡 Why These Requirements</div>
+                        <div class="why-text">
+                            <strong>24x24px:</strong> Small pickup size. Must be visible but not overwhelming. Standard coin size for runner games.<br><br>
+                            <strong>Circular:</strong> Classic coin shape is instantly recognizable. Players immediately understand it's collectible.<br><br>
+                            <strong>Circuit Pattern:</strong> Reinforces game's technology theme. Pattern can be animated for visual interest.<br><br>
+                            <strong>Teal + Amber:</strong> Matches game's color palette. High contrast colors ensure visibility against dark backgrounds.<br><br>
+                            <strong>Glow Effect:</strong> Makes coin feel valuable and magical. Draws player attention during fast scrolling.
+                        </div>
+                    </div>
+                    <div class="file-input-wrapper">
+                        <label class="file-input-label">
+                            📤 Upload Coin Sprite
+                            <input type="file" accept="image/png" data-asset="G1">
+                        </label>
+                    </div>
+                </div>
+                
+                <!-- G2. Run Animation -->
+                <div class="asset-card">
+                    <div class="asset-header">
+                        <span class="asset-id">G2. Run Animation (3-Frame)</span>
+                        <span class="asset-status status-character">CHARACTER</span>
+                    </div>
+                    <div class="asset-preview" style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 5px; padding: 10px;">
+                        <img src="assets/player_run_0.png" alt="Run Frame 0" onerror="this.parentElement.innerHTML='<div class=\'preview-placeholder\'>Animation Frames Preview<br><small>3 frames × 1024x1280px</small></div>'">
+                        <img src="assets/player_run_1.png" alt="Run Frame 1" onerror="this.style.display='none'">
+                        <img src="assets/player_run_2.png" alt="Run Frame 2" onerror="this.style.display='none'">
+                    </div>
+                    <div class="asset-info">
+                        <div class="info-row">
+                            <span class="info-label">Files:</span>
+                            <span class="info-value">assets/player_run_0.png<br>assets/player_run_1.png<br>assets/player_run_2.png</span>
+                        </div>
+                        <div class="file-path">
+                            assets/player_run_0.png (contact) ❌<br>
+                            assets/player_run_1.png (air) ❌<br>
+                            assets/player_run_2.png (passing) ❌
+                        </div>
+                    </div>
+                    <div class="requirements">
+                        <div class="requirements-title">📋 Exact Requirements</div>
+                        <div class="requirement-item"><strong>Frames:</strong> 3 frames total</div>
+                        <div class="requirement-item"><strong>Size:</strong> Same as A1 Player (1024x1280px master, ~52x64px final)</div>
+                        <div class="requirement-item"><strong>Format:</strong> PNG with transparent background (each frame)</div>
+                        <div class="requirement-item"><strong>Pivot:</strong> Bottom-center (same as A1)</div>
+                        <div class="requirement-item"><strong>Frame 0:</strong> Contact frame (one foot on ground)</div>
+                        <div class="requirement-item"><strong>Frame 1:</strong> Air frame (both feet off ground)</div>
+                        <div class="requirement-item"><strong>Frame 2:</strong> Passing frame (legs crossing)</div>
+                        <div class="requirement-item"><strong>Kelly Consistency:</strong> Must match A1 exactly (same character, wardrobe)</div>
+                    </div>
+                    <div class="why-section">
+                        <div class="why-title">💡 Why These Requirements</div>
+                        <div class="why-text">
+                            <strong>3 Frames:</strong> Minimum frames for convincing run cycle. More frames = smoother animation but larger file size. 3 frames strikes balance.<br><br>
+                            <strong>Same Size as A1:</strong> Frames must match static player sprite dimensions. Ensures no size jumps during animation.<br><br>
+                            <strong>Bottom-Center Pivot:</strong> All frames must use same pivot point. Prevents character "bouncing" up and down during animation.<br><br>
+                            <strong>Contact/Air/Passing:</strong> Three key poses create complete run cycle. Covers all phases of running motion.<br><br>
+                            <strong>Kelly Consistency:</strong> Critical - character must look identical across all frames. Same face, hair, armor. Only pose changes.
+                        </div>
+                    </div>
+                    <div class="file-input-wrapper">
+                        <label class="file-input-label">
+                            📤 Upload All 3 Frames (ZIP)
+                            <input type="file" accept=".zip,image/png" data-asset="G2" multiple>
+                        </label>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <footer style="text-align: center; margin-top: 50px; padding: 30px; color: #adb5bd;">
+            <p><strong>ReinMaker Runner Game</strong> - Asset Requirements Gallery</p>
+            <p style="margin-top: 10px; font-size: 0.9em;">Upload your final assets above. Each replacement will be validated against requirements.</p>
+        </footer>
+    </div>
+    
+    <script>
+        // File upload handling
+        document.querySelectorAll('input[type="file"]').forEach(input => {
+            input.addEventListener('change', function(e) {
+                const file = e.target.files[0];
+                if (file) {
+                    const assetId = this.getAttribute('data-asset');
+                    const card = this.closest('.asset-card');
+                    const preview = card.querySelector('.asset-preview');
+                    
+                    // Create preview
+                    const reader = new FileReader();
+                    reader.onload = function(e) {
+                        preview.innerHTML = `<img src="${e.target.result}" alt="Preview">`;
+                    };
+                    reader.readAsDataURL(file);
+                    
+                    // Update status
+                    const statusBadge = card.querySelector('.asset-status');
+                    if (statusBadge.classList.contains('status-missing')) {
+                        statusBadge.textContent = 'UPLOADED';
+                        statusBadge.classList.remove('status-missing');
+                        statusBadge.classList.add('status-exists');
+                    }
+                    
+                    console.log(`Asset ${assetId} uploaded:`, file.name);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
+

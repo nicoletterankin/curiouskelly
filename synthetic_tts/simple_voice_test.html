@@ -1,0 +1,246 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Simple Voice Test - Real Audio</title>
+    <style>
+        body { 
+            font-family: Arial, sans-serif; 
+            margin: 20px; 
+            background: #f5f5f5;
+        }
+        .audio-test { 
+            background: white; 
+            margin: 20px 0; 
+            padding: 20px; 
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .audio-test h3 { 
+            color: #333; 
+            margin-bottom: 15px;
+        }
+        .transcript {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 5px;
+            margin: 10px 0;
+            font-style: italic;
+            border-left: 4px solid #007bff;
+        }
+        audio { 
+            width: 100%; 
+            margin: 10px 0; 
+        }
+        .quality-score {
+            display: flex;
+            gap: 10px;
+            margin: 10px 0;
+        }
+        .score-button {
+            padding: 5px 10px;
+            border: 1px solid #ddd;
+            background: white;
+            cursor: pointer;
+            border-radius: 3px;
+        }
+        .score-button:hover {
+            background: #f0f0f0;
+        }
+        .score-button.selected {
+            background: #007bff;
+            color: white;
+        }
+        .status {
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 5px;
+        }
+        .success { background: #d4edda; color: #155724; }
+        .error { background: #f8d7da; color: #721c24; }
+    </style>
+</head>
+<body>
+    <h1>🎵 Simple Voice Test - Real Audio</h1>
+    <p>Test the actual speech audio files with quality scoring</p>
+    
+    <div class="audio-test">
+        <h3>Basic Synthesis Test</h3>
+        <div class="transcript">"Hello, this is a basic synthesis test using the hybrid TTS system."</div>
+        <audio controls>
+            <source src="real_speech_output/basic_synthesis/basic_voice_1_1.wav" type="audio/wav">
+            Your browser does not support the audio element.
+        </audio>
+        <div class="quality-score">
+            <span>Quality Score:</span>
+            <button class="score-button" onclick="scoreAudio(this, 1)">1</button>
+            <button class="score-button" onclick="scoreAudio(this, 2)">2</button>
+            <button class="score-button" onclick="scoreAudio(this, 3)">3</button>
+            <button class="score-button" onclick="scoreAudio(this, 4)">4</button>
+            <button class="score-button" onclick="scoreAudio(this, 5)">5</button>
+            <button class="score-button" onclick="scoreAudio(this, 6)">6</button>
+            <button class="score-button" onclick="scoreAudio(this, 7)">7</button>
+            <button class="score-button" onclick="scoreAudio(this, 8)">8</button>
+            <button class="score-button" onclick="scoreAudio(this, 9)">9</button>
+            <button class="score-button" onclick="scoreAudio(this, 10)">10</button>
+        </div>
+    </div>
+    
+    <div class="audio-test">
+        <h3>Voice Interpolation Test</h3>
+        <div class="transcript">"This is voice interpolation between two different voices in real-time."</div>
+        <audio controls>
+            <source src="real_speech_output/voice_interpolation/interpolation_voice_1_voice_2_1_weight_0.50.wav" type="audio/wav">
+            Your browser does not support the audio element.
+        </audio>
+        <div class="quality-score">
+            <span>Quality Score:</span>
+            <button class="score-button" onclick="scoreAudio(this, 1)">1</button>
+            <button class="score-button" onclick="scoreAudio(this, 2)">2</button>
+            <button class="score-button" onclick="scoreAudio(this, 3)">3</button>
+            <button class="score-button" onclick="scoreAudio(this, 4)">4</button>
+            <button class="score-button" onclick="scoreAudio(this, 5)">5</button>
+            <button class="score-button" onclick="scoreAudio(this, 6)">6</button>
+            <button class="score-button" onclick="scoreAudio(this, 7)">7</button>
+            <button class="score-button" onclick="scoreAudio(this, 8)">8</button>
+            <button class="score-button" onclick="scoreAudio(this, 9)">9</button>
+            <button class="score-button" onclick="scoreAudio(this, 10)">10</button>
+        </div>
+    </div>
+    
+    <div class="audio-test">
+        <h3>Emotional Speech Test</h3>
+        <div class="transcript">"I am so excited about this new technology!"</div>
+        <audio controls>
+            <source src="real_speech_output/emotional_speech/emotion_happy_voice_1_1.wav" type="audio/wav">
+            Your browser does not support the audio element.
+        </audio>
+        <div class="quality-score">
+            <span>Quality Score:</span>
+            <button class="score-button" onclick="scoreAudio(this, 1)">1</button>
+            <button class="score-button" onclick="scoreAudio(this, 2)">2</button>
+            <button class="score-button" onclick="scoreAudio(this, 3)">3</button>
+            <button class="score-button" onclick="scoreAudio(this, 4)">4</button>
+            <button class="score-button" onclick="scoreAudio(this, 5)">5</button>
+            <button class="score-button" onclick="scoreAudio(this, 6)">6</button>
+            <button class="score-button" onclick="scoreAudio(this, 7)">7</button>
+            <button class="score-button" onclick="scoreAudio(this, 8)">8</button>
+            <button class="score-button" onclick="scoreAudio(this, 9)">9</button>
+            <button class="score-button" onclick="scoreAudio(this, 10)">10</button>
+        </div>
+    </div>
+    
+    <div id="status-log"></div>
+    
+    <script>
+        let scores = {};
+        
+        function scoreAudio(button, score) {
+            // Remove selected class from all buttons in this group
+            const buttons = button.parentElement.querySelectorAll('.score-button');
+            buttons.forEach(btn => btn.classList.remove('selected'));
+            
+            // Add selected class to clicked button
+            button.classList.add('selected');
+            
+            // Store the score
+            const audioTest = button.closest('.audio-test');
+            const testName = audioTest.querySelector('h3').textContent;
+            scores[testName] = score;
+            
+            logStatus(`Scored ${testName}: ${score}/10`);
+            
+            // Show average score
+            const avgScore = Object.values(scores).reduce((a, b) => a + b, 0) / Object.keys(scores).length;
+            logStatus(`Average Score: ${avgScore.toFixed(1)}/10`);
+        }
+        
+        function logStatus(message) {
+            const log = document.getElementById('status-log');
+            const div = document.createElement('div');
+            div.className = 'status success';
+            div.textContent = new Date().toLocaleTimeString() + ': ' + message;
+            log.appendChild(div);
+            console.log(message);
+        }
+        
+        function logError(message) {
+            const log = document.getElementById('status-log');
+            const div = document.createElement('div');
+            const div2 = document.createElement('div');
+            div.className = 'status error';
+            div.textContent = new Date().toLocaleTimeString() + ': ' + message;
+            div2.textContent = 'Check browser console for more details';
+            log.appendChild(div);
+            log.appendChild(div2);
+            console.error(message);
+        }
+        
+        // Test audio file accessibility
+        function testAudioAccess() {
+            const audioFiles = [
+                'real_speech_output/basic_synthesis/basic_voice_1_1.wav',
+                'real_speech_output/voice_interpolation/interpolation_voice_1_voice_2_1_weight_0.50.wav',
+                'real_speech_output/emotional_speech/emotion_happy_voice_1_1.wav'
+            ];
+            
+            audioFiles.forEach((file, index) => {
+                fetch(file)
+                    .then(response => {
+                        if (response.ok) {
+                            logStatus(`✅ Audio file ${index + 1} accessible: ${file}`);
+                        } else {
+                            logError(`❌ Audio file ${index + 1} not accessible: ${file} (Status: ${response.status})`);
+                        }
+                    })
+                    .catch(error => {
+                        logError(`❌ Audio file ${index + 1} error: ${file} - ${error.message}`);
+                    });
+            });
+        }
+        
+        // Run tests when page loads
+        window.onload = function() {
+            logStatus('Page loaded, testing audio accessibility...');
+            testAudioAccess();
+        };
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+

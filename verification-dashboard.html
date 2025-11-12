@@ -1,0 +1,219 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Kelly Assets - Verification Dashboard</title>
+  <style>
+    :root {
+      --bg: #0f1115;
+      --panel: #171a21;
+      --text: #e6e6e6;
+      --muted: #9aa4b2;
+      --green: #29c56e;
+      --red: #ff5f5f;
+      --yellow: #ffd166;
+      --blue: #5aa9ff;
+      --border: #2a2f3a;
+    }
+    html, body { height: 100%; }
+    body {
+      margin: 0; font-family: system-ui, -apple-system, Segoe UI, Roboto, Arial, sans-serif;
+      background: var(--bg); color: var(--text);
+    }
+    header {
+      padding: 16px 20px; background: var(--panel); border-bottom: 1px solid var(--border);
+      display: flex; align-items: center; gap: 16px; flex-wrap: wrap;
+    }
+    h1 { font-size: 18px; margin: 0; font-weight: 600; }
+    .hint { color: var(--muted); font-size: 13px; }
+    .controls { display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+    .btn { background: var(--blue); color: #fff; border: none; padding: 8px 12px; border-radius: 8px; cursor: pointer; font-weight: 600; }
+    .btn:disabled { opacity: 0.6; cursor: default; }
+    .stat {
+      display: inline-flex; align-items: center; gap: 8px; background: var(--panel);
+      border: 1px solid var(--border); border-radius: 8px; padding: 6px 10px; font-size: 13px;
+    }
+    .stat .dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; }
+    .dot.pass { background: var(--green); }
+    .dot.fail { background: var(--red); }
+    .grid { padding: 16px; display: grid; grid-template-columns: 1fr; gap: 12px; }
+    .card { background: var(--panel); border: 1px solid var(--border); border-radius: 10px; padding: 12px; }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { text-align: left; padding: 8px; font-size: 13px; border-bottom: 1px solid var(--border); vertical-align: top; }
+    th { color: var(--muted); font-weight: 600; }
+    .status { font-weight: 700; }
+    .status.pass { color: var(--green); }
+    .status.fail { color: var(--red); }
+    .thumb { width: 96px; height: 96px; object-fit: contain; background: #0b0d10; border: 1px solid var(--border); border-radius: 6px; }
+    details { margin-top: 6px; }
+    code { background: #0c0f14; border: 1px solid var(--border); padding: 1px 4px; border-radius: 4px; }
+    footer { color: var(--muted); font-size: 12px; text-align: center; padding: 16px; }
+    .filters { display: flex; gap: 10px; align-items: center; }
+    select, input[type="search"] { background: #10141b; color: var(--text); border: 1px solid var(--border); border-radius: 6px; padding: 6px 8px; }
+  </style>
+  <script>
+    let fileHandles = [];
+    let imagesByName = new Map();
+    let manifests = [];
+
+    async function handlePickDir(ev) {
+      const input = document.getElementById('picker');
+      const files = Array.from(input.files || []);
+      if (!files.length) return;
+      fileHandles = files;
+      // Index images by basename
+      imagesByName.clear();
+      for (const f of files) {
+        const name = f.name;
+        if (name.match(/\.(png|jpg|jpeg|webp)$/i)) {
+          imagesByName.set(name, f);
+        }
+      }
+      // Load manifests (accept any *.json that looks like our manifest)
+      manifests = [];
+      for (const f of files) {
+        if (f.name.toLowerCase().endsWith('.json')) {
+          try {
+            const text = await f.text();
+            const data = JSON.parse(text);
+            if (data && (data.qc || data.schema === 'kelly.asset.manifest/v1')) {
+              manifests.push({ file: f, data });
+            }
+          } catch (e) {
+            console.warn('Bad manifest', f.name, e);
+          }
+        }
+      }
+      render();
+    }
+
+    function matchImageFor(manifest) {
+      try {
+        const path = manifest.data?.result?.path || '';
+        const base = path.split(/[\\\/]/).pop();
+        if (imagesByName.has(base)) return imagesByName.get(base);
+        // Fallback: try manifest filename base
+        const mfBase = (manifest.file.name || '').replace(/\.json$/,'') + '.png';
+        if (imagesByName.has(mfBase)) return imagesByName.get(mfBase);
+      } catch {}
+      return null;
+    }
+
+    function render() {
+      const tbody = document.querySelector('#results tbody');
+      tbody.innerHTML = '';
+      let pass = 0, fail = 0;
+      const query = document.getElementById('search').value.trim().toLowerCase();
+      const filter = document.getElementById('filter').value;
+
+      // Sort by status -> name
+      const rows = manifests.slice().sort((a,b)=>{
+        const ap = a.data?.qc?.verdict?.pass ? 0 : 1;
+        const bp = b.data?.qc?.verdict?.pass ? 0 : 1;
+        if (ap!==bp) return ap-bp;
+        return (a.file.name||'').localeCompare(b.file.name||'');
+      });
+
+      for (const m of rows) {
+        const d = m.data || {};
+        const v = d.qc?.verdict || {}; const metrics = d.qc?.metrics || {};
+        const name = m.file.name.replace(/\.json$/,'');
+        const status = v.pass ? 'PASS' : 'FAIL';
+        if (status==='PASS') pass++; else fail++;
+        const searchBlob = (name + ' ' + JSON.stringify(v) + ' ' + JSON.stringify(metrics)).toLowerCase();
+        if (query && !searchBlob.includes(query)) continue;
+        if (filter==='pass' && !v.pass) continue;
+        if (filter==='fail' && v.pass) continue;
+
+        const tr = document.createElement('tr');
+        const imgFile = matchImageFor(m);
+        let imgCell = '';
+        if (imgFile) {
+          const url = URL.createObjectURL(imgFile);
+          imgCell = `<a href="${url}" target="_blank"><img class="thumb" src="${url}" alt="thumb"/></a>`;
+        } else {
+          imgCell = `<div class="thumb" style="display:flex;align-items:center;justify-content:center;color:var(--muted);">n/a</div>`;
+        }
+
+        const reasons = (v.reasons||[]).join(', ');
+        const metricsHtml = `
+          <div>brightness: <code>${fmt(metrics.brightness_mean)}</code>
+            · contrast: <code>${fmt(metrics.contrast_std)}</code>
+            · colorfulness: <code>${fmt(metrics.colorfulness)}</code>
+            · sharpness: <code>${fmt(metrics.sharpness_var_laplace)}</code>
+            · size: <code>${metrics?.resolution?.width}×${metrics?.resolution?.height}</code>
+          </div>`;
+
+        tr.innerHTML = `
+          <td style="width:120px">${imgCell}</td>
+          <td>
+            <div style="font-weight:600">${name}</div>
+            <div class="hint">${m.file.webkitRelativePath}</div>
+          </td>
+          <td class="status ${v.pass?'pass':'fail'}">${status}</td>
+          <td>
+            ${metricsHtml}
+            ${reasons?`<div class="hint">reasons: ${reasons}</div>`:''}
+            <details><summary>thresholds</summary>
+              <pre style="white-space:pre-wrap">${escapeHtml(JSON.stringify(v.thresholds||{}, null, 2))}</pre>
+            </details>
+          </td>
+        `;
+        tbody.appendChild(tr);
+      }
+      document.getElementById('pass').textContent = pass;
+      document.getElementById('fail').textContent = fail;
+
+      const empty = document.getElementById('empty');
+      if ((pass + fail) === 0) {
+        empty.style.display = 'block';
+      } else {
+        empty.style.display = 'none';
+      }
+    }
+
+    function fmt(v){ return (v===undefined||v===null)?'—':Number(v).toFixed(4); }
+    function escapeHtml(s){ return String(s).replace(/[&<>]/g, c=>({"&":"&amp;","<":"&lt;",">":"&gt;"}[c])); }
+  </script>
+</head>
+<body>
+  <header>
+    <h1>Kelly Assets — Verification Dashboard</h1>
+    <div class="controls">
+      <label class="btn" for="picker">Select assets folder</label>
+      <input id="picker" type="file" webkitdirectory directory multiple style="display:none" onchange="handlePickDir(event)" />
+      <div class="stat"><span class="dot pass"></span> PASS <span id="pass">0</span></div>
+      <div class="stat"><span class="dot fail"></span> FAIL <span id="fail">0</span></div>
+      <div class="filters">
+        <select id="filter" onchange="render()">
+          <option value="all">All</option>
+          <option value="pass">Pass only</option>
+          <option value="fail">Fail only</option>
+        </select>
+        <input id="search" type="search" placeholder="Search name / reason..." oninput="render()" />
+      </div>
+      <div class="hint">Tip: choose the folder <code>projects/Kelly/assets</code></div>
+    </div>
+  </header>
+  <div class="grid">
+    <div class="card">
+      <div id="empty" class="hint" style="display:none;padding:6px 8px">No manifests found yet. Select the folder <code>projects/Kelly/assets</code> or its parent to include both <code>renders</code> and <code>manifests</code>.</div>
+      <table id="results">
+        <thead>
+          <tr>
+            <th>Image</th>
+            <th>Name</th>
+            <th>Status</th>
+            <th>QC Metrics</th>
+          </tr>
+        </thead>
+        <tbody></tbody>
+      </table>
+    </div>
+  </div>
+  <footer>Open this file directly in a browser, click “Select assets folder”, then choose <code>projects/Kelly/assets</code>.</footer>
+</body>
+</html>
+
+

@@ -1,0 +1,96 @@
+---
+import { buildLocalizedPath, normaliseLocale } from '@lib/i18n';
+import type { LocaleDictionary } from '@lib/i18n/types';
+
+interface LocaleOption {
+  code: string;
+  label: string;
+  prefix: string;
+}
+
+interface Props {
+  dictionary: LocaleDictionary;
+  locale: string;
+  currentPath: string;
+  locales: LocaleOption[];
+  nonce: string;
+}
+
+const { dictionary, locale, currentPath, locales, nonce } = Astro.props as Props;
+const activeLocale = normaliseLocale(locale);
+---
+
+<aside class="locale-banner shadow-lg" data-locale-banner hidden>
+  <p class="mb-2 fw-semibold" data-locale-message></p>
+  <div class="d-flex gap-2">
+    <button type="button" class="btn btn-primary btn-sm flex-fill" data-locale-switch>
+      {dictionary.localePrompt.confirm}
+    </button>
+    <button type="button" class="btn btn-outline-secondary btn-sm flex-fill" data-locale-dismiss>
+      {dictionary.localePrompt.dismiss}
+    </button>
+  </div>
+</aside>
+<script type="module" nonce={nonce} is:inline>
+  import { trackLocalePrompt } from '@lib/analytics';
+  import { buildLocalizedPath } from '@lib/i18n';
+
+  const banner = document.querySelector('[data-locale-banner]');
+  const switchButton = document.querySelector('[data-locale-switch]');
+  const dismissButton = document.querySelector('[data-locale-dismiss]');
+  const messageEl = document.querySelector('[data-locale-message]');
+
+  const LOCALE_COOKIE = 'localeChoice';
+  const locales = {JSON.stringify(locales)};
+  const currentLocale = {JSON.stringify(activeLocale)};
+  const localePromptCopy = {JSON.stringify(dictionary.localePrompt)};
+  const currentPath = {JSON.stringify(currentPath)};
+
+  const getPreferredLocale = () => {
+    const browserLocales = navigator.languages ?? [navigator.language];
+    const normalized = browserLocales
+      .map((loc) => loc?.toLowerCase?.())
+      .filter(Boolean);
+
+    for (const candidate of normalized) {
+      const matched = locales.find((item) => item.code.toLowerCase() === candidate || item.prefix === candidate);
+      if (matched) {
+        return matched;
+      }
+    }
+    return null;
+  };
+
+  const storedChoice = document.cookie.split('; ').find((row) => row.startsWith(`${LOCALE_COOKIE}=`));
+  if (storedChoice) {
+    // user already made a choice
+    trackLocalePrompt('dismissed', currentLocale);
+    banner?.remove();
+  } else {
+    const preferred = getPreferredLocale();
+    if (preferred && preferred.code !== currentLocale) {
+      if (messageEl) {
+        messageEl.textContent = localePromptCopy.message.replace('{{language}}', preferred.label);
+      }
+      banner?.removeAttribute('hidden');
+      trackLocalePrompt('shown', preferred.code);
+
+      switchButton?.addEventListener('click', () => {
+        const targetPath = buildLocalizedPath(currentPath, preferred.code);
+        document.cookie = `${LOCALE_COOKIE}=${preferred.code};path=/;max-age=${60 * 60 * 24 * 365};SameSite=Lax`;
+        trackLocalePrompt('accepted', preferred.code);
+        window.location.href = targetPath;
+      });
+
+      dismissButton?.addEventListener('click', () => {
+        document.cookie = `${LOCALE_COOKIE}=${currentLocale};path=/;max-age=${60 * 60 * 24 * 365};SameSite=Lax`;
+        trackLocalePrompt('dismissed', preferred.code);
+        banner?.setAttribute('hidden', 'true');
+      });
+    }
+  }
+</script>
+
+
+
+

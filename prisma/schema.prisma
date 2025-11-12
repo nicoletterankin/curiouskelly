@@ -1,0 +1,288 @@
+generator client {
+  provider = "prisma-client-js"
+  previewFeatures = ["postgresqlExtensions"]
+}
+
+datasource db {
+  provider          = "postgresql"
+  url               = env("DATABASE_URL")
+  relationMode      = "prisma"
+  shadowDatabaseUrl = env("SHADOW_DATABASE_URL")
+}
+
+model User {
+  id                String       @id @default(uuid())
+  email             String       @unique
+  displayName       String
+  locale            String       @default("en-US")
+  region            Region
+  createdAt         DateTime     @default(now())
+  updatedAt         DateTime     @updatedAt
+  passkeys          AuthPasskey[]
+  magicLinks        MagicLink[]
+  authChallenges    AuthChallenge[]
+  devices           Device[]
+  subscriptions     Subscription[]
+  attendances       Attendance[]
+  feedback          Feedback[]
+  sessions          Session[]    @relation("SessionOwner")
+}
+
+model AuthPasskey {
+  id            String   @id @default(uuid())
+  user          User     @relation(fields: [userId], references: [id])
+  userId        String
+  credentialId  String   @unique
+  publicKey     Bytes
+  counter       Int      @default(0)
+  deviceBinding String?
+  createdAt     DateTime @default(now())
+}
+
+model MagicLink {
+  id        String   @id @default(uuid())
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  token     String   @unique
+  expiresAt DateTime
+  consumed  Boolean  @default(false)
+  createdAt DateTime @default(now())
+}
+
+model AuthChallenge {
+  id        String             @id @default(uuid())
+  user      User?              @relation(fields: [userId], references: [id])
+  userId    String?
+  challenge String             @unique
+  type      AuthChallengeType
+  metadata  Json?
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+}
+
+model Device {
+  id              String   @id @default(uuid())
+  user            User     @relation(fields: [userId], references: [id])
+  userId          String
+  deviceFingerprint String
+  platform        String
+  lastSeenAt      DateTime @default(now())
+  createdAt       DateTime @default(now())
+}
+
+model Plan {
+  id          String   @id @default(uuid())
+  code        String   @unique
+  name        String
+  description String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  features    PlanFeature[]
+  subscriptions Subscription[]
+}
+
+model Feature {
+  id          String        @id @default(uuid())
+  code        String        @unique
+  description String
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  plans       PlanFeature[]
+}
+
+model PlanFeature {
+  planId    String
+  featureId String
+  limit     Int?
+  plan      Plan    @relation(fields: [planId], references: [id])
+  feature   Feature @relation(fields: [featureId], references: [id])
+
+  @@id([planId, featureId])
+}
+
+model Subscription {
+  id                String    @id @default(uuid())
+  user              User      @relation(fields: [userId], references: [id])
+  userId            String
+  plan              Plan      @relation(fields: [planId], references: [id])
+  planId            String
+  stripeCustomerId  String
+  stripeSubscriptionId String
+  status            SubscriptionStatus
+  startedAt         DateTime  @default(now())
+  currentPeriodEnd  DateTime
+  cancelAtPeriodEnd Boolean   @default(false)
+  createdAt         DateTime  @default(now())
+  updatedAt         DateTime  @updatedAt
+}
+
+model LessonTopic {
+  id          String             @id @default(uuid())
+  topic       String             @unique
+  title       String
+  summary     String
+  ageRating   String
+  createdAt   DateTime           @default(now())
+  updatedAt   DateTime           @updatedAt
+  manifests   LessonManifest[]
+}
+
+model LessonManifest {
+  id             String       @id @default(uuid())
+  topic          LessonTopic  @relation(fields: [topicId], references: [id])
+  topicId        String
+  locale         String
+  checksum       String
+  manifestUrl    String
+  assetsBasePath String
+  availableFrom  DateTime
+  availableUntil DateTime
+  durationMinutes Int
+  createdAt      DateTime @default(now())
+  updatedAt      DateTime @updatedAt
+
+  @@index([topicId, locale])
+}
+
+model ScheduleSlot {
+  id            String       @id @default(uuid())
+  topic         LessonTopic  @relation(fields: [topicId], references: [id])
+  topicId       String
+  region        Region
+  startTime     DateTime
+  capacity      Int
+  instructor    Instructor   @relation(fields: [instructorId], references: [id])
+  instructorId  String
+  allowOverflow Boolean      @default(false)
+  createdAt     DateTime     @default(now())
+  updatedAt     DateTime     @updatedAt
+  sessions      Session[]
+
+  @@index([region, startTime])
+}
+
+model Instructor {
+  id          String        @id @default(uuid())
+  displayName String
+  skills      String[]
+  timezone    String
+  isActive    Boolean       @default(true)
+  createdAt   DateTime      @default(now())
+  updatedAt   DateTime      @updatedAt
+  schedule    ScheduleSlot[]
+}
+
+model Session {
+  id             String        @id @default(uuid())
+  scheduleSlot   ScheduleSlot  @relation(fields: [scheduleSlotId], references: [id])
+  scheduleSlotId String
+  owner          User          @relation("SessionOwner", fields: [ownerId], references: [id])
+  ownerId        String
+  livekitRoomId  String
+  livekitUrl     String
+  status         SessionStatus
+  createdAt      DateTime      @default(now())
+  updatedAt      DateTime      @updatedAt
+  attendance     Attendance[]
+  replay         Replay?
+  feedback       Feedback[]
+}
+
+model Attendance {
+  id        String   @id @default(uuid())
+  session   Session  @relation(fields: [sessionId], references: [id])
+  sessionId String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  joinedAt  DateTime @default(now())
+  leftAt    DateTime?
+
+  @@unique([sessionId, userId])
+}
+
+model Replay {
+  id           String   @id @default(uuid())
+  session      Session  @relation(fields: [sessionId], references: [id])
+  sessionId    String   @unique
+  recordingUrl String
+  processedAt  DateTime @default(now())
+  createdAt    DateTime @default(now())
+}
+
+model Feedback {
+  id        String   @id @default(uuid())
+  session   Session  @relation(fields: [sessionId], references: [id])
+  sessionId String
+  user      User     @relation(fields: [userId], references: [id])
+  userId    String
+  rating    Int
+  comment   String?
+  submitted DateTime @default(now())
+}
+
+model Notification {
+  id          String   @id @default(uuid())
+  user        User     @relation(fields: [userId], references: [id])
+  userId      String
+  channel     NotificationChannel
+  template    String
+  payload     Json
+  scheduledAt DateTime
+  deliveredAt DateTime?
+  status      NotificationStatus @default(PENDING)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AuditEvent {
+  id          String   @id @default(uuid())
+  actorId     String?
+  actorType   String
+  action      String
+  targetType  String
+  targetId    String?
+  metadata    Json?
+  createdAt   DateTime @default(now())
+}
+
+enum Region {
+  AMER
+  EUROPE
+  APAC
+}
+
+enum SubscriptionStatus {
+  ACTIVE
+  PAST_DUE
+  CANCELED
+  INCOMPLETE
+  TRIALING
+}
+
+enum SessionStatus {
+  SCHEDULED
+  LIVE
+  ENDED
+  CANCELED
+}
+
+enum NotificationChannel {
+  EMAIL
+  PUSH
+  SMS
+}
+
+enum NotificationStatus {
+  PENDING
+  SENT
+  FAILED
+}
+
+enum AuthChallengeType {
+  REGISTRATION
+  AUTHENTICATION
+  MAGIC_LINK
+}
+

@@ -1,0 +1,305 @@
+---
+import SiteLayout from '@layouts/SiteLayout.astro';
+import HeroCountdown from '@components/HeroCountdown.astro';
+import LeadForm from '@components/LeadForm.astro';
+import TestimonialsCarousel from '@components/TestimonialsCarousel.astro';
+import { getDictionary, supportedLocales } from '@lib/i18n';
+import type { LocaleCode, RouteKey } from '@lib/i18n/types';
+
+const marketingRoutes: RouteKey[] = ['home', 'adults', 'children', 'teachers', 'schools'];
+const legalRoutes: RouteKey[] = ['privacy', 'cookies'];
+
+const localeSegments = supportedLocales.map((locale) => ({
+  ...locale,
+  slugPrefix: locale.prefix ? [locale.prefix] : []
+}));
+
+const baseRoutes: { key: RouteKey; slug: string[] }[] = [
+  { key: 'home', slug: [] },
+  { key: 'adults', slug: ['adults'] },
+  { key: 'children', slug: ['children'] },
+  { key: 'teachers', slug: ['teachers'] },
+  { key: 'schools', slug: ['schools'] },
+  { key: 'privacy', slug: ['privacy'] },
+  { key: 'cookies', slug: ['cookies'] },
+  { key: 'thank-you', slug: ['thank-you'] }
+];
+
+export function getStaticPaths() {
+  const paths = [];
+  for (const locale of localeSegments) {
+    for (const route of baseRoutes) {
+      paths.push({
+        params: {
+          slug: [...locale.slugPrefix, ...route.slug]
+        },
+        props: {
+          locale: locale.code,
+          routeKey: route.key
+        }
+      });
+    }
+  }
+  return paths;
+}
+
+interface Props {
+  locale: LocaleCode;
+  routeKey: RouteKey;
+}
+
+const { props, url } = Astro;
+const { locale: localeCode, routeKey } = props as Props;
+const dictionary = getDictionary(localeCode);
+const heroCTA = '#lead-form';
+const countdownEnd =
+  import.meta.env.PUBLIC_COUNTDOWN_TEST_MODE === 'true'
+    ? new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString()
+    : import.meta.env.PUBLIC_COUNTDOWN_END ?? '2026-01-01T05:00:00.000Z';
+
+const navLabel = dictionary.nav.find((item) => item.key === routeKey)?.label ?? '';
+const pageTitle =
+  routeKey === 'home' ? dictionary.meta.title : `${navLabel} — Curious Kelly`;
+const pageDescription =
+  routeKey === 'home'
+    ? dictionary.meta.description
+    : `${navLabel} · ${dictionary.hero.subheadline}`;
+
+const heroTitle =
+  routeKey === 'home'
+    ? dictionary.hero.headline
+    : `${navLabel} · ${dictionary.hero.headline}`;
+
+const heroSubtitle =
+  routeKey === 'home'
+    ? dictionary.hero.subheadline
+    : dictionary.hero.subheadline;
+
+const legalContent: Record<RouteKey, { title: string; paragraphs: string[] }> = {
+  privacy: {
+    title: navLabel || 'Privacy',
+    paragraphs: [
+      'We keep learner data encrypted at rest and in transit. No behavioural advertising, ever.',
+      'We precompute lesson content per locale across English, Spanish, and Brazilian Portuguese before delivery.',
+      'We store consent separately from analytics data and provide deletion on request within 24 hours.'
+    ]
+  },
+  cookies: {
+    title: navLabel || 'Cookies',
+    paragraphs: [
+      'Essential cookies store your consent choices and secure sessions for the concierge portal.',
+      'Analytics cookies only load after you opt in. They measure aggregate performance across locales.',
+      'Marketing tags are disabled by default and will never run without an explicit opt-in.'
+    ]
+  },
+  home: { title: '', paragraphs: [] },
+  adults: { title: '', paragraphs: [] },
+  children: { title: '', paragraphs: [] },
+  teachers: { title: '', paragraphs: [] },
+  schools: { title: '', paragraphs: [] },
+  'thank-you': { title: '', paragraphs: [] }
+};
+
+const checkRoute = (key: RouteKey) => {
+  if (!baseRoutes.some((route) => route.key === key)) {
+    return Astro.redirect('/404');
+  }
+};
+
+checkRoute(routeKey);
+---
+
+<SiteLayout
+  dictionary={dictionary}
+  locale={localeCode}
+  currentPath={url.pathname}
+  routeKey={routeKey}
+  title={pageTitle}
+  description={pageDescription}
+>
+  {marketingRoutes.includes(routeKey) ? (
+    <section class="hero">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-lg-7">
+            <h1 class="display-4 fw-bold">{heroTitle}</h1>
+            <p class="lead hero__subtitle">{heroSubtitle}</p>
+            <HeroCountdown copy={dictionary.countdown} endDate={countdownEnd} nonce={crypto.randomUUID()} />
+            <div class="mt-4 d-flex gap-3 flex-wrap">
+              <a class="btn btn-gradient btn-lg" href={heroCTA}>
+                {dictionary.hero.ctaLabel}
+              </a>
+              <a class="btn btn-outline-secondary btn-lg" href="#faq">
+                FAQ
+              </a>
+            </div>
+          </div>
+          <div class="col-lg-5" id="lead-form">
+            <LeadForm dictionary={dictionary} locale={localeCode} nonce={crypto.randomUUID()} routeKey={routeKey} />
+          </div>
+        </div>
+      </div>
+    </section>
+  ) : null}
+
+  {routeKey === 'home' ? (
+    <section class="py-5 bg-light">
+      <div class="container">
+        <p class="text-uppercase text-muted fw-semibold mb-3">{dictionary.trust.title}</p>
+        <div class="trust-badges">
+          {dictionary.trust.items.map((item) => (
+            <div class="badge-item">{item}</div>
+          ))}
+        </div>
+      </div>
+    </section>
+  ) : null}
+
+  {marketingRoutes.includes(routeKey) ? (
+    <section class="py-5" id="features">
+      <div class="container">
+        <div class="row mb-4">
+          <div class="col-lg-7">
+            <h2 class="h3 fw-semibold">{dictionary.features.title}</h2>
+            <p class="text-muted">
+              {dictionary.hero.subheadline}
+            </p>
+          </div>
+        </div>
+        <div class="row g-4">
+          {dictionary.features.items.map((feature) => (
+            <div class="col-md-6 col-lg-3">
+              <div class="card h-100 shadow-sm border-0">
+                <div class="card-body">
+                  <div class="mb-3 display-6 text-primary" aria-hidden="true">
+                    {feature.icon === 'clock' ? '⏰' : null}
+                    {feature.icon === 'shield' ? '🛡️' : null}
+                    {feature.icon === 'globe' ? '🌍' : null}
+                    {feature.icon === 'people' ? '🤝' : null}
+                  </div>
+                  <h3 class="h5">{feature.title}</h3>
+                  <p class="text-muted">{feature.description}</p>
+                </div>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
+    </section>
+  ) : null}
+
+  {routeKey === 'home' ? (
+    <section class="py-5 bg-light">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-lg-5">
+            <h2 class="h3 fw-semibold">{dictionary.pricing.title}</h2>
+            <p class="text-muted">{dictionary.pricing.subtitle}</p>
+            <p class="small text-muted">{dictionary.pricing.legal}</p>
+          </div>
+          <div class="col-lg-7">
+            <div class="row g-3">
+              {dictionary.pricing.options.map((option) => (
+                <div class="col-md-6">
+                  <div class="card h-100 border-0 shadow-sm">
+                    <div class="card-body">
+                      <h3 class="h5">{option.title}</h3>
+                      <p class="text-muted mb-0">{option.description}</p>
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  ) : null}
+
+  {marketingRoutes.includes(routeKey) ? (
+    <section class="py-5">
+      <div class="container">
+        <div class="row g-5 align-items-center">
+          <div class="col-lg-6">
+            <TestimonialsCarousel dictionary={dictionary} nonce={crypto.randomUUID()} />
+          </div>
+          <div class="col-lg-6">
+            <div class="accordion faq-accordion" id="faq">
+              <div class="mb-3">
+                <h2 class="h4">{dictionary.faq.title}</h2>
+              </div>
+              {dictionary.faq.items.map((item, index) => (
+                <div class="card">
+                  <div class="card-header bg-white" id={`faq-heading-${index}`}>
+                    <button
+                      class="btn btn-link text-start w-100"
+                      type="button"
+                      data-bs-toggle="collapse"
+                      data-bs-target={`#faq-collapse-${index}`}
+                      aria-expanded={index === 0 ? 'true' : 'false'}
+                      aria-controls={`faq-collapse-${index}`}
+                    >
+                      {item.question}
+                    </button>
+                  </div>
+                  <div
+                    id={`faq-collapse-${index}`}
+                    class:list={[
+                      'collapse',
+                      { show: index === 0 }
+                    ]}
+                    aria-labelledby={`faq-heading-${index}`}
+                    data-bs-parent="#faq"
+                  >
+                    <div class="card-body text-muted">
+                      {item.answer}
+                    </div>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  ) : null}
+
+  {legalRoutes.includes(routeKey) ? (
+    <section class="py-5">
+      <div class="container">
+        <h1 class="display-5 mb-4">{legalContent[routeKey].title}</h1>
+        {legalContent[routeKey].paragraphs.map((paragraph) => (
+          <p class="lead text-muted">{paragraph}</p>
+        ))}
+        <p class="text-muted small">
+          Last updated: {new Date().toLocaleDateString(dictionary.code)}
+        </p>
+      </div>
+    </section>
+  ) : null}
+
+  {routeKey === 'thank-you' ? (
+    <section class="py-5">
+      <div class="container">
+        <div class="row justify-content-center">
+          <div class="col-lg-7 text-center">
+            <h1 class="display-5 fw-semibold">{dictionary.thankYou.heading}</h1>
+            <p class="lead text-muted">{dictionary.thankYou.body}</p>
+            <ul class="list-unstyled text-start mx-auto" style="max-width: 30rem;">
+              {dictionary.thankYou.checklist.map((item) => (
+                <li class="d-flex align-items-start mb-2">
+                  <span class="badge bg-primary me-3 rounded-pill">+</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+            <a class="btn btn-gradient mt-3" href={supportedLocales.find((l) => l.code === localeCode)?.prefix ? `/${supportedLocales.find((l) => l.code === localeCode)?.prefix}/` : '/'}>
+              {dictionary.thankYou.back}
+            </a>
+          </div>
+        </div>
+      </div>
+    </section>
+  ) : null}
+</SiteLayout>
+

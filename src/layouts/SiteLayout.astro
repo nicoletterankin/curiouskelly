@@ -1,0 +1,380 @@
+---
+import SeoHead from '@components/SeoHead.astro';
+import CookieConsent from '@components/CookieConsent.astro';
+import LanguageSwitcher from '@components/LanguageSwitcher.astro';
+import LocalePrompt from '@components/LocalePrompt.astro';
+import { supportedLocales, buildLocalizedPath, getAlternateHreflang, normaliseLocale } from '@lib/i18n';
+import type { LocaleDictionary, RouteKey, LocaleCode } from '@lib/i18n/types';
+import '@styles/main.scss';
+
+interface Props {
+  dictionary: LocaleDictionary;
+  locale: string;
+  currentPath: string;
+  routeKey: RouteKey;
+  title?: string;
+  description?: string;
+  canonical?: string;
+}
+
+const {
+  dictionary,
+  locale,
+  currentPath,
+  routeKey,
+  title = dictionary.meta.title,
+  description = dictionary.meta.description,
+  canonical
+} = Astro.props as Props;
+
+const nonce = crypto.randomUUID();
+const alternateLinks = getAlternateHreflang(currentPath);
+const consentRequired = import.meta.env.PUBLIC_CONSENT_REQUIRED !== 'false';
+const localeCode = normaliseLocale(locale) as LocaleCode;
+---
+
+<!DOCTYPE html>
+<html lang={locale.toLowerCase()}>
+  <head>
+    <SeoHead
+      title={title}
+      description={description}
+      dictionary={dictionary}
+      locale={locale}
+      nonce={nonce}
+      canonical={canonical ?? new URL(currentPath, import.meta.env.PUBLIC_SITE_URL ?? 'https://www.curiouskelly.com').toString()}
+      alternate={alternateLinks}
+      routeKey={routeKey}
+    />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="referrer" content="strict-origin-when-cross-origin" />
+    <link rel="icon" href="/favicons/favicon.ico" sizes="any" />
+    <link rel="icon" type="image/svg+xml" href="/favicons/favicon.svg" />
+    <link rel="apple-touch-icon" href="/favicons/apple-touch-icon.png" />
+    <link rel="manifest" href="/manifest.webmanifest" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link
+      rel="preload"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap"
+      as="style"
+    />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=DM+Mono:wght@400;500&display=swap"
+    />
+    <script type="module" nonce={nonce} is:inline>
+      const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReducedMotion) {
+        document.body.classList.add('reduced-motion');
+      }
+      window.__CURIOUS_KELLY__ = {
+        locale: {JSON.stringify(locale)},
+        consentRequired: {JSON.stringify(consentRequired)},
+        countdownEnd: {JSON.stringify(import.meta.env.PUBLIC_COUNTDOWN_END ?? '')},
+        analytics: {
+          gtmId: {JSON.stringify(import.meta.env.PUBLIC_GTM_ID ?? '')},
+          ga4Id: {JSON.stringify(import.meta.env.PUBLIC_GA4_ID ?? '')},
+          metaPixelId: {JSON.stringify(import.meta.env.PUBLIC_META_PIXEL_ID ?? '')},
+          tiktokPixelId: {JSON.stringify(import.meta.env.PUBLIC_TIKTOK_PIXEL_ID ?? '')},
+          twitterPixelId: {JSON.stringify(import.meta.env.PUBLIC_TWITTER_PIXEL_ID ?? '')},
+          taboolaId: {JSON.stringify(import.meta.env.PUBLIC_TABOOLA_ACCOUNT_ID ?? '')},
+          vwoId: {JSON.stringify(import.meta.env.PUBLIC_VWO_ID ?? '')},
+          hotjarId: {JSON.stringify(import.meta.env.PUBLIC_HOTJAR_ID ?? '')},
+          clarityId: {JSON.stringify(import.meta.env.PUBLIC_CLARITY_ID ?? '')}
+        }
+      };
+      window.dataLayer = window.dataLayer || [];
+    </script>
+  </head>
+  <body class="d-flex flex-column min-vh-100">
+    <a href="#main" class="sr-only sr-only-focusable">Skip to content</a>
+    <CookieConsent dictionary={dictionary} nonce={nonce} enabled={consentRequired} />
+    <LocalePrompt
+      dictionary={dictionary}
+      locale={locale}
+      currentPath={currentPath}
+      nonce={nonce}
+      locales={supportedLocales}
+    />
+    <header class="navbar navbar-expand-lg navbar-light bg-white sticky-top shadow-sm">
+      <div class="container">
+        <a class="navbar-brand" href={buildLocalizedPath('/', localeCode)}>
+          Curious Kelly
+        </a>
+        <button
+          class="navbar-toggler"
+          type="button"
+          data-bs-toggle="collapse"
+          data-bs-target="#primary-nav"
+          aria-controls="primary-nav"
+          aria-expanded="false"
+          aria-label="Toggle navigation"
+        >
+          <span class="navbar-toggler-icon"></span>
+        </button>
+        <nav class="collapse navbar-collapse" id="primary-nav">
+          <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+            {dictionary.nav.map((item) => (
+              <li class="nav-item" data-route={item.key}>
+                <a
+                  class:list={[
+                    'nav-link',
+                    { active: item.key === routeKey }
+                  ]}
+                  href={item.href}
+                >
+                  {item.label}
+                </a>
+              </li>
+            ))}
+          </ul>
+          <LanguageSwitcher
+            locale={locale}
+            currentPath={currentPath}
+            locales={supportedLocales}
+            nonce={nonce}
+          />
+        </nav>
+      </div>
+    </header>
+    <main id="main" class="flex-grow-1">
+      <slot />
+    </main>
+    <footer class="bg-light py-5 border-top mt-5">
+      <div class="container">
+        <div class="row align-items-center">
+          <div class="col-md-6">
+            <p class="mb-2 fw-semibold text-uppercase text-secondary">{dictionary.trust.title}</p>
+            <div class="store-badges mb-3">
+              <span class="badge-placeholder">App Store</span>
+              <span class="badge-placeholder">Google Play</span>
+            </div>
+            <p class="small text-muted mb-0">{dictionary.footer.rights}</p>
+          </div>
+          <div class="col-md-6 text-md-end text-start mt-4 mt-md-0">
+            <a class="text-decoration-none me-3" href={dictionary.nav.find((item) => item.key === 'privacy')?.href ?? '#'}>{dictionary.footer.privacy}</a>
+            <a class="text-decoration-none" href={dictionary.nav.find((item) => item.key === 'cookies')?.href ?? '#'}>{dictionary.footer.cookies}</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+    <script type="module" nonce={nonce} is:inline>
+      import { registerLoader, onConsentChange, loadConsent } from '@lib/consent';
+
+      const config = window.__CURIOUS_KELLY__?.analytics ?? {};
+      const loadedTags = new Map();
+
+      const createScript = (id, src, attributes = {}) => {
+        if (loadedTags.has(id)) {
+          return;
+        }
+        const script = document.createElement('script');
+        script.src = src;
+        script.async = true;
+        script.dataset.tagId = id;
+        script.dataset.tagCategory = attributes.category ?? 'analytics';
+        Object.entries(attributes).forEach(([key, value]) => {
+          if (key === 'category') return;
+          script.setAttribute(key, value);
+        });
+        document.head.appendChild(script);
+        loadedTags.set(id, script);
+      };
+
+      const removeCategory = (category) => {
+        loadedTags.forEach((node, id) => {
+          if (node.dataset.tagCategory === category) {
+            node.remove();
+            loadedTags.delete(id);
+          }
+        });
+      };
+
+      if (config.ga4Id) {
+        registerLoader('analytics', () => {
+          createScript(
+            `ga4-${config.ga4Id}`,
+            `https://www.googletagmanager.com/gtag/js?id=${config.ga4Id}`,
+            { category: 'analytics' }
+          );
+          window.dataLayer = window.dataLayer || [];
+          function gtag() {
+            window.dataLayer.push(arguments);
+          }
+          gtag('js', new Date());
+          gtag('config', config.ga4Id);
+        });
+      }
+
+      if (config.hotjarId) {
+        registerLoader('analytics', () => {
+          createScript(
+            `hotjar-${config.hotjarId}`,
+            `https://static.hotjar.com/c/hotjar-${config.hotjarId}.js?sv=7`,
+            { category: 'analytics' }
+          );
+        });
+      }
+
+      if (config.clarityId) {
+        registerLoader('analytics', () => {
+          if (loadedTags.has(`clarity-${config.clarityId}`)) return;
+          window.clarity =
+            window.clarity ||
+            function () {
+              (window.clarity.q = window.clarity.q || []).push(arguments);
+            };
+          createScript(
+            `clarity-${config.clarityId}`,
+            `https://www.clarity.ms/tag/${config.clarityId}`,
+            { category: 'analytics' }
+          );
+        });
+      }
+
+      if (config.gtmId) {
+        registerLoader('marketing', () => {
+          if (loadedTags.has(`gtm-${config.gtmId}`)) return;
+          const noscript = document.createElement('noscript');
+          noscript.innerHTML = `<iframe src="https://www.googletagmanager.com/ns.html?id=${config.gtmId}" height="0" width="0" style="display:none;visibility:hidden"></iframe>`;
+          document.body.appendChild(noscript);
+          loadedTags.set(`gtm-noscript-${config.gtmId}`, noscript);
+          createScript(
+            `gtm-${config.gtmId}`,
+            `https://www.googletagmanager.com/gtm.js?id=${config.gtmId}`,
+            { category: 'marketing' }
+          );
+        });
+      }
+
+      if (config.metaPixelId) {
+        registerLoader('marketing', () => {
+          if (loadedTags.has(`meta-${config.metaPixelId}`)) return;
+          window.fbq =
+            window.fbq ||
+            function () {
+              (window.fbq.q = window.fbq.q || []).push(arguments);
+            };
+          window.fbq.push = window.fbq;
+          window.fbq.loaded = true;
+          window.fbq.version = '2.0';
+          createScript(
+            `meta-${config.metaPixelId}`,
+            'https://connect.facebook.net/en_US/fbevents.js',
+            { category: 'marketing' }
+          );
+          window.fbq('init', config.metaPixelId);
+          window.fbq('track', 'PageView');
+        });
+      }
+
+      if (config.tiktokPixelId) {
+        registerLoader('marketing', () => {
+          if (loadedTags.has(`tiktok-${config.tiktokPixelId}`)) return;
+          window.ttq = window.ttq || [];
+          createScript(
+            `tiktok-${config.tiktokPixelId}`,
+            'https://analytics.tiktok.com/i18n/pixel/events.js',
+            { category: 'marketing' }
+          );
+          window.ttq.push(['config', config.tiktokPixelId]);
+        });
+      }
+
+      if (config.twitterPixelId) {
+        registerLoader('marketing', () => {
+          if (loadedTags.has(`twitter-${config.twitterPixelId}`)) return;
+          window.twq =
+            window.twq ||
+            function () {
+              window.twq.exe ? window.twq.exe(...arguments) : window.twq.queue.push(arguments);
+            };
+          window.twq.version = '1';
+          window.twq.queue = [];
+          createScript(
+            `twitter-${config.twitterPixelId}`,
+            'https://static.ads-twitter.com/uwt.js',
+            { category: 'marketing' }
+          );
+          window.twq('config', config.twitterPixelId);
+        });
+      }
+
+      if (config.taboolaId) {
+        registerLoader('marketing', () => {
+          if (loadedTags.has(`taboola-${config.taboolaId}`)) return;
+          window._tfa = window._tfa || [];
+          window._tfa.push({ notify: 'event', name: 'page_view', id: config.taboolaId });
+          createScript(
+            `taboola-${config.taboolaId}`,
+            `https://cdn.taboola.com/libtrc/${config.taboolaId}/tfa.js`,
+            { category: 'marketing' }
+          );
+        });
+      }
+
+      if (config.vwoId) {
+        registerLoader('marketing', () => {
+          if (loadedTags.has(`vwo-${config.vwoId}`)) return;
+          createScript(
+            `vwo-${config.vwoId}`,
+            `https://dev.visualwebsiteoptimizer.com/j.php?a=${config.vwoId}&u=${encodeURIComponent(window.location.href)}&f=0`,
+            { category: 'marketing' }
+          );
+        });
+      }
+
+      onConsentChange((state) => {
+        if (!state.analytics) {
+          removeCategory('analytics');
+          loadedTags.forEach((node, id) => {
+            if (id.startsWith('gtm-noscript') || id.startsWith('meta-iframe')) {
+              node.remove();
+              loadedTags.delete(id);
+            }
+          });
+        }
+        if (!state.marketing) {
+          removeCategory('marketing');
+          loadedTags.forEach((node, id) => {
+            if (id.startsWith('gtm-noscript') || id.startsWith('meta-iframe')) {
+              node.remove();
+              loadedTags.delete(id);
+            }
+          });
+        }
+      });
+
+      const initial = loadConsent();
+      if (!initial.analytics) {
+        removeCategory('analytics');
+      }
+      if (!initial.marketing) {
+        removeCategory('marketing');
+      }
+    </script>
+    <script type="module" nonce={nonce} is:inline>
+      import 'bootstrap/dist/js/bootstrap.bundle.min.js';
+      import { initRum } from '@lib/rum';
+      import { trackView } from '@lib/analytics';
+      import { loadConsent, updateConsent } from '@lib/consent';
+
+      const locale = window.__CURIOUS_KELLY__?.locale ?? 'en-US';
+      trackView(locale);
+
+      if (window.__CURIOUS_KELLY__?.consentRequired === false) {
+        const currentConsent = loadConsent();
+        if (!currentConsent.analytics || !currentConsent.marketing) {
+          updateConsent({ analytics: true, marketing: true });
+        }
+      }
+
+      if (window.__CURIOUS_KELLY__?.locale && import.meta.env.PUBLIC_RUM_ENABLED === 'true') {
+        initRum(window.__CURIOUS_KELLY__.locale);
+      }
+    </script>
+  </body>
+</html>
+
