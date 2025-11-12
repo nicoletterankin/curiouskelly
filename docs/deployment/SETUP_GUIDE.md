@@ -54,8 +54,9 @@ git commit -m "Initial commit: CuriousKelly.com production codebase
 
 1. Open browser: https://github.com/new
 2. **Repository name:** `curiouskelly`
-3. **Description:** `Striving to be the best digital teacher in the world.`
-4. **Visibility:** Public
+3. **Description:** `Hi I'm Kelly, and I'm striving to be the best digital teacher for anyone, anywhere.
+
+  **Visibility:** Public
 5. **DO NOT check:**
    - ❌ Add a README file
    - ❌ Add .gitignore
