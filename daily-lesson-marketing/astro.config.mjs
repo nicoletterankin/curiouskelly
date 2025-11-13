@@ -1,5 +1,5 @@
 import { defineConfig } from 'astro/config';
-import vercel from '@astrojs/vercel/serverless';
+import vercel from '@astrojs/vercel';
 import purgecss from 'vite-plugin-purgecss';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -16,7 +16,7 @@ export default defineConfig({
   envPrefix: ['PUBLIC_', 'CRM_', 'TURNSTILE_', 'RECAPTCHA_', 'LOCALE_'],
   integrations: [],
   adapter: process.env.NODE_ENV === 'development' ? undefined : vercel(),
-  output: process.env.NODE_ENV === 'development' ? 'static' : 'hybrid',
+  output: 'static',
   vite: {
     resolve: {
       alias: {
@@ -59,9 +59,6 @@ export default defineConfig({
   build: {
     inlineStylesheets: 'auto',
     assets: '_assets'
-  },
-  experimental: {
-    assets: true
   }
 });
 
