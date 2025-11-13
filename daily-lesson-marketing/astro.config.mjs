@@ -1,6 +1,5 @@
 import { defineConfig } from 'astro/config';
 import vercel from '@astrojs/vercel/serverless';
-import image from '@astrojs/image';
 import purgecss from 'vite-plugin-purgecss';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
@@ -15,11 +14,7 @@ export default defineConfig({
     port: 4321
   },
   envPrefix: ['PUBLIC_', 'CRM_', 'TURNSTILE_', 'RECAPTCHA_', 'LOCALE_'],
-  integrations: [
-    image({
-      serviceEntryPoint: '@astrojs/image/sharp'
-    })
-  ],
+  integrations: [],
   adapter: process.env.NODE_ENV === 'development' ? undefined : vercel(),
   output: process.env.NODE_ENV === 'development' ? 'static' : 'hybrid',
   vite: {
