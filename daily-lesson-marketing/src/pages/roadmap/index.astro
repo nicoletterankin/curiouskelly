@@ -1,27 +1,14 @@
 ---
 import SiteLayout from '@layouts/SiteLayout.astro';
-import { getDictionary, supportedLocales } from '@lib/i18n';
-import type { LocaleCode } from '@lib/i18n/types';
+import { getDictionary } from '@lib/i18n';
 
-export function getStaticPaths() {
-  return supportedLocales.map((locale) => ({
-    params: { locale: locale.prefix || 'en' },
-    props: { locale: locale.code }
-  }));
-}
-
-interface Props {
-  locale: LocaleCode;
-}
-
-const { locale: localeCode } = Astro.props as Props;
-const dictionary = getDictionary(localeCode);
+const dictionary = getDictionary('en-US');
 const nonce = crypto.randomUUID();
 ---
 
 <SiteLayout
   dictionary={dictionary}
-  locale={localeCode}
+  locale="en-US"
   currentPath="/roadmap"
   routeKey="home"
   title="Roadmap — Curious Kelly"
