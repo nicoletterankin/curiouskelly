@@ -1,22 +1,31 @@
 ---
 import SiteLayout from '@layouts/SiteLayout.astro';
-import { getTranslations, getPathPrefix, type Locale } from '@lib/i18n';
+import { getDictionary, buildLocalizedPath, normaliseLocale } from '@lib/i18n';
+import type { LocaleCode } from '@lib/i18n/types';
 
-const locale: Locale = 'en-US';
-const t = getTranslations(locale);
-const prefix = getPathPrefix(locale);
+const locale = normaliseLocale(Astro.url.pathname);
+const dictionary = getDictionary(locale);
+const nonce = crypto.randomUUID();
 ---
 
-<SiteLayout title={`Thank You - ${t.site.name}`} description="Thank you for your submission" locale={locale} path="/thank-you/">
+<SiteLayout
+  dictionary={dictionary}
+  locale={locale}
+  currentPath="/thank-you/"
+  routeKey="thank-you"
+  title={`Thank You — Curious Kelly`}
+  description="Thank you for your submission"
+  nonce={nonce}
+>
   <section class="thank-you-section">
     <div class="container">
       <div class="row justify-content-center">
         <div class="col-md-8 text-center">
           <div class="thank-you-icon">✓</div>
-          <h1>{t.thankYou.title}</h1>
-          <p class="lead">{t.thankYou.message}</p>
-          <a href={prefix || '/'} class="btn btn-primary btn-lg">
-            {t.thankYou.backHome}
+          <h1>{dictionary.thankYou.heading}</h1>
+          <p class="lead">{dictionary.thankYou.body}</p>
+          <a href={buildLocalizedPath('/', locale)} class="btn btn-primary btn-lg">
+            {dictionary.thankYou.back}
           </a>
         </div>
       </div>
@@ -57,6 +66,7 @@ const prefix = getPathPrefix(locale);
     color: #6c757d;
   }
 </style>
+
 
 
 

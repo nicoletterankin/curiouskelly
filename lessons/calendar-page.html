@@ -1,0 +1,270 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>365-Day Learning Calendar - Curious Kelly</title>
+    <link rel="stylesheet" href="calendar-page.css">
+    <style>
+        .server-warning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #fef3c7;
+            border-bottom: 2px solid #f59e0b;
+            padding: 12px 20px;
+            z-index: 10000;
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: 14px;
+            display: none;
+        }
+        .server-warning.show {
+            display: block;
+        }
+        .server-warning-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 20px;
+        }
+        .server-warning-text {
+            flex: 1;
+        }
+        .server-warning strong {
+            color: #92400e;
+        }
+        .server-warning-code {
+            background: #fff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin: 4px 0;
+        }
+        .server-warning-close {
+            background: #f59e0b;
+            color: white;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+        }
+        .server-warning-close:hover {
+            background: #d97706;
+        }
+    </style>
+</head>
+<body>
+    <!-- CORS Warning Banner -->
+    <div class="server-warning" id="cors-warning">
+        <div class="server-warning-content">
+            <div class="server-warning-text">
+                <strong>⚠️ CORS Error Detected:</strong> This page needs to run on a web server. 
+                <div class="server-warning-code">
+                    Windows: .\start-server.ps1<br>
+                    Mac/Linux: ./start-server.sh<br>
+                    Then open: http://localhost:8000/calendar-page.html
+                </div>
+            </div>
+            <button class="server-warning-close" onclick="document.getElementById('cors-warning').classList.remove('show')">×</button>
+        </div>
+    </div>
+
+    <!-- Layout #1: Side Panel Slide-Over -->
+    <div class="app-container">
+        <!-- Panel Toggle Button -->
+        <button class="panel-toggle" id="panel-toggle" aria-label="Toggle panel">
+            <span class="toggle-icon">☰</span>
+        </button>
+
+        <!-- Side Panel (Slides in from right) -->
+        <div class="side-panel" id="side-panel">
+            <div class="panel-header">
+                <h2>📅 Calendar & Lesson</h2>
+                <button class="panel-close" id="panel-close" aria-label="Close panel">×</button>
+            </div>
+
+            <!-- Panel Tabs -->
+            <div class="panel-tabs">
+                <button class="tab-btn active" data-tab="calendar">Calendar</button>
+                <button class="tab-btn" data-tab="lesson">Lesson</button>
+                <button class="tab-btn" data-tab="settings">Settings</button>
+            </div>
+
+            <!-- Tab Content: Calendar -->
+            <div class="tab-content active" id="tab-calendar">
+                <div class="calendar-view-selector">
+                    <button class="view-btn active" data-view="today">Today</button>
+                    <button class="view-btn" data-view="year">Year</button>
+                    <button class="view-btn" data-view="month">Month</button>
+                    <button class="view-btn" data-view="week">Week</button>
+                </div>
+
+                <!-- Today View -->
+                <div class="calendar-view active" id="view-today">
+                    <div class="today-card" id="today-card">
+                        <!-- Populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Year View -->
+                <div class="calendar-view" id="view-year">
+                    <div class="year-grid" id="year-grid">
+                        <!-- 12 months will be generated here -->
+                    </div>
+                </div>
+
+                <!-- Month View -->
+                <div class="calendar-view" id="view-month">
+                    <div class="month-header">
+                        <button class="nav-btn" id="prev-month">◀</button>
+                        <h3 id="current-month-name">January 2025</h3>
+                        <button class="nav-btn" id="next-month">▶</button>
+                    </div>
+                    <div class="month-calendar" id="month-calendar">
+                        <!-- Calendar grid will be generated here -->
+                    </div>
+                </div>
+
+                <!-- Week View -->
+                <div class="calendar-view" id="view-week">
+                    <div class="week-header">
+                        <button class="nav-btn" id="prev-week">◀</button>
+                        <h3 id="current-week-range">Week of Jan 1</h3>
+                        <button class="nav-btn" id="next-week">▶</button>
+                    </div>
+                    <div class="week-list" id="week-list">
+                        <!-- Week days will be generated here -->
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content: Lesson -->
+            <div class="tab-content" id="tab-lesson">
+                <div class="lesson-header">
+                    <div class="lesson-title" id="lesson-title">No lesson selected</div>
+                    <div class="lesson-day" id="lesson-day"></div>
+                </div>
+
+                <!-- Phase Progress -->
+                <div class="phase-progress">
+                    <div class="phase-indicator active" data-phase="welcome">
+                        <span class="phase-number">1</span>
+                        <span class="phase-label">Welcome</span>
+                    </div>
+                    <div class="phase-indicator" data-phase="q1">
+                        <span class="phase-number">2</span>
+                        <span class="phase-label">Q1</span>
+                    </div>
+                    <div class="phase-indicator" data-phase="q2">
+                        <span class="phase-number">3</span>
+                        <span class="phase-label">Q2</span>
+                    </div>
+                    <div class="phase-indicator" data-phase="q3">
+                        <span class="phase-number">4</span>
+                        <span class="phase-label">Q3</span>
+                    </div>
+                    <div class="phase-indicator" data-phase="wisdom">
+                        <span class="phase-number">5</span>
+                        <span class="phase-label">Wisdom</span>
+                    </div>
+                </div>
+
+                <!-- Current Phase Content -->
+                <div class="phase-content" id="phase-content">
+                    <div class="empty-phase">
+                        <p>Select a lesson to begin</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Tab Content: Settings -->
+            <div class="tab-content" id="tab-settings">
+                <div class="settings-section">
+                    <h3>Age Selection</h3>
+                    <p class="settings-desc">Choose the age level for lesson content</p>
+                    <select class="settings-select" id="age-selector">
+                        <option value="2-5">2-5 years</option>
+                        <option value="6-12">6-12 years</option>
+                        <option value="13-17">13-17 years</option>
+                        <option value="18-35">18-35 years</option>
+                        <option value="36-60">36-60 years</option>
+                        <option value="61-102">61-102 years</option>
+                    </select>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Language</h3>
+                    <p class="settings-desc">Choose the language Kelly speaks</p>
+                    <select class="settings-select" id="language-selector">
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                        <option value="fr">Français</option>
+                    </select>
+                </div>
+
+                <div class="settings-section">
+                    <h3>Current Lesson</h3>
+                    <div class="current-lesson-info" id="current-lesson-info">
+                        <p>No lesson selected</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- White Room Background with Window Light -->
+        <div class="white-room">
+            <div class="window-light"></div>
+            <div class="window-shadows"></div>
+        </div>
+
+        <!-- Center - Kelly (Always Visible, Shifts when panel opens) -->
+        <div class="kelly-area" id="kelly-area">
+            <!-- Zoom Controls -->
+            <div class="zoom-controls">
+                <button class="zoom-btn" id="zoom-in-btn" aria-label="Zoom in">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 4V16M4 10H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <div class="zoom-indicator" id="zoom-indicator">Head & Shoulders</div>
+                <button class="zoom-btn" id="zoom-out-btn" aria-label="Zoom out">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M4 10H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
+            
+            <!-- Kelly Scene Container -->
+            <div class="kelly-container" id="kelly-container">
+                <div class="kelly-scene" id="kelly-scene">
+                    <div class="kelly-image-wrapper" id="kelly-image-wrapper">
+                        <img src="" alt="Kelly" class="kelly-image" id="kelly-image">
+                    </div>
+                    <!-- Fallback if image not found -->
+                    <div class="kelly-placeholder-content" id="kelly-fallback">
+                        <div class="kelly-label">Kelly</div>
+                        <div class="kelly-status" id="kelly-status">Ready to learn</div>
+                        <div class="kelly-fallback-message">Loading Kelly images...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Controls -->
+    <div class="bottom-controls">
+        <button class="control-btn" id="prev-phase" disabled>◀ Back</button>
+        <div class="phase-info">
+            <span id="current-phase-name">No lesson active</span>
+        </div>
+        <button class="control-btn" id="next-phase" disabled>Next ▶</button>
+    </div>
+
+    <script src="calendar-page.js"></script>
+</body>
+</html>

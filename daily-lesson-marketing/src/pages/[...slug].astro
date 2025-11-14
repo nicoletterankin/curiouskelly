@@ -9,7 +9,7 @@ import type { LocaleCode, RouteKey } from '@lib/i18n/types';
 const marketingRoutes: RouteKey[] = ['home', 'adults', 'children', 'teachers', 'schools'];
 const legalRoutes: RouteKey[] = ['privacy', 'cookies'];
 
-const localeSegments = supportedLocales.map((locale) => ({
+const localeSegments = supportedLocales.map((locale: { code: string; label: string; prefix: string }) => ({
   ...locale,
   slugPrefix: locale.prefix ? [locale.prefix] : []
 }));
@@ -57,7 +57,7 @@ const countdownEnd =
     ? new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString()
     : import.meta.env.PUBLIC_COUNTDOWN_END ?? '2026-01-01T05:00:00.000Z';
 
-const navLabel = dictionary.nav.find((item) => item.key === routeKey)?.label ?? '';
+const navLabel = dictionary.nav.find((item: { key: RouteKey; href: string; label: string }) => item.key === routeKey)?.label ?? '';
 const pageTitle =
   routeKey === 'home' ? dictionary.meta.title : `${navLabel} — Curious Kelly`;
 const pageDescription =
@@ -147,7 +147,7 @@ checkRoute(routeKey);
       <div class="container">
         <p class="text-uppercase text-muted fw-semibold mb-3">{dictionary.trust.title}</p>
         <div class="trust-badges">
-          {dictionary.trust.items.map((item) => (
+          {dictionary.trust.items.map((item: string) => (
             <div class="badge-item">{item}</div>
           ))}
         </div>
@@ -167,7 +167,7 @@ checkRoute(routeKey);
           </div>
         </div>
         <div class="row g-4">
-          {dictionary.features.items.map((feature) => (
+          {dictionary.features.items.map((feature: { title: string; description: string; icon: string }) => (
             <div class="col-md-6 col-lg-3">
               <div class="card h-100 shadow-sm border-0">
                 <div class="card-body">
@@ -199,7 +199,7 @@ checkRoute(routeKey);
           </div>
           <div class="col-lg-7">
             <div class="row g-3">
-              {dictionary.pricing.options.map((option) => (
+              {dictionary.pricing.options.map((option: { title: string; description: string }) => (
                 <div class="col-md-6">
                   <div class="card h-100 border-0 shadow-sm">
                     <div class="card-body">
@@ -228,7 +228,7 @@ checkRoute(routeKey);
               <div class="mb-3">
                 <h2 class="h4">{dictionary.faq.title}</h2>
               </div>
-              {dictionary.faq.items.map((item, index) => (
+              {dictionary.faq.items.map((item: { question: string; answer: string }, index: number) => (
                 <div class="card">
                   <div class="card-header bg-white" id={`faq-heading-${index}`}>
                     <button
@@ -286,14 +286,14 @@ checkRoute(routeKey);
             <h1 class="display-5 fw-semibold">{dictionary.thankYou.heading}</h1>
             <p class="lead text-muted">{dictionary.thankYou.body}</p>
             <ul class="list-unstyled text-start mx-auto" style="max-width: 30rem;">
-              {dictionary.thankYou.checklist.map((item) => (
+              {dictionary.thankYou.checklist.map((item: string) => (
                 <li class="d-flex align-items-start mb-2">
                   <span class="badge bg-primary me-3 rounded-pill">+</span>
                   <span>{item}</span>
                 </li>
               ))}
             </ul>
-            <a class="btn btn-gradient mt-3" href={supportedLocales.find((l) => l.code === localeCode)?.prefix ? `/${supportedLocales.find((l) => l.code === localeCode)?.prefix}/` : '/'}>
+            <a class="btn btn-gradient mt-3" href={supportedLocales.find((l: { code: string; label: string; prefix: string }) => l.code === localeCode)?.prefix ? `/${supportedLocales.find((l: { code: string; label: string; prefix: string }) => l.code === localeCode)?.prefix}/` : '/'}>
               {dictionary.thankYou.back}
             </a>
           </div>

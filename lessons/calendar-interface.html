@@ -1,0 +1,1093 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>365-Day Learning Calendar - Curious Kelly</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .app-container {
+            display: grid;
+            grid-template-columns: 240px 1fr 280px;
+            height: 100vh;
+            gap: 0;
+        }
+
+        /* Left Rail - Calendar Navigation */
+        .left-rail {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-right: 2px solid rgba(102, 126, 234, 0.2);
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .calendar-header {
+            margin-bottom: 20px;
+        }
+
+        .calendar-header h2 {
+            color: #667eea;
+            font-size: 20px;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .view-selector {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+
+        .view-btn {
+            padding: 10px 16px;
+            border: 2px solid #e0e0e0;
+            background: white;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-align: left;
+        }
+
+        .view-btn:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .view-btn.active {
+            background: #667eea;
+            color: white;
+            border-color: #667eea;
+        }
+
+        .view-content {
+            display: none;
+        }
+
+        .view-content.active {
+            display: block;
+        }
+
+        /* Year View */
+        .year-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+
+        .month-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            background: white;
+        }
+
+        .month-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+            transform: translateY(-2px);
+        }
+
+        .month-card h3 {
+            color: #667eea;
+            font-size: 14px;
+            margin-bottom: 8px;
+        }
+
+        .month-stats {
+            font-size: 11px;
+            color: #666;
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+        }
+
+        .month-stats span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .dna-badge {
+            display: inline-block;
+            background: #667eea;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 10px;
+            font-size: 10px;
+            font-weight: 600;
+        }
+
+        /* Month View */
+        .month-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .month-header h3 {
+            color: #333;
+            font-size: 16px;
+        }
+
+        .nav-btn {
+            background: #667eea;
+            color: white;
+            border: none;
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .nav-btn:hover {
+            background: #5568d3;
+        }
+
+        .month-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .day-header {
+            text-align: center;
+            font-size: 10px;
+            font-weight: 600;
+            color: #667eea;
+            padding: 4px;
+        }
+
+        .day-cell {
+            aspect-ratio: 1;
+            border: 2px solid #e0e0e0;
+            border-radius: 6px;
+            padding: 4px;
+            cursor: pointer;
+            background: white;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            font-size: 10px;
+        }
+
+        .day-cell:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 4px rgba(102, 126, 234, 0.2);
+        }
+
+        .day-cell.today {
+            border-color: #10b981;
+            background: #f0fdf4;
+        }
+
+        .day-cell.completed {
+            background: #f0fdf4;
+        }
+
+        .day-cell.completed::after {
+            content: '✓';
+            position: absolute;
+            top: 2px;
+            right: 2px;
+            color: #10b981;
+            font-weight: bold;
+        }
+
+        .day-cell.has-dna::before {
+            content: '🧬';
+            position: absolute;
+            top: 2px;
+            left: 2px;
+            font-size: 10px;
+        }
+
+        .day-number {
+            font-weight: 600;
+            color: #333;
+        }
+
+        .day-cell.empty {
+            background: #f9f9f9;
+            cursor: default;
+            border-color: transparent;
+        }
+
+        /* Week View */
+        .week-list {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .week-day-card {
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .week-day-card:hover {
+            border-color: #667eea;
+            box-shadow: 0 2px 8px rgba(102, 126, 234, 0.2);
+        }
+
+        .week-day-card.has-dna {
+            border-left: 4px solid #667eea;
+        }
+
+        .week-day-header {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 12px;
+            margin-bottom: 4px;
+        }
+
+        .week-day-title {
+            font-size: 13px;
+            color: #333;
+            margin-bottom: 4px;
+        }
+
+        .week-day-date {
+            font-size: 11px;
+            color: #666;
+        }
+
+        /* Today View */
+        .today-card {
+            border: 2px solid #10b981;
+            border-radius: 12px;
+            padding: 16px;
+            background: white;
+            box-shadow: 0 4px 12px rgba(16, 185, 129, 0.2);
+        }
+
+        .today-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: start;
+            margin-bottom: 12px;
+        }
+
+        .today-day {
+            font-weight: 600;
+            color: #10b981;
+            font-size: 12px;
+        }
+
+        .today-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 8px;
+        }
+
+        .today-objective {
+            font-size: 12px;
+            color: #666;
+            line-height: 1.5;
+            margin-bottom: 12px;
+            max-height: 100px;
+            overflow-y: auto;
+        }
+
+        .today-meta {
+            display: flex;
+            gap: 12px;
+            font-size: 11px;
+            color: #999;
+            margin-bottom: 12px;
+        }
+
+        .play-btn {
+            width: 100%;
+            padding: 12px;
+            background: #667eea;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .play-btn:hover {
+            background: #5568d3;
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+        }
+
+        /* Center - Kelly */
+        .center-area {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(5px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .kelly-container {
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+
+        .kelly-placeholder {
+            width: 400px;
+            height: 600px;
+            background: rgba(255, 255, 255, 0.2);
+            border-radius: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .kelly-placeholder::before {
+            content: '👤';
+            font-size: 120px;
+            opacity: 0.5;
+        }
+
+        .kelly-placeholder::after {
+            content: 'Kelly';
+            position: absolute;
+            bottom: 40px;
+            color: white;
+            font-size: 24px;
+            font-weight: 600;
+            text-shadow: 0 2px 10px rgba(0, 0, 0, 0.3);
+        }
+
+        /* Right Rail - Lesson Details */
+        .right-rail {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-left: 2px solid rgba(102, 126, 234, 0.2);
+            padding: 20px;
+            overflow-y: auto;
+            box-shadow: -2px 0 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .right-rail.empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #999;
+            font-size: 14px;
+        }
+
+        .lesson-detail {
+            display: none;
+        }
+
+        .lesson-detail.active {
+            display: block;
+        }
+
+        .lesson-header {
+            margin-bottom: 16px;
+        }
+
+        .lesson-day {
+            font-weight: 600;
+            color: #667eea;
+            font-size: 12px;
+            margin-bottom: 8px;
+        }
+
+        .lesson-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #333;
+            margin-bottom: 12px;
+            line-height: 1.3;
+        }
+
+        .lesson-badges {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+
+        .lesson-objective {
+            font-size: 13px;
+            color: #666;
+            line-height: 1.6;
+            margin-bottom: 16px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        .lesson-meta {
+            background: #f5f5f5;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 16px;
+        }
+
+        .meta-item {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 12px;
+        }
+
+        .meta-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .meta-label {
+            color: #666;
+        }
+
+        .meta-value {
+            color: #333;
+            font-weight: 500;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 8px;
+            background: #e0e0e0;
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 16px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: #667eea;
+            transition: width 0.3s;
+        }
+
+        /* Bottom Controls */
+        .bottom-controls {
+            position: fixed;
+            bottom: 0;
+            left: 240px;
+            right: 280px;
+            height: 80px;
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-top: 2px solid rgba(102, 126, 234, 0.2);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 20px;
+            padding: 0 20px;
+            box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.1);
+        }
+
+        .control-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            border: 2px solid #667eea;
+            background: white;
+            color: #667eea;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 20px;
+            transition: all 0.2s;
+        }
+
+        .control-btn:hover {
+            background: #667eea;
+            color: white;
+            transform: scale(1.1);
+        }
+
+        .control-btn.play {
+            width: 64px;
+            height: 64px;
+            background: #667eea;
+            color: white;
+            font-size: 24px;
+        }
+
+        .control-btn.play:hover {
+            background: #5568d3;
+        }
+
+        .today-btn {
+            padding: 10px 20px;
+            background: #10b981;
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .today-btn:hover {
+            background: #059669;
+            transform: translateY(-2px);
+        }
+
+        /* Responsive */
+        @media (max-width: 1400px) {
+            .app-container {
+                grid-template-columns: 200px 1fr 240px;
+            }
+            .bottom-controls {
+                left: 200px;
+                right: 240px;
+            }
+        }
+
+        @media (max-width: 1024px) {
+            .left-rail, .right-rail {
+                position: absolute;
+                z-index: 100;
+                height: 100vh;
+                transform: translateX(-100%);
+                transition: transform 0.3s;
+            }
+            .left-rail.open {
+                transform: translateX(0);
+            }
+            .right-rail {
+                right: 0;
+                left: auto;
+                transform: translateX(100%);
+            }
+            .right-rail.open {
+                transform: translateX(0);
+            }
+            .app-container {
+                grid-template-columns: 1fr;
+            }
+            .bottom-controls {
+                left: 0;
+                right: 0;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <!-- Left Rail - Calendar Navigation -->
+        <div class="left-rail">
+            <div class="calendar-header">
+                <h2>📅 Calendar</h2>
+            </div>
+
+            <div class="view-selector">
+                <button class="view-btn active" data-view="today">Today's Lesson</button>
+                <button class="view-btn" data-view="year">Year View</button>
+                <button class="view-btn" data-view="month">Month View</button>
+                <button class="view-btn" data-view="week">Week View</button>
+            </div>
+
+            <!-- Today View -->
+            <div class="view-content active" id="view-today">
+                <div class="today-card" id="today-card">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Year View -->
+            <div class="view-content" id="view-year">
+                <div class="year-grid" id="year-grid">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Month View -->
+            <div class="view-content" id="view-month">
+                <div class="month-header">
+                    <button class="nav-btn" id="prev-month">◀</button>
+                    <h3 id="current-month">January 2025</h3>
+                    <button class="nav-btn" id="next-month">▶</button>
+                </div>
+                <div class="month-grid" id="month-grid">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Week View -->
+            <div class="view-content" id="view-week">
+                <div class="month-header">
+                    <button class="nav-btn" id="prev-week">◀</button>
+                    <h3 id="current-week">Week of Jan 1</h3>
+                    <button class="nav-btn" id="next-week">▶</button>
+                </div>
+                <div class="week-list" id="week-list">
+                    <!-- Populated by JavaScript -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Center - Kelly -->
+        <div class="center-area">
+            <div class="kelly-container">
+                <div class="kelly-placeholder">
+                    <!-- Kelly 3D Avatar will be rendered here in Unity -->
+                </div>
+            </div>
+        </div>
+
+        <!-- Right Rail - Lesson Details -->
+        <div class="right-rail" id="right-rail">
+            <div class="right-rail.empty" id="empty-state">
+                Click a day to see lesson details
+            </div>
+            <div class="lesson-detail" id="lesson-detail">
+                <!-- Populated by JavaScript -->
+            </div>
+        </div>
+    </div>
+
+    <!-- Bottom Controls -->
+    <div class="bottom-controls">
+        <button class="control-btn" id="prev-day">◀</button>
+        <button class="control-btn play" id="play-btn">▶</button>
+        <button class="control-btn" id="next-day">▶</button>
+        <button class="today-btn" id="today-btn">Today</button>
+        <div style="flex: 1;"></div>
+        <button class="control-btn" id="calendar-btn">📅</button>
+    </div>
+
+    <script>
+        // Calendar data
+        let calendarData = null;
+        let currentView = 'today';
+        let currentMonth = 0; // 0-11
+        let currentYear = 2025;
+        let currentWeek = 0;
+        let selectedDay = null;
+        let todayDay = null;
+
+        // Month names
+        const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                       'July', 'August', 'September', 'October', 'November', 'December'];
+        const dayNames = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+
+        // Load calendar data
+        async function loadCalendar() {
+            try {
+                const response = await fetch('365_day_calendar.json');
+                calendarData = await response.json();
+                
+                // Find today's day
+                const today = new Date();
+                todayDay = today.getDate();
+                currentMonth = today.getMonth();
+                currentYear = today.getFullYear();
+                
+                // Find today's lesson
+                const todayLesson = calendarData.lessons.find(l => {
+                    const lessonDate = new Date(l.date + ', ' + currentYear);
+                    return lessonDate.getDate() === todayDay && 
+                           lessonDate.getMonth() === currentMonth;
+                });
+                
+                if (todayLesson) {
+                    selectedDay = todayLesson.day;
+                } else {
+                    // Fallback to day 1
+                    selectedDay = 1;
+                }
+                
+                init();
+            } catch (error) {
+                console.error('Error loading calendar:', error);
+                document.getElementById('empty-state').textContent = 'Error loading calendar data';
+            }
+        }
+
+        function init() {
+            setupEventListeners();
+            renderToday();
+            renderYear();
+            renderMonth();
+            renderWeek();
+            if (selectedDay) {
+                showLessonDetail(selectedDay);
+            }
+        }
+
+        function setupEventListeners() {
+            // View selector
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    switchView(e.target.dataset.view);
+                });
+            });
+
+            // Month navigation
+            document.getElementById('prev-month').addEventListener('click', () => {
+                currentMonth--;
+                if (currentMonth < 0) {
+                    currentMonth = 11;
+                    currentYear--;
+                }
+                renderMonth();
+            });
+
+            document.getElementById('next-month').addEventListener('click', () => {
+                currentMonth++;
+                if (currentMonth > 11) {
+                    currentMonth = 0;
+                    currentYear++;
+                }
+                renderMonth();
+            });
+
+            // Week navigation
+            document.getElementById('prev-week').addEventListener('click', () => {
+                currentWeek--;
+                renderWeek();
+            });
+
+            document.getElementById('next-week').addEventListener('click', () => {
+                currentWeek++;
+                renderWeek();
+            });
+
+            // Day navigation
+            document.getElementById('prev-day').addEventListener('click', () => {
+                if (selectedDay > 1) {
+                    selectedDay--;
+                    showLessonDetail(selectedDay);
+                    renderToday();
+                }
+            });
+
+            document.getElementById('next-day').addEventListener('click', () => {
+                if (selectedDay < 365) {
+                    selectedDay++;
+                    showLessonDetail(selectedDay);
+                    renderToday();
+                }
+            });
+
+            document.getElementById('today-btn').addEventListener('click', () => {
+                const today = new Date();
+                const todayLesson = calendarData.lessons.find(l => {
+                    const lessonDate = new Date(l.date + ', ' + currentYear);
+                    return lessonDate.getDate() === today.getDate() && 
+                           lessonDate.getMonth() === today.getMonth();
+                });
+                if (todayLesson) {
+                    selectedDay = todayLesson.day;
+                    showLessonDetail(selectedDay);
+                    renderToday();
+                    switchView('today');
+                }
+            });
+
+            document.getElementById('play-btn').addEventListener('click', () => {
+                if (selectedDay) {
+                    playLesson(selectedDay);
+                }
+            });
+        }
+
+        function switchView(view) {
+            currentView = view;
+            
+            // Update buttons
+            document.querySelectorAll('.view-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.view === view);
+            });
+
+            // Update content
+            document.querySelectorAll('.view-content').forEach(content => {
+                content.classList.toggle('active', content.id === `view-${view}`);
+            });
+        }
+
+        function renderToday() {
+            const lesson = calendarData.lessons.find(l => l.day === selectedDay);
+            if (!lesson) return;
+
+            const card = document.getElementById('today-card');
+            const isToday = isLessonToday(lesson);
+            
+            card.innerHTML = `
+                <div class="today-header">
+                    <div class="today-day">Day ${lesson.day} - ${lesson.date}${isToday ? ' (Today)' : ''}</div>
+                    ${lesson.has_dna ? '<span class="dna-badge">🧬 DNA</span>' : ''}
+                </div>
+                <div class="today-title">${lesson.title}</div>
+                <div class="today-objective">${lesson.learning_objective}</div>
+                <div class="today-meta">
+                    <span>Source: ${lesson.source}</span>
+                    ${lesson.category ? `<span>Category: ${lesson.category}</span>` : ''}
+                </div>
+                <button class="play-btn" onclick="playLesson(${lesson.day})">
+                    ▶ Play Lesson
+                </button>
+            `;
+        }
+
+        function renderYear() {
+            const grid = document.getElementById('year-grid');
+            const monthLessons = {};
+
+            // Group lessons by month
+            calendarData.lessons.forEach(lesson => {
+                const month = lesson.date.split(' ')[0];
+                if (!monthLessons[month]) {
+                    monthLessons[month] = { total: 0, dna: 0, completed: 0 };
+                }
+                monthLessons[month].total++;
+                if (lesson.has_dna) monthLessons[month].dna++;
+                // completed would come from user progress data
+            });
+
+            grid.innerHTML = months.map((month, index) => {
+                const stats = monthLessons[month] || { total: 0, dna: 0, completed: 0 };
+                const daysInMonth = new Date(currentYear, index + 1, 0).getDate();
+                
+                return `
+                    <div class="month-card" onclick="openMonth(${index})">
+                        <h3>${month}</h3>
+                        <div class="month-stats">
+                            <span>📚 ${stats.total} lessons</span>
+                            ${stats.dna > 0 ? `<span>🧬 ${stats.dna} DNA lessons</span>` : ''}
+                            ${stats.completed > 0 ? `<span>✓ ${stats.completed} completed</span>` : ''}
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+
+        function openMonth(monthIndex) {
+            currentMonth = monthIndex;
+            renderMonth();
+            switchView('month');
+        }
+
+        function renderMonth() {
+            const grid = document.getElementById('month-grid');
+            const header = document.getElementById('current-month');
+            header.textContent = `${months[currentMonth]} ${currentYear}`;
+
+            // Get lessons for this month
+            const monthLessons = calendarData.lessons.filter(l => {
+                const lessonDate = new Date(l.date + ', ' + currentYear);
+                return lessonDate.getMonth() === currentMonth;
+            });
+
+            // Create day map
+            const dayMap = {};
+            monthLessons.forEach(lesson => {
+                const lessonDate = new Date(lesson.date + ', ' + currentYear);
+                dayMap[lessonDate.getDate()] = lesson;
+            });
+
+            // Get first day of month
+            const firstDay = new Date(currentYear, currentMonth, 1).getDay();
+            const daysInMonth = new Date(currentYear, currentMonth + 1, 0).getDate();
+            const today = new Date();
+
+            let html = '';
+
+            // Day headers
+            dayNames.forEach(day => {
+                html += `<div class="day-header">${day}</div>`;
+            });
+
+            // Empty cells for days before month starts
+            for (let i = 0; i < firstDay; i++) {
+                html += '<div class="day-cell empty"></div>';
+            }
+
+            // Days of month
+            for (let day = 1; day <= daysInMonth; day++) {
+                const lesson = dayMap[day];
+                const isToday = today.getDate() === day && 
+                               today.getMonth() === currentMonth && 
+                               today.getFullYear() === currentYear;
+                const classes = ['day-cell'];
+                if (isToday) classes.push('today');
+                if (lesson?.has_dna) classes.push('has-dna');
+                // if (lesson?.completed) classes.push('completed');
+
+                html += `
+                    <div class="${classes.join(' ')}" 
+                         onclick="selectDay(${lesson?.day || day})"
+                         title="${lesson?.title || 'No lesson'}">
+                        <div class="day-number">${day}</div>
+                    </div>
+                `;
+            }
+
+            grid.innerHTML = html;
+        }
+
+        function renderWeek() {
+            const list = document.getElementById('week-list');
+            const header = document.getElementById('current-week');
+            
+            // Calculate week start
+            const weekStart = getWeekStartDate();
+            header.textContent = `Week of ${weekStart.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}`;
+
+            let html = '';
+            for (let i = 0; i < 7; i++) {
+                const date = new Date(weekStart);
+                date.setDate(date.getDate() + i);
+                
+                const lesson = calendarData.lessons.find(l => {
+                    const lessonDate = new Date(l.date + ', ' + currentYear);
+                    return lessonDate.getDate() === date.getDate() &&
+                           lessonDate.getMonth() === date.getMonth();
+                });
+
+                if (lesson) {
+                    const isToday = isLessonToday(lesson);
+                    html += `
+                        <div class="week-day-card ${lesson.has_dna ? 'has-dna' : ''}" 
+                             onclick="selectDay(${lesson.day})">
+                            <div class="week-day-header">${dayNames[date.getDay()]}</div>
+                            <div class="week-day-date">${date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' })}</div>
+                            <div class="week-day-title">${lesson.title}</div>
+                            ${isToday ? '<div style="color: #10b981; font-size: 10px; margin-top: 4px;">Today</div>' : ''}
+                        </div>
+                    `;
+                }
+            }
+
+            list.innerHTML = html;
+        }
+
+        function getWeekStartDate() {
+            const date = new Date(currentYear, 0, 1);
+            date.setDate(date.getDate() + (currentWeek * 7));
+            const day = date.getDay();
+            const diff = date.getDate() - day;
+            date.setDate(diff);
+            return date;
+        }
+
+        function selectDay(day) {
+            selectedDay = day;
+            showLessonDetail(day);
+            renderToday();
+        }
+
+        function showLessonDetail(day) {
+            const lesson = calendarData.lessons.find(l => l.day === day);
+            if (!lesson) return;
+
+            const detail = document.getElementById('lesson-detail');
+            const empty = document.getElementById('empty-state');
+
+            empty.style.display = 'none';
+            detail.classList.add('active');
+
+            detail.innerHTML = `
+                <div class="lesson-header">
+                    <div class="lesson-day">Day ${lesson.day} - ${lesson.date}</div>
+                    <div class="lesson-title">${lesson.title}</div>
+                    <div class="lesson-badges">
+                        ${lesson.has_dna ? '<span class="dna-badge">🧬 DNA Lesson</span>' : ''}
+                        ${isLessonToday(lesson) ? '<span style="background: #10b981; color: white; padding: 2px 6px; border-radius: 10px; font-size: 10px; font-weight: 600;">Today</span>' : ''}
+                    </div>
+                </div>
+                <div class="lesson-objective">${lesson.learning_objective}</div>
+                <div class="lesson-meta">
+                    <div class="meta-item">
+                        <span class="meta-label">Source:</span>
+                        <span class="meta-value">${lesson.source}</span>
+                    </div>
+                    ${lesson.category ? `
+                    <div class="meta-item">
+                        <span class="meta-label">Category:</span>
+                        <span class="meta-value">${lesson.category}</span>
+                    </div>
+                    ` : ''}
+                    ${lesson.has_dna ? `
+                    <div class="meta-item">
+                        <span class="meta-label">Age Variants:</span>
+                        <span class="meta-value">${lesson.age_variants?.join(', ') || 'N/A'}</span>
+                    </div>
+                    <div class="meta-item">
+                        <span class="meta-label">Languages:</span>
+                        <span class="meta-value">${lesson.languages?.join(', ') || 'N/A'}</span>
+                    </div>
+                    ` : ''}
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" style="width: 0%"></div>
+                </div>
+                <button class="play-btn" onclick="playLesson(${lesson.day})">
+                    ▶ Play Lesson with Kelly
+                </button>
+            `;
+        }
+
+        function isLessonToday(lesson) {
+            const today = new Date();
+            const lessonDate = new Date(lesson.date + ', ' + currentYear);
+            return lessonDate.getDate() === today.getDate() &&
+                   lessonDate.getMonth() === today.getMonth() &&
+                   lessonDate.getFullYear() === today.getFullYear();
+        }
+
+        function playLesson(day) {
+            const lesson = calendarData.lessons.find(l => l.day === day);
+            if (!lesson) return;
+
+            // This would trigger Kelly to play the lesson
+            console.log('Playing lesson:', lesson.title);
+            alert(`Kelly will now play: "${lesson.title}"\n\nIn Unity, this would trigger Kelly's lipsync animation and lesson playback.`);
+            
+            // Update play button
+            const playBtn = document.getElementById('play-btn');
+            playBtn.textContent = '⏸';
+            playBtn.classList.add('playing');
+        }
+
+        // Initialize
+        loadCalendar();
+    </script>
+</body>
+</html>
+

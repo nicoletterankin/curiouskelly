@@ -1,0 +1,788 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curious Kelly - AI Assistant Onboarding</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            color: #333;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 40px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .header p {
+            font-size: 1.1em;
+            opacity: 0.9;
+        }
+
+        .content {
+            padding: 40px;
+        }
+
+        .section {
+            margin-bottom: 40px;
+            padding: 30px;
+            background: #f8f9fa;
+            border-radius: 12px;
+            border-left: 4px solid #667eea;
+        }
+
+        .section h2 {
+            color: #667eea;
+            margin-bottom: 20px;
+            font-size: 1.5em;
+        }
+
+        .question-group {
+            margin-bottom: 25px;
+        }
+
+        .question-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .question-group textarea,
+        .question-group input[type="text"],
+        .question-group select {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            font-size: 1em;
+            font-family: inherit;
+            transition: border-color 0.3s;
+        }
+
+        .question-group textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+
+        .question-group textarea:focus,
+        .question-group input:focus,
+        .question-group select:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .radio-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .radio-option {
+            display: flex;
+            align-items: center;
+            padding: 12px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .radio-option:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .radio-option input[type="radio"] {
+            margin-right: 12px;
+            cursor: pointer;
+        }
+
+        .checkbox-group {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .checkbox-option {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            background: white;
+            border: 2px solid #e0e0e0;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .checkbox-option:hover {
+            border-color: #667eea;
+            background: #f0f4ff;
+        }
+
+        .checkbox-option input[type="checkbox"] {
+            margin-right: 8px;
+            cursor: pointer;
+        }
+
+        .priority-badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.85em;
+            font-weight: 600;
+            margin-left: 10px;
+        }
+
+        .priority-p0 { background: #ff4444; color: white; }
+        .priority-p1 { background: #ff8800; color: white; }
+        .priority-p2 { background: #ffbb00; color: white; }
+
+        .status-indicator {
+            display: inline-block;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            margin-right: 8px;
+        }
+
+        .status-working { background: #4caf50; }
+        .status-partial { background: #ff9800; }
+        .status-missing { background: #f44336; }
+
+        .actions {
+            display: flex;
+            gap: 15px;
+            margin-top: 30px;
+            padding-top: 30px;
+            border-top: 2px solid #e0e0e0;
+        }
+
+        .btn {
+            flex: 1;
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1em;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-secondary {
+            background: #e0e0e0;
+            color: #333;
+        }
+
+        .btn-secondary:hover {
+            background: #d0d0d0;
+        }
+
+        .output-section {
+            margin-top: 40px;
+            padding: 30px;
+            background: #1e1e1e;
+            color: #d4d4d4;
+            border-radius: 12px;
+            font-family: 'Courier New', monospace;
+            display: none;
+        }
+
+        .output-section.active {
+            display: block;
+        }
+
+        .output-section h3 {
+            color: #4ec9b0;
+            margin-bottom: 15px;
+        }
+
+        .output-section pre {
+            white-space: pre-wrap;
+            word-wrap: break-word;
+            line-height: 1.6;
+        }
+
+        .help-text {
+            font-size: 0.9em;
+            color: #666;
+            margin-top: 5px;
+            font-style: italic;
+        }
+
+        .progress-bar {
+            height: 6px;
+            background: #e0e0e0;
+            border-radius: 3px;
+            margin-bottom: 30px;
+            overflow: hidden;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+            width: 0%;
+        }
+
+        .quick-context {
+            background: #fff3cd;
+            border-left: 4px solid #ffc107;
+            padding: 15px;
+            margin-bottom: 20px;
+            border-radius: 8px;
+        }
+
+        .quick-context h3 {
+            color: #856404;
+            margin-bottom: 10px;
+        }
+
+        .quick-context ul {
+            margin-left: 20px;
+            color: #856404;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1>🤖 AI Assistant Onboarding</h1>
+            <p>Help me understand your project, priorities, and how you want to work together</p>
+        </div>
+
+        <div class="content">
+            <div class="progress-bar">
+                <div class="progress-fill" id="progressFill"></div>
+            </div>
+
+            <div class="quick-context">
+                <h3>⚡ Quick Context</h3>
+                <ul>
+                    <li>This is Curious Kelly - a multi-platform AI learning companion</li>
+                    <li>You're building: iOS/Android apps, GPT Store integration, Daily Lesson system</li>
+                    <li>Current state: Working prototype with web player, ElevenLabs TTS, Unity avatar</li>
+                    <li>Goal: Production launch in 12 weeks</li>
+                </ul>
+            </div>
+
+            <form id="onboardingForm">
+                <!-- SECTION 1: IMMEDIATE GOAL -->
+                <div class="section">
+                    <h2>1️⃣ What do you want to accomplish RIGHT NOW?</h2>
+                    
+                    <div class="question-group">
+                        <label>What's your immediate goal or task?</label>
+                        <textarea 
+                            id="immediateGoal" 
+                            placeholder="e.g., 'I need to fix the audio generation pipeline' or 'I want to add a new lesson topic' or 'Help me understand why deployment is failing'"
+                            required></textarea>
+                        <div class="help-text">Be specific - what outcome do you want?</div>
+                    </div>
+
+                    <div class="question-group">
+                        <label>What's blocking you or what do you need help with?</label>
+                        <textarea 
+                            id="blockers" 
+                            placeholder="e.g., 'I don't understand how the PhaseDNA schema works' or 'The Unity avatar isn't rendering correctly' or 'I need to set up ElevenLabs API keys'"></textarea>
+                    </div>
+
+                    <div class="question-group">
+                        <label>What's your timeline/urgency?</label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="urgency" value="critical" required>
+                                <span>🚨 Critical - blocking something important (today)</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="urgency" value="high">
+                                <span>🔥 High - needs to happen this week</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="urgency" value="medium">
+                                <span>📅 Medium - this sprint (next 2 weeks)</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="urgency" value="low">
+                                <span>💡 Low - exploring/learning, no deadline</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 2: CURRENT STATE -->
+                <div class="section">
+                    <h2>2️⃣ What's your current state?</h2>
+                    
+                    <div class="question-group">
+                        <label>Which components are you actively working on?</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-option">
+                                <input type="checkbox" name="components" value="backend">
+                                <span>Backend API & Services</span>
+                            </label>
+                            <label class="checkbox-option">
+                                <input type="checkbox" name="components" value="mobile">
+                                <span>Mobile App (Flutter/iOS/Android)</span>
+                            </label>
+                            <label class="checkbox-option">
+                                <input type="checkbox" name="components" value="avatar">
+                                <span>Avatar Rendering (Unity/Audio2Face)</span>
+                            </label>
+                            <label class="checkbox-option">
+                                <input type="checkbox" name="components" value="audio">
+                                <span>Audio Generation (ElevenLabs/TTS)</span>
+                            </label>
+                            <label class="checkbox-option">
+                                <input type="checkbox" name="components" value="content">
+                                <span>Content Creation (Lessons/PhaseDNA)</span>
+                            </label>
+                            <label class="checkbox-option">
+                                <input type="checkbox" name="components" value="deployment">
+                                <span>Deployment (Cloudflare/Vercel)</span>
+                            </label>
+                            <label class="checkbox-option">
+                                <input type="checkbox" name="components" value="billing">
+                                <span>Billing & IAP Integration</span>
+                            </label>
+                            <label class="checkbox-option">
+                                <input type="checkbox" name="components" value="other">
+                                <span>Other (specify below)</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="question-group">
+                        <label>What's working well right now?</label>
+                        <textarea 
+                            id="workingWell" 
+                            placeholder="e.g., 'The lesson player renders correctly' or 'ElevenLabs audio quality is great' or 'Unity avatar loads successfully'"></textarea>
+                    </div>
+
+                    <div class="question-group">
+                        <label>What's broken or not working?</label>
+                        <textarea 
+                            id="broken" 
+                            placeholder="e.g., 'Audio2Face pipeline crashes' or 'Mobile app won't build' or 'Deployment fails with timeout'"></textarea>
+                    </div>
+
+                    <div class="question-group">
+                        <label>What have you tried already?</label>
+                        <textarea 
+                            id="triedAlready" 
+                            placeholder="e.g., 'I read the BUILD_PLAN.md' or 'I ran setup_local.ps1' or 'I checked the error logs'"></textarea>
+                    </div>
+                </div>
+
+                <!-- SECTION 3: PRIORITIES & CONSTRAINTS -->
+                <div class="section">
+                    <h2>3️⃣ Priorities & Constraints</h2>
+                    
+                    <div class="question-group">
+                        <label>What's your priority level for this task?</label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="priority" value="p0" required>
+                                <span><span class="priority-badge priority-p0">P0</span> Critical - blocks launch</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="priority" value="p1">
+                                <span><span class="priority-badge priority-p1">P1</span> Important - should have for launch</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="priority" value="p2">
+                                <span><span class="priority-badge priority-p2">P2</span> Nice to have - post-launch</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="question-group">
+                        <label>Any constraints I should know about?</label>
+                        <div class="checkbox-group">
+                            <label class="checkbox-option">
+                                <input type="checkbox" name="constraints" value="cost">
+                                <span>💰 Cost-sensitive (minimize API calls)</span>
+                            </label>
+                            <label class="checkbox-option">
+                                <input type="checkbox" name="constraints" value="time">
+                                <span>⏰ Time-sensitive (need quick solution)</span>
+                            </label>
+                            <label class="checkbox-option">
+                                <input type="checkbox" name="constraints" value="quality">
+                                <span>✨ Quality-critical (must be perfect)</span>
+                            </label>
+                            <label class="checkbox-option">
+                                <input type="checkbox" name="constraints" value="compliance">
+                                <span>📋 Compliance/legal concerns</span>
+                            </label>
+                            <label class="checkbox-option">
+                                <input type="checkbox" name="constraints" value="breaking">
+                                <span>🚫 Don't break existing functionality</span>
+                            </label>
+                            <label class="checkbox-option">
+                                <input type="checkbox" name="constraints" value="approval">
+                                <span>✅ Need approval before changes</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="question-group">
+                        <label>Are there any files or areas I should NOT touch?</label>
+                        <textarea 
+                            id="offLimits" 
+                            placeholder="e.g., 'Don't modify deployment/cloudflare.json' or 'Leave lesson-player/index.html alone'"></textarea>
+                    </div>
+                </div>
+
+                <!-- SECTION 4: COMMUNICATION PREFERENCES -->
+                <div class="section">
+                    <h2>4️⃣ How do you want to work together?</h2>
+                    
+                    <div class="question-group">
+                        <label>How do you prefer I communicate?</label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="communication" value="direct" required>
+                                <span>🎯 Direct & concise - just tell me what to do</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="communication" value="detailed">
+                                <span>📚 Detailed explanations - help me understand why</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="communication" value="step-by-step">
+                                <span>👣 Step-by-step - walk me through everything</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="communication" value="autonomous">
+                                <span>🤖 Autonomous - just do it, tell me when done</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="question-group">
+                        <label>How should I handle decisions?</label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="decisions" value="ask" required>
+                                <span>❓ Ask first - don't make changes without approval</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="decisions" value="suggest">
+                                <span>💡 Suggest - propose changes, wait for approval</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="decisions" value="decide">
+                                <span>✅ Decide - make reasonable choices, inform you</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <div class="question-group">
+                        <label>What level of detail do you want in my responses?</label>
+                        <div class="radio-group">
+                            <label class="radio-option">
+                                <input type="radio" name="detail" value="minimal" required>
+                                <span>📝 Minimal - just the essentials</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="detail" value="moderate">
+                                <span>📄 Moderate - key points + context</span>
+                            </label>
+                            <label class="radio-option">
+                                <input type="radio" name="detail" value="comprehensive">
+                                <span>📚 Comprehensive - full explanations + alternatives</span>
+                            </label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- SECTION 5: CONTEXT & BACKGROUND -->
+                <div class="section">
+                    <h2>5️⃣ Additional Context</h2>
+                    
+                    <div class="question-group">
+                        <label>Any specific files, documents, or code I should review first?</label>
+                        <textarea 
+                            id="reviewFiles" 
+                            placeholder="e.g., 'Read CURIOUS_KELLLY_EXECUTION_PLAN.md section on voice pipeline' or 'Check the error logs in deployment/'"></textarea>
+                    </div>
+
+                    <div class="question-group">
+                        <label>Any relevant context about your environment or setup?</label>
+                        <textarea 
+                            id="environment" 
+                            placeholder="e.g., 'I'm on Windows 11' or 'GPU drivers are updated' or 'I have ElevenLabs API keys configured'"></textarea>
+                    </div>
+
+                    <div class="question-group">
+                        <label>Anything else I should know?</label>
+                        <textarea 
+                            id="additionalInfo" 
+                            placeholder="Any other context, concerns, or information that would help me assist you better"></textarea>
+                    </div>
+                </div>
+
+                <div class="actions">
+                    <button type="button" class="btn btn-secondary" onclick="resetForm()">🔄 Reset</button>
+                    <button type="submit" class="btn btn-primary">🚀 Generate Communication Protocol</button>
+                </div>
+            </form>
+
+            <div class="output-section" id="outputSection">
+                <h3>📋 Generated Communication Protocol</h3>
+                <pre id="outputContent"></pre>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const form = document.getElementById('onboardingForm');
+        const progressFill = document.getElementById('progressFill');
+        const outputSection = document.getElementById('outputSection');
+        const outputContent = document.getElementById('outputContent');
+
+        // Update progress bar as user fills form
+        function updateProgress() {
+            const inputs = form.querySelectorAll('input[required], textarea[required]');
+            const filled = Array.from(inputs).filter(input => {
+                if (input.type === 'radio') {
+                    return form.querySelector(`input[name="${input.name}"]:checked`);
+                }
+                return input.value.trim() !== '';
+            }).length;
+            const total = inputs.length;
+            const progress = (filled / total) * 100;
+            progressFill.style.width = progress + '%';
+        }
+
+        form.addEventListener('input', updateProgress);
+        form.addEventListener('change', updateProgress);
+
+        form.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const formData = new FormData(form);
+            const data = {
+                immediateGoal: document.getElementById('immediateGoal').value,
+                blockers: document.getElementById('blockers').value,
+                urgency: formData.get('urgency'),
+                components: formData.getAll('components'),
+                workingWell: document.getElementById('workingWell').value,
+                broken: document.getElementById('broken').value,
+                triedAlready: document.getElementById('triedAlready').value,
+                priority: formData.get('priority'),
+                constraints: formData.getAll('constraints'),
+                offLimits: document.getElementById('offLimits').value,
+                communication: formData.get('communication'),
+                decisions: formData.get('decisions'),
+                detail: formData.get('detail'),
+                reviewFiles: document.getElementById('reviewFiles').value,
+                environment: document.getElementById('environment').value,
+                additionalInfo: document.getElementById('additionalInfo').value
+            };
+
+            generateProtocol(data);
+        });
+
+        function generateProtocol(data) {
+            const protocol = {
+                timestamp: new Date().toISOString(),
+                immediateContext: {
+                    goal: data.immediateGoal,
+                    blockers: data.blockers,
+                    urgency: data.urgency,
+                    priority: data.priority
+                },
+                currentState: {
+                    activeComponents: data.components,
+                    working: data.workingWell,
+                    broken: data.broken,
+                    triedAlready: data.triedAlready
+                },
+                constraints: {
+                    list: data.constraints,
+                    offLimits: data.offLimits
+                },
+                communicationPreferences: {
+                    style: data.communication,
+                    decisionMaking: data.decisions,
+                    detailLevel: data.detail
+                },
+                context: {
+                    reviewFiles: data.reviewFiles,
+                    environment: data.environment,
+                    additionalInfo: data.additionalInfo
+                },
+                actionPlan: generateActionPlan(data)
+            };
+
+            const formatted = formatProtocol(protocol);
+            outputContent.textContent = formatted;
+            outputSection.classList.add('active');
+            outputSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        function generateActionPlan(data) {
+            const plan = [];
+            
+            if (data.reviewFiles) {
+                plan.push(`1. Review: ${data.reviewFiles}`);
+            }
+            
+            if (data.broken) {
+                plan.push(`2. Investigate issue: ${data.broken}`);
+            }
+            
+            if (data.triedAlready) {
+                plan.push(`3. Note previous attempts: ${data.triedAlready}`);
+            }
+            
+            plan.push(`4. Approach: ${getApproach(data.communication, data.decisions)}`);
+            plan.push(`5. Deliver: ${getDelivery(data.detail, data.urgency)}`);
+            
+            return plan;
+        }
+
+        function getApproach(comm, decisions) {
+            if (comm === 'autonomous' && decisions === 'decide') {
+                return 'Proceed autonomously, implement solution, report when complete';
+            } else if (decisions === 'ask') {
+                return 'Analyze situation, propose solution, wait for approval before acting';
+            } else {
+                return 'Analyze situation, propose solution with rationale, proceed after confirmation';
+            }
+        }
+
+        function getDelivery(detail, urgency) {
+            if (urgency === 'critical') {
+                return 'Immediate action with ' + detail + ' detail';
+            } else {
+                return detail + ' level explanation';
+            }
+        }
+
+        function formatProtocol(protocol) {
+            let output = '='.repeat(80) + '\n';
+            output += 'AI ASSISTANT COMMUNICATION PROTOCOL\n';
+            output += 'Generated: ' + new Date(protocol.timestamp).toLocaleString() + '\n';
+            output += '='.repeat(80) + '\n\n';
+
+            output += '🎯 IMMEDIATE CONTEXT\n';
+            output += '-'.repeat(80) + '\n';
+            output += `Goal: ${protocol.immediateContext.goal}\n`;
+            output += `Urgency: ${protocol.immediateContext.urgency.toUpperCase()}\n`;
+            output += `Priority: ${protocol.immediateContext.priority.toUpperCase()}\n`;
+            if (protocol.immediateContext.blockers) {
+                output += `Blockers: ${protocol.immediateContext.blockers}\n`;
+            }
+            output += '\n';
+
+            output += '📊 CURRENT STATE\n';
+            output += '-'.repeat(80) + '\n';
+            output += `Active Components: ${protocol.currentState.activeComponents.join(', ') || 'None specified'}\n`;
+            if (protocol.currentState.working) {
+                output += `Working Well: ${protocol.currentState.working}\n`;
+            }
+            if (protocol.currentState.broken) {
+                output += `Broken/Issues: ${protocol.currentState.broken}\n`;
+            }
+            if (protocol.currentState.triedAlready) {
+                output += `Already Tried: ${protocol.currentState.triedAlready}\n`;
+            }
+            output += '\n';
+
+            output += '🚧 CONSTRAINTS\n';
+            output += '-'.repeat(80) + '\n';
+            output += `Constraints: ${protocol.constraints.list.join(', ') || 'None specified'}\n`;
+            if (protocol.constraints.offLimits) {
+                output += `Off-Limits: ${protocol.constraints.offLimits}\n`;
+            }
+            output += '\n';
+
+            output += '💬 COMMUNICATION PREFERENCES\n';
+            output += '-'.repeat(80) + '\n';
+            output += `Style: ${protocol.communicationPreferences.style}\n`;
+            output += `Decision Making: ${protocol.communicationPreferences.decisionMaking}\n`;
+            output += `Detail Level: ${protocol.communicationPreferences.detailLevel}\n`;
+            output += '\n';
+
+            if (protocol.context.reviewFiles || protocol.context.environment || protocol.context.additionalInfo) {
+                output += '📝 ADDITIONAL CONTEXT\n';
+                output += '-'.repeat(80) + '\n';
+                if (protocol.context.reviewFiles) {
+                    output += `Review First: ${protocol.context.reviewFiles}\n`;
+                }
+                if (protocol.context.environment) {
+                    output += `Environment: ${protocol.context.environment}\n`;
+                }
+                if (protocol.context.additionalInfo) {
+                    output += `Additional Info: ${protocol.context.additionalInfo}\n`;
+                }
+                output += '\n';
+            }
+
+            output += '✅ ACTION PLAN\n';
+            output += '-'.repeat(80) + '\n';
+            protocol.actionPlan.forEach((action, i) => {
+                output += action + '\n';
+            });
+            output += '\n';
+
+            output += '='.repeat(80) + '\n';
+            output += 'Copy this protocol and share it with your AI assistant to ensure\n';
+            output += 'aligned communication and efficient collaboration.\n';
+            output += '='.repeat(80) + '\n';
+
+            return output;
+        }
+
+        function resetForm() {
+            form.reset();
+            outputSection.classList.remove('active');
+            progressFill.style.width = '0%';
+        }
+
+        // Initial progress update
+        updateProgress();
+    </script>
+</body>
+</html>
+

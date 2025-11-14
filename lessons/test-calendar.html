@@ -1,0 +1,44 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Calendar Data Load</title>
+</head>
+<body>
+    <h1>Testing Calendar Data Load</h1>
+    <div id="status">Loading...</div>
+    <div id="results"></div>
+
+    <script>
+        async function testLoad() {
+            try {
+                const response = await fetch('365_day_calendar.json');
+                const data = await response.json();
+                
+                document.getElementById('status').textContent = '✅ Data loaded successfully!';
+                document.getElementById('results').innerHTML = `
+                    <h2>Calendar Data:</h2>
+                    <p>Total lessons: ${data.lessons.length}</p>
+                    <p>DNA lessons: ${data.lessons.filter(l => l.has_dna).length}</p>
+                    <p>Sample lessons:</p>
+                    <ul>
+                        ${data.lessons.slice(0, 5).map(l => 
+                            `<li>Day ${l.day}: ${l.title} ${l.has_dna ? '🧬' : ''}</li>`
+                        ).join('')}
+                    </ul>
+                `;
+            } catch (error) {
+                document.getElementById('status').textContent = '❌ Error: ' + error.message;
+                document.getElementById('results').innerHTML = `
+                    <p>Make sure 365_day_calendar.json is in the same directory.</p>
+                    <p>Error: ${error}</p>
+                `;
+            }
+        }
+        
+        testLoad();
+    </script>
+</body>
+</html>
+
