@@ -23,7 +23,8 @@ export default defineConfig({
         '@components': path.resolve(__dirname, './src/components'),
         '@layouts': path.resolve(__dirname, './src/layouts'),
         '@lib': path.resolve(__dirname, './src/lib'),
-        '@styles': path.resolve(__dirname, './src/styles')
+        '@styles': path.resolve(__dirname, './src/styles'),
+        '@': path.resolve(__dirname, './src')
       }
     },
     plugins: [
