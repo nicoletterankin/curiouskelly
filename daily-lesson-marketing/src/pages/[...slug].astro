@@ -9,29 +9,32 @@ import type { LocaleCode, RouteKey } from '@lib/i18n/types';
 const marketingRoutes: RouteKey[] = ['home', 'adults', 'children', 'teachers', 'schools'];
 const legalRoutes: RouteKey[] = ['privacy', 'cookies'];
 
-const localeSegments = supportedLocales.map((locale: { code: string; label: string; prefix: string }) => ({
-  ...locale,
-  slugPrefix: locale.prefix ? [locale.prefix] : []
-}));
-
-const baseRoutes: { key: RouteKey; slug: string[] }[] = [
-  { key: 'home', slug: [] },
-  { key: 'adults', slug: ['adults'] },
-  { key: 'children', slug: ['children'] },
-  { key: 'teachers', slug: ['teachers'] },
-  { key: 'schools', slug: ['schools'] },
-  { key: 'privacy', slug: ['privacy'] },
-  { key: 'cookies', slug: ['cookies'] },
-  { key: 'thank-you', slug: ['thank-you'] }
-];
+const BASE_ROUTE_KEYS: RouteKey[] = ['home', 'adults', 'children', 'teachers', 'schools', 'privacy', 'cookies', 'thank-you'];
 
 export function getStaticPaths() {
+  const localeSegments = supportedLocales.map((locale: { code: string; label: string; prefix: string }) => ({
+    ...locale,
+    slugPrefix: locale.prefix ? [locale.prefix] : []
+  }));
+  
+  const baseRoutes: { key: RouteKey; slug: string[] }[] = [
+    { key: 'home', slug: [] },
+    { key: 'adults', slug: ['adults'] },
+    { key: 'children', slug: ['children'] },
+    { key: 'teachers', slug: ['teachers'] },
+    { key: 'schools', slug: ['schools'] },
+    { key: 'privacy', slug: ['privacy'] },
+    { key: 'cookies', slug: ['cookies'] },
+    { key: 'thank-you', slug: ['thank-you'] }
+  ];
+  
   const paths = [];
   for (const locale of localeSegments) {
     for (const route of baseRoutes) {
+      const slugParts = [...locale.slugPrefix, ...route.slug];
       paths.push({
         params: {
-          slug: [...locale.slugPrefix, ...route.slug]
+          slug: slugParts.length > 0 ? slugParts.join('/') : undefined
         },
         props: {
           locale: locale.code,
@@ -101,7 +104,7 @@ const legalContent: Record<RouteKey, { title: string; paragraphs: string[] }> = 
 };
 
 const checkRoute = (key: RouteKey) => {
-  if (!baseRoutes.some((route) => route.key === key)) {
+  if (!BASE_ROUTE_KEYS.includes(key)) {
     return Astro.redirect('/404');
   }
 };

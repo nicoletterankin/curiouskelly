@@ -55,6 +55,13 @@ export default defineConfig({
     },
     optimizeDeps: {
       include: ['jquery', 'bootstrap', 'slick-carousel', 'intl-tel-input']
+    },
+    css: {
+      preprocessorOptions: {
+        scss: {
+          includePaths: [path.resolve(__dirname, './node_modules')]
+        }
+      }
     }
   },
   build: {
