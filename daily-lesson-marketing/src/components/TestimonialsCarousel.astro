@@ -1,0 +1,61 @@
+---
+import type { LocaleDictionary } from '@lib/i18n/types';
+
+interface Props {
+  dictionary: LocaleDictionary;
+  nonce: string;
+}
+
+const { dictionary, nonce } = Astro.props;
+---
+
+<section class="testimonials-section">
+  <h2 class="h4 mb-4">{dictionary.testimonials.title}</h2>
+  <div class="testimonials-carousel" data-testimonials>
+    {dictionary.testimonials.items.map((testimonial: { quote: string; author: string; role?: string }) => (
+      <div class="testimonial-item">
+        <blockquote class="testimonial-quote">
+          <p>{testimonial.quote}</p>
+        </blockquote>
+        <div class="testimonial-author">
+          <strong>{testimonial.author}</strong>
+          {testimonial.role && <span class="text-muted"> — {testimonial.role}</span>}
+        </div>
+      </div>
+    ))}
+  </div>
+</section>
+
+<style>
+  .testimonials-section {
+    padding: 2rem 0;
+  }
+
+  .testimonials-carousel {
+    display: flex;
+    flex-direction: column;
+    gap: 2rem;
+  }
+
+  .testimonial-item {
+    padding: 1.5rem;
+    background: var(--bs-light, #f8f9fa);
+    border-radius: 0.5rem;
+  }
+
+  .testimonial-quote {
+    margin: 0 0 1rem 0;
+    font-style: italic;
+    font-size: 1.1rem;
+    line-height: 1.6;
+  }
+
+  .testimonial-quote p {
+    margin: 0;
+  }
+
+  .testimonial-author {
+    font-size: 0.9rem;
+  }
+</style>
+
