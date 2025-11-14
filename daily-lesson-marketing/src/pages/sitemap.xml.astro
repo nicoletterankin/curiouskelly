@@ -1,5 +1,48 @@
 ---
-import { generateSitemap, generateSitemapRoutes } from '../lib/sitemap.js';
+// Inlined sitemap functions to avoid module resolution issues in Vercel builds
+import type { AstroGlobal } from 'astro';
+
+function generateSitemap(site: string, pages: Array<{ path: string; lastmod?: string; changefreq?: string; priority?: number }>) {
+  const urls = pages.map((page) => {
+    const lastmod = page.lastmod || new Date().toISOString().split('T')[0];
+    const changefreq = page.changefreq || 'monthly';
+    const priority = page.priority || 0.5;
+    return `  <url>
+    <loc>${site}${page.path}</loc>
+    <lastmod>${lastmod}</lastmod>
+    <changefreq>${changefreq}</changefreq>
+    <priority>${priority}</priority>
+  </url>`;
+  }).join('\n');
+
+  return `<?xml version="1.0" encoding="UTF-8"?>
+<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">
+${urls}
+</urlset>`;
+}
+
+function generateSitemapRoutes(Astro: AstroGlobal) {
+  const baseRoutes = [
+    { path: '/', priority: 1.0, changefreq: 'daily' },
+    { path: '/adults/', priority: 0.8 },
+    { path: '/children/', priority: 0.8 },
+    { path: '/companies/', priority: 0.8 },
+    { path: '/more-languages/', priority: 0.6 },
+    { path: '/privacy/', priority: 0.3 },
+    { path: '/cookies/', priority: 0.3 },
+    { path: '/thank-you/', priority: 0.5 }
+  ];
+
+  const localizedRoutes = ['es-es', 'pt-br'].flatMap(locale =>
+    baseRoutes.map(route => ({
+      ...route,
+      path: `/${locale}${route.path === '/' ? '' : route.path}`,
+      priority: route.priority * 0.9
+    }))
+  );
+
+  return [...baseRoutes, ...localizedRoutes];
+}
 
 const site = Astro.site?.href || 'https://thedailylesson.com';
 const routes = generateSitemapRoutes(Astro);
