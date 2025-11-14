@@ -25,7 +25,8 @@ export default defineConfig({
         '@lib': path.resolve(__dirname, './src/lib'),
         '@styles': path.resolve(__dirname, './src/styles'),
         '@': path.resolve(__dirname, './src')
-      }
+      },
+      extensions: ['.mjs', '.js', '.mts', '.ts', '.jsx', '.tsx', '.json', '.astro']
     },
     plugins: [
       purgecss({
