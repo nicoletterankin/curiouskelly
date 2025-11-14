@@ -1,5 +1,5 @@
 import type { APIRoute } from 'astro';
-import { validateLeadForm, sanitizeFormData, type LeadFormData } from '@lib/validation';
+import { validateLeadForm, sanitizeFormData, type LeadFormData } from '../../lib/validation.js';
 
 export const POST: APIRoute = async ({ request }) => {
   try {
