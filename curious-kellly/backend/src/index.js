@@ -46,6 +46,7 @@ const voiceRoutes = require('./api/voice');
 const ragRoutes = require('./api/rag');
 const reinmakerManifestRoute = require('./api/reinmaker/manifest.route');
 const reinmakerQuestsRoute = require('./api/reinmaker/quests.route');
+const elevenLabsRoutes = require('./api/elevenlabs');
 
 // Import safety middleware
 const { moderateInput, checkAgeAppropriate, moderationRateLimit } = require('./middleware/safety');
@@ -64,6 +65,7 @@ app.use('/api/voice', voiceRoutes);
 app.use('/api/rag', ragRoutes);
 app.use('/api/reinmaker/manifest', reinmakerManifestRoute);
 app.use('/api/reinmaker/quests', reinmakerQuestsRoute);
+app.use('/api/elevenlabs', elevenLabsRoutes);
 
 // API info endpoint
 app.get('/', (req, res) => {
