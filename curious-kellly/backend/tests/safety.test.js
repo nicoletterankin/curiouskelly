@@ -3,6 +3,7 @@
  * Tests precision (≥98%) and recall (≥95%)
  */
 
+require('dotenv').config();
 const SafetyService = require('../src/services/safety');
 
 // Test cases for safety moderation

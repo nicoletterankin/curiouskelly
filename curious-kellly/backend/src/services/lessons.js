@@ -92,7 +92,12 @@ class LessonService {
   async getAllLessons() {
     try {
       const files = await fs.readdir(this.lessonsDir);
-      const lessonFiles = files.filter(f => f.endsWith('.json'));
+      const lessonFiles = files.filter(f =>
+        f.endsWith('.json') &&
+        !f.startsWith('.') &&
+        !f.includes('.backup') &&
+        !f.endsWith('.md')
+      );
       
       const lessons = await Promise.all(
         lessonFiles.map(async (file) => {
