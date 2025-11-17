@@ -1,0 +1,495 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Lesson DNA Schema",
+  "description": "Universal lesson structure that works for any topic across all ages 2-102",
+  "type": "object",
+  "required": ["id", "title", "description", "ageVariants", "interactions", "metadata"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the lesson",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "title": {
+      "type": "string",
+      "description": "Universal title that works for all ages",
+      "minLength": 5,
+      "maxLength": 100
+    },
+    "description": {
+      "type": "string",
+      "description": "Universal description that works for all ages",
+      "minLength": 20,
+      "maxLength": 200
+    },
+    "ageVariants": {
+      "type": "object",
+      "description": "Age-specific content for each age bucket",
+      "required": ["2-5", "6-12", "13-17", "18-35", "36-60", "61-102"],
+      "properties": {
+        "2-5": {
+          "$ref": "#/definitions/ageVariant"
+        },
+        "6-12": {
+          "$ref": "#/definitions/ageVariant"
+        },
+        "13-17": {
+          "$ref": "#/definitions/ageVariant"
+        },
+        "18-35": {
+          "$ref": "#/definitions/ageVariant"
+        },
+        "36-60": {
+          "$ref": "#/definitions/ageVariant"
+        },
+        "61-102": {
+          "$ref": "#/definitions/ageVariant"
+        }
+      }
+    },
+    "interactions": {
+      "type": "array",
+      "description": "Interactive conversation sequences",
+      "items": {
+        "$ref": "#/definitions/interaction"
+      }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Lesson metadata and configuration",
+      "required": ["category", "difficulty", "duration", "tags"],
+      "properties": {
+        "category": {
+          "type": "string",
+          "enum": ["science", "art", "history", "nature", "human-connection", "creativity", "emotional-intelligence", "stem", "humanities"]
+        },
+        "difficulty": {
+          "type": "string",
+          "enum": ["beginner", "intermediate", "advanced"]
+        },
+        "duration": {
+          "type": "object",
+          "required": ["min", "max"],
+          "properties": {
+            "min": {
+              "type": "integer",
+              "minimum": 3,
+              "maximum": 15,
+              "description": "Minimum duration in minutes"
+            },
+            "max": {
+              "type": "integer",
+              "minimum": 5,
+              "maximum": 30,
+              "description": "Maximum duration in minutes"
+            }
+          }
+        },
+        "tags": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Searchable tags for the lesson"
+        },
+        "prerequisites": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Previous lessons that should be completed first"
+        },
+        "learningOutcomes": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Universal learning outcomes for all ages"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "ageVariant": {
+      "type": "object",
+      "required": ["title", "description", "video", "script", "objectives", "vocabulary", "pacing", "kellyAge", "kellyPersona", "voiceProfile", "language", "expressionCues"],
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Age-appropriate title",
+          "minLength": 3,
+          "maxLength": 80
+        },
+        "description": {
+          "type": "string",
+          "description": "Age-appropriate description",
+          "minLength": 10,
+          "maxLength": 150
+        },
+        "video": {
+          "type": "string",
+          "description": "Video filename for this age variant",
+          "pattern": "^[a-z0-9_-]+\\.mp4$"
+        },
+        "script": {
+          "type": "string",
+          "description": "Kelly's opening script for this age",
+          "minLength": 20,
+          "maxLength": 500
+        },
+        "kellyAge": {
+          "type": "integer",
+          "minimum": 2,
+          "maximum": 102,
+          "description": "Canonical age of Kelly for this persona"
+        },
+        "kellyPersona": {
+          "type": "string",
+          "enum": [
+            "playful-toddler",
+            "curious-kid",
+            "enthusiastic-teen",
+            "knowledgeable-adult",
+            "wise-mentor",
+            "reflective-elder"
+          ],
+          "description": "Persona style name for this age group"
+        },
+        "voiceProfile": {
+          "$ref": "#/definitions/voiceProfile"
+        },
+        "objectives": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "minItems": 2,
+          "maxItems": 5,
+          "description": "Age-appropriate learning objectives"
+        },
+        "vocabulary": {
+          "type": "object",
+          "description": "Age-appropriate vocabulary and concepts",
+          "properties": {
+            "keyTerms": {
+              "type": "array",
+              "items": {
+                "type": "string"
+              },
+              "description": "Key terms for this age group"
+            },
+            "complexity": {
+              "type": "string",
+              "enum": ["simple", "moderate", "complex"],
+              "description": "Vocabulary complexity level"
+            },
+            "explanations": {
+              "type": "object",
+              "description": "Age-appropriate explanations for complex terms"
+            }
+          }
+        },
+        "language": {
+          "type": "object",
+          "description": "Precomputed multilingual payload keyed by language code",
+          "minProperties": 1,
+          "additionalProperties": {
+            "$ref": "#/definitions/languageVariant"
+          }
+        },
+        "pacing": {
+          "type": "object",
+          "description": "Age-appropriate pacing and delivery",
+          "properties": {
+            "speechRate": {
+              "type": "string",
+              "enum": ["slow", "moderate", "fast"],
+              "description": "Kelly's speech rate for this age"
+            },
+            "pauseFrequency": {
+              "type": "string",
+              "enum": ["frequent", "moderate", "minimal"],
+              "description": "How often Kelly pauses for questions"
+            },
+            "interactionLevel": {
+              "type": "string",
+              "enum": ["high", "moderate", "low"],
+              "description": "Level of student interaction expected"
+            }
+          }
+        },
+        "teachingMoments": {
+          "type": "array",
+          "description": "Key teaching moments for this age",
+          "items": {
+            "type": "object",
+            "required": ["timestamp", "type", "content"],
+            "properties": {
+              "id": {
+                "type": "string",
+                "description": "Unique identifier for this teaching moment"
+              },
+              "timestamp": {
+                "type": "number",
+                "description": "Time in seconds when this moment occurs"
+              },
+              "type": {
+                "type": "string",
+                "enum": ["explanation", "question", "demonstration", "story", "wisdom"],
+                "description": "Type of teaching moment"
+              },
+              "content": {
+                "type": "string",
+                "description": "Content for this teaching moment"
+              }
+            }
+          }
+        },
+        "expressionCues": {
+          "type": "array",
+          "description": "Timeline of expression cues aligned to teaching moments",
+          "minItems": 1,
+          "items": {
+            "$ref": "#/definitions/expressionCue"
+          }
+        }
+      }
+    },
+    "voiceProfile": {
+      "type": "object",
+      "required": ["provider", "voiceId", "speechRate", "pitch", "energy"],
+      "properties": {
+        "provider": {
+          "type": "string",
+          "enum": ["elevenlabs", "piper", "custom"],
+          "description": "Primary voice provider"
+        },
+        "voiceId": {
+          "type": "string",
+          "description": "Voice identifier for the provider"
+        },
+        "fallbackVoiceId": {
+          "type": "string",
+          "description": "Optional fallback voice identifier"
+        },
+        "speechRate": {
+          "type": "number",
+          "minimum": 0.5,
+          "maximum": 2.0,
+          "description": "Playback rate multiplier"
+        },
+        "pitch": {
+          "type": "number",
+          "minimum": -12,
+          "maximum": 12,
+          "description": "Semitone adjustment relative to base recording"
+        },
+        "energy": {
+          "type": "string",
+          "enum": ["gentle", "warm", "bright", "dynamic"],
+          "description": "Energy descriptor for this delivery"
+        },
+        "style": {
+          "type": "string",
+          "description": "Optional expressive style tag"
+        },
+        "language": {
+          "type": "string",
+          "pattern": "^[a-z]{2}(-[A-Z]{2})?$",
+          "description": "BCP-47 language tag for this voice"
+        }
+      }
+    },
+    "languageVariant": {
+      "type": "object",
+      "required": ["title", "welcome", "mainContent", "keyPoints", "interactionPrompts", "wisdomMoment"],
+      "properties": {
+        "title": {
+          "type": "string",
+          "description": "Localized title for this persona"
+        },
+        "welcome": {
+          "type": "string",
+          "description": "Localized greeting/opening"
+        },
+        "mainContent": {
+          "type": "string",
+          "description": "Localized main explanation body"
+        },
+        "keyPoints": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          },
+          "description": "Localized list of key takeaways"
+        },
+        "interactionPrompts": {
+          "type": "array",
+          "minItems": 1,
+          "items": {
+            "type": "string"
+          },
+          "description": "Localized prompts Kelly asks during interactions"
+        },
+        "wisdomMoment": {
+          "type": "string",
+          "description": "Localized reflective closing statement"
+        },
+        "cta": {
+          "type": "string",
+          "description": "Optional localized call-to-action"
+        },
+        "summary": {
+          "type": "string",
+          "description": "Optional localized summary paragraph"
+        }
+      }
+    },
+    "expressionCue": {
+      "type": "object",
+      "required": ["id", "momentRef", "type", "offset", "duration", "intensity"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "description": "Unique identifier for the cue"
+        },
+        "momentRef": {
+          "type": "string",
+          "description": "ID of the teaching moment this cue aligns to"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["micro-smile", "macro-gesture", "gaze-shift", "brow-raise", "head-nod", "breath"],
+          "description": "Type of expression or motion"
+        },
+        "offset": {
+          "type": "number",
+          "description": "Seconds offset relative to teaching moment timestamp"
+        },
+        "duration": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Duration in seconds"
+        },
+        "intensity": {
+          "type": "string",
+          "enum": ["subtle", "medium", "emphatic"],
+          "description": "Intensity of the expression"
+        },
+        "gazeTarget": {
+          "type": "string",
+          "enum": ["camera", "left", "right", "up", "down", "content"],
+          "description": "Where Kelly should look during the cue"
+        },
+        "notes": {
+          "type": "string",
+          "description": "Optional animator notes"
+        }
+      }
+    },
+    "interaction": {
+      "type": "object",
+      "required": ["step", "question", "choices"],
+      "properties": {
+        "step": {
+          "type": "string",
+          "enum": ["welcome", "teaching", "practice", "wisdom", "reflection"],
+          "description": "Which lesson step this interaction belongs to"
+        },
+        "question": {
+          "type": "string",
+          "description": "Question Kelly asks the student",
+          "minLength": 10,
+          "maxLength": 200
+        },
+        "choices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/choice"
+          },
+          "minItems": 2,
+          "maxItems": 4,
+          "description": "Student response options"
+        },
+        "ageAdaptations": {
+          "type": "object",
+          "description": "Age-specific adaptations for this interaction",
+          "properties": {
+            "2-5": {
+              "$ref": "#/definitions/ageAdaptation"
+            },
+            "6-12": {
+              "$ref": "#/definitions/ageAdaptation"
+            },
+            "13-17": {
+              "$ref": "#/definitions/ageAdaptation"
+            },
+            "18-35": {
+              "$ref": "#/definitions/ageAdaptation"
+            },
+            "36-60": {
+              "$ref": "#/definitions/ageAdaptation"
+            },
+            "61-102": {
+              "$ref": "#/definitions/ageAdaptation"
+            }
+          }
+        }
+      }
+    },
+    "choice": {
+      "type": "object",
+      "required": ["text", "nextStep", "response"],
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "Choice text displayed to student",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "nextStep": {
+          "type": "string",
+          "enum": ["welcome", "teaching", "practice", "wisdom", "reflection", "complete"],
+          "description": "Next step after this choice"
+        },
+        "response": {
+          "type": "string",
+          "description": "Kelly's response to this choice",
+          "minLength": 10,
+          "maxLength": 300
+        },
+        "learningValue": {
+          "type": "string",
+          "enum": ["high", "moderate", "low"],
+          "description": "Learning value of this choice"
+        }
+      }
+    },
+    "ageAdaptation": {
+      "type": "object",
+      "description": "Age-specific adaptation for interactions",
+      "properties": {
+        "question": {
+          "type": "string",
+          "description": "Age-appropriate version of the question"
+        },
+        "choices": {
+          "type": "array",
+          "items": {
+            "$ref": "#/definitions/choice"
+          },
+          "description": "Age-appropriate choice options"
+        },
+        "hints": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "description": "Age-appropriate hints if student struggles"
+        }
+      }
+    }
+  }
+}
+

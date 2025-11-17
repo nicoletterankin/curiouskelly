@@ -4,32 +4,27 @@ Privacy-first, multilingual marketing experience for CuriousKelly.com built with
 
 ## Quick Start
 
+**🚀 Servers start automatically when you open VS Code!** See [AUTO_SERVER_MANAGEMENT.md](./AUTO_SERVER_MANAGEMENT.md) for details.
+
+### Manual Setup (If Needed)
+
 1. **Install prerequisites**
-   - Node.js ≥ 18.17
-   - npm ≥ 9
+   - Node.js ≥ 20.11.1
+   - pnpm ≥ 9.9.0
+   - Docker Desktop (for infrastructure)
 
 2. **Install dependencies**
    ```bash
-   npm install
+   pnpm install
    ```
 
-3. **Copy environment template**
+3. **Start servers manually**
    ```bash
-   cp .env.example .env
+   .\scripts\dev-server.ps1 -Target stack
    ```
-   Fill in keys for Turnstile/recaptcha/analytics as needed.
+   Or use VS Code: `Ctrl+Shift+P` → "Tasks: Run Task" → "🚀 Start Everything (Auto-Managed)"
 
-4. **Run mock CRM (optional)**
-   ```bash
-   npm run mock:crm
-   ```
-   Logs requests to `.data/mock-crm.log`. Default URL `http://localhost:8787/api/mock-crm`.
-
-5. **Start local dev server**
-   ```bash
-   npm run dev
-   ```
-   Visit `http://localhost:4321`.
+4. **HTML files auto-open** when created/modified. Works with Live Server extension (right-click → "Open with Live Server").
 
 ## Scripts
 
@@ -155,5 +150,9 @@ Refer to `PRIVACY.md` and `RUNBOOK.md` for escalation paths, retention policy, a
 - `PERFORMANCE.md` – Budget definitions, measurement playbooks.
 - `PRIVACY.md` – Consent, data retention, webhook hygiene.
 - `RUNBOOK.md` – Ops checklist for incident response and release duties.
+
+## Full-Stack Backend Dev Server
+
+Need the Fastify gateway + classroom control plane plus local databases? Use `DEV_SERVER_GUIDE.md` for a click-by-click walkthrough of `docker-compose.dev.yml` and `scripts/dev-server.ps1` (one command to start everything, Ctrl+C to stop, optional flags for partial stacks).
 
 This site complies with `CLAUDE.md` invariants: multilingual precomputation, privacy gating, no runtime lesson generation, and no browser TTS usage. Pull requests should include links to CI artifacts and Lighthouse summaries.

@@ -111,6 +111,25 @@ public class BlendshapeDriver : MonoBehaviour
             }
         }
     }
+
+    public void Stop()
+    {
+        playing = false;
+
+        if (audioSource != null && audioSource.isPlaying)
+        {
+            audioSource.Stop();
+        }
+
+        if (headRenderer != null && headRenderer.sharedMesh != null)
+        {
+            int count = headRenderer.sharedMesh.blendShapeCount;
+            for (int i = 0; i < count; i++)
+            {
+                headRenderer.SetBlendShapeWeight(i, 0f);
+            }
+        }
+    }
 }
 
 

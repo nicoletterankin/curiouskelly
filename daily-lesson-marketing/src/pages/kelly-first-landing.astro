@@ -1,0 +1,761 @@
+---
+/**
+ * Kelly-First Landing Page
+ * A seamless, character-driven experience that bridges marketing to lesson player
+ */
+import '../styles/unified-design-system.scss';
+---
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Meet Kelly — Your Daily Learning Companion</title>
+  <meta name="description" content="8-minute daily lessons that build lifelong learning habits. Meet Kelly, your AI learning companion who makes every day curious.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&display=swap" rel="stylesheet">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'SF Pro Display', sans-serif;
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      overflow-x: hidden;
+    }
+    
+    /* ========================================== */
+    /* SEAMLESS NAVIGATION - Always visible */
+    /* ========================================== */
+    .kelly-persistent-nav {
+      position: fixed;
+      top: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 1000;
+      width: calc(100% - 40px);
+      max-width: 1200px;
+    }
+    
+    /* ========================================== */
+    /* HERO WITH KELLY PRESENCE */
+    /* ========================================== */
+    .hero-section {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      padding-top: 100px;
+    }
+    
+    .hero-kelly-container {
+      position: absolute;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 50%;
+      height: 80vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1;
+    }
+    
+    .hero-kelly-image {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+      object-position: center;
+      filter: drop-shadow(0 20px 60px rgba(0, 0, 0, 0.15));
+    }
+    
+    .hero-content {
+      position: relative;
+      z-index: 2;
+      max-width: 600px;
+      animation: kelly-fade-in 0.8s ease-out;
+    }
+    
+    .hero-kelly-greeting {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      background: var(--glass-white-heavy);
+      backdrop-filter: blur(20px);
+      padding: 8px 20px;
+      border-radius: var(--radius-full);
+      margin-bottom: 24px;
+      box-shadow: var(--shadow-sm);
+      animation: kelly-scale-in 0.6s ease-out 0.2s backwards;
+    }
+    
+    .hero-kelly-avatar-small {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid white;
+    }
+    
+    .hero-kelly-greeting-text {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--kelly-text-primary);
+    }
+    
+    .hero-headline {
+      font-size: clamp(2.5rem, 6vw, 4.5rem);
+      font-weight: 800;
+      line-height: 1.1;
+      letter-spacing: -0.02em;
+      margin-bottom: 24px;
+      animation: kelly-fade-in 0.8s ease-out 0.3s backwards;
+    }
+    
+    .hero-headline-gradient {
+      background: linear-gradient(135deg, var(--kelly-indigo), var(--kelly-purple), var(--kelly-pink));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    
+    .hero-subtitle {
+      font-size: clamp(1.125rem, 2vw, 1.5rem);
+      line-height: 1.6;
+      color: var(--kelly-text-secondary);
+      margin-bottom: 32px;
+      max-width: 540px;
+      animation: kelly-fade-in 0.8s ease-out 0.4s backwards;
+    }
+    
+    .hero-cta-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 16px;
+      margin-bottom: 32px;
+      animation: kelly-fade-in 0.8s ease-out 0.5s backwards;
+    }
+    
+    .hero-social-proof {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      animation: kelly-fade-in 0.8s ease-out 0.6s backwards;
+    }
+    
+    .hero-avatars {
+      display: flex;
+      margin-left: -8px;
+    }
+    
+    .hero-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: 2px solid white;
+      margin-left: -8px;
+      background: linear-gradient(135deg, var(--kelly-indigo), var(--kelly-purple));
+    }
+    
+    .hero-social-text {
+      font-size: 14px;
+      color: var(--kelly-text-secondary);
+    }
+    
+    .hero-social-text strong {
+      color: var(--kelly-text-primary);
+      font-weight: 600;
+    }
+    
+    /* ========================================== */
+    /* INTERACTIVE PREVIEW - Try Before Register */
+    /* ========================================== */
+    .preview-section {
+      padding: 120px 0;
+      position: relative;
+    }
+    
+    .preview-container {
+      background: var(--glass-white);
+      backdrop-filter: blur(40px);
+      border-radius: 32px;
+      padding: 60px;
+      box-shadow: var(--shadow-2xl);
+      border: 1px solid var(--glass-border);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .preview-header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    
+    .preview-kelly-intro {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .preview-kelly-avatar {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 3px solid white;
+      box-shadow: var(--shadow-md);
+    }
+    
+    .preview-kelly-bubble {
+      background: white;
+      padding: 16px 24px;
+      border-radius: 20px;
+      box-shadow: var(--shadow-sm);
+      position: relative;
+      max-width: 400px;
+    }
+    
+    .preview-kelly-bubble::before {
+      content: '';
+      position: absolute;
+      left: -10px;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 0;
+      height: 0;
+      border-top: 10px solid transparent;
+      border-bottom: 10px solid transparent;
+      border-right: 10px solid white;
+    }
+    
+    .preview-title {
+      font-size: 36px;
+      font-weight: 700;
+      margin-bottom: 16px;
+      color: var(--kelly-text-primary);
+    }
+    
+    .preview-subtitle {
+      font-size: 18px;
+      color: var(--kelly-text-secondary);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+    
+    .preview-demo {
+      background: linear-gradient(135deg, #fafafa, #f0f4ff);
+      border-radius: 24px;
+      padding: 40px;
+      min-height: 400px;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      gap: 24px;
+      position: relative;
+      overflow: hidden;
+      border: 2px solid var(--kelly-bg-3);
+    }
+    
+    .preview-demo-kelly {
+      width: 200px;
+      height: 200px;
+      border-radius: 50%;
+      object-fit: cover;
+      box-shadow: var(--shadow-xl);
+      border: 4px solid white;
+      animation: kelly-breathing 4s ease-in-out infinite;
+    }
+    
+    .preview-demo-question {
+      background: white;
+      padding: 24px 32px;
+      border-radius: 16px;
+      box-shadow: var(--shadow-md);
+      text-align: center;
+      max-width: 500px;
+    }
+    
+    .preview-demo-question h3 {
+      font-size: 24px;
+      font-weight: 600;
+      color: var(--kelly-text-primary);
+      margin-bottom: 16px;
+    }
+    
+    .preview-demo-choices {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 24px;
+    }
+    
+    .preview-choice {
+      background: var(--glass-white);
+      backdrop-filter: blur(20px);
+      padding: 16px 24px;
+      border-radius: 12px;
+      border: 2px solid var(--glass-border);
+      cursor: pointer;
+      transition: all var(--transition-base);
+      font-weight: 500;
+      color: var(--kelly-text-primary);
+    }
+    
+    .preview-choice:hover {
+      background: white;
+      border-color: var(--kelly-indigo);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .preview-cta {
+      text-align: center;
+      margin-top: 32px;
+    }
+    
+    /* ========================================== */
+    /* SEAMLESS REGISTRATION */
+    /* ========================================== */
+    .register-section {
+      padding: 120px 0;
+      background: linear-gradient(135deg, var(--kelly-indigo), var(--kelly-purple));
+      color: white;
+      position: relative;
+    }
+    
+    .register-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+    
+    .register-content h2 {
+      font-size: 48px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      line-height: 1.2;
+    }
+    
+    .register-content p {
+      font-size: 20px;
+      line-height: 1.6;
+      opacity: 0.9;
+      margin-bottom: 32px;
+    }
+    
+    .register-benefits {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    
+    .register-benefit {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 16px;
+    }
+    
+    .register-benefit-icon {
+      width: 24px;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.2);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    
+    .register-form-container {
+      background: white;
+      padding: 40px;
+      border-radius: 24px;
+      box-shadow: var(--shadow-2xl);
+    }
+    
+    .register-form-container h3 {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--kelly-text-primary);
+      margin-bottom: 24px;
+    }
+    
+    .register-form {
+      display: flex;
+      flex-direction: column;
+      gap: 20px;
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .form-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--kelly-text-primary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .form-input {
+      padding: 14px 16px;
+      border: 2px solid var(--kelly-bg-3);
+      border-radius: 12px;
+      font-size: 16px;
+      transition: all var(--transition-base);
+      font-family: inherit;
+    }
+    
+    .form-input:focus {
+      outline: none;
+      border-color: var(--kelly-indigo);
+      box-shadow: 0 0 0 4px rgba(99, 102, 241, 0.1);
+    }
+    
+    .form-submit {
+      margin-top: 8px;
+    }
+    
+    .form-privacy {
+      font-size: 12px;
+      color: var(--kelly-text-tertiary);
+      text-align: center;
+      margin-top: 16px;
+    }
+    
+    .form-privacy a {
+      color: var(--kelly-indigo);
+      text-decoration: none;
+    }
+    
+    /* ========================================== */
+    /* TRANSITION TO LESSON PLAYER */
+    /* ========================================== */
+    .transition-bridge {
+      padding: 80px 0;
+      text-align: center;
+    }
+    
+    .transition-bridge h2 {
+      font-size: 40px;
+      font-weight: 700;
+      margin-bottom: 24px;
+      color: var(--kelly-text-primary);
+    }
+    
+    .transition-bridge p {
+      font-size: 20px;
+      color: var(--kelly-text-secondary);
+      margin-bottom: 40px;
+    }
+    
+    .transition-preview {
+      background: var(--glass-white);
+      backdrop-filter: blur(40px);
+      border-radius: 24px;
+      padding: 40px;
+      box-shadow: var(--shadow-xl);
+      max-width: 800px;
+      margin: 0 auto 40px;
+    }
+    
+    .transition-preview-image {
+      width: 100%;
+      border-radius: 16px;
+      box-shadow: var(--shadow-lg);
+    }
+    
+    /* ========================================== */
+    /* RESPONSIVE */
+    /* ========================================== */
+    @media (max-width: 1024px) {
+      .hero-kelly-container {
+        width: 40%;
+      }
+      
+      .register-grid {
+        grid-template-columns: 1fr;
+        gap: 40px;
+      }
+    }
+    
+    @media (max-width: 768px) {
+      .hero-kelly-container {
+        position: relative;
+        width: 100%;
+        height: 300px;
+        transform: none;
+        margin-bottom: 40px;
+      }
+      
+      .hero-content {
+        text-align: center;
+      }
+      
+      .hero-cta-group {
+        justify-content: center;
+      }
+      
+      .preview-container {
+        padding: 32px 24px;
+      }
+      
+      .preview-demo-choices {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body class="kelly-bg-gradient">
+  
+  <!-- ========================================== -->
+  <!-- PERSISTENT NAVIGATION -->
+  <!-- ========================================== -->
+  <nav class="kelly-persistent-nav">
+    <div class="kelly-nav">
+      <a href="/" class="kelly-nav__brand">
+        <img src="/lessons/images/kelly-directors-chair-curious.png" alt="Kelly avatar">
+        <span>Curious Kelly</span>
+      </a>
+      <div class="kelly-nav__links">
+        <a href="#preview" class="kelly-nav__link">Try it</a>
+        <a href="#how-it-works" class="kelly-nav__link">How it works</a>
+        <a href="#register" class="kelly-nav__link">Join 2026</a>
+        <a href="/lesson-player/index.html" class="kelly-nav__link active">Start Learning</a>
+      </div>
+    </div>
+  </nav>
+  
+  <!-- ========================================== -->
+  <!-- HERO SECTION -->
+  <!-- ========================================== -->
+  <section class="hero-section">
+    <div class="kelly-container">
+      <div class="hero-content">
+        <div class="hero-kelly-greeting">
+          <img src="/lessons/images/kelly-directors-chair-curious.png" alt="Kelly" class="hero-kelly-avatar-small">
+          <span class="hero-kelly-greeting-text">Hi! I'm Kelly 👋</span>
+        </div>
+        
+        <h1 class="hero-headline">
+          <span class="hero-headline-gradient">8 minutes a day</span><br>
+          builds a lifetime of learning
+        </h1>
+        
+        <p class="hero-subtitle">
+          Meet Kelly, your AI learning companion who makes every day curious. Daily micro-lessons that actually stick—no overwhelm, just joy.
+        </p>
+        
+        <div class="hero-cta-group">
+          <button class="btn-kelly-primary" onclick="document.getElementById('preview').scrollIntoView({behavior:'smooth'})">
+            Try a lesson free
+          </button>
+          <a href="/lesson-player/index.html" class="btn-kelly-secondary">
+            Start learning now
+          </a>
+        </div>
+        
+        <div class="hero-social-proof">
+          <div class="hero-avatars">
+            <div class="hero-avatar"></div>
+            <div class="hero-avatar"></div>
+            <div class="hero-avatar"></div>
+            <div class="hero-avatar"></div>
+          </div>
+          <div class="hero-social-text">
+            <strong>2,431 early learners</strong> joined in 2025
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <div class="hero-kelly-container kelly-breathing">
+      <img 
+        src="/lessons/images/kelly-directors-chair-curious.png" 
+        alt="Kelly sitting in her director's chair, ready to teach"
+        class="hero-kelly-image"
+      >
+    </div>
+  </section>
+  
+  <!-- ========================================== -->
+  <!-- INTERACTIVE PREVIEW -->
+  <!-- ========================================== -->
+  <section id="preview" class="preview-section">
+    <div class="kelly-container">
+      <div class="preview-container">
+        <div class="preview-header">
+          <div class="preview-kelly-intro">
+            <img src="/lessons/images/kelly-directors-chair-curious.png" alt="Kelly" class="preview-kelly-avatar">
+            <div class="preview-kelly-bubble">
+              <p style="margin: 0; font-weight: 500; color: var(--kelly-text-primary);">
+                Let me show you how this works! Here's a quick taste...
+              </p>
+            </div>
+          </div>
+          
+          <h2 class="preview-title">Try it right now</h2>
+          <p class="preview-subtitle">
+            This is exactly what every lesson feels like. No signup required—just experience it.
+          </p>
+        </div>
+        
+        <div class="preview-demo">
+          <img 
+            src="/lessons/images/kelly-directors-chair-explaining.png" 
+            alt="Kelly teaching"
+            class="preview-demo-kelly"
+          >
+          
+          <div class="preview-demo-question">
+            <h3>Today's question: What makes a habit stick?</h3>
+            <p style="color: var(--kelly-text-secondary); font-size: 16px; margin: 0;">
+              Kelly will guide you through the science—then help you apply it today.
+            </p>
+            
+            <div class="preview-demo-choices">
+              <button class="preview-choice">Repetition</button>
+              <button class="preview-choice">Motivation</button>
+              <button class="preview-choice">Rewards</button>
+              <button class="preview-choice">Environment</button>
+            </div>
+          </div>
+        </div>
+        
+        <div class="preview-cta">
+          <a href="/lesson-player/index.html" class="btn-kelly-primary" style="text-decoration: none; display: inline-block;">
+            Start your first real lesson →
+          </a>
+          <p class="kelly-body-small" style="margin-top: 16px;">
+            No credit card. No commitment. Just curiosity.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- ========================================== -->
+  <!-- SEAMLESS REGISTRATION -->
+  <!-- ========================================== -->
+  <section id="register" class="register-section">
+    <div class="kelly-container">
+      <div class="register-grid">
+        <div class="register-content">
+          <h2>Join 2,431 learners starting daily habits in 2026</h2>
+          <p>
+            Reserve your spot for lifetime early-access pricing. Kelly will personally greet you when you join.
+          </p>
+          
+          <div class="register-benefits">
+            <div class="register-benefit">
+              <div class="register-benefit-icon">✓</div>
+              <span>Daily 8-minute lessons (never longer)</span>
+            </div>
+            <div class="register-benefit">
+              <div class="register-benefit-icon">✓</div>
+              <span>Privacy-first (no ads, no tracking)</span>
+            </div>
+            <div class="register-benefit">
+              <div class="register-benefit-icon">✓</div>
+              <span>English, Spanish & Portuguese</span>
+            </div>
+            <div class="register-benefit">
+              <div class="register-benefit-icon">✓</div>
+              <span>Lifetime early-bird pricing</span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="register-form-container">
+          <h3>Meet Kelly in 2026</h3>
+          
+          <form class="register-form" id="register-form">
+            <div class="form-group">
+              <label class="form-label" for="name">Your name</label>
+              <input type="text" id="name" class="form-input" placeholder="Kelly Rivera" required>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="email">Email address</label>
+              <input type="email" id="email" class="form-input" placeholder="you@example.com" required>
+            </div>
+            
+            <div class="form-group">
+              <label class="form-label" for="learning-goal">What do you want to learn?</label>
+              <input type="text" id="learning-goal" class="form-input" placeholder="Build better habits, understand science, be curious...">
+            </div>
+            
+            <button type="submit" class="btn-kelly-primary form-submit">
+              Reserve my spot →
+            </button>
+            
+            <p class="form-privacy">
+              By joining, you agree to our <a href="/privacy/">Privacy Policy</a>. 
+              We'll never sell your data or show ads.
+            </p>
+          </form>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <!-- ========================================== -->
+  <!-- TRANSITION BRIDGE TO LESSON PLAYER -->
+  <!-- ========================================== -->
+  <section class="transition-bridge">
+    <div class="kelly-container">
+      <h2>Already a learner?</h2>
+      <p>Kelly is waiting for you. Pick up right where you left off.</p>
+      
+      <div class="transition-preview">
+        <img 
+          src="/lessons/images/kelly-directors-chair-listening.png" 
+          alt="Lesson player preview"
+          class="transition-preview-image"
+        >
+      </div>
+      
+      <a href="/lesson-player/index.html" class="btn-kelly-primary" style="text-decoration: none; display: inline-block;">
+        Continue learning →
+      </a>
+    </div>
+  </section>
+  
+  <script>
+    // Simple form submission
+    document.getElementById('register-form')?.addEventListener('submit', (e) => {
+      e.preventDefault();
+      const name = document.getElementById('name').value;
+      alert(`Welcome, ${name}! 🎉\n\nWe'll email you when Kelly is ready in 2026.\n\nFor now, try a lesson by clicking "Start learning now" above!`);
+      // In production, this would POST to /api/lead
+      window.location.href = '/lesson-player/index.html';
+    });
+    
+    // Preview demo interaction
+    document.querySelectorAll('.preview-choice').forEach(button => {
+      button.addEventListener('click', function() {
+        alert('✨ Great thinking! In a real lesson, Kelly would:\n\n1. Explain why you're right (or almost right)\n2. Show you the science\n3. Help you apply it today\n\nReady to try a full lesson?');
+      });
+    });
+  </script>
+</body>
+</html>
+
+
+
+

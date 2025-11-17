@@ -283,19 +283,76 @@ def generate(req: GenerationRequest) -> None:
     image0 = images[0]
     image_bytes: Optional[bytes] = None
 
+    # Try multiple methods to extract image bytes
+    # Method 1: Check for image_bytes attribute
     if hasattr(image0, "image_bytes") and image0.image_bytes:
         image_bytes = image0.image_bytes
-    else:
+    
+    # Method 2: Try _as_bytes() method
+    if not image_bytes and hasattr(image0, "_as_bytes"):
+        try:
+            image_bytes = image0._as_bytes()
+        except Exception:
+            pass
+    
+    # Method 3: Try to_pil() then save
+    if not image_bytes and Image is not None:
+        try:
+            if hasattr(image0, "to_pil"):
+                pil_img = image0.to_pil()
+            elif hasattr(image0, "_pil_image"):
+                pil_img = image0._pil_image
+            else:
+                # Try to convert GeneratedImage to PIL
+                pil_img = None
+                if hasattr(image0, "generated_image"):
+                    pil_img = Image.open(io.BytesIO(image0.generated_image))
+            
+            if pil_img:
+                buffer = io.BytesIO()
+                pil_img.save(buffer, format="PNG")
+                buffer.seek(0)
+                image_bytes = buffer.read()
+        except Exception:
+            pass
+    
+    # Method 4: Try save() method without format parameter
+    if not image_bytes:
         buffer = io.BytesIO()
         try:
-            # Some SDK versions expose `save` on the image object
-            image0.save(buffer, format="PNG")  # type: ignore[attr-defined]
-            buffer.seek(0)
-            image_bytes = buffer.read()
-        except Exception as exc:  # pragma: no cover - fallback path
+            if hasattr(image0, "save"):
+                # Try without format parameter
+                image0.save(buffer)  # type: ignore[attr-defined]
+                buffer.seek(0)
+                image_bytes = buffer.read()
+        except Exception:
+            pass
+    
+    # Method 5: Check if it's already bytes
+    if not image_bytes and isinstance(image0, bytes):
+        image_bytes = image0
+
+    if not image_bytes:
+        # Last resort: try to get any data attribute
+        for attr in ["data", "content", "bytes", "image_data", "generated_image"]:
+            if hasattr(image0, attr):
+                try:
+                    data = getattr(image0, attr)
+                    if isinstance(data, bytes):
+                        image_bytes = data
+                        break
+                    elif isinstance(data, str):
+                        import base64
+                        image_bytes = base64.b64decode(data)
+                        break
+                except Exception:
+                    continue
+        
+        if not image_bytes:
             raise RuntimeError(
-                "Unable to extract image bytes from Vertex AI response"
-            ) from exc
+                f"Unable to extract image bytes from Vertex AI response. "
+                f"Image type: {type(image0)}, Attributes: {[a for a in dir(image0) if not a.startswith('__')]}"
+            )
 
     if not image_bytes:
         raise RuntimeError("Vertex AI returned empty image bytes.")

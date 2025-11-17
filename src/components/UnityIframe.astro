@@ -1,0 +1,257 @@
+---
+import type { LocaleDictionary } from '@lib/i18n/types';
+
+interface Props {
+  dictionary: LocaleDictionary;
+  iframeSrc?: string;
+  lessonId?: string;
+  supportUrl?: string;
+  nonce?: string;
+}
+
+const {
+  dictionary,
+  iframeSrc = import.meta.env.PUBLIC_UNITY_IFRAME_SRC ?? '/unity/kelly-v1/index.html',
+  lessonId = 'water-cycle-18-35',
+  supportUrl = 'https://github.com/curiouskelly/UI-TARS-desktop/blob/main/digital-kelly/engines/kelly_unity_player/WEBGL_EMBED_GUIDE.md',
+  nonce = Astro.props.nonce ?? crypto.randomUUID()
+} = Astro.props as Props;
+
+const componentId = `unity-demo-${crypto.randomUUID()}`;
+const copy = dictionary.demoPage;
+
+const sampleJson = import.meta.env.PUBLIC_UNITY_SAMPLE_JSON ?? '';
+const sampleAudio = import.meta.env.PUBLIC_UNITY_SAMPLE_AUDIO ?? '';
+const sampleExpressions = import.meta.env.PUBLIC_UNITY_SAMPLE_EXPRESSIONS ?? '';
+---
+
+<div
+  id={componentId}
+  class="unity-demo card border-0 shadow-lg"
+  data-lesson-id={lessonId}
+  data-lesson-json={sampleJson}
+  data-lesson-audio={sampleAudio}
+  data-lesson-expressions={sampleExpressions}
+  data-support-url={supportUrl}
+>
+  <div class="ratio ratio-16x9 unity-demo__player mb-3">
+    <iframe
+      src={iframeSrc}
+      title="Kelly avatar demo"
+      allow="autoplay *; microphone; fullscreen; xr-spatial-tracking"
+      loading="lazy"
+      referrerpolicy="strict-origin-when-cross-origin"
+    ></iframe>
+  </div>
+  <div class="unity-demo__status d-flex align-items-center gap-2 mb-3">
+    <span class="badge rounded-pill bg-secondary" data-role="indicator">
+      •
+    </span>
+    <span data-role="status">{copy.status.waiting}</span>
+  </div>
+  <div class="d-flex flex-wrap gap-2">
+    <button class="btn btn-gradient" type="button" data-action="play">
+      {copy.actions.load}
+    </button>
+    <button class="btn btn-outline-secondary" type="button" data-action="stop">
+      {copy.actions.stop}
+    </button>
+    <button class="btn btn-outline-primary" type="button" data-action="reload">
+      {copy.actions.reload}
+    </button>
+  </div>
+  <p class="small text-muted mt-3 mb-0">
+    {copy.subtitle}
+  </p>
+  <div class="unity-demo__fallback alert alert-warning mt-3" data-role="fallback" hidden>
+    <div class="fw-semibold mb-1">{copy.fallback.title}</div>
+    <p class="mb-2">{copy.fallback.body}</p>
+    <a class="btn btn-sm btn-outline-dark" href={supportUrl} target="_blank" rel="noreferrer">
+      {copy.fallback.ctaLabel}
+    </a>
+  </div>
+</div>
+
+<script type="module" nonce={nonce} is:inline>
+  import { trackUnityDemo } from '@lib/analytics';
+
+  const root = document.getElementById({JSON.stringify(componentId)});
+  if (!root) {
+    console.warn('[UnityIframe] Root element not found');
+  } else {
+    const iframe = root.querySelector('iframe');
+    const statusLabel = root.querySelector('[data-role="status"]');
+    const indicator = root.querySelector('[data-role="indicator"]');
+    const playButton = root.querySelector('[data-action="play"]');
+    const stopButton = root.querySelector('[data-action="stop"]');
+    const reloadButton = root.querySelector('[data-action="reload"]');
+    const fallbackNode = root.querySelector('[data-role="fallback"]');
+    const statusCopy = {JSON.stringify(copy.status)};
+    const unityEventName = {JSON.stringify(dictionary.analytics.unityDemoEvent)};
+    const localeCode = {JSON.stringify(dictionary.code)};
+
+    const lessonConfig = {
+      id: root.dataset.lessonId ?? 'demo',
+      jsonUrl: root.dataset.lessonJson ?? '',
+      audioUrl: root.dataset.lessonAudio ?? '',
+      expressionsUrl: root.dataset.lessonExpressions ?? ''
+    };
+
+    const emitAnalytics = (action, extra = {}) => {
+      trackUnityDemo(unityEventName, {
+        action,
+        locale: localeCode,
+        lessonId: lessonConfig.id,
+        ...extra
+      });
+    };
+
+    const updateStatus = (text, variant = 'secondary') => {
+      statusLabel.textContent = text;
+      indicator.className = `badge rounded-pill bg-${variant}`;
+    };
+
+    const postToPlayer = (type, payload = {}) => {
+      if (!iframe?.contentWindow) {
+        updateStatus(statusCopy.error, 'danger');
+        return;
+      }
+      iframe.contentWindow.postMessage(
+        {
+          source: 'curiouskelly.com',
+          destination: 'kelly-webgl',
+          type,
+          payload
+        },
+        '*'
+      );
+    };
+
+    let ready = false;
+    let errorCount = 0;
+    let timeoutHandle = window.setTimeout(() => {
+      if (!ready) {
+        updateStatus(statusCopy.error, 'danger');
+        emitAnalytics('timeout');
+      }
+    }, 15000);
+
+    const hideFallback = () => {
+      if (fallbackNode) {
+        fallbackNode.hidden = true;
+      }
+    };
+
+    const showFallback = () => {
+      if (fallbackNode) {
+        fallbackNode.hidden = false;
+      }
+    };
+
+    const requireAssets = () => {
+      if (!lessonConfig.jsonUrl || !lessonConfig.audioUrl) {
+        playButton.setAttribute('disabled', 'true');
+        updateStatus(statusCopy.assetsMissing, 'warning');
+        return true;
+      }
+      playButton.removeAttribute('disabled');
+      return false;
+    };
+
+    requireAssets();
+
+    const handleMessage = (event) => {
+      const data = event.data;
+      if (!data || data.source !== 'kelly-webgl') {
+        return;
+      }
+
+      switch (data.type) {
+        case 'kelly-ready':
+          ready = true;
+          window.clearTimeout(timeoutHandle);
+          updateStatus(statusCopy.ready, 'success');
+           errorCount = 0;
+           hideFallback();
+           emitAnalytics('ready');
+          break;
+        case 'kelly-loading':
+          updateStatus(statusCopy.loading, 'info');
+          emitAnalytics('loading');
+          break;
+        case 'kelly-playing':
+          updateStatus(statusCopy.playing, 'success');
+          errorCount = 0;
+          hideFallback();
+          emitAnalytics('playing');
+          break;
+        case 'kelly-stopped':
+          updateStatus(statusCopy.ready, 'secondary');
+          emitAnalytics('stopped');
+          break;
+        case 'kelly-error':
+          errorCount += 1;
+          const errorMessage = data.message || statusCopy.error;
+          updateStatus(errorMessage, 'danger');
+          emitAnalytics('error', { message: errorMessage });
+          if (errorCount >= 2) {
+            showFallback();
+          }
+          break;
+        default:
+          break;
+      }
+    };
+
+    window.addEventListener('message', handleMessage);
+
+    playButton.addEventListener('click', () => {
+      if (requireAssets()) {
+        return;
+      }
+      updateStatus(statusCopy.loading, 'info');
+      hideFallback();
+      errorCount = 0;
+      emitAnalytics('play_requested');
+      postToPlayer('kelly-load', {
+        lessonId: lessonConfig.id,
+        jsonUrl: lessonConfig.jsonUrl,
+        audioUrl: lessonConfig.audioUrl,
+        expressionsUrl: lessonConfig.expressionsUrl,
+        offsetMs: 50
+      });
+    });
+
+    stopButton.addEventListener('click', () => {
+      emitAnalytics('stop_requested');
+      postToPlayer('kelly-stop', { lessonId: lessonConfig.id });
+    });
+
+    reloadButton.addEventListener('click', () => {
+      ready = false;
+      updateStatus(statusCopy.waiting, 'secondary');
+      const src = new URL(iframe.src, window.location.href);
+      src.searchParams.set('ts', Date.now().toString());
+      iframe.src = src.toString();
+      timeoutHandle = window.setTimeout(() => {
+        if (!ready) {
+          updateStatus(statusCopy.error, 'danger');
+          emitAnalytics('timeout');
+        }
+      }, 15000);
+    });
+
+    const supportUrl = root.dataset.supportUrl;
+    if (supportUrl) {
+      const link = fallbackNode?.querySelector('a');
+      if (link) {
+        link.href = supportUrl;
+      }
+    }
+
+    if (!lessonConfig.jsonUrl) {
+      updateStatus(`${statusCopy.assetsMissing}${supportUrl ? ` (${supportUrl})` : ''}`, 'warning');
+    }
+  }
+</script>
+

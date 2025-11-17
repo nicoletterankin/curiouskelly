@@ -3,6 +3,7 @@ import SiteLayout from '@layouts/SiteLayout.astro';
 import HeroCountdown from '@components/HeroCountdown.astro';
 import LeadForm from '@components/LeadForm.astro';
 import TestimonialsCarousel from '@components/TestimonialsCarousel.astro';
+import UnityIframe from '@components/UnityIframe.astro';
 import { getDictionary, supportedLocales } from '@lib/i18n';
 import type { LocaleCode, RouteKey } from '@lib/i18n/types';
 
@@ -20,6 +21,7 @@ const baseRoutes: { key: RouteKey; slug: string[] }[] = [
   { key: 'children', slug: ['children'] },
   { key: 'teachers', slug: ['teachers'] },
   { key: 'schools', slug: ['schools'] },
+  { key: 'demo', slug: ['demo', 'avatar'] },
   { key: 'privacy', slug: ['privacy'] },
   { key: 'cookies', slug: ['cookies'] },
   { key: 'thank-you', slug: ['thank-you'] }
@@ -52,10 +54,13 @@ const { props, url } = Astro;
 const { locale: localeCode, routeKey } = props as Props;
 const dictionary = getDictionary(localeCode);
 const heroCTA = '#lead-form';
+const unityGuideUrl =
+  'https://github.com/curiouskelly/UI-TARS-desktop/blob/main/digital-kelly/engines/kelly_unity_player/WEBGL_EMBED_GUIDE.md';
 const countdownEnd =
   import.meta.env.PUBLIC_COUNTDOWN_TEST_MODE === 'true'
     ? new Date(Date.now() + 1000 * 60 * 60 * 24).toISOString()
     : import.meta.env.PUBLIC_COUNTDOWN_END ?? '2026-01-01T05:00:00.000Z';
+const isDemoRoute = routeKey === 'demo';
 
 const navLabel = dictionary.nav.find((item) => item.key === routeKey)?.label ?? '';
 const pageTitle =
@@ -97,6 +102,7 @@ const legalContent: Record<RouteKey, { title: string; paragraphs: string[] }> = 
   children: { title: '', paragraphs: [] },
   teachers: { title: '', paragraphs: [] },
   schools: { title: '', paragraphs: [] },
+  demo: { title: '', paragraphs: [] },
   'thank-you': { title: '', paragraphs: [] }
 };
 
@@ -258,6 +264,34 @@ checkRoute(routeKey);
                 </div>
               ))}
             </div>
+          </div>
+        </div>
+      </div>
+    </section>
+  ) : null}
+
+  {isDemoRoute ? (
+    <section class="py-5">
+      <div class="container">
+        <div class="row g-5 align-items-start">
+          <div class="col-lg-5">
+            <p class="text-uppercase text-muted fw-semibold mb-2">{dictionary.demoPage.checklistTitle}</p>
+            <h1 class="display-5 fw-semibold">{dictionary.demoPage.title}</h1>
+            <p class="lead text-muted">{dictionary.demoPage.subtitle}</p>
+            <ul class="list-unstyled mt-4">
+              {dictionary.demoPage.checklist.map((item) => (
+                <li class="d-flex align-items-start mb-2">
+                  <span class="badge bg-primary me-3 rounded-pill">+</span>
+                  <span>{item}</span>
+                </li>
+              ))}
+            </ul>
+            <a class="btn btn-link px-0 mt-3" href={unityGuideUrl} target="_blank" rel="noreferrer">
+              {dictionary.demoPage.supportCta}
+            </a>
+          </div>
+          <div class="col-lg-7">
+            <UnityIframe dictionary={dictionary} nonce={crypto.randomUUID()} supportUrl={unityGuideUrl} />
           </div>
         </div>
       </div>
