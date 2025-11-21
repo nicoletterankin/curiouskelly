@@ -1,0 +1,659 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Curious Kelly - The Daily Learning Operating System. Live lessons, 365-day syllabus, and personalized AI instruction.">
+    <title>Curious Kelly - The Campus</title>
+    
+    <style>
+        :root {
+            /* Design Tokens from Index (The Portal) */
+            --bg-color: #0f0f11;
+            --text-primary: #f4f4f5;
+            --text-secondary: #a1a1aa;
+            --accent-orange: #d97757;
+            --accent-hover: #c56a4d;
+            --card-bg: #18181b; /* Slightly lighter for cards */
+            --border-color: #3f3f46;
+            --footer-bg: #000000;
+            --live-red: #ef4444;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Times New Roman', Times, serif; /* The "Intellectual" Font */
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        /* Shared Utility Classes */
+        a { text-decoration: none; color: inherit; transition: color 0.2s; }
+        a:hover { color: var(--accent-orange); }
+        
+        h1, h2, h3, h4 { font-weight: 400; }
+        h2 { font-size: 2.5rem; margin-bottom: 1rem; letter-spacing: -1px; }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid transparent;
+        }
+
+        .btn-primary {
+            background-color: var(--text-primary);
+            color: var(--bg-color);
+        }
+        .btn-primary:hover {
+            background-color: #e4e4e7;
+            box-shadow: 0 0 15px rgba(255,255,255,0.2);
+        }
+
+        .btn-outline {
+            background-color: transparent;
+            color: var(--text-primary);
+            border-color: var(--border-color);
+        }
+        .btn-outline:hover {
+            background-color: rgba(255,255,255,0.05);
+            border-color: var(--text-secondary);
+        }
+
+        .btn-accent {
+            background-color: var(--accent-orange);
+            color: white;
+        }
+        .btn-accent:hover {
+            background-color: var(--accent-hover);
+            box-shadow: 0 0 20px rgba(217, 119, 87, 0.3);
+        }
+
+        /* Header */
+        header {
+            background: rgba(15, 15, 17, 0.8);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+            padding: 20px 0;
+            position: sticky;
+            top: 0;
+            z-index: 1000;
+        }
+
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-weight: 600;
+            font-size: 1.1rem;
+            letter-spacing: 0.5px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        .logo span { color: var(--accent-orange); font-size: 1.4rem; }
+
+        .nav-links { display: flex; gap: 30px; align-items: center; }
+        .nav-links a {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        .nav-links a:hover { color: var(--text-primary); }
+
+        /* Hero Section: The Daily Beat */
+        .hero {
+            padding: 100px 20px 60px;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 12px;
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.2);
+            border-radius: 20px;
+            color: var(--live-red);
+            font-family: monospace;
+            font-size: 0.8rem;
+            margin-bottom: 24px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--live-red);
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse { 0% { opacity: 1; } 50% { opacity: 0.5; } 100% { opacity: 1; } }
+
+        .hero h1 {
+            font-size: 4.5rem;
+            margin-bottom: 16px;
+            background: linear-gradient(to bottom right, #fff, #ccc);
+            background-clip: text;
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -2px;
+        }
+        
+        .hero-topic {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            color: var(--accent-orange);
+            font-size: 1.2rem;
+            margin-bottom: 24px;
+            font-weight: 500;
+            letter-spacing: 0.5px;
+        }
+
+        .hero .subtitle {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            max-width: 600px;
+            margin-left: auto;
+            margin-right: auto;
+            font-weight: 300;
+        }
+
+        /* Unity Container: Office Hours */
+        #unity-section {
+            max-width: 1000px;
+            margin: 0 auto 80px;
+            position: relative;
+        }
+        
+        .unity-frame {
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            background: #000;
+            height: 560px;
+            position: relative;
+            overflow: hidden;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+
+        #unity-canvas { width: 100%; height: 100%; }
+
+        .overlay-ui {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-end;
+            pointer-events: none;
+        }
+        
+        .session-info {
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.1);
+            font-family: monospace;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+        .session-info b { color: white; display: block; font-size: 1rem; margin-bottom: 4px; }
+
+        /* Curriculum Tracks (Features) */
+        .curriculum {
+            padding: 100px 20px;
+            background: var(--bg-color);
+        }
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        .section-header p {
+            color: var(--text-secondary);
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .track-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+
+        .track-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 32px;
+            transition: transform 0.2s, border-color 0.2s;
+        }
+        .track-card:hover {
+            border-color: var(--accent-orange);
+            transform: translateY(-4px);
+        }
+        .track-icon { font-size: 2rem; margin-bottom: 20px; display: block; }
+        .track-title { 
+            font-family: 'Times New Roman', serif; 
+            font-size: 1.5rem; 
+            margin-bottom: 12px; 
+            color: var(--text-primary);
+        }
+        .track-desc {
+            color: var(--text-secondary);
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            font-size: 0.95rem;
+        }
+
+        /* Syllabus (Calendar) */
+        .syllabus {
+            padding: 100px 20px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            background: linear-gradient(to bottom, var(--bg-color), #0a0a0a);
+        }
+        
+        .calendar-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 12px;
+            max-width: 1200px;
+            margin: 40px auto 0;
+        }
+
+        .day-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 16px;
+            font-family: -apple-system, sans-serif;
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            height: 140px;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .day-card:hover {
+            border-color: var(--text-secondary);
+            background: #202023;
+        }
+        
+        .day-num { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
+        .day-topic { font-size: 0.95rem; font-weight: 500; line-height: 1.3; margin-top: 8px; }
+        .dna-tag { 
+            align-self: flex-start;
+            font-size: 0.7rem; 
+            color: var(--accent-orange); 
+            border: 1px solid var(--accent-orange); 
+            padding: 2px 6px; 
+            border-radius: 4px; 
+            margin-top: auto;
+        }
+
+        /* Tuition (Pricing) */
+        .tuition {
+            padding: 100px 20px;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+
+        .tuition-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 30px;
+            max-width: 1000px;
+            margin: 50px auto 0;
+        }
+
+        .plan-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 40px;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+        }
+        .plan-card.featured { border-color: var(--accent-orange); box-shadow: 0 0 30px rgba(217, 119, 87, 0.1); }
+        
+        .plan-tag {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent-orange);
+            color: white;
+            font-family: sans-serif;
+            font-size: 0.75rem;
+            font-weight: 600;
+            padding: 4px 12px;
+            border-radius: 12px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .plan-name { font-family: 'Times New Roman', serif; font-size: 1.8rem; margin-bottom: 8px; }
+        .plan-price { font-size: 2.5rem; font-weight: 300; margin-bottom: 24px; font-family: -apple-system, sans-serif; }
+        .plan-price span { font-size: 1rem; color: var(--text-secondary); }
+        
+        .plan-features { list-style: none; margin-bottom: 40px; flex: 1; }
+        .plan-features li {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 12px;
+            color: var(--text-secondary);
+            font-family: -apple-system, sans-serif;
+            font-size: 0.95rem;
+        }
+        .plan-features li::before { content: "•"; color: var(--text-primary); }
+
+        /* Copy Footer from Index */
+        .corporate-footer {
+            background-color: var(--footer-bg);
+            padding: 80px 20px;
+            border-top: 1px solid #202023;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+        }
+        .footer-grid { display: grid; grid-template-columns: repeat(4, 1fr); gap: 40px; max-width: 1200px; margin: 0 auto; }
+        .footer-col h4 { color: #fff; font-size: 0.9rem; margin-bottom: 20px; font-weight: 600; }
+        .footer-links { list-style: none; display: flex; flex-direction: column; gap: 12px; }
+        .footer-links a { color: var(--text-secondary); font-size: 0.85rem; }
+        .footer-links a:hover { color: #fff; }
+        .footer-bottom { border-top: 1px solid #202023; margin-top: 60px; padding-top: 20px; display: flex; justify-content: space-between; font-size: 0.75rem; color: #52525b; max-width: 1200px; margin-left: auto; margin-right: auto; }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .hero h1 { font-size: 3rem; }
+            .footer-grid { grid-template-columns: 1fr 1fr; }
+            .unity-frame { height: 400px; }
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <div class="header-content">
+            <a href="index.html" class="logo">
+                <span>✴</span> Curious Kelly
+            </a>
+            <nav class="nav-links">
+                <a href="#syllabus">Syllabus</a>
+                <a href="#tuition">Tuition</a>
+                <a href="index.html" class="btn btn-outline" style="padding: 8px 16px;">Log In</a>
+            </nav>
+        </div>
+    </header>
+
+    <section class="hero">
+        <div class="live-indicator"><div class="live-dot"></div> Live Now</div>
+        <div class="hero-topic">Today's Lesson</div>
+        <h1>The Sun: Our Magnificent Star</h1>
+        <p class="subtitle">
+            Join the live session. Interactive lessons running every hour on the hour. 
+            Deep dives into science, nature, and wisdom.
+        </p>
+        
+        <div id="unity-section">
+            <div class="unity-frame">
+                <canvas id="unity-canvas" tabindex="-1"></canvas>
+                
+                <div class="overlay-ui">
+                    <div class="session-info">
+                        <b>Office Hours</b>
+                        <span>Topic: Stellar Physics • Age Group: Adaptive</span>
+                    </div>
+                </div>
+
+                <!-- Loading Overlay -->
+                <div id="unity-loading-overlay" style="position: absolute; inset: 0; background: #0f0f11; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10;">
+                    <div style="font-size: 2rem; margin-bottom: 1rem;">✴</div>
+                    <div style="color: var(--text-secondary); font-family: monospace;">Initializing Neural Avatar...</div>
+                </div>
+            </div>
+        </div>
+
+        <div style="display: flex; justify-content: center; gap: 16px; flex-wrap: wrap;">
+            <a href="index.html" class="btn btn-primary">Start Learning</a>
+            <a href="#syllabus" class="btn btn-outline">View Full Syllabus</a>
+        </div>
+    </section>
+
+    <section class="curriculum" id="features">
+        <div class="section-header">
+            <h2>Curriculum Tracks</h2>
+            <p>An adaptive learning engine that evolves with you. From first words to life philosophy.</p>
+        </div>
+        
+        <div class="track-grid">
+            <div class="track-card">
+                <span class="track-icon">🌱</span>
+                <h3 class="track-title">Wonder & Discovery</h3>
+                <p class="track-desc">Ages 2-5. Building vocabulary through playful observation of the natural world.</p>
+            </div>
+            <div class="track-card">
+                <span class="track-icon">🔭</span>
+                <h3 class="track-title">Foundations</h3>
+                <p class="track-desc">Ages 6-12. Connecting concepts. Why is the sky blue? How do machines work?</p>
+            </div>
+            <div class="track-card">
+                <span class="track-icon">🧬</span>
+                <h3 class="track-title">Synthesis</h3>
+                <p class="track-desc">Ages 13-17. Critical thinking, scientific method, and emotional intelligence.</p>
+            </div>
+            <div class="track-card">
+                <span class="track-icon">🏛️</span>
+                <h3 class="track-title">Mastery</h3>
+                <p class="track-desc">Ages 18+. Deep dives into history, philosophy, and complex systems.</p>
+            </div>
+        </div>
+    </section>
+
+    <section class="syllabus" id="syllabus">
+        <div class="section-header">
+            <h2>The 2025 Syllabus</h2>
+            <p>365 days of curated knowledge. A new topic unlocks every morning at 6:00 AM local time.</p>
+        </div>
+
+        <div class="calendar-grid" id="calendar-grid">
+            <!-- JS Injected -->
+        </div>
+        
+        <div style="text-align: center; margin-top: 40px;">
+            <a href="index.html" class="btn btn-outline">Access Full Calendar</a>
+        </div>
+    </section>
+
+    <section class="tuition" id="tuition">
+        <div class="section-header">
+            <h2>Tuition & Enrollment</h2>
+            <p>Invest in a year of exponential growth. One pass, unlimited curiosity.</p>
+        </div>
+
+        <div class="tuition-grid">
+            <div class="plan-card">
+                <h3 class="plan-name">Scholar</h3>
+                <div class="plan-price">$199<span>/year</span></div>
+                <ul class="plan-features">
+                    <li>Full access to Daily Lessons</li>
+                    <li>Personalized AI Teacher (Kelly)</li>
+                    <li>Progress tracking & streaks</li>
+                    <li>Mobile & Web access</li>
+                </ul>
+                <a href="index.html" class="btn btn-outline">Enroll Now</a>
+            </div>
+
+            <div class="plan-card featured">
+                <div class="plan-tag">Recommended</div>
+                <h3 class="plan-name">Fellowship (Gift)</h3>
+                <div class="plan-price">$199<span>/one-time</span></div>
+                <ul class="plan-features">
+                    <li>Give the gift of knowledge</li>
+                    <li>Beautiful digital certificate</li>
+                    <li>Starts Jan 1st, 2026</li>
+                    <li>Perfect for holidays</li>
+                </ul>
+                <a href="index.html" class="btn btn-accent">Gift a Fellowship</a>
+            </div>
+
+            <div class="plan-card">
+                <h3 class="plan-name">House</h3>
+                <div class="plan-price">$299<span>/year</span></div>
+                <ul class="plan-features">
+                    <li>Up to 6 family members</li>
+                    <li>Individual progress profiles</li>
+                    <li>Shared family discussion prompts</li>
+                    <li>Parental insights dashboard</li>
+                </ul>
+                <a href="index.html" class="btn btn-outline">Create Family Account</a>
+            </div>
+        </div>
+    </section>
+
+    <footer class="corporate-footer">
+        <div class="footer-grid">
+            <div class="footer-col">
+                <h4>Institute</h4>
+                <ul class="footer-links">
+                    <li><a href="about.html">About</a></li>
+                    <li><a href="about.html#syllabus">Syllabus</a></li>
+                    <li><a href="about.html#tuition">Tuition</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Campus</h4>
+                <ul class="footer-links">
+                    <li><a href="careers.html">Careers</a></li>
+                    <li><a href="newsroom.html">Newsroom</a></li>
+                    <li><a href="privacy.html">Privacy</a></li>
+                    <li><a href="terms.html">Terms</a></li>
+                    <li><a href="diversity.html">Diversity</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Connect</h4>
+                <ul class="footer-links">
+                    <li><a href="social.html#twitter">Twitter</a></li>
+                    <li><a href="social.html#instagram">Instagram</a></li>
+                    <li><a href="social.html#youtube">YouTube</a></li>
+                    <li><a href="social.html#linkedin">LinkedIn</a></li>
+                </ul>
+            </div>
+            <div class="footer-col">
+                <h4>Access</h4>
+                <ul class="footer-links">
+                    <li><a href="index.html">Log In</a></li>
+                    <li><a href="enterprise.html">Enterprise</a></li>
+                </ul>
+            </div>
+        </div>
+        <div class="footer-bottom">
+            <div>© 2025 Curious Kelly PBC.</div>
+            <div>Designed in California.</div>
+        </div>
+    </footer>
+
+    <!-- Unity & Data Scripts -->
+    <script>
+        // Calendar Data (First 30 Days)
+        const syllabus = [
+            { day: 1, title: "The Sun", dna: true },
+            { day: 2, title: "Habit Stacking", dna: false },
+            { day: 3, title: "Planet Earth", dna: false },
+            { day: 4, title: "Simple Machines", dna: false },
+            { day: 5, title: "Emotional IQ", dna: true },
+            { day: 6, title: "Civilizations", dna: false },
+            { day: 7, title: "Water Cycle", dna: false },
+            { day: 8, title: "Growth Mindset", dna: false },
+            { day: 9, title: "Ecosystems", dna: false },
+            { day: 10, title: "The Moon", dna: true },
+            { day: 11, title: "Photosynthesis", dna: false },
+            { day: 12, title: "Time Mgmt", dna: false },
+            { day: 13, title: "Body Systems", dna: false },
+            { day: 14, title: "Magnets", dna: false },
+            { day: 15, title: "Oceans", dna: false },
+            { day: 16, title: "Electricity", dna: false },
+            { day: 17, title: "Weather", dna: false },
+            { day: 18, title: "Insects", dna: false },
+            { day: 19, title: "Geology", dna: false },
+            { day: 20, title: "Climate", dna: false },
+            { day: 21, title: "Gravity", dna: false },
+            { day: 22, title: "Social Media", dna: false },
+            { day: 23, title: "Medicine", dna: false },
+            { day: 24, title: "Language", dna: false },
+            { day: 25, title: "Enlightenment", dna: false },
+            { day: 26, title: "Neuroscience", dna: false },
+            { day: 27, title: "Seasons", dna: false },
+            { day: 28, title: "Marine Bio", dna: false },
+            { day: 29, title: "Science Method", dna: false },
+            { day: 30, title: "Music Theory", dna: false }
+        ];
+
+        const grid = document.getElementById('calendar-grid');
+        syllabus.forEach(lesson => {
+            const card = document.createElement('div');
+            card.className = 'day-card';
+            card.innerHTML = `
+                <div class="day-num">Day ${lesson.day}</div>
+                <div class="day-topic">${lesson.title}</div>
+                ${lesson.dna ? '<span class="dna-tag">CORE</span>' : ''}
+            `;
+            grid.appendChild(card);
+        });
+
+        // Unity Loader (Mock for now, connecting to existing build)
+        var canvas = document.querySelector("#unity-canvas");
+        var buildUrl = "public/unity/kelly-v1/Build";
+        var loaderUrl = buildUrl + "/kelly-v1.loader.js";
+        var config = {
+            dataUrl: buildUrl + "/kelly-v1.stripped.data.br",
+            frameworkUrl: buildUrl + "/kelly-v1.framework.js",
+            codeUrl: buildUrl + "/kelly-v1.wasm",
+            streamingAssetsUrl: "StreamingAssets",
+            companyName: "DefaultCompany",
+            productName: "Curious Kelly",
+            productVersion: "0.1.0",
+        };
+
+        var script = document.createElement("script");
+        script.src = loaderUrl;
+        script.onload = () => {
+            createUnityInstance(canvas, config, (progress) => {
+                // Loading progress logic could go here
+            }).then((unityInstance) => {
+                document.getElementById('unity-loading-overlay').style.display = 'none';
+            }).catch((message) => {
+                console.log("Unity not found in this path (expected for dev env), UI will remain in mock state.");
+            });
+        };
+        document.body.appendChild(script);
+    </script>
+</body>
+</html>
