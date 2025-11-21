@@ -534,16 +534,24 @@
         </div>
     </footer>
 
-    <script>
-        function handleLogin(btn, provider) {
+    <script type="module">
+        // Import Supabase auth functions
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+
+        // Initialize Supabase client
+        const supabase = createClient(
+            'https://tvjalxxsyryjphkforjv.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcnp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE5NjI3NTcsImV4cCI6MjA0NzUzODc1N30.kLMlC14ckEp-XoL8RX5liw_cMdGs8lR'
+        )
+
+        // Real OAuth login function
+        window.handleLogin = async function(btn, provider) {
             // Reset all buttons
             document.querySelectorAll('.btn').forEach(b => b.classList.remove('loading'));
             
             // Set loading state
             btn.classList.add('loading');
-            
-            // Simulate network request
-            console.log(`Attempting login with ${provider}...`);
+            btn.disabled = true;
             
             // Audio feedback
             try {
@@ -560,24 +568,40 @@
                 osc.stop(audioCtx.currentTime + 0.1);
             } catch(e) {}
             
-            setTimeout(() => {
-                // Save session (mock)
-                localStorage.setItem('kelly_user_session', JSON.stringify({
+            try {
+                // Real Supabase OAuth
+                const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: provider,
-                    timestamp: new Date().toISOString(),
-                    isLoggedIn: true
-                }));
+                    options: {
+                        redirectTo: `${window.location.origin}/dashboard.html`,
+                        queryParams: provider === 'google' ? {
+                            access_type: 'offline',
+                            prompt: 'consent',
+                        } : {}
+                    }
+                })
                 
-                // Redirect to dashboard
-                window.location.href = 'dashboard.html';
-            }, 1500);
+                if (error) {
+                    console.error('Auth error:', error)
+                    alert('Login failed. Please try again.')
+                    btn.classList.remove('loading')
+                    btn.disabled = false
+                }
+                // Supabase will handle redirect
+            } catch (error) {
+                console.error('Login error:', error)
+                alert('Login failed. Please try again.')
+                btn.classList.remove('loading')
+                btn.disabled = false
+            }
         }
         
         // Check if already logged in
-        window.onload = function() {
-            const session = localStorage.getItem('kelly_user_session');
+        window.onload = async function() {
+            const { data: { session } } = await supabase.auth.getSession()
             if (session) {
-                console.log('Session found, user can continue.');
+                console.log('User already logged in, redirecting to dashboard...')
+                window.location.href = 'dashboard.html'
             }
         };
     </script>

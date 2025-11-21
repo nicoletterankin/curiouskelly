@@ -1,0 +1,321 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Your Curious Kelly Dashboard - Track your learning journey">
+    <title>Dashboard - Curious Kelly</title>
+    
+    <style>
+        :root {
+            --bg-color: #0f0f11;
+            --text-primary: #f4f4f5;
+            --text-secondary: #a1a1aa;
+            --accent-orange: #d97757;
+            --accent-hover: #c56a4d;
+            --card-bg: #18181b;
+            --border-color: #3f3f46;
+            --success-green: #10b981;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Times New Roman', Times, serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 40px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .welcome {
+            font-size: 2rem;
+            font-weight: 400;
+        }
+
+        .user-name {
+            color: var(--accent-orange);
+        }
+
+        .btn-signout {
+            padding: 10px 20px;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-family: -apple-system, sans-serif;
+            transition: all 0.2s;
+        }
+
+        .btn-signout:hover {
+            border-color: var(--accent-orange);
+            color: var(--accent-orange);
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .stat-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            color: var(--accent-orange);
+            margin-bottom: 8px;
+        }
+
+        .stat-label {
+            font-family: -apple-system, sans-serif;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .lesson-card {
+            background: var(--card-bg);
+            border: 2px solid var(--accent-orange);
+            border-radius: 16px;
+            padding: 48px;
+            margin-bottom: 40px;
+        }
+
+        .lesson-day {
+            font-family: -apple-system, sans-serif;
+            color: var(--accent-orange);
+            font-size: 0.9rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 12px;
+        }
+
+        .lesson-title {
+            font-size: 3rem;
+            font-weight: 400;
+            margin-bottom: 12px;
+            letter-spacing: -1px;
+        }
+
+        .lesson-subtitle {
+            font-family: -apple-system, sans-serif;
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+            margin-bottom: 32px;
+        }
+
+        .btn-start {
+            background: var(--accent-orange);
+            color: white;
+            padding: 16px 40px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            font-family: -apple-system, sans-serif;
+            transition: all 0.2s;
+        }
+
+        .btn-start:hover {
+            background: var(--accent-hover);
+            box-shadow: 0 0 20px rgba(217, 119, 87, 0.3);
+        }
+
+        .btn-start:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 100px 20px;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            border: 3px solid var(--border-color);
+            border-top: 3px solid var(--accent-orange);
+            border-radius: 50%;
+            width: 40px;
+            height: 40px;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 20px;
+        }
+
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+
+        .error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            color: #ef4444;
+            font-family: -apple-system, sans-serif;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div id="loading" class="loading">
+            <div class="spinner"></div>
+            <p>Loading your dashboard...</p>
+        </div>
+
+        <div id="content" style="display: none;">
+            <div class="header">
+                <h1 class="welcome">Welcome, <span class="user-name" id="user-name">...</span>!</h1>
+                <button class="btn-signout" onclick="handleSignOut()">Sign Out</button>
+            </div>
+
+            <div class="stats-grid">
+                <div class="stat-card">
+                    <div class="stat-value" id="streak">0</div>
+                    <div class="stat-label">Day Streak 🔥</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="current-day">1</div>
+                    <div class="stat-label">Current Day</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-value" id="completed">0</div>
+                    <div class="stat-label">Lessons Completed</div>
+                </div>
+            </div>
+
+            <div class="lesson-card">
+                <div class="lesson-day">TODAY'S LESSON</div>
+                <h2 class="lesson-title" id="lesson-title">Loading...</h2>
+                <p class="lesson-subtitle" id="lesson-subtitle"></p>
+                <button class="btn-start" id="start-btn" onclick="startLesson()">Start Lesson</button>
+            </div>
+
+            <div id="error" class="error" style="display: none;"></div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+
+        // Initialize Supabase
+        const supabase = createClient(
+            'https://tvjalxxsyryjphkforjv.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcnp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE5NjI3NTcsImV4cCI6MjA0NzUzODc1N30.kLMlC14ckEp-XoL8RX5liw_cMdGs8lR'
+        )
+
+        // Check authentication
+        const { data: { session } } = await supabase.auth.getSession()
+        
+        if (!session) {
+            // Not logged in, redirect to home
+            window.location.href = '/index.html'
+        } else {
+            // Load dashboard data
+            try {
+                const { data: { user } } = await supabase.auth.getUser()
+                
+                // Display user name
+                const userName = user.user_metadata?.name || user.email.split('@')[0]
+                document.getElementById('user-name').textContent = userName
+
+                // Get user profile
+                const { data: profile } = await supabase
+                    .from('users')
+                    .select('*')
+                    .eq('id', user.id)
+                    .single()
+
+                if (profile) {
+                    document.getElementById('streak').textContent = profile.streak_days || 0
+                    document.getElementById('current-day').textContent = profile.current_day || 1
+
+                    // Get completed lessons count
+                    const { count } = await supabase
+                        .from('user_progress')
+                        .select('*', { count: 'exact', head: true })
+                        .eq('user_id', user.id)
+                        .eq('completed', true)
+
+                    document.getElementById('completed').textContent = count || 0
+
+                    // Get today's lesson
+                    const currentDay = profile.current_day || 1
+                    const { data: lesson } = await supabase
+                        .from('lessons')
+                        .select('*')
+                        .eq('day_number', currentDay)
+                        .eq('is_published', true)
+                        .single()
+
+                    if (lesson) {
+                        document.getElementById('lesson-title').textContent = lesson.title
+                        document.getElementById('lesson-subtitle').textContent = lesson.subtitle || ''
+                        document.getElementById('start-btn').disabled = false
+                        
+                        // Store lesson ID for start button
+                        window.currentLessonId = lesson.id
+                    } else {
+                        document.getElementById('lesson-title').textContent = 'No lesson available'
+                        document.getElementById('lesson-subtitle').textContent = 'Check back soon!'
+                        document.getElementById('start-btn').disabled = true
+                    }
+                }
+
+                // Show content, hide loading
+                document.getElementById('loading').style.display = 'none'
+                document.getElementById('content').style.display = 'block'
+
+            } catch (error) {
+                console.error('Error loading dashboard:', error)
+                document.getElementById('loading').style.display = 'none'
+                document.getElementById('content').style.display = 'block'
+                document.getElementById('error').style.display = 'block'
+                document.getElementById('error').textContent = 'Error loading dashboard: ' + error.message
+            }
+        }
+
+        // Sign out function
+        window.handleSignOut = async function() {
+            const { error } = await supabase.auth.signOut()
+            if (error) {
+                console.error('Sign out error:', error)
+                alert('Error signing out')
+            } else {
+                window.location.href = '/index.html'
+            }
+        }
+
+        // Start lesson function
+        window.startLesson = function() {
+            // TODO: Navigate to lesson player
+            alert('Lesson player coming soon! Your lesson is ready in Supabase.')
+            console.log('Lesson ID:', window.currentLessonId)
+        }
+    </script>
+</body>
+</html>
