@@ -1,0 +1,279 @@
+/* Curious Kelly Public OS - The "Best Way" Implementation */
+
+:root {
+    --bg-color: #0f0f11;
+    --text-primary: #f4f4f5;
+    --text-secondary: #a1a1aa;
+    --accent-orange: #d97757;
+    --accent-hover: #c56a4d;
+    --card-bg: #18181b;
+    --window-bg: rgba(15, 15, 17, 0.95);
+    --border-color: #3f3f46;
+    --dock-bg: rgba(0, 0, 0, 0.8);
+    --glass-border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+* {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+}
+
+body {
+    background-color: var(--bg-color);
+    color: var(--text-primary);
+    font-family: 'Times New Roman', Times, serif;
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden; /* The Golden Rule: No Body Scroll */
+    position: relative;
+}
+
+/* --- Typography & Buttons (Shared) --- */
+h1, h2, h3, h4 { font-weight: 400; }
+a { text-decoration: none; color: inherit; cursor: pointer; }
+
+.btn {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    padding: 12px 24px;
+    border-radius: 12px;
+    font-family: -apple-system, sans-serif;
+    font-size: 0.95rem;
+    font-weight: 600;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.2s;
+}
+
+.btn-primary { background: var(--text-primary); color: var(--bg-color); }
+.btn-primary:hover { background: #e4e4e7; box-shadow: 0 0 15px rgba(255,255,255,0.2); }
+
+.btn-outline { background: transparent; border-color: var(--border-color); color: var(--text-primary); }
+.btn-outline:hover { background: rgba(255,255,255,0.05); border-color: var(--text-secondary); }
+
+.btn-accent { background: var(--accent-orange); color: white; }
+.btn-accent:hover { background: var(--accent-hover); box-shadow: 0 0 20px rgba(217, 119, 87, 0.3); }
+
+/* --- LAYOUT LAYERS --- */
+
+/* Layer 1: The Wallpaper / 3D Context */
+#os-layer-background {
+    position: absolute;
+    inset: 0;
+    z-index: 0;
+    display: flex;
+}
+
+/* The Split Screen Layout for "Desktop" */
+.desktop-split {
+    display: flex;
+    width: 100%;
+    height: 100%;
+}
+
+.split-left {
+    flex: 1;
+    padding: 80px;
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    max-width: 600px;
+    z-index: 1;
+    position: relative;
+    background: linear-gradient(to right, var(--bg-color) 80%, transparent);
+}
+
+.split-right {
+    flex: 1;
+    position: relative;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hero-image {
+    max-width: 90%;
+    max-height: 90%;
+    object-fit: contain;
+    animation: float 8s ease-in-out infinite;
+    filter: drop-shadow(0 20px 50px rgba(0,0,0,0.5));
+}
+
+@keyframes float {
+    0% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+    100% { transform: translateY(0px); }
+}
+
+/* Layer 2: The Taskbar / Dock */
+#os-layer-dock {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    width: 100%;
+    z-index: 100;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 40px;
+    height: 60px;
+    background: var(--dock-bg);
+    backdrop-filter: blur(10px);
+    border-top: 1px solid rgba(255,255,255,0.05);
+}
+
+.dock-start {
+    font-family: -apple-system, sans-serif;
+    font-weight: 600;
+    font-size: 1.1rem;
+    color: var(--text-primary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.dock-apps {
+    display: flex;
+    gap: 20px;
+}
+
+.dock-icon {
+    color: var(--text-secondary);
+    font-family: -apple-system, sans-serif;
+    font-size: 0.85rem;
+    padding: 8px 12px;
+    border-radius: 6px;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+}
+.dock-icon:hover {
+    color: var(--text-primary);
+    background: rgba(255,255,255,0.1);
+}
+.dock-icon.active {
+    color: var(--accent-orange);
+    background: rgba(217, 119, 87, 0.1);
+}
+
+/* Layer 3: Windows (Modals) */
+#os-layer-windows {
+    position: absolute;
+    inset: 0;
+    z-index: 50;
+    pointer-events: none; /* Allow clicks to pass through to desktop when no window is open */
+}
+
+.os-window {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%) scale(0.95);
+    width: 85%;
+    height: 85%;
+    background: var(--window-bg);
+    backdrop-filter: blur(20px);
+    border: var(--glass-border);
+    border-radius: 20px;
+    box-shadow: 0 50px 100px rgba(0,0,0,0.6);
+    opacity: 0;
+    pointer-events: none;
+    transition: all 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+    display: flex;
+    flex-direction: column;
+    overflow: hidden;
+}
+
+.os-window.open {
+    transform: translate(-50%, -50%) scale(1);
+    opacity: 1;
+    pointer-events: auto;
+}
+
+.window-header {
+    height: 60px;
+    border-bottom: var(--glass-border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 0 24px;
+    flex-shrink: 0;
+}
+
+.window-title {
+    font-family: -apple-system, sans-serif;
+    font-size: 1rem;
+    color: var(--text-secondary);
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.window-controls {
+    display: flex;
+    gap: 10px;
+}
+
+.btn-close {
+    width: 30px;
+    height: 30px;
+    border-radius: 50%;
+    border: 1px solid rgba(255,255,255,0.1);
+    background: rgba(255,255,255,0.05);
+    color: #fff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: all 0.2s;
+}
+.btn-close:hover { background: #ef4444; border-color: #ef4444; }
+
+.window-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 40px;
+}
+
+/* --- Content Styling Inside Windows (Migrated from Pages) --- */
+.content-container { max-width: 1000px; margin: 0 auto; }
+
+/* Grid Systems */
+.grid-2 { display: grid; grid-template-columns: 1fr 1fr; gap: 40px; }
+.grid-3 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 30px; }
+.grid-4 { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 20px; }
+
+/* Specific Modules */
+.syllabus-day {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.05);
+    padding: 20px;
+    border-radius: 12px;
+    transition: transform 0.2s;
+}
+.syllabus-day:hover { background: rgba(255,255,255,0.06); transform: translateY(-2px); }
+
+.pricing-card {
+    background: rgba(255,255,255,0.03);
+    border: 1px solid rgba(255,255,255,0.1);
+    padding: 40px;
+    border-radius: 16px;
+    text-align: center;
+}
+.pricing-card.featured { border-color: var(--accent-orange); background: rgba(217, 119, 87, 0.05); }
+
+/* Responsive Adjustments */
+@media (max-width: 900px) {
+    .desktop-split { flex-direction: column; }
+    .split-left { padding: 40px; max-width: 100%; height: 50%; }
+    .split-right { height: 50%; }
+    .hero-image { max-height: 80%; }
+    .os-window { width: 100%; height: 100%; border-radius: 0; border: none; }
+    #os-layer-dock { overflow-x: auto; }
+    .dock-apps { min-width: max-content; }
+}
+

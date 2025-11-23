@@ -415,3 +415,5 @@ ON CONFLICT (day_number) DO NOTHING;
 -- 4. Deploy backend API
 -- 5. Wire up frontend authentication
 
+
+

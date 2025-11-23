@@ -66,6 +66,41 @@ export async function signInWithGitHub() {
   return data
 }
 
+export async function signInWithFacebook() {
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'facebook',
+    options: {
+      redirectTo: `${window.location.origin}/dashboard.html`,
+      scopes: 'public_profile,email' 
+    }
+  })
+  
+  if (error) {
+    console.error('Facebook sign-in error:', error)
+    throw error
+  }
+  
+  return data
+}
+
+export async function signInWithOpenAI() {
+  // Note: OpenAI login usually requires a custom OIDC provider configuration in Supabase
+  const { data, error } = await supabase.auth.signInWithOAuth({
+    provider: 'oidc', // or specific OpenAI provider key if configured
+    options: {
+      redirectTo: `${window.location.origin}/dashboard.html`,
+      scopes: 'openid profile email'
+    }
+  })
+  
+  if (error) {
+    console.error('OpenAI sign-in error:', error)
+    throw error
+  }
+  
+  return data
+}
+
 export async function signOut() {
   const { error } = await supabase.auth.signOut()
   

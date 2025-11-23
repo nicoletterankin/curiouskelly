@@ -1,120 +1,40 @@
-# Kelly Unity Player
+# Kelly Unity Player (Clean Slate)
 
-Unity URP project for rendering Kelly's 3D avatar with frame-accurate audio-lip-sync.
+**Status:** Ready for Final Assets (Incoming)
+**Unity Version:** 6000.2.10f1 (Recommended) or 2022.3 LTS
+
+This project has been cleaned to prepare for the final Kelly model and scene integration.
 
 ## Project Structure
 
 ```
 Assets/
-├── Kelly/
-│   ├── Scripts/      # BlendshapeDriver, AutoBlink, KellyBridge, etc.
-│   ├── Models/       # Kelly_Head.fbx (placeholder: sphere)
-│   ├── Audio/        # Test audio files
-│   ├── Data/         # A2F JSON data
-│   ├── Materials/    # URP materials
-│   └── Scenes/       # Main.unity
+├── Scripts/      # Core Logic (Preserved)
+│   ├── KellyBridge.cs          # WebGL Messaging Bridge
+│   ├── BlendshapeDriver.cs     # Audio2Face Animation Driver
+│   ├── KellyAvatarController.cs # Main Controller
+│   └── ...
+├── Editor/       # Build Tools
+│   └── WebGLBuild.cs
+├── Models/       # [EMPTY] Place final FBX here
+├── Scenes/       # [EMPTY] Place final Scene here
+├── Materials/    # [EMPTY] Place textures/materials here
+└── Prefabs/      # [EMPTY] Place prefabs here
 ```
 
-## Scene Setup
+## How to Integrate the New Model
 
-### Main.unity Scene
+1.  **Open Project:** Open this folder (`digital-kelly/engines/kelly_unity_player`) in Unity Hub.
+2.  **Import Assets:** Drag the new `.fbx`, textures, and scene files into the respective folders.
+3.  **Setup Scene:**
+    *   Open the imported scene (or create a new one in `Scenes/`).
+    *   Ensure the Kelly GameObject has the `KellyAvatarController` script attached.
+    *   Ensure the `KellyBridge` script is in the scene (usually on a Controller object).
+4.  **Build:**
+    *   Run `scripts/build_unity_webgl.ps1` from the repo root.
 
-1. **Camera**
-   - FOV: 38
-   - Position: Tight head close-up
-   - Background: Black
+## Core Scripts Overview
 
-2. **Lighting**
-   - Directional Light (Soft shadows)
-
-3. **Kelly_Head GameObject**
-   - Currently: Placeholder sphere with test blendshape "jawOpen"
-   - Future: Replace with Kelly_Head.fbx
-
-### KellyController
-
-Empty GameObject with:
-- `KellyBridge` component (Flutter communication)
-- `BlendshapeDriver` component (A2F animation)
-- `AudioSource` component (audio playback)
-
-Optional components:
-- `AutoBlink` - Automatic blinking
-- `BreathingLayer` - Micro-expressions for breathing
-
-## Scripts
-
-### BlendshapeDriver.cs
-- Loads A2F JSON frames
-- Synchronizes audio playback with frames using `AudioSettings.dspTime`
-- Applies blendshape weights in real-time
-
-### KellyBridge.cs
-- Receives messages from Flutter
-- Loads audio clips and A2F data
-- Triggers synchronized playback
-
-### AutoBlink.cs
-- Generates natural blinking every 3-6 seconds
-- Blendshape-based (does not interfere with speech)
-
-### BreathingLayer.cs
-- Adds subtle breathing micro-expression
-- Sinusoidal animation
-- Low amplitude (4 units)
-
-## Build Settings
-
-### Unity Version
-- 2022.3 LTS or 2023.x
-- URP enabled
-- iOS/Android platform modules
-
-### Export for Flutter
-
-1. Open `Main.unity`
-2. File → Build Settings
-3. Select iOS or Android
-4. Export to corresponding directory in Flutter project
-
-See `docs/EMBED.md` for detailed integration steps.
-
-## Testing
-
-1. Open Main.unity in Unity Editor
-2. Press Play
-3. In Console, manually trigger:
-   ```csharp
-   var bridge = FindObjectOfType<KellyBridge>();
-   bridge.LoadAndPlay("path/to/json|path/to/wav");
-   ```
-4. Verify blendshape weights animate in real-time
-
-## Next Steps
-
-- Replace placeholder mesh with real FBX
-- Add jaw, smile, eyebrows blendshapes
-- Calibrate sync timing (±60ms slider)
-- Priority system for blink/breathing layers
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
+*   **KellyBridge.cs**: Handles communication with the web browser (Lesson Player).
+*   **BlendshapeDriver.cs**: Syncs audio with facial blendshapes (A2F).
+*   **KellyAvatarController.cs**: Manages age variants and overall state.

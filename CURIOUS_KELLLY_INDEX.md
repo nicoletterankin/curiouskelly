@@ -46,6 +46,8 @@ Track progress with:
 | [curious-kellly/README.md](./curious-kellly/README.md) | Production project overview | 10 min | 🟡 Important |
 | [lesson-player/README.md](./lesson-player/README.md) | Lesson player guide | 5 min | 🟢 Reference |
 | [digital-kelly/README.md](./digital-kelly/README.md) | Flutter+Unity architecture | 5 min | 🟢 Reference |
+| [docs/features/UNIVERSAL_LOGIN_AND_POWERUP.md](./docs/features/UNIVERSAL_LOGIN_AND_POWERUP.md) | Universal Login & Neural Link Spec | 10 min | 🟡 Important |
+| [docs/deployment/AUTH_ROLLOUT_CHECKLIST.md](./docs/deployment/AUTH_ROLLOUT_CHECKLIST.md) | Deployment Checklist for Auth | 5 min | 🔴 Critical |
 
 ### 📊 **Requirements & Tracking**
 
@@ -319,6 +321,10 @@ Start your first task from GETTING_STARTED_CK.md
 **Next Action**: Read START_HERE.md  
 **Timeline**: 12 weeks to launch  
 **Let's ship Curious Kellly!** 🎉
+
+
+
+
 
 
 

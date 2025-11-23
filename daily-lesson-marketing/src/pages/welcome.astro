@@ -1,0 +1,235 @@
+---
+/**
+ * Welcome/Success Page
+ * Shown after successful checkout
+ */
+
+import SiteLayout from '@layouts/SiteLayout.astro';
+
+const params = Astro.url.searchParams;
+const sessionId = params.get('session_id');
+---
+
+<SiteLayout title="Welcome to The Daily Lesson!" description="Your learning journey starts now.">
+  <div class="welcome-page">
+    <div class="container">
+      <div class="welcome-card">
+        <div class="success-icon">🎉</div>
+        
+        <h1>Welcome to The Daily Lesson!</h1>
+        <p class="subtitle">Your 7-day free trial starts now</p>
+
+        <div class="next-steps">
+          <h2>What happens next?</h2>
+          
+          <div class="step">
+            <span class="step-number">1</span>
+            <div class="step-content">
+              <h3>Check your email</h3>
+              <p>We've sent you a welcome email with your login details and first lesson.</p>
+            </div>
+          </div>
+
+          <div class="step">
+            <span class="step-number">2</span>
+            <div class="step-content">
+              <h3>Start your first lesson</h3>
+              <p>Today's 8-minute lesson is ready. Learn something new right now.</p>
+            </div>
+          </div>
+
+          <div class="step">
+            <span class="step-number">3</span>
+            <div class="step-content">
+              <h3>Invite your family</h3>
+              <p>One subscription covers everyone. Add family members to start their journey.</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="cta-buttons">
+          <a href="/app/dashboard" class="btn-primary">
+            Go to Your Dashboard
+          </a>
+          <a href="/today" class="btn-secondary">
+            Start Today's Lesson
+          </a>
+        </div>
+
+        <div class="trial-info">
+          <p><strong>Your trial ends:</strong> {new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toLocaleDateString('en-US', { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' })}</p>
+          <p>You won't be charged until your trial ends. Cancel anytime.</p>
+        </div>
+
+        {sessionId && (
+          <div class="session-debug" style="margin-top: 2rem; padding: 1rem; background: #f1f5f9; border-radius: 0.5rem; font-size: 0.875rem; color: #64748b;">
+            <p>Session ID: {sessionId}</p>
+          </div>
+        )}
+      </div>
+    </div>
+  </div>
+</SiteLayout>
+
+<style>
+  .welcome-page {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    padding: 4rem 0;
+    background: linear-gradient(to bottom, #f8fafc 0%, #ffffff 100%);
+  }
+
+  .container {
+    max-width: 800px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .welcome-card {
+    background: white;
+    border-radius: 1.5rem;
+    padding: 3rem;
+    box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+    text-align: center;
+  }
+
+  .success-icon {
+    font-size: 5rem;
+    margin-bottom: 1rem;
+  }
+
+  h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    color: #1e293b;
+    margin-bottom: 0.5rem;
+  }
+
+  .subtitle {
+    font-size: 1.25rem;
+    color: #64748b;
+    margin-bottom: 3rem;
+  }
+
+  .next-steps {
+    text-align: left;
+    margin: 3rem 0;
+  }
+
+  .next-steps h2 {
+    text-align: center;
+    font-size: 1.5rem;
+    margin-bottom: 2rem;
+    color: #1e293b;
+  }
+
+  .step {
+    display: flex;
+    gap: 1.5rem;
+    margin-bottom: 2rem;
+  }
+
+  .step-number {
+    flex-shrink: 0;
+    width: 3rem;
+    height: 3rem;
+    background: #3b82f6;
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 1.5rem;
+    font-weight: 700;
+  }
+
+  .step-content h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #1e293b;
+  }
+
+  .step-content p {
+    color: #64748b;
+    line-height: 1.6;
+  }
+
+  .cta-buttons {
+    display: flex;
+    gap: 1rem;
+    justify-content: center;
+    margin: 3rem 0;
+  }
+
+  .btn-primary,
+  .btn-secondary {
+    padding: 1rem 2rem;
+    border-radius: 0.5rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s;
+  }
+
+  .btn-primary {
+    background: #3b82f6;
+    color: white;
+  }
+
+  .btn-primary:hover {
+    background: #2563eb;
+    transform: translateY(-2px);
+  }
+
+  .btn-secondary {
+    background: white;
+    color: #3b82f6;
+    border: 2px solid #3b82f6;
+  }
+
+  .btn-secondary:hover {
+    background: #eff6ff;
+  }
+
+  .trial-info {
+    margin-top: 2rem;
+    padding: 1.5rem;
+    background: #f8fafc;
+    border-radius: 0.5rem;
+  }
+
+  .trial-info p {
+    margin: 0.5rem 0;
+    color: #475569;
+  }
+
+  .trial-info strong {
+    color: #1e293b;
+  }
+
+  @media (max-width: 768px) {
+    .welcome-card {
+      padding: 2rem 1.5rem;
+    }
+
+    h1 {
+      font-size: 2rem;
+    }
+
+    .cta-buttons {
+      flex-direction: column;
+    }
+
+    .btn-primary,
+    .btn-secondary {
+      width: 100%;
+    }
+  }
+</style>
+
+
+
+
+

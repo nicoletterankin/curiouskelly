@@ -1,0 +1,260 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Lesson DNA Schema v2",
+  "description": "Universal lesson structure that works for any topic across all ages 2-102, with phase-based content",
+  "type": "object",
+  "required": ["id", "title", "description", "ageVariants", "category", "difficulty", "tags"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "description": "Unique identifier for the lesson",
+      "pattern": "^[a-z0-9-]+$"
+    },
+    "version": {
+      "type": "string",
+      "description": "Schema version",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$"
+    },
+    "title": {
+      "type": "string",
+      "description": "Universal title that works for all ages",
+      "minLength": 5,
+      "maxLength": 100
+    },
+    "description": {
+      "type": "string",
+      "description": "Universal description that works for all ages",
+      "minLength": 20,
+      "maxLength": 200
+    },
+    "author": {
+      "type": "string",
+      "description": "Author or team name"
+    },
+    "createdAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "updatedAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+        "category": {
+          "type": "string",
+          "enum": [
+            "science", "art", "history", "nature", "human-connection", "creativity", 
+            "emotional-intelligence", "stem", "humanities", "astronomy",
+            "philosophy", "mathematics", "technology", "music", "economics", 
+            "social-studies", "literature", "civics", "architecture", "media", 
+            "psychology", "sociology", "anthropology", "film", "dance"
+          ]
+        },
+    "subcategory": { "type": "string" },
+    "difficulty": {
+      "type": "string",
+      "enum": ["beginner", "intermediate", "advanced"]
+    },
+    "estimatedMinutes": { "type": "integer" },
+    "duration": {
+      "type": "object",
+      "properties": {
+        "min": { "type": "integer", "minimum": 3, "maximum": 15 },
+        "max": { "type": "integer", "minimum": 5, "maximum": 30 }
+      }
+    },
+    "tags": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "prerequisites": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "learningObjectives": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "learningOutcomes": {
+      "type": "array",
+      "items": { "type": "string" }
+    },
+    "ageVariants": {
+      "type": "object",
+      "description": "Age-specific content for each age bucket",
+      "required": ["2-5", "6-12", "13-17", "18-35", "36-60", "61-102"],
+      "properties": {
+        "2-5": { "$ref": "#/definitions/ageVariant" },
+        "6-12": { "$ref": "#/definitions/ageVariant" },
+        "13-17": { "$ref": "#/definitions/ageVariant" },
+        "18-35": { "$ref": "#/definitions/ageVariant" },
+        "36-60": { "$ref": "#/definitions/ageVariant" },
+        "61-102": { "$ref": "#/definitions/ageVariant" }
+      }
+    },
+    "interactions": {
+      "type": "array",
+      "description": "Interactive conversation sequences",
+      "items": { "$ref": "#/definitions/interaction" }
+    },
+    "metadata": {
+      "type": "object",
+      "description": "Additional metadata",
+      "properties": {
+        "contentAdvisories": { "type": "array", "items": { "type": "string" } },
+        "educationalStandards": { "type": "array", "items": { "type": "string" } },
+        "accessibility": {
+          "type": "object",
+          "properties": {
+            "transcriptAvailable": { "type": "boolean" },
+            "signLanguageAvailable": { "type": "boolean" },
+            "closedCaptioningAvailable": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "calendar": {
+      "type": "object",
+      "properties": {
+        "day": { "type": "integer" },
+        "date": { "type": "string" },
+        "month": { "type": "string" }
+      }
+    },
+    "crossAgeThemes": {
+      "type": "object"
+    }
+  },
+  "definitions": {
+    "ageVariant": {
+      "type": "object",
+      "required": ["title", "description", "vocabulary", "pacing", "language", "phases"],
+      "properties": {
+        "title": { "type": "string", "minLength": 3, "maxLength": 80 },
+        "description": { "type": "string", "minLength": 10, "maxLength": 150 },
+        "kellyAge": { "type": "integer", "minimum": 2, "maximum": 102 },
+        "kellyPersona": {
+          "type": "string",
+          "enum": ["playful-toddler", "curious-kid", "enthusiastic-teen", "knowledgeable-adult", "wise-mentor", "reflective-elder"]
+        },
+        "voiceProfile": { "$ref": "#/definitions/voiceProfile" },
+        "vocabulary": {
+          "type": "object",
+          "properties": {
+            "keyTerms": { "type": "array", "items": { "type": "string" } },
+            "complexity": { "type": "string" },
+            "technical_terms": { "type": "array", "items": { "type": "string" } },
+            "scaffolding": { "type": "object" },
+            "explanations": { "type": "object" }
+          }
+        },
+        "language": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": { "$ref": "#/definitions/languageVariant" }
+        },
+        "pacing": {
+          "type": "object",
+          "properties": {
+            "speechRate": { "type": "string" },
+            "pauseFrequency": { "type": "string" },
+            "interactionLevel": { "type": "string" }
+          }
+        },
+        "phases": {
+          "type": "array",
+          "minItems": 1,
+          "items": { "$ref": "#/definitions/phase" }
+        },
+        "tone": { "type": "object" }
+      }
+    },
+    "phase": {
+      "type": "object",
+      "required": ["id", "type", "duration", "content"],
+      "properties": {
+        "id": { "type": "string" },
+        "type": { "type": "string" },
+        "duration": { "type": "integer" },
+        "content": { "type": "string" },
+        "teachingMoments": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["concept", "explanation"],
+            "properties": {
+              "concept": { "type": "string" },
+              "explanation": { "type": "string" },
+              "ageAppropriate": { "type": "string" }
+            }
+          }
+        },
+        "expressionCues": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/expressionCue" }
+        }
+      }
+    },
+    "voiceProfile": {
+      "type": "object",
+      "required": ["provider", "voiceId", "speechRate", "pitch", "energy"],
+      "properties": {
+        "provider": { "type": "string" },
+        "voiceId": { "type": "string" },
+        "fallbackVoiceId": { "type": "string" },
+        "speechRate": { "type": "number" },
+        "pitch": { "type": "number" },
+        "energy": { "type": "string" },
+        "language": { "type": "string" }
+      }
+    },
+    "languageVariant": {
+      "type": "object",
+      "required": ["title", "welcome"],
+      "properties": {
+        "title": { "type": "string" },
+        "welcome": { "type": "string" },
+        "mainContent": { "type": "string" },
+        "keyPoints": { "type": "array", "items": { "type": "string" } },
+        "interactionPrompts": { "type": "array", "items": { "type": "string" } },
+        "wisdomMoment": { "type": "string" },
+        "cta": { "type": "string" },
+        "summary": { "type": "string" },
+        "core_metaphor": { "type": "string" },
+        "abstract_concepts": { "type": "object" }
+      }
+    },
+    "expressionCue": {
+      "type": "object",
+      "required": ["timestamp", "type", "intensity", "description"],
+      "properties": {
+        "timestamp": { "type": "number" },
+        "type": { "type": "string" },
+        "intensity": { "type": "string" },
+        "description": { "type": "string" }
+      }
+    },
+    "interaction": {
+      "type": "object",
+      "required": ["step", "question", "choices"],
+      "properties": {
+        "step": { "type": "string" },
+        "question": { "type": "string" },
+        "choices": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/choice" }
+        },
+        "ageAdaptations": { "type": "object" }
+      }
+    },
+    "choice": {
+      "type": "object",
+      "required": ["text", "nextStep", "response"],
+      "properties": {
+        "text": { "type": "string" },
+        "nextStep": { "type": "string" },
+        "response": { "type": "string" },
+        "learningValue": { "type": "string" }
+      }
+    }
+  }
+}

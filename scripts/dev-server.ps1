@@ -42,6 +42,8 @@ function Invoke-DockerCompose {
 
     & docker @($dockerArgs + $AdditionalArgs) | Write-Output
     if ($LASTEXITCODE -ne 0) {
+        Write-Host "Docker command failed with exit code $LASTEXITCODE" -ForegroundColor Red
+        Write-Host "Command was: docker $($dockerArgs + $AdditionalArgs)" -ForegroundColor Red
         throw "docker compose command failed ($LASTEXITCODE)"
     }
 }

@@ -1,0 +1,209 @@
+---
+/**
+ * ToneSelector Component
+ * Allows users to choose their preferred voice tone: Neutral, Fun, or Warm
+ * Stores preference in localStorage and updates page copy dynamically
+ */
+
+interface Props {
+  dictionary: any;
+  nonce?: string;
+}
+
+const { dictionary, nonce } = Astro.props;
+---
+
+<div class="tone-selector" data-tone-selector>
+  <div class="tone-selector__label">
+    <span class="tone-selector__label-text">Choose Kelly's style:</span>
+  </div>
+  <div class="tone-selector__buttons" role="radiogroup" aria-label="Voice tone selection">
+    <button
+      type="button"
+      class="tone-selector__button"
+      data-tone="neutral"
+      role="radio"
+      aria-checked="true"
+      aria-label="Neutral tone">
+      <span class="tone-selector__icon" aria-hidden="true">🎯</span>
+      <span class="tone-selector__name">Neutral</span>
+    </button>
+    <button
+      type="button"
+      class="tone-selector__button"
+      data-tone="fun"
+      role="radio"
+      aria-checked="false"
+      aria-label="Fun tone">
+      <span class="tone-selector__icon" aria-hidden="true">✨</span>
+      <span class="tone-selector__name">Fun</span>
+    </button>
+    <button
+      type="button"
+      class="tone-selector__button"
+      data-tone="warm"
+      role="radio"
+      aria-checked="false"
+      aria-label="Warm tone">
+      <span class="tone-selector__icon" aria-hidden="true">💙</span>
+      <span class="tone-selector__name">Warm</span>
+    </button>
+  </div>
+</div>
+
+<style>
+  .tone-selector {
+    margin-bottom: 1.5rem;
+    padding: 1rem;
+    background: rgba(255, 255, 255, 0.05);
+    backdrop-filter: blur(10px);
+    border-radius: 12px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+  }
+
+  .tone-selector__label {
+    margin-bottom: 0.75rem;
+  }
+
+  .tone-selector__label-text {
+    font-size: 0.875rem;
+    font-weight: 600;
+    color: rgba(255, 255, 255, 0.9);
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .tone-selector__buttons {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 0.5rem;
+  }
+
+  .tone-selector__button {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 0.25rem;
+    padding: 0.75rem 0.5rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 2px solid transparent;
+    border-radius: 8px;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    font-family: inherit;
+  }
+
+  .tone-selector__button:hover {
+    background: rgba(255, 255, 255, 0.15);
+    transform: translateY(-2px);
+  }
+
+  .tone-selector__button:focus {
+    outline: none;
+    border-color: rgba(99, 102, 241, 0.8);
+    box-shadow: 0 0 0 3px rgba(99, 102, 241, 0.2);
+  }
+
+  .tone-selector__button[aria-checked="true"] {
+    background: rgba(99, 102, 241, 0.2);
+    border-color: rgba(99, 102, 241, 0.8);
+  }
+
+  .tone-selector__icon {
+    font-size: 1.5rem;
+    line-height: 1;
+  }
+
+  .tone-selector__name {
+    font-size: 0.75rem;
+    font-weight: 600;
+    color: white;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  @media (max-width: 640px) {
+    .tone-selector__buttons {
+      gap: 0.375rem;
+    }
+
+    .tone-selector__button {
+      padding: 0.625rem 0.375rem;
+    }
+
+    .tone-selector__icon {
+      font-size: 1.25rem;
+    }
+
+    .tone-selector__name {
+      font-size: 0.625rem;
+    }
+  }
+</style>
+
+<script nonce={nonce} is:inline>
+  (function() {
+    const STORAGE_KEY = 'kelly_tone';
+    const selector = document.querySelector('[data-tone-selector]');
+    if (!selector) return;
+
+    const buttons = selector.querySelectorAll('[data-tone]');
+
+    // Load saved tone or default to neutral
+    const savedTone = localStorage.getItem(STORAGE_KEY) || 'neutral';
+
+    // Set initial state
+    buttons.forEach(button => {
+      const tone = button.getAttribute('data-tone');
+      if (tone === savedTone) {
+        button.setAttribute('aria-checked', 'true');
+      } else {
+        button.setAttribute('aria-checked', 'false');
+      }
+    });
+
+    // Handle tone selection
+    buttons.forEach(button => {
+      button.addEventListener('click', () => {
+        const selectedTone = button.getAttribute('data-tone');
+
+        // Update storage
+        localStorage.setItem(STORAGE_KEY, selectedTone);
+
+        // Update UI
+        buttons.forEach(btn => {
+          btn.setAttribute('aria-checked', btn === button ? 'true' : 'false');
+        });
+
+        // Dispatch custom event for other components to listen
+        window.dispatchEvent(new CustomEvent('tone-changed', {
+          detail: { tone: selectedTone }
+        }));
+
+        // Track in analytics if available
+        if (typeof window.gtag === 'function') {
+          window.gtag('event', 'tone_selected', {
+            'event_category': 'engagement',
+            'event_label': selectedTone
+          });
+        }
+      });
+    });
+
+    // Keyboard navigation
+    selector.addEventListener('keydown', (e) => {
+      if (e.key === 'ArrowLeft' || e.key === 'ArrowRight') {
+        e.preventDefault();
+        const currentButton = document.querySelector('[data-tone][aria-checked="true"]');
+        const currentIndex = Array.from(buttons).indexOf(currentButton);
+        const nextIndex = e.key === 'ArrowRight'
+          ? (currentIndex + 1) % buttons.length
+          : (currentIndex - 1 + buttons.length) % buttons.length;
+
+        buttons[nextIndex].click();
+        buttons[nextIndex].focus();
+      }
+    });
+  })();
+</script>
+

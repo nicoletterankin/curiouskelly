@@ -4,11 +4,12 @@ This document encodes how the assistant must operate in this repository to maxim
 
 ### How to use this doc
 - If you are onboarding: read `START_HERE.md` → then skim this file top-to-bottom.
-- When acting: follow this file’s rules; for concrete steps, jump to:
-  - `CURIOUS_KELLLY_EXECUTION_PLAN.md` → Executive Summary, “SPRINT 0: Foundation,” “SPRINT 1: Voice & Avatar,” “SPRINT 2: Content Creation.”
-  - `TECHNICAL_ALIGNMENT_MATRIX.md` → “Voice & Audio Pipeline,” “Avatar Rendering,” “Lesson System,” “Backend Services.”
-  - `BUILD_PLAN.md` → “Phase 1: Generate Audio,” “Phase 2: Update Lesson Player,” “Phase 5: Testing & Validation.”
+- When acting: follow this file's rules; for concrete steps, jump to:
+  - `CURIOUS_KELLLY_EXECUTION_PLAN.md` → Executive Summary, "SPRINT 0: Foundation," "SPRINT 1: Voice & Avatar," "SPRINT 2: Content Creation."
+  - `TECHNICAL_ALIGNMENT_MATRIX.md` → "Voice & Audio Pipeline," "Avatar Rendering," "Lesson System," "Backend Services."
+  - `BUILD_PLAN.md` → "Phase 1: Generate Audio," "Phase 2: Update Lesson Player," "Phase 5: Testing & Validation."
   - `CURIOUS_KELLLY_INDEX.md` → navigation to all living documents.
+  - `docs/social-media/SOCIAL_MEDIA_INDEX.md` → complete social media strategy, brand guidelines, automation tools.
   - `docs/reinmaker/API_OVERVIEW.md` → Reinmaker endpoints, OAuth scopes, webhook contracts.
   - `docs/billing/GLOBAL_ROADMAP.md` → unified billing responsibilities and global payment rollout.
   - `docs/web/SITE_MAP.md` → domain roles, cross-link rules, analytics instrumentation.
@@ -48,6 +49,7 @@ This document encodes how the assistant must operate in this repository to maxim
 - Training: `gpu_optimized_trainer.py` and `synthetic_tts/` tooling per docs
 - Deployment: `deployment/setup-cloud.sh`; `deployment/vercel.json` and Cloudflare rules
 - Diagnostics: `tests/`, `test_*.py`, and validation tools in `tools/` and `curious-kellly/content-tools`
+- Social media: `tools/social-media-automation/` scripts (post_scheduler.py, content_generator.py); `docs/social-media/` for strategy/guidelines
 
 ### Workflows (must follow exactly)
 1) Voice training (Kelly/Kyle)
@@ -79,8 +81,9 @@ This document encodes how the assistant must operate in this repository to maxim
    - See: `CURIOUS_KELLLY_EXECUTION_PLAN.md` → “SPRINT 7: Store Submission & Launch,” and `deployment/` docs.
 
 ### Safety rails and approvals
-- Require explicit user approval for: schema changes; DNA structure edits; deletion/moves of assets; production config changes; any action that increases recurring costs.
+- Require explicit user approval for: schema changes; DNA structure edits; deletion/moves of assets; production config changes; any action that increases recurring costs (EXCEPTION: $400/month social media budget pre-approved).
 - Secrets: keep keys in `.env`/secure store; never commit or print. Redact in logs and diffs.
+- **Email communications:** ALL email must use hello@curiouskelly.com. No other addresses authorized (no team@, social@, dev@, etc.).
 
 ### Testing and quality gates (pre‑merge requirements)
 - Run unit tests in `tests/` and subproject suites.
@@ -101,6 +104,19 @@ This document encodes how the assistant must operate in this repository to maxim
 - Cloudflare/Vercel deployment as configured; do not alter without approval.
 - Reinmaker integrations follow `docs/reinmaker/API_OVERVIEW.md`; shared manifests live under `content/manifests/reinmaker/`.
 - Billing flows must align with `docs/billing/GLOBAL_ROADMAP.md`. Web presence changes must respect `docs/web/SITE_MAP.md`.
+
+### Social media automation and community building (APPROVED)
+- **Budget:** $400/month approved for social media tools (Buffer, OpenAI API, Canva Pro, analytics).
+- **Logo:** ✨ Curious Kelly (sparkles symbol LOCKED - see `docs/social-media/LOGO_DECISION.md`).
+- **Platforms:** Twitter/X (@CuriousKelly), Instagram (@CuriousKellyAI), YouTube (@CuriousKelly), LinkedIn (Lesson of the Day PBC), TikTok (@CuriousKellyAI), Discord (Curious Kelly Community).
+- **Contact email:** ALL customer/community communications go to hello@curiouskelly.com (the ONLY authorized email address).
+- **Content pillars:** 40% Educate, 25% Inspire, 25% Engage, 10% Convert (80/20 value-to-promotion rule).
+- **Brand voice:** Three modes (Neutral for LinkedIn/formal, Fun for TikTok/Instagram, Wisdom for inspirational). Always curious, warm, intelligent, enthusiastic, inclusive.
+- **Automation:** Use `tools/social-media-automation/` Python scripts for AI content generation, multi-platform scheduling, and analytics tracking.
+- **Launch target:** December 17, 2025. Goal: 1,000 subscribers by Christmas 2025.
+- **Documentation:** Follow `docs/social-media/SOCIAL_MEDIA_STRATEGY.md`, `SOCIAL_MEDIA_BRAND_GUIDELINES.md`, `SOCIAL_MEDIA_LAUNCH_CHECKLIST.md`, `CONTENT_CALENDAR_SYSTEM.md`, and `templates/CONTENT_TEMPLATES_LIBRARY.md`.
+- **Restrictions:** Never post political/religious content; never use unofficial email addresses; never create content that contradicts brand guidelines; always maintain Kelly's authentic AI teacher persona.
+- **Daily workflow:** 3-4 hours/day with automation (batch content creation weekly, AI-assisted generation, scheduled posting, daily community engagement).
 
 ### Daily habit reinforcement (experience rules)
 - Default to micro‑sessions (5–10 min) with resume‑from‑last‑phase.

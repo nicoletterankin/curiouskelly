@@ -10,7 +10,10 @@ const path = require('path');
 const Ajv = require('ajv');
 
 // Load schema (try v2 first, fallback to v1)
-let schemaPath = path.join(__dirname, '../../lesson-player/lesson-dna-schema-v2.json');
+let schemaPath = path.join(__dirname, '../backend/config/lesson-dna-schema-v2.json');
+if (!fs.existsSync(schemaPath)) {
+  schemaPath = path.join(__dirname, '../../lesson-player/lesson-dna-schema-v2.json');
+}
 if (!fs.existsSync(schemaPath)) {
   schemaPath = path.join(__dirname, '../backend/config/lesson-dna-schema.json');
 }
@@ -108,13 +111,15 @@ function validateLesson(lessonPath) {
     
     const variant = lessonData.ageVariants[ageGroup];
     
-    // Check Kelly age
-    if (variant.kellyAge !== KELLY_AGES[ageGroup]) {
+    // Check Kelly age (optional in V2)
+    if (variant.kellyAge && variant.kellyAge !== KELLY_AGES[ageGroup]) {
       errors.push(`${ageGroup}: Kelly age should be ${KELLY_AGES[ageGroup]}, got ${variant.kellyAge}`);
+    } else if (!variant.kellyAge) {
+        // Derived from age group in V2
     }
     
-    // Check Kelly persona
-    if (variant.kellyPersona !== KELLY_PERSONAS[ageGroup]) {
+    // Check Kelly persona (optional in V2)
+    if (variant.kellyPersona && variant.kellyPersona !== KELLY_PERSONAS[ageGroup]) {
       errors.push(`${ageGroup}: Kelly persona should be ${KELLY_PERSONAS[ageGroup]}, got ${variant.kellyPersona}`);
     }
     
@@ -196,14 +201,22 @@ function validateLesson(lessonPath) {
       errors.push(`${ageGroup}: Missing pacing`);
     }
     
-    // Check teaching moments
-    if (!variant.teachingMoments || variant.teachingMoments.length === 0) {
-      warnings.push(`${ageGroup}: No teaching moments defined`);
-    }
-    
-    // Check expression cues
-    if (!variant.expressionCues || variant.expressionCues.length === 0) {
-      warnings.push(`${ageGroup}: No expression cues defined`);
+    // Check teaching moments and cues (optional in V2 if inside phases, but here checking top level property from V1?)
+    // V2 uses phases. Check phases.
+    if (variant.phases) {
+        // Check phases completeness
+        variant.phases.forEach(phase => {
+            if (!phase.content) errors.push(`${ageGroup}: Phase ${phase.id} missing content`);
+            if (!phase.expressionCues || phase.expressionCues.length === 0) warnings.push(`${ageGroup}: Phase ${phase.id} missing expression cues`);
+        });
+    } else {
+        // Fallback V1 check
+        if (!variant.teachingMoments || variant.teachingMoments.length === 0) {
+          warnings.push(`${ageGroup}: No teaching moments defined`);
+        }
+        if (!variant.expressionCues || variant.expressionCues.length === 0) {
+          warnings.push(`${ageGroup}: No expression cues defined`);
+        }
     }
     
     // Check v2 optional fields (informational)
@@ -279,4 +292,3 @@ if (require.main === module) {
 }
 
 module.exports = { validateLesson };
-

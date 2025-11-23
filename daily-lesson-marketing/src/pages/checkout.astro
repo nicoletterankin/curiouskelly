@@ -1,0 +1,500 @@
+---
+/**
+ * Checkout Page
+ * Where users select a plan and start their free trial
+ */
+
+import SiteLayout from '@layouts/SiteLayout.astro';
+import { getDictionary } from '@lib/i18n';
+
+// Get locale from URL or default to English
+const locale = 'en-US'; // TODO: Get from URL params
+const dictionary = getDictionary(locale);
+const nonce = crypto.randomUUID();
+
+// Check if user came back from cancelled checkout
+const params = Astro.url.searchParams;
+const cancelled = params.get('cancelled') === 'true';
+---
+
+<SiteLayout title="Start Your Free Trial - The Daily Lesson" description="Start your 7-day free trial. $4.99/month or $49.99/year. Cancel anytime.">
+  <div class="checkout-page">
+    <div class="container">
+      <!-- Header -->
+      <div class="checkout-header">
+        <h1>Start Your 7-Day Free Trial</h1>
+        <p class="subtitle">No credit card required. Cancel anytime.</p>
+        
+        {cancelled && (
+          <div class="alert alert-info">
+            <p>Still thinking it over? No problem! Start your free trial when you're ready.</p>
+          </div>
+        )}
+      </div>
+
+      <!-- Plan Selector -->
+      <div class="plan-grid">
+        <button class="plan-card" data-plan="monthly" tabindex="0">
+          <div class="plan-header">
+            <h3>Monthly</h3>
+          </div>
+          <div class="plan-price">
+            <span class="price-amount">$4.99</span>
+            <span class="price-period">/month</span>
+          </div>
+          <ul class="plan-features">
+            <li>✓ 7 days free</li>
+            <li>✓ Unlimited daily lessons</li>
+            <li>✓ All 3 languages</li>
+            <li>✓ All family members</li>
+            <li>✓ Cancel anytime</li>
+          </ul>
+        </button>
+
+        <button class="plan-card plan-card--featured" data-plan="annual" tabindex="0">
+          <div class="plan-badge">Save $10</div>
+          <div class="plan-header">
+            <h3>Annual</h3>
+            <p class="plan-subtitle">Best value</p>
+          </div>
+          <div class="plan-price">
+            <span class="price-amount">$49.99</span>
+            <span class="price-period">/year</span>
+          </div>
+          <ul class="plan-features">
+            <li>✓ 7 days free</li>
+            <li>✓ Unlimited daily lessons</li>
+            <li>✓ All 3 languages</li>
+            <li>✓ All family members</li>
+            <li>✓ Cancel anytime</li>
+            <li>✓ <strong>2 months free</strong></li>
+          </ul>
+        </button>
+      </div>
+
+      <!-- Customer Form -->
+      <div class="checkout-form-container">
+        <form id="checkout-form" class="checkout-form">
+          <div class="form-group">
+            <label for="name">Full Name</label>
+            <input 
+              type="text" 
+              id="name" 
+              name="name" 
+              required 
+              placeholder="Enter your name"
+              autocomplete="name"
+            />
+          </div>
+
+          <div class="form-group">
+            <label for="email">Email Address</label>
+            <input 
+              type="email" 
+              id="email" 
+              name="email" 
+              required 
+              placeholder="your@email.com"
+              autocomplete="email"
+            />
+          </div>
+
+          <button type="submit" class="btn-primary" id="checkout-button">
+            <span class="button-text">Continue to Payment</span>
+            <span class="button-loader" style="display: none;">Processing...</span>
+          </button>
+        </form>
+
+        <div class="trust-signals">
+          <div class="trust-item">
+            <span class="trust-icon">🔒</span>
+            <span>Secure payment via Stripe</span>
+          </div>
+          <div class="trust-item">
+            <span class="trust-icon">💳</span>
+            <span>No credit card for 7-day trial</span>
+          </div>
+          <div class="trust-item">
+            <span class="trust-icon">✖️</span>
+            <span>Cancel anytime with 1 click</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- FAQ -->
+      <div class="checkout-faq">
+        <h2>Common Questions</h2>
+        <div class="faq-grid">
+          <div class="faq-item">
+            <h4>Is the trial really free?</h4>
+            <p>Yes! No credit card required for the 7-day trial. You'll only be charged after your trial ends if you choose to continue.</p>
+          </div>
+          <div class="faq-item">
+            <h4>Can I cancel anytime?</h4>
+            <p>Absolutely. Cancel with one click in your account settings. No questions asked, no fees.</p>
+          </div>
+          <div class="faq-item">
+            <h4>What's included in my subscription?</h4>
+            <p>Unlimited daily lessons for your entire family, in English, Spanish, or Portuguese. New lesson every day.</p>
+          </div>
+          <div class="faq-item">
+            <h4>Do you offer refunds?</h4>
+            <p>Yes! 30-day money-back guarantee. If you're not satisfied, we'll refund you in full.</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</SiteLayout>
+
+<script nonce={nonce}>
+  // Plan selection
+  const planCards = document.querySelectorAll('.plan-card');
+  let selectedPlan = 'annual'; // Default to annual (best value)
+
+  // Set initial selection
+  document.querySelector('[data-plan="annual"]')?.classList.add('selected');
+
+  planCards.forEach((card) => {
+    card.addEventListener('click', () => {
+      planCards.forEach((c) => c.classList.remove('selected'));
+      card.classList.add('selected');
+      selectedPlan = card.getAttribute('data-plan') || 'monthly';
+    });
+
+    // Keyboard support
+    card.addEventListener('keydown', (e) => {
+      if (e.key === 'Enter' || e.key === ' ') {
+        e.preventDefault();
+        card.dispatchEvent(new Event('click'));
+      }
+    });
+  });
+
+  // Form submission
+  const form = document.getElementById('checkout-form') as HTMLFormElement;
+  const submitButton = document.getElementById('checkout-button');
+  const buttonText = submitButton?.querySelector('.button-text');
+  const buttonLoader = submitButton?.querySelector('.button-loader');
+
+  form?.addEventListener('submit', async (e) => {
+    e.preventDefault();
+
+    // Disable button during processing
+    if (submitButton) {
+      submitButton.setAttribute('disabled', 'true');
+      if (buttonText) buttonText.style.display = 'none';
+      if (buttonLoader) buttonLoader.style.display = 'inline';
+    }
+
+    const formData = new FormData(form);
+    const name = formData.get('name') as string;
+    const email = formData.get('email') as string;
+
+    try {
+      // Call API to create checkout session
+      const response = await fetch('/api/create-checkout', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          plan: selectedPlan,
+          email,
+          name,
+          customerId: email, // Use email as customer ID for now
+        }),
+      });
+
+      if (!response.ok) {
+        throw new Error('Failed to create checkout session');
+      }
+
+      const data = await response.json();
+
+      // Redirect to Stripe Checkout
+      if (data.url) {
+        window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL returned');
+      }
+    } catch (error) {
+      console.error('Checkout error:', error);
+      alert('Something went wrong. Please try again or contact support@curiouskelly.com');
+
+      // Re-enable button
+      if (submitButton) {
+        submitButton.removeAttribute('disabled');
+        if (buttonText) buttonText.style.display = 'inline';
+        if (buttonLoader) buttonLoader.style.display = 'none';
+      }
+    }
+  });
+</script>
+
+<style>
+  .checkout-page {
+    padding: 4rem 0;
+    min-height: 100vh;
+    background: linear-gradient(to bottom, #f8fafc 0%, #ffffff 100%);
+  }
+
+  .container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 1.5rem;
+  }
+
+  .checkout-header {
+    text-align: center;
+    margin-bottom: 3rem;
+  }
+
+  .checkout-header h1 {
+    font-size: 2.5rem;
+    font-weight: 700;
+    margin-bottom: 0.5rem;
+    color: #1e293b;
+  }
+
+  .subtitle {
+    font-size: 1.25rem;
+    color: #64748b;
+    margin-bottom: 1.5rem;
+  }
+
+  .alert {
+    padding: 1rem;
+    border-radius: 0.5rem;
+    margin-top: 1rem;
+  }
+
+  .alert-info {
+    background-color: #dbeafe;
+    border: 1px solid #3b82f6;
+    color: #1e40af;
+  }
+
+  /* Plan cards */
+  .plan-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 1.5rem;
+    margin-bottom: 3rem;
+    max-width: 800px;
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .plan-card {
+    position: relative;
+    background: white;
+    border: 2px solid #e2e8f0;
+    border-radius: 1rem;
+    padding: 2rem;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+    width: 100%;
+  }
+
+  .plan-card:hover {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.1);
+    transform: translateY(-2px);
+  }
+
+  .plan-card.selected {
+    border-color: #3b82f6;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+  }
+
+  .plan-card--featured {
+    border-color: #3b82f6;
+    box-shadow: 0 4px 20px rgba(59, 130, 246, 0.15);
+  }
+
+  .plan-badge {
+    position: absolute;
+    top: -12px;
+    left: 50%;
+    transform: translateX(-50%);
+    background: #3b82f6;
+    color: white;
+    padding: 0.25rem 1rem;
+    border-radius: 999px;
+    font-size: 0.875rem;
+    font-weight: 600;
+  }
+
+  .plan-header h3 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+    color: #1e293b;
+  }
+
+  .plan-subtitle {
+    color: #64748b;
+    font-size: 0.875rem;
+  }
+
+  .plan-price {
+    margin: 1.5rem 0;
+  }
+
+  .price-amount {
+    font-size: 3rem;
+    font-weight: 700;
+    color: #1e293b;
+  }
+
+  .price-period {
+    font-size: 1.25rem;
+    color: #64748b;
+  }
+
+  .plan-features {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+  }
+
+  .plan-features li {
+    padding: 0.5rem 0;
+    color: #475569;
+    font-size: 1rem;
+  }
+
+  /* Checkout form */
+  .checkout-form-container {
+    max-width: 500px;
+    margin: 0 auto;
+  }
+
+  .checkout-form {
+    background: white;
+    border-radius: 1rem;
+    padding: 2rem;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
+  }
+
+  .form-group {
+    margin-bottom: 1.5rem;
+  }
+
+  .form-group label {
+    display: block;
+    margin-bottom: 0.5rem;
+    font-weight: 600;
+    color: #1e293b;
+  }
+
+  .form-group input {
+    width: 100%;
+    padding: 0.75rem 1rem;
+    border: 2px solid #e2e8f0;
+    border-radius: 0.5rem;
+    font-size: 1rem;
+    transition: border-color 0.2s;
+  }
+
+  .form-group input:focus {
+    outline: none;
+    border-color: #3b82f6;
+  }
+
+  .btn-primary {
+    width: 100%;
+    padding: 1rem 2rem;
+    background: #3b82f6;
+    color: white;
+    border: none;
+    border-radius: 0.5rem;
+    font-size: 1.125rem;
+    font-weight: 600;
+    cursor: pointer;
+    transition: background-color 0.2s;
+  }
+
+  .btn-primary:hover {
+    background: #2563eb;
+  }
+
+  .btn-primary:disabled {
+    background: #94a3b8;
+    cursor: not-allowed;
+  }
+
+  /* Trust signals */
+  .trust-signals {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-top: 2rem;
+  }
+
+  .trust-item {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    font-size: 0.875rem;
+    color: #64748b;
+  }
+
+  .trust-icon {
+    font-size: 1.25rem;
+  }
+
+  /* FAQ */
+  .checkout-faq {
+    max-width: 900px;
+    margin: 4rem auto 0;
+    padding-top: 3rem;
+    border-top: 1px solid #e2e8f0;
+  }
+
+  .checkout-faq h2 {
+    text-align: center;
+    font-size: 2rem;
+    margin-bottom: 2rem;
+    color: #1e293b;
+  }
+
+  .faq-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 2rem;
+  }
+
+  .faq-item h4 {
+    font-size: 1.125rem;
+    font-weight: 600;
+    margin-bottom: 0.5rem;
+    color: #1e293b;
+  }
+
+  .faq-item p {
+    color: #64748b;
+    line-height: 1.6;
+  }
+
+  @media (max-width: 768px) {
+    .checkout-header h1 {
+      font-size: 2rem;
+    }
+
+    .plan-grid {
+      grid-template-columns: 1fr;
+    }
+
+    .checkout-form {
+      padding: 1.5rem;
+    }
+  }
+</style>
+
+
+
+
+

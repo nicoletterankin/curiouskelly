@@ -1,174 +1,246 @@
-# Curious Kellly - Backend Service
-**The Daily Lesson API**
+# Curious Kelly Backend API
 
----
+Backend service for Curious Kelly Christmas launch.
 
-## 🚀 Quick Start
+## Setup
+
+### 1. Install Dependencies
 
 ```bash
-# Install dependencies
 npm install
-
-# Create .env file
-cp .env.example .env
-# Edit .env with your OpenAI API key
-
-# Start development server
-npm run dev
-
-# Test the server
-curl http://localhost:3000/health
 ```
 
----
+### 2. Configure Environment
 
-## 📡 API Endpoints
+Copy `env.template` to `.env` and fill in your values:
+
+```bash
+cp env.template .env
+```
+
+Required environment variables:
+- `DATABASE_URL` - PostgreSQL connection string
+- `STRIPE_SECRET_KEY` - Stripe API secret key
+- `STRIPE_WEBHOOK_SECRET` - Stripe webhook signing secret
+- `SENDGRID_API_KEY` - SendGrid API key
+- Template IDs for all 14 email templates
+
+See `env.template` for complete list.
+
+### 3. Set Up Database
+
+Create PostgreSQL database:
+
+```bash
+createdb curious_kelly
+```
+
+Run migrations:
+
+```bash
+npm run migrate
+```
+
+### 4. Start Development Server
+
+```bash
+npm run dev
+```
+
+Server will start on http://localhost:3000
+
+## API Endpoints
 
 ### Health Check
+- `GET /health` - Check server status
+
+### Checkout
+- `POST /api/checkout/create-session` - Create Stripe checkout session
+  - Body: `{ plan, customerEmail, recipientEmail?, giftMessage?, gifterName? }`
+
+### Gifts
+- `POST /api/gifts/create` - Create gift record (internal, called from webhook)
+- `GET /api/gifts/verify/:code` - Verify gift code validity
+- `POST /api/gifts/redeem` - Redeem gift code
+  - Body: `{ giftCode, userEmail, userName? }`
+
+### Users
+- `POST /api/users/create` - Create new user
+  - Body: `{ email, name?, age?, plan? }`
+- `GET /api/users/:id` - Get user by ID
+- `PUT /api/users/:id` - Update user profile
+  - Body: `{ name?, age? }`
+
+### Lessons
+- `GET /api/lessons/calendar` - Get full 365-day calendar
+- `GET /api/lessons/day/:day` - Get specific lesson (1-365)
+- `POST /api/lessons/complete` - Mark lesson as completed
+  - Body: `{ userId, lessonDay, lessonId, durationSeconds?, ageVariant? }`
+- `GET /api/lessons/user/:userId/progress` - Get user's progress
+
+### Webhooks
+- `POST /webhook` - Stripe webhook handler (requires raw body)
+
+## Development
+
+### Run with auto-reload
+
 ```bash
-GET /health
+npm run dev
 ```
 
-Response:
-```json
-{
-  "status": "ok",
-  "service": "curious-kellly-backend",
-  "timestamp": "2025-10-29T...",
-  "version": "0.1.0"
-}
-```
+### Run tests
 
-### Test OpenAI Connection
 ```bash
-GET /api/realtime/test
+npm test
 ```
 
-Response:
-```json
-{
-  "status": "ok",
-  "message": "OpenAI connection successful",
-  "data": {
-    "success": true,
-    "response": "Hello from Curious Kellly backend!",
-    "model": "gpt-4o-mini"
-  }
-}
-```
-
-### Get Kelly's Response
-```bash
-POST /api/realtime/kelly
-Content-Type: application/json
-
-{
-  "age": 35,
-  "topic": "leaves",
-  "message": "Why do leaves change color?"
-}
-```
-
-Response:
-```json
-{
-  "status": "ok",
-  "data": {
-    "success": true,
-    "kellyAge": 27,
-    "kellyPersona": "knowledgeable-adult",
-    "response": "Great question! Leaves change color because..."
-  }
-}
-```
-
----
-
-## 🏗️ Project Structure
-
-```
-backend/
-├── src/
-│   ├── index.js           # Main server
-│   ├── api/
-│   │   └── realtime.js    # OpenAI API routes
-│   ├── services/
-│   │   └── realtime.js    # OpenAI service logic
-│   ├── models/            # Data models (coming soon)
-│   └── utils/             # Helper functions (coming soon)
-├── config/                # Configuration files
-├── tests/                 # Test files (coming soon)
-├── .env                   # Environment variables (not in git)
-├── .env.example           # Environment template
-├── package.json
-└── README.md
-```
-
----
-
-## 🔧 Development
-
-### Start Server
-```bash
-npm run dev    # Development with auto-reload
-npm start      # Production
-```
+## Deployment
 
 ### Environment Variables
-```env
-NODE_ENV=development
-PORT=3000
-OPENAI_API_KEY=sk-proj-...
-OPENAI_REALTIME_MODEL=gpt-4o-realtime-preview-2024-10-01
-LOG_LEVEL=debug
+
+Set all environment variables in your hosting platform:
+- Vercel: Project Settings → Environment Variables
+- Railway: Project → Variables
+- Heroku: Settings → Config Vars
+
+### Deploy to Railway
+
+```bash
+# Install Railway CLI
+npm install -g @railway/cli
+
+# Login
+railway login
+
+# Initialize project
+railway init
+
+# Add PostgreSQL
+railway add postgresql
+
+# Deploy
+railway up
 ```
 
----
+### Deploy to Heroku
 
-## 📈 Voice Metrics Logging
+```bash
+# Install Heroku CLI
+# Login
+heroku login
 
-- `src/services/voice.js` now logs `request_started_at`, `response_sent_at`, persona, and calculated round-trip time for every interaction (hashed session ids only).
-- Metrics append to `analytics/Kelly/voice-latency.csv` (auto-creates with header on first write). Use this file for latency dashboards and nightly regression reports.
-- Keep logs free of PII—store only age bucket and hashed session identifiers. Mirror this pattern in `src/services/session.js` when session persistence is added.
+# Create app
+heroku create curious-kelly-api
 
----
+# Add PostgreSQL
+heroku addons:create heroku-postgresql:mini
 
-## ✅ Day 1 Status
+# Set environment variables
+heroku config:set STRIPE_SECRET_KEY=sk_live_xxxxx
+# ... (set all other env vars)
 
-**Completed:**
-- ✅ Project scaffolded
-- ✅ Express server running
-- ✅ OpenAI integration working
-- ✅ Health check endpoint
-- ✅ Test OpenAI endpoint
-- ✅ Kelly response endpoint (basic)
+# Deploy
+git push heroku main
 
-**Next (Day 2):**
-- [ ] Safety router with moderation
-- [ ] Moderation test suite
-- [ ] Safety endpoint
-
----
-
-## 📞 Testing Commands
-
-### PowerShell
-```powershell
-# Health check
-curl http://localhost:3000/health
-
-# Test OpenAI
-curl http://localhost:3000/api/realtime/test
-
-# Get Kelly response
-curl -X POST http://localhost:3000/api/realtime/kelly `
-  -H "Content-Type: application/json" `
-  -d '{"age":35,"topic":"leaves","message":"Why do leaves change color?"}'
+# Run migrations
+heroku run npm run migrate
 ```
 
----
+## Stripe Webhook Setup
 
-**Status**: 🟢 Day 1 Complete  
-**Next**: Day 2 - Safety Router  
-**Version**: 0.1.0
+1. Go to Stripe Dashboard → Developers → Webhooks
+2. Add endpoint: `https://your-api.com/webhook`
+3. Select events:
+   - `checkout.session.completed`
+   - `customer.subscription.created`
+   - `customer.subscription.deleted`
+   - `invoice.payment_succeeded`
+   - `invoice.payment_failed`
+4. Copy webhook signing secret to `.env`:
+   ```
+   STRIPE_WEBHOOK_SECRET=whsec_xxxxx
+   ```
 
+## Testing
+
+### Test Stripe Checkout
+
+```bash
+# Create test checkout session
+curl -X POST http://localhost:3000/api/checkout/create-session \
+  -H "Content-Type: application/json" \
+  -d '{
+    "plan": "gift",
+    "customerEmail": "test@example.com",
+    "recipientEmail": "recipient@example.com",
+    "gifterName": "John Doe",
+    "giftMessage": "Merry Christmas!"
+  }'
+```
+
+### Test Gift Redemption
+
+```bash
+# Verify gift code
+curl http://localhost:3000/api/gifts/verify/CK-TEST1-TEST1
+
+# Redeem gift
+curl -X POST http://localhost:3000/api/gifts/redeem \
+  -H "Content-Type: application/json" \
+  -d '{
+    "giftCode": "CK-TEST1-TEST1",
+    "userEmail": "user@example.com",
+    "userName": "Jane Smith"
+  }'
+```
+
+### Test Webhook Locally
+
+Use Stripe CLI to forward webhooks to localhost:
+
+```bash
+# Install Stripe CLI
+# Login
+stripe login
+
+# Forward webhooks
+stripe listen --forward-to localhost:3000/webhook
+
+# Trigger test event
+stripe trigger checkout.session.completed
+```
+
+## Monitoring
+
+### Logs
+
+```bash
+# Heroku logs
+heroku logs --tail
+
+# Railway logs
+railway logs
+```
+
+### Database
+
+```bash
+# Connect to database
+psql $DATABASE_URL
+
+# Check tables
+\dt
+
+# Check gift codes
+SELECT * FROM gifts ORDER BY created_at DESC LIMIT 10;
+
+# Check users
+SELECT * FROM users ORDER BY created_at DESC LIMIT 10;
+```
+
+## Support
+
+For issues or questions:
+- Email: hello@curiouskelly.com
+- Documentation: See `IMPLEMENTATION_GUIDE.md`

@@ -9,34 +9,34 @@ export default class GameScene extends Phaser.Scene {
   private obstacles!: Phaser.Physics.Arcade.Group;
   private stones!: Phaser.Physics.Arcade.Group;
   
-  private score: number = 0;
-  private stonesCollected: number = 0;
+  private score = 0;
+  private stonesCollected = 0;
   private scoreText!: Phaser.GameObjects.Text;
   private stonesText!: Phaser.GameObjects.Text;
   private comboText!: Phaser.GameObjects.Text;
   private speedText!: Phaser.GameObjects.Text;
   
-  private gameSpeed: number = 200;
-  private isGameOver: boolean = false;
-  private isPaused: boolean = false;
+  private gameSpeed = 200;
+  private isGameOver = false;
+  private isPaused = false;
   
-  private spawnTimer: number = 0;
-  private stoneTimer: number = 0;
+  private spawnTimer = 0;
+  private stoneTimer = 0;
   
   // Jump physics
-  private coyoteTime: number = 0;
-  private coyoteTimeMax: number = 100; // ms grace period after leaving ground
-  private jumpBufferTime: number = 0;
-  private jumpBufferMax: number = 150; // ms buffer before landing
-  private isJumping: boolean = false;
-  private wasOnGround: boolean = false;
+  private coyoteTime = 0;
+  private coyoteTimeMax = 100; // ms grace period after leaving ground
+  private jumpBufferTime = 0;
+  private jumpBufferMax = 150; // ms buffer before landing
+  private isJumping = false;
+  private wasOnGround = false;
   
   // Combo system
-  private comboCount: number = 0;
-  private comboMultiplier: number = 1;
-  private lastStoneTime: number = 0;
-  private comboTimeout: number = 2000; // ms to maintain combo
-  private bestCombo: number = 0;
+  private comboCount = 0;
+  private comboMultiplier = 1;
+  private lastStoneTime = 0;
+  private comboTimeout = 2000; // ms to maintain combo
+  private bestCombo = 0;
   
   // Visual effects
   private stoneGlowTimers: Map<Phaser.GameObjects.Sprite, Phaser.Time.TimerEvent> = new Map();
@@ -45,12 +45,12 @@ export default class GameScene extends Phaser.Scene {
   private audioContext!: AudioContext;
   
   // High score
-  private highScore: number = 0;
+  private highScore = 0;
   private highScoreText!: Phaser.GameObjects.Text;
   
   // Pattern system
-  private lastPattern: string = '';
-  private patternCounter: number = 0;
+  private lastPattern = '';
+  private patternCounter = 0;
 
   constructor() {
     super({ key: 'GameScene' });
@@ -61,13 +61,15 @@ export default class GameScene extends Phaser.Scene {
     
     // Initialize audio context
     try {
-      this.audioContext = new (window.AudioContext || (window as any).webkitAudioContext)();
-    } catch (e) {
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      const AudioContextClass = window.AudioContext || (window as any).webkitAudioContext;
+      this.audioContext = new AudioContextClass();
+    } catch {
       console.warn('Web Audio API not supported');
     }
     
     // Load high score
-    this.highScore = parseInt(localStorage.getItem('reinmakerHighScore') || '0', 10);
+    this.highScore = parseInt(localStorage.getItem('reinmakerHighScore') ?? '0', 10);
     
     // Background (scrolling slowly)
     this.background = this.add.tileSprite(0, 0, width * 2, 256, 'bg')
@@ -116,8 +118,9 @@ export default class GameScene extends Phaser.Scene {
     this.stones = this.physics.add.group();
     
     // Collisions
-    this.physics.add.collider(this.player, this.obstacles, this.hitObstacle, undefined, this);
-    this.physics.add.overlap(this.player, this.stones, this.collectStone, undefined, this);
+    this.physics.add.collider(this.player, this.obstacles, this.hitObstacle.bind(this));
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    this.physics.add.overlap(this.player, this.stones, this.collectStone.bind(this) as any);
     
     // HUD
     this.scoreText = this.add.text(16, 16, 'Score: 0', {
@@ -128,7 +131,7 @@ export default class GameScene extends Phaser.Scene {
       strokeThickness: 2
     }).setScrollFactor(0);
     
-    this.stonesText = this.add.text(16, 48, 'Stones: 0', {
+    this.stonesText = this.add.text(16, 48, 'Atoms: 0', {
       fontSize: '20px',
       color: '#0BB39C',
       stroke: '#000000',
@@ -182,7 +185,7 @@ export default class GameScene extends Phaser.Scene {
     if (this.isGameOver || this.isPaused) return;
     
     // Update jump physics timers
-    const isOnGround = this.player.body?.touching.down || false;
+    const isOnGround = this.player.body?.touching.down ?? false;
     
     if (isOnGround) {
       this.coyoteTime = this.coyoteTimeMax;
@@ -279,7 +282,7 @@ export default class GameScene extends Phaser.Scene {
   private jump() {
     if (this.isGameOver || this.isPaused) return;
     
-    const isOnGround = this.player.body?.touching.down || false;
+    const isOnGround = this.player.body?.touching.down ?? false;
     
     if (isOnGround || this.coyoteTime > 0) {
       this.executeJump();
@@ -452,7 +455,12 @@ export default class GameScene extends Phaser.Scene {
     this.stoneGlowTimers.set(stone, timer);
   }
 
-  private collectStone(_player: any, stone: any) {
+  private collectStone(
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    _player: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile,
+    stoneObj: Phaser.Types.Physics.Arcade.GameObjectWithBody | Phaser.Tilemaps.Tile
+  ) {
+    const stone = stoneObj as Phaser.Physics.Arcade.Sprite;
     const x = stone.x;
     const y = stone.y;
     const currentTime = this.time.now;
@@ -472,7 +480,7 @@ export default class GameScene extends Phaser.Scene {
     
     // Get stone type for color matching
     const stoneType = stone.texture.key.replace('stone_', '');
-    const tribeColors: { [key: string]: number } = {
+    const tribeColors: Record<string, number> = {
       light: 0xFFE066,
       stone: 0x8E9AAF,
       metal: 0xadb5bd,
@@ -481,7 +489,7 @@ export default class GameScene extends Phaser.Scene {
       water: 0x4dabf7,
       fire: 0xF25F5C
     };
-    const color = tribeColors[stoneType] || 0x0BB39C;
+    const color = tribeColors[stoneType] ?? 0x0BB39C;
     
     // Create particle explosion - more particles for combo
     const particleCount = 15 + (this.comboCount * 5);
@@ -510,7 +518,7 @@ export default class GameScene extends Phaser.Scene {
     
     stone.destroy();
     this.stonesCollected++;
-    this.stonesText.setText(`Stones: ${this.stonesCollected}`);
+    this.stonesText.setText(`Atoms: ${this.stonesCollected}`);
     
     // Combo display
     if (this.comboCount > 1) {
@@ -577,7 +585,7 @@ export default class GameScene extends Phaser.Scene {
     this.add.rectangle(width / 2, height / 2, 400, 300, 0x1B1E22, 0.9);
     
     const finalScore = Math.floor(this.score);
-    const savedHighScore = parseInt(localStorage.getItem('reinmakerHighScore') || '0', 10);
+    const savedHighScore = parseInt(localStorage.getItem('reinmakerHighScore') ?? '0', 10);
     const isNewRecord = finalScore > savedHighScore;
     
     this.add.text(width / 2, height / 2 - 80, 'Game Over', {
@@ -599,7 +607,7 @@ export default class GameScene extends Phaser.Scene {
       color: '#F2F7FA'
     }).setOrigin(0.5);
     
-    this.add.text(width / 2, height / 2 + 50, `Stones Collected: ${this.stonesCollected}`, {
+    this.add.text(width / 2, height / 2 + 50, `Atoms Collected: ${this.stonesCollected}`, {
       fontSize: '20px',
       color: '#0BB39C'
     }).setOrigin(0.5);

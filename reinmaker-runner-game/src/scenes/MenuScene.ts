@@ -8,22 +8,22 @@ export default class MenuScene extends Phaser.Scene {
   preload() {
     // Load assets from public folder (served from root in Vite)
     // Core gameplay
-    this.load.image('player', 'player.png');
-    this.load.image('obstacle', 'obstacle.png');
-    this.load.image('ground_stripe', 'ground_stripe.png');
+    this.load.svg('player', 'player.svg', { width: 64, height: 64 });
+    this.load.svg('obstacle', 'obstacle.svg', { width: 64, height: 64 });
+    this.load.image('ground_stripe', 'ground_stripe.png'); // Keep or replace if needed
     
     // Background
-    this.load.image('bg', 'bg.png');
-    this.load.image('ground_tex', 'ground_tex.png');
+    this.load.svg('bg', 'bg.svg', { width: 800, height: 600 });
+    this.load.svg('ground_tex', 'ground_tex.svg', { width: 64, height: 64 });
     
-    // Collectibles - Knowledge Stones
-    this.load.image('stone_light', 'stones/stone_light.png');
-    this.load.image('stone_stone', 'stones/stone_stone.png');
-    this.load.image('stone_metal', 'stones/stone_metal.png');
-    this.load.image('stone_code', 'stones/stone_code.png');
-    this.load.image('stone_air', 'stones/stone_air.png');
-    this.load.image('stone_water', 'stones/stone_water.png');
-    this.load.image('stone_fire', 'stones/stone_fire.png');
+    // Collectibles - Atoms (formerly Stones)
+    this.load.svg('stone_light', 'stones/atom_light.svg', { width: 64, height: 64 });
+    this.load.svg('stone_stone', 'stones/atom_stone.svg', { width: 64, height: 64 });
+    this.load.svg('stone_metal', 'stones/atom_metal.svg', { width: 64, height: 64 });
+    this.load.svg('stone_code', 'stones/atom_code.svg', { width: 64, height: 64 });
+    this.load.svg('stone_air', 'stones/atom_air.svg', { width: 64, height: 64 });
+    this.load.svg('stone_water', 'stones/atom_water.svg', { width: 64, height: 64 });
+    this.load.svg('stone_fire', 'stones/atom_fire.svg', { width: 64, height: 64 });
     
     // UI
     this.load.image('favicon', 'favicon.png');
@@ -48,10 +48,10 @@ export default class MenuScene extends Phaser.Scene {
     // Instructions
     const instructions = [
       'SPACE or UP ARROW to jump',
-      'Collect Knowledge Stones',
-      'Avoid obstacles',
+      'Collect Knowledge Atoms',
+      'Avoid Glitches',
       '',
-      'Click to Start'
+      'Click to Start Mission'
     ];
     
     this.add.text(width / 2, height / 2 + 40, instructions.join('\n'), {

@@ -1,6 +1,7 @@
 import StateManager from './state-manager.js';
 import SessionClient from './session-client.js';
 import UnityBridge from './unity-bridge.js';
+import SupabaseService from './supabase-service.js';
 
 const PHASE_ALIASES = {
   welcome: 'welcome',
@@ -35,7 +36,24 @@ class UnifiedLessonApp {
       sessionLessonId: null,
       sessionState: null,
       sessionCompleted: false,
+      vibeCoords: { x: 100, y: 0 }, // Default: The Scientist (Safe)
+      currentArchetype: 'The Scientist',
     });
+
+    this.archetypeMatrix = [
+        { name: 'The Survivor', x: 0, y: 0, traits: 'Practical • Serious' },
+        { name: 'The Strategist', x: 25, y: 0, traits: 'Practical • Structured' },
+        { name: 'The MacGyver', x: 25, y: 25, traits: 'Resourceful • Analytical' },
+        { name: 'The Scientist', x: 100, y: 0, traits: 'Analytical • Abstract' },
+        { name: 'The Architect', x: 75, y: 25, traits: 'Structured • Visionary' },
+        { name: 'The Rebel', x: 0, y: 50, traits: 'Chaotic • Practical' },
+        { name: 'The Explorer', x: 100, y: 50, traits: 'Energetic • Abstract' },
+        { name: 'The Diplomat', x: 25, y: 75, traits: 'Social • Practical' },
+        { name: 'The Provider', x: 0, y: 100, traits: 'Warm • Practical' },
+        { name: 'The Storyteller', x: 75, y: 75, traits: 'Expressive • Abstract' },
+        { name: 'The Mystic', x: 100, y: 100, traits: 'Deep • Abstract' },
+        { name: 'The Empath', x: 75, y: 100, traits: 'Warm • Abstract' }
+    ];
 
     this.bucketRanges = {
       '2-5': [2, 5],
@@ -101,9 +119,47 @@ class UnifiedLessonApp {
     this.elements.unityRibbon = document.getElementById('unity-lock-ribbon');
     this.elements.unityIframe = document.getElementById('unity-iframe');
     this.elements.unityStatusLabel = document.getElementById('unity-status-label');
+
+    // Vibe Tuner
+    this.elements.vibeTrigger = document.getElementById('vibe-trigger-btn');
+    this.elements.vibePanel = document.getElementById('vibe-tuner-panel');
+    this.elements.closeVibeBtn = document.getElementById('close-vibe-btn');
+    this.elements.vibeSliderX = document.getElementById('vibe-slider-x');
+    this.elements.vibeSliderY = document.getElementById('vibe-slider-y');
+    this.elements.archetypeName = document.getElementById('vibe-archetype-name');
+    this.elements.archetypeTraits = document.getElementById('vibe-archetype-traits');
   }
 
   bindEvents() {
+    // Vibe Tuner Events
+    this.elements.vibeTrigger?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        this.elements.vibePanel.classList.toggle('hidden');
+    });
+    
+    this.elements.closeVibeBtn?.addEventListener('click', () => {
+        this.elements.vibePanel.classList.add('hidden');
+    });
+    
+    // Close on outside click
+    document.addEventListener('click', (e) => {
+        if (this.elements.vibePanel && 
+            !this.elements.vibePanel.classList.contains('hidden') && 
+            !this.elements.vibePanel.contains(e.target) && 
+            !this.elements.vibeTrigger.contains(e.target)) {
+            this.elements.vibePanel.classList.add('hidden');
+        }
+    });
+    
+    const updateVibe = () => {
+        const x = parseInt(this.elements.vibeSliderX.value);
+        const y = parseInt(this.elements.vibeSliderY.value);
+        this.stateManager.setState({ vibeCoords: { x, y } });
+    };
+    
+    this.elements.vibeSliderX?.addEventListener('input', updateVibe);
+    this.elements.vibeSliderY?.addEventListener('input', updateVibe);
+
     this.elements.ageSlider?.addEventListener('input', (event) => {
       const value = Number(event.target.value);
       const bucket = this.getBucketForAge(value);
@@ -196,8 +252,42 @@ class UnifiedLessonApp {
     this.showUnityStream(false);
   }
 
+  getArchetype(x, y) {
+    // Nearest Neighbor Lookup
+    let minParams = null;
+    let minDist = Infinity;
+    
+    for (const arch of this.archetypeMatrix) {
+        // Euclidean distance
+        const dist = Math.sqrt(Math.pow(x - arch.x, 2) + Math.pow(y - arch.y, 2));
+        if (dist < minDist) {
+            minDist = dist;
+            minParams = arch;
+        }
+    }
+    return minParams || this.archetypeMatrix[3]; // Fallback to Scientist
+  }
+
   setupStateSubscriptions() {
     this.stateManager.subscribe((state, prev) => {
+      // Handle Vibe Change
+      if (state.vibeCoords !== prev.vibeCoords) {
+          const archetype = this.getArchetype(state.vibeCoords.x, state.vibeCoords.y);
+          
+          // Update UI Labels
+          if (this.elements.archetypeName) this.elements.archetypeName.textContent = archetype.name;
+          if (this.elements.archetypeTraits) this.elements.archetypeTraits.textContent = archetype.traits;
+          
+          // If archetype changed, reload DNA if lesson selected
+          if (archetype.name !== state.currentArchetype) {
+              this.stateManager.setState({ currentArchetype: archetype.name });
+              if (state.selectedLesson) {
+                  // Debounce or immediately reload? Immediate for now.
+                  this.loadLessonDNA(state.selectedLesson);
+              }
+          }
+      }
+
       if (state.selectedLesson !== prev.selectedLesson && state.selectedLesson) {
         this.renderTodayCard(state.selectedLesson);
         this.renderLessonOverviewFromSummary(state.selectedLesson);
@@ -246,46 +336,88 @@ class UnifiedLessonApp {
 
   async loadCalendarData() {
     try {
-      const response = await fetch('../lessons/365_day_calendar.json');
-      if (!response.ok) throw new Error('Failed to load calendar data');
-      const data = await response.json();
-      const lessons = data.lessons || [];
+      // Fetch real data from Supabase
+      const coreLessons = await SupabaseService.getAllCoreLessons();
+      
+      // Map to app format
+      const lessons = coreLessons.map(l => ({
+          id: l.id,
+          day: l.day_number,
+          title: l.topic,
+          learning_essence: l.universal_truth,
+          has_dna: true, // We have atoms for all
+          tags: [], // Placeholder
+          duration: 5 // Placeholder
+      }));
+      
       const todayLesson = this.findTodayLesson(lessons);
-      const fallbackLesson = lessons.find((lesson) => lesson.has_dna && lesson.dna_file);
-      const initialLesson = todayLesson?.has_dna ? todayLesson : fallbackLesson || todayLesson || null;
+      const initialLesson = todayLesson || lessons[0] || null;
 
       this.stateManager.setState({
         calendarLessons: lessons,
-        todayLesson: todayLesson || fallbackLesson || null,
+        todayLesson: initialLesson,
         selectedLesson: initialLesson,
         selectedDay: initialLesson?.day ?? null,
-        streak: initialLesson?.day ?? 0,
+        streak: 0,
       });
       this.refreshHistoryStreak();
     } catch (error) {
-      console.error(error);
+      console.error('Calendar load failed:', error);
       this.showCalendarError();
     }
   }
 
   async loadLessonDNA(lessonSummary) {
-    if (!lessonSummary?.dna_file) {
+    if (!lessonSummary?.id) {
       this.stateManager.setState({ lessonData: null });
       return;
     }
     try {
-      const response = await fetch(`../lessons/${lessonSummary.dna_file}-dna.json`);
-      if (!response.ok) throw new Error(`Unable to load DNA for ${lessonSummary.dna_file}`);
-      const lessonData = await response.json();
+      // Use current archetype from state
+      const archetype = this.stateManager.getState().currentArchetype || "The Scientist"; 
+      
+      // Fetch atoms from Supabase
+      const phases = await SupabaseService.getAtomsForLesson(lessonSummary.id, archetype);
+      
+      // Fallback Safety Protocol
+      if (Object.keys(phases).length === 0) {
+          console.warn(`Missing atoms for ${archetype}. Falling back to The Scientist.`);
+          if (archetype !== "The Scientist") {
+             const safePhases = await SupabaseService.getAtomsForLesson(lessonSummary.id, "The Scientist");
+             if (Object.keys(safePhases).length > 0) {
+                 // Recursively load with safe archetype but keep UI showing the user's selection?
+                 // Better to show the content and maybe a subtle toast.
+                 // For now, just use the safe content.
+                 Object.assign(phases, safePhases);
+             } else {
+                 throw new Error("No atoms found (even for fallback)");
+             }
+          } else {
+              throw new Error("No atoms found");
+          }
+      }
+
+      // Map Atomic Phases to App Phases
+      // Atoms: Hook, Fact1, Fact2, Fact3, Wisdom
+      // App: welcome, teaching, practice, wisdom
+      const lessonData = {
+          phases: {
+              welcome: phases['Hook'],
+              teaching: phases['Fact1'],
+              practice: phases['Fact2'],
+              wisdom: phases['Wisdom']
+          }
+      };
+      
       this.stateManager.setState({
         lessonData,
         currentPhase: 'welcome',
       });
       await this.establishSession(lessonSummary);
-      this.elements.sessionStatus.textContent = `Synced "${lessonSummary.title}" DNA`;
+      this.elements.sessionStatus.textContent = `Synced "${lessonSummary.title}" Atoms`;
     } catch (error) {
       console.error(error);
-      this.elements.sessionStatus.textContent = 'DNA missing for this lesson';
+      this.elements.sessionStatus.textContent = 'Atoms missing for this lesson';
       this.stateManager.setState({ lessonData: null });
     }
   }
@@ -377,14 +509,70 @@ class UnifiedLessonApp {
       return;
     }
 
-    if (normalized === 'welcome') {
-      this.renderWelcomePhase(state);
-    } else if (normalized === 'wisdom') {
-      this.renderWisdomPhase(state);
-      this.completeSessionIfNeeded();
+    // Check if using Atomic structure (phases object)
+    if (state.lessonData.phases) {
+        this.renderAtomicPhase(state, normalized);
     } else {
-      this.renderQuestionPhase(state, normalized);
+        // Legacy DNA v2 fallback
+        if (normalized === 'welcome') {
+          this.renderWelcomePhase(state);
+        } else if (normalized === 'wisdom') {
+          this.renderWisdomPhase(state);
+          this.completeSessionIfNeeded();
+        } else {
+          this.renderQuestionPhase(state, normalized);
+        }
     }
+  }
+
+  renderAtomicPhase(state, phase) {
+      const atom = state.lessonData.phases[phase];
+      if (!atom) {
+           this.elements.questionText.textContent = 'Kelly is formulating thoughts...';
+           this.hideChoices();
+           return;
+      }
+      
+      // Render Script
+      // content field is from DB JSON, script is usually the key
+      const script = atom.script || atom.content || "Kelly is listening...";
+      this.setAudioScript(`Kelly: ${script}`);
+      this.elements.questionText.textContent = script;
+
+      // Render Options
+      const options = atom.options || [];
+      if (options.length > 0) {
+          this.renderChoiceButtons(options);
+      } else {
+          // If wisdom, show continue button
+          if (phase === 'wisdom') {
+              this.renderWisdomAction();
+          } else {
+              this.hideChoices();
+          }
+      }
+      
+      if (phase === 'wisdom') {
+          this.completeSessionIfNeeded();
+      }
+  }
+
+  renderWisdomAction() {
+      if (this.elements.choiceContainer) {
+          this.elements.choiceContainer.classList.remove('hidden');
+          this.elements.choiceContainer.innerHTML = '';
+          
+          const container = document.createElement('div');
+          container.className = 'wisdom-block';
+          
+          const action = document.createElement('button');
+          action.className = 'primary-btn wisdom-action';
+          action.textContent = 'Continue learning';
+          action.addEventListener('click', () => this.scrollToLesson());
+          
+          container.appendChild(action);
+          this.elements.choiceContainer.appendChild(container);
+      }
   }
 
   renderWelcomePhase(state) {

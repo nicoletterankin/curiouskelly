@@ -274,49 +274,185 @@
             font-size: 0.95rem;
         }
 
+        /* Persona Bar (The Magic Lens) */
+        .persona-bar-wrapper {
+            position: sticky;
+            top: 85px; /* Below header */
+            z-index: 900;
+            padding: 20px;
+            pointer-events: none; /* Let clicks pass through if not on bar */
+        }
+
+        .persona-bar {
+            max-width: 900px;
+            margin: 0 auto;
+            background: rgba(24, 24, 27, 0.9);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 16px;
+            padding: 16px 32px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+            pointer-events: auto;
+            gap: 24px;
+            transition: all 0.3s ease;
+        }
+
+        .persona-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .persona-label {
+            font-family: monospace;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        /* Custom Range Slider */
+        .age-slider-container {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            width: 300px;
+        }
+
+        .age-slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            background: var(--border-color);
+            border-radius: 2px;
+            outline: none;
+        }
+
+        .age-slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 20px;
+            height: 20px;
+            background: var(--accent-orange);
+            border-radius: 50%;
+            cursor: pointer;
+            box-shadow: 0 0 10px rgba(217, 119, 87, 0.5);
+            transition: transform 0.1s;
+        }
+        .age-slider::-webkit-slider-thumb:hover { transform: scale(1.2); }
+
+        .age-display {
+            font-family: 'Times New Roman', serif;
+            font-size: 1.2rem;
+            min-width: 80px;
+            text-align: center;
+        }
+
+        /* Toggles */
+        .toggle-group {
+            display: flex;
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 4px;
+        }
+
+        .toggle-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            border: none;
+            background: transparent;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-family: -apple-system, sans-serif;
+        }
+
+        .toggle-btn.active {
+            background: var(--text-primary);
+            color: var(--bg-color);
+            font-weight: 600;
+        }
+
         /* Syllabus (Calendar) */
         .syllabus {
-            padding: 100px 20px;
+            padding: 40px 20px 100px; /* Adjusted for sticky bar */
             border-top: 1px solid rgba(255,255,255,0.05);
             background: linear-gradient(to bottom, var(--bg-color), #0a0a0a);
+            min-height: 100vh;
         }
         
         .calendar-grid {
             display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 12px;
-            max-width: 1200px;
+            grid-template-columns: repeat(auto-fill, minmax(180px, 1fr));
+            gap: 16px;
+            max-width: 1400px;
             margin: 40px auto 0;
         }
 
         .day-card {
             background: var(--card-bg);
             border: 1px solid var(--border-color);
-            border-radius: 8px;
-            padding: 16px;
+            border-radius: 12px;
+            padding: 20px;
             font-family: -apple-system, sans-serif;
             display: flex;
             flex-direction: column;
             justify-content: space-between;
-            height: 140px;
-            transition: all 0.2s;
+            height: 180px; /* Taller for descriptions */
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
             cursor: pointer;
+            position: relative;
+            overflow: hidden;
         }
+        
         .day-card:hover {
             border-color: var(--text-secondary);
             background: #202023;
+            transform: translateY(-4px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
         }
         
-        .day-num { font-size: 0.75rem; color: var(--text-secondary); text-transform: uppercase; letter-spacing: 1px; }
-        .day-topic { font-size: 0.95rem; font-weight: 500; line-height: 1.3; margin-top: 8px; }
+        .day-num { 
+            font-size: 0.75rem; 
+            color: var(--text-secondary); 
+            text-transform: uppercase; 
+            letter-spacing: 1px; 
+            margin-bottom: 8px;
+            display: flex;
+            justify-content: space-between;
+        }
+
+        .day-topic { 
+            font-size: 1.1rem; 
+            font-weight: 500; 
+            line-height: 1.3; 
+            color: var(--text-primary);
+            transition: opacity 0.2s;
+        }
+
+        .day-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 12px;
+            line-height: 1.4;
+            opacity: 0.8;
+            display: -webkit-box;
+            -webkit-line-clamp: 3;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+            transition: opacity 0.2s;
+        }
+        
         .dna-tag { 
-            align-self: flex-start;
             font-size: 0.7rem; 
             color: var(--accent-orange); 
             border: 1px solid var(--accent-orange); 
             padding: 2px 6px; 
             border-radius: 4px; 
-            margin-top: auto;
         }
 
         /* Tuition (Pricing) */
@@ -394,6 +530,9 @@
             .hero h1 { font-size: 3rem; }
             .footer-grid { grid-template-columns: 1fr 1fr; }
             .unity-frame { height: 400px; }
+            .persona-bar { flex-direction: column; gap: 16px; padding: 16px; }
+            .age-slider-container { width: 100%; }
+            .calendar-grid { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
         }
     </style>
 </head>
@@ -402,7 +541,7 @@
     <header>
         <div class="header-content">
             <a href="index.html" class="logo">
-                <span>✴</span> Curious Kelly
+                <span>✨</span> Curious Kelly
             </a>
             <nav class="nav-links">
                 <a href="#syllabus">Syllabus</a>
@@ -434,7 +573,7 @@
 
                 <!-- Loading Overlay -->
                 <div id="unity-loading-overlay" style="position: absolute; inset: 0; background: #0f0f11; display: flex; flex-direction: column; align-items: center; justify-content: center; z-index: 10;">
-                    <div style="font-size: 2rem; margin-bottom: 1rem;">✴</div>
+                    <div style="font-size: 2rem; margin-bottom: 1rem;">✨</div>
                     <div style="color: var(--text-secondary); font-family: monospace;">Initializing Neural Avatar...</div>
                 </div>
             </div>
@@ -479,7 +618,41 @@
     <section class="syllabus" id="syllabus">
         <div class="section-header">
             <h2>The 2025 Syllabus</h2>
-            <p>365 days of curated knowledge. A new topic unlocks every morning at 6:00 AM local time.</p>
+            <p>365 days of curated knowledge. Real-time adaptation for any age, language, or learning style.</p>
+        </div>
+
+        <!-- The Persona Bar -->
+        <div class="persona-bar-wrapper">
+            <div class="persona-bar">
+                <!-- Age Slider -->
+                <div class="persona-group">
+                    <span class="persona-label">Age:</span>
+                    <div class="age-slider-container">
+                        <input type="range" min="1" max="6" value="4" class="age-slider" id="age-slider">
+                        <div class="age-display" id="age-display" style="min-width: 200px;">Knowledgeable Adult</div>
+                    </div>
+                </div>
+
+                <!-- Language Toggle -->
+                <div class="persona-group">
+                    <span class="persona-label">Language:</span>
+                    <div class="toggle-group" id="lang-toggles">
+                        <button class="toggle-btn active" data-val="en">EN</button>
+                        <button class="toggle-btn" data-val="es">ES</button>
+                        <button class="toggle-btn" data-val="fr">FR</button>
+                    </div>
+                </div>
+
+                <!-- Tone Toggle -->
+                <div class="persona-group">
+                    <span class="persona-label">Tone:</span>
+                    <div class="toggle-group" id="tone-toggles">
+                        <button class="toggle-btn active" data-val="neutral">Neutral</button>
+                        <button class="toggle-btn" data-val="fun">Fun</button>
+                        <button class="toggle-btn" data-val="wisdom">Wisdom</button>
+                    </div>
+                </div>
+            </div>
         </div>
 
         <div class="calendar-grid" id="calendar-grid">
@@ -581,54 +754,161 @@
     </footer>
 
     <!-- Unity & Data Scripts -->
-    <script>
-        // Calendar Data (First 30 Days)
-        const syllabus = [
-            { day: 1, title: "The Sun", dna: true },
-            { day: 2, title: "Habit Stacking", dna: false },
-            { day: 3, title: "Planet Earth", dna: false },
-            { day: 4, title: "Simple Machines", dna: false },
-            { day: 5, title: "Emotional IQ", dna: true },
-            { day: 6, title: "Civilizations", dna: false },
-            { day: 7, title: "Water Cycle", dna: false },
-            { day: 8, title: "Growth Mindset", dna: false },
-            { day: 9, title: "Ecosystems", dna: false },
-            { day: 10, title: "The Moon", dna: true },
-            { day: 11, title: "Photosynthesis", dna: false },
-            { day: 12, title: "Time Mgmt", dna: false },
-            { day: 13, title: "Body Systems", dna: false },
-            { day: 14, title: "Magnets", dna: false },
-            { day: 15, title: "Oceans", dna: false },
-            { day: 16, title: "Electricity", dna: false },
-            { day: 17, title: "Weather", dna: false },
-            { day: 18, title: "Insects", dna: false },
-            { day: 19, title: "Geology", dna: false },
-            { day: 20, title: "Climate", dna: false },
-            { day: 21, title: "Gravity", dna: false },
-            { day: 22, title: "Social Media", dna: false },
-            { day: 23, title: "Medicine", dna: false },
-            { day: 24, title: "Language", dna: false },
-            { day: 25, title: "Enlightenment", dna: false },
-            { day: 26, title: "Neuroscience", dna: false },
-            { day: 27, title: "Seasons", dna: false },
-            { day: 28, title: "Marine Bio", dna: false },
-            { day: 29, title: "Science Method", dna: false },
-            { day: 30, title: "Music Theory", dna: false }
-        ];
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
 
-        const grid = document.getElementById('calendar-grid');
-        syllabus.forEach(lesson => {
-            const card = document.createElement('div');
-            card.className = 'day-card';
-            card.innerHTML = `
-                <div class="day-num">Day ${lesson.day}</div>
-                <div class="day-topic">${lesson.title}</div>
-                ${lesson.dna ? '<span class="dna-tag">CORE</span>' : ''}
-            `;
-            grid.appendChild(card);
+        // Initialize Supabase
+        const supabaseUrl = 'https://tvjalxxsyryjphkforjv.supabase.co'
+        const supabaseKey = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcnp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE5NjI3NTcsImV4cCI6MjA0NzUzODc1N30.kLMlC14ckEp-XoL8RX5liw_cMdGs8lR'
+        const supabase = createClient(supabaseUrl, supabaseKey)
+
+        // ==========================================
+        // THE MAGIC LENS: ADAPTIVE SYLLABUS ENGINE
+        // ==========================================
+
+        // Configuration Map
+        const ages = {
+            1: { label: "Playful Toddler (2-5)", range: "2-5", icon: "🌱", persona: "playful-toddler" },
+            2: { label: "Curious Kid (6-12)", range: "6-12", icon: "🔭", persona: "curious-kid" },
+            3: { label: "Teen Mentor (13-17)", range: "13-17", icon: "🛹", persona: "teen-mentor" },
+            4: { label: "Knowledgeable Adult (18-35)", range: "18-35", icon: "🧬", persona: "knowledgeable-adult" },
+            5: { label: "Experienced Guide (36-60)", range: "36-60", icon: "🏛️", persona: "experienced-guide" },
+            6: { label: "Wise Elder (61+)", range: "61-102", icon: "🦉", persona: "wise-elder" }
+        };
+
+        // State
+        let state = {
+            ageLevel: 4, // Knowledgeable Adult (Default)
+            language: 'en',
+            tone: 'standard'
+        };
+
+        // ... existing fetch code ...
+
+        function getAdaptedContent(lesson, state) {
+            const { baseTitle } = lesson;
+            const { ageLevel, language, tone } = state;
+
+            let title = baseTitle;
+            let desc = "Loading...";
+
+            const personaKey = ages[ageLevel].persona;
+
+            // Simulated Adaptation Logic (In production, this comes from Supabase lesson_dna)
+            if (personaKey === 'playful-toddler') {
+                if (baseTitle === "The Sun") title = "Mr. Sun's Warm Hug";
+                if (baseTitle === "Gravity") title = "Why Things Fall Down";
+                desc = `Let's explore ${title}! It's magic and fun.`;
+            } else if (personaKey === 'curious-kid') {
+                if (baseTitle === "The Sun") title = "The Sun: Our Super Star";
+                if (baseTitle === "Gravity") title = "The Invisible Magnet";
+                desc = "Discover how this works in the real world with cool experiments.";
+            } else if (personaKey === 'teen-mentor') {
+                if (baseTitle === "The Sun") title = "Stellar Physics & Us";
+                desc = "Why this matters for our future and how it connects to everything.";
+            } else if (personaKey === 'knowledgeable-adult') {
+                if (baseTitle === "The Sun") title = "The Sun: Fusion & Life";
+                desc = "A comprehensive analysis of the key concepts and practical applications.";
+            } else if (personaKey === 'experienced-guide') {
+                 if (baseTitle === "The Sun") title = "The Sun: Energy & Legacy";
+                 desc = "Understanding the systems that sustain our world for future generations.";
+            } else if (personaKey === 'wise-elder') {
+                 if (baseTitle === "The Sun") title = "The Warmth of Stars";
+                 desc = "Reflecting on the eternal dance of energy that connects us to the cosmos.";
+            }
+
+            // ... existing tone/language logic ...
+
+
+            // 2. Tone Adaptation
+            if (tone === 'fun') {
+                desc = "✨ Guess what? " + desc + " 🚀";
+            } else if (tone === 'wisdom') {
+                desc = "In the deeper patterns of " + title + ", we find a connection to our own lives.";
+            }
+
+            // 3. Language Adaptation
+            if (language === 'es') {
+                if (baseTitle === "The Sun") title = "El Sol";
+                if (baseTitle === "Water Cycle") title = "El Ciclo del Agua";
+                desc = "(Spanish) " + desc;
+            } else if (language === 'fr') {
+                 if (baseTitle === "The Sun") title = "Le Soleil";
+                 desc = "(French) " + desc;
+            }
+
+            return { title, desc };
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '';
+
+            fullSyllabus.forEach(lesson => {
+                const content = getAdaptedContent(lesson, state);
+                
+                const card = document.createElement('div');
+                card.className = 'day-card';
+                card.innerHTML = `
+                    <div class="day-num">
+                        <span>Day ${lesson.day}</span>
+                        ${lesson.category === 'CORE' ? '<span class="dna-tag">CORE</span>' : ''}
+                    </div>
+                    <div class="day-topic">${content.title}</div>
+                    <div class="day-desc">${content.desc}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        // Event Listeners
+        document.getElementById('age-slider').addEventListener('input', (e) => {
+            const val = parseInt(e.target.value);
+            state.ageLevel = val;
+            document.getElementById('age-display').innerText = ages[val].label;
+            renderGrid(); // Re-render instantly
         });
 
-        // Unity Loader (Mock for now, connecting to existing build)
+        document.querySelectorAll('#lang-toggles .toggle-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('#lang-toggles .toggle-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                state.language = e.target.dataset.val;
+                renderGrid();
+            });
+        });
+
+        document.querySelectorAll('#tone-toggles .toggle-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                document.querySelectorAll('#tone-toggles .toggle-btn').forEach(b => b.classList.remove('active'));
+                e.target.classList.add('active');
+                state.tone = e.target.dataset.val;
+                renderGrid();
+            });
+        });
+
+        // Init
+        async function initSyllabus() {
+            const grid = document.getElementById('calendar-grid');
+            grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #aaa;">Loading the 2025 Syllabus...</div>';
+
+            try {
+                const res = await fetch('lessons/365_day_calendar.json');
+                if (!res.ok) throw new Error("Failed to fetch");
+                
+                const data = await res.json();
+                // Cache for filtering
+                window.fullSyllabus = data.lessons; 
+                renderGrid();
+            } catch (e) {
+                console.error(e);
+                grid.innerHTML = '<div style="grid-column: 1/-1; text-align: center; padding: 40px; color: #ef4444;">Unable to load syllabus. Please try again later.</div>';
+            }
+        }
+
+        initSyllabus();
+
+        // Unity Loader (Keep existing logic)
         var canvas = document.querySelector("#unity-canvas");
         var buildUrl = "public/unity/kelly-v1/Build";
         var loaderUrl = buildUrl + "/kelly-v1.loader.js";
