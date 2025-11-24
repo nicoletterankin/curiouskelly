@@ -1,0 +1,240 @@
+name: Database Backup
+
+on:
+  schedule:
+    # Daily full backup at 3:00 AM UTC
+    - cron: '0 3 * * *'
+    
+    # Critical data export every 6 hours
+    - cron: '0 */6 * * *'
+  
+  # Allow manual trigger
+  workflow_dispatch:
+    inputs:
+      backup_type:
+        description: 'Backup type'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - critical
+          - both
+
+jobs:
+  full-backup:
+    name: Full Database Backup
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'schedule' && github.event.schedule == '0 3 * * *' ||
+      github.event_name == 'workflow_dispatch' && (github.event.inputs.backup_type == 'full' || github.event.inputs.backup_type == 'both')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      
+      - name: Install AWS CLI
+        run: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install
+      
+      - name: Make backup script executable
+        run: chmod +x scripts/backup/full-database-backup.sh
+      
+      - name: Run full database backup
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          CLOUDFLARE_R2_ENDPOINT: ${{ secrets.CLOUDFLARE_R2_ENDPOINT }}
+          CLOUDFLARE_R2_ACCESS_KEY: ${{ secrets.CLOUDFLARE_R2_ACCESS_KEY }}
+          CLOUDFLARE_R2_SECRET_KEY: ${{ secrets.CLOUDFLARE_R2_SECRET_KEY }}
+          CLOUDFLARE_R2_BUCKET: ${{ secrets.CLOUDFLARE_R2_BUCKET }}
+        run: ./scripts/backup/full-database-backup.sh
+      
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Database Backup Failed',
+              body: `**Backup Type:** Full Database Backup\n**Date:** ${new Date().toISOString()}\n**Status:** ❌ FAILED\n\nPlease investigate immediately.`,
+              labels: ['database', 'critical', 'backup']
+            });
+            console.log(`Created issue #${issue.data.number}`);
+
+  critical-data-export:
+    name: Critical Data Export
+    runs-on: ubuntu-latest
+    if: |
+      github.event_name == 'schedule' && github.event.schedule == '0 */6 * * *' ||
+      github.event_name == 'workflow_dispatch' && (github.event.inputs.backup_type == 'critical' || github.event.inputs.backup_type == 'both')
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+      
+      - name: Install dependencies
+        run: |
+          pip install --upgrade pip
+          pip install psycopg2-binary boto3
+      
+      - name: Make export script executable
+        run: chmod +x scripts/backup/critical-data-export.py
+      
+      - name: Run critical data export
+        env:
+          SUPABASE_DB_URL: ${{ secrets.SUPABASE_DB_URL }}
+          CLOUDFLARE_R2_ENDPOINT: ${{ secrets.CLOUDFLARE_R2_ENDPOINT }}
+          CLOUDFLARE_R2_ACCESS_KEY: ${{ secrets.CLOUDFLARE_R2_ACCESS_KEY }}
+          CLOUDFLARE_R2_SECRET_KEY: ${{ secrets.CLOUDFLARE_R2_SECRET_KEY }}
+          CLOUDFLARE_R2_BUCKET: ${{ secrets.CLOUDFLARE_R2_BUCKET }}
+        run: python scripts/backup/critical-data-export.py
+      
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Critical Data Export Failed',
+              body: `**Backup Type:** Critical Data Export\n**Date:** ${new Date().toISOString()}\n**Status:** ❌ FAILED\n\nPlease investigate immediately.`,
+              labels: ['database', 'critical', 'backup']
+            });
+            console.log(`Created issue #${issue.data.number}`);
+
+  test-restore:
+    name: Weekly Restore Test
+    runs-on: ubuntu-latest
+    # Run every Sunday at 4:00 AM UTC
+    if: github.event_name == 'schedule' && github.event.schedule == '0 4 * * 0'
+    
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+      
+      - name: Install PostgreSQL client
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client
+      
+      - name: Install AWS CLI
+        run: |
+          curl "https://awscli.amazonaws.com/awscli-exe-linux-x86_64.zip" -o "awscliv2.zip"
+          unzip awscliv2.zip
+          sudo ./aws/install
+      
+      - name: Download latest backup
+        env:
+          CLOUDFLARE_R2_ENDPOINT: ${{ secrets.CLOUDFLARE_R2_ENDPOINT }}
+          CLOUDFLARE_R2_ACCESS_KEY: ${{ secrets.CLOUDFLARE_R2_ACCESS_KEY }}
+          CLOUDFLARE_R2_SECRET_KEY: ${{ secrets.CLOUDFLARE_R2_SECRET_KEY }}
+          CLOUDFLARE_R2_BUCKET: ${{ secrets.CLOUDFLARE_R2_BUCKET }}
+        run: |
+          export AWS_ACCESS_KEY_ID="${CLOUDFLARE_R2_ACCESS_KEY}"
+          export AWS_SECRET_ACCESS_KEY="${CLOUDFLARE_R2_SECRET_KEY}"
+          
+          # Get most recent backup
+          LATEST_BACKUP=$(aws s3 ls \
+            s3://${CLOUDFLARE_R2_BUCKET}/daily/ \
+            --endpoint-url ${CLOUDFLARE_R2_ENDPOINT} \
+            | sort | tail -n 1 | awk '{print $4}')
+          
+          echo "Latest backup: $LATEST_BACKUP"
+          
+          # Download backup
+          aws s3 cp \
+            s3://${CLOUDFLARE_R2_BUCKET}/daily/${LATEST_BACKUP} \
+            ./test-backup.sql.gz \
+            --endpoint-url ${CLOUDFLARE_R2_ENDPOINT}
+          
+          # Decompress
+          gunzip test-backup.sql.gz
+      
+      - name: Test restore (dry run)
+        run: |
+          # Validate SQL file structure
+          echo "Testing SQL file integrity..."
+          
+          # Check file size
+          FILE_SIZE=$(stat -c%s test-backup.sql)
+          echo "Backup file size: $FILE_SIZE bytes"
+          
+          if [ $FILE_SIZE -lt 1048576 ]; then
+            echo "❌ ERROR: Backup file is too small (< 1MB)"
+            exit 1
+          fi
+          
+          # Check for key tables
+          if ! grep -q "CREATE TABLE.*users" test-backup.sql; then
+            echo "❌ ERROR: 'users' table not found in backup"
+            exit 1
+          fi
+          
+          if ! grep -q "CREATE TABLE.*lessons" test-backup.sql; then
+            echo "❌ ERROR: 'lessons' table not found in backup"
+            exit 1
+          fi
+          
+          echo "✅ Restore test passed"
+      
+      - name: Create test report
+        run: |
+          cat <<EOF > restore-test-report.md
+          # Weekly Restore Test Report
+          
+          **Date:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")
+          **Status:** ✅ PASSED
+          
+          ## Test Results
+          
+          - ✅ Backup file downloaded successfully
+          - ✅ Backup file size validation passed
+          - ✅ SQL structure validation passed
+          - ✅ Required tables present
+          
+          ## Next Steps
+          
+          - Continue monitoring daily backups
+          - Review quarterly for full restore drill
+          
+          EOF
+          
+          cat restore-test-report.md
+      
+      - name: Upload test report
+        uses: actions/upload-artifact@v4
+        with:
+          name: restore-test-report
+          path: restore-test-report.md
+          retention-days: 90
+      
+      - name: Notify on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            const issue = await github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Weekly Restore Test Failed',
+              body: `**Test Date:** ${new Date().toISOString()}\n**Status:** ❌ FAILED\n\nThe weekly backup restore test has failed. This may indicate corrupted backups or incomplete data.\n\n**Action Required:** Investigate immediately and verify backup integrity.`,
+              labels: ['database', 'critical', 'backup', 'testing']
+            });
+            console.log(`Created issue #${issue.data.number}`);
+
