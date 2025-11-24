@@ -95,7 +95,17 @@ prepare_backup_dir() {
 backup_database() {
     log "Starting full database backup..."
     
+    # Test connection first
+    log "Testing database connection..."
+    if ! psql "$SUPABASE_DB_URL" -c "SELECT 1;" > /dev/null 2>&1; then
+        error "Cannot connect to database. Check SUPABASE_DB_URL."
+        error "Connection string format: postgresql://postgres:PASSWORD@HOST:5432/postgres"
+        exit 1
+    fi
+    log "✓ Database connection successful"
+    
     # Full backup with data
+    log "Running pg_dump..."
     if pg_dump "$SUPABASE_DB_URL" \
         --no-owner \
         --no-acl \
@@ -105,7 +115,9 @@ backup_database() {
         --file="$BACKUP_DIR/$BACKUP_FILENAME" 2>&1 | grep -v "NOTICE"; then
         log "✓ Database backup completed: $BACKUP_FILENAME"
     else
-        error "Database backup failed"
+        local exit_code=$?
+        error "Database backup failed with exit code: $exit_code"
+        error "Check database connection and credentials"
         exit 1
     fi
     
