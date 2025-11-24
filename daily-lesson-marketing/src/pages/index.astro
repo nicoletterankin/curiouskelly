@@ -6,13 +6,29 @@ import '../styles/unified-design-system.scss';
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Give the gift of 365 days with Kelly - Your personal AI teacher for a whole year. Perfect Christmas gift for ages 2-102.">
-    <title>Curious Kelly - Access</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="description" content="Curious Kelly - The operating system for your potential. Your personal AI teacher for a whole year.">
+    <title>Curious Kelly</title>
+    
+    <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Times+New+Roman&display=swap" rel="stylesheet">
+
+    <!-- OS Styles (Preloaded) -->
+    <link rel="stylesheet" href="/lesson-player/css/styles.css">
+    <link rel="stylesheet" href="/lesson-player/css/ui-kit.css">
+    
+    <!-- Supabase (Global for OS) -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
     <style>
+        /* 
+         * UNIFIED ARCHITECTURE:
+         * 1. Login Layer (Z-Index 1000) - The "Marketing" State
+         * 2. OS Layer (Z-Index 0) - The "App" State (Preloaded)
+         */
+
         :root {
             --bg-color: #0f0f11;
             --text-primary: #f4f4f5;
@@ -24,29 +40,40 @@ import '../styles/unified-design-system.scss';
             --footer-bg: #000000;
         }
 
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
             background-color: var(--bg-color);
             color: var(--text-primary);
-            min-height: 100vh;
+            height: 100vh;
+            overflow: hidden; /* OS-like feel */
+        }
+
+        /* --- LOGIN LAYER STYLES --- */
+        #login-layer {
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            z-index: 1000;
+            background-color: var(--bg-color);
             display: flex;
             flex-direction: column;
-            overflow-x: hidden;
+            transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out;
+        }
+
+        #login-layer.hidden {
+            opacity: 0;
+            pointer-events: none;
+            transform: scale(1.05); /* Subtle zoom out effect */
         }
 
         .container {
             display: flex;
             width: 100%;
-            flex: 1; /* Take available space above footer */
+            flex: 1;
+            overflow-y: auto; /* Allow scroll only on login if needed */
         }
 
-        /* Left Side: Content & Login */
         .left-panel {
             flex: 1;
             padding: 80px;
@@ -54,9 +81,26 @@ import '../styles/unified-design-system.scss';
             flex-direction: column;
             justify-content: center;
             max-width: 640px;
-            z-index: 10;
-            position: relative;
             border-right: 1px solid rgba(255,255,255,0.05);
+            z-index: 2;
+        }
+
+        .right-panel {
+            flex: 1;
+            background-color: var(--bg-color);
+            position: relative;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        
+        .right-panel::before {
+             content: "";
+             position: absolute;
+             inset: 0;
+             background: radial-gradient(circle at center, #202023 0%, #0f0f11 70%);
+             z-index: 1;
         }
 
         .logo {
@@ -66,20 +110,10 @@ import '../styles/unified-design-system.scss';
             display: flex;
             align-items: center;
             gap: 10px;
-            letter-spacing: 0.5px;
-        }
-        
-        .logo-icon {
-            color: var(--accent-orange);
-            font-size: 1.5rem;
-        }
-
-        .main-content {
-            margin-bottom: auto;
-            margin-top: 60px;
         }
 
         h1 {
+            font-family: 'Times New Roman', serif;
             font-size: 5rem;
             font-weight: 400;
             line-height: 1;
@@ -118,96 +152,42 @@ import '../styles/unified-design-system.scss';
             transition: all 0.2s ease;
             cursor: pointer;
             border: 1px solid var(--border-color);
-            position: relative;
-            overflow: hidden;
         }
 
-        .btn:active {
-            transform: scale(0.98);
-        }
+        .btn:hover { transform: translateY(-1px); }
+        .btn:active { transform: scale(0.98); }
 
         .btn-primary {
             background-color: #f4f4f5;
             color: #18181b;
             border: none;
             font-weight: 600;
-            margin-top: 10px;
-        }
-
-        .btn-primary:hover {
-            background-color: #e4e4e7;
-            box-shadow: 0 0 15px rgba(255,255,255,0.2);
         }
 
         .btn-outline {
             background-color: transparent;
             color: var(--text-primary);
-            border: 1px solid var(--border-color);
         }
 
-        .btn-outline:hover {
-            background-color: rgba(255,255,255,0.05);
-            border-color: #52525b;
-        }
-        
         .divider {
             display: flex;
             align-items: center;
             color: var(--text-secondary);
             font-size: 0.8rem;
-            margin: 20px 0;
+            margin: 10px 0;
             text-transform: uppercase;
             letter-spacing: 1px;
         }
         .divider::before, .divider::after {
-            content: "";
-            flex: 1;
-            border-bottom: 1px solid var(--border-color);
+            content: ""; flex: 1; border-bottom: 1px solid var(--border-color);
         }
-        .divider span {
-            padding: 0 10px;
-        }
-
-        .terms {
-            font-size: 0.75rem;
-            color: var(--text-secondary);
-            margin-top: 24px;
-            line-height: 1.5;
-        }
-        
-        .terms a {
-            color: var(--text-secondary);
-            text-decoration: underline;
-        }
-
-        /* Right Side: Image */
-        .right-panel {
-            flex: 1;
-            background-color: var(--bg-color);
-            position: relative;
-            overflow: hidden;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        
-        .right-panel::before {
-             content: "";
-             position: absolute;
-             top: 0;
-             right: 0;
-             bottom: 0;
-             left: 0;
-             background: radial-gradient(circle at center, #202023 0%, #0f0f11 70%);
-             z-index: 1;
-        }
+        .divider span { padding: 0 10px; }
 
         .hero-image {
             max-width: 85%;
             max-height: 85%;
             object-fit: contain;
             z-index: 2;
-            /* Subtle float animation */
             animation: float 8s ease-in-out infinite;
             filter: drop-shadow(0 20px 50px rgba(0,0,0,0.5));
         }
@@ -218,7 +198,6 @@ import '../styles/unified-design-system.scss';
             100% { transform: translateY(0px); }
         }
 
-        /* Scribble decoration */
         .scribble {
             position: absolute;
             pointer-events: none;
@@ -226,253 +205,262 @@ import '../styles/unified-design-system.scss';
             z-index: 3;
         }
 
-        /* Corporate Footer */
-        .corporate-footer {
-            background-color: var(--footer-bg);
-            padding: 60px 80px;
-            border-top: 1px solid #202023;
-            position: relative;
-            z-index: 20;
-        }
-
-        .footer-grid {
-            display: grid;
-            grid-template-columns: repeat(4, 1fr);
-            gap: 40px;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-
-        .footer-col h4 {
-            color: #fff;
-            font-size: 0.9rem;
-            margin-bottom: 20px;
-            font-weight: 600;
-        }
-
-        .footer-links {
-            list-style: none;
-            display: flex;
-            flex-direction: column;
-            gap: 12px;
-        }
-
-        .footer-links a {
-            color: var(--text-secondary);
-            text-decoration: none;
-            font-size: 0.85rem;
-            transition: color 0.2s;
-        }
-
-        .footer-links a:hover {
-            color: #fff;
-        }
-
-        .app-badges {
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .app-badge {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: #000;
-            border: 1px solid #3f3f46;
-            border-radius: 8px;
-            padding: 8px 12px;
-            color: #fff;
-            text-decoration: none;
-            width: 160px;
-            transition: all 0.2s;
-        }
-
-        .app-badge:hover {
-            border-color: #fff;
-            background: #18181b;
-        }
-        
-        .app-badge img, .app-badge svg {
-            height: 24px;
-            width: auto;
-            margin-right: 10px;
-        }
-        
-        .app-badge span {
-            font-size: 0.75rem;
-            text-align: left;
-            line-height: 1.2;
-        }
-        .app-badge b {
-            display: block;
-            font-size: 0.9rem;
-        }
-
-        .footer-bottom {
-            border-top: 1px solid #202023;
-            margin-top: 40px;
-            padding-top: 20px;
-            display: flex;
-            justify-content: space-between;
-            font-size: 0.75rem;
-            color: #52525b;
-        }
-
         /* Spinner */
         .spinner {
             border: 2px solid rgba(255,255,255,0.1);
             border-left-color: #fff;
             border-radius: 50%;
-            width: 16px;
-            height: 16px;
+            width: 16px; height: 16px;
             animation: spin 1s linear infinite;
             display: none;
         }
-        
         @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        
-        .btn.loading .spinner {
-            display: block;
+        .btn.loading .spinner { display: block; }
+        .btn.loading span, .btn.loading img { display: none; }
+
+        /* --- OS LAYER TWEAKS --- */
+        /* Ensure Unity sits behind but accessible */
+        #app-layer-desktop {
+            position: absolute;
+            inset: 0;
+            z-index: 1;
+            opacity: 0; /* Hidden initially */
+            transition: opacity 1s ease-in-out;
         }
         
-        .btn.loading span, .btn.loading svg, .btn.loading img {
-            display: none;
+        #app-layer-desktop.active {
+            opacity: 1;
+            pointer-events: auto;
         }
 
-        /* Responsive */
+        /* Mobile Response for Login */
         @media (max-width: 900px) {
-            .container {
-                flex-direction: column;
-            }
-            .right-panel {
-                height: 30vh;
-                order: -1;
-            }
-            .left-panel {
-                padding: 40px;
-                max-width: 100%;
-                border-right: none;
-            }
-            h1 {
-                font-size: 3.5rem;
-            }
-            .footer-grid {
-                grid-template-columns: 1fr 1fr;
-            }
+            .container { flex-direction: column; }
+            .right-panel { height: 30vh; order: -1; }
+            .left-panel { padding: 40px; border-right: none; }
+            h1 { font-size: 3.5rem; }
         }
     </style>
 </head>
 <body>
-    <div class="container">
-        <div class="left-panel">
-            <div class="logo">
-                <span class="logo-icon">✨</span> Curious Kelly
+
+    <!-- ==================================================================
+         LAYER 1: LOGIN / LANDING (The "Site")
+         ================================================================== -->
+    <div id="login-layer">
+        <div class="container">
+            <div class="left-panel">
+                <div class="logo">
+                    <span style="color: var(--accent-orange); font-size: 1.5rem;">✨</span> Curious Kelly
+                </div>
+
+                <div class="main-content" style="margin-top: auto; margin-bottom: auto;">
+                    <h1>Curious?<br>Always.</h1>
+                    <p class="subtitle">The operating system for your potential.</p>
+
+                    <div class="login-container">
+                        <button class="btn btn-outline" onclick="handleLogin(this, 'google')">
+                            <img src="/lessons/images/google.svg" width="20" alt="G" onerror="this.style.display='none'">
+                            <span>Continue with Google</span>
+                            <div class="spinner"></div>
+                        </button>
+                        
+                        <div class="divider"><span>OR</span></div>
+                        
+                        <button class="btn btn-primary" onclick="handleLogin(this, 'guest')">
+                            <span>Just Exploring (Guest)</span>
+                            <div class="spinner"></div>
+                        </button>
+                        
+                        <p style="margin-top: 20px; font-size: 0.75rem; color: var(--text-secondary);">
+                            By continuing, you acknowledge our <a href="/privacy.html" style="color:inherit;">Privacy Policy</a>.
+                        </p>
+                    </div>
+                </div>
             </div>
 
-            <div class="main-content">
-                <h1>Curious?<br>Always.</h1>
-                <p class="subtitle">The operating system for your potential.</p>
+            <div class="right-panel">
+                <img src="/lessons/images/kelly-directors-chair-wisdom.png" alt="Kelly" class="hero-image">
+                
+                <!-- Claude-like Scribbles -->
+                <svg class="scribble" style="top: 20%; left: 10%; width: 100px; height: 100px;" viewBox="0 0 100 100">
+                    <path d="M10,50 Q30,10 50,50 T90,50" fill="none" stroke="#84cc16" stroke-width="3" />
+                </svg>
+                <svg class="scribble" style="bottom: 30%; right: 20%; width: 60px; height: 60px;" viewBox="0 0 100 100">
+                    <circle cx="50" cy="50" r="40" fill="none" stroke="#f472b6" stroke-width="2" stroke-dasharray="10,5" />
+                </svg>
+                <svg class="scribble" style="top: 50%; right: 10%; width: 40px; height: 40px;" viewBox="0 0 100 100">
+                    <text x="10" y="60" fill="#60a5fa" font-family="monospace" font-size="40">&lt;/&gt;</text>
+                </svg>
+            </div>
+        </div>
+    </div>
 
-                <div class="login-container">
-                    <button class="btn btn-outline" onclick="handleLogin(this, 'google')">
-                        <img src="https://www.svgrepo.com/show/475656/google-color.svg" width="20" alt="Google">
-                        <span>Continue with Google</span>
-                        <div class="spinner"></div>
-                    </button>
-                    
-                    <div class="divider"><span>OR</span></div>
-                    
-                    <button class="btn btn-primary" onclick="handleLogin(this, 'guest')">
-                        <span>Continue as Guest</span>
-                        <div class="spinner"></div>
-                    </button>
-                    
-                    <p class="terms">
-                        By continuing, you acknowledge our <a href="/privacy.html">Privacy Policy</a>.
-                    </p>
+    <!-- ==================================================================
+         LAYER 2: THE OS (The "App")
+         This is the DOM structure required by app.js
+         ================================================================== -->
+    <div id="app-layer-desktop">
+        
+        <!-- LAYER 0: Background (Unity / Video) -->
+        <div id="layer-background">
+            <div class="kelly-unity-container" id="kelly-unity-container">
+                <iframe
+                    id="kelly-unity-iframe"
+                    class="kelly-unity-iframe"
+                    src="/unity/kelly-v1/index.html" 
+                    title="Kelly Unity Avatar"
+                    allow="autoplay *; microphone; fullscreen; xr-spatial-tracking"
+                    loading="eager"
+                    referrerpolicy="strict-origin-when-cross-origin"
+                ></iframe>
+                <div class="kelly-unity-status" id="kelly-unity-status">
+                    <span class="status-indicator" id="unity-status-indicator">•</span>
+                    <span class="status-text" id="unity-status-text">Loading Kelly...</span>
+                </div>
+            </div>
+            <!-- Fallback Image matches the hero image for seamless transition -->
+            <img id="kelly-image" class="kelly-image" src="/lessons/images/kelly-directors-chair-curious.png" alt="Kelly teaching">
+        </div>
+
+        <!-- TRIGGER: The Single Entry Point -->
+        <button id="os-trigger" title="Open Kelly OS">☰</button>
+
+        <!-- LAYER 2: OS Interface -->
+        <div id="layer-os-interface">
+            <div id="mode-dashboard" class="os-mode-panel active"></div>
+
+            <div id="mode-lesson" class="os-mode-panel">
+                <div class="controls-panel">
+                    <div class="age-selector-floating glass-panel-light">
+                         <label for="age-slider" class="age-label-floating">Age</label>
+                         <div class="age-display-floating"><span id="age-value">25</span></div>
+                         <input type="range" id="age-slider" min="2" max="102" value="25" class="age-slider-floating">
+                    </div>
+                </div>
+
+                <aside class="lesson-context-panel glass-panel-medium">
+                    <div class="lesson-meta-header"><div class="meta-label">Current Lesson</div></div>
+                    <h2 id="lesson-title" class="lesson-title">Loading...</h2>
+                    <p id="topic-description" class="lesson-description">...</p>
+                </aside>
+
+                <div class="interaction-zone">
+                    <div id="question-card" class="question-card glass-panel-medium">
+                        <button id="play-pause" class="play-button glass-panel-light"><span class="play-icon">▶</span></button>
+                        <div id="question-text" class="question-text">Ready?</div>
+                    </div>
+                    <div id="choice-cards-container" class="choice-cards-container"></div>
                 </div>
             </div>
         </div>
 
-        <div class="right-panel">
-            <img src="/lessons/images/kelly-directors-chair-wisdom.png" alt="Kelly sitting in wisdom pose" class="hero-image">
-            
-            <svg class="scribble" style="top: 20%; left: 10%; width: 100px; height: 100px;" viewBox="0 0 100 100">
-                <path d="M10,50 Q30,10 50,50 T90,50" fill="none" stroke="#84cc16" stroke-width="3" />
-            </svg>
-             <svg class="scribble" style="bottom: 30%; right: 20%; width: 60px; height: 60px;" viewBox="0 0 100 100">
-                <circle cx="50" cy="50" r="40" fill="none" stroke="#f472b6" stroke-width="2" stroke-dasharray="10,5" />
-            </svg>
-            <svg class="scribble" style="top: 50%; right: 10%; width: 40px; height: 40px;" viewBox="0 0 100 100">
-                <text x="10" y="60" fill="#60a5fa" font-family="monospace" font-size="40">&lt;/&gt;</text>
-            </svg>
+        <!-- LAYER 3: Modal Stack (Overlays) -->
+        <div id="layer-modal-stack">
+            <div id="menu-drawer" class="glass-drawer">
+                <div class="drawer-header">
+                    <h3>Kelly OS</h3>
+                    <button class="btn-close-drawer">×</button>
+                </div>
+                <div class="drawer-content-scroll" style="overflow-y: auto; flex: 1;">
+                    <div class="nav-section">
+                        <div class="dashboard-card glass-panel-light" style="margin-bottom: 20px; padding: 20px;">
+                            <span class="meta-label">Today's Focus</span>
+                            <h4 id="drawer-lesson-title" style="margin: 5px 0; font-size: 1.1rem;">The Sun: Our Star</h4>
+                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
+                                <span class="date-pill" id="drawer-date" style="font-size: 0.8rem; opacity: 0.7;">Dec 25</span>
+                                <button class="btn-primary-glass" id="btn-drawer-start" style="padding: 6px 12px; font-size: 0.8rem;">Start</button>
+                            </div>
+                        </div>
+                    </div>
+                    <nav class="drawer-nav">
+                        <button class="drawer-item active" data-target="mode-lesson"><span class="icon">📚</span> Classroom</button>
+                        <button class="drawer-item" data-action="open-syllabus"><span class="icon">📅</span> Syllabus</button>
+                        <button class="drawer-item" data-action="open-tuition"><span class="icon">🎓</span> Tuition & Gifts</button>
+                        <button class="drawer-item" data-action="open-careers"><span class="icon">💼</span> Careers</button>
+                         <button class="drawer-item" data-action="open-newsroom"><span class="icon">📰</span> Newsroom</button>
+                    </nav>
+                    <div class="drawer-divider"></div>
+                    <nav class="drawer-nav">
+                        <button class="drawer-item" data-action="open-settings">Settings</button>
+                        <!-- Reload page to logout/reset -->
+                        <button class="drawer-item text-danger" onclick="window.location.reload()">Log Out</button>
+                    </nav>
+                </div>
+            </div>
+
+            <div id="modal-reader" class="os-modal glass-panel-heavy">
+                <div class="modal-header">
+                    <h2 id="reader-title">Title</h2>
+                    <button class="btn-close-modal">Close</button>
+                </div>
+                <div class="modal-content-scroll" id="reader-content"></div>
+            </div>
+
+            <div id="modal-tuition" class="os-modal glass-panel-heavy">
+                <div class="modal-header">
+                    <h2>Tuition & Enrollment</h2>
+                    <button class="btn-close-modal">Close</button>
+                </div>
+                <div class="modal-content-scroll">
+                    <div class="pricing-grid">
+                        <div class="pricing-card glass-panel-light">
+                            <h3>Scholar</h3>
+                            <div class="price">$199<span>/yr</span></div>
+                            <button class="btn-primary-glass btn-checkout" data-plan="personal">Subscribe</button>
+                        </div>
+                        <div class="pricing-card glass-panel-light featured">
+                            <h3>Fellowship (Gift)</h3>
+                            <div class="price">$199<span>/one-time</span></div>
+                            <button class="btn-primary-glass btn-checkout" data-plan="gift">Gift Now</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
         </div>
     </div>
     
-    <footer class="corporate-footer">
-        <div class="footer-grid">
-            <div class="footer-col">
-                <h4>Explore</h4>
-                <ul class="footer-links">
-                    <li><a href="/about.html#syllabus">Missions</a></li>
-                    <li><a href="/about.html#features">Curriculum</a></li>
-                    <li><a href="/about.html#tuition">Gifts</a></li>
-                    <li><a href="/enterprise.html">Enterprise</a></li>
-                </ul>
-            </div>
-            <div class="footer-col">
-                <h4>About</h4>
-                <ul class="footer-links">
-                    <li><a href="/about.html">About Curious Kelly</a></li>
-                    <li><a href="/careers.html">Careers</a></li>
-                    <li><a href="/newsroom.html">Newsroom</a></li>
-                    <li><a href="/privacy.html">Privacy</a></li>
-                    <li><a href="/terms.html">Terms</a></li>
-                    <li><a href="/diversity.html">Diversity & Inclusion</a></li>
-                </ul>
-            </div>
-            <div class="footer-col">
-                <h4>Social</h4>
-                <ul class="footer-links">
-                    <li><a href="/social.html#twitter">Twitter</a></li>
-                    <li><a href="/social.html#instagram">Instagram</a></li>
-                    <li><a href="/social.html#youtube">YouTube</a></li>
-                    <li><a href="/social.html#linkedin">LinkedIn</a></li>
-                </ul>
-            </div>
-            <div class="footer-col">
-                <h4>Download</h4>
-                <div class="app-badges">
-                    <a href="#" class="app-badge">
-                        <svg viewBox="0 0 24 24" fill="white"><path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.74 1.18 0 2.21-.93 3.69-.93.95 0 1.95.43 2.55.89-1.93 1.16-1.6 4.34.64 5.75-.43 1.06-.95 2.12-1.96 4.52zm-2.3-14.4c.77-1.29 1.87-2.16 3.26-2.31.37 1.6-1.27 3.47-3.26 2.31z"/></svg>
-                        <span>Download on the<br><b>App Store</b></span>
-                    </a>
-                    <a href="#" class="app-badge">
-                        <svg viewBox="0 0 24 24" fill="white"><path d="M3.609 1.814L13.792 12 1.5 24.164V1.814zM4.391 1.032l10.918 10.918L22.348 4.91 4.391 1.032zM23.435 6.038l-5.797 5.797 5.797 5.797a2.36 2.36 0 0 0 .435-1.49V7.528c0-.564-.16-1.087-.435-1.49zM15.309 13.518l-10.918 10.918 17.957-3.878-7.039-7.04z"/></svg>
-                        <span>GET IT ON<br><b>Google Play</b></span>
-                    </a>
-                </div>
-            </div>
-        </div>
-        <div class="footer-bottom">
-            <div>© 2025 Curious Kelly PBC. Secured with SSL.</div>
-            <div>Made on Earth 🌍</div>
-        </div>
-    </footer>
+    <!-- Audio Element -->
+    <audio id="kelly-audio" preload="auto"></audio>
 
+    <!-- Main App Logic (Module) -->
+    <script type="module" src="/lesson-player/js/app.js"></script>
+
+    <!-- Transition Logic -->
     <script is:inline>
         function handleLogin(btn, provider) {
-            // Simple redirect to the Player OS
             btn.classList.add('loading');
-            btn.disabled = true;
             
+            // 1. Simulate Auth Delay (or real auth later)
             setTimeout(() => {
-                // NOTE: Since player.html is now in public/, this path is correct
-                window.location.href = '/player.html';
+                // 2. The "Magic" Transition
+                const loginLayer = document.getElementById('login-layer');
+                const osLayer = document.getElementById('app-layer-desktop');
+                
+                // Fade out Login
+                loginLayer.classList.add('hidden');
+                
+                // Fade in OS
+                osLayer.classList.add('active');
+                
+                // 3. Trigger OS Mode Switch via the Global Object (exposed by app.js)
+                if (window.os) {
+                    console.log("Transitioning to Lesson Mode...");
+                    window.os.switchMode('lesson');
+                    
+                    // Optional: Play a welcome sound or trigger Unity
+                    // window.os.playAudio(); 
+                } else {
+                    console.error("KellyOS not initialized yet");
+                }
+                
+                // 4. Cleanup Login Layer from DOM after fade (optional, keeps it cleaner)
+                setTimeout(() => {
+                    loginLayer.style.display = 'none';
+                }, 800);
+                
             }, 800);
         }
     </script>
 </body>
 </html>
-
