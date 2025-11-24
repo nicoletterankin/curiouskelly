@@ -150,6 +150,11 @@ compress_backup() {
 configure_s3_client() {
     log "Configuring S3 client for Cloudflare R2..."
     
+    if [[ -z "${CLOUDFLARE_R2_ACCESS_KEY:-}" ]] || [[ -z "${CLOUDFLARE_R2_SECRET_KEY:-}" ]]; then
+        error "R2 credentials not set. Check CLOUDFLARE_R2_ACCESS_KEY and CLOUDFLARE_R2_SECRET_KEY"
+        exit 1
+    fi
+    
     export AWS_ACCESS_KEY_ID="$CLOUDFLARE_R2_ACCESS_KEY"
     export AWS_SECRET_ACCESS_KEY="$CLOUDFLARE_R2_SECRET_KEY"
     export AWS_DEFAULT_REGION="auto"
@@ -167,9 +172,10 @@ upload_to_r2() {
         exit 1
     fi
     
-    # Verify credentials are set
+    # Credentials should already be set by configure_s3_client()
+    # But verify they're available for AWS CLI
     if [[ -z "${AWS_ACCESS_KEY_ID:-}" ]] || [[ -z "${AWS_SECRET_ACCESS_KEY:-}" ]]; then
-        error "AWS credentials not set. Check CLOUDFLARE_R2_ACCESS_KEY and CLOUDFLARE_R2_SECRET_KEY"
+        error "AWS credentials not set. configure_s3_client() should have set these."
         exit 1
     fi
     
