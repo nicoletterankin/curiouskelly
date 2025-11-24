@@ -2,6 +2,19 @@
 
 This document encodes how the assistant must operate in this repository to maximize learner experience, speed, and daily habit formation for lifelong learners, while protecting quality, cost, and safety. It applies across the repo, with subproject specifics called out where relevant.
 
+### Environment Variables & Secrets (Documentation Only)
+**NEVER COMMIT VALUES TO THIS FILE OR GIT. USE `.env` LOCALLY AND VERCEL DASHBOARD FOR PROD.**
+
+Required keys for full functionality:
+- `PUBLIC_SUPABASE_URL`: The URL of your Supabase project (e.g., `https://xyz.supabase.co`).
+- `PUBLIC_SUPABASE_ANON_KEY`: The public anonymous key for client-side access.
+- `STRIPE_SECRET_KEY`: Secret key for processing payments (starts with `sk_`).
+- `STRIPE_WEBHOOK_SECRET`: Secret for verifying Stripe webhooks (starts with `whsec_`).
+- `NEXT_PUBLIC_CLERK_PUBLISHABLE_KEY` (if applicable): For auth integration if migrated from Supabase Auth.
+
+**Note on Architecture:**
+The project uses a "Unified Aquarium" architecture where `index.astro` serves as both the Marketing Landing Page (Layer 1) and the Kelly OS App (Layer 2, hidden initially). This ensures zero-latency transition.
+
 ### How to use this doc
 - If you are onboarding: read `START_HERE.md` → then skim this file top-to-bottom.
 - When acting: follow this file's rules; for concrete steps, jump to:
@@ -143,5 +156,3 @@ This document encodes how the assistant must operate in this repository to maxim
 5. Do you have caching/batching to avoid duplicates and cost loops?
 6. Do tests, linters, and media validators pass locally?
 7. Does the outcome help daily use: faster entry, resume state, progress/streak integrity?
-
-
