@@ -22,8 +22,8 @@ const {
   locale,
   currentPath,
   routeKey,
-  title = dictionary.meta.title,
-  description = dictionary.meta.description,
+  title = dictionary?.meta?.title ?? 'The Daily Lesson',
+  description = dictionary?.meta?.description ?? 'Learn something new every day.',
   canonical
 } = Astro.props as Props;
 
@@ -31,10 +31,11 @@ const nonce = crypto.randomUUID();
 const alternateLinks = getAlternateHreflang(currentPath);
 const consentRequired = import.meta.env.PUBLIC_CONSENT_REQUIRED !== 'false';
 const localeCode = normaliseLocale(locale) as LocaleCode;
+const navItems = dictionary?.nav ?? [];
 ---
 
 <!DOCTYPE html>
-<html lang={locale.toLowerCase()}>
+<html lang={(locale || 'en-US').toLowerCase()}>
   <head>
     <SeoHead
       title={title}
@@ -70,7 +71,7 @@ const localeCode = normaliseLocale(locale) as LocaleCode;
         document.body.classList.add('reduced-motion');
       }
       window.__CURIOUS_KELLY__ = {
-        locale: JSON.stringify(locale),
+        locale: JSON.stringify(locale || 'en-US'),
         consentRequired: JSON.stringify(consentRequired),
         countdownEnd: JSON.stringify(import.meta.env.PUBLIC_COUNTDOWN_END ?? ''),
         analytics: {
@@ -116,7 +117,7 @@ const localeCode = normaliseLocale(locale) as LocaleCode;
         </button>
         <nav class="collapse navbar-collapse" id="primary-nav">
           <ul class="navbar-nav me-auto mb-2 mb-lg-0">
-            {dictionary.nav.map((item: { key: RouteKey; href: string; label: string }) => (
+            {navItems.map((item: { key: RouteKey; href: string; label: string }) => (
               <li class="nav-item" data-route={item.key}>
                 <a
                   class:list={[
@@ -146,16 +147,16 @@ const localeCode = normaliseLocale(locale) as LocaleCode;
       <div class="container">
         <div class="row align-items-center">
           <div class="col-md-6">
-            <p class="mb-2 fw-semibold text-uppercase text-secondary">{dictionary.trust.title}</p>
+            <p class="mb-2 fw-semibold text-uppercase text-secondary">{dictionary?.trust?.title}</p>
             <div class="store-badges mb-3">
               <span class="badge-placeholder">App Store</span>
               <span class="badge-placeholder">Google Play</span>
             </div>
-            <p class="small text-muted mb-0">{dictionary.footer.rights}</p>
+            <p class="small text-muted mb-0">{dictionary?.footer?.rights}</p>
           </div>
           <div class="col-md-6 text-md-end text-start mt-4 mt-md-0">
-            <a class="text-decoration-none me-3" href={dictionary.nav.find((item: { key: RouteKey; href: string; label: string }) => item.key === 'privacy')?.href ?? '#'}>{dictionary.footer.privacy}</a>
-            <a class="text-decoration-none" href={dictionary.nav.find((item: { key: RouteKey; href: string; label: string }) => item.key === 'cookies')?.href ?? '#'}>{dictionary.footer.cookies}</a>
+            <a class="text-decoration-none me-3" href={navItems.find((item: { key: RouteKey; href: string; label: string }) => item.key === 'privacy')?.href ?? '#'}>{dictionary?.footer?.privacy}</a>
+            <a class="text-decoration-none" href={navItems.find((item: { key: RouteKey; href: string; label: string }) => item.key === 'cookies')?.href ?? '#'}>{dictionary?.footer?.cookies}</a>
           </div>
         </div>
       </div>

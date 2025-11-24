@@ -1,0 +1,84 @@
+<!DOCTYPE html>
+<html lang="en-us">
+  <head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <title>Unity Web Player | Curious Kelly</title>
+    <link rel="shortcut icon" href="TemplateData/favicon.ico">
+    <link rel="stylesheet" href="TemplateData/style.css">
+    <style>
+      html, body { width: 100%; height: 100%; margin: 0; padding: 0; overflow: hidden; background: transparent !important; }
+      #unity-container { width: 100% !important; height: 100% !important; position: absolute; top: 0; left: 0; background: transparent !important; }
+      #unity-canvas { width: 100% !important; height: 100% !important; background: transparent !important; }
+      
+      /* AGGRESSIVE REMOVAL OF DEFAULT UI */
+      #unity-loading-bar, 
+      #unity-footer, 
+      #unity-warning, 
+      #unity-logo, 
+      .unity-desktop #unity-logo,
+      #unity-progress-bar-empty,
+      #unity-progress-bar-full { 
+        display: none !important; 
+        opacity: 0 !important;
+        pointer-events: none !important;
+        visibility: hidden !important;
+        width: 0 !important;
+        height: 0 !important;
+      }
+    </style>
+  </head>
+  <body>
+    <div id="unity-container" class="unity-desktop">
+      <canvas id="unity-canvas" tabindex="-1"></canvas>
+    </div>
+    <script>
+      var canvas = document.querySelector("#unity-canvas");
+
+      function unityShowBanner(msg, type) {
+        console.log("Unity Banner:", msg, type); 
+      }
+
+      var buildUrl = "Build";
+      var loaderUrl = buildUrl + "/kelly-v1.loader.js";
+      
+      var config = {
+        arguments: [],
+        dataUrl: buildUrl + "/kelly-v1.data", 
+        frameworkUrl: buildUrl + "/kelly-v1.framework.js", 
+        codeUrl: buildUrl + "/kelly-v1.wasm", 
+        streamingAssetsUrl: "StreamingAssets",
+        companyName: "DefaultCompany",
+        productName: "Curious Kelly",
+        productVersion: "0.1.0",
+        showBanner: unityShowBanner,
+      };
+
+      if (/iPhone|iPad|iPod|Android/i.test(navigator.userAgent)) {
+        var meta = document.createElement('meta');
+        meta.name = 'viewport';
+        meta.content = 'width=device-width, height=device-height, initial-scale=1.0, user-scalable=no, shrink-to-fit=yes';
+        document.getElementsByTagName('head')[0].appendChild(meta);
+        document.querySelector("#unity-container").className = "unity-mobile";
+        canvas.className = "unity-mobile";
+      }
+
+      var script = document.createElement("script");
+      script.src = loaderUrl;
+      script.onload = () => {
+        createUnityInstance(canvas, config, (progress) => {
+          window.parent.postMessage({ source: 'kelly-webgl', type: 'kelly-progress', payload: progress }, '*');
+        }).then((unityInstance) => {
+          window.unityInstance = unityInstance;
+          window.parent.postMessage({ source: 'kelly-webgl', type: 'kelly-ready' }, '*');
+          console.log("Kelly Unity Instance Ready");
+        }).catch((message) => {
+          console.warn("Unity Load Error:", message);
+        });
+      };
+
+      document.body.appendChild(script);
+    </script>
+    <script src="./kbridge.js" type="module"></script>
+  </body>
+</html>

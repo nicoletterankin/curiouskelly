@@ -7,12 +7,22 @@ import type { APIRoute } from 'astro';
 import Stripe from 'stripe';
 import { trackTrialStarted } from '@/lib/customerio';
 
-const stripe = new Stripe(import.meta.env.STRIPE_SECRET_KEY || '', {
+// Initialize Stripe only if key is present (prevents build errors during static generation)
+const stripeKey = import.meta.env.STRIPE_SECRET_KEY;
+const stripe = stripeKey ? new Stripe(stripeKey, {
   apiVersion: '2024-11-20.acacia',
-});
+}) : null;
 
 export const POST: APIRoute = async ({ request }) => {
   try {
+    if (!stripe) {
+      console.error('Stripe secret key not configured');
+      return new Response(
+        JSON.stringify({ error: 'Payment service unavailable' }),
+        { status: 503, headers: { 'Content-Type': 'application/json' } }
+      );
+    }
+
     const body = await request.json();
     const { plan, email, name, customerId, mode = 'subscription' } = body;
 

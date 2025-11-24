@@ -5,19 +5,27 @@
  */
 
 import SiteLayout from '@layouts/SiteLayout.astro';
-import { getDictionary } from '@lib/i18n';
+import { getDictionary, getLocaleFromPath } from '@lib/i18n';
 
-// Get locale from URL or default to English
-const locale = 'en-US'; // TODO: Get from URL params
-const dictionary = getDictionary(locale);
-const nonce = crypto.randomUUID();
+  // Get locale from URL or default to English
+  const currentPath = Astro.url.pathname;
+  const locale = getLocaleFromPath(currentPath);
+  const dictionary = getDictionary(locale);
+  const nonce = crypto.randomUUID();
 
 // Check if user came back from cancelled checkout
 const params = Astro.url.searchParams;
 const cancelled = params.get('cancelled') === 'true';
 ---
 
-<SiteLayout title="Start Your Free Trial - The Daily Lesson" description="Start your 7-day free trial. $4.99/month or $49.99/year. Cancel anytime.">
+<SiteLayout 
+  dictionary={dictionary}
+  locale={locale}
+  currentPath={currentPath}
+  routeKey="home"
+  title="Start Your Free Trial - The Daily Lesson" 
+  description="Start your 7-day free trial. $4.99/month or $49.99/year. Cancel anytime."
+>
   <div class="checkout-page">
     <div class="container">
       <!-- Header -->

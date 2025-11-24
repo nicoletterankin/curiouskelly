@@ -14,17 +14,24 @@ import {
   trackEvent,
 } from '@/lib/customerio';
 
-const stripe = new Stripe(import.meta.env.STRIPE_SECRET_KEY || '', {
+// Initialize Stripe only if key is present
+const stripeKey = import.meta.env.STRIPE_SECRET_KEY;
+const stripe = stripeKey ? new Stripe(stripeKey, {
   apiVersion: '2024-11-20.acacia',
-});
+}) : null;
 
 export const POST: APIRoute = async ({ request }) => {
   const sig = request.headers.get('stripe-signature');
   const webhookSecret = import.meta.env.STRIPE_WEBHOOK_SECRET;
 
-  if (!sig || !webhookSecret) {
-    console.error('Missing stripe-signature header or webhook secret');
-    return new Response('Webhook Error: Missing signature or secret', { status: 400 });
+  if (!stripe || !webhookSecret) {
+    console.error('Stripe not configured');
+    return new Response('Webhook Error: Service unavailable', { status: 503 });
+  }
+
+  if (!sig) {
+    console.error('Missing stripe-signature header');
+    return new Response('Webhook Error: Missing signature', { status: 400 });
   }
 
   let event: Stripe.Event;

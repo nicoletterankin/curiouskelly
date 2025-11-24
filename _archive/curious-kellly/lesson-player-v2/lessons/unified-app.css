@@ -1,0 +1,569 @@
+/* 
+  CURIOUS KELLY - UNIFIED PRODUCT ARCHITECTURE
+  "The White Room" Design System
+  Inspired by Claude.ai's cleanliness + 3D Presence
+*/
+
+:root {
+    /* Brand Colors */
+    --kelly-primary: #2563eb; /* Royal Blue */
+    --kelly-primary-hover: #1d4ed8;
+    --kelly-accent: #f59e0b; /* Warm Amber for "Curiosity" */
+    
+    /* UI Colors */
+    --bg-glass: rgba(255, 255, 255, 0.85);
+    --bg-glass-heavy: rgba(255, 255, 255, 0.95);
+    --text-main: #1e293b;
+    --text-secondary: #64748b;
+    --border-subtle: rgba(0, 0, 0, 0.06);
+    
+    /* Spacing */
+    --sidebar-width: 280px;
+    
+    /* Transitions */
+    --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+* {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+}
+
+body {
+    height: 100vh;
+    width: 100vw;
+    overflow: hidden;
+    background: #f8fafc; /* Fallback */
+}
+
+/* ==========================================
+   LAYER 1: KELLY VIEWPORT (Persistent)
+   ========================================== */
+.kelly-viewport {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    z-index: 1;
+    background: #ffffff;
+    /* The "White Room" Effect */
+    background: radial-gradient(circle at 60% 40%, #ffffff 0%, #f1f5f9 100%);
+    pointer-events: none; /* Let clicks pass through to UI unless explicitly blocked */
+}
+
+.kelly-stage {
+    position: absolute;
+    /* Positioning Kelly exactly like a conversational partner */
+    bottom: -5%; 
+    right: 5%; /* Slightly offset to right to leave room for text on left/center */
+    width: 50vh; /* Responsive size based on viewport height */
+    height: 80vh;
+    transition: all 0.8s var(--ease-smooth);
+}
+
+/* When Sidebar is open, Kelly shifts slightly */
+body.sidebar-open .kelly-stage {
+    right: -5%;
+}
+
+.kelly-actor {
+    width: 100%;
+    height: 100%;
+    object-fit: contain;
+    filter: drop-shadow(0 20px 40px rgba(0,0,0,0.1));
+    /* Subtle "Life" Animation */
+    animation: breathe 6s ease-in-out infinite;
+    transition: all 0.5s ease;
+}
+
+@keyframes breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.01); }
+}
+
+/* ==========================================
+   LAYER 2: APP INTERFACE
+   ========================================== */
+.app-interface {
+    position: relative;
+    z-index: 10;
+    display: flex;
+    height: 100vh;
+    width: 100%;
+}
+
+/* 2.1 SIDEBAR (Claude-like) */
+.sidebar {
+    width: var(--sidebar-width);
+    background: #f8fafc;
+    border-right: 1px solid var(--border-subtle);
+    display: flex;
+    flex-direction: column;
+    transition: width 0.3s var(--ease-smooth);
+    position: relative;
+}
+
+.sidebar.collapsed {
+    width: 0; /* Fully hide for the "Immersive" marketing look */
+    overflow: hidden;
+    border: none;
+}
+
+.sidebar-header {
+    padding: 20px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+}
+
+.brand {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    font-weight: 700;
+    color: var(--text-main);
+    font-size: 18px;
+}
+
+.sidebar-toggle {
+    background: none;
+    border: none;
+    cursor: pointer;
+    color: var(--text-secondary);
+}
+
+.sidebar-content {
+    flex: 1;
+    overflow-y: auto;
+    padding: 0 16px;
+}
+
+.user-profile-card {
+    background: white;
+    border: 1px solid var(--border-subtle);
+    border-radius: 12px;
+    padding: 12px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 24px;
+}
+
+.avatar-circle {
+    width: 40px;
+    height: 40px;
+    background: var(--kelly-accent);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: white;
+    font-weight: 700;
+    font-size: 14px;
+}
+
+.streak-badge {
+    font-size: 12px;
+    color: var(--kelly-accent);
+    font-weight: 600;
+}
+
+.nav-section {
+    margin-bottom: 24px;
+}
+
+.nav-label {
+    text-transform: uppercase;
+    font-size: 11px;
+    font-weight: 700;
+    color: var(--text-secondary);
+    margin-bottom: 8px;
+    padding-left: 8px;
+}
+
+.nav-item {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    padding: 10px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text-main);
+    transition: background 0.2s;
+    font-size: 14px;
+}
+
+.nav-item:hover {
+    background: rgba(0,0,0,0.04);
+}
+
+.nav-item.active {
+    background: #e0e7ff; /* Light blue tint */
+    color: var(--kelly-primary);
+    font-weight: 500;
+}
+
+.nav-icon {
+    width: 20px;
+    text-align: center;
+}
+
+.sidebar-footer {
+    padding: 20px;
+    border-top: 1px solid var(--border-subtle);
+    font-size: 12px;
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+}
+
+.footer-link {
+    color: var(--text-secondary);
+    text-decoration: none;
+}
+
+.footer-link:hover {
+    text-decoration: underline;
+}
+
+/* 2.2 MAIN STAGE */
+.main-stage {
+    flex: 1;
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    /* Ensure content sits above Kelly */
+}
+
+.top-bar {
+    padding: 20px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.mobile-menu-btn {
+    background: white;
+    border: 1px solid var(--border-subtle);
+    width: 40px;
+    height: 40px;
+    border-radius: 8px;
+    font-size: 20px;
+    cursor: pointer;
+    display: none; /* Hidden on desktop */
+}
+
+.context-pill {
+    background: var(--bg-glass);
+    backdrop-filter: blur(10px);
+    padding: 6px 16px;
+    border-radius: 20px;
+    font-size: 13px;
+    color: var(--text-secondary);
+    border: 1px solid var(--border-subtle);
+    box-shadow: 0 2px 10px rgba(0,0,0,0.03);
+}
+
+/* INTERACTION CONTAINER */
+.interaction-container {
+    flex: 1;
+    display: flex;
+    align-items: center; /* Vertically center */
+    justify-content: center; /* Horizontally center (or left align) */
+    padding: 40px;
+    position: relative;
+}
+
+/* STATE 1: GREETING */
+.interaction-state {
+    display: none;
+    max-width: 600px;
+    width: 100%;
+    opacity: 0;
+    transform: translateY(20px);
+    transition: all 0.4s var(--ease-smooth);
+}
+
+.interaction-state.active {
+    display: block;
+    opacity: 1;
+    transform: translateY(0);
+}
+
+.greeting-title {
+    font-size: 48px;
+    font-weight: 800;
+    color: var(--text-main);
+    margin-bottom: 16px;
+    letter-spacing: -1px;
+    line-height: 1.1;
+}
+
+.greeting-subtitle {
+    font-size: 24px;
+    color: var(--text-secondary);
+    margin-bottom: 40px;
+    font-weight: 300;
+}
+
+.action-card {
+    background: white;
+    padding: 8px; /* Thin padding like Claude's input area */
+    border-radius: 16px;
+    box-shadow: 0 8px 30px rgba(0,0,0,0.08);
+    border: 1px solid var(--border-subtle);
+}
+
+.action-input-mock {
+    display: flex;
+    gap: 12px;
+    align-items: center;
+}
+
+.btn-primary-large {
+    background: var(--kelly-primary);
+    color: white;
+    border: none;
+    padding: 16px 32px;
+    border-radius: 12px;
+    font-size: 18px;
+    font-weight: 600;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    transition: all 0.2s;
+    flex-shrink: 0;
+}
+
+.btn-primary-large:hover {
+    background: var(--kelly-primary-hover);
+    transform: translateY(-1px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.2);
+}
+
+.secondary-actions {
+    flex: 1;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.btn-text {
+    background: none;
+    border: none;
+    color: var(--text-secondary);
+    font-size: 14px;
+    cursor: pointer;
+    padding: 8px;
+}
+
+.btn-text:hover {
+    color: var(--text-main);
+}
+
+.pricing-micro-copy {
+    margin-top: 12px;
+    text-align: center;
+    font-size: 12px;
+    color: #94a3b8;
+}
+
+/* LESSON INTERFACE */
+.lesson-card {
+    background: var(--bg-glass-heavy);
+    backdrop-filter: blur(20px);
+    border-radius: 24px;
+    padding: 32px;
+    box-shadow: 0 12px 40px rgba(0,0,0,0.12);
+    border: 1px solid rgba(255,255,255,0.5);
+    max-width: 640px;
+    width: 100%;
+    margin: 0 auto;
+    transform: translateY(20px);
+    opacity: 0;
+}
+
+.lesson-card.animate-in {
+    transform: translateY(0);
+    opacity: 1;
+    transition: all 0.4s var(--ease-smooth);
+}
+
+.lesson-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 24px;
+}
+
+.phase-dots {
+    display: flex;
+    gap: 8px;
+}
+
+.dot {
+    width: 8px;
+    height: 8px;
+    background: rgba(0,0,0,0.1);
+    border-radius: 50%;
+}
+
+.dot.active {
+    background: var(--kelly-primary);
+    transform: scale(1.2);
+}
+
+.lesson-question {
+    font-size: 24px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin-bottom: 32px;
+    line-height: 1.3;
+}
+
+.lesson-text {
+    font-size: 18px;
+    line-height: 1.6;
+    color: var(--text-main);
+    margin-bottom: 32px;
+}
+
+.options-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+}
+
+.option-card {
+    background: white;
+    border: 1px solid var(--border-subtle);
+    padding: 20px;
+    border-radius: 16px;
+    font-size: 16px;
+    color: var(--text-main);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: left;
+}
+
+.option-card:hover {
+    border-color: var(--kelly-primary);
+    background: #eff6ff;
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(37, 99, 235, 0.1);
+}
+
+/* CALENDAR OVERLAY */
+.calendar-overlay {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: var(--bg-glass-heavy);
+    backdrop-filter: blur(20px);
+    z-index: 100;
+    display: none;
+    flex-direction: column;
+    padding: 40px;
+}
+
+.calendar-overlay.active {
+    display: flex;
+}
+
+.overlay-header {
+    display: flex;
+    justify-content: space-between;
+    margin-bottom: 20px;
+}
+
+.btn-secondary {
+    background: white;
+    border: 1px solid var(--border-subtle);
+    padding: 12px;
+    border-radius: 8px;
+    cursor: pointer;
+    color: var(--text-main);
+    font-weight: 500;
+}
+
+.full-width {
+    width: 100%;
+}
+
+/* Calendar Mock Grid */
+.calendar-grid-mock {
+    display: grid;
+    grid-template-columns: repeat(7, 1fr);
+    gap: 10px;
+    padding: 20px;
+}
+
+.day-cell {
+    aspect-ratio: 1;
+    background: white;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-weight: 600;
+    border: 1px solid var(--border-subtle);
+    position: relative;
+}
+
+.day-cell.completed {
+    background: #ecfccb; /* Light green */
+    color: #365314;
+    border-color: #84cc16;
+}
+
+.day-cell.today {
+    border: 2px solid var(--kelly-primary);
+}
+
+.check {
+    position: absolute;
+    top: 4px;
+    right: 4px;
+    font-size: 10px;
+}
+
+/* Mobile Responsive */
+@media (max-width: 768px) {
+    .sidebar {
+        position: fixed;
+        z-index: 100;
+        height: 100%;
+        transform: translateX(-100%);
+    }
+    
+    .sidebar.open {
+        transform: translateX(0);
+    }
+    
+    .mobile-menu-btn {
+        display: block;
+    }
+    
+    .kelly-stage {
+        width: 40vh;
+        right: -10%; /* Move Kelly more offscreen on mobile */
+        opacity: 0.5; /* Fade her out so text is readable */
+    }
+    
+    .greeting-title {
+        font-size: 32px;
+    }
+    
+    .action-input-mock {
+        flex-direction: column;
+        align-items: stretch;
+    }
+    
+    .options-grid {
+        grid-template-columns: 1fr;
+    }
+}
