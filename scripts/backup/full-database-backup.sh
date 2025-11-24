@@ -161,30 +161,84 @@ configure_s3_client() {
 upload_to_r2() {
     log "Uploading backup to Cloudflare R2..."
     
+    # Verify AWS CLI is configured
+    if ! command -v aws &> /dev/null; then
+        error "AWS CLI is not installed or not in PATH"
+        exit 1
+    fi
+    
+    # Verify credentials are set
+    if [[ -z "${AWS_ACCESS_KEY_ID:-}" ]] || [[ -z "${AWS_SECRET_ACCESS_KEY:-}" ]]; then
+        error "AWS credentials not set. Check CLOUDFLARE_R2_ACCESS_KEY and CLOUDFLARE_R2_SECRET_KEY"
+        exit 1
+    fi
+    
     local s3_path="s3://${CLOUDFLARE_R2_BUCKET}/daily/${BACKUP_FILENAME_GZ}"
     
-    if aws s3 cp \
+    log "Uploading to: $s3_path"
+    log "Endpoint: $CLOUDFLARE_R2_ENDPOINT"
+    log "Bucket: $CLOUDFLARE_R2_BUCKET"
+    
+    # Upload with explicit error handling
+    local upload_output
+    upload_output=$(aws s3 cp \
         "$BACKUP_DIR/$BACKUP_FILENAME_GZ" \
         "$s3_path" \
         --endpoint-url "$CLOUDFLARE_R2_ENDPOINT" \
-        --no-progress 2>&1; then
+        --no-progress 2>&1)
+    local upload_exit_code=$?
+    
+    if [[ $upload_exit_code -eq 0 ]]; then
         log "✓ Backup uploaded to R2: $s3_path"
+        log "Upload output: $upload_output"
     else
-        error "Upload to R2 failed"
+        error "Upload to R2 failed with exit code: $upload_exit_code"
+        error "AWS CLI output: $upload_output"
+        error "Check R2 credentials and endpoint URL"
         exit 1
     fi
     
     # Upload schema file (uncompressed for easy viewing)
     local schema_s3_path="s3://${CLOUDFLARE_R2_BUCKET}/daily/${SCHEMA_FILENAME}"
     
-    if aws s3 cp \
+    log "Uploading schema to: $schema_s3_path"
+    
+    local schema_upload_output
+    schema_upload_output=$(aws s3 cp \
         "$BACKUP_DIR/$SCHEMA_FILENAME" \
         "$schema_s3_path" \
         --endpoint-url "$CLOUDFLARE_R2_ENDPOINT" \
-        --no-progress 2>&1; then
+        --no-progress 2>&1)
+    local schema_upload_exit_code=$?
+    
+    if [[ $schema_upload_exit_code -eq 0 ]]; then
         log "✓ Schema uploaded to R2: $schema_s3_path"
     else
-        warn "Schema upload failed (non-critical)"
+        warn "Schema upload failed (non-critical) - exit code: $schema_upload_exit_code"
+        warn "AWS CLI output: $schema_upload_output"
+    fi
+    
+    # Verify upload succeeded by listing R2 bucket
+    log "Verifying upload by listing R2 bucket contents..."
+    local verify_output
+    verify_output=$(aws s3 ls "s3://${CLOUDFLARE_R2_BUCKET}/daily/" --endpoint-url "$CLOUDFLARE_R2_ENDPOINT" 2>&1)
+    local verify_exit_code=$?
+    
+    if [[ $verify_exit_code -eq 0 ]]; then
+        log "✓ R2 bucket listing successful:"
+        echo "$verify_output" | while read -r line; do
+            log "  $line"
+        done
+        
+        # Check if our file is in the list
+        if echo "$verify_output" | grep -q "$BACKUP_FILENAME_GZ"; then
+            log "✓ Confirmed: Backup file is in R2 bucket"
+        else
+            error "⚠ WARNING: Backup file not found in R2 bucket listing!"
+            error "This may indicate an upload failure despite success code"
+        fi
+    else
+        warn "Could not verify upload (listing failed): $verify_output"
     fi
 }
 
