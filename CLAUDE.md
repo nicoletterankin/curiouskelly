@@ -112,6 +112,8 @@ The project uses a "Unified Aquarium" architecture where `index.astro` serves as
 - See: `60FPS_SETUP_GUIDE.md`; `TECHNICAL_ALIGNMENT_MATRIX.md` → “Avatar Rendering.”
 
 ### Integrations and environment constraints
+- Supabase is the primary database for users and dynamic content. Schema: `docs/backend/SUPABASE_SCHEMA.md`.
+- Use Supabase MCP for context where possible (`docs/backend/SUPABASE_MCP_SETUP.md`).
 - ElevenLabs for high‑quality synthesis; match Kelly/Kyle training personas.
 - NVIDIA Audio2Face and iClone pipelines require proper GPU/driver setup.
 - Cloudflare/Vercel deployment as configured; do not alter without approval.

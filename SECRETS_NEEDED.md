@@ -39,3 +39,8 @@ Required for sending login links and gift notifications.
 3. Add the PostgreSQL plugin.
 4. Paste these variables into the "Variables" tab.
 
+
+
+
+
+

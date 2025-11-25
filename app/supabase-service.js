@@ -1,8 +1,53 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-// Credentials from production setup
-const SUPABASE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcnp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE5NjI3NTcsImV4cCI6MjA0NzUzODc1N30.kLMlC14ckEp-XoL8RX5liw_cMdGs8lR';
+/**
+ * Supabase Service - Browser-compatible client
+ * 
+ * Credentials are loaded from:
+ * 1. Window config (set by hosting page)
+ * 2. Environment variables (for Node.js/SSR)
+ * 3. Default fallback (development only - NEVER commit real keys)
+ */
+
+// Try multiple sources for credentials
+const getSupabaseUrl = () => {
+  // Window config (set in HTML or by build process)
+  if (typeof window !== 'undefined' && window.SUPABASE_URL) {
+    return window.SUPABASE_URL;
+  }
+  // Environment variables (Node.js/build time)
+  if (typeof process !== 'undefined' && process.env?.PUBLIC_SUPABASE_URL) {
+    return process.env.PUBLIC_SUPABASE_URL;
+  }
+  // Import meta env (Vite/Astro)
+  if (typeof import.meta !== 'undefined' && import.meta.env?.PUBLIC_SUPABASE_URL) {
+    return import.meta.env.PUBLIC_SUPABASE_URL;
+  }
+  // Fallback for development (should be replaced in production)
+  console.warn('[SupabaseService] Using fallback URL - configure window.SUPABASE_URL for production');
+  return 'https://tvjalxxsyryjphkforjv.supabase.co';
+};
+
+const getSupabaseKey = () => {
+  // Window config
+  if (typeof window !== 'undefined' && window.SUPABASE_ANON_KEY) {
+    return window.SUPABASE_ANON_KEY;
+  }
+  // Environment variables
+  if (typeof process !== 'undefined' && process.env?.PUBLIC_SUPABASE_ANON_KEY) {
+    return process.env.PUBLIC_SUPABASE_ANON_KEY;
+  }
+  // Import meta env
+  if (typeof import.meta !== 'undefined' && import.meta.env?.PUBLIC_SUPABASE_ANON_KEY) {
+    return import.meta.env.PUBLIC_SUPABASE_ANON_KEY;
+  }
+  // Fallback for development
+  console.warn('[SupabaseService] Using fallback key - configure window.SUPABASE_ANON_KEY for production');
+  return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcnp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE5NjI3NTcsImV4cCI6MjA0NzUzODc1N30.kLMlC14ckEp-XoL8RX5liw_cMdGs8lR';
+};
+
+const SUPABASE_URL = getSupabaseUrl();
+const SUPABASE_KEY = getSupabaseKey();
 
 class SupabaseService {
   constructor() {

@@ -1,0 +1,459 @@
+/**
+ * Kelly Avatar Animation System - CSS Styles
+ * 
+ * Smooth, delightful animations for the 5-phase learning journey.
+ * Optimized for 60fps performance.
+ */
+
+/* ============================================================================
+   AVATAR WRAPPER
+   ============================================================================ */
+
+.kelly-avatar-wrapper {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  overflow: hidden;
+  transform-origin: center center;
+  will-change: transform;
+}
+
+/* Subtle floating animation for life */
+.kelly-avatar-wrapper {
+  animation: kelly-float 6s ease-in-out infinite;
+}
+
+@keyframes kelly-float {
+  0%, 100% { 
+    transform: translateY(0px) scale(1); 
+  }
+  50% { 
+    transform: translateY(-8px) scale(1.01); 
+  }
+}
+
+/* ============================================================================
+   IMAGE LAYER
+   ============================================================================ */
+
+.kelly-image-layer {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 1;
+}
+
+.kelly-base-image {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+  transition: opacity 0.3s ease-in-out, transform 0.6s cubic-bezier(0.34, 1.56, 0.64, 1);
+  will-change: opacity, transform;
+}
+
+/* ============================================================================
+   SVG EFFECTS OVERLAY
+   ============================================================================ */
+
+.kelly-effects-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  z-index: 2;
+  pointer-events: none;
+  overflow: visible;
+}
+
+/* Breathing aura pulse */
+.breathing-aura {
+  transform-origin: center;
+  transition: fill 0.5s ease;
+}
+
+/* Blink overlay smooth transitions */
+.blink-overlay {
+  transition: opacity 0.1s ease-in-out;
+}
+
+/* Speaking indicator pulse */
+.speaking-indicator {
+  transition: opacity 0.3s ease;
+}
+
+/* Celebration sparkles */
+.celebration-sparkles {
+  transition: opacity 0.5s ease;
+}
+
+.celebration-sparkles .sparkle {
+  filter: drop-shadow(0 0 8px rgba(255, 215, 0, 0.8));
+}
+
+/* Thinking dots */
+.thinking-dots {
+  transition: opacity 0.4s ease;
+}
+
+/* Age transition shimmer */
+.age-transition-shimmer {
+  transition: opacity 0.5s ease;
+}
+
+/* ============================================================================
+   PHASE-SPECIFIC STYLES
+   ============================================================================ */
+
+/* Welcome Phase - Inviting and warm */
+.kelly-avatar-wrapper[data-phase="welcome"] .kelly-base-image {
+  animation: kelly-welcome-glow 3s ease-in-out infinite;
+}
+
+@keyframes kelly-welcome-glow {
+  0%, 100% { filter: brightness(1) contrast(1); }
+  50% { filter: brightness(1.05) contrast(1.02); }
+}
+
+/* Question Phases - Curious and engaged */
+.kelly-avatar-wrapper[data-phase^="q"] .kelly-base-image {
+  animation: kelly-curious-tilt 4s ease-in-out infinite;
+}
+
+@keyframes kelly-curious-tilt {
+  0%, 100% { transform: rotate(0deg) scale(1); }
+  25% { transform: rotate(-0.5deg) scale(1.01); }
+  75% { transform: rotate(0.5deg) scale(1.01); }
+}
+
+/* Reaction Phases - Celebratory (choice B) */
+.kelly-avatar-wrapper[data-phase$="reaction_b"] {
+  animation: kelly-celebrate-bounce 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes kelly-celebrate-bounce {
+  0% { transform: scale(1) rotate(0deg); }
+  30% { transform: scale(1.1) rotate(-5deg); }
+  60% { transform: scale(1.05) rotate(5deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+/* Reaction Phases - Explaining (choice A) */
+.kelly-avatar-wrapper[data-phase$="reaction_a"] {
+  animation: kelly-explain-nod 1s ease-in-out;
+}
+
+@keyframes kelly-explain-nod {
+  0%, 100% { transform: translateY(0); }
+  25% { transform: translateY(-5px); }
+  50% { transform: translateY(0); }
+  75% { transform: translateY(-3px); }
+}
+
+/* Wisdom Phase - Serene and profound */
+.kelly-avatar-wrapper[data-phase="wisdom"] {
+  animation: kelly-wisdom-glow 5s ease-in-out infinite;
+}
+
+@keyframes kelly-wisdom-glow {
+  0%, 100% { 
+    filter: brightness(1) saturate(1);
+    transform: scale(1);
+  }
+  50% { 
+    filter: brightness(1.08) saturate(1.1);
+    transform: scale(1.02);
+  }
+}
+
+/* ============================================================================
+   INTERACTION STATES
+   ============================================================================ */
+
+/* Hover effect (if interactive) */
+.kelly-avatar-wrapper:hover {
+  animation-play-state: paused;
+  cursor: pointer;
+}
+
+.kelly-avatar-wrapper:hover .kelly-base-image {
+  transform: scale(1.02);
+  transition: transform 0.3s ease;
+}
+
+/* Active/Click effect */
+.kelly-avatar-wrapper:active {
+  animation: kelly-pop 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+@keyframes kelly-pop {
+  0% { transform: scale(1); }
+  50% { transform: scale(0.95); }
+  100% { transform: scale(1); }
+}
+
+/* ============================================================================
+   POSE-SPECIFIC ENHANCEMENTS
+   ============================================================================ */
+
+/* Curious pose - slight head tilt effect */
+.kelly-base-image[data-pose="curious"] {
+  animation: subtle-curiosity 8s ease-in-out infinite;
+}
+
+@keyframes subtle-curiosity {
+  0%, 100% { transform: rotate(0deg); }
+  50% { transform: rotate(-1deg); }
+}
+
+/* Celebrating pose - bounce and shine */
+.kelly-base-image[data-pose="celebrating"] {
+  animation: celebrate-shine 1.5s ease-out;
+  filter: brightness(1.1) saturate(1.2);
+}
+
+@keyframes celebrate-shine {
+  0% { 
+    transform: scale(1) rotate(0deg);
+    filter: brightness(1) saturate(1);
+  }
+  25% { 
+    transform: scale(1.08) rotate(-3deg);
+    filter: brightness(1.2) saturate(1.3);
+  }
+  50% { 
+    transform: scale(1.05) rotate(3deg);
+    filter: brightness(1.15) saturate(1.25);
+  }
+  100% { 
+    transform: scale(1) rotate(0deg);
+    filter: brightness(1.1) saturate(1.2);
+  }
+}
+
+/* Explaining pose - gentle nod rhythm */
+.kelly-base-image[data-pose="explaining"] {
+  animation: explain-nod 3s ease-in-out infinite;
+}
+
+@keyframes explain-nod {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+/* Listening pose - attentive lean */
+.kelly-base-image[data-pose="listening"] {
+  animation: listen-lean 5s ease-in-out infinite;
+}
+
+@keyframes listen-lean {
+  0%, 100% { transform: translateX(0); }
+  50% { transform: translateX(5px); }
+}
+
+/* Wisdom pose - gentle radiance */
+.kelly-base-image[data-pose="wisdom"] {
+  animation: wisdom-radiance 6s ease-in-out infinite;
+  filter: brightness(1.05) contrast(1.02);
+}
+
+@keyframes wisdom-radiance {
+  0%, 100% { filter: brightness(1.05) contrast(1.02) saturate(1); }
+  50% { filter: brightness(1.1) contrast(1.05) saturate(1.1); }
+}
+
+/* ============================================================================
+   AGE TRANSITIONS
+   ============================================================================ */
+
+/* Smooth cross-fade for age changes */
+.kelly-base-image[data-age] {
+  transition: opacity 0.6s ease-in-out;
+}
+
+/* Age-specific subtle adjustments */
+.kelly-base-image[data-age="3"],
+.kelly-base-image[data-age="9"] {
+  /* Younger Kelly - slightly more energetic float */
+  animation: kelly-float 4s ease-in-out infinite;
+}
+
+.kelly-base-image[data-age="82"] {
+  /* Elder Kelly - slower, more serene float */
+  animation: kelly-float 8s ease-in-out infinite;
+}
+
+/* ============================================================================
+   SPEAKING STATE
+   ============================================================================ */
+
+/* When Kelly is speaking, add subtle movement */
+.kelly-avatar-wrapper.is-speaking .kelly-base-image {
+  animation: kelly-speaking 0.8s ease-in-out infinite;
+}
+
+@keyframes kelly-speaking {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.015); }
+}
+
+.kelly-avatar-wrapper.is-speaking .speaking-indicator {
+  opacity: 1 !important;
+}
+
+/* ============================================================================
+   LOADING STATES
+   ============================================================================ */
+
+.kelly-avatar-wrapper.is-loading .kelly-base-image {
+  animation: kelly-loading-pulse 1.5s ease-in-out infinite;
+}
+
+@keyframes kelly-loading-pulse {
+  0%, 100% { opacity: 0.7; }
+  50% { opacity: 1; }
+}
+
+/* ============================================================================
+   ACCESSIBILITY & PERFORMANCE
+   ============================================================================ */
+
+/* Respect user's motion preferences */
+@media (prefers-reduced-motion: reduce) {
+  .kelly-avatar-wrapper,
+  .kelly-base-image,
+  .breathing-aura,
+  .speaking-indicator,
+  .celebration-sparkles,
+  .thinking-dots {
+    animation: none !important;
+    transition: opacity 0.2s ease, transform 0.2s ease;
+  }
+  
+  /* Keep only essential state transitions */
+  .kelly-avatar-wrapper[data-phase$="reaction_b"] {
+    animation: none;
+    transform: scale(1.02);
+  }
+}
+
+/* GPU acceleration hints */
+.kelly-avatar-wrapper,
+.kelly-base-image,
+.kelly-effects-overlay {
+  transform: translateZ(0);
+  backface-visibility: hidden;
+  perspective: 1000px;
+}
+
+/* ============================================================================
+   RESPONSIVE ADJUSTMENTS
+   ============================================================================ */
+
+@media (max-width: 768px) {
+  /* Slightly reduced animation intensity on mobile */
+  @keyframes kelly-float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-4px); }
+  }
+  
+  .kelly-avatar-wrapper:hover .kelly-base-image {
+    transform: none; /* Disable hover effects on touch */
+  }
+}
+
+/* ============================================================================
+   DEBUG MODE
+   ============================================================================ */
+
+.kelly-state-debug {
+  position: absolute;
+  top: 10px;
+  left: 10px;
+  background: rgba(0, 0, 0, 0.8);
+  color: #00ff00;
+  padding: 8px 12px;
+  border-radius: 4px;
+  font-family: 'Courier New', monospace;
+  font-size: 12px;
+  z-index: 9999;
+  pointer-events: none;
+}
+
+.kelly-state-debug span {
+  display: block;
+  margin: 2px 0;
+}
+
+.kelly-state-debug strong {
+  color: #ffff00;
+}
+
+/* Show debug when ?debug=true in URL */
+body[data-debug="true"] .kelly-state-debug {
+  display: block !important;
+}
+
+/* ============================================================================
+   TRANSITION EFFECTS
+   ============================================================================ */
+
+/* Phase transition shimmer */
+@keyframes phase-transition-shimmer {
+  0% { transform: translateX(-100%); opacity: 0; }
+  50% { opacity: 0.3; }
+  100% { transform: translateX(200%); opacity: 0; }
+}
+
+.kelly-avatar-wrapper.transitioning::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    transparent 100%
+  );
+  animation: phase-transition-shimmer 1s ease-out;
+  pointer-events: none;
+  z-index: 10;
+}
+
+/* ============================================================================
+   CHOICE FEEDBACK ANIMATIONS
+   ============================================================================ */
+
+/* Hot (Choice A - Explaining) */
+.kelly-avatar-wrapper.choice-a-selected {
+  animation: choice-a-feedback 0.4s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes choice-a-feedback {
+  0% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+  100% { transform: scale(1); }
+}
+
+/* Not (Choice B - Celebrating) */
+.kelly-avatar-wrapper.choice-b-selected {
+  animation: choice-b-feedback 0.6s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+}
+
+@keyframes choice-b-feedback {
+  0% { transform: scale(1) rotate(0deg); }
+  25% { transform: scale(1.08) rotate(-5deg); }
+  50% { transform: scale(1.1) rotate(3deg); }
+  75% { transform: scale(1.05) rotate(-2deg); }
+  100% { transform: scale(1) rotate(0deg); }
+}
+
+
+
+

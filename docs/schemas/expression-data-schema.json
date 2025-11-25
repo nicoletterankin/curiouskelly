@@ -1,0 +1,334 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://curiouskelly.com/schemas/expression-data.json",
+  "title": "Curious Kelly Expression Data",
+  "description": "Schema for AI-generated facial expressions and gestures",
+  "type": "object",
+  "required": ["metadata", "expressions", "gestures"],
+  "properties": {
+    "metadata": {
+      "type": "object",
+      "description": "Generation metadata and configuration",
+      "required": ["archetype", "ageBucket", "phase", "totalDuration", "generatedAt", "version"],
+      "properties": {
+        "archetype": {
+          "type": "string",
+          "enum": [
+            "The Scientist",
+            "The Explorer",
+            "The Storyteller",
+            "The Empath",
+            "The Mystic",
+            "The Provider",
+            "The Diplomat",
+            "The Architect",
+            "The Rebel",
+            "The Strategist",
+            "The MacGyver",
+            "The Survivor"
+          ],
+          "description": "One of the 12 Curious Kelly archetypes"
+        },
+        "tone": {
+          "type": "string",
+          "enum": ["enthusiastic", "serious", "playful", "thoughtful", "warm", "confident"],
+          "description": "Expression tone modifier"
+        },
+        "ageBucket": {
+          "type": "string",
+          "enum": ["2-5", "6-12", "13-17", "18-35", "36-60", "61-102"],
+          "description": "Target age group"
+        },
+        "language": {
+          "type": "string",
+          "enum": ["en", "es", "fr"],
+          "default": "en",
+          "description": "Language code (ISO 639-1)"
+        },
+        "phase": {
+          "type": "string",
+          "enum": ["welcome", "q1", "q2", "q3", "wisdom", "teaching", "practice", "synthesis"],
+          "description": "Lesson phase"
+        },
+        "totalDuration": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Total audio duration in seconds"
+        },
+        "generatedAt": {
+          "type": "string",
+          "format": "date-time",
+          "description": "ISO 8601 generation timestamp"
+        },
+        "version": {
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+$",
+          "description": "Schema version (semver)"
+        }
+      }
+    },
+    "expressions": {
+      "type": "array",
+      "description": "Array of timestamped expression keyframes",
+      "items": {
+        "$ref": "#/definitions/expression"
+      }
+    },
+    "gestures": {
+      "type": "array",
+      "description": "Array of timestamped gesture commands",
+      "items": {
+        "$ref": "#/definitions/gesture"
+      }
+    },
+    "blendShapeTimeline": {
+      "type": "array",
+      "description": "Unity-ready blend shape timeline with interpolation",
+      "items": {
+        "$ref": "#/definitions/blendShapeKeyframe"
+      }
+    },
+    "textAnalysis": {
+      "type": "object",
+      "description": "Summary of text analysis results",
+      "properties": {
+        "overallMood": {
+          "type": "string",
+          "description": "Dominant mood detected"
+        },
+        "emotionCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of emotion triggers detected"
+        },
+        "pauseCount": {
+          "type": "integer",
+          "minimum": 0,
+          "description": "Number of pause points detected"
+        }
+      }
+    }
+  },
+  "definitions": {
+    "expression": {
+      "type": "object",
+      "required": ["timestamp", "emotion", "intensity", "blendShapes"],
+      "properties": {
+        "timestamp": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Time in seconds from audio start"
+        },
+        "emotion": {
+          "type": "string",
+          "enum": [
+            "neutral",
+            "warm",
+            "excited",
+            "curious",
+            "emphatic",
+            "amused",
+            "awed",
+            "encouraging",
+            "challenging",
+            "compassionate",
+            "contemplative",
+            "dramatic",
+            "serene",
+            "insightful",
+            "proud",
+            "triumphant",
+            "skeptical"
+          ],
+          "description": "Emotion type"
+        },
+        "intensity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "description": "Emotion intensity (0.0 to 1.0)"
+        },
+        "blendShapes": {
+          "$ref": "#/definitions/blendShapes"
+        },
+        "trigger": {
+          "type": "string",
+          "description": "Text that triggered this expression"
+        },
+        "transitionDuration": {
+          "type": "number",
+          "minimum": 0,
+          "default": 0.3,
+          "description": "Transition duration in seconds"
+        }
+      }
+    },
+    "gesture": {
+      "type": "object",
+      "required": ["timestamp", "gesture", "duration"],
+      "properties": {
+        "timestamp": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Time in seconds from audio start"
+        },
+        "gesture": {
+          "type": "string",
+          "description": "Gesture animation name",
+          "examples": [
+            "chin_touch",
+            "glasses_adjust",
+            "point_up_dramatic",
+            "arms_wide_open",
+            "hands_flowing",
+            "heart_open",
+            "hands_prayer_position",
+            "open_arms_welcome",
+            "balance_hands",
+            "building_blocks",
+            "fist_pump",
+            "chess_move",
+            "assembling",
+            "grounding_stance"
+          ]
+        },
+        "duration": {
+          "type": "number",
+          "minimum": 0.1,
+          "description": "Gesture duration in seconds"
+        },
+        "intensity": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 1,
+          "default": 0.5,
+          "description": "Gesture intensity (0.0 to 1.0)"
+        },
+        "context": {
+          "type": "string",
+          "enum": [
+            "phase_opening",
+            "thinking",
+            "emphasis",
+            "pause",
+            "periodic",
+            "discovery",
+            "emotional",
+            "transition"
+          ],
+          "description": "Context that triggered the gesture"
+        }
+      }
+    },
+    "blendShapes": {
+      "type": "object",
+      "description": "ARKit-compatible blend shape values (0-100)",
+      "additionalProperties": {
+        "type": "number",
+        "minimum": 0,
+        "maximum": 100
+      },
+      "properties": {
+        "smile": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Mouth corners up"
+        },
+        "eyebrowRaise": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Eyebrows raised"
+        },
+        "eyesWide": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Eyes opened wide"
+        },
+        "eyesClosed": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Eyes closed"
+        },
+        "eyeSquint": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Eyes squinted"
+        },
+        "mouthOpen": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Jaw dropped"
+        },
+        "cheekRaise": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Cheeks raised (smile helper)"
+        },
+        "headTilt": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Head tilted to side"
+        },
+        "nod": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Head nodding down"
+        },
+        "lipsPursed": {
+          "type": "number",
+          "minimum": 0,
+          "maximum": 100,
+          "description": "Lips pushed forward"
+        }
+      }
+    },
+    "blendShapeKeyframe": {
+      "type": "object",
+      "required": ["timestamp", "blendShapes"],
+      "properties": {
+        "timestamp": {
+          "type": "number",
+          "minimum": 0,
+          "description": "Time in seconds"
+        },
+        "blendShapes": {
+          "$ref": "#/definitions/blendShapes"
+        },
+        "transitionDuration": {
+          "type": "number",
+          "minimum": 0,
+          "default": 0.3,
+          "description": "Transition duration in seconds"
+        },
+        "easing": {
+          "type": "string",
+          "enum": [
+            "linear",
+            "ease-in",
+            "ease-out",
+            "ease-in-out",
+            "ease-out-bounce"
+          ],
+          "default": "ease-in-out",
+          "description": "Easing function for transition"
+        },
+        "isInterpolated": {
+          "type": "boolean",
+          "default": false,
+          "description": "Whether this is an auto-generated interpolation keyframe"
+        }
+      }
+    }
+  }
+}
+
+

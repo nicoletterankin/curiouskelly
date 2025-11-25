@@ -43,3 +43,8 @@ Return a single JSON object:
     *   "Hook": "Whoa, the barista can only pull so many shots at once!"
     *   "Body": "Think of it like the morning rush. If everyone orders a Frappuccino at the exact same second, the machine jams. We have to line up and take tickets so everyone gets their caffeine without the shop burning down."
 
+
+
+
+
+

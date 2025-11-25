@@ -59,3 +59,8 @@ To achieve the "OS Wallpaper" feel, we must eliminate "Web Page Scrolling" entir
 2. Refactor `index.html` to be a non-scrolling "Portal".
 3. Convert `about`, `careers`, etc., into "Content Windows" overlaying the portal.
 
+
+
+
+
+

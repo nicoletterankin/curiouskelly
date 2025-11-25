@@ -1,8 +1,17 @@
 [build]
-  command = "npm run build"
-  publish = "dist"
+  # Deploy public/index.html as the homepage of curiouskelly.com
+  # Configure Git to skip LFS before any operations
+  # This must run early to prevent LFS errors during clone
+  command = "git config --global lfs.fetchexclude '*' && git lfs install --skip-smudge || true"
+  publish = "public"
+
+[build.environment]
+  # Skip Git LFS smudge filter to prevent LFS download errors
+  # This tells Git to skip downloading LFS objects (like .ccProject files)
+  GIT_LFS_SKIP_SMUDGE = "1"
 
 [functions]
+  # Functions are at root level: functions/netlify
   directory = "functions/netlify"
 
 [[redirects]]
@@ -12,10 +21,28 @@
   force = true
 
 [[redirects]]
-  from = "/api/rum"
-  to = "/.netlify/functions/rum"
-  status = 200
-  force = true
+from = "/api/rum"
+to = "/.netlify/functions/rum"
+status = 200
+force = true
+
+[[redirects]]
+from = "/api/stripe-checkout"
+to = "/.netlify/functions/stripe-checkout"
+status = 200
+force = true
+
+[[redirects]]
+from = "/api/stripe-session"
+to = "/.netlify/functions/stripe-session"
+status = 200
+force = true
+
+[[redirects]]
+from = "/api/waitlist"
+to = "/.netlify/functions/waitlist"
+status = 200
+force = true
 
 
 

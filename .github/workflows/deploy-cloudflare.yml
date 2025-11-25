@@ -24,17 +24,22 @@ jobs:
           ref: ${{ github.event.inputs.branch }}
           lfs: false
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9.9.0
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
-          cache: 'npm'
+          node-version: 20
+          cache: 'pnpm'
 
       - name: Install dependencies
-        run: npm install
+        run: pnpm install
 
       - name: Build
-        run: npm run build
+        run: pnpm run build
         env:
           PUBLIC_SITE_URL: ${{ secrets.PUBLIC_SITE_URL || 'https://curiouskelly.com' }}
 

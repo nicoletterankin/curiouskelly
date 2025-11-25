@@ -74,3 +74,8 @@ assets/social-media/
 
 **Rationale:** This approach ensures pixel-perfect consistency across all 6 platforms without manual editing, allowing us to update the base asset later and regenerate everything instantly.
 
+
+
+
+
+

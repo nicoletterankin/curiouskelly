@@ -94,3 +94,8 @@ If the selected archetype (e.g., "The Rebel") does not have an atom for the curr
     *   Wire sliders to update state.
     *   Update `loadLessonDNA` to use dynamic archetype instead of hardcoded default.
 
+
+
+
+
+

@@ -26,34 +26,39 @@ jobs:
       - name: Checkout
         uses: actions/checkout@v4
 
+      - name: Setup pnpm
+        uses: pnpm/action-setup@v3
+        with:
+          version: 9.9.0
+
       - name: Setup Node
         uses: actions/setup-node@v4
         with:
-          node-version: 18
-          cache: 'npm'
+          node-version: 20
+          cache: 'pnpm'
 
       - name: Install dependencies
         run: |
           if [ -f "curiouskelly-marketing-site/package.json" ]; then
             cd curiouskelly-marketing-site
-            npm install
+            pnpm install
           elif [ -f "daily-lesson-marketing/package.json" ]; then
             cd daily-lesson-marketing
-            npm install
+            pnpm install
           else
-            npm install
+            pnpm install
           fi
 
       - name: Build
         run: |
           if [ -f "curiouskelly-marketing-site/package.json" ]; then
             cd curiouskelly-marketing-site
-            npm run build
+            pnpm run build
           elif [ -f "daily-lesson-marketing/package.json" ]; then
             cd daily-lesson-marketing
-            npm run build
+            pnpm run build
           else
-            npm run build
+            pnpm run build
           fi
         env:
           PUBLIC_SITE_URL: ${{ secrets.PUBLIC_SITE_URL || 'https://curiouskelly.com' }}

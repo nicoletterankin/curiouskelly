@@ -1,9 +1,16 @@
+/* eslint-env browser */
 const DEFAULT_EVENTS = [
   'bridge-handshake',
   'session-start',
   'phase-progress',
   'choice-selected',
   'session-complete',
+  // New events for age/language/audio integration
+  'age-changed',
+  'language-changed',
+  'archetype-changed',
+  'audio-load',
+  'character-load',
 ];
 
 const WS_BACKOFF = [1000, 5000, 15000];
