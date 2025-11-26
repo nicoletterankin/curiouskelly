@@ -1,0 +1,710 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Today's Lesson - Curious Kelly</title>
+  <link rel="icon" href="/assets/icons/favicon.ico">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+      background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
+      color: #fff;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+    }
+    
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+      margin-bottom: 30px;
+    }
+    
+    .logo {
+      font-size: 20px;
+      font-weight: 700;
+      color: #fff;
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .logo-icon { font-size: 24px; }
+    
+    .day-badge {
+      background: rgba(0, 217, 255, 0.15);
+      color: #00d9ff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    
+    /* Main Content */
+    .main {
+      flex: 1;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      align-items: center;
+    }
+    
+    /* Kelly Avatar Section */
+    .avatar-section {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    .avatar-container {
+      position: relative;
+      width: 100%;
+      max-width: 450px;
+    }
+    
+    .avatar-image {
+      width: 100%;
+      border-radius: 20px;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+      transition: all 0.3s ease;
+    }
+    
+    .avatar-image.speaking {
+      box-shadow: 0 20px 60px rgba(0, 217, 255, 0.3);
+    }
+    
+    /* Speaking indicator */
+    .speaking-indicator {
+      position: absolute;
+      bottom: -20px;
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      gap: 6px;
+      padding: 12px 24px;
+      background: rgba(0, 0, 0, 0.8);
+      border-radius: 30px;
+      opacity: 0;
+      transition: opacity 0.3s;
+    }
+    
+    .speaking-indicator.active {
+      opacity: 1;
+    }
+    
+    .speaking-bar {
+      width: 4px;
+      height: 20px;
+      background: #00d9ff;
+      border-radius: 2px;
+      animation: speak 0.5s ease-in-out infinite alternate;
+    }
+    
+    .speaking-bar:nth-child(1) { animation-delay: 0s; }
+    .speaking-bar:nth-child(2) { animation-delay: 0.1s; }
+    .speaking-bar:nth-child(3) { animation-delay: 0.2s; }
+    .speaking-bar:nth-child(4) { animation-delay: 0.1s; }
+    .speaking-bar:nth-child(5) { animation-delay: 0s; }
+    
+    @keyframes speak {
+      0% { height: 8px; }
+      100% { height: 24px; }
+    }
+    
+    /* Lesson Content Section */
+    .content-section {
+      padding: 20px;
+    }
+    
+    .lesson-category {
+      color: #00d9ff;
+      font-size: 14px;
+      text-transform: uppercase;
+      letter-spacing: 2px;
+      margin-bottom: 10px;
+    }
+    
+    .lesson-title {
+      font-size: 42px;
+      font-weight: 700;
+      line-height: 1.2;
+      margin-bottom: 20px;
+    }
+    
+    .lesson-description {
+      color: #999;
+      font-size: 18px;
+      line-height: 1.6;
+      margin-bottom: 30px;
+    }
+    
+    /* Transcript Box */
+    .transcript-box {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 30px;
+      min-height: 150px;
+      max-height: 250px;
+      overflow-y: auto;
+    }
+    
+    .transcript-label {
+      color: #666;
+      font-size: 12px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    
+    .transcript-text {
+      font-size: 18px;
+      line-height: 1.8;
+      color: #ddd;
+    }
+    
+    .transcript-text .current-word {
+      color: #00d9ff;
+      font-weight: 600;
+    }
+    
+    /* Phase Progress */
+    .phase-progress {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 30px;
+    }
+    
+    .phase-dot {
+      width: 40px;
+      height: 6px;
+      background: rgba(255,255,255,0.2);
+      border-radius: 3px;
+      transition: all 0.3s;
+    }
+    
+    .phase-dot.active {
+      background: #00d9ff;
+    }
+    
+    .phase-dot.completed {
+      background: #00ff88;
+    }
+    
+    /* Controls */
+    .controls {
+      display: flex;
+      gap: 16px;
+    }
+    
+    .btn {
+      padding: 16px 32px;
+      border: none;
+      border-radius: 12px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #00d9ff, #0088ff);
+      color: #fff;
+      flex: 1;
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 30px rgba(0, 217, 255, 0.4);
+    }
+    
+    .btn-primary:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .btn-secondary {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+    
+    .btn-secondary:hover {
+      background: rgba(255,255,255,0.15);
+    }
+    
+    /* Loading State */
+    .loading-spinner {
+      width: 20px;
+      height: 20px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    /* Error State */
+    .error-message {
+      background: rgba(255, 68, 68, 0.1);
+      border: 1px solid rgba(255, 68, 68, 0.3);
+      color: #ff6b6b;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      display: none;
+    }
+    
+    .error-message.show {
+      display: block;
+    }
+    
+    /* Responsive */
+    @media (max-width: 900px) {
+      .main {
+        grid-template-columns: 1fr;
+        gap: 30px;
+      }
+      
+      .lesson-title {
+        font-size: 32px;
+      }
+      
+      .avatar-container {
+        max-width: 350px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <a href="/" class="logo">
+        <span class="logo-icon">✨</span>
+        Curious Kelly
+      </a>
+      <div class="day-badge" id="day-badge">Day 1 of 365</div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="main">
+      <!-- Kelly Avatar -->
+      <div class="avatar-section">
+        <div class="avatar-container">
+          <img 
+            src="/assets/kelly_canonical/core/chair/kelly-chair-wisdom.png" 
+            alt="Kelly - Your AI Tutor" 
+            class="avatar-image"
+            id="kelly-avatar"
+            onerror="this.src='/assets/kelly_canonical/core/chair/kelly-chair-explaining.png'"
+          >
+          <div class="speaking-indicator" id="speaking-indicator">
+            <div class="speaking-bar"></div>
+            <div class="speaking-bar"></div>
+            <div class="speaking-bar"></div>
+            <div class="speaking-bar"></div>
+            <div class="speaking-bar"></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Lesson Content -->
+      <div class="content-section">
+        <div class="lesson-category" id="lesson-category">Loading...</div>
+        <h1 class="lesson-title" id="lesson-title">Today's Lesson</h1>
+        <p class="lesson-description" id="lesson-description">
+          Get ready for an exciting learning adventure!
+        </p>
+        
+        <!-- Error Message -->
+        <div class="error-message" id="error-message"></div>
+        
+        <!-- Phase Progress -->
+        <div class="phase-progress">
+          <div class="phase-dot active" data-phase="0"></div>
+          <div class="phase-dot" data-phase="1"></div>
+          <div class="phase-dot" data-phase="2"></div>
+          <div class="phase-dot" data-phase="3"></div>
+          <div class="phase-dot" data-phase="4"></div>
+        </div>
+        
+        <!-- Transcript -->
+        <div class="transcript-box">
+          <div class="transcript-label">Kelly says:</div>
+          <div class="transcript-text" id="transcript">
+            Click "Start Lesson" to begin...
+          </div>
+        </div>
+        
+        <!-- Controls -->
+        <div class="controls">
+          <button class="btn btn-secondary" id="btn-replay" disabled>
+            ↻ Replay
+          </button>
+          <button class="btn btn-primary" id="btn-start">
+            ▶ Start Lesson
+          </button>
+        </div>
+      </div>
+    </main>
+  </div>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <script>
+    // ============================================
+    // CONFIGURATION - Update these values
+    // ============================================
+    const CONFIG = {
+      SUPABASE_URL: 'https://tvjalxxsyryjphkforjv.supabase.co',
+      SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI',
+      // ElevenLabs will be called via API endpoint to protect keys
+    };
+    
+    // ============================================
+    // LESSON PHASES
+    // ============================================
+    const LESSON_PHASES = [
+      {
+        name: 'welcome',
+        getText: (lesson) => `Welcome! Today is Day ${lesson.day_number} of your learning journey. We're going to explore ${lesson.topic_title || lesson.topic}. This is going to be fascinating!`
+      },
+      {
+        name: 'question1',
+        getText: (lesson) => `Here's an interesting question to think about: What do you already know about ${lesson.topic}? Take a moment to consider what you've heard or learned before.`
+      },
+      {
+        name: 'main',
+        getText: (lesson) => `${lesson.topic_title || lesson.topic} is such an important topic. Understanding it helps us make sense of the world around us. Let me share some key insights with you.`
+      },
+      {
+        name: 'question2',
+        getText: (lesson) => `Now think about this: How might ${lesson.topic} affect your everyday life? Can you think of any examples?`
+      },
+      {
+        name: 'wisdom',
+        getText: (lesson) => `Here's today's wisdom: Every new thing you learn connects to everything else you know. ${lesson.topic} is just one piece of the beautiful puzzle of knowledge. Great job learning today!`
+      }
+    ];
+    
+    // ============================================
+    // STATE
+    // ============================================
+    let supabase = null;
+    let currentLesson = null;
+    let currentPhase = 0;
+    let isPlaying = false;
+    let currentAudio = null;
+    
+    // ============================================
+    // DOM ELEMENTS
+    // ============================================
+    const elements = {
+      dayBadge: document.getElementById('day-badge'),
+      category: document.getElementById('lesson-category'),
+      title: document.getElementById('lesson-title'),
+      description: document.getElementById('lesson-description'),
+      transcript: document.getElementById('transcript'),
+      avatar: document.getElementById('kelly-avatar'),
+      speakingIndicator: document.getElementById('speaking-indicator'),
+      btnStart: document.getElementById('btn-start'),
+      btnReplay: document.getElementById('btn-replay'),
+      errorMessage: document.getElementById('error-message'),
+      phaseDots: document.querySelectorAll('.phase-dot')
+    };
+    
+    // ============================================
+    // UTILITIES
+    // ============================================
+    function getTodayLessonDay() {
+      const startDate = new Date('2025-01-01');
+      const today = new Date();
+      const diffTime = Math.abs(today - startDate);
+      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
+      return ((diffDays - 1) % 365) + 1;
+    }
+    
+    function showError(message) {
+      elements.errorMessage.textContent = message;
+      elements.errorMessage.classList.add('show');
+      setTimeout(() => elements.errorMessage.classList.remove('show'), 5000);
+    }
+    
+    function setLoading(loading) {
+      if (loading) {
+        elements.btnStart.innerHTML = '<div class="loading-spinner"></div> Loading...';
+        elements.btnStart.disabled = true;
+      } else {
+        elements.btnStart.innerHTML = isPlaying ? '⏸ Pause' : '▶ Continue';
+        elements.btnStart.disabled = false;
+      }
+    }
+    
+    function updatePhaseIndicator() {
+      elements.phaseDots.forEach((dot, index) => {
+        dot.classList.remove('active', 'completed');
+        if (index < currentPhase) {
+          dot.classList.add('completed');
+        } else if (index === currentPhase) {
+          dot.classList.add('active');
+        }
+      });
+    }
+    
+    function setSpeaking(speaking) {
+      if (speaking) {
+        elements.avatar.classList.add('speaking');
+        elements.speakingIndicator.classList.add('active');
+      } else {
+        elements.avatar.classList.remove('speaking');
+        elements.speakingIndicator.classList.remove('active');
+      }
+    }
+    
+    // ============================================
+    // SUPABASE
+    // ============================================
+    async function initSupabase() {
+      try {
+        supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+        console.log('✅ Supabase initialized');
+      } catch (error) {
+        console.error('❌ Supabase init failed:', error);
+        showError('Failed to connect to database');
+      }
+    }
+    
+    async function loadLesson(dayNumber) {
+      try {
+        const { data, error } = await supabase
+          .from('core_lessons')
+          .select('*')
+          .eq('day_number', dayNumber)
+          .single();
+        
+        if (error) throw error;
+        
+        currentLesson = data;
+        
+        // Update UI
+        elements.dayBadge.textContent = `Day ${dayNumber} of 365`;
+        elements.category.textContent = data.category || 'General Knowledge';
+        elements.title.textContent = data.topic_title || data.topic;
+        elements.description.textContent = `Explore the fascinating world of ${data.topic}.`;
+        
+        console.log('✅ Lesson loaded:', data.topic);
+        return data;
+        
+      } catch (error) {
+        console.error('❌ Lesson load failed:', error);
+        
+        // Fallback lesson
+        currentLesson = {
+          day_number: dayNumber,
+          topic: 'The Sun',
+          topic_title: 'The Sun: Our Star',
+          category: 'Astronomy'
+        };
+        
+        elements.dayBadge.textContent = `Day ${dayNumber} of 365`;
+        elements.category.textContent = 'Astronomy';
+        elements.title.textContent = 'The Sun: Our Star';
+        elements.description.textContent = 'Explore the fascinating world of The Sun.';
+        
+        return currentLesson;
+      }
+    }
+    
+    // ============================================
+    // ELEVENLABS VOICE
+    // ============================================
+    async function generateVoice(text) {
+      try {
+        // Try to use API endpoint first (for production)
+        const response = await fetch('/api/voice', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+        
+        if (response.ok) {
+          const blob = await response.blob();
+          return URL.createObjectURL(blob);
+        }
+        
+        // If API fails, we'll use browser speech synthesis as fallback
+        console.warn('Voice API failed, using browser speech');
+        return null;
+        
+      } catch (error) {
+        console.error('Voice generation error:', error);
+        return null;
+      }
+    }
+    
+    function speakWithBrowser(text) {
+      return new Promise((resolve) => {
+        const utterance = new SpeechSynthesisUtterance(text);
+        utterance.rate = 0.9;
+        utterance.pitch = 1.1;
+        utterance.volume = 1;
+        
+        // Try to get a female voice
+        const voices = speechSynthesis.getVoices();
+        const femaleVoice = voices.find(v => 
+          v.name.includes('Female') || 
+          v.name.includes('Samantha') || 
+          v.name.includes('Google US English')
+        );
+        if (femaleVoice) utterance.voice = femaleVoice;
+        
+        utterance.onend = () => {
+          setSpeaking(false);
+          resolve();
+        };
+        
+        utterance.onstart = () => setSpeaking(true);
+        
+        speechSynthesis.speak(utterance);
+      });
+    }
+    
+    // ============================================
+    // PLAYBACK
+    // ============================================
+    async function playPhase(phaseIndex) {
+      if (phaseIndex >= LESSON_PHASES.length) {
+        // Lesson complete
+        elements.transcript.textContent = "Great job! You've completed today's lesson. See you tomorrow!";
+        elements.btnStart.innerHTML = '✓ Complete';
+        elements.btnStart.disabled = true;
+        return;
+      }
+      
+      currentPhase = phaseIndex;
+      updatePhaseIndicator();
+      
+      const phase = LESSON_PHASES[phaseIndex];
+      const text = phase.getText(currentLesson);
+      
+      elements.transcript.textContent = text;
+      setLoading(true);
+      
+      // Try ElevenLabs first, fallback to browser speech
+      const audioUrl = await generateVoice(text);
+      
+      setLoading(false);
+      isPlaying = true;
+      elements.btnStart.innerHTML = '⏸ Pause';
+      elements.btnReplay.disabled = false;
+      
+      if (audioUrl) {
+        // Play ElevenLabs audio
+        currentAudio = new Audio(audioUrl);
+        setSpeaking(true);
+        
+        currentAudio.onended = () => {
+          setSpeaking(false);
+          isPlaying = false;
+          elements.btnStart.innerHTML = '▶ Continue';
+        };
+        
+        currentAudio.onerror = () => {
+          setSpeaking(false);
+          speakWithBrowser(text);
+        };
+        
+        currentAudio.play();
+      } else {
+        // Use browser speech synthesis
+        await speakWithBrowser(text);
+        isPlaying = false;
+        elements.btnStart.innerHTML = '▶ Continue';
+      }
+    }
+    
+    // ============================================
+    // EVENT HANDLERS
+    // ============================================
+    elements.btnStart.addEventListener('click', async () => {
+      if (isPlaying) {
+        // Pause
+        if (currentAudio) {
+          currentAudio.pause();
+        }
+        speechSynthesis.cancel();
+        setSpeaking(false);
+        isPlaying = false;
+        elements.btnStart.innerHTML = '▶ Continue';
+      } else {
+        // Start or continue
+        if (currentPhase === 0 && !isPlaying) {
+          // First time starting
+          await playPhase(0);
+        } else {
+          // Continue to next phase
+          await playPhase(currentPhase + 1);
+        }
+      }
+    });
+    
+    elements.btnReplay.addEventListener('click', async () => {
+      if (currentAudio) {
+        currentAudio.pause();
+        currentAudio.currentTime = 0;
+      }
+      speechSynthesis.cancel();
+      await playPhase(currentPhase);
+    });
+    
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+    async function init() {
+      // Load voices for browser speech
+      if (speechSynthesis.onvoiceschanged !== undefined) {
+        speechSynthesis.onvoiceschanged = () => {};
+      }
+      speechSynthesis.getVoices();
+      
+      await initSupabase();
+      
+      const dayNumber = getTodayLessonDay();
+      await loadLesson(dayNumber);
+      
+      elements.transcript.textContent = `Ready to learn about ${currentLesson.topic_title || currentLesson.topic}? Click "Start Lesson" to begin!`;
+      
+      console.log('✅ Player initialized');
+    }
+    
+    // Start
+    init();
+  </script>
+</body>
+</html>
