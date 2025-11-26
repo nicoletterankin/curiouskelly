@@ -35,6 +35,12 @@
       margin-bottom: 30px;
     }
     
+    .header-right {
+      display: flex;
+      align-items: center;
+      gap: 15px;
+    }
+    
     .logo {
       font-size: 20px;
       font-weight: 700;
@@ -54,6 +60,151 @@
       border-radius: 20px;
       font-size: 14px;
       font-weight: 600;
+    }
+
+    /* Vibe Tuner Button */
+    .vibe-btn {
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      color: #fff;
+      padding: 8px 16px;
+      border-radius: 20px;
+      cursor: pointer;
+      font-size: 14px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      transition: all 0.2s;
+    }
+
+    .vibe-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-1px);
+    }
+
+    /* Vibe Modal */
+    .modal-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(5px);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.3s;
+    }
+
+    .modal-overlay.open {
+      opacity: 1;
+      pointer-events: all;
+    }
+
+    .vibe-panel {
+      background: rgba(20, 20, 25, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 24px;
+      padding: 32px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+      transform: scale(0.9);
+      transition: transform 0.3s;
+    }
+
+    .modal-overlay.open .vibe-panel {
+      transform: scale(1);
+    }
+
+    .vibe-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+    }
+
+    .vibe-title {
+      font-size: 20px;
+      font-weight: 700;
+    }
+
+    .close-btn {
+      background: none;
+      border: none;
+      color: rgba(255,255,255,0.5);
+      font-size: 24px;
+      cursor: pointer;
+    }
+
+    .slider-group {
+      margin-bottom: 24px;
+    }
+
+    .slider-label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: rgba(255,255,255,0.6);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    .slider-container {
+      position: relative;
+      height: 40px;
+      display: flex;
+      align-items: center;
+    }
+
+    .vibe-slider {
+      -webkit-appearance: none;
+      width: 100%;
+      height: 6px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 3px;
+      outline: none;
+    }
+
+    .vibe-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      background: #fff;
+      cursor: pointer;
+      box-shadow: 0 0 15px rgba(255,255,255,0.5);
+      transition: transform 0.1s;
+    }
+
+    .vibe-slider::-webkit-slider-thumb:hover {
+      transform: scale(1.2);
+    }
+
+    .current-archetype {
+      text-align: center;
+      margin-top: 32px;
+      padding-top: 24px;
+      border-top: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .archetype-name {
+      font-size: 24px;
+      font-weight: 700;
+      background: linear-gradient(135deg, #fff 0%, #aaa 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 8px;
+    }
+
+    .archetype-desc {
+      font-size: 14px;
+      color: rgba(255,255,255,0.6);
     }
     
     /* Main Content */
@@ -308,8 +459,69 @@
         <span class="logo-icon">✨</span>
         Curious Kelly
       </a>
-      <div class="day-badge" id="day-badge">Day 1 of 365</div>
+      <div class="header-right">
+        <button class="vibe-btn" id="vibe-btn">
+          <span>🎛️</span> Vibe Tuner
+        </button>
+        <div class="day-badge" id="day-badge">Day 1 of 365</div>
+      </div>
     </header>
+    
+    <!-- Vibe Tuner Modal -->
+    <div class="modal-overlay" id="vibe-modal">
+      <div class="vibe-panel">
+        <div class="vibe-header">
+          <div class="vibe-title">Tune Your Vibe</div>
+          <button class="close-btn" id="close-vibe">×</button>
+        </div>
+        
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>Concrete</span>
+            <span>Abstract</span>
+          </div>
+          <div class="slider-container">
+            <input type="range" min="0" max="100" value="100" class="vibe-slider" id="slider-perspective">
+          </div>
+        </div>
+
+        <div class="slider-group">
+          <div class="slider-label">
+            <span>Thinking</span>
+            <span>Feeling</span>
+          </div>
+          <div class="slider-container">
+            <input type="range" min="0" max="100" value="0" class="vibe-slider" id="slider-energy">
+          </div>
+        </div>
+
+        <!-- Identity Controls -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+          <div>
+            <div class="slider-label">Age Group</div>
+            <select id="select-age" style="width: 100%; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 8px; border-radius: 8px; outline: none;">
+              <option value="child">Child (5-8)</option>
+              <option value="preteen">Pre-Teen (9-12)</option>
+              <option value="teen">Teen (13-17)</option>
+              <option value="adult" selected>Adult (18+)</option>
+            </select>
+          </div>
+          <div>
+            <div class="slider-label">Language</div>
+            <select id="select-language" style="width: 100%; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 8px; border-radius: 8px; outline: none;">
+              <option value="en" selected>English</option>
+              <option value="es">Español</option>
+              <option value="fr">Français</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="current-archetype">
+          <div class="archetype-name" id="archetype-display">The Scientist</div>
+          <div class="archetype-desc" id="archetype-desc">Truth • Logic • Analysis</div>
+        </div>
+      </div>
+    </div>
     
     <!-- Main Content -->
     <main class="main">
@@ -390,6 +602,23 @@
     // ============================================
     // ARCHETYPE CONFIGURATION
     // ============================================
+    
+    // Archetype Definitions (Centroids)
+    const ARCHETYPES = [
+      { name: 'The Survivor', x: 0, y: 0, desc: 'Survival • Utility • Practical' },
+      { name: 'The Strategist', x: 25, y: 0, desc: 'Outcome • Planning • Structure' },
+      { name: 'The MacGyver', x: 25, y: 25, desc: 'Resourcefulness • Analysis • Practical' },
+      { name: 'The Scientist', x: 100, y: 0, desc: 'Truth • Logic • Analysis' },
+      { name: 'The Architect', x: 75, y: 25, desc: 'Structure • Vision • Abstract' },
+      { name: 'The Rebel', x: 0, y: 50, desc: 'Change • Freedom • Chaos' },
+      { name: 'The Explorer', x: 100, y: 50, desc: 'Curiosity • Adventure • Energy' },
+      { name: 'The Diplomat', x: 25, y: 75, desc: 'Harmony • Mediation • Social' },
+      { name: 'The Provider', x: 0, y: 100, desc: 'Care • Community • Warmth' },
+      { name: 'The Storyteller', x: 75, y: 75, desc: 'Narrative • Meaning • Expression' },
+      { name: 'The Mystic', x: 100, y: 100, desc: 'Spirit • Unknown • Deep' },
+      { name: 'The Empath', x: 75, y: 100, desc: 'Connection • Feeling • Warmth' }
+    ];
+
     // Default archetype - can be changed by user later
     const DEFAULT_ARCHETYPE = 'The Scientist';
     
@@ -406,7 +635,10 @@
     let isPlaying = false;
     let currentAudio = null;
     let currentArchetype = DEFAULT_ARCHETYPE;
-    
+    let currentAge = 'adult';
+    let currentLanguage = 'en';
+    let debounceTimer = null;
+
     // ============================================
     // DOM ELEMENTS
     // ============================================
@@ -421,9 +653,86 @@
       btnStart: document.getElementById('btn-start'),
       btnReplay: document.getElementById('btn-replay'),
       errorMessage: document.getElementById('error-message'),
-      phaseDots: document.querySelectorAll('.phase-dot')
+      phaseDots: document.querySelectorAll('.phase-dot'),
+      // Vibe Tuner Elements
+      vibeBtn: document.getElementById('vibe-btn'),
+      vibeModal: document.getElementById('vibe-modal'),
+      closeVibe: document.getElementById('close-vibe'),
+      sliderPerspective: document.getElementById('slider-perspective'),
+      sliderEnergy: document.getElementById('slider-energy'),
+      selectAge: document.getElementById('select-age'),
+      selectLanguage: document.getElementById('select-language'),
+      archetypeDisplay: document.getElementById('archetype-display'),
+      archetypeDesc: document.getElementById('archetype-desc')
     };
     
+    // ============================================
+    // VIBE TUNER LOGIC
+    // ============================================
+    function getNearestArchetype(x, y) {
+      let minDistance = Infinity;
+      let nearest = ARCHETYPES[0];
+
+      ARCHETYPES.forEach(archetype => {
+        // Calculate Euclidean distance
+        const dist = Math.sqrt(Math.pow(x - archetype.x, 2) + Math.pow(y - archetype.y, 2));
+        if (dist < minDistance) {
+          minDistance = dist;
+          nearest = archetype;
+        }
+      });
+
+      return nearest;
+    }
+
+    function updateVibe() {
+      const x = parseInt(elements.sliderPerspective.value);
+      const y = parseInt(elements.sliderEnergy.value);
+      const age = elements.selectAge.value;
+      const language = elements.selectLanguage.value;
+      
+      const archetype = getNearestArchetype(x, y);
+      
+      // Update UI immediately
+      elements.archetypeDisplay.textContent = archetype.name;
+      elements.archetypeDesc.textContent = archetype.desc;
+      
+      // Only reload if something changed
+      if (archetype.name !== currentArchetype || age !== currentAge || language !== currentLanguage) {
+        console.log(`🔄 [VIBE] Updating to: ${archetype.name} | ${age} | ${language}`);
+        currentArchetype = archetype.name;
+        currentAge = age;
+        currentLanguage = language;
+        
+        // Debounce the reload to prevent spamming API
+        if (debounceTimer) clearTimeout(debounceTimer);
+        debounceTimer = setTimeout(() => {
+          loadLesson(currentLesson.day_number);
+        }, 500);
+      }
+    }
+
+    // Event Listeners for Vibe Tuner
+    elements.vibeBtn.addEventListener('click', () => {
+      elements.vibeModal.classList.add('open');
+    });
+
+    elements.closeVibe.addEventListener('click', () => {
+      elements.vibeModal.classList.remove('open');
+    });
+
+    // Close on outside click
+    elements.vibeModal.addEventListener('click', (e) => {
+      if (e.target === elements.vibeModal) {
+        elements.vibeModal.classList.remove('open');
+      }
+    });
+
+    elements.sliderPerspective.addEventListener('input', updateVibe);
+    elements.sliderEnergy.addEventListener('input', updateVibe);
+    elements.selectAge.addEventListener('change', updateVibe);
+    elements.selectLanguage.addEventListener('change', updateVibe);
+
     // ============================================
     // UTILITIES
     // ============================================
@@ -630,7 +939,9 @@
           topic: coreLesson.topic,
           atoms_count: lessonAtoms.length,
           phases: lessonAtoms.map(a => a.phase),
-          archetype: currentArchetype
+          archetype: currentArchetype,
+          age: currentAge,
+          language: currentLanguage
         });
         
         return coreLesson;
