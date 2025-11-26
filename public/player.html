@@ -388,39 +388,24 @@
     };
     
     // ============================================
-    // LESSON PHASES
+    // ARCHETYPE CONFIGURATION
     // ============================================
-    const LESSON_PHASES = [
-      {
-        name: 'welcome',
-        getText: (lesson) => `Welcome! Today is Day ${lesson.day_number} of your learning journey. We're going to explore ${lesson.topic_title || lesson.topic}. This is going to be fascinating!`
-      },
-      {
-        name: 'question1',
-        getText: (lesson) => `Here's an interesting question to think about: What do you already know about ${lesson.topic}? Take a moment to consider what you've heard or learned before.`
-      },
-      {
-        name: 'main',
-        getText: (lesson) => `${lesson.topic_title || lesson.topic} is such an important topic. Understanding it helps us make sense of the world around us. Let me share some key insights with you.`
-      },
-      {
-        name: 'question2',
-        getText: (lesson) => `Now think about this: How might ${lesson.topic} affect your everyday life? Can you think of any examples?`
-      },
-      {
-        name: 'wisdom',
-        getText: (lesson) => `Here's today's wisdom: Every new thing you learn connects to everything else you know. ${lesson.topic} is just one piece of the beautiful puzzle of knowledge. Great job learning today!`
-      }
-    ];
+    // Default archetype - can be changed by user later
+    const DEFAULT_ARCHETYPE = 'The Scientist';
+    
+    // Standard phase order (if not specified in data)
+    const PHASE_ORDER = ['welcome', 'teaching', 'practice', 'reflection', 'wisdom'];
     
     // ============================================
     // STATE
     // ============================================
     let supabase = null;
     let currentLesson = null;
-    let currentPhase = 0;
+    let lessonAtoms = []; // Array of {phase, content} from lesson_atoms
+    let currentPhaseIndex = 0;
     let isPlaying = false;
     let currentAudio = null;
+    let currentArchetype = DEFAULT_ARCHETYPE;
     
     // ============================================
     // DOM ELEMENTS
@@ -469,12 +454,41 @@
     function updatePhaseIndicator() {
       elements.phaseDots.forEach((dot, index) => {
         dot.classList.remove('active', 'completed');
-        if (index < currentPhase) {
+        if (index < currentPhaseIndex) {
           dot.classList.add('completed');
-        } else if (index === currentPhase) {
+        } else if (index === currentPhaseIndex) {
           dot.classList.add('active');
         }
       });
+    }
+    
+    /**
+     * Extract text from lesson_atom content JSON
+     */
+    function extractTextFromContent(content) {
+      if (typeof content === 'string') {
+        return content;
+      }
+      if (typeof content === 'object' && content !== null) {
+        // Try common content structure patterns
+        if (content.text) return content.text;
+        if (content.script) return content.script;
+        if (content.content) return content.content;
+        if (content.message) return content.message;
+        if (Array.isArray(content)) {
+          return content.map(item => extractTextFromContent(item)).join(' ');
+        }
+        // If it's an object with nested structure, try to find text
+        const textKeys = ['text', 'script', 'content', 'message', 'transcript'];
+        for (const key of textKeys) {
+          if (content[key]) {
+            return typeof content[key] === 'string' ? content[key] : JSON.stringify(content[key]);
+          }
+        }
+        // Last resort: stringify the object
+        return JSON.stringify(content);
+      }
+      return String(content);
     }
     
     function setSpeaking(speaking) {
@@ -500,45 +514,170 @@
       }
     }
     
+    /**
+     * Load lesson from core_lessons and lesson_atoms
+     * Logs complete data structure for debugging
+     */
     async function loadLesson(dayNumber) {
       try {
-        const { data, error } = await supabase
+        console.log(`\n🔍 [AUDIT] Loading Day ${dayNumber} lesson...`);
+        
+        // Step 1: Load core_lessons
+        const { data: coreLesson, error: coreError } = await supabase
           .from('core_lessons')
           .select('*')
           .eq('day_number', dayNumber)
           .single();
         
-        if (error) throw error;
+        if (coreError) {
+          console.error('❌ [AUDIT] core_lessons query error:', coreError);
+          throw coreError;
+        }
         
-        currentLesson = data;
+        if (!coreLesson) {
+          throw new Error(`No lesson found for day ${dayNumber}`);
+        }
         
-        // Update UI
+        console.log('✅ [AUDIT] core_lessons loaded:', {
+          id: coreLesson.id,
+          day_number: coreLesson.day_number,
+          topic: coreLesson.topic,
+          available_columns: Object.keys(coreLesson)
+        });
+        console.log('📋 [AUDIT] Full core_lessons data:', JSON.stringify(coreLesson, null, 2));
+        
+        currentLesson = coreLesson;
+        
+        // Step 2: Load lesson_atoms for this lesson and archetype
+        console.log(`\n🔍 [AUDIT] Loading lesson_atoms for archetype: ${currentArchetype}...`);
+        const { data: atoms, error: atomsError } = await supabase
+          .from('lesson_atoms')
+          .select('*')
+          .eq('core_lesson_id', coreLesson.id)
+          .eq('archetype', currentArchetype);
+        
+        if (atomsError) {
+          console.error('❌ [AUDIT] lesson_atoms query error:', atomsError);
+          // Try without archetype filter
+          console.log('🔄 [AUDIT] Trying without archetype filter...');
+          const { data: allAtoms, error: allAtomsError } = await supabase
+            .from('lesson_atoms')
+            .select('*')
+            .eq('core_lesson_id', coreLesson.id);
+          
+          if (allAtomsError) {
+            console.error('❌ [AUDIT] lesson_atoms query (no filter) error:', allAtomsError);
+            throw allAtomsError;
+          }
+          
+          if (allAtoms && allAtoms.length > 0) {
+            console.log(`⚠️  [AUDIT] Found ${allAtoms.length} atoms but none for archetype "${currentArchetype}"`);
+            console.log('📋 [AUDIT] Available archetypes:', [...new Set(allAtoms.map(a => a.archetype))]);
+            // Use first available archetype
+            const firstArchetype = allAtoms[0].archetype;
+            console.log(`🔄 [AUDIT] Using archetype: ${firstArchetype}`);
+            currentArchetype = firstArchetype;
+            lessonAtoms = allAtoms.filter(a => a.archetype === firstArchetype);
+          } else {
+            lessonAtoms = [];
+          }
+        } else {
+          lessonAtoms = atoms || [];
+        }
+        
+        console.log(`✅ [AUDIT] Found ${lessonAtoms.length} lesson_atoms`);
+        
+        if (lessonAtoms.length > 0) {
+          console.log('📋 [AUDIT] lesson_atoms structure:');
+          lessonAtoms.forEach((atom, index) => {
+            console.log(`\n--- Atom ${index + 1} ---`);
+            console.log(`Phase: ${atom.phase}`);
+            console.log(`Archetype: ${atom.archetype}`);
+            console.log(`Content type: ${typeof atom.content}`);
+            if (typeof atom.content === 'object') {
+              console.log(`Content keys:`, Object.keys(atom.content));
+              console.log('Content preview:', JSON.stringify(atom.content, null, 2).substring(0, 500));
+            }
+          });
+          
+          // Sort atoms by phase order
+          lessonAtoms.sort((a, b) => {
+            const aIndex = PHASE_ORDER.indexOf(a.phase);
+            const bIndex = PHASE_ORDER.indexOf(b.phase);
+            if (aIndex === -1 && bIndex === -1) return a.phase.localeCompare(b.phase);
+            if (aIndex === -1) return 1;
+            if (bIndex === -1) return -1;
+            return aIndex - bIndex;
+          });
+          
+          console.log('📊 [AUDIT] Phases in order:', lessonAtoms.map(a => a.phase));
+        } else {
+          console.warn('⚠️  [AUDIT] No lesson_atoms found - will use fallback content');
+        }
+        
+        // Step 3: Update phase dots based on actual data
+        updatePhaseDots(lessonAtoms.length);
+        
+        // Step 4: Update UI
         elements.dayBadge.textContent = `Day ${dayNumber} of 365`;
-        elements.category.textContent = data.category || 'General Knowledge';
-        elements.title.textContent = data.topic_title || data.topic;
-        elements.description.textContent = `Explore the fascinating world of ${data.topic}.`;
+        elements.category.textContent = coreLesson.difficulty_level || coreLesson.ideal_age_range || 'General Knowledge';
+        elements.title.textContent = coreLesson.topic;
+        elements.description.textContent = coreLesson.universal_truth || `Explore the fascinating world of ${coreLesson.topic}.`;
         
-        console.log('✅ Lesson loaded:', data.topic);
-        return data;
+        console.log('✅ [AUDIT] Lesson loaded successfully');
+        console.log('📊 [AUDIT] Summary:', {
+          day: dayNumber,
+          topic: coreLesson.topic,
+          atoms_count: lessonAtoms.length,
+          phases: lessonAtoms.map(a => a.phase),
+          archetype: currentArchetype
+        });
+        
+        return coreLesson;
         
       } catch (error) {
-        console.error('❌ Lesson load failed:', error);
+        console.error('❌ [AUDIT] Lesson load failed:', error);
         
         // Fallback lesson
         currentLesson = {
+          id: 'fallback',
           day_number: dayNumber,
           topic: 'The Sun',
-          topic_title: 'The Sun: Our Star',
-          category: 'Astronomy'
+          universal_truth: 'The Sun is our star',
+          difficulty_level: 'Beginner'
         };
+        lessonAtoms = [];
         
         elements.dayBadge.textContent = `Day ${dayNumber} of 365`;
         elements.category.textContent = 'Astronomy';
         elements.title.textContent = 'The Sun: Our Star';
         elements.description.textContent = 'Explore the fascinating world of The Sun.';
         
+        updatePhaseDots(0);
+        
         return currentLesson;
       }
+    }
+    
+    /**
+     * Update phase dots to match actual number of phases
+     */
+    function updatePhaseDots(count) {
+      const phaseProgress = document.querySelector('.phase-progress');
+      phaseProgress.innerHTML = '';
+      
+      const actualCount = Math.max(count, 1); // At least 1 dot
+      
+      for (let i = 0; i < actualCount; i++) {
+        const dot = document.createElement('div');
+        dot.className = 'phase-dot';
+        dot.setAttribute('data-phase', i);
+        phaseProgress.appendChild(dot);
+      }
+      
+      // Update elements reference
+      elements.phaseDots = document.querySelectorAll('.phase-dot');
+      updatePhaseIndicator();
     }
     
     // ============================================
@@ -599,20 +738,45 @@
     // PLAYBACK
     // ============================================
     async function playPhase(phaseIndex) {
-      if (phaseIndex >= LESSON_PHASES.length) {
-        // Lesson complete
-        elements.transcript.textContent = "Great job! You've completed today's lesson. See you tomorrow!";
-        elements.btnStart.innerHTML = '✓ Complete';
-        elements.btnStart.disabled = true;
+      console.log(`\n🎬 [PLAYBACK] Starting phase ${phaseIndex} of ${lessonAtoms.length}`);
+      
+      // Check if we have lesson_atoms data
+      if (lessonAtoms.length === 0) {
+        console.warn('⚠️  [PLAYBACK] No lesson_atoms - using fallback');
+        const fallbackText = `Welcome! Today is Day ${currentLesson.day_number} of your learning journey. We're going to explore ${currentLesson.topic}. This is going to be fascinating!`;
+        await playText(fallbackText, phaseIndex);
         return;
       }
       
-      currentPhase = phaseIndex;
+      if (phaseIndex >= lessonAtoms.length) {
+        // Lesson complete
+        console.log('✅ [PLAYBACK] Lesson complete!');
+        elements.transcript.textContent = "Great job! You've completed today's lesson. See you tomorrow!";
+        elements.btnStart.innerHTML = '✓ Complete';
+        elements.btnStart.disabled = true;
+        currentPhaseIndex = lessonAtoms.length;
+        updatePhaseIndicator();
+        return;
+      }
+      
+      currentPhaseIndex = phaseIndex;
       updatePhaseIndicator();
       
-      const phase = LESSON_PHASES[phaseIndex];
-      const text = phase.getText(currentLesson);
+      const atom = lessonAtoms[phaseIndex];
+      console.log(`📝 [PLAYBACK] Phase: ${atom.phase}`);
+      console.log(`📦 [PLAYBACK] Atom content:`, atom.content);
       
+      // Extract text from content
+      const text = extractTextFromContent(atom.content);
+      console.log(`💬 [PLAYBACK] Extracted text (${text.length} chars):`, text.substring(0, 100) + '...');
+      
+      await playText(text, phaseIndex);
+    }
+    
+    /**
+     * Play text with voice synthesis
+     */
+    async function playText(text, phaseIndex) {
       elements.transcript.textContent = text;
       setLoading(true);
       
@@ -630,22 +794,38 @@
         setSpeaking(true);
         
         currentAudio.onended = () => {
+          console.log(`✅ [PLAYBACK] Phase ${phaseIndex} audio ended`);
           setSpeaking(false);
           isPlaying = false;
-          elements.btnStart.innerHTML = '▶ Continue';
+          if (phaseIndex < lessonAtoms.length - 1) {
+            elements.btnStart.innerHTML = '▶ Continue';
+          } else {
+            elements.btnStart.innerHTML = '✓ Complete';
+            elements.btnStart.disabled = true;
+          }
         };
         
-        currentAudio.onerror = () => {
+        currentAudio.onerror = (error) => {
+          console.error('❌ [PLAYBACK] Audio error:', error);
           setSpeaking(false);
           speakWithBrowser(text);
         };
         
-        currentAudio.play();
+        currentAudio.play().catch(error => {
+          console.error('❌ [PLAYBACK] Audio play failed:', error);
+          setSpeaking(false);
+          speakWithBrowser(text);
+        });
       } else {
         // Use browser speech synthesis
         await speakWithBrowser(text);
         isPlaying = false;
-        elements.btnStart.innerHTML = '▶ Continue';
+        if (phaseIndex < lessonAtoms.length - 1) {
+          elements.btnStart.innerHTML = '▶ Continue';
+        } else {
+          elements.btnStart.innerHTML = '✓ Complete';
+          elements.btnStart.disabled = true;
+        }
       }
     }
     
@@ -653,8 +833,11 @@
     // EVENT HANDLERS
     // ============================================
     elements.btnStart.addEventListener('click', async () => {
+      console.log(`\n🖱️  [INTERACTION] Start/Continue clicked. isPlaying: ${isPlaying}, phase: ${currentPhaseIndex}`);
+      
       if (isPlaying) {
         // Pause
+        console.log('⏸️  [INTERACTION] Pausing...');
         if (currentAudio) {
           currentAudio.pause();
         }
@@ -664,23 +847,32 @@
         elements.btnStart.innerHTML = '▶ Continue';
       } else {
         // Start or continue
-        if (currentPhase === 0 && !isPlaying) {
+        if (currentPhaseIndex === 0 && lessonAtoms.length === 0) {
+          // First time starting, but no atoms loaded yet
+          console.log('⚠️  [INTERACTION] No atoms loaded, waiting for lesson load...');
+          return;
+        }
+        
+        if (currentPhaseIndex === 0 && !isPlaying) {
           // First time starting
+          console.log('▶️  [INTERACTION] Starting first phase...');
           await playPhase(0);
         } else {
           // Continue to next phase
-          await playPhase(currentPhase + 1);
+          console.log(`▶️  [INTERACTION] Continuing to phase ${currentPhaseIndex + 1}...`);
+          await playPhase(currentPhaseIndex + 1);
         }
       }
     });
     
     elements.btnReplay.addEventListener('click', async () => {
+      console.log(`\n🔄 [INTERACTION] Replay clicked for phase ${currentPhaseIndex}`);
       if (currentAudio) {
         currentAudio.pause();
         currentAudio.currentTime = 0;
       }
       speechSynthesis.cancel();
-      await playPhase(currentPhase);
+      await playPhase(currentPhaseIndex);
     });
     
     // ============================================
@@ -696,11 +888,25 @@
       await initSupabase();
       
       const dayNumber = getTodayLessonDay();
-      await loadLesson(dayNumber);
+      // Allow URL parameter to override day number for testing
+      const urlParams = new URLSearchParams(window.location.search);
+      const testDay = urlParams.get('day');
+      const finalDayNumber = testDay ? parseInt(testDay) : dayNumber;
       
-      elements.transcript.textContent = `Ready to learn about ${currentLesson.topic_title || currentLesson.topic}? Click "Start Lesson" to begin!`;
+      console.log(`\n🚀 [INIT] Initializing player for Day ${finalDayNumber}...`);
+      await loadLesson(finalDayNumber);
       
-      console.log('✅ Player initialized');
+      if (currentLesson) {
+        elements.transcript.textContent = `Ready to learn about ${currentLesson.topic}? Click "Start Lesson" to begin!`;
+      }
+      
+      console.log('✅ [INIT] Player initialized');
+      console.log('📊 [INIT] Final state:', {
+        lesson: currentLesson?.topic,
+        atoms_count: lessonAtoms.length,
+        archetype: currentArchetype,
+        phases: lessonAtoms.map(a => a.phase)
+      });
     }
     
     // Start
