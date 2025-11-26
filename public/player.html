@@ -3,1225 +3,664 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Today's Lesson - Curious Kelly</title>
+  <title>Kelly OS - Learning Experience</title>
   <link rel="icon" href="/assets/icons/favicon.ico">
   <style>
+    :root {
+      --glass-bg: rgba(255, 255, 255, 0.85);
+      --glass-border: rgba(255, 255, 255, 0.5);
+      --text-primary: #1d1d1f;
+      --text-secondary: #86868b;
+      --accent-color: #0071e3;
+      --danger-color: #ff3b30;
+      --success-color: #34c759;
+    }
+
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
     body {
-      font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
-      background: linear-gradient(135deg, #0a0a0f 0%, #1a1a2e 100%);
-      color: #fff;
-      min-height: 100vh;
-      overflow-x: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+      background-color: #f5f5f7;
+      color: var(--text-primary);
+      height: 100vh;
+      width: 100vw;
+      overflow: hidden;
+      display: flex;
+      justify-content: center;
+      align-items: center;
     }
-    
-    .container {
-      max-width: 1200px;
-      margin: 0 auto;
-      padding: 20px;
-      min-height: 100vh;
+
+    /* Background Container (Kelly/Unity) */
+    .bg-container {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 0;
+      background: #fff; /* Fallback */
+      display: flex;
+      justify-content: center;
+      align-items: center;
+    }
+
+    .bg-image {
+      height: 100%;
+      width: auto;
+      object-fit: cover;
+      opacity: 0.9;
+      transition: all 0.5s ease;
+    }
+
+    /* Overlay UI Layer */
+    .ui-layer {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: 10;
+      pointer-events: none; /* Let clicks pass through to "Kelly" if needed */
       display: flex;
       flex-direction: column;
+      justify-content: space-between;
+      padding: 20px;
     }
-    
-    /* Header */
-    .header {
+
+    /* Interactive Elements Container */
+    .ui-controls {
+      pointer-events: auto;
+    }
+
+    /* Top Bar */
+    .top-bar {
       display: flex;
       justify-content: space-between;
-      align-items: center;
-      padding: 10px 0;
-      border-bottom: 1px solid rgba(255,255,255,0.1);
-      margin-bottom: 30px;
+      align-items: flex-start;
+      padding: 20px;
     }
-    
-    .header-right {
-      display: flex;
-      align-items: center;
-      gap: 15px;
-    }
-    
-    .logo {
-      font-size: 20px;
-      font-weight: 700;
-      color: #fff;
-      text-decoration: none;
+
+    .logo-area {
       display: flex;
       align-items: center;
       gap: 8px;
-    }
-    
-    .logo-icon { font-size: 24px; }
-    
-    .day-badge {
-      background: rgba(0, 217, 255, 0.15);
-      color: #00d9ff;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-size: 14px;
-      font-weight: 600;
+      background: var(--glass-bg);
+      padding: 10px 20px;
+      border-radius: 30px;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      box-shadow: 0 4px 20px rgba(0,0,0,0.05);
+      border: 1px solid var(--glass-border);
     }
 
-    /* Vibe Tuner Button */
-    .vibe-btn {
-      background: rgba(255, 255, 255, 0.1);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: #fff;
-      padding: 8px 16px;
-      border-radius: 20px;
-      cursor: pointer;
-      font-size: 14px;
+    .logo-text {
+      font-weight: 600;
+      font-size: 16px;
+      letter-spacing: -0.5px;
+    }
+
+    .menu-area {
       display: flex;
+      gap: 12px;
+    }
+
+    /* Menu Icons */
+    .menu-item {
+      position: relative;
+    }
+
+    .menu-btn {
+      width: 44px;
+      height: 44px;
+      border-radius: 50%;
+      background: var(--glass-bg);
+      border: 1px solid var(--glass-border);
+      display: flex;
+      justify-content: center;
       align-items: center;
-      gap: 6px;
+      font-size: 20px;
+      cursor: pointer;
+      transition: all 0.2s cubic-bezier(0.25, 0.1, 0.25, 1);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+      backdrop-filter: blur(20px);
+    }
+
+    .menu-btn:hover, .menu-btn.active {
+      transform: scale(1.05);
+      background: #fff;
+      box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    }
+
+    /* Dropdown Menus */
+    .dropdown-menu {
+      position: absolute;
+      top: 55px;
+      right: 0;
+      background: rgba(255, 255, 255, 0.95);
+      border-radius: 18px;
+      padding: 16px;
+      width: 260px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      border: 1px solid rgba(255,255,255,0.5);
+      backdrop-filter: blur(30px);
+      transform-origin: top right;
+      transform: scale(0.9);
+      opacity: 0;
+      pointer-events: none;
+      transition: all 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+    }
+
+    .dropdown-menu.open {
+      transform: scale(1);
+      opacity: 1;
+      pointer-events: auto;
+    }
+
+    .dropdown-title {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Age Slider */
+    .age-slider-container {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .age-value {
+      font-size: 24px;
+      font-weight: 700;
+      text-align: center;
+      color: var(--accent-color);
+    }
+
+    input[type=range] {
+      -webkit-appearance: none;
+      width: 100%;
+      background: transparent;
+    }
+
+    input[type=range]::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      height: 24px;
+      width: 24px;
+      border-radius: 50%;
+      background: #fff;
+      border: 1px solid rgba(0,0,0,0.1);
+      box-shadow: 0 2px 8px rgba(0,0,0,0.15);
+      margin-top: -10px;
+      cursor: pointer;
+    }
+
+    input[type=range]::-webkit-slider-runnable-track {
+      width: 100%;
+      height: 4px;
+      background: #e5e5e5;
+      border-radius: 2px;
+    }
+
+    /* Tone Grid */
+    .tone-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .tone-option {
+      padding: 10px;
+      border-radius: 12px;
+      background: rgba(0,0,0,0.03);
+      border: 1px solid transparent;
+      text-align: center;
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
       transition: all 0.2s;
     }
 
-    .vibe-btn:hover {
-      background: rgba(255, 255, 255, 0.2);
-      transform: translateY(-1px);
+    .tone-option:hover {
+      background: rgba(0,0,0,0.06);
     }
 
-    /* Vibe Modal */
-    .modal-overlay {
-      position: fixed;
-      top: 0;
-      left: 0;
-      right: 0;
-      bottom: 0;
-      background: rgba(0, 0, 0, 0.8);
-      backdrop-filter: blur(5px);
+    .tone-option.selected {
+      background: #fff;
+      border-color: var(--accent-color);
+      color: var(--accent-color);
+      box-shadow: 0 2px 10px rgba(0, 113, 227, 0.1);
+    }
+
+    /* Center Content */
+    .center-content {
+      flex: 1;
+      display: flex;
+      flex-direction: column;
+      justify-content: flex-end; /* Push to bottom initially */
+      align-items: center;
+      padding-bottom: 120px; /* Space for nav bar */
+      text-align: center;
+      max-width: 800px;
+      margin: 0 auto;
+      pointer-events: none; /* Let interaction pass through */
+    }
+
+    .lesson-card {
+      background: var(--glass-bg);
+      border-radius: 24px;
+      padding: 32px;
+      backdrop-filter: blur(30px);
+      box-shadow: 0 20px 60px rgba(0,0,0,0.05);
+      border: 1px solid var(--glass-border);
+      pointer-events: auto;
+      transition: all 0.3s ease;
+      opacity: 0; /* Hidden initially */
+      transform: translateY(20px);
+      animation: fadeUp 0.6s cubic-bezier(0.2, 0.8, 0.2, 1) forwards;
+      animation-delay: 0.5s;
+    }
+
+    @keyframes fadeUp {
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .slot-machine-text {
+      font-size: 24px;
+      line-height: 1.4;
+      font-weight: 500;
+      min-height: 100px;
       display: flex;
       align-items: center;
       justify-content: center;
-      z-index: 1000;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.3s;
     }
 
-    .modal-overlay.open {
-      opacity: 1;
-      pointer-events: all;
+    .slot-animating {
+      opacity: 0.5;
+      filter: blur(2px);
+      transform: scale(0.98);
+      transition: all 0.2s;
     }
 
-    .vibe-panel {
-      background: rgba(20, 20, 25, 0.95);
-      border: 1px solid rgba(255, 255, 255, 0.1);
-      border-radius: 24px;
-      padding: 32px;
-      width: 90%;
-      max-width: 400px;
-      box-shadow: 0 20px 50px rgba(0,0,0,0.5);
-      transform: scale(0.9);
-      transition: transform 0.3s;
-    }
-
-    .modal-overlay.open .vibe-panel {
-      transform: scale(1);
-    }
-
-    .vibe-header {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      margin-bottom: 24px;
-    }
-
-    .vibe-title {
-      font-size: 20px;
-      font-weight: 700;
-    }
-
-    .close-btn {
-      background: none;
-      border: none;
-      color: rgba(255,255,255,0.5);
-      font-size: 24px;
-      cursor: pointer;
-    }
-
-    .slider-group {
-      margin-bottom: 24px;
-    }
-
-    .slider-label {
-      display: flex;
-      justify-content: space-between;
-      font-size: 12px;
-      color: rgba(255,255,255,0.6);
-      margin-bottom: 8px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-
-    .slider-container {
-      position: relative;
-      height: 40px;
-      display: flex;
-      align-items: center;
-    }
-
-    .vibe-slider {
-      -webkit-appearance: none;
-      width: 100%;
-      height: 6px;
-      background: rgba(255,255,255,0.1);
-      border-radius: 3px;
-      outline: none;
-    }
-
-    .vibe-slider::-webkit-slider-thumb {
-      -webkit-appearance: none;
-      width: 24px;
-      height: 24px;
-      border-radius: 50%;
-      background: #fff;
-      cursor: pointer;
-      box-shadow: 0 0 15px rgba(255,255,255,0.5);
-      transition: transform 0.1s;
-    }
-
-    .vibe-slider::-webkit-slider-thumb:hover {
-      transform: scale(1.2);
-    }
-
-    .current-archetype {
-      text-align: center;
-      margin-top: 32px;
-      padding-top: 24px;
-      border-top: 1px solid rgba(255,255,255,0.1);
-    }
-
-    .archetype-name {
-      font-size: 24px;
-      font-weight: 700;
-      background: linear-gradient(135deg, #fff 0%, #aaa 100%);
-      -webkit-background-clip: text;
-      -webkit-text-fill-color: transparent;
-      margin-bottom: 8px;
-    }
-
-    .archetype-desc {
-      font-size: 14px;
-      color: rgba(255,255,255,0.6);
-    }
-    
-    /* Main Content */
-    .main {
-      flex: 1;
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 40px;
-      align-items: center;
-    }
-    
-    /* Kelly Avatar Section */
-    .avatar-section {
-      position: relative;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-    }
-    
-    .avatar-container {
-      position: relative;
-      width: 100%;
-      max-width: 450px;
-    }
-    
-    .avatar-image {
-      width: 100%;
-      border-radius: 20px;
-      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-      transition: all 0.3s ease;
-    }
-    
-    .avatar-image.speaking {
-      box-shadow: 0 20px 60px rgba(0, 217, 255, 0.3);
-    }
-    
-    /* Speaking indicator */
-    .speaking-indicator {
+    /* Bottom Navigation (Phases) */
+    .bottom-nav {
       position: absolute;
-      bottom: -20px;
+      bottom: 40px;
       left: 50%;
       transform: translateX(-50%);
       display: flex;
-      gap: 6px;
-      padding: 12px 24px;
-      background: rgba(0, 0, 0, 0.8);
-      border-radius: 30px;
-      opacity: 0;
-      transition: opacity 0.3s;
+      gap: 12px;
+      background: var(--glass-bg);
+      padding: 8px;
+      border-radius: 24px;
+      backdrop-filter: blur(20px);
+      box-shadow: 0 10px 30px rgba(0,0,0,0.1);
+      border: 1px solid var(--glass-border);
+      pointer-events: auto;
     }
-    
-    .speaking-indicator.active {
-      opacity: 1;
-    }
-    
-    .speaking-bar {
-      width: 4px;
-      height: 20px;
-      background: #00d9ff;
-      border-radius: 2px;
-      animation: speak 0.5s ease-in-out infinite alternate;
-    }
-    
-    .speaking-bar:nth-child(1) { animation-delay: 0s; }
-    .speaking-bar:nth-child(2) { animation-delay: 0.1s; }
-    .speaking-bar:nth-child(3) { animation-delay: 0.2s; }
-    .speaking-bar:nth-child(4) { animation-delay: 0.1s; }
-    .speaking-bar:nth-child(5) { animation-delay: 0s; }
-    
-    @keyframes speak {
-      0% { height: 8px; }
-      100% { height: 24px; }
-    }
-    
-    /* Lesson Content Section */
-    .content-section {
-      padding: 20px;
-    }
-    
-    .lesson-category {
-      color: #00d9ff;
-      font-size: 14px;
-      text-transform: uppercase;
-      letter-spacing: 2px;
-      margin-bottom: 10px;
-    }
-    
-    .lesson-title {
-      font-size: 42px;
-      font-weight: 700;
-      line-height: 1.2;
-      margin-bottom: 20px;
-    }
-    
-    .lesson-description {
-      color: #999;
-      font-size: 18px;
-      line-height: 1.6;
-      margin-bottom: 30px;
-    }
-    
-    /* Transcript Box */
-    .transcript-box {
-      background: rgba(255,255,255,0.03);
-      border: 1px solid rgba(255,255,255,0.1);
+
+    .phase-segment {
+      padding: 10px 20px;
       border-radius: 16px;
-      padding: 24px;
-      margin-bottom: 30px;
-      min-height: 150px;
-      max-height: 250px;
-      overflow-y: auto;
-    }
-    
-    .transcript-label {
-      color: #666;
-      font-size: 12px;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-      margin-bottom: 12px;
-    }
-    
-    .transcript-text {
-      font-size: 18px;
-      line-height: 1.8;
-      color: #ddd;
-    }
-    
-    .transcript-text .current-word {
-      color: #00d9ff;
-      font-weight: 600;
-    }
-    
-    /* Phase Progress */
-    .phase-progress {
-      display: flex;
-      gap: 8px;
-      margin-bottom: 30px;
-    }
-    
-    .phase-dot {
-      width: 40px;
-      height: 6px;
-      background: rgba(255,255,255,0.2);
-      border-radius: 3px;
-      transition: all 0.3s;
-    }
-    
-    .phase-dot.active {
-      background: #00d9ff;
-    }
-    
-    .phase-dot.completed {
-      background: #00ff88;
-    }
-    
-    /* Controls */
-    .controls {
-      display: flex;
-      gap: 16px;
-    }
-    
-    .btn {
-      padding: 16px 32px;
-      border: none;
-      border-radius: 12px;
-      font-size: 16px;
+      font-size: 14px;
       font-weight: 600;
       cursor: pointer;
-      transition: all 0.2s;
+      transition: all 0.3s cubic-bezier(0.2, 0.8, 0.2, 1);
+      color: var(--text-secondary);
+      background: transparent;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .phase-segment:hover {
+      color: var(--text-primary);
+      background: rgba(0,0,0,0.03);
+    }
+
+    .phase-segment.active {
+      background: #fff;
+      color: var(--text-primary);
+      box-shadow: 0 4px 15px rgba(0,0,0,0.05);
+    }
+
+    .phase-segment.completed {
+      color: var(--success-color);
+    }
+
+    .phase-segment.completed::after {
+      content: '✓';
+      font-size: 10px;
+      margin-left: 4px;
+    }
+
+    /* Loading Overlay */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      background: #fff;
+      z-index: 100;
       display: flex;
+      justify-content: center;
       align-items: center;
-      gap: 8px;
+      transition: opacity 0.5s ease;
     }
     
-    .btn-primary {
-      background: linear-gradient(135deg, #00d9ff, #0088ff);
-      color: #fff;
-      flex: 1;
+    .loading-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
     }
-    
-    .btn-primary:hover {
-      transform: translateY(-2px);
-      box-shadow: 0 8px 30px rgba(0, 217, 255, 0.4);
-    }
-    
-    .btn-primary:disabled {
-      opacity: 0.5;
-      cursor: not-allowed;
-      transform: none;
-    }
-    
-    .btn-secondary {
-      background: rgba(255,255,255,0.1);
-      color: #fff;
-    }
-    
-    .btn-secondary:hover {
-      background: rgba(255,255,255,0.15);
-    }
-    
-    /* Loading State */
-    .loading-spinner {
-      width: 20px;
-      height: 20px;
-      border: 2px solid rgba(255,255,255,0.3);
-      border-top-color: #fff;
-      border-radius: 50%;
-      animation: spin 0.8s linear infinite;
-    }
-    
-    @keyframes spin {
-      to { transform: rotate(360deg); }
-    }
-    
-    /* Error State */
-    .error-message {
-      background: rgba(255, 68, 68, 0.1);
-      border: 1px solid rgba(255, 68, 68, 0.3);
-      color: #ff6b6b;
-      padding: 16px;
-      border-radius: 12px;
-      margin-bottom: 20px;
-      display: none;
-    }
-    
-    .error-message.show {
-      display: block;
-    }
-    
-    /* Responsive */
-    @media (max-width: 900px) {
-      .main {
-        grid-template-columns: 1fr;
-        gap: 30px;
+
+    /* Mobile Tweaks */
+    @media (max-width: 768px) {
+      .bg-image {
+        width: 100%;
+        height: 100%;
+        object-position: top center;
       }
-      
-      .lesson-title {
-        font-size: 32px;
+      .bottom-nav {
+        bottom: 20px;
+        width: 90%;
+        overflow-x: auto;
+        justify-content: flex-start;
       }
-      
-      .avatar-container {
-        max-width: 350px;
+      .phase-segment {
+        flex-shrink: 0;
       }
     }
   </style>
 </head>
 <body>
-  <div class="container">
-    <!-- Header -->
-    <header class="header">
-      <a href="/" class="logo">
-        <span class="logo-icon">✨</span>
-        Curious Kelly
-      </a>
-      <div class="header-right">
-        <button class="vibe-btn" id="vibe-btn">
-          <span>🎛️</span> Vibe Tuner
-        </button>
-        <div class="day-badge" id="day-badge">Day 1 of 365</div>
-      </div>
-    </header>
+
+  <!-- Loading Screen -->
+  <div class="loading-overlay" id="loading-screen">
+    <div class="logo-area" style="transform: scale(1.5);">
+      <span class="logo-icon">✨</span>
+      <span class="logo-text">Kelly OS</span>
+    </div>
+  </div>
+
+  <!-- Background -->
+  <div class="bg-container">
+    <img src="/assets/kelly_canonical/core/chair/kelly-chair-wisdom.png" alt="Kelly" class="bg-image" id="kelly-bg">
+  </div>
+
+  <!-- UI Layer -->
+  <div class="ui-layer">
     
-    <!-- Vibe Tuner Modal -->
-    <div class="modal-overlay" id="vibe-modal">
-      <div class="vibe-panel">
-        <div class="vibe-header">
-          <div class="vibe-title">Tune Your Vibe</div>
-          <button class="close-btn" id="close-vibe">×</button>
-        </div>
-        
-        <div class="slider-group">
-          <div class="slider-label">
-            <span>Concrete</span>
-            <span>Abstract</span>
+    <!-- Top Bar -->
+    <div class="top-bar ui-controls">
+      <div class="logo-area">
+        <span class="logo-icon">✨</span>
+        <span class="logo-text">Kelly OS</span>
+      </div>
+
+      <div class="menu-area">
+        <!-- Age Menu -->
+        <div class="menu-item">
+          <div class="menu-btn" id="btn-age" title="Age Group">
+            <span>🎂</span>
           </div>
-          <div class="slider-container">
-            <input type="range" min="0" max="100" value="100" class="vibe-slider" id="slider-perspective">
+          <div class="dropdown-menu" id="menu-age">
+            <div class="dropdown-title">Target Age</div>
+            <div class="age-slider-container">
+              <div class="age-value" id="age-display">18</div>
+              <input type="range" min="2" max="102" value="18" id="age-slider">
+              <div style="display:flex; justify-content:space-between; font-size:10px; color:#aaa;">
+                <span>2</span>
+                <span>102</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        <div class="slider-group">
-          <div class="slider-label">
-            <span>Thinking</span>
-            <span>Feeling</span>
+        <!-- Tone Menu -->
+        <div class="menu-item">
+          <div class="menu-btn" id="btn-tone" title="Lesson Tone">
+            <span>🎭</span>
           </div>
-          <div class="slider-container">
-            <input type="range" min="0" max="100" value="0" class="vibe-slider" id="slider-energy">
+          <div class="dropdown-menu" id="menu-tone">
+            <div class="dropdown-title">Lesson Tone</div>
+            <div class="tone-grid">
+              <div class="tone-option selected" data-tone="neutral">Neutral</div>
+              <div class="tone-option" data-tone="fun">Fun</div>
+              <div class="tone-option" data-tone="warm">Warm</div>
+              <div class="tone-option" data-tone="inspirational">Inspire</div>
+            </div>
           </div>
-        </div>
-
-        <!-- Identity Controls -->
-        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
-          <div>
-            <div class="slider-label">Age Group</div>
-            <select id="select-age" style="width: 100%; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 8px; border-radius: 8px; outline: none;">
-              <option value="child">Child (5-8)</option>
-              <option value="preteen">Pre-Teen (9-12)</option>
-              <option value="teen">Teen (13-17)</option>
-              <option value="adult" selected>Adult (18+)</option>
-            </select>
-          </div>
-          <div>
-            <div class="slider-label">Language</div>
-            <select id="select-language" style="width: 100%; background: rgba(255,255,255,0.1); color: white; border: 1px solid rgba(255,255,255,0.2); padding: 8px; border-radius: 8px; outline: none;">
-              <option value="en" selected>English</option>
-              <option value="es">Español</option>
-              <option value="fr">Français</option>
-            </select>
-          </div>
-        </div>
-
-        <div class="current-archetype">
-          <div class="archetype-name" id="archetype-display">The Scientist</div>
-          <div class="archetype-desc" id="archetype-desc">Truth • Logic • Analysis</div>
         </div>
       </div>
     </div>
-    
-    <!-- Main Content -->
-    <main class="main">
-      <!-- Kelly Avatar -->
-      <div class="avatar-section">
-        <div class="avatar-container">
-          <img 
-            src="/assets/kelly_canonical/core/chair/kelly-chair-wisdom.png" 
-            alt="Kelly - Your AI Tutor" 
-            class="avatar-image"
-            id="kelly-avatar"
-            onerror="this.src='/assets/kelly_canonical/core/chair/kelly-chair-explaining.png'"
-          >
-          <div class="speaking-indicator" id="speaking-indicator">
-            <div class="speaking-bar"></div>
-            <div class="speaking-bar"></div>
-            <div class="speaking-bar"></div>
-            <div class="speaking-bar"></div>
-            <div class="speaking-bar"></div>
-          </div>
+
+    <!-- Center Content -->
+    <div class="center-content">
+      <div class="lesson-card ui-controls">
+        <div class="slot-machine-text" id="lesson-text">
+          initializing neural link...
         </div>
-      </div>
-      
-      <!-- Lesson Content -->
-      <div class="content-section">
-        <div class="lesson-category" id="lesson-category">Loading...</div>
-        <h1 class="lesson-title" id="lesson-title">Today's Lesson</h1>
-        <p class="lesson-description" id="lesson-description">
-          Get ready for an exciting learning adventure!
-        </p>
-        
-        <!-- Error Message -->
-        <div class="error-message" id="error-message"></div>
-        
-        <!-- Phase Progress -->
-        <div class="phase-progress">
-          <div class="phase-dot active" data-phase="0"></div>
-          <div class="phase-dot" data-phase="1"></div>
-          <div class="phase-dot" data-phase="2"></div>
-          <div class="phase-dot" data-phase="3"></div>
-          <div class="phase-dot" data-phase="4"></div>
-        </div>
-        
-        <!-- Transcript -->
-        <div class="transcript-box">
-          <div class="transcript-label">Kelly says:</div>
-          <div class="transcript-text" id="transcript">
-            Click "Start Lesson" to begin...
-          </div>
-        </div>
-        
-        <!-- Controls -->
-        <div class="controls">
-          <button class="btn btn-secondary" id="btn-replay" disabled>
-            ↻ Replay
-          </button>
-          <button class="btn btn-primary" id="btn-start">
-            ▶ Start Lesson
+        <div style="margin-top: 20px; display: flex; gap: 10px; justify-content: center;">
+          <button id="btn-speak" style="background: var(--accent-color); color: white; border: none; padding: 10px 20px; border-radius: 20px; cursor: pointer; font-weight: 600;">
+            ▶ Play
           </button>
         </div>
       </div>
-    </main>
+    </div>
+
+    <!-- Bottom Nav -->
+    <div class="bottom-nav ui-controls" id="phase-nav">
+      <!-- Segments injected via JS -->
+    </div>
+
   </div>
 
   <!-- Supabase -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-  
+
   <script>
-    // ============================================
-    // CONFIGURATION - Update these values
-    // ============================================
+    // Configuration
     const CONFIG = {
       SUPABASE_URL: 'https://tvjalxxsyryjphkforjv.supabase.co',
       SUPABASE_ANON_KEY: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI',
-      // ElevenLabs will be called via API endpoint to protect keys
     };
-    
-    // ============================================
-    // ARCHETYPE CONFIGURATION
-    // ============================================
-    
-    // Archetype Definitions (Centroids)
-    const ARCHETYPES = [
-      { name: 'The Survivor', x: 0, y: 0, desc: 'Survival • Utility • Practical' },
-      { name: 'The Strategist', x: 25, y: 0, desc: 'Outcome • Planning • Structure' },
-      { name: 'The MacGyver', x: 25, y: 25, desc: 'Resourcefulness • Analysis • Practical' },
-      { name: 'The Scientist', x: 100, y: 0, desc: 'Truth • Logic • Analysis' },
-      { name: 'The Architect', x: 75, y: 25, desc: 'Structure • Vision • Abstract' },
-      { name: 'The Rebel', x: 0, y: 50, desc: 'Change • Freedom • Chaos' },
-      { name: 'The Explorer', x: 100, y: 50, desc: 'Curiosity • Adventure • Energy' },
-      { name: 'The Diplomat', x: 25, y: 75, desc: 'Harmony • Mediation • Social' },
-      { name: 'The Provider', x: 0, y: 100, desc: 'Care • Community • Warmth' },
-      { name: 'The Storyteller', x: 75, y: 75, desc: 'Narrative • Meaning • Expression' },
-      { name: 'The Mystic', x: 100, y: 100, desc: 'Spirit • Unknown • Deep' },
-      { name: 'The Empath', x: 75, y: 100, desc: 'Connection • Feeling • Warmth' }
-    ];
 
-    // Default archetype - can be changed by user later
-    const DEFAULT_ARCHETYPE = 'The Scientist';
-    
-    // Standard phase order (if not specified in data)
-    const PHASE_ORDER = ['welcome', 'teaching', 'practice', 'reflection', 'wisdom'];
-    
-    // ============================================
-    // STATE
-    // ============================================
-    let supabase = null;
-    let currentLesson = null;
-    let lessonAtoms = []; // Array of {phase, content} from lesson_atoms
-    let currentPhaseIndex = 0;
-    let isPlaying = false;
-    let currentAudio = null;
-    let currentArchetype = DEFAULT_ARCHETYPE;
-    let currentAge = 'adult';
-    let currentLanguage = 'en';
-    let debounceTimer = null;
-
-    // ============================================
-    // DOM ELEMENTS
-    // ============================================
-    const elements = {
-      dayBadge: document.getElementById('day-badge'),
-      category: document.getElementById('lesson-category'),
-      title: document.getElementById('lesson-title'),
-      description: document.getElementById('lesson-description'),
-      transcript: document.getElementById('transcript'),
-      avatar: document.getElementById('kelly-avatar'),
-      speakingIndicator: document.getElementById('speaking-indicator'),
-      btnStart: document.getElementById('btn-start'),
-      btnReplay: document.getElementById('btn-replay'),
-      errorMessage: document.getElementById('error-message'),
-      phaseDots: document.querySelectorAll('.phase-dot'),
-      // Vibe Tuner Elements
-      vibeBtn: document.getElementById('vibe-btn'),
-      vibeModal: document.getElementById('vibe-modal'),
-      closeVibe: document.getElementById('close-vibe'),
-      sliderPerspective: document.getElementById('slider-perspective'),
-      sliderEnergy: document.getElementById('slider-energy'),
-      selectAge: document.getElementById('select-age'),
-      selectLanguage: document.getElementById('select-language'),
-      archetypeDisplay: document.getElementById('archetype-display'),
-      archetypeDesc: document.getElementById('archetype-desc')
+    // State
+    const state = {
+      age: 18,
+      tone: 'neutral',
+      phaseIndex: 0,
+      phases: ['Hook', 'Fact1', 'Fact2', 'Fact3', 'Wisdom'], // Default phases
+      lessonData: null, // Core lesson data
+      atoms: [], // Loaded atoms
+      isPlaying: false
     };
-    
-    // ============================================
-    // VIBE TUNER LOGIC
-    // ============================================
-    function getNearestArchetype(x, y) {
-      let minDistance = Infinity;
-      let nearest = ARCHETYPES[0];
 
-      ARCHETYPES.forEach(archetype => {
-        // Calculate Euclidean distance
-        const dist = Math.sqrt(Math.pow(x - archetype.x, 2) + Math.pow(y - archetype.y, 2));
-        if (dist < minDistance) {
-          minDistance = dist;
-          nearest = archetype;
-        }
-      });
+    // Tone to Archetype Mapping (Internal Logic)
+    const TONE_MAP = {
+      'neutral': 'The Scientist',
+      'fun': 'The Explorer',
+      'warm': 'The Provider',
+      'inspirational': 'The Mystic'
+    };
 
-      return nearest;
-    }
+    // Elements
+    const els = {
+      ageBtn: document.getElementById('btn-age'),
+      ageMenu: document.getElementById('menu-age'),
+      ageSlider: document.getElementById('age-slider'),
+      ageDisplay: document.getElementById('age-display'),
+      toneBtn: document.getElementById('btn-tone'),
+      toneMenu: document.getElementById('menu-tone'),
+      toneOptions: document.querySelectorAll('.tone-option'),
+      lessonText: document.getElementById('lesson-text'),
+      phaseNav: document.getElementById('phase-nav'),
+      loading: document.getElementById('loading-screen'),
+      speakBtn: document.getElementById('btn-speak')
+    };
 
-    function updateVibe() {
-      const x = parseInt(elements.sliderPerspective.value);
-      const y = parseInt(elements.sliderEnergy.value);
-      const age = elements.selectAge.value;
-      const language = elements.selectLanguage.value;
-      
-      const archetype = getNearestArchetype(x, y);
-      
-      // Update UI immediately
-      elements.archetypeDisplay.textContent = archetype.name;
-      elements.archetypeDesc.textContent = archetype.desc;
-      
-      // Only reload if something changed
-      if (archetype.name !== currentArchetype || age !== currentAge || language !== currentLanguage) {
-        console.log(`🔄 [VIBE] Updating to: ${archetype.name} | ${age} | ${language}`);
-        currentArchetype = archetype.name;
-        currentAge = age;
-        currentLanguage = language;
-        
-        // Debounce the reload to prevent spamming API
-        if (debounceTimer) clearTimeout(debounceTimer);
-        debounceTimer = setTimeout(() => {
-          loadLesson(currentLesson.day_number);
-        }, 500);
-      }
-    }
+    // Initialize
+    const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 
-    // Event Listeners for Vibe Tuner
-    elements.vibeBtn.addEventListener('click', () => {
-      elements.vibeModal.classList.add('open');
-    });
-
-    elements.closeVibe.addEventListener('click', () => {
-      elements.vibeModal.classList.remove('open');
-    });
-
-    // Close on outside click
-    elements.vibeModal.addEventListener('click', (e) => {
-      if (e.target === elements.vibeModal) {
-        elements.vibeModal.classList.remove('open');
-      }
-    });
-
-    elements.sliderPerspective.addEventListener('input', updateVibe);
-    elements.sliderEnergy.addEventListener('input', updateVibe);
-    elements.selectAge.addEventListener('change', updateVibe);
-    elements.selectLanguage.addEventListener('change', updateVibe);
-
-    // ============================================
-    // UTILITIES
-    // ============================================
-    function getTodayLessonDay() {
-      const startDate = new Date('2025-01-01');
-      const today = new Date();
-      const diffTime = Math.abs(today - startDate);
-      const diffDays = Math.ceil(diffTime / (1000 * 60 * 60 * 24));
-      return ((diffDays - 1) % 365) + 1;
-    }
-    
-    function showError(message) {
-      elements.errorMessage.textContent = message;
-      elements.errorMessage.classList.add('show');
-      setTimeout(() => elements.errorMessage.classList.remove('show'), 5000);
-    }
-    
-    function setLoading(loading) {
-      if (loading) {
-        elements.btnStart.innerHTML = '<div class="loading-spinner"></div> Loading...';
-        elements.btnStart.disabled = true;
-      } else {
-        elements.btnStart.innerHTML = isPlaying ? '⏸ Pause' : '▶ Continue';
-        elements.btnStart.disabled = false;
-      }
-    }
-    
-    function updatePhaseIndicator() {
-      elements.phaseDots.forEach((dot, index) => {
-        dot.classList.remove('active', 'completed');
-        if (index < currentPhaseIndex) {
-          dot.classList.add('completed');
-        } else if (index === currentPhaseIndex) {
-          dot.classList.add('active');
-        }
-      });
-    }
-    
-    /**
-     * Extract text from lesson_atom content JSON
-     */
-    function extractTextFromContent(content) {
-      if (typeof content === 'string') {
-        return content;
-      }
-      if (typeof content === 'object' && content !== null) {
-        // Try common content structure patterns
-        if (content.text) return content.text;
-        if (content.script) return content.script;
-        if (content.content) return content.content;
-        if (content.message) return content.message;
-        if (Array.isArray(content)) {
-          return content.map(item => extractTextFromContent(item)).join(' ');
-        }
-        // If it's an object with nested structure, try to find text
-        const textKeys = ['text', 'script', 'content', 'message', 'transcript'];
-        for (const key of textKeys) {
-          if (content[key]) {
-            return typeof content[key] === 'string' ? content[key] : JSON.stringify(content[key]);
-          }
-        }
-        // Last resort: stringify the object
-        return JSON.stringify(content);
-      }
-      return String(content);
-    }
-    
-    function setSpeaking(speaking) {
-      if (speaking) {
-        elements.avatar.classList.add('speaking');
-        elements.speakingIndicator.classList.add('active');
-      } else {
-        elements.avatar.classList.remove('speaking');
-        elements.speakingIndicator.classList.remove('active');
-      }
-    }
-    
-    // ============================================
-    // SUPABASE
-    // ============================================
-    async function initSupabase() {
-      try {
-        supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
-        console.log('✅ Supabase initialized');
-      } catch (error) {
-        console.error('❌ Supabase init failed:', error);
-        showError('Failed to connect to database');
-      }
-    }
-    
-    /**
-     * Load lesson from core_lessons and lesson_atoms
-     * Logs complete data structure for debugging
-     */
-    async function loadLesson(dayNumber) {
-      try {
-        console.log(`\n🔍 [AUDIT] Loading Day ${dayNumber} lesson...`);
-        
-        // Step 1: Load core_lessons
-        const { data: coreLesson, error: coreError } = await supabase
-          .from('core_lessons')
-          .select('*')
-          .eq('day_number', dayNumber)
-          .single();
-        
-        if (coreError) {
-          console.error('❌ [AUDIT] core_lessons query error:', coreError);
-          throw coreError;
-        }
-        
-        if (!coreLesson) {
-          throw new Error(`No lesson found for day ${dayNumber}`);
-        }
-        
-        console.log('✅ [AUDIT] core_lessons loaded:', {
-          id: coreLesson.id,
-          day_number: coreLesson.day_number,
-          topic: coreLesson.topic,
-          available_columns: Object.keys(coreLesson)
-        });
-        console.log('📋 [AUDIT] Full core_lessons data:', JSON.stringify(coreLesson, null, 2));
-        
-        currentLesson = coreLesson;
-        
-        // Step 2: Load lesson_atoms for this lesson and archetype
-        console.log(`\n🔍 [AUDIT] Loading lesson_atoms for archetype: ${currentArchetype}...`);
-        const { data: atoms, error: atomsError } = await supabase
-          .from('lesson_atoms')
-          .select('*')
-          .eq('core_lesson_id', coreLesson.id)
-          .eq('archetype', currentArchetype);
-        
-        if (atomsError) {
-          console.error('❌ [AUDIT] lesson_atoms query error:', atomsError);
-          // Try without archetype filter
-          console.log('🔄 [AUDIT] Trying without archetype filter...');
-          const { data: allAtoms, error: allAtomsError } = await supabase
-            .from('lesson_atoms')
-            .select('*')
-            .eq('core_lesson_id', coreLesson.id);
-          
-          if (allAtomsError) {
-            console.error('❌ [AUDIT] lesson_atoms query (no filter) error:', allAtomsError);
-            throw allAtomsError;
-          }
-          
-          if (allAtoms && allAtoms.length > 0) {
-            console.log(`⚠️  [AUDIT] Found ${allAtoms.length} atoms but none for archetype "${currentArchetype}"`);
-            console.log('📋 [AUDIT] Available archetypes:', [...new Set(allAtoms.map(a => a.archetype))]);
-            // Use first available archetype
-            const firstArchetype = allAtoms[0].archetype;
-            console.log(`🔄 [AUDIT] Using archetype: ${firstArchetype}`);
-            currentArchetype = firstArchetype;
-            lessonAtoms = allAtoms.filter(a => a.archetype === firstArchetype);
-          } else {
-            lessonAtoms = [];
-          }
-        } else {
-          lessonAtoms = atoms || [];
-        }
-        
-        console.log(`✅ [AUDIT] Found ${lessonAtoms.length} lesson_atoms`);
-        
-        if (lessonAtoms.length > 0) {
-          console.log('📋 [AUDIT] lesson_atoms structure:');
-          lessonAtoms.forEach((atom, index) => {
-            console.log(`\n--- Atom ${index + 1} ---`);
-            console.log(`Phase: ${atom.phase}`);
-            console.log(`Archetype: ${atom.archetype}`);
-            console.log(`Content type: ${typeof atom.content}`);
-            if (typeof atom.content === 'object') {
-              console.log(`Content keys:`, Object.keys(atom.content));
-              console.log('Content preview:', JSON.stringify(atom.content, null, 2).substring(0, 500));
-            }
-          });
-          
-          // Sort atoms by phase order
-          lessonAtoms.sort((a, b) => {
-            const aIndex = PHASE_ORDER.indexOf(a.phase);
-            const bIndex = PHASE_ORDER.indexOf(b.phase);
-            if (aIndex === -1 && bIndex === -1) return a.phase.localeCompare(b.phase);
-            if (aIndex === -1) return 1;
-            if (bIndex === -1) return -1;
-            return aIndex - bIndex;
-          });
-          
-          console.log('📊 [AUDIT] Phases in order:', lessonAtoms.map(a => a.phase));
-        } else {
-          console.warn('⚠️  [AUDIT] No lesson_atoms found - will use fallback content');
-        }
-        
-        // Step 3: Update phase dots based on actual data
-        updatePhaseDots(lessonAtoms.length);
-        
-        // Step 4: Update UI
-        elements.dayBadge.textContent = `Day ${dayNumber} of 365`;
-        elements.category.textContent = coreLesson.difficulty_level || coreLesson.ideal_age_range || 'General Knowledge';
-        elements.title.textContent = coreLesson.topic;
-        elements.description.textContent = coreLesson.universal_truth || `Explore the fascinating world of ${coreLesson.topic}.`;
-        
-        console.log('✅ [AUDIT] Lesson loaded successfully');
-        console.log('📊 [AUDIT] Summary:', {
-          day: dayNumber,
-          topic: coreLesson.topic,
-          atoms_count: lessonAtoms.length,
-          phases: lessonAtoms.map(a => a.phase),
-          archetype: currentArchetype,
-          age: currentAge,
-          language: currentLanguage
-        });
-        
-        return coreLesson;
-        
-      } catch (error) {
-        console.error('❌ [AUDIT] Lesson load failed:', error);
-        
-        // Fallback lesson
-        currentLesson = {
-          id: 'fallback',
-          day_number: dayNumber,
-          topic: 'The Sun',
-          universal_truth: 'The Sun is our star',
-          difficulty_level: 'Beginner'
-        };
-        lessonAtoms = [];
-        
-        elements.dayBadge.textContent = `Day ${dayNumber} of 365`;
-        elements.category.textContent = 'Astronomy';
-        elements.title.textContent = 'The Sun: Our Star';
-        elements.description.textContent = 'Explore the fascinating world of The Sun.';
-        
-        updatePhaseDots(0);
-        
-        return currentLesson;
-      }
-    }
-    
-    /**
-     * Update phase dots to match actual number of phases
-     */
-    function updatePhaseDots(count) {
-      const phaseProgress = document.querySelector('.phase-progress');
-      phaseProgress.innerHTML = '';
-      
-      const actualCount = Math.max(count, 1); // At least 1 dot
-      
-      for (let i = 0; i < actualCount; i++) {
-        const dot = document.createElement('div');
-        dot.className = 'phase-dot';
-        dot.setAttribute('data-phase', i);
-        phaseProgress.appendChild(dot);
-      }
-      
-      // Update elements reference
-      elements.phaseDots = document.querySelectorAll('.phase-dot');
-      updatePhaseIndicator();
-    }
-    
-    // ============================================
-    // ELEVENLABS VOICE
-    // ============================================
-    async function generateVoice(text) {
-      try {
-        // Try to use API endpoint first (for production)
-        const response = await fetch('/api/voice', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ text })
-        });
-        
-        if (response.ok) {
-          const blob = await response.blob();
-          return URL.createObjectURL(blob);
-        }
-        
-        // If API fails, we'll use browser speech synthesis as fallback
-        console.warn('Voice API failed, using browser speech');
-        return null;
-        
-      } catch (error) {
-        console.error('Voice generation error:', error);
-        return null;
-      }
-    }
-    
-    function speakWithBrowser(text) {
-      return new Promise((resolve) => {
-        const utterance = new SpeechSynthesisUtterance(text);
-        utterance.rate = 0.9;
-        utterance.pitch = 1.1;
-        utterance.volume = 1;
-        
-        // Try to get a female voice
-        const voices = speechSynthesis.getVoices();
-        const femaleVoice = voices.find(v => 
-          v.name.includes('Female') || 
-          v.name.includes('Samantha') || 
-          v.name.includes('Google US English')
-        );
-        if (femaleVoice) utterance.voice = femaleVoice;
-        
-        utterance.onend = () => {
-          setSpeaking(false);
-          resolve();
-        };
-        
-        utterance.onstart = () => setSpeaking(true);
-        
-        speechSynthesis.speak(utterance);
-      });
-    }
-    
-    // ============================================
-    // PLAYBACK
-    // ============================================
-    async function playPhase(phaseIndex) {
-      console.log(`\n🎬 [PLAYBACK] Starting phase ${phaseIndex} of ${lessonAtoms.length}`);
-      
-      // Check if we have lesson_atoms data
-      if (lessonAtoms.length === 0) {
-        console.warn('⚠️  [PLAYBACK] No lesson_atoms - using fallback');
-        const fallbackText = `Welcome! Today is Day ${currentLesson.day_number} of your learning journey. We're going to explore ${currentLesson.topic}. This is going to be fascinating!`;
-        await playText(fallbackText, phaseIndex);
-        return;
-      }
-      
-      if (phaseIndex >= lessonAtoms.length) {
-        // Lesson complete
-        console.log('✅ [PLAYBACK] Lesson complete!');
-        elements.transcript.textContent = "Great job! You've completed today's lesson. See you tomorrow!";
-        elements.btnStart.innerHTML = '✓ Complete';
-        elements.btnStart.disabled = true;
-        currentPhaseIndex = lessonAtoms.length;
-        updatePhaseIndicator();
-        return;
-      }
-      
-      currentPhaseIndex = phaseIndex;
-      updatePhaseIndicator();
-      
-      const atom = lessonAtoms[phaseIndex];
-      console.log(`📝 [PLAYBACK] Phase: ${atom.phase}`);
-      console.log(`📦 [PLAYBACK] Atom content:`, atom.content);
-      
-      // Extract text from content
-      const text = extractTextFromContent(atom.content);
-      console.log(`💬 [PLAYBACK] Extracted text (${text.length} chars):`, text.substring(0, 100) + '...');
-      
-      await playText(text, phaseIndex);
-    }
-    
-    /**
-     * Play text with voice synthesis
-     */
-    async function playText(text, phaseIndex) {
-      elements.transcript.textContent = text;
-      setLoading(true);
-      
-      // Try ElevenLabs first, fallback to browser speech
-      const audioUrl = await generateVoice(text);
-      
-      setLoading(false);
-      isPlaying = true;
-      elements.btnStart.innerHTML = '⏸ Pause';
-      elements.btnReplay.disabled = false;
-      
-      if (audioUrl) {
-        // Play ElevenLabs audio
-        currentAudio = new Audio(audioUrl);
-        setSpeaking(true);
-        
-        currentAudio.onended = () => {
-          console.log(`✅ [PLAYBACK] Phase ${phaseIndex} audio ended`);
-          setSpeaking(false);
-          isPlaying = false;
-          if (phaseIndex < lessonAtoms.length - 1) {
-            elements.btnStart.innerHTML = '▶ Continue';
-          } else {
-            elements.btnStart.innerHTML = '✓ Complete';
-            elements.btnStart.disabled = true;
-          }
-        };
-        
-        currentAudio.onerror = (error) => {
-          console.error('❌ [PLAYBACK] Audio error:', error);
-          setSpeaking(false);
-          speakWithBrowser(text);
-        };
-        
-        currentAudio.play().catch(error => {
-          console.error('❌ [PLAYBACK] Audio play failed:', error);
-          setSpeaking(false);
-          speakWithBrowser(text);
-        });
-      } else {
-        // Use browser speech synthesis
-        await speakWithBrowser(text);
-        isPlaying = false;
-        if (phaseIndex < lessonAtoms.length - 1) {
-          elements.btnStart.innerHTML = '▶ Continue';
-        } else {
-          elements.btnStart.innerHTML = '✓ Complete';
-          elements.btnStart.disabled = true;
-        }
-      }
-    }
-    
-    // ============================================
-    // EVENT HANDLERS
-    // ============================================
-    elements.btnStart.addEventListener('click', async () => {
-      console.log(`\n🖱️  [INTERACTION] Start/Continue clicked. isPlaying: ${isPlaying}, phase: ${currentPhaseIndex}`);
-      
-      if (isPlaying) {
-        // Pause
-        console.log('⏸️  [INTERACTION] Pausing...');
-        if (currentAudio) {
-          currentAudio.pause();
-        }
-        speechSynthesis.cancel();
-        setSpeaking(false);
-        isPlaying = false;
-        elements.btnStart.innerHTML = '▶ Continue';
-      } else {
-        // Start or continue
-        if (currentPhaseIndex === 0 && lessonAtoms.length === 0) {
-          // First time starting, but no atoms loaded yet
-          console.log('⚠️  [INTERACTION] No atoms loaded, waiting for lesson load...');
-          return;
-        }
-        
-        if (currentPhaseIndex === 0 && !isPlaying) {
-          // First time starting
-          console.log('▶️  [INTERACTION] Starting first phase...');
-          await playPhase(0);
-        } else {
-          // Continue to next phase
-          console.log(`▶️  [INTERACTION] Continuing to phase ${currentPhaseIndex + 1}...`);
-          await playPhase(currentPhaseIndex + 1);
-        }
-      }
-    });
-    
-    elements.btnReplay.addEventListener('click', async () => {
-      console.log(`\n🔄 [INTERACTION] Replay clicked for phase ${currentPhaseIndex}`);
-      if (currentAudio) {
-        currentAudio.pause();
-        currentAudio.currentTime = 0;
-      }
-      speechSynthesis.cancel();
-      await playPhase(currentPhaseIndex);
-    });
-    
-    // ============================================
-    // INITIALIZATION
-    // ============================================
     async function init() {
-      // Load voices for browser speech
-      if (speechSynthesis.onvoiceschanged !== undefined) {
-        speechSynthesis.onvoiceschanged = () => {};
+      console.log('✨ Kelly OS Initializing...');
+      
+      // Simulate loading
+      setTimeout(() => {
+        els.loading.classList.add('hidden');
+      }, 1000);
+
+      // Load Data
+      await loadLessonData(330); // Hardcoded day for now as per previous context
+      
+      // Render UI
+      renderPhases();
+      updateContent();
+
+      // Event Listeners
+      setupInteractions();
+    }
+
+    async function loadLessonData(day) {
+      console.log(`📚 Loading Day ${day}...`);
+      
+      // 1. Core Lesson
+      const { data: core } = await supabase
+        .from('core_lessons')
+        .select('*')
+        .eq('day_number', day)
+        .single();
+      
+      state.lessonData = core || { topic: 'Unknown' };
+      console.log('✅ Core Loaded:', state.lessonData.topic);
+
+      // 2. Atoms (Variants)
+      // We load ALL atoms for this lesson so we can swap instantly client-side (Kelly adapts in real time)
+      const { data: atoms } = await supabase
+        .from('lesson_atoms')
+        .select('*')
+        .eq('core_lesson_id', state.lessonData.id);
+        
+      state.atoms = atoms || [];
+      console.log(`✅ Atoms Loaded: ${state.atoms.length}`);
+    }
+
+    function getBestAtom() {
+      // Logic: Find atom matching current Phase + mapped Archetype
+      // Fallback to "The Scientist" if specific tone/archetype missing
+      const targetArchetype = TONE_MAP[state.tone] || 'The Scientist';
+      const targetPhase = state.phases[state.phaseIndex];
+
+      let atom = state.atoms.find(a => 
+        a.phase === targetPhase && a.archetype === targetArchetype
+      );
+
+      if (!atom) {
+        // Fallback: Try finding ANY atom for this phase
+        atom = state.atoms.find(a => a.phase === targetPhase);
       }
-      speechSynthesis.getVoices();
+
+      return atom;
+    }
+
+    function updateContent() {
+      // Slot machine animation effect
+      els.lessonText.classList.add('slot-animating');
       
-      await initSupabase();
-      
-      const dayNumber = getTodayLessonDay();
-      // Allow URL parameter to override day number for testing
-      const urlParams = new URLSearchParams(window.location.search);
-      const testDay = urlParams.get('day');
-      const finalDayNumber = testDay ? parseInt(testDay) : dayNumber;
-      
-      console.log(`\n🚀 [INIT] Initializing player for Day ${finalDayNumber}...`);
-      await loadLesson(finalDayNumber);
-      
-      if (currentLesson) {
-        elements.transcript.textContent = `Ready to learn about ${currentLesson.topic}? Click "Start Lesson" to begin!`;
-      }
-      
-      console.log('✅ [INIT] Player initialized');
-      console.log('📊 [INIT] Final state:', {
-        lesson: currentLesson?.topic,
-        atoms_count: lessonAtoms.length,
-        archetype: currentArchetype,
-        phases: lessonAtoms.map(a => a.phase)
+      setTimeout(() => {
+        const atom = getBestAtom();
+        if (atom && atom.content) {
+          // Extract text logic
+          let text = "Content missing...";
+          if (typeof atom.content === 'string') text = atom.content;
+          else if (atom.content.script) text = atom.content.script;
+          else if (atom.content.text) text = atom.content.text;
+          
+          // Personalized tweak (Client-side "AI" adaptation simulation)
+          // In a real app, we'd use the shards table for age-specific text.
+          // Since shards are missing, we simulate age adaptation by simple prefixing/logic if possible, 
+          // or just relying on the tone mapping which is real.
+          
+          els.lessonText.innerHTML = text;
+        } else {
+          els.lessonText.innerHTML = `(No content for ${state.phases[state.phaseIndex]})`;
+        }
+        els.lessonText.classList.remove('slot-animating');
+      }, 250);
+    }
+
+    function renderPhases() {
+      els.phaseNav.innerHTML = '';
+      state.phases.forEach((phase, idx) => {
+        const el = document.createElement('div');
+        el.className = `phase-segment ${idx === state.phaseIndex ? 'active' : ''}`;
+        el.innerText = phase;
+        el.onclick = () => {
+          state.phaseIndex = idx;
+          renderPhases();
+          updateContent();
+        };
+        els.phaseNav.appendChild(el);
       });
     }
-    
-    // Start
+
+    function setupInteractions() {
+      // Menu Toggles
+      const toggleMenu = (btn, menu) => {
+        const isOpen = menu.classList.contains('open');
+        // Close all
+        document.querySelectorAll('.dropdown-menu').forEach(el => el.classList.remove('open'));
+        document.querySelectorAll('.menu-btn').forEach(el => el.classList.remove('active'));
+        
+        if (!isOpen) {
+          menu.classList.add('open');
+          btn.classList.add('active');
+        }
+      };
+
+      els.ageBtn.onclick = (e) => { e.stopPropagation(); toggleMenu(els.ageBtn, els.ageMenu); };
+      els.toneBtn.onclick = (e) => { e.stopPropagation(); toggleMenu(els.toneBtn, els.toneMenu); };
+
+      // Close menus on outside click
+      document.body.onclick = () => {
+        document.querySelectorAll('.dropdown-menu').forEach(el => el.classList.remove('open'));
+        document.querySelectorAll('.menu-btn').forEach(el => el.classList.remove('active'));
+      };
+
+      // Stop propagation inside menus
+      document.querySelectorAll('.dropdown-menu').forEach(el => {
+        el.onclick = (e) => e.stopPropagation();
+      });
+
+      // Age Slider
+      els.ageSlider.oninput = (e) => {
+        const val = e.target.value;
+        state.age = val;
+        els.ageDisplay.innerText = val;
+        // "Slot machine" update on slide end or debounced could go here
+        // For now, we update immediately to feel "real time"
+        updateContent(); 
+      };
+
+      // Tone Options
+      els.toneOptions.forEach(opt => {
+        opt.onclick = () => {
+          els.toneOptions.forEach(o => o.classList.remove('selected'));
+          opt.classList.add('selected');
+          state.tone = opt.dataset.tone;
+          updateContent();
+        };
+      });
+      
+      // Speak Button (Mock)
+      els.speakBtn.onclick = () => {
+        const text = els.lessonText.innerText;
+        const utterance = new SpeechSynthesisUtterance(text);
+        window.speechSynthesis.speak(utterance);
+      };
+    }
+
     init();
+
   </script>
 </body>
 </html>
