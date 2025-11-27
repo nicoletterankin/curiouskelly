@@ -228,7 +228,232 @@
 
         @keyframes pulse {
             0%, 100% { opacity: 1; transform: scale(1); }
-            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           LESSON INTERACTION OVERLAY - The "Zoom Call" Experience
+           Kelly is always visible, lesson content floats on top
+           ═══════════════════════════════════════════════════════════════ */
+        
+        .lesson-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 60px; /* Leave room for status bar */
+            display: flex;
+            flex-direction: column;
+            justify-content: space-between;
+            padding: 20px;
+            pointer-events: none; /* Allow clicks to pass through to Kelly */
+            z-index: 5;
+        }
+
+        .lesson-overlay > * {
+            pointer-events: auto; /* Re-enable clicks for overlay elements */
+        }
+
+        /* Phase Progress Bar */
+        .phase-progress {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 0;
+            padding: 12px 20px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 30px;
+            margin: 0 auto;
+            max-width: 400px;
+        }
+
+        .phase-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            position: relative;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .phase-dot.active {
+            background: var(--kelly-blue);
+            box-shadow: 0 0 12px var(--kelly-blue);
+        }
+
+        .phase-dot.completed {
+            background: #10b981;
+        }
+
+        .phase-dot .phase-label {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 0.7rem;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .phase-dot:hover .phase-label,
+        .phase-dot.active .phase-label {
+            opacity: 1;
+        }
+
+        .phase-line {
+            width: 40px;
+            height: 2px;
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* Kelly's Speech Bubble */
+        .kelly-speech {
+            max-width: 500px;
+            margin: auto auto 0;
+            padding: 20px 24px;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(16px);
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            text-align: center;
+        }
+
+        .speech-content {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: var(--text-primary);
+        }
+
+        .speech-indicator {
+            display: none;
+            justify-content: center;
+            gap: 4px;
+            margin-top: 12px;
+        }
+
+        .speech-indicator.active {
+            display: flex;
+        }
+
+        .typing-dot {
+            width: 8px;
+            height: 8px;
+            background: var(--kelly-blue);
+            border-radius: 50%;
+            animation: typingBounce 1.4s ease-in-out infinite;
+        }
+
+        .typing-dot:nth-child(2) { animation-delay: 0.2s; }
+        .typing-dot:nth-child(3) { animation-delay: 0.4s; }
+
+        @keyframes typingBounce {
+            0%, 60%, 100% { transform: translateY(0); }
+            30% { transform: translateY(-8px); }
+        }
+
+        /* Choice Buttons Container */
+        .choice-container {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            max-width: 500px;
+            margin: 16px auto 0;
+        }
+
+        .choice-btn {
+            padding: 16px 24px;
+            background: rgba(37, 99, 235, 0.15);
+            border: 1px solid rgba(37, 99, 235, 0.4);
+            border-radius: 14px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            text-align: left;
+            backdrop-filter: blur(8px);
+        }
+
+        .choice-btn:hover {
+            background: rgba(37, 99, 235, 0.3);
+            border-color: var(--kelly-blue);
+            transform: translateY(-2px);
+        }
+
+        .choice-btn.selected {
+            background: var(--kelly-blue);
+            border-color: var(--kelly-blue);
+            color: white;
+        }
+
+        .choice-btn.correct {
+            background: rgba(16, 185, 129, 0.3);
+            border-color: #10b981;
+        }
+
+        .choice-btn.incorrect {
+            background: rgba(239, 68, 68, 0.3);
+            border-color: #ef4444;
+        }
+
+        /* Continue Button */
+        .continue-btn {
+            padding: 16px 32px;
+            background: var(--kelly-blue);
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            max-width: 300px;
+            margin: 16px auto 0;
+        }
+
+        .continue-btn:hover {
+            background: var(--kelly-blue-hover, #1d4ed8);
+            transform: translateY(-2px);
+        }
+
+        /* Hide overlay when in calendar/selection mode */
+        .lesson-overlay.hidden {
+            display: none;
+        }
+
+        /* Mobile Responsive */
+        @media (max-width: 768px) {
+            .phase-progress {
+                padding: 8px 12px;
+                max-width: 90%;
+            }
+            
+            .phase-line {
+                width: 20px;
+            }
+            
+            .kelly-speech {
+                max-width: 95%;
+                padding: 16px;
+                margin-left: 10px;
+                margin-right: 10px;
+            }
+            
+            .speech-content {
+                font-size: 1rem;
+            }
+            
+            .choice-container {
+                max-width: 95%;
+                padding: 0 10px;
+            }
+            
+            .choice-btn {
+                padding: 14px 18px;
+                font-size: 0.95rem;
+            }
         }
 
         /* Unity loaded state - crossfade from image to 3D */
@@ -450,7 +675,7 @@
             <div class="lesson-badge" id="current-lesson-display">Initializing Neural Avatar...</div>
         </div>
 
-        <!-- Kelly Presence Container (16:9 aspect ratio) -->
+        <!-- Kelly Presence Container (16:9 aspect ratio) - Like a Zoom call -->
         <div id="kelly-presence" class="kelly-presence">
             <!-- Kelly Image (loads first, always visible as fallback) -->
             <img 
@@ -466,14 +691,62 @@
                 <canvas id="unity-canvas" tabindex="-1"></canvas>
             </div>
             
-            <!-- Loading indicator (shows over Kelly image) -->
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <!-- LESSON INTERACTION OVERLAY - Floats on top of Kelly             -->
+            <!-- Kelly leads learner through phases with lip-synced responses    -->
+            <!-- ═══════════════════════════════════════════════════════════════ -->
+            <div id="lesson-overlay" class="lesson-overlay hidden">
+                
+                <!-- Phase Progress Bar -->
+                <div class="phase-progress" id="phase-progress">
+                    <div class="phase-dot active" data-phase="welcome">
+                        <span class="phase-label">Welcome</span>
+                    </div>
+                    <div class="phase-line"></div>
+                    <div class="phase-dot" data-phase="teaching">
+                        <span class="phase-label">Learn</span>
+                    </div>
+                    <div class="phase-line"></div>
+                    <div class="phase-dot" data-phase="practice">
+                        <span class="phase-label">Practice</span>
+                    </div>
+                    <div class="phase-line"></div>
+                    <div class="phase-dot" data-phase="wisdom">
+                        <span class="phase-label">Wisdom</span>
+                    </div>
+                </div>
+
+                <!-- Kelly's Speech Bubble / Current Prompt -->
+                <div class="kelly-speech" id="kelly-speech">
+                    <div class="speech-content" id="speech-content">
+                        Welcome! I'm Kelly. Ready to learn something amazing today?
+                    </div>
+                    <div class="speech-indicator" id="speech-indicator">
+                        <span class="typing-dot"></span>
+                        <span class="typing-dot"></span>
+                        <span class="typing-dot"></span>
+                    </div>
+                </div>
+
+                <!-- Choice Buttons (Multiple Choice Questions) -->
+                <div class="choice-container" id="choice-container">
+                    <!-- Populated dynamically based on lesson phase -->
+                </div>
+
+                <!-- Continue Button (for non-choice phases) -->
+                <button class="continue-btn" id="continue-btn" style="display: none;">
+                    Continue →
+                </button>
+            </div>
+            
+            <!-- Kelly Status -->
             <div class="kelly-status" id="kelly-status">
                 <span class="status-pulse"></span>
                 <span id="kelly-status-text">Kelly is here</span>
             </div>
         </div>
 
-        <!-- Chat Interface -->
+        <!-- Chat Interface (for open-ended responses) -->
         <div class="chat-container">
             <div class="chat-wrapper">
                 <input type="text" class="chat-input" id="chat-input" placeholder="Type your answer or ask Kelly for a hint..." autocomplete="off">
@@ -924,20 +1197,224 @@
             document.getElementById('start-lesson-btn').onclick = startSelectedLesson;
         }
         
+        // ═══════════════════════════════════════════════════════════════
+        // LESSON INTERACTION ENGINE
+        // Kelly leads the learner through phases: welcome → teaching → practice → wisdom
+        // ═══════════════════════════════════════════════════════════════
+        
+        let lessonAtoms = [];
+        let currentPhaseIndex = 0;
+        const PHASES = ['welcome', 'teaching', 'practice', 'wisdom'];
+        let isLessonActive = false;
+
         async function startSelectedLesson() {
             if (!currentLesson) return;
             
-            const lang = document.getElementById('lang-select').value;
             const tone = document.getElementById('tone-select').value;
             const age = document.getElementById('age-select').value;
             
-            console.log(`🚀 Starting lesson: ${currentLesson.title} (lang=${lang}, tone=${tone}, age=${age})`);
+            console.log(`🚀 Starting: ${currentLesson.title} (tone=${tone}, age=${age})`);
             
-            // Load the first phase/question for this lesson
-            playKellyResponse(`Let's explore ${currentLesson.title}! ${currentLesson.learning_objective}`);
+            // Load lesson atoms from Supabase
+            await loadLessonAtoms(currentLesson.id, tone);
             
-            // TODO: Load actual lesson content from lesson_atoms based on archetype/phase
+            // Show the overlay and start lesson
+            isLessonActive = true;
+            document.getElementById('lesson-overlay').classList.remove('hidden');
+            
+            // Start with welcome phase
+            currentPhaseIndex = 0;
+            showPhase(PHASES[currentPhaseIndex]);
         }
+
+        async function loadLessonAtoms(lessonId, archetype) {
+            try {
+                // Map tone to archetype
+                const archetypeMap = {
+                    'curious': 'The Scientist',
+                    'playful': 'The Artist',
+                    'serious': 'The Philosopher'
+                };
+                const targetArchetype = archetypeMap[archetype] || 'The Scientist';
+                
+                console.log(`📚 Loading atoms for lesson ${lessonId}, archetype: ${targetArchetype}`);
+                
+                const { data, error } = await supabase
+                    .from('lesson_atoms')
+                    .select('phase, content, archetype')
+                    .eq('core_lesson_id', lessonId);
+                
+                if (error) throw error;
+                
+                // Filter for our archetype, fallback to any available
+                lessonAtoms = data.filter(a => a.archetype === targetArchetype);
+                
+                if (lessonAtoms.length === 0) {
+                    // Fallback to any archetype
+                    lessonAtoms = data;
+                }
+                
+                console.log(`✅ Loaded ${lessonAtoms.length} atoms`);
+                
+            } catch (e) {
+                console.error('❌ Failed to load atoms:', e);
+                // Create fallback content
+                lessonAtoms = PHASES.map(phase => ({
+                    phase,
+                    content: {
+                        script: `This is the ${phase} phase for ${currentLesson.title}.`,
+                        options: phase === 'practice' ? [
+                            { text: 'Option A', response: 'Great thinking!' },
+                            { text: 'Option B', response: 'Interesting choice!' },
+                            { text: 'Option C', response: 'Let me explain more...' }
+                        ] : null
+                    }
+                }));
+            }
+        }
+
+        function showPhase(phase) {
+            // Update phase progress dots
+            document.querySelectorAll('.phase-dot').forEach((dot, i) => {
+                dot.classList.remove('active', 'completed');
+                if (i < currentPhaseIndex) dot.classList.add('completed');
+                if (i === currentPhaseIndex) dot.classList.add('active');
+            });
+            
+            // Find atom for this phase
+            const atom = lessonAtoms.find(a => a.phase === phase);
+            
+            if (!atom) {
+                console.warn(`No atom found for phase: ${phase}`);
+                speakKelly(`Let's continue with ${phase}...`);
+                showContinueButton();
+                return;
+            }
+            
+            const content = atom.content;
+            
+            // Kelly speaks the script
+            speakKelly(content.script || `Welcome to the ${phase} phase!`);
+            
+            // Show choices if available (usually in practice phase)
+            if (content.options && content.options.length > 0) {
+                showChoices(content.options);
+            } else {
+                showContinueButton();
+            }
+        }
+
+        function speakKelly(text) {
+            const speechContent = document.getElementById('speech-content');
+            const speechIndicator = document.getElementById('speech-indicator');
+            
+            // Show typing indicator briefly
+            speechIndicator.classList.add('active');
+            speechContent.textContent = '';
+            
+            // Simulate typing effect
+            setTimeout(() => {
+                speechIndicator.classList.remove('active');
+                
+                // Typewriter effect
+                let i = 0;
+                const typeInterval = setInterval(() => {
+                    if (i < text.length) {
+                        speechContent.textContent += text.charAt(i);
+                        i++;
+                    } else {
+                        clearInterval(typeInterval);
+                    }
+                }, 20);
+                
+            }, 500);
+            
+            // Update status
+            document.getElementById('kelly-status-text').textContent = 'Kelly is speaking...';
+            setTimeout(() => {
+                document.getElementById('kelly-status-text').textContent = 'Kelly is listening';
+            }, text.length * 20 + 1000);
+            
+            // TODO: Send to Unity for lip-sync when available
+            console.log(`🗣️ Kelly: ${text}`);
+        }
+
+        function showChoices(options) {
+            const container = document.getElementById('choice-container');
+            const continueBtn = document.getElementById('continue-btn');
+            
+            container.innerHTML = '';
+            continueBtn.style.display = 'none';
+            
+            options.forEach((option, index) => {
+                const btn = document.createElement('button');
+                btn.className = 'choice-btn';
+                btn.textContent = option.text;
+                btn.onclick = () => handleChoice(index, option);
+                container.appendChild(btn);
+            });
+        }
+
+        function handleChoice(index, option) {
+            // Highlight selected choice
+            document.querySelectorAll('.choice-btn').forEach((btn, i) => {
+                btn.classList.remove('selected');
+                if (i === index) btn.classList.add('selected');
+            });
+            
+            // Kelly responds
+            const response = option.response || "That's a great choice!";
+            speakKelly(response);
+            
+            // Show continue after response
+            setTimeout(() => {
+                showContinueButton();
+            }, response.length * 20 + 1500);
+        }
+
+        function showContinueButton() {
+            const container = document.getElementById('choice-container');
+            const continueBtn = document.getElementById('continue-btn');
+            
+            // Clear choices
+            container.innerHTML = '';
+            
+            // Show continue button
+            if (currentPhaseIndex < PHASES.length - 1) {
+                continueBtn.textContent = 'Continue →';
+                continueBtn.style.display = 'block';
+            } else {
+                continueBtn.textContent = '🎉 Complete Lesson';
+                continueBtn.style.display = 'block';
+            }
+        }
+
+        function advancePhase() {
+            currentPhaseIndex++;
+            
+            if (currentPhaseIndex >= PHASES.length) {
+                // Lesson complete!
+                completeLesson();
+            } else {
+                showPhase(PHASES[currentPhaseIndex]);
+            }
+        }
+
+        function completeLesson() {
+            speakKelly(`Wonderful work! You've completed today's lesson on ${currentLesson.title}. See you tomorrow for more learning adventures!`);
+            
+            document.getElementById('continue-btn').textContent = '✨ Return to Calendar';
+            document.getElementById('continue-btn').onclick = () => {
+                isLessonActive = false;
+                document.getElementById('lesson-overlay').classList.add('hidden');
+                // Reset for next time
+                currentPhaseIndex = 0;
+                document.getElementById('continue-btn').onclick = advancePhase;
+            };
+        }
+
+        // Wire up continue button
+        document.getElementById('continue-btn').onclick = advancePhase;
 
         async function loadSyllabus() {
             // Set selected date to today
