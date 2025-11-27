@@ -149,10 +149,42 @@
             pointer-events: auto;
         }
 
-        #unity-container {
+        /* Kelly Presence Container - 16:9 Aspect Ratio */
+        .kelly-presence {
             flex: 1;
             width: 100%;
             position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(135deg, #1a1a1d 0%, #0f0f11 100%);
+            overflow: hidden;
+        }
+
+        /* Kelly Image - Loads First, Always Visible */
+        .kelly-image {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 80%;
+            max-height: 80%;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            z-index: 1;
+            transition: opacity 0.5s ease;
+        }
+
+        /* Unity Container - Loads in Background */
+        .unity-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: 2;
+            transition: opacity 0.5s ease;
         }
 
         #unity-canvas {
@@ -161,15 +193,49 @@
             display: block;
         }
 
-        .loading-overlay {
+        /* Kelly Status Indicator */
+        .kelly-status {
             position: absolute;
-            inset: 0;
-            background: var(--bg-color);
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
             display: flex;
-            flex-direction: column;
-            justify-content: center;
             align-items: center;
-            z-index: 20;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            z-index: 10;
+        }
+
+        .status-pulse {
+            width: 8px;
+            height: 8px;
+            background: #10b981;
+            border-radius: 50%;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        .status-pulse.loading {
+            background: var(--accent-orange);
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+
+        /* Unity loaded state - crossfade from image to 3D */
+        .kelly-presence.unity-ready .kelly-image {
+            opacity: 0;
+            pointer-events: none;
+        }
+
+        .kelly-presence.unity-ready .unity-container {
+            opacity: 1;
         }
 
         /* Chat Interface */
@@ -239,6 +305,33 @@
             border-radius: 4px;
         }
 
+        /* App Footer */
+        .app-footer {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 20px;
+            background: rgba(0, 0, 0, 0.3);
+            border-top: 1px solid var(--border-color);
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .app-footer a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .app-footer a:hover {
+            color: var(--accent-orange);
+        }
+
+        .app-footer .copyright {
+            opacity: 0.6;
+        }
+
         @media (max-width: 768px) {
             .sidebar {
                 position: absolute;
@@ -254,6 +347,11 @@
             .chat-container {
                 height: 100px;
                 padding: 10px;
+            }
+            .app-footer {
+                flex-wrap: wrap;
+                gap: 8px;
+                font-size: 0.75rem;
             }
         }
     </style>
@@ -312,12 +410,26 @@
             <div class="lesson-badge" id="current-lesson-display">Initializing Neural Avatar...</div>
         </div>
 
-        <div id="unity-container">
-            <canvas id="unity-canvas" tabindex="-1"></canvas>
+        <!-- Kelly Presence Container (16:9 aspect ratio) -->
+        <div id="kelly-presence" class="kelly-presence">
+            <!-- Kelly Image (loads first, always visible as fallback) -->
+            <img 
+                id="kelly-image" 
+                class="kelly-image"
+                src="/images/kelly/kelly-directors-chair-curious.png" 
+                alt="Kelly - Your AI Learning Companion"
+                loading="eager"
+            />
             
-            <div class="loading-overlay" id="loading-overlay">
-                <div style="font-size: 3rem; margin-bottom: 20px;">✨</div>
-                <div style="color: var(--text-secondary);">Connecting to Kelly...</div>
+            <!-- Unity Container (loads in background, replaces image when ready) -->
+            <div id="unity-container" class="unity-container" style="opacity: 0;">
+                <canvas id="unity-canvas" tabindex="-1"></canvas>
+            </div>
+            
+            <!-- Loading indicator (shows over Kelly image) -->
+            <div class="kelly-status" id="kelly-status">
+                <span class="status-pulse"></span>
+                <span id="kelly-status-text">Kelly is here</span>
             </div>
         </div>
 
@@ -332,6 +444,19 @@
                 </button>
             </div>
         </div>
+        
+        <!-- Footer Links -->
+        <footer class="app-footer">
+            <a href="/privacy.html">Privacy</a>
+            <span>•</span>
+            <a href="/terms.html">Terms</a>
+            <span>•</span>
+            <a href="/about.html">About</a>
+            <span>•</span>
+            <a href="mailto:hello@curiouskelly.com">Help</a>
+            <span>•</span>
+            <span class="copyright">© 2025 Curious Kelly PBC</span>
+        </footer>
     </main>
 
     <!-- Supabase & Unity Logic -->
@@ -748,7 +873,16 @@
             alert('OpenAI integration coming soon! This will allow Kelly to:\n\n• Access your ChatGPT conversation history\n• Learn your interests and preferences\n• Personalize lessons based on your goals\n• Remember context across sessions');
         }
 
-        // --- Unity Loader ---
+        // --- Kelly Presence System (Image → Unity Crossfade) ---
+        const kellyPresence = document.getElementById('kelly-presence');
+        const kellyImage = document.getElementById('kelly-image');
+        const kellyStatus = document.getElementById('kelly-status-text');
+        const statusPulse = document.querySelector('.status-pulse');
+        
+        // Kelly image is already visible - she's here!
+        console.log('✅ Kelly image loaded');
+        
+        // Now load Unity in the background
         var canvas = document.querySelector("#unity-canvas");
         var buildUrl = "unity/kelly-live/Build";
         var loaderUrl = buildUrl + "/Kelly_Web_Build.loader.js";
@@ -762,28 +896,51 @@
             productVersion: "1.0",
         };
 
+        // Start loading Unity in background
+        kellyStatus.textContent = 'Loading 3D avatar...';
+        statusPulse.classList.add('loading');
+
         var script = document.createElement("script");
         script.src = loaderUrl;
         script.onload = () => {
             createUnityInstance(canvas, config, (progress) => {
-                // Loading progress
+                // Update progress
+                const percent = Math.round(progress * 100);
+                kellyStatus.textContent = `Loading 3D avatar... ${percent}%`;
             }).then((unityInstance) => {
-                window.unityInstance = unityInstance; // Global ref for interaction
-                document.getElementById('loading-overlay').style.display = 'none';
+                window.unityInstance = unityInstance;
+                
+                // Unity is ready! Crossfade from image to 3D
+                console.log('✅ Unity loaded, crossfading to 3D Kelly');
+                kellyStatus.textContent = 'Kelly 3D is live!';
+                statusPulse.classList.remove('loading');
+                
+                // Add class to trigger crossfade animation
+                kellyPresence.classList.add('unity-ready');
                 
                 // Trigger initial welcome if lesson loaded
                 if (currentLesson) startInteraction();
                 
+                // Hide status after 3 seconds
+                setTimeout(() => {
+                    document.getElementById('kelly-status').style.opacity = '0';
+                }, 3000);
+                
             }).catch((message) => {
-                console.log("Unity load error: " + message);
-                document.getElementById('loading-overlay').innerHTML = 
-                    '<div style="color: #ef4444; text-align: center;">Avatar System Offline<br><span style="font-size: 0.8rem; color: #666;">(Development Mode)</span></div>';
+                // Unity failed to load - Kelly image stays visible (graceful degradation)
+                console.log("Unity load error (Kelly image remains): " + message);
+                kellyStatus.textContent = 'Kelly is here';
+                statusPulse.classList.remove('loading');
             });
         };
+        
         script.onerror = () => {
-             document.getElementById('loading-overlay').innerHTML = 
-                '<div style="color: #ef4444; text-align: center;">Avatar System Offline<br><span style="font-size: 0.8rem; color: #666;">(Development Mode)</span></div>';
+            // Unity loader failed - Kelly image stays visible
+            console.log("Unity loader unavailable (Kelly image remains)");
+            kellyStatus.textContent = 'Kelly is here';
+            statusPulse.classList.remove('loading');
         }
+        
         document.body.appendChild(script);
 
         // Start App
