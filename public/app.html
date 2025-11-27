@@ -672,49 +672,12 @@
         let allLessons = [];
 
         async function loadAllLessons() {
-            try {
-                // Load ALL lessons from Supabase core_lessons or lesson_shards
-                let { data, error } = await supabase
-                    .from('lesson_shards')
-                    .select('*')
-                    .order('day', { ascending: true });
-
-                // Fallback to core_lessons if lesson_shards doesn't exist
-                if (error && error.message.includes('does not exist')) {
-                    console.log('Trying core_lessons table...');
-                    const result = await supabase
-                        .from('core_lessons')
-                        .select('*')
-                        .order('day_number', { ascending: true });
-                    data = result.data;
-                    error = result.error;
-                    
-                    // Map core_lessons fields to expected format
-                    if (data) {
-                        data = data.map(lesson => ({
-                            ...lesson,
-                            day: lesson.day_number,
-                            learning_objective: lesson.description
-                        }));
-                    }
-                }
-
-                if (error) throw error;
-                
-                allLessons = data || [];
-                console.log(`✅ Loaded ${allLessons.length} lessons from Supabase`);
-                
-                // Fallback to local calendar JSON if database is empty
-                if (allLessons.length === 0) {
-                    console.log('📁 Database empty, loading from local calendar...');
-                    await loadFromLocalCalendar();
-                }
-            } catch (e) {
-                console.error('❌ Failed to load lessons from Supabase:', e);
-                // Fallback to local calendar JSON
-                console.log('📁 Falling back to local calendar...');
-                await loadFromLocalCalendar();
-            }
+            // ALWAYS load from local calendar first - it's reliable and has all 365 lessons
+            console.log('📁 Loading lessons from local calendar...');
+            await loadFromLocalCalendar();
+            
+            // Optionally enhance with Supabase data (user progress, etc.) in the future
+            // For now, local JSON is the source of truth for lesson content
         }
         
         async function loadFromLocalCalendar() {
