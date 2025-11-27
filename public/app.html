@@ -1247,15 +1247,22 @@
                 weekday: 'long', month: 'long', day: 'numeric' 
             });
             
-            // Update TODAY section header
-            document.getElementById('nav-date-label').textContent = isToday ? 'Today' : dateStr;
-            document.getElementById('nav-today').textContent = lesson.title;
+            // Update TODAY section header (if element exists)
+            const navDateLabel = document.getElementById('nav-date-label');
+            const navToday = document.getElementById('nav-today');
+            if (navDateLabel) navDateLabel.textContent = isToday ? 'Today' : dateStr;
+            if (navToday) navToday.textContent = lesson.title;
             
-            // Update lesson preview with full content
-            document.getElementById('lesson-title').textContent = lesson.title;
-            document.getElementById('lesson-date').textContent = dateStr;
-            document.getElementById('lesson-objective').textContent = lesson.learning_objective || 'Explore and discover!';
-            document.getElementById('current-lesson-display').textContent = lesson.title;
+            // Update lesson preview with full content (null-safe)
+            const titleEl = document.getElementById('lesson-title');
+            const dateEl = document.getElementById('lesson-date');
+            const objectiveEl = document.getElementById('lesson-objective');
+            const displayEl = document.getElementById('current-lesson-display');
+            
+            if (titleEl) titleEl.textContent = lesson.title;
+            if (dateEl) dateEl.textContent = dateStr;
+            if (objectiveEl) objectiveEl.textContent = lesson.learning_objective || 'Explore and discover!';
+            if (displayEl) displayEl.textContent = lesson.title;
             
             // Update button
             const btn = document.getElementById('start-lesson-btn');
@@ -2028,6 +2035,12 @@
         window.toggleSidebar = function() {
             document.getElementById('sidebar').classList.toggle('open');
         }
+        
+        // Expose global personalization functions
+        window.setGlobalLanguage = setGlobalLanguage;
+        window.setGlobalAge = setGlobalAge;
+        window.setGlobalTone = setGlobalTone;
+        window.setView = setView;
 
         // OpenAI Connection (Future Feature)
         window.connectOpenAI = function() {
