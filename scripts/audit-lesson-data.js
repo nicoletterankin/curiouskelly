@@ -3,13 +3,29 @@
  * Queries Day 330 "Rights" lesson and logs complete data structure
  */
 
-import { createClient } from '@supabase/supabase-js';
-import dotenv from 'dotenv';
+import { createRequire } from 'module';
+import { resolve, dirname } from 'path';
+import { fileURLToPath } from 'url';
 
-dotenv.config();
+// Create require to load from daily-lesson-marketing node_modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = dirname(__filename);
+const require = createRequire(resolve(__dirname, '../daily-lesson-marketing/package.json'));
 
-const SUPABASE_URL = process.env.PUBLIC_SUPABASE_URL || 'https://tvjalxxsyryjphkforjv.supabase.co';
-const SUPABASE_ANON_KEY = process.env.PUBLIC_SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI';
+const { createClient } = require('@supabase/supabase-js');
+const dotenv = require('dotenv');
+
+// Load environment variables from project root .env
+const envPath = resolve(__dirname, '..', '.env');
+dotenv.config({ path: envPath });
+
+const SUPABASE_URL = process.env.PUBLIC_SUPABASE_URL;
+const SUPABASE_ANON_KEY = process.env.PUBLIC_SUPABASE_ANON_KEY;
+
+if (!SUPABASE_URL || !SUPABASE_ANON_KEY) {
+  console.error('❌ Missing Supabase credentials in .env');
+  process.exit(1);
+}
 
 const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
 
@@ -55,17 +71,10 @@ async function auditLessonData() {
       console.log(`\n✅ Found ${atoms?.length || 0} lesson_atoms`);
       
       if (atoms && atoms.length > 0) {
-        console.log('\n📋 LESSON_ATOMS STRUCTURE:');
-        atoms.forEach((atom, index) => {
-          console.log(`\n--- Atom ${index + 1} ---`);
-          console.log(`Archetype: ${atom.archetype}`);
-          console.log(`Phase: ${atom.phase}`);
-          console.log(`Content type: ${typeof atom.content}`);
-          if (typeof atom.content === 'object') {
-            console.log(`Content keys:`, Object.keys(atom.content));
-            console.log('Content preview:', JSON.stringify(atom.content, null, 2).substring(0, 500));
-          }
-        });
+        console.log('\n📋 LESSON_ATOMS STRUCTURE (First Atom):');
+        const atom = atoms[0];
+        console.log(JSON.stringify(atom, null, 2));
+        console.log('\nAtom Columns:', Object.keys(atom));
         
         // Group by phase
         const phasesByArchetype = {};
@@ -81,39 +90,44 @@ async function auditLessonData() {
       }
     }
     
-    // 3. Check for looms_shards (if exists)
+    // 3. Check for looms_shards
     console.log(`\n\n🔮 STEP 3: Checking for looms_shards table...`);
     const { data: shards, error: shardsError } = await supabase
       .from('looms_shards')
       .select('*')
-      .eq('core_lesson_id', coreLesson.id)
       .limit(5);
     
     if (shardsError) {
-      console.log(`ℹ️  looms_shards table may not exist: ${shardsError.message}`);
+      console.log(`ℹ️  looms_shards table check failed: ${shardsError.message}`);
     } else {
-      console.log(`\n✅ Found ${shards?.length || 0} looms_shards`);
+      console.log(`\n✅ Found ${shards?.length || 0} looms_shards records`);
       if (shards && shards.length > 0) {
         console.log('\n📋 LOOMS_SHARDS STRUCTURE:');
         console.log(JSON.stringify(shards[0], null, 2));
+        console.log('\nShards Columns:', Object.keys(shards[0]));
+      }
+    }
+
+    // 4. Check for lesson_shards (alternative name)
+    console.log(`\n\n🔮 STEP 4: Checking for lesson_shards table...`);
+    const { data: lessonShards, error: lessonShardsError } = await supabase
+      .from('lesson_shards')
+      .select('*')
+      .limit(5);
+    
+    if (lessonShardsError) {
+      console.log(`ℹ️  lesson_shards table check failed: ${lessonShardsError.message}`);
+    } else {
+      console.log(`\n✅ Found ${lessonShards?.length || 0} lesson_shards records`);
+      if (lessonShards && lessonShards.length > 0) {
+        console.log('\n📋 LESSON_SHARDS STRUCTURE:');
+        console.log(JSON.stringify(lessonShards[0], null, 2));
+        console.log('\nLesson Shards Columns:', Object.keys(lessonShards[0]));
       }
     }
     
-    // 4. Summary
     console.log('\n\n' + '='.repeat(80));
-    console.log('📊 SUMMARY');
-    console.log('='.repeat(80));
-    console.log(`Day ${dayNumber} Lesson: ${coreLesson.topic || 'N/A'}`);
-    console.log(`Core Lesson ID: ${coreLesson.id}`);
-    console.log(`Available Atoms: ${atoms?.length || 0}`);
-    console.log(`Available Shards: ${shards?.length || 0}`);
-    
-    if (atoms && atoms.length > 0) {
-      const uniquePhases = [...new Set(atoms.map(a => a.phase))];
-      const uniqueArchetypes = [...new Set(atoms.map(a => a.archetype))];
-      console.log(`Unique Phases: ${uniquePhases.join(', ')}`);
-      console.log(`Unique Archetypes: ${uniqueArchetypes.join(', ')}`);
-    }
+    console.log('📊 SUMMARY COMPLETE');
     
   } catch (error) {
     console.error('❌ Fatal error:', error);
@@ -121,4 +135,3 @@ async function auditLessonData() {
 }
 
 auditLessonData();
-

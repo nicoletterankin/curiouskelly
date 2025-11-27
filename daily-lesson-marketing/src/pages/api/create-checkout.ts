@@ -1,11 +1,20 @@
 /**
  * Create Stripe Checkout Session
  * Called when user clicks "Start Trial" or "Buy Now"
+ * 
+ * Rate limited: 5 requests per minute per IP
  */
 
 import type { APIRoute } from 'astro';
 import Stripe from 'stripe';
 import { trackTrialStarted } from '@/lib/customerio';
+import { 
+  checkRateLimit, 
+  getClientIdentifier, 
+  rateLimitResponse, 
+  addRateLimitHeaders,
+  RATE_LIMITS 
+} from '@/lib/ratelimit';
 
 // Initialize Stripe only if key is present (prevents build errors during static generation)
 const stripeKey = import.meta.env.STRIPE_SECRET_KEY;
@@ -14,6 +23,16 @@ const stripe = stripeKey ? new Stripe(stripeKey, {
 }) : null;
 
 export const POST: APIRoute = async ({ request }) => {
+  // Rate limiting
+  const clientId = getClientIdentifier(request);
+  const rateLimitResult = checkRateLimit(clientId, RATE_LIMITS.checkout);
+  
+  const blockedResponse = rateLimitResponse(rateLimitResult);
+  if (blockedResponse) {
+    console.warn(`Rate limited checkout request from ${clientId}`);
+    return blockedResponse;
+  }
+
   try {
     if (!stripe) {
       console.error('Stripe secret key not configured');

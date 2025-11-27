@@ -1,0 +1,169 @@
+---
+/**
+ * OAuth Callback Handler
+ *
+ * This page handles the redirect from OAuth providers (Google, Apple, etc.)
+ * It extracts the tokens from the URL hash and redirects to the app.
+ *
+ * Flow:
+ * 1. User clicks "Continue with Google"
+ * 2. Redirects to Google → User logs in
+ * 3. Google redirects to Supabase callback
+ * 4. Supabase redirects here with tokens in URL hash
+ * 5. This page stores the session and redirects to /
+ */
+---
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Signing you in... | Curious Kelly</title>
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
+      body {
+        font-family:
+          'Inter',
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background: #0f0f11;
+        color: #f4f4f5;
+        height: 100vh;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-direction: column;
+        gap: 24px;
+      }
+      .spinner {
+        width: 48px;
+        height: 48px;
+        border: 3px solid rgba(255, 255, 255, 0.1);
+        border-left-color: #d97757;
+        border-radius: 50%;
+        animation: spin 1s linear infinite;
+      }
+      @keyframes spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      .message {
+        font-size: 1.25rem;
+        color: #a1a1aa;
+      }
+      .error {
+        color: #ef4444;
+        max-width: 400px;
+        text-align: center;
+        padding: 16px;
+        background: rgba(239, 68, 68, 0.1);
+        border-radius: 8px;
+        display: none;
+      }
+    </style>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  </head>
+  <body>
+    <div class="spinner" id="spinner"></div>
+    <p class="message" id="message">Signing you in...</p>
+    <p class="error" id="error"></p>
+
+    <script
+      define:vars={{
+        supabaseUrl:
+          import.meta.env.PUBLIC_SUPABASE_URL || 'https://tvjalxxsyryjphkforjv.supabase.co',
+        supabaseKey: import.meta.env.PUBLIC_SUPABASE_ANON_KEY || '',
+      }}
+    >
+      async function handleCallback() {
+        const spinner = document.getElementById('spinner');
+        const message = document.getElementById('message');
+        const errorEl = document.getElementById('error');
+
+        try {
+          // Initialize Supabase
+          const supabase = window.supabase.createClient(supabaseUrl, supabaseKey, {
+            auth: {
+              autoRefreshToken: true,
+              persistSession: true,
+              detectSessionInUrl: true,
+            },
+          });
+
+          // Check for error in URL
+          const urlParams = new URLSearchParams(window.location.search);
+          const error = urlParams.get('error');
+          const errorDescription = urlParams.get('error_description');
+
+          if (error) {
+            throw new Error(errorDescription || error);
+          }
+
+          // Check for tokens in hash (OAuth callback)
+          const hash = window.location.hash;
+          if (hash && hash.includes('access_token')) {
+            message.textContent = 'Processing login...';
+
+            // Supabase will automatically handle the hash
+            const {
+              data: { session },
+              error: sessionError,
+            } = await supabase.auth.getSession();
+
+            if (sessionError) {
+              throw sessionError;
+            }
+
+            if (session) {
+              message.textContent = 'Welcome! Redirecting...';
+
+              // Small delay for UX
+              setTimeout(() => {
+                window.location.href = '/';
+              }, 500);
+              return;
+            }
+          }
+
+          // Check if already logged in
+          const {
+            data: { session },
+          } = await supabase.auth.getSession();
+          if (session) {
+            message.textContent = 'Already logged in! Redirecting...';
+            setTimeout(() => {
+              window.location.href = '/';
+            }, 500);
+            return;
+          }
+
+          // No session found, redirect to home
+          message.textContent = 'Redirecting to login...';
+          setTimeout(() => {
+            window.location.href = '/';
+          }, 1000);
+        } catch (err) {
+          console.error('Auth callback error:', err);
+          spinner.style.display = 'none';
+          message.style.display = 'none';
+          errorEl.style.display = 'block';
+          errorEl.textContent = `Login failed: ${err.message}. Redirecting...`;
+
+          setTimeout(() => {
+            window.location.href = '/?error=' + encodeURIComponent(err.message);
+          }, 3000);
+        }
+      }
+
+      // Run on page load
+      handleCallback();
+    </script>
+  </body>
+</html>

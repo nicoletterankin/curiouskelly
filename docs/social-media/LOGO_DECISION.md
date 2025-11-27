@@ -14,7 +14,7 @@
 
 **Symbol:** ✨ (Sparkles emoji/unicode U+2728)  
 **Wordmark:** Curious Kelly  
-**Primary Color:** #d97757 (Curious Orange)
+**Primary Color:** #2563eb (Kelly Blue)
 
 ---
 
@@ -88,9 +88,9 @@ Curious Kelly
 - Name: SPARKLES
 
 ### Colors
-- Primary: `#d97757` (Curious Orange)
-- On dark: `#d97757`
-- On light: `#c56a4d` (slightly darker for contrast)
+- Primary: `#2563eb` (Kelly Blue)
+- On dark: `#2563eb`
+- On light: `#1d4ed8` (slightly darker for contrast)
 - Monochrome: `#f4f4f5` (white) or `#18181b` (dark)
 
 ### Typography
@@ -214,7 +214,7 @@ Sparkles won decisively on curiosity + social media + uniqueness while maintaini
 **CRITICAL:** From this point forward, ALL Curious Kelly materials must use:
 - ✨ (sparkles) symbol
 - "Curious Kelly" wordmark
-- #d97757 primary color
+- #2563eb primary color (Kelly Blue)
 
 Do NOT use:
 - ✴ (starburst) - that's Claude's

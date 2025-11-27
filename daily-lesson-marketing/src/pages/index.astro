@@ -3,298 +3,418 @@ import '../styles/unified-design-system.scss';
 // Production fix: Google SVG inline to avoid COEP blocking
 ---
 
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <meta name="description" content="Curious Kelly - The operating system for your potential. Your personal AI teacher for a whole year.">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <meta
+      name="description"
+      content="Curious Kelly - The operating system for your potential. Your personal AI teacher for a whole year."
+    />
     <title>Curious Kelly</title>
-    
+
     <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Times+New+Roman&display=swap" rel="stylesheet">
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Times+New+Roman&display=swap"
+      rel="stylesheet"
+    />
 
     <!-- OS Styles (Preloaded) -->
-    <link rel="stylesheet" href="/lesson-player/css/styles.css">
-    <link rel="stylesheet" href="/lesson-player/css/ui-kit.css">
-    
+    <link rel="stylesheet" href="/lesson-player/css/styles.css" />
+    <link rel="stylesheet" href="/lesson-player/css/ui-kit.css" />
+
     <!-- Supabase (Global for OS) -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-        /* 
+      /* 
          * UNIFIED ARCHITECTURE:
          * 1. Login Layer (Z-Index 1000) - The "Marketing" State
          * 2. OS Layer (Z-Index 0) - The "App" State (Preloaded)
          */
 
-        :root {
-            --bg-color: #0f0f11;
-            --text-primary: #f4f4f5;
-            --text-secondary: #a1a1aa;
-            --accent-orange: #d97757;
-            --accent-hover: #c56a4d;
-            --input-bg: #27272a;
-            --border-color: #3f3f46;
-            --footer-bg: #000000;
-        }
+      :root {
+        --bg-color: #0f0f11;
+        --text-primary: #f4f4f5;
+        --text-secondary: #a1a1aa;
+        --accent-orange: #d97757;
+        --accent-hover: #c56a4d;
+        --input-bg: #27272a;
+        --border-color: #3f3f46;
+        --footer-bg: #000000;
+      }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
-            background-color: var(--bg-color);
-            color: var(--text-primary);
-            height: 100vh;
-            overflow: hidden; /* OS-like feel */
-        }
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+      }
 
-        /* --- LOGIN LAYER STYLES --- */
-        #login-layer {
-            position: fixed;
-            top: 0; left: 0; right: 0; bottom: 0;
-            z-index: 1000;
-            background-color: var(--bg-color);
-            display: flex;
-            flex-direction: column;
-            transition: opacity 0.8s ease-in-out, transform 0.8s ease-in-out;
-        }
+      body {
+        font-family:
+          'Inter',
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        background-color: var(--bg-color);
+        color: var(--text-primary);
+        height: 100vh;
+        overflow: hidden; /* OS-like feel */
+      }
 
-        #login-layer.hidden {
-            opacity: 0;
-            pointer-events: none;
-            transform: scale(1.05); /* Subtle zoom out effect */
-        }
+      /* --- LOGIN LAYER STYLES --- */
+      #login-layer {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        z-index: 1000;
+        background-color: var(--bg-color);
+        display: flex;
+        flex-direction: column;
+        transition:
+          opacity 0.8s ease-in-out,
+          transform 0.8s ease-in-out;
+      }
 
+      #login-layer.hidden {
+        opacity: 0;
+        pointer-events: none;
+        transform: scale(1.05); /* Subtle zoom out effect */
+      }
+
+      .container {
+        display: flex;
+        width: 100%;
+        flex: 1;
+        overflow-y: auto; /* Allow scroll only on login if needed */
+      }
+
+      .left-panel {
+        flex: 1;
+        padding: 80px;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        max-width: 640px;
+        border-right: 1px solid rgba(255, 255, 255, 0.05);
+        z-index: 2;
+      }
+
+      .right-panel {
+        flex: 1;
+        background-color: var(--bg-color);
+        position: relative;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+      }
+
+      .right-panel::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: radial-gradient(circle at center, #202023 0%, #0f0f11 70%);
+        z-index: 1;
+      }
+
+      .logo {
+        font-weight: 600;
+        font-size: 1.2rem;
+        margin-bottom: auto;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+      }
+
+      h1 {
+        font-family: 'Times New Roman', serif;
+        font-size: 5rem;
+        font-weight: 400;
+        line-height: 1;
+        margin-bottom: 24px;
+        letter-spacing: -2px;
+        background: linear-gradient(to bottom right, #fff, #ccc);
+        background-clip: text;
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+      }
+
+      .subtitle {
+        font-size: 1.2rem;
+        color: var(--text-secondary);
+        margin-bottom: 48px;
+        font-weight: 300;
+      }
+
+      .login-container {
+        display: flex;
+        flex-direction: column;
+        gap: 16px;
+        width: 100%;
+        max-width: 400px;
+      }
+
+      .btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        padding: 14px 20px;
+        border-radius: 12px;
+        text-decoration: none;
+        font-size: 1rem;
+        transition: all 0.2s ease;
+        cursor: pointer;
+        border: 1px solid var(--border-color);
+      }
+
+      .btn:hover {
+        transform: translateY(-1px);
+      }
+      .btn:active {
+        transform: scale(0.98);
+      }
+
+      .btn-primary {
+        background-color: #f4f4f5;
+        color: #18181b;
+        border: none;
+        font-weight: 600;
+      }
+
+      .btn-outline {
+        background-color: transparent;
+        color: var(--text-primary);
+      }
+
+      .divider {
+        display: flex;
+        align-items: center;
+        color: var(--text-secondary);
+        font-size: 0.8rem;
+        margin: 10px 0;
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+      .divider::before,
+      .divider::after {
+        content: '';
+        flex: 1;
+        border-bottom: 1px solid var(--border-color);
+      }
+      .divider span {
+        padding: 0 10px;
+      }
+
+      .hero-image {
+        max-width: 85%;
+        max-height: 85%;
+        object-fit: contain;
+        z-index: 2;
+        animation: float 8s ease-in-out infinite;
+        filter: drop-shadow(0 20px 50px rgba(0, 0, 0, 0.5));
+      }
+
+      @keyframes float {
+        0% {
+          transform: translateY(0px);
+        }
+        50% {
+          transform: translateY(-30px);
+        }
+        100% {
+          transform: translateY(0px);
+        }
+      }
+
+      .scribble {
+        position: absolute;
+        pointer-events: none;
+        opacity: 0.4;
+        z-index: 3;
+      }
+
+      /* Spinner */
+      .spinner {
+        border: 2px solid rgba(255, 255, 255, 0.1);
+        border-left-color: #fff;
+        border-radius: 50%;
+        width: 16px;
+        height: 16px;
+        animation: spin 1s linear infinite;
+        display: none;
+      }
+      @keyframes spin {
+        0% {
+          transform: rotate(0deg);
+        }
+        100% {
+          transform: rotate(360deg);
+        }
+      }
+      .btn.loading .spinner {
+        display: block;
+      }
+      .btn.loading span,
+      .btn.loading img {
+        display: none;
+      }
+
+      /* --- OS LAYER TWEAKS --- */
+      /* Ensure Unity sits behind but accessible */
+      #app-layer-desktop {
+        position: absolute;
+        inset: 0;
+        z-index: 1;
+        opacity: 0; /* Hidden initially */
+        transition: opacity 1s ease-in-out;
+      }
+
+      #app-layer-desktop.active {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      /* Mobile Response for Login */
+      @media (max-width: 900px) {
         .container {
-            display: flex;
-            width: 100%;
-            flex: 1;
-            overflow-y: auto; /* Allow scroll only on login if needed */
+          flex-direction: column;
         }
-
-        .left-panel {
-            flex: 1;
-            padding: 80px;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            max-width: 640px;
-            border-right: 1px solid rgba(255,255,255,0.05);
-            z-index: 2;
-        }
-
         .right-panel {
-            flex: 1;
-            background-color: var(--bg-color);
-            position: relative;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            overflow: hidden;
+          height: 30vh;
+          order: -1;
         }
-        
-        .right-panel::before {
-             content: "";
-             position: absolute;
-             inset: 0;
-             background: radial-gradient(circle at center, #202023 0%, #0f0f11 70%);
-             z-index: 1;
+        .left-panel {
+          padding: 40px;
+          border-right: none;
         }
-
-        .logo {
-            font-weight: 600;
-            font-size: 1.2rem;
-            margin-bottom: auto;
-            display: flex;
-            align-items: center;
-            gap: 10px;
-        }
-
         h1 {
-            font-family: 'Times New Roman', serif;
-            font-size: 5rem;
-            font-weight: 400;
-            line-height: 1;
-            margin-bottom: 24px;
-            letter-spacing: -2px;
-            background: linear-gradient(to bottom right, #fff, #ccc);
-            background-clip: text;
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
+          font-size: 3.5rem;
         }
-
-        .subtitle {
-            font-size: 1.2rem;
-            color: var(--text-secondary);
-            margin-bottom: 48px;
-            font-weight: 300;
-        }
-
-        .login-container {
-            display: flex;
-            flex-direction: column;
-            gap: 16px;
-            width: 100%;
-            max-width: 400px;
-        }
-
-        .btn {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: 12px;
-            padding: 14px 20px;
-            border-radius: 12px;
-            text-decoration: none;
-            font-size: 1rem;
-            transition: all 0.2s ease;
-            cursor: pointer;
-            border: 1px solid var(--border-color);
-        }
-
-        .btn:hover { transform: translateY(-1px); }
-        .btn:active { transform: scale(0.98); }
-
-        .btn-primary {
-            background-color: #f4f4f5;
-            color: #18181b;
-            border: none;
-            font-weight: 600;
-        }
-
-        .btn-outline {
-            background-color: transparent;
-            color: var(--text-primary);
-        }
-
-        .divider {
-            display: flex;
-            align-items: center;
-            color: var(--text-secondary);
-            font-size: 0.8rem;
-            margin: 10px 0;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-        }
-        .divider::before, .divider::after {
-            content: ""; flex: 1; border-bottom: 1px solid var(--border-color);
-        }
-        .divider span { padding: 0 10px; }
-
-        .hero-image {
-            max-width: 85%;
-            max-height: 85%;
-            object-fit: contain;
-            z-index: 2;
-            animation: float 8s ease-in-out infinite;
-            filter: drop-shadow(0 20px 50px rgba(0,0,0,0.5));
-        }
-        
-        @keyframes float {
-            0% { transform: translateY(0px); }
-            50% { transform: translateY(-30px); }
-            100% { transform: translateY(0px); }
-        }
-
-        .scribble {
-            position: absolute;
-            pointer-events: none;
-            opacity: 0.4;
-            z-index: 3;
-        }
-
-        /* Spinner */
-        .spinner {
-            border: 2px solid rgba(255,255,255,0.1);
-            border-left-color: #fff;
-            border-radius: 50%;
-            width: 16px; height: 16px;
-            animation: spin 1s linear infinite;
-            display: none;
-        }
-        @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
-        .btn.loading .spinner { display: block; }
-        .btn.loading span, .btn.loading img { display: none; }
-
-        /* --- OS LAYER TWEAKS --- */
-        /* Ensure Unity sits behind but accessible */
-        #app-layer-desktop {
-            position: absolute;
-            inset: 0;
-            z-index: 1;
-            opacity: 0; /* Hidden initially */
-            transition: opacity 1s ease-in-out;
-        }
-        
-        #app-layer-desktop.active {
-            opacity: 1;
-            pointer-events: auto;
-        }
-
-        /* Mobile Response for Login */
-        @media (max-width: 900px) {
-            .container { flex-direction: column; }
-            .right-panel { height: 30vh; order: -1; }
-            .left-panel { padding: 40px; border-right: none; }
-            h1 { font-size: 3.5rem; }
-        }
+      }
     </style>
-</head>
-<body>
-
+  </head>
+  <body>
     <!-- ==================================================================
          LAYER 1: LOGIN / LANDING (The "Site")
          ================================================================== -->
     <div id="login-layer">
-        <div class="container">
-            <div class="left-panel">
-                <div class="logo">
-                    <span style="color: var(--accent-orange); font-size: 1.5rem;">✨</span> Curious Kelly
-                </div>
+      <div class="container">
+        <div class="left-panel">
+          <div class="logo">
+            <span style="color: var(--accent-orange); font-size: 1.5rem;">✨</span> Curious Kelly
+          </div>
 
-                <div class="main-content" style="margin-top: auto; margin-bottom: auto;">
-                    <h1>Curious?<br>Always.</h1>
-                    <p class="subtitle">The operating system for your potential.</p>
+          <div class="main-content" style="margin-top: auto; margin-bottom: auto;">
+            <h1>Curious?<br />Always.</h1>
+            <p class="subtitle">The operating system for your potential.</p>
 
-                    <div class="login-container">
-                        <button class="btn btn-outline" onclick="handleLogin(this, 'google')">
-                            <img src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZmlsbD0iI0ZGQzEwNyIgZD0iTTQzLjYxMSwyMC4wODNINDUyVjIwSDI0djhoMTEuMzAzYy0xLjY0OSw0LjY1Ny02LjA4LDgtMTEuMzAzLDhjLTYuNjI3LDAtMTItNS4zNzMtMTItMTJjMC02LjYyNyw1LjM3My0xMiwxMi0xMmMzLjA1OSwwLDUuODQyLDEuMTU0LDcuOTYxLDMuMDM5bDUuNjU3LTUuNjU3QzM0LjA0Niw2LjA1MywyOS4yNjgsNCwyNCw0QzEyLjk1NSw0LDQsMTIuOTU1LDQsMjRjMCwxMS4wNDUsOC45NTUsMjAsMjAsMjBjMTEuMDQ1LDAsMjAtOC45NTUsMjAtMjBDNDQsMjIuNjU5LDQzLjg2MiwyMS4zNTAsNDMuNjExLDIwLjA4M3oiLz48cGF0aCBmaWxsPSIjRkYzRDAwIiBkPSJNNi4zMDYsMTQuNjkxbDYuNTcxLDQuODE5QzE0LjY1NSwxNS4xMDgsMTguOTYxLDEyLDI0LDEyYzMuMDU5LDAsNS44NDIsMS4xNTQsNy45NjEsMy4wMzlsNS42NTctNS42NTdDMzQuMDQ2LDYuMDUzLDI5LjI2OCw0LDI0LDRDMTYuMzE4LDQsOS42NTYsOC4zMzcsNi4zMDYsMTQuNjkxeiIvPjxwYXRoIGZpbGw9IiM0Q0FGNTAiIGQ9Ik0yNCw0NGM1LjE2NiwwLDkuODYtMS45NzcsMTMuNDA5LTUuMTkybC02LjE5LTUuMjM4QzI5LjIxMSwzNS4wOTEsMjYuNzE1LDM2LDI0LDM2Yy01LjIwMiwwLTkuNjE5LTMuMzE3LTExLjI4My03Ljk0NmwtNi41MjIsNS4wMjVDOS41MDUsMzkuNTU2LDE2LjIyNyw0NCwyNCw0NHoiLz48cGF0aCBmaWxsPSIjMTk3NkQyIiBkPSJNNDMuNjExLDIwLjA4M0g0MlYyMEgyNHY4aDExLjMwM2MtMC43OTIsMi4yMzctMi4yMzEsNC4xNjYtNC4wODcsNS41NzFjMC4wMDEtMC4wMDEsMC4wMDItMC4wMDEsMC4wMDMtMC4wMDJsNi4xOSw1LjIzOEMzNi45NzEsMzkuMjA1LDQ0LDM0LDQ0LDI0QzQ0LDIyLjY1OSw0My44NjIsMjEuMzUwLDQzLjYxMSwyMC4wODN6Ii8+PC9zdmc+" width="20" alt="G">
-                            <span>Continue with Google</span>
-                            <div class="spinner"></div>
-                        </button>
-                        
-                        <div class="divider"><span>OR</span></div>
-                        
-                        <button class="btn btn-primary" onclick="handleLogin(this, 'guest')">
-                            <span>Just Exploring (Guest)</span>
-                            <div class="spinner"></div>
-                        </button>
-                        
-                        <p style="margin-top: 20px; font-size: 0.75rem; color: var(--text-secondary);">
-                            By continuing, you acknowledge our <a href="/privacy.html" style="color:inherit;">Privacy Policy</a>.
-                        </p>
-                    </div>
-                </div>
+            <div class="login-container">
+              <!-- Primary: Google (most users) -->
+              <button class="btn btn-outline" onclick="handleLogin(this, 'google')" id="btn-google">
+                <img
+                  src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZmlsbD0iI0ZGQzEwNyIgZD0iTTQzLjYxMSwyMC4wODNINDUyVjIwSDI0djhoMTEuMzAzYy0xLjY0OSw0LjY1Ny02LjA4LDgtMTEuMzAzLDhjLTYuNjI3LDAtMTItNS4zNzMtMTItMTJjMC02LjYyNyw1LjM3My0xMiwxMi0xMmMzLjA1OSwwLDUuODQyLDEuMTU0LDcuOTYxLDMuMDM5bDUuNjU3LTUuNjU3QzM0LjA0Niw2LjA1MywyOS4yNjgsNCwyNCw0QzEyLjk1NSw0LDQsMTIuOTU1LDQsMjRjMCwxMS4wNDUsOC45NTUsMjAsMjAsMjBjMTEuMDQ1LDAsMjAtOC45NTUsMjAtMjBDNDQsMjIuNjU5LDQzLjg2MiwyMS4zNTAsNDMuNjExLDIwLjA4M3oiLz48cGF0aCBmaWxsPSIjRkYzRDAwIiBkPSJNNi4zMDYsMTQuNjkxbDYuNTcxLDQuODE5QzE0LjY1NSwxNS4xMDgsMTguOTYxLDEyLDI0LDEyYzMuMDU5LDAsNS44NDIsMS4xNTQsNy45NjEsMy4wMzlsNS42NTctNS42NTdDMzQuMDQ2LDYuMDUzLDI5LjI2OCw0LDI0LDRDMTYuMzE4LDQsOS42NTYsOC4zMzcsNi4zMDYsMTQuNjkxeiIvPjxwYXRoIGZpbGw9IiM0Q0FGNTAiIGQ9Ik0yNCw0NGM1LjE2NiwwLDkuODYtMS45NzcsMTMuNDA5LTUuMTkybC02LjE5LTUuMjM4QzI5LjIxMSwzNS4wOTEsMjYuNzE1LDM2LDI0LDM2Yy01LjIwMiwwLTkuNjE5LTMuMzE3LTExLjI4My03Ljk0NmwtNi41MjIsNS4wMjVDOS41MDUsMzkuNTU2LDE2LjIyNyw0NCwyNCw0NHoiLz48cGF0aCBmaWxsPSIjMTk3NkQyIiBkPSJNNDMuNjExLDIwLjA4M0g0MlYyMEgyNHY4aDExLjMwM2MtMC43OTIsMi4yMzctMi4yMzEsNC4xNjYtNC4wODcsNS41NzFjMC4wMDEtMC4wMDEsMC4wMDItMC4wMDEsMC4wMDMtMC4wMDJsNi4xOSw1LjIzOEMzNi45NzEsMzkuMjA1LDQ0LDM0LDQ0LDI0QzQ0LDIyLjY1OSw0My44NjIsMjEuMzUwLDQzLjYxMSwyMC4wODN6Ii8+PC9zdmc+"
+                  width="20"
+                  alt="G"
+                />
+                <span>Continue with Google</span>
+                <div class="spinner"></div>
+              </button>
+
+              <!-- Apple Sign In (for iOS users) -->
+              <button
+                class="btn btn-outline"
+                onclick="handleLogin(this, 'apple')"
+                id="btn-apple"
+                style="background: #000; border-color: #333;"
+              >
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
+                  <path
+                    d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"
+                  ></path>
+                </svg>
+                <span>Continue with Apple</span>
+                <div class="spinner"></div>
+              </button>
+
+              <div class="divider"><span>OR</span></div>
+
+              <!-- Guest mode - instant, no friction -->
+              <button class="btn btn-primary" onclick="handleLogin(this, 'guest')" id="btn-guest">
+                <span>✨ Start Learning Now</span>
+                <div class="spinner"></div>
+              </button>
+              <p
+                style="text-align: center; font-size: 0.75rem; color: var(--text-secondary); margin-top: 8px;"
+              >
+                No account needed. Upgrade anytime.
+              </p>
+
+              <p
+                style="margin-top: 24px; font-size: 0.7rem; color: var(--text-secondary); text-align: center;"
+              >
+                By continuing, you agree to our <a
+                  href="/privacy.html"
+                  style="color:inherit; text-decoration: underline;">Privacy Policy</a
+                >
+                and <a href="/terms.html" style="color:inherit; text-decoration: underline;"
+                  >Terms of Service</a
+                >.
+              </p>
             </div>
-
-            <div class="right-panel">
-                <img src="/lessons/images/kelly-directors-chair-wisdom.png" alt="Kelly" class="hero-image">
-                
-                <!-- Claude-like Scribbles -->
-                <svg class="scribble" style="top: 20%; left: 10%; width: 100px; height: 100px;" viewBox="0 0 100 100">
-                    <path d="M10,50 Q30,10 50,50 T90,50" fill="none" stroke="#84cc16" stroke-width="3" />
-                </svg>
-                <svg class="scribble" style="bottom: 30%; right: 20%; width: 60px; height: 60px;" viewBox="0 0 100 100">
-                    <circle cx="50" cy="50" r="40" fill="none" stroke="#f472b6" stroke-width="2" stroke-dasharray="10,5" />
-                </svg>
-                <svg class="scribble" style="top: 50%; right: 10%; width: 40px; height: 40px;" viewBox="0 0 100 100">
-                    <text x="10" y="60" fill="#60a5fa" font-family="monospace" font-size="40">&lt;/&gt;</text>
-                </svg>
-            </div>
+          </div>
         </div>
+
+        <div class="right-panel">
+          <img
+            src="/lessons/images/kelly-directors-chair-wisdom.png"
+            alt="Kelly"
+            class="hero-image"
+          />
+
+          <!-- Claude-like Scribbles -->
+          <svg
+            class="scribble"
+            style="top: 20%; left: 10%; width: 100px; height: 100px;"
+            viewBox="0 0 100 100"
+          >
+            <path d="M10,50 Q30,10 50,50 T90,50" fill="none" stroke="#84cc16" stroke-width="3"
+            ></path>
+          </svg>
+          <svg
+            class="scribble"
+            style="bottom: 30%; right: 20%; width: 60px; height: 60px;"
+            viewBox="0 0 100 100"
+          >
+            <circle
+              cx="50"
+              cy="50"
+              r="40"
+              fill="none"
+              stroke="#f472b6"
+              stroke-width="2"
+              stroke-dasharray="10,5"></circle>
+          </svg>
+          <svg
+            class="scribble"
+            style="top: 50%; right: 10%; width: 40px; height: 40px;"
+            viewBox="0 0 100 100"
+          >
+            <text x="10" y="60" fill="#60a5fa" font-family="monospace" font-size="40"
+              >&lt;/&gt;</text
+            >
+          </svg>
+        </div>
+      </div>
     </div>
 
     <!-- ==================================================================
@@ -302,166 +422,525 @@ import '../styles/unified-design-system.scss';
          This is the DOM structure required by app.js
          ================================================================== -->
     <div id="app-layer-desktop">
-        
-        <!-- LAYER 0: Background (Unity / Video) -->
-        <div id="layer-background">
-            <div class="kelly-unity-container" id="kelly-unity-container">
-                <iframe
-                    id="kelly-unity-iframe"
-                    class="kelly-unity-iframe"
-                    src="/unity/kelly-v1/index.html" 
-                    title="Kelly Unity Avatar"
-                    allow="autoplay *; microphone; fullscreen; xr-spatial-tracking"
-                    loading="eager"
-                    referrerpolicy="strict-origin-when-cross-origin"
-                ></iframe>
-                <div class="kelly-unity-status" id="kelly-unity-status">
-                    <span class="status-indicator" id="unity-status-indicator">•</span>
-                    <span class="status-text" id="unity-status-text">Loading Kelly...</span>
-                </div>
+      <!-- LAYER 0: Background (Unity / Video) -->
+      <div id="layer-background">
+        <div class="kelly-unity-container" id="kelly-unity-container">
+          <iframe
+            id="kelly-unity-iframe"
+            class="kelly-unity-iframe"
+            src="/unity/kelly-v1/index.html"
+            title="Kelly Unity Avatar"
+            allow="autoplay *; microphone; fullscreen; xr-spatial-tracking"
+            loading="eager"
+            referrerpolicy="strict-origin-when-cross-origin"></iframe>
+          <div class="kelly-unity-status" id="kelly-unity-status">
+            <span class="status-indicator" id="unity-status-indicator">•</span>
+            <span class="status-text" id="unity-status-text">Loading Kelly...</span>
+          </div>
+        </div>
+        <!-- Fallback Image matches the hero image for seamless transition -->
+        <img
+          id="kelly-image"
+          class="kelly-image"
+          src="/lessons/images/kelly-directors-chair-curious.png"
+          alt="Kelly teaching"
+        />
+      </div>
+
+      <!-- TRIGGER: The Single Entry Point -->
+      <button id="os-trigger" title="Open Kelly OS">☰</button>
+
+      <!-- LAYER 2: OS Interface -->
+      <div id="layer-os-interface">
+        <div id="mode-dashboard" class="os-mode-panel active"></div>
+
+        <div id="mode-lesson" class="os-mode-panel">
+          <div class="controls-panel">
+            <div class="age-selector-floating glass-panel-light">
+              <label for="age-slider" class="age-label-floating">Age</label>
+              <div class="age-display-floating"><span id="age-value">25</span></div>
+              <input
+                type="range"
+                id="age-slider"
+                min="2"
+                max="102"
+                value="25"
+                class="age-slider-floating"
+              />
             </div>
-            <!-- Fallback Image matches the hero image for seamless transition -->
-            <img id="kelly-image" class="kelly-image" src="/lessons/images/kelly-directors-chair-curious.png" alt="Kelly teaching">
+          </div>
+
+          <aside class="lesson-context-panel glass-panel-medium">
+            <div class="lesson-meta-header"><div class="meta-label">Current Lesson</div></div>
+            <h2 id="lesson-title" class="lesson-title">Loading...</h2>
+            <p id="topic-description" class="lesson-description">...</p>
+          </aside>
+
+          <div class="interaction-zone">
+            <div id="question-card" class="question-card glass-panel-medium">
+              <button id="play-pause" class="play-button glass-panel-light"
+                ><span class="play-icon">▶</span></button
+              >
+              <div id="question-text" class="question-text">Ready?</div>
+            </div>
+            <div id="choice-cards-container" class="choice-cards-container"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LAYER 3: Modal Stack (Overlays) -->
+      <div id="layer-modal-stack">
+        <div id="menu-drawer" class="glass-drawer">
+          <div class="drawer-header">
+            <h3>Kelly OS</h3>
+            <button class="btn-close-drawer">×</button>
+          </div>
+          <div class="drawer-content-scroll" style="overflow-y: auto; flex: 1;">
+            <div class="nav-section">
+              <div
+                class="dashboard-card glass-panel-light"
+                style="margin-bottom: 20px; padding: 20px;"
+              >
+                <span class="meta-label">Today's Focus</span>
+                <h4 id="drawer-lesson-title" style="margin: 5px 0; font-size: 1.1rem;">
+                  The Sun: Our Star
+                </h4>
+                <div
+                  style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;"
+                >
+                  <span class="date-pill" id="drawer-date" style="font-size: 0.8rem; opacity: 0.7;"
+                    >Dec 25</span
+                  >
+                  <button
+                    class="btn-primary-glass"
+                    id="btn-drawer-start"
+                    style="padding: 6px 12px; font-size: 0.8rem;">Start</button
+                  >
+                </div>
+              </div>
+            </div>
+            <nav class="drawer-nav">
+              <button class="drawer-item active" data-target="mode-lesson"
+                ><span class="icon">📚</span> Classroom</button
+              >
+              <button class="drawer-item" data-action="open-syllabus"
+                ><span class="icon">📅</span> Syllabus</button
+              >
+              <button class="drawer-item" data-action="open-tuition"
+                ><span class="icon">🎓</span> Tuition & Gifts</button
+              >
+              <button class="drawer-item" data-action="open-careers"
+                ><span class="icon">💼</span> Careers</button
+              >
+              <button class="drawer-item" data-action="open-newsroom"
+                ><span class="icon">📰</span> Newsroom</button
+              >
+            </nav>
+            <div class="drawer-divider"></div>
+            <nav class="drawer-nav">
+              <button class="drawer-item" data-action="open-settings">Settings</button>
+              <!-- Reload page to logout/reset -->
+              <button class="drawer-item text-danger" onclick="window.location.reload()"
+                >Log Out</button
+              >
+            </nav>
+          </div>
         </div>
 
-        <!-- TRIGGER: The Single Entry Point -->
-        <button id="os-trigger" title="Open Kelly OS">☰</button>
-
-        <!-- LAYER 2: OS Interface -->
-        <div id="layer-os-interface">
-            <div id="mode-dashboard" class="os-mode-panel active"></div>
-
-            <div id="mode-lesson" class="os-mode-panel">
-                <div class="controls-panel">
-                    <div class="age-selector-floating glass-panel-light">
-                         <label for="age-slider" class="age-label-floating">Age</label>
-                         <div class="age-display-floating"><span id="age-value">25</span></div>
-                         <input type="range" id="age-slider" min="2" max="102" value="25" class="age-slider-floating">
-                    </div>
-                </div>
-
-                <aside class="lesson-context-panel glass-panel-medium">
-                    <div class="lesson-meta-header"><div class="meta-label">Current Lesson</div></div>
-                    <h2 id="lesson-title" class="lesson-title">Loading...</h2>
-                    <p id="topic-description" class="lesson-description">...</p>
-                </aside>
-
-                <div class="interaction-zone">
-                    <div id="question-card" class="question-card glass-panel-medium">
-                        <button id="play-pause" class="play-button glass-panel-light"><span class="play-icon">▶</span></button>
-                        <div id="question-text" class="question-text">Ready?</div>
-                    </div>
-                    <div id="choice-cards-container" class="choice-cards-container"></div>
-                </div>
-            </div>
+        <div id="modal-reader" class="os-modal glass-panel-heavy">
+          <div class="modal-header">
+            <h2 id="reader-title">Title</h2>
+            <button class="btn-close-modal">Close</button>
+          </div>
+          <div class="modal-content-scroll" id="reader-content"></div>
         </div>
 
-        <!-- LAYER 3: Modal Stack (Overlays) -->
-        <div id="layer-modal-stack">
-            <div id="menu-drawer" class="glass-drawer">
-                <div class="drawer-header">
-                    <h3>Kelly OS</h3>
-                    <button class="btn-close-drawer">×</button>
-                </div>
-                <div class="drawer-content-scroll" style="overflow-y: auto; flex: 1;">
-                    <div class="nav-section">
-                        <div class="dashboard-card glass-panel-light" style="margin-bottom: 20px; padding: 20px;">
-                            <span class="meta-label">Today's Focus</span>
-                            <h4 id="drawer-lesson-title" style="margin: 5px 0; font-size: 1.1rem;">The Sun: Our Star</h4>
-                            <div style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;">
-                                <span class="date-pill" id="drawer-date" style="font-size: 0.8rem; opacity: 0.7;">Dec 25</span>
-                                <button class="btn-primary-glass" id="btn-drawer-start" style="padding: 6px 12px; font-size: 0.8rem;">Start</button>
-                            </div>
-                        </div>
-                    </div>
-                    <nav class="drawer-nav">
-                        <button class="drawer-item active" data-target="mode-lesson"><span class="icon">📚</span> Classroom</button>
-                        <button class="drawer-item" data-action="open-syllabus"><span class="icon">📅</span> Syllabus</button>
-                        <button class="drawer-item" data-action="open-tuition"><span class="icon">🎓</span> Tuition & Gifts</button>
-                        <button class="drawer-item" data-action="open-careers"><span class="icon">💼</span> Careers</button>
-                         <button class="drawer-item" data-action="open-newsroom"><span class="icon">📰</span> Newsroom</button>
-                    </nav>
-                    <div class="drawer-divider"></div>
-                    <nav class="drawer-nav">
-                        <button class="drawer-item" data-action="open-settings">Settings</button>
-                        <!-- Reload page to logout/reset -->
-                        <button class="drawer-item text-danger" onclick="window.location.reload()">Log Out</button>
-                    </nav>
-                </div>
+        <div id="modal-tuition" class="os-modal glass-panel-heavy">
+          <div class="modal-header">
+            <h2>Tuition & Enrollment</h2>
+            <button class="btn-close-modal">Close</button>
+          </div>
+          <div class="modal-content-scroll">
+            <p style="text-align: center; margin-bottom: 1.5rem; opacity: 0.8; font-size: 0.9rem;">
+              Start with a 7-day free trial. Cancel anytime.
+            </p>
+            <div class="pricing-grid">
+              <div class="pricing-card glass-panel-light">
+                <h3>Monthly</h3>
+                <div class="price">$4.99<span>/month</span></div>
+                <ul
+                  style="margin: 1rem 0; font-size: 0.85rem; opacity: 0.9; list-style: none; padding: 0;"
+                >
+                  <li>✓ 7 days free trial</li>
+                  <li>✓ Daily lessons for all ages</li>
+                  <li>✓ Whole family access</li>
+                </ul>
+                <button class="btn-primary-glass btn-checkout" data-plan="monthly"
+                  >Start Free Trial</button
+                >
+              </div>
+              <div class="pricing-card glass-panel-light featured">
+                <span
+                  style="position: absolute; top: -10px; right: 10px; background: #d97757; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;"
+                  >BEST VALUE</span
+                >
+                <h3>Annual</h3>
+                <div class="price">$49.99<span>/year</span></div>
+                <ul
+                  style="margin: 1rem 0; font-size: 0.85rem; opacity: 0.9; list-style: none; padding: 0;"
+                >
+                  <li>✓ 7 days free trial</li>
+                  <li>✓ Save $10 vs monthly</li>
+                  <li>✓ 2 months free</li>
+                </ul>
+                <button class="btn-primary-glass btn-checkout" data-plan="annual"
+                  >Start Free Trial</button
+                >
+              </div>
+              <div class="pricing-card glass-panel-light">
+                <h3>Gift a Year</h3>
+                <div class="price">$49.99<span>/one-time</span></div>
+                <ul
+                  style="margin: 1rem 0; font-size: 0.85rem; opacity: 0.9; list-style: none; padding: 0;"
+                >
+                  <li>✓ Full year of lessons</li>
+                  <li>✓ Send to any email</li>
+                  <li>✓ Perfect for families</li>
+                </ul>
+                <button class="btn-primary-glass btn-checkout" data-plan="gift">Gift Now</button>
+              </div>
             </div>
-
-            <div id="modal-reader" class="os-modal glass-panel-heavy">
-                <div class="modal-header">
-                    <h2 id="reader-title">Title</h2>
-                    <button class="btn-close-modal">Close</button>
-                </div>
-                <div class="modal-content-scroll" id="reader-content"></div>
-            </div>
-
-            <div id="modal-tuition" class="os-modal glass-panel-heavy">
-                <div class="modal-header">
-                    <h2>Tuition & Enrollment</h2>
-                    <button class="btn-close-modal">Close</button>
-                </div>
-                <div class="modal-content-scroll">
-                    <div class="pricing-grid">
-                        <div class="pricing-card glass-panel-light">
-                            <h3>Scholar</h3>
-                            <div class="price">$199<span>/yr</span></div>
-                            <button class="btn-primary-glass btn-checkout" data-plan="personal">Subscribe</button>
-                        </div>
-                        <div class="pricing-card glass-panel-light featured">
-                            <h3>Fellowship (Gift)</h3>
-                            <div class="price">$199<span>/one-time</span></div>
-                            <button class="btn-primary-glass btn-checkout" data-plan="gift">Gift Now</button>
-                        </div>
-                    </div>
-                </div>
-            </div>
+          </div>
         </div>
+      </div>
     </div>
-    
+
     <!-- Audio Element -->
     <audio id="kelly-audio" preload="auto"></audio>
 
     <!-- Main App Logic (Module) -->
     <script type="module" src="/lesson-player/js/app.js"></script>
 
-    <!-- Transition Logic -->
-    <script is:inline>
-        function handleLogin(btn, provider) {
-            btn.classList.add('loading');
-            
-            // 1. Simulate Auth Delay (or real auth later)
-            setTimeout(() => {
-                // 2. The "Magic" Transition
-                const loginLayer = document.getElementById('login-layer');
-                const osLayer = document.getElementById('app-layer-desktop');
-                
-                // Fade out Login
-                loginLayer.classList.add('hidden');
-                
-                // Fade in OS
-                osLayer.classList.add('active');
-                
-                // 3. Trigger OS Mode Switch via the Global Object (exposed by app.js)
-                if (window.os) {
-                    console.log("Transitioning to Lesson Mode...");
-                    window.os.switchMode('lesson');
-                    
-                    // Optional: Play a welcome sound or trigger Unity
-                    // window.os.playAudio(); 
-                } else {
-                    console.error("KellyOS not initialized yet");
-                }
-                
-                // 4. Cleanup Login Layer from DOM after fade (optional, keeps it cleaner)
-                setTimeout(() => {
-                    loginLayer.style.display = 'none';
-                }, 800);
-                
-            }, 800);
+    <!-- Production Auth System -->
+    <script
+      is:inline
+      define:vars={{
+        supabaseUrl:
+          import.meta.env.PUBLIC_SUPABASE_URL || 'https://tvjalxxsyryjphkforjv.supabase.co',
+        supabaseKey: import.meta.env.PUBLIC_SUPABASE_ANON_KEY || '',
+      }}
+    >
+      // ============================================
+      // CURIOUS KELLY - PRODUCTION AUTH
+      // Zero friction, instant learning
+      // ============================================
+
+      // Initialize Supabase (uses CDN loaded above)
+      let supabase = null;
+
+      if (window.supabase && supabaseUrl && supabaseKey) {
+        supabase = window.supabase.createClient(supabaseUrl, supabaseKey, {
+          auth: {
+            autoRefreshToken: true,
+            persistSession: true,
+            detectSessionInUrl: true,
+            storageKey: 'curious-kelly-auth',
+            flowType: 'pkce',
+          },
+        });
+        console.log('✅ Supabase initialized');
+      } else {
+        console.warn(
+          '⚠️ Supabase not configured - auth will not work. Set PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY'
+        );
+      }
+
+      // ============================================
+      // STATE
+      // ============================================
+
+      let currentUser = null;
+      let isProcessing = false;
+
+      // ============================================
+      // CHECK SESSION ON LOAD
+      // ============================================
+
+      async function checkSession() {
+        try {
+          // Check for OAuth callback (hash contains access_token)
+          const hash = window.location.hash;
+          if (hash && (hash.includes('access_token') || hash.includes('error'))) {
+            console.log('Processing OAuth callback...');
+
+            // Parse error if present
+            if (hash.includes('error')) {
+              const params = new URLSearchParams(hash.substring(1));
+              const error = params.get('error_description') || params.get('error');
+              console.error('OAuth error:', error);
+              showAuthError(error);
+              // Clean up URL
+              history.replaceState(null, '', window.location.pathname);
+              return null;
+            }
+
+            // Let Supabase process the tokens
+            // Wait a moment for Supabase to handle the callback
+            await new Promise(resolve => setTimeout(resolve, 100));
+          }
+
+          const {
+            data: { session },
+            error,
+          } = await supabase.auth.getSession();
+
+          if (error) {
+            console.error('Session check error:', error);
+            return null;
+          }
+
+          if (session?.user) {
+            currentUser = session.user;
+            console.log('✅ User authenticated:', session.user.email);
+
+            // Clean up URL hash if present (removes tokens from URL bar)
+            if (window.location.hash) {
+              history.replaceState(null, '', window.location.pathname);
+            }
+
+            // Auto-transition to OS for authenticated users
+            transitionToOS(session.user);
+            return session.user;
+          }
+
+          return null;
+        } catch (err) {
+          console.error('Session check failed:', err);
+          return null;
         }
+      }
+
+      // Show auth error to user
+      function showAuthError(message) {
+        const toast = document.createElement('div');
+        toast.style.cssText = `
+                position: fixed;
+                top: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #ef4444;
+                color: white;
+                padding: 16px 24px;
+                border-radius: 8px;
+                font-size: 14px;
+                z-index: 9999;
+                max-width: 400px;
+                text-align: center;
+            `;
+        toast.textContent = message || 'Login failed. Please try again.';
+        document.body.appendChild(toast);
+        setTimeout(() => toast.remove(), 5000);
+      }
+
+      // ============================================
+      // AUTH STATE LISTENER
+      // ============================================
+
+      supabase.auth.onAuthStateChange((event, session) => {
+        console.log('Auth event:', event);
+
+        if (event === 'SIGNED_IN' && session?.user) {
+          currentUser = session.user;
+          transitionToOS(session.user);
+        } else if (event === 'SIGNED_OUT') {
+          currentUser = null;
+          // Could show login layer again here
+        }
+      });
+
+      // ============================================
+      // TRANSITION TO OS
+      // ============================================
+
+      function transitionToOS(user) {
+        const loginLayer = document.getElementById('login-layer');
+        const osLayer = document.getElementById('app-layer-desktop');
+
+        // Update any user display elements
+        if (user?.email) {
+          const userDisplays = document.querySelectorAll('[data-user-email]');
+          userDisplays.forEach(el => (el.textContent = user.email));
+        }
+
+        // Fade out Login
+        loginLayer.classList.add('hidden');
+
+        // Fade in OS
+        osLayer.classList.add('active');
+
+        // Trigger OS Mode Switch
+        if (window.os) {
+          console.log('Transitioning to Lesson Mode...');
+          window.os.switchMode('lesson');
+
+          // Store user in OS state
+          if (window.os.state) {
+            window.os.state.user = user;
+          }
+        } else {
+          console.warn('KellyOS not initialized yet - will initialize on ready');
+        }
+
+        // Cleanup Login Layer from DOM after fade
+        setTimeout(() => {
+          loginLayer.style.display = 'none';
+        }, 800);
+      }
+
+      // ============================================
+      // HANDLE LOGIN (Called by buttons)
+      // ============================================
+
+      // Make handleLogin global so onclick can find it
+      window.handleLogin = async function handleLogin(btn, provider) {
+        if (isProcessing) return;
+        isProcessing = true;
+
+        btn.classList.add('loading');
+
+        try {
+          if (provider === 'google') {
+            // Real Google OAuth
+            const { data, error } = await supabase.auth.signInWithOAuth({
+              provider: 'google',
+              options: {
+                redirectTo: window.location.origin + '/',
+                queryParams: {
+                  access_type: 'offline',
+                  prompt: 'consent',
+                },
+              },
+            });
+
+            if (error) {
+              console.error('Google OAuth error:', error);
+              showError(btn, error.message);
+            }
+            // If successful, browser will redirect to Google
+          } else if (provider === 'apple') {
+            // Real Apple OAuth
+            const { data, error } = await supabase.auth.signInWithOAuth({
+              provider: 'apple',
+              options: {
+                redirectTo: window.location.origin + '/',
+              },
+            });
+
+            if (error) {
+              console.error('Apple OAuth error:', error);
+              showError(btn, error.message);
+            }
+          } else if (provider === 'guest') {
+            // Guest mode - instant access, no auth required
+            console.log('Entering guest mode...');
+
+            // Store guest state
+            localStorage.setItem('curious-kelly-guest', 'true');
+            localStorage.setItem('curious-kelly-guest-started', new Date().toISOString());
+
+            // Create a pseudo-user for guest mode
+            const guestUser = {
+              id: 'guest-' + Date.now(),
+              email: null,
+              isGuest: true,
+              user_metadata: { full_name: 'Explorer' },
+            };
+
+            currentUser = guestUser;
+
+            // Transition with slight delay for UX
+            setTimeout(() => {
+              transitionToOS(guestUser);
+            }, 400);
+          }
+        } catch (err) {
+          console.error('Login error:', err);
+          showError(btn, 'Something went wrong. Please try again.');
+        } finally {
+          isProcessing = false;
+          // Don't remove loading state for OAuth - browser will redirect
+          if (provider === 'guest') {
+            btn.classList.remove('loading');
+          }
+        }
+      };
+
+      // ============================================
+      // ERROR DISPLAY
+      // ============================================
+
+      function showError(btn, message) {
+        btn.classList.remove('loading');
+
+        // Create error toast
+        const toast = document.createElement('div');
+        toast.className = 'error-toast';
+        toast.textContent = message;
+        toast.style.cssText = `
+                position: fixed;
+                bottom: 20px;
+                left: 50%;
+                transform: translateX(-50%);
+                background: #ef4444;
+                color: white;
+                padding: 12px 24px;
+                border-radius: 8px;
+                font-size: 14px;
+                z-index: 9999;
+                animation: slideUp 0.3s ease;
+            `;
+
+        document.body.appendChild(toast);
+
+        setTimeout(() => {
+          toast.remove();
+        }, 4000);
+      }
+
+      // ============================================
+      // INITIALIZE ON LOAD
+      // ============================================
+
+      document.addEventListener('DOMContentLoaded', () => {
+        // Check for existing session
+        checkSession();
+
+        // Add slide up animation
+        const style = document.createElement('style');
+        style.textContent = `
+                @keyframes slideUp {
+                    from { transform: translate(-50%, 20px); opacity: 0; }
+                    to { transform: translate(-50%, 0); opacity: 1; }
+                }
+            `;
+        document.head.appendChild(style);
+      });
+
+      // ============================================
+      // EXPORT FOR OTHER SCRIPTS
+      // ============================================
+
+      window.CuriousKellyAuth = {
+        supabase,
+        getUser: () => currentUser,
+        signOut: async () => {
+          await supabase.auth.signOut();
+          localStorage.removeItem('curious-kelly-guest');
+          window.location.reload();
+        },
+        isGuest: () => currentUser?.isGuest || false,
+        isAuthenticated: () => !!currentUser && !currentUser.isGuest,
+      };
     </script>
-</body>
+  </body>
 </html>

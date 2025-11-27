@@ -4,13 +4,20 @@ interface HandlerContext {
 }
 
 interface CheckoutRequest {
-  planType: 'monthly' | 'annual' | 'family' | 'gift';
+  planType: 'monthly' | 'annual' | 'lifetime' | 'gift_12mo' | 'gift_6mo' | 'gift_3mo';
   customerEmail: string;
+  promoCode?: string;
+  affiliateCode?: string;
   giftData?: {
     recipientEmail: string;
     gifterName?: string;
     message?: string;
+    deliveryDate?: string;
   };
+  // Attribution
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
 }
 
 interface CheckoutResponse {
@@ -79,7 +86,7 @@ export async function stripeCheckoutHandler(
   }
 
   const stripe = new Stripe(stripeKey, {
-    apiVersion: '2024-11-20.acacia',
+    apiVersion: '2024-11-20.acacia'
   });
 
   let body: CheckoutRequest;
@@ -101,7 +108,8 @@ export async function stripeCheckoutHandler(
   }
 
   // Validate plan type
-  if (!['monthly', 'annual', 'family', 'gift'].includes(body.planType)) {
+  const validPlanTypes = ['monthly', 'annual', 'lifetime', 'gift_12mo', 'gift_6mo', 'gift_3mo'];
+  if (!validPlanTypes.includes(body.planType)) {
     return jsonResponse<CheckoutErrorResponse>(
       { status: 'error', message: 'invalid_plan_type', requestId },
       { status: 422 }
@@ -109,7 +117,8 @@ export async function stripeCheckoutHandler(
   }
 
   // Validate gift data if gift plan
-  if (body.planType === 'gift') {
+  const isGiftPlan = body.planType.startsWith('gift_');
+  if (isGiftPlan) {
     if (!body.giftData?.recipientEmail || !isValidEmail(body.giftData.recipientEmail)) {
       return jsonResponse<CheckoutErrorResponse>(
         { status: 'error', message: 'invalid_recipient_email', requestId },
@@ -119,41 +128,93 @@ export async function stripeCheckoutHandler(
   }
 
   // Get price IDs from environment
-  const priceIds = {
+  const priceIds: Record<string, string | undefined> = {
     monthly: context.env.STRIPE_PRICE_MONTHLY,
     annual: context.env.STRIPE_PRICE_ANNUAL,
-    family: context.env.STRIPE_PRICE_FAMILY,
-    gift: context.env.STRIPE_PRICE_GIFT,
+    lifetime: context.env.STRIPE_PRICE_LIFETIME,
+    gift_12mo: context.env.STRIPE_PRICE_GIFT_12MO,
+    gift_6mo: context.env.STRIPE_PRICE_GIFT_6MO,
+    gift_3mo: context.env.STRIPE_PRICE_GIFT_3MO
   };
 
   const siteUrl = context.env.PUBLIC_SITE_URL || 'https://curiouskelly.com';
 
+  // Build common metadata for attribution tracking
+  const commonMetadata = {
+    source: 'web',
+    utm_source: body.utmSource || 'direct',
+    utm_medium: body.utmMedium || 'none',
+    utm_campaign: body.utmCampaign || 'none',
+    affiliate_code: body.affiliateCode || '',
+    promo_code: body.promoCode || ''
+  };
+
   try {
     let sessionConfig: import('stripe').Stripe.Checkout.SessionCreateParams;
 
-    if (body.planType === 'gift' && body.giftData) {
+    if (isGiftPlan && body.giftData) {
       // Gift purchase (one-time payment)
+      const giftPriceId = priceIds[body.planType];
+      if (!giftPriceId) {
+        return jsonResponse<CheckoutErrorResponse>(
+          { status: 'error', message: `price_id_not_configured_${body.planType}`, requestId },
+          { status: 503 }
+        );
+      }
+
       sessionConfig = {
         payment_method_types: ['card'],
         line_items: [
           {
-            price: priceIds.gift!,
-            quantity: 1,
-          },
+            price: giftPriceId,
+            quantity: 1
+          }
         ],
         mode: 'payment',
         customer_email: body.customerEmail,
-        success_url: `${siteUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${siteUrl}/?canceled=true`,
+        success_url: `${siteUrl}/gift-success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${siteUrl}/gifts?canceled=true`,
+        allow_promotion_codes: true,
         metadata: {
+          ...commonMetadata,
           type: 'gift',
+          gift_plan: body.planType,
           recipient_email: body.giftData.recipientEmail,
           gift_message: body.giftData.message || '',
           gifter_name: body.giftData.gifterName || '',
-        },
+          delivery_date: body.giftData.deliveryDate || new Date().toISOString()
+        }
+      };
+    } else if (body.planType === 'lifetime') {
+      // Lifetime purchase (one-time payment)
+      const lifetimePriceId = priceIds.lifetime;
+      if (!lifetimePriceId) {
+        return jsonResponse<CheckoutErrorResponse>(
+          { status: 'error', message: 'price_id_not_configured_lifetime', requestId },
+          { status: 503 }
+        );
+      }
+
+      sessionConfig = {
+        payment_method_types: ['card'],
+        line_items: [
+          {
+            price: lifetimePriceId,
+            quantity: 1
+          }
+        ],
+        mode: 'payment',
+        customer_email: body.customerEmail,
+        success_url: `${siteUrl}/welcome?session_id={CHECKOUT_SESSION_ID}&plan=lifetime`,
+        cancel_url: `${siteUrl}/?canceled=true`,
+        allow_promotion_codes: true,
+        metadata: {
+          ...commonMetadata,
+          type: 'lifetime'
+        }
       };
     } else {
-      // Subscription plans
+      // Subscription plans (monthly, annual)
       const priceId = priceIds[body.planType];
       if (!priceId) {
         return jsonResponse<CheckoutErrorResponse>(
@@ -167,21 +228,29 @@ export async function stripeCheckoutHandler(
         line_items: [
           {
             price: priceId,
-            quantity: 1,
-          },
+            quantity: 1
+          }
         ],
         mode: 'subscription',
         customer_email: body.customerEmail,
-        success_url: `${siteUrl}/success?session_id={CHECKOUT_SESSION_ID}`,
+        success_url: `${siteUrl}/welcome?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${siteUrl}/?canceled=true`,
         metadata: {
-          type: body.planType,
+          ...commonMetadata,
+          type: body.planType
         },
         subscription_data: {
           metadata: {
-            plan_type: body.planType,
-          },
+            ...commonMetadata,
+            plan_type: body.planType
+          }
         },
+        // Allow promotion codes
+        allow_promotion_codes: true,
+        // Collect billing address for tax purposes
+        billing_address_collection: 'auto',
+        // Enable automatic tax calculation
+        automatic_tax: { enabled: true }
       };
     }
 
@@ -191,12 +260,12 @@ export async function stripeCheckoutHandler(
       requestId,
       sessionId: session.id,
       planType: body.planType,
-      emailHash: body.customerEmail.substring(0, 3) + '***',
+      emailHash: body.customerEmail.substring(0, 3) + '***'
     });
 
     return jsonResponse<CheckoutResponse>({
       sessionId: session.id,
-      url: session.url || '',
+      url: session.url || ''
     });
   } catch (error) {
     console.error('[stripeCheckoutHandler] error', { requestId, error });
@@ -205,12 +274,9 @@ export async function stripeCheckoutHandler(
         status: 'error',
         message: 'checkout_creation_failed',
         requestId,
-        details: error instanceof Error ? error.message : 'Unknown error',
+        details: error instanceof Error ? error.message : 'Unknown error'
       },
       { status: 500 }
     );
   }
 }
-
-
-

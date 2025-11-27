@@ -1,0 +1,54 @@
+name: Build Kelly WebGL
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main ]
+
+jobs:
+  build:
+    name: Build WebGL
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout repository
+      uses: actions/checkout@v3
+      with:
+        lfs: true
+    
+    - name: Cache Library
+      uses: actions/cache@v3
+      with:
+        path: Library
+        key: Library-Kelly-WebGL
+        restore-keys: |
+          Library-Kelly-
+          Library-
+    
+    - name: Build Kelly
+      uses: game-ci/unity-builder@v4
+      env:
+        UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+        UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+        UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+      with:
+        targetPlatform: WebGL
+        buildMethod: KellySetup.BuildWebGL.BuildFromCommandLine
+        versioning: Semantic
+    
+    - name: Upload Build
+      uses: actions/upload-artifact@v3
+      with:
+        name: Kelly-WebGL-Build
+        path: Builds/WebGL
+    
+    - name: Deploy to Netlify (Production)
+      if: github.ref == 'refs/heads/main'
+      uses: netlify/actions/cli@master
+      env:
+        NETLIFY_AUTH_TOKEN: ${{ secrets.NETLIFY_AUTH_TOKEN }}
+        NETLIFY_SITE_ID: ${{ secrets.NETLIFY_SITE_ID }}
+      with:
+        args: deploy --prod --dir=Builds/WebGL
+

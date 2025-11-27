@@ -13,6 +13,11 @@ import {
   trackPaymentFailed,
   trackEvent,
 } from '@/lib/customerio';
+import {
+  upsertUserFromCheckout,
+  activateSubscription,
+  updateSubscriptionStatus,
+} from '@/lib/supabase';
 
 // Initialize Stripe only if key is present
 const stripeKey = import.meta.env.STRIPE_SECRET_KEY;
@@ -53,30 +58,51 @@ export const POST: APIRoute = async ({ request }) => {
         const session = event.data.object as Stripe.Checkout.Session;
         console.log('✅ Checkout completed:', session.id);
 
-        // Get customer email
+        // Get customer email and info
         const customerEmail = session.customer_email || session.customer_details?.email;
+        const customerName = session.customer_details?.name || session.metadata?.customer_name;
         const customerId = session.client_reference_id || session.customer as string;
+        const stripeCustomerId = session.customer as string;
+        const plan = (session.metadata?.plan || 'annual') as 'monthly' | 'annual' | 'gift';
+        const isGift = session.metadata?.is_gift === 'true';
 
-        if (customerEmail && customerId) {
-          // Identify customer in Customer.io
+        if (customerEmail) {
+          // 1. Identify customer in Customer.io
           await identifyCustomer({
             id: customerId,
             email: customerEmail,
+            first_name: customerName?.split(' ')[0],
             created_at: Math.floor(Date.now() / 1000),
           });
 
-          // Track trial started
+          // 2. Track trial started (or purchase for gifts)
           await trackEvent(customerId, {
-            name: 'trial_started',
+            name: isGift ? 'gift_purchased' : 'trial_started',
             data: {
               session_id: session.id,
               payment_status: session.payment_status,
+              plan,
             },
           });
+
+          // 3. Create/update user in database
+          const trialEndDate = new Date();
+          trialEndDate.setDate(trialEndDate.getDate() + 7);
+
+          const dbResult = await upsertUserFromCheckout({
+            email: customerEmail,
+            name: customerName,
+            stripeCustomerId: stripeCustomerId || customerId,
+            plan,
+            trialEndDate: isGift ? undefined : trialEndDate,
+          });
+
+          if (!dbResult.success) {
+            console.error('Failed to create user record:', dbResult.error);
+            // Don't fail the webhook - user can still use the service
+          }
         }
 
-        // TODO: Create user in database
-        // TODO: Grant access to lessons
         break;
       }
 
@@ -85,31 +111,40 @@ export const POST: APIRoute = async ({ request }) => {
         console.log('✅ Payment succeeded:', invoice.id);
 
         if (invoice.customer && invoice.subscription) {
-          const customerId = invoice.customer as string;
+          const stripeCustomerId = invoice.customer as string;
 
           // Get subscription details
           const subscription = await stripe.subscriptions.retrieve(invoice.subscription as string);
-          const plan = subscription.items.data[0]?.price.id;
+          const priceId = subscription.items.data[0]?.price.id;
 
           // Determine plan type
           let planType: 'monthly' | 'annual' | 'gift' = 'monthly';
-          if (plan === import.meta.env.STRIPE_PRICE_ANNUAL) {
+          if (priceId === import.meta.env.STRIPE_PRICE_ANNUAL) {
             planType = 'annual';
-          } else if (plan === import.meta.env.STRIPE_PRICE_GIFT) {
+          } else if (priceId === import.meta.env.STRIPE_PRICE_GIFT) {
             planType = 'gift';
           }
 
-          // Track in Customer.io
-          await trackSubscriptionPurchased(customerId, {
+          // 1. Track in Customer.io
+          await trackSubscriptionPurchased(stripeCustomerId, {
             plan: planType,
             amount: invoice.amount_paid / 100, // Convert cents to dollars
-            stripe_customer_id: customerId,
+            stripe_customer_id: stripeCustomerId,
             stripe_subscription_id: subscription.id,
           });
+
+          // 2. Activate subscription in database (trial ended, payment successful)
+          const dbResult = await activateSubscription({
+            stripeCustomerId,
+            plan: planType,
+            subscriptionId: subscription.id,
+          });
+
+          if (!dbResult.success) {
+            console.error('Failed to activate subscription in DB:', dbResult.error);
+          }
         }
 
-        // TODO: Update database with payment confirmation
-        // TODO: Send receipt email
         break;
       }
 
@@ -118,68 +153,90 @@ export const POST: APIRoute = async ({ request }) => {
         console.log('❌ Payment failed:', invoice.id);
 
         if (invoice.customer) {
-          const customerId = invoice.customer as string;
+          const stripeCustomerId = invoice.customer as string;
 
-          // Track failed payment
-          await trackPaymentFailed(customerId, {
+          // 1. Track failed payment in Customer.io
+          await trackPaymentFailed(stripeCustomerId, {
             amount: invoice.amount_due / 100,
             reason: invoice.last_finalization_error?.message,
             stripe_invoice_id: invoice.id,
           });
+
+          // 2. Mark subscription as inactive in database
+          // (Customer.io handles the dunning emails via automated campaigns)
+          await updateSubscriptionStatus({
+            stripeCustomerId,
+            status: 'inactive', // Will reactivate when payment succeeds
+          });
         }
 
-        // TODO: Send dunning email (payment update required)
-        // TODO: Mark subscription as past_due in database
         break;
       }
 
       case 'customer.subscription.created': {
         const subscription = event.data.object as Stripe.Subscription;
         console.log('✅ Subscription created:', subscription.id);
-
-        // TODO: Create subscription record in database
+        // User record is created in checkout.session.completed
+        // No additional action needed here
         break;
       }
 
       case 'customer.subscription.updated': {
         const subscription = event.data.object as Stripe.Subscription;
-        console.log('🔄 Subscription updated:', subscription.id);
+        const stripeCustomerId = subscription.customer as string;
+        console.log('🔄 Subscription updated:', subscription.id, 'Status:', subscription.status);
 
-        // Check if status changed
-        if (subscription.status === 'active') {
-          // Subscription activated (trial ended, payment successful)
-          // TODO: Ensure access is granted
-        } else if (subscription.status === 'past_due') {
-          // Payment failed
-          // TODO: Send dunning email
-        } else if (subscription.status === 'canceled' || subscription.status === 'unpaid') {
-          // Subscription cancelled
-          // TODO: Revoke access
+        // Map Stripe status to our status
+        let dbStatus: 'active' | 'inactive' | 'cancelled' | 'expired' | 'trialing';
+        
+        switch (subscription.status) {
+          case 'active':
+            dbStatus = 'active';
+            break;
+          case 'trialing':
+            dbStatus = 'trialing';
+            break;
+          case 'past_due':
+          case 'unpaid':
+            dbStatus = 'inactive';
+            break;
+          case 'canceled':
+            dbStatus = 'cancelled';
+            break;
+          default:
+            dbStatus = 'inactive';
         }
 
-        // TODO: Update subscription status in database
+        // Update database
+        await updateSubscriptionStatus({
+          stripeCustomerId,
+          status: dbStatus,
+        });
+
         break;
       }
 
       case 'customer.subscription.deleted': {
         const subscription = event.data.object as Stripe.Subscription;
+        const stripeCustomerId = subscription.customer as string;
         console.log('🗑️ Subscription cancelled:', subscription.id);
 
-        if (subscription.customer) {
-          const customerId = subscription.customer as string;
+        // 1. Track cancellation in Customer.io
+        await trackEvent(stripeCustomerId, {
+          name: 'subscription_cancelled',
+          data: {
+            subscription_id: subscription.id,
+            cancel_at_period_end: subscription.cancel_at_period_end,
+          },
+        });
 
-          // Track cancellation
-          await trackEvent(customerId, {
-            name: 'subscription_cancelled',
-            data: {
-              subscription_id: subscription.id,
-              cancel_at_period_end: subscription.cancel_at_period_end,
-            },
-          });
-        }
+        // 2. Update database - mark as cancelled
+        await updateSubscriptionStatus({
+          stripeCustomerId,
+          status: 'cancelled',
+        });
 
-        // TODO: Revoke access in database
-        // TODO: Send cancellation confirmation email
+        // Customer.io handles cancellation confirmation emails via automated campaigns
         break;
       }
 

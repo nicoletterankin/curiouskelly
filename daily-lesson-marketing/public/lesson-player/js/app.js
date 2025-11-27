@@ -7,14 +7,12 @@
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 import { KellyAvatarSystem } from './kelly-avatar-system.js';
 
-// Configuration
+// Configuration - Uses auth system from index.astro
 let SUPABASE_URL = '';
 let SUPABASE_KEY = '';
-// Set to your backend URL (e.g. from Railway) or default for dev
-const API_URL =
-  window.location.hostname === 'localhost'
-    ? 'http://localhost:3000/api'
-    : 'https://curiouskelly-production.up.railway.app/api'; // Connected to Railway Production
+
+// API URL - now points to Astro API routes (no separate backend needed)
+const API_URL = '';  // Empty = relative URLs (/api/...)
 
 class KellyOS {
   constructor() {
@@ -93,7 +91,16 @@ class KellyOS {
     this.setupKellyAvatar(); // Initialize Kelly Avatar System
     this.setupEventListeners();
     this.setupUnity();
-    if (this.supabase) {
+    
+    // Get user from the new auth system (set by index.astro)
+    if (window.CuriousKellyAuth) {
+      const user = window.CuriousKellyAuth.getUser();
+      if (user) {
+        this.state.user = user;
+        console.log('KellyOS: User loaded from auth system:', user.email || 'Guest');
+      }
+    } else if (this.supabase) {
+      // Fallback to direct Supabase check
       this.checkSession();
     }
 
@@ -105,6 +112,8 @@ class KellyOS {
 
     // Bind Checkout Buttons
     this.bindCheckoutButtons();
+    
+    console.log('✅ KellyOS initialized');
   }
 
   async loadConfig() {
@@ -272,9 +281,19 @@ class KellyOS {
   }
 
   async handleCheckout(btn, plan) {
-    // 1. Auth Check (Simple)
-    if (!this.state.user && plan !== 'gift') {
-      // Prompt login logic would go here, for now we proceed or use dummy
+    // 1. Auth Check - if not logged in, prompt for email
+    const userEmail = this.state.user?.email;
+    const userName = this.state.user?.user_metadata?.full_name;
+
+    if (!userEmail && plan !== 'gift') {
+      // Prompt for email if not logged in
+      const email = prompt('Please enter your email address:');
+      if (!email || !email.includes('@')) {
+        alert('Please enter a valid email address to continue.');
+        return;
+      }
+      // Store temporarily for checkout
+      this._checkoutEmail = email;
     }
 
     const originalText = btn.innerText;
@@ -282,17 +301,16 @@ class KellyOS {
     btn.disabled = true;
 
     try {
-      // 2. Prepare Payload
+      // 2. Prepare Payload (matching the Astro API format)
       const payload = {
-        plan,
-        customerEmail: this.state.user?.email || 'guest@example.com', // Fallback for guests/gifts
-        // Optional fields for Gifts
-        recipientEmail: plan === 'gift' ? 'recipient@example.com' : undefined, // UI needs input for this
-        gifterName: this.state.user?.user_metadata?.full_name || 'A Friend',
+        plan: plan === 'personal' ? 'annual' : plan, // Map 'personal' to 'annual'
+        email: userEmail || this._checkoutEmail || 'guest@example.com',
+        name: userName || '',
+        customerId: userEmail || this._checkoutEmail,
       };
 
-      // 3. Call Backend
-      const response = await fetch(`${API_URL}/checkout/create-session`, {
+      // 3. Call the Astro create-checkout API
+      const response = await fetch('/api/create-checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify(payload),
@@ -319,7 +337,7 @@ class KellyOS {
         btn.style.background = '';
       }, 3000);
 
-      alert(`Checkout failed: ${error.message}. (Backend might not be active yet)`);
+      alert(`Checkout failed: ${error.message}. Please try again or contact hello@curiouskelly.com`);
     }
   }
 

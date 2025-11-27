@@ -184,9 +184,71 @@ const cancelled = params.get('cancelled') === 'true';
   const submitButton = document.getElementById('checkout-button');
   const buttonText = submitButton?.querySelector('.button-text');
   const buttonLoader = submitButton?.querySelector('.button-loader');
+  const emailInput = document.getElementById('email') as HTMLInputElement;
+
+  // Email validation helper
+  function isValidEmail(email: string): boolean {
+    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+    return emailRegex.test(email.trim().toLowerCase());
+  }
+
+  // Show inline error
+  function showError(message: string) {
+    // Remove existing error if any
+    const existingError = document.querySelector('.form-error');
+    if (existingError) existingError.remove();
+
+    // Create error element
+    const errorDiv = document.createElement('div');
+    errorDiv.className = 'form-error';
+    errorDiv.textContent = message;
+    errorDiv.style.cssText = 'color: #ef4444; background: #fef2f2; padding: 0.75rem 1rem; border-radius: 0.5rem; margin-bottom: 1rem; font-size: 0.875rem; border: 1px solid #fecaca;';
+    
+    // Insert before submit button
+    submitButton?.parentElement?.insertBefore(errorDiv, submitButton);
+  }
+
+  // Clear error
+  function clearError() {
+    const existingError = document.querySelector('.form-error');
+    if (existingError) existingError.remove();
+  }
+
+  // Real-time email validation
+  emailInput?.addEventListener('blur', () => {
+    const email = emailInput.value.trim();
+    if (email && !isValidEmail(email)) {
+      emailInput.style.borderColor = '#ef4444';
+    } else {
+      emailInput.style.borderColor = '';
+    }
+  });
 
   form?.addEventListener('submit', async (e) => {
     e.preventDefault();
+    clearError();
+
+    const formData = new FormData(form);
+    const name = (formData.get('name') as string)?.trim();
+    const email = (formData.get('email') as string)?.trim();
+
+    // Validate name
+    if (!name || name.length < 2) {
+      showError('Please enter your full name.');
+      return;
+    }
+
+    // Validate email
+    if (!email) {
+      showError('Please enter your email address.');
+      return;
+    }
+
+    if (!isValidEmail(email)) {
+      showError('Please enter a valid email address (e.g., you@example.com).');
+      emailInput.style.borderColor = '#ef4444';
+      return;
+    }
 
     // Disable button during processing
     if (submitButton) {
@@ -194,10 +256,6 @@ const cancelled = params.get('cancelled') === 'true';
       if (buttonText) buttonText.style.display = 'none';
       if (buttonLoader) buttonLoader.style.display = 'inline';
     }
-
-    const formData = new FormData(form);
-    const name = formData.get('name') as string;
-    const email = formData.get('email') as string;
 
     try {
       // Call API to create checkout session
@@ -214,11 +272,11 @@ const cancelled = params.get('cancelled') === 'true';
         }),
       });
 
-      if (!response.ok) {
-        throw new Error('Failed to create checkout session');
-      }
-
       const data = await response.json();
+
+      if (!response.ok) {
+        throw new Error(data.error || 'Failed to create checkout session');
+      }
 
       // Redirect to Stripe Checkout
       if (data.url) {
@@ -228,7 +286,8 @@ const cancelled = params.get('cancelled') === 'true';
       }
     } catch (error) {
       console.error('Checkout error:', error);
-      alert('Something went wrong. Please try again or contact support@curiouskelly.com');
+      const errorMessage = error instanceof Error ? error.message : 'Something went wrong';
+      showError(`${errorMessage}. Please try again or contact hello@curiouskelly.com`);
 
       // Re-enable button
       if (submitButton) {
