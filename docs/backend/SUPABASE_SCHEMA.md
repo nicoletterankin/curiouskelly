@@ -2,39 +2,49 @@
 
 This document outlines the Supabase database schema used by the Curious Kelly platform.
 
-## ⚠️ IMPORTANT: THE CORRECT TABLE IS `lessons`
+## Production Tables (AS OF NOV 2024)
 
-**DO NOT USE:** `core_lessons`, `lesson_atoms`, `lesson_shards` - these are DEPRECATED/NEVER EXISTED.
+### `core_lessons` - 365 Daily Lessons
+**Rows: 365** - The master curriculum.
 
-## Production Tables
+| Column | Type | Description |
+|--------|------|-------------|
+| `id` | UUID | Primary key |
+| `day_number` | INTEGER | Day 1-365 (unique) |
+| `topic` | TEXT | Lesson title (e.g., "The Sun") |
+| `universal_truth` | TEXT | Core concept |
+| `learning_objectives` | JSONB | Goals array |
+| `difficulty_level` | TEXT | beginner/intermediate/advanced |
 
-### `lessons` ← THE ONLY LESSON TABLE
-The production table for the 365-day curriculum.
+### `lesson_atoms` - 21,918 Content Pieces
+Content variants for different archetypes and phases.
 
-```sql
-CREATE TABLE public.lessons (
-  id UUID PRIMARY KEY,
-  day_number INTEGER UNIQUE NOT NULL,  -- Day 1-365
-  title TEXT NOT NULL,                  -- "The Sun - Our Star"
-  subtitle TEXT,                        -- Brief description
-  content JSONB NOT NULL,               -- PhaseDNA structure
-  audio_url TEXT,
-  duration_seconds INTEGER,
-  difficulty TEXT,                      -- 'beginner', 'intermediate', 'advanced'
-  tags TEXT[],
-  is_published BOOLEAN DEFAULT false,   -- Only published lessons are shown
-  created_at TIMESTAMPTZ,
-  updated_at TIMESTAMPTZ
-);
-```
+| Column | Type | Description |
+|--------|------|-------------|
+| `core_lesson_id` | UUID | FK to core_lessons |
+| `archetype` | TEXT | Persona (e.g., "The Scientist") |
+| `phase` | TEXT | welcome/teaching/practice/wisdom |
+| `content` | JSONB | The actual script/content |
 
-**Frontend Query Example:**
+### `lesson_shards` - 38,314 Demographic Variants  
+Fine-grained content by age/region/tone.
+
+### `lessons` - 5 rows (MINIMAL, use core_lessons instead)
+
+## Frontend Query Example
 ```javascript
+// Load all 365 lessons
 const { data } = await supabase
-  .from('lessons')
-  .select('day_number, title, subtitle, content')
-  .eq('is_published', true)
+  .from('core_lessons')
+  .select('*')
   .order('day_number');
+
+// Load lesson with atoms
+const { data } = await supabase
+  .from('core_lessons')
+  .select('*, lesson_atoms(content)')
+  .eq('day_number', dayNumber)
+  .single();
 ```
 
 ## User Tables

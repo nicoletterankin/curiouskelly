@@ -673,14 +673,12 @@
 
         async function loadAllLessons() {
             try {
-                // Load from Supabase 'lessons' table (the CORRECT production table)
-                // Schema: day_number, title, subtitle, content, is_published
-                console.log('📡 Loading lessons from Supabase...');
+                // Load from Supabase 'core_lessons' table (365 lessons!)
+                console.log('📡 Loading lessons from Supabase core_lessons...');
                 
                 const { data, error } = await supabase
-                    .from('lessons')
-                    .select('day_number, title, subtitle, content, difficulty, tags')
-                    .eq('is_published', true)
+                    .from('core_lessons')
+                    .select('*')
                     .order('day_number', { ascending: true });
 
                 if (error) {
@@ -689,19 +687,18 @@
                 }
                 
                 if (data && data.length > 0) {
-                    // Map Supabase fields to expected format
+                    // Map core_lessons fields to expected format
                     allLessons = data.map(lesson => ({
                         day: lesson.day_number,
-                        title: lesson.title,
-                        subtitle: lesson.subtitle,
-                        learning_objective: lesson.subtitle || '',
+                        title: lesson.topic || lesson.title,
+                        learning_objective: lesson.universal_truth || lesson.description || '',
                         content: lesson.content,
-                        difficulty: lesson.difficulty,
+                        difficulty: lesson.difficulty_level,
                         tags: lesson.tags || []
                     }));
                     console.log(`✅ Loaded ${allLessons.length} lessons from Supabase`);
                 } else {
-                    console.log('⚠️ No published lessons in Supabase, using local fallback');
+                    console.log('⚠️ No lessons in Supabase, using local fallback');
                     await loadFromLocalCalendar();
                 }
             } catch (e) {
