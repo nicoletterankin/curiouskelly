@@ -1,0 +1,197 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://curiouskelly.com/schemas/lesson-complete.schema.json",
+  "title": "Complete Lesson DNA Schema",
+  "description": "Canonical schema for a launch-ready Curious Kelly lesson. Every field marked required MUST be present for launch.",
+  "type": "object",
+  "required": ["id", "title", "calendar", "category", "ageVariants"],
+  "properties": {
+    "id": {
+      "type": "string",
+      "pattern": "^[a-z0-9-]+$",
+      "description": "Unique lesson identifier (kebab-case)"
+    },
+    "title": {
+      "type": "string",
+      "minLength": 5,
+      "maxLength": 100
+    },
+    "description": {
+      "type": "string",
+      "minLength": 20,
+      "maxLength": 500
+    },
+    "calendar": {
+      "type": "object",
+      "required": ["day", "date", "month"],
+      "properties": {
+        "day": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 365
+        },
+        "date": {
+          "type": "string",
+          "pattern": "^(January|February|March|April|May|June|July|August|September|October|November|December) \\d{1,2}, \\d{4}$",
+          "description": "Must be calendar format: 'January 1, 2025' NOT 'Day 1'"
+        },
+        "month": {
+          "type": "string",
+          "enum": ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
+        }
+      }
+    },
+    "category": {
+      "type": "string",
+      "minLength": 3
+    },
+    "ageVariants": {
+      "type": "object",
+      "description": "Content adapted for each age bucket. At minimum, 18-35 is required.",
+      "required": ["18-35"],
+      "properties": {
+        "2-5": { "$ref": "#/$defs/ageVariant" },
+        "6-12": { "$ref": "#/$defs/ageVariant" },
+        "13-17": { "$ref": "#/$defs/ageVariant" },
+        "18-35": { "$ref": "#/$defs/ageVariant" },
+        "36-60": { "$ref": "#/$defs/ageVariant" },
+        "61-102": { "$ref": "#/$defs/ageVariant" }
+      }
+    }
+  },
+  "$defs": {
+    "ageVariant": {
+      "type": "object",
+      "required": ["title", "language", "phases"],
+      "properties": {
+        "title": {
+          "type": "string",
+          "minLength": 5
+        },
+        "description": {
+          "type": "string",
+          "minLength": 10
+        },
+        "language": {
+          "type": "object",
+          "required": ["en"],
+          "properties": {
+            "en": { "$ref": "#/$defs/languageContent" },
+            "es": { "$ref": "#/$defs/languageContent" },
+            "fr": { "$ref": "#/$defs/languageContent" }
+          }
+        },
+        "phases": {
+          "type": "array",
+          "minItems": 4,
+          "items": { "$ref": "#/$defs/phase" },
+          "description": "Must include: welcome, teaching, practice, wisdom"
+        }
+      }
+    },
+    "languageContent": {
+      "type": "object",
+      "required": ["title", "welcome", "mainContent", "wisdomMoment"],
+      "properties": {
+        "title": { "type": "string", "minLength": 5 },
+        "welcome": { "type": "string", "minLength": 20 },
+        "mainContent": { "type": "string", "minLength": 100 },
+        "wisdomMoment": { "type": "string", "minLength": 20 },
+        "keyPoints": {
+          "type": "array",
+          "items": { "type": "string" }
+        }
+      }
+    },
+    "phase": {
+      "type": "object",
+      "required": ["id", "content"],
+      "properties": {
+        "id": {
+          "type": "string",
+          "enum": ["welcome", "teaching", "practice", "reflection", "wisdom"]
+        },
+        "type": {
+          "type": "string"
+        },
+        "content": {
+          "type": "string",
+          "minLength": 10,
+          "description": "Kelly's script for this phase"
+        },
+        "duration": {
+          "type": "integer",
+          "minimum": 10,
+          "maximum": 300
+        },
+        "choices": {
+          "type": "array",
+          "description": "REQUIRED for teaching and practice phases",
+          "minItems": 2,
+          "maxItems": 2,
+          "items": { "$ref": "#/$defs/choice" }
+        },
+        "expressionCues": {
+          "type": "array",
+          "items": { "$ref": "#/$defs/expressionCue" }
+        }
+      },
+      "if": {
+        "properties": {
+          "id": { "enum": ["teaching", "practice"] }
+        }
+      },
+      "then": {
+        "required": ["choices"],
+        "properties": {
+          "choices": {
+            "minItems": 2
+          }
+        }
+      }
+    },
+    "choice": {
+      "type": "object",
+      "required": ["text", "response"],
+      "properties": {
+        "text": {
+          "type": "string",
+          "minLength": 5,
+          "maxLength": 100,
+          "description": "The choice text shown to the learner"
+        },
+        "response": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 200,
+          "description": "Kelly's response when this choice is selected"
+        },
+        "nextStep": {
+          "type": "string",
+          "description": "Optional: override default phase transition"
+        }
+      }
+    },
+    "expressionCue": {
+      "type": "object",
+      "required": ["timestamp", "type"],
+      "properties": {
+        "timestamp": {
+          "type": "number",
+          "minimum": 0
+        },
+        "type": {
+          "type": "string",
+          "enum": ["micro-smile", "macro-gesture", "brow-raise", "breath", "nod", "head-tilt", "eye-widen"]
+        },
+        "intensity": {
+          "type": "string",
+          "enum": ["subtle", "moderate", "emphatic"]
+        },
+        "description": {
+          "type": "string"
+        }
+      }
+    }
+  }
+}
