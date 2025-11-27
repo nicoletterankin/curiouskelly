@@ -370,17 +370,61 @@
 
         <div class="sidebar-content">
             <div class="nav-section">
-                <div class="nav-title">Today</div>
-                <div class="nav-item active" id="nav-today">
+                <div class="nav-title" id="nav-date-label">Today</div>
+                <div class="nav-item active" id="nav-today" style="font-weight: 600; padding: 12px; background: var(--kelly-blue); color: white; border-radius: 10px;">
                     Loading...
                 </div>
             </div>
 
-            <div class="nav-section" style="flex: 1; overflow: hidden; display: flex; flex-direction: column;">
-                <div class="nav-title">All 365 Lessons</div>
-                <div id="all-lessons-list" style="flex: 1; overflow-y: auto; max-height: calc(100vh - 300px);">
-                    <!-- Populated by JS with all 365 lessons -->
+            <!-- Calendar Navigation -->
+            <div class="calendar-nav" style="padding: 12px; border-bottom: 1px solid var(--border-color);">
+                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
+                    <button id="prev-month" style="background: none; border: none; color: var(--kelly-blue); font-size: 1.2rem; cursor: pointer;">‹</button>
+                    <span id="current-month" style="font-weight: 600; font-size: 1rem;"></span>
+                    <button id="next-month" style="background: none; border: none; color: var(--kelly-blue); font-size: 1.2rem; cursor: pointer;">›</button>
                 </div>
+                <div class="calendar-grid" id="calendar-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; font-size: 0.75rem;">
+                    <div style="text-align: center; color: var(--text-secondary); padding: 4px;">S</div>
+                    <div style="text-align: center; color: var(--text-secondary); padding: 4px;">M</div>
+                    <div style="text-align: center; color: var(--text-secondary); padding: 4px;">T</div>
+                    <div style="text-align: center; color: var(--text-secondary); padding: 4px;">W</div>
+                    <div style="text-align: center; color: var(--text-secondary); padding: 4px;">T</div>
+                    <div style="text-align: center; color: var(--text-secondary); padding: 4px;">F</div>
+                    <div style="text-align: center; color: var(--text-secondary); padding: 4px;">S</div>
+                </div>
+                <div id="calendar-days" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;"></div>
+            </div>
+
+            <!-- Selected Lesson Preview -->
+            <div id="lesson-preview" style="padding: 16px; flex: 1; overflow-y: auto;">
+                <div id="lesson-title" style="font-size: 1.1rem; font-weight: 600; margin-bottom: 8px;"></div>
+                <div id="lesson-objective" style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.4;"></div>
+                
+                <!-- Personalization Options -->
+                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
+                    <select id="lang-select" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 10px; border-radius: 6px; font-size: 0.8rem;">
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                        <option value="fr">Français</option>
+                    </select>
+                    <select id="tone-select" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 10px; border-radius: 6px; font-size: 0.8rem;">
+                        <option value="curious">Curious</option>
+                        <option value="playful">Playful</option>
+                        <option value="serious">Serious</option>
+                    </select>
+                    <select id="age-select" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 10px; border-radius: 6px; font-size: 0.8rem;">
+                        <option value="5">Age 5-7</option>
+                        <option value="10">Age 8-12</option>
+                        <option value="15">Age 13-17</option>
+                        <option value="25">Age 18-35</option>
+                        <option value="50">Age 36-60</option>
+                        <option value="70">Age 61+</option>
+                    </select>
+                </div>
+                
+                <button id="start-lesson-btn" style="width: 100%; padding: 14px; background: var(--kelly-blue); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.2s;">
+                    Start Today's Lesson →
+                </button>
             </div>
 
             <div class="nav-section" id="connections-section" style="display: none;">
@@ -663,11 +707,27 @@
         }
 
         let allLessons = [];
+        let currentMonth = new Date();
+        let selectedDate = new Date();
+        
+        // Map day_number (1-365) to actual calendar date for 2025
+        const YEAR_START = new Date(2025, 0, 1); // January 1, 2025
+        
+        function dayNumberToDate(dayNumber) {
+            const date = new Date(YEAR_START);
+            date.setDate(date.getDate() + dayNumber - 1);
+            return date;
+        }
+        
+        function dateToDayNumber(date) {
+            const start = new Date(date.getFullYear(), 0, 0);
+            const diff = date - start;
+            const oneDay = 1000 * 60 * 60 * 24;
+            return Math.floor(diff / oneDay);
+        }
 
         async function loadAllLessons() {
             try {
-                // Load from Supabase 'core_lessons' table (365 lessons)
-                // ACTUAL COLUMNS: id, day_number, topic, universal_truth, marketing_headline, etc.
                 console.log('📡 Loading lessons from Supabase core_lessons...');
                 
                 const { data, error } = await supabase
@@ -675,28 +735,23 @@
                     .select('id, day_number, topic, universal_truth, marketing_headline, marketing_tagline')
                     .order('day_number', { ascending: true });
 
-                if (error) {
-                    console.error('❌ Supabase error:', error.message);
-                    throw error;
-                }
+                if (error) throw error;
                 
                 if (data && data.length > 0) {
-                    // Map ACTUAL core_lessons fields
                     allLessons = data.map(lesson => ({
                         id: lesson.id,
                         day: lesson.day_number,
-                        title: lesson.topic,  // ACTUAL field name is 'topic'
+                        date: dayNumberToDate(lesson.day_number),
+                        title: lesson.topic,
                         learning_objective: lesson.universal_truth || '',
                         subtitle: lesson.marketing_tagline || ''
                     }));
                     console.log(`✅ Loaded ${allLessons.length} lessons from Supabase`);
                 } else {
-                    console.log('⚠️ No lessons in Supabase, using local fallback');
                     await loadFromLocalCalendar();
                 }
             } catch (e) {
                 console.error('❌ Failed to load from Supabase:', e);
-                console.log('📁 Falling back to local calendar...');
                 await loadFromLocalCalendar();
             }
         }
@@ -709,111 +764,213 @@
                 if (calendarData.lessons && calendarData.lessons.length > 0) {
                     allLessons = calendarData.lessons.map(lesson => ({
                         ...lesson,
+                        date: dayNumberToDate(lesson.day),
                         learning_objective: lesson.learning_objective || lesson.description || ''
                     }));
                     console.log(`✅ Loaded ${allLessons.length} lessons from local calendar`);
-                } else {
-                    // Last resort: Create a sample lesson
-                    allLessons = [{
-                        day: 1,
-                        title: "The Sun - Our Star",
-                        learning_objective: "Learn about the center of our solar system"
-                    }];
-                    console.log('⚠️ Using fallback sample lesson');
                 }
             } catch (localError) {
                 console.error('❌ Failed to load local calendar:', localError);
-                // Absolute fallback
-                allLessons = [{
-                    day: 1,
-                    title: "The Sun - Our Star",
-                    learning_objective: "Learn about the center of our solar system"
-                }];
             }
         }
 
-        async function loadSyllabus() {
-            // Get current day
-            const day = userProfile?.current_day || 1;
+        // ═══════════════════════════════════════════════════════════════
+        // CALENDAR SYSTEM - Apple Calendar Inspired
+        // ═══════════════════════════════════════════════════════════════
+        
+        function renderCalendar() {
+            const monthNames = ['January', 'February', 'March', 'April', 'May', 'June', 
+                               'July', 'August', 'September', 'October', 'November', 'December'];
             
-            // Find the lesson for today from Supabase data
-            currentLesson = allLessons.find(l => l.day === day);
+            document.getElementById('current-month').textContent = 
+                `${monthNames[currentMonth.getMonth()]} ${currentMonth.getFullYear()}`;
             
-            if (!currentLesson) {
-                console.error(`❌ No lesson found for day ${day}`);
-                currentLesson = {
-                    title: "Lesson Not Found",
-                    day: day,
-                    learning_objective: "Please contact support.",
-                    interactions: []
-                };
-            } else {
-                console.log(`✅ Loaded Day ${day}: ${currentLesson.title}`);
+            const daysContainer = document.getElementById('calendar-days');
+            daysContainer.innerHTML = '';
+            
+            const firstDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), 1);
+            const lastDay = new Date(currentMonth.getFullYear(), currentMonth.getMonth() + 1, 0);
+            const today = new Date();
+            
+            // Empty cells for days before the 1st
+            for (let i = 0; i < firstDay.getDay(); i++) {
+                const empty = document.createElement('div');
+                empty.style.padding = '8px';
+                daysContainer.appendChild(empty);
             }
+            
+            // Days of the month
+            for (let day = 1; day <= lastDay.getDate(); day++) {
+                const dateObj = new Date(currentMonth.getFullYear(), currentMonth.getMonth(), day);
+                const dayNum = dateToDayNumber(dateObj);
+                const lesson = allLessons.find(l => l.day === dayNum);
+                
+                const dayEl = document.createElement('div');
+                dayEl.textContent = day;
+                dayEl.style.cssText = `
+                    text-align: center;
+                    padding: 8px 4px;
+                    border-radius: 8px;
+                    cursor: ${lesson ? 'pointer' : 'default'};
+                    font-size: 0.85rem;
+                    transition: all 0.15s ease;
+                    position: relative;
+                `;
+                
+                // Is this today?
+                const isToday = dateObj.toDateString() === today.toDateString();
+                // Is this selected?
+                const isSelected = dateObj.toDateString() === selectedDate.toDateString();
+                // Has lesson?
+                const hasLesson = !!lesson;
+                
+                if (isSelected) {
+                    dayEl.style.background = 'var(--kelly-blue)';
+                    dayEl.style.color = 'white';
+                    dayEl.style.fontWeight = '600';
+                } else if (isToday) {
+                    dayEl.style.background = 'rgba(37, 99, 235, 0.2)';
+                    dayEl.style.color = 'var(--kelly-blue)';
+                    dayEl.style.fontWeight = '600';
+                } else if (hasLesson) {
+                    dayEl.style.color = 'var(--text-primary)';
+                } else {
+                    dayEl.style.color = 'var(--text-secondary)';
+                    dayEl.style.opacity = '0.4';
+                }
+                
+                // Lesson indicator dot
+                if (hasLesson && !isSelected) {
+                    const dot = document.createElement('div');
+                    dot.style.cssText = `
+                        width: 4px; height: 4px;
+                        background: var(--kelly-blue);
+                        border-radius: 50%;
+                        margin: 2px auto 0;
+                    `;
+                    dayEl.appendChild(dot);
+                }
+                
+                // Hover effect
+                dayEl.onmouseenter = () => {
+                    if (hasLesson && !isSelected) {
+                        dayEl.style.background = 'rgba(37, 99, 235, 0.1)';
+                    }
+                };
+                dayEl.onmouseleave = () => {
+                    if (!isSelected && !isToday) {
+                        dayEl.style.background = 'transparent';
+                    } else if (isToday && !isSelected) {
+                        dayEl.style.background = 'rgba(37, 99, 235, 0.2)';
+                    }
+                };
+                
+                // Click to select
+                if (hasLesson) {
+                    dayEl.onclick = () => selectLesson(dateObj, lesson);
+                }
+                
+                daysContainer.appendChild(dayEl);
+            }
+        }
+        
+        function selectLesson(date, lesson) {
+            selectedDate = date;
+            currentLesson = lesson;
+            
+            // Update preview
+            const dateStr = date.toLocaleDateString('en-US', { 
+                weekday: 'long', month: 'long', day: 'numeric' 
+            });
+            
+            document.getElementById('lesson-title').textContent = lesson.title;
+            document.getElementById('lesson-objective').textContent = 
+                `${dateStr}\n\n${lesson.learning_objective}`;
+            document.getElementById('current-lesson-display').textContent = lesson.title;
+            
+            // Update button
+            const btn = document.getElementById('start-lesson-btn');
+            const today = new Date();
+            if (date.toDateString() === today.toDateString()) {
+                btn.textContent = "Start Today's Lesson →";
+            } else {
+                btn.textContent = `Explore ${lesson.title} →`;
+            }
+            
+            // Re-render calendar to update selection
+            renderCalendar();
+            
+            console.log(`📅 Selected: ${dateStr} - ${lesson.title}`);
+        }
+        
+        function setupCalendarNav() {
+            document.getElementById('prev-month').onclick = () => {
+                currentMonth.setMonth(currentMonth.getMonth() - 1);
+                renderCalendar();
+            };
+            document.getElementById('next-month').onclick = () => {
+                currentMonth.setMonth(currentMonth.getMonth() + 1);
+                renderCalendar();
+            };
+            
+            // Start lesson button
+            document.getElementById('start-lesson-btn').onclick = startSelectedLesson;
+        }
+        
+        async function startSelectedLesson() {
+            if (!currentLesson) return;
+            
+            const lang = document.getElementById('lang-select').value;
+            const tone = document.getElementById('tone-select').value;
+            const age = document.getElementById('age-select').value;
+            
+            console.log(`🚀 Starting lesson: ${currentLesson.title} (lang=${lang}, tone=${tone}, age=${age})`);
+            
+            // Load the first phase/question for this lesson
+            playKellyResponse(`Let's explore ${currentLesson.title}! ${currentLesson.learning_objective}`);
+            
+            // TODO: Load actual lesson content from lesson_atoms based on archetype/phase
+        }
 
-            updateUI();
+        async function loadSyllabus() {
+            // Set selected date to today
+            selectedDate = new Date();
+            const todayDayNum = dateToDayNumber(selectedDate);
+            
+            // Find today's lesson
+            currentLesson = allLessons.find(l => l.day === todayDayNum);
+            
+            if (currentLesson) {
+                console.log(`✅ Today's lesson: ${currentLesson.title}`);
+                selectLesson(selectedDate, currentLesson);
+            } else {
+                // Find nearest lesson
+                currentLesson = allLessons[0];
+                if (currentLesson) {
+                    selectLesson(currentLesson.date, currentLesson);
+                }
+            }
+            
+            renderCalendar();
+            setupCalendarNav();
         }
 
         function updateUI() {
             if (!currentLesson) return;
 
-            const currentDay = userProfile?.current_day || 1;
-
-            // Update Sidebar with real data
-            document.getElementById('nav-today').textContent = `Day ${currentDay}: ${currentLesson.title}`;
+            // Update header
+            document.getElementById('nav-today').textContent = currentLesson.title;
             document.getElementById('current-lesson-display').textContent = currentLesson.title;
 
-            // Populate ALL 365 lessons in sidebar
-            const allLessonsList = document.getElementById('all-lessons-list');
-            allLessonsList.innerHTML = '';
-            
-            if (allLessons.length > 0) {
-                allLessons.forEach(lesson => {
-                    const div = document.createElement('div');
-                    div.className = 'nav-item';
-                    div.textContent = `Day ${lesson.day}: ${lesson.title}`;
-                    div.title = lesson.learning_objective || '';
-                    
-                    // Style based on progress
-                    if (lesson.day === currentDay) {
-                        div.classList.add('active');
-                        div.style.background = 'var(--kelly-blue, #2563eb)';
-                        div.style.color = 'white';
-                    } else if (lesson.day < currentDay) {
-                        div.style.opacity = '0.6';
-                        div.innerHTML = `✓ Day ${lesson.day}: ${lesson.title}`;
-                    } else {
-                        div.style.opacity = '0.8';
-                    }
-                    
-                    // Click to jump to lesson (for now just log)
-                    div.style.cursor = 'pointer';
-                    div.onclick = () => {
-                        console.log(`Selected Day ${lesson.day}: ${lesson.title}`);
-                        // TODO: Actually load and display this lesson
-                    };
-                    
-                    allLessonsList.appendChild(div);
-                });
-                
-                // Scroll to current day
-                setTimeout(() => {
-                    const activeItem = allLessonsList.querySelector('.active');
-                    if (activeItem) {
-                        activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
-                    }
-                }, 100);
-            }
-
+            // Calendar is now rendered separately via renderCalendar()
             // Start Interaction Flow
             startInteraction();
         }
 
-        // --- Interaction Engine (The "Vanna White" Logic) ---
+        // --- Interaction Engine ---
         function startInteraction() {
-            // Show lesson info from Supabase
             if (currentLesson) {
-                const welcomeText = `Hi! Today's lesson: ${currentLesson.title}. ${currentLesson.learning_objective || ''}`;
+                const welcomeText = `Welcome! Today we're exploring: ${currentLesson.title}`;
                 playKellyResponse(welcomeText);
             }
         }
