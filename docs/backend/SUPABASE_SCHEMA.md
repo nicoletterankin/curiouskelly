@@ -1,48 +1,62 @@
-# Supabase Database Schema
+# Supabase Database Schema - VERIFIED NOV 27, 2024
 
-This document outlines the Supabase database schema used by the Curious Kelly platform.
-
-## Production Tables (AS OF NOV 2024)
+## Production Tables
 
 ### `core_lessons` - 365 Daily Lessons
-**Rows: 365** - The master curriculum.
 
-| Column | Type | Description |
-|--------|------|-------------|
+| Column | Type | Example |
+|--------|------|---------|
+| `id` | UUID | `9f8af9c5-66d6-40a0-a10c-b95a7940d25c` |
+| `day_number` | INTEGER | 1, 2, 3... 365 |
+| `topic` | TEXT | "Water", "Clouds", "Light" |
+| `universal_truth` | TEXT | "Water transforms between solid, liquid, and gas..." |
+| `marketing_headline` | TEXT | "Water Wonders: Discover the Magic of H2O!" |
+| `marketing_tagline` | TEXT | "Water: It's not just wet!" |
+| `marketing_pitch` | TEXT | "Dive into the fascinating world of water!" |
+| `quick_quiz_questions` | JSONB | Quiz data |
+| `reflection_prompts` | JSONB | Prompts array |
+| `mastery_criteria` | TEXT | Success criteria |
+
+### `lesson_atoms` - 21,915 Content Pieces
+
+| Column | Type | Example |
+|--------|------|---------|
 | `id` | UUID | Primary key |
-| `day_number` | INTEGER | Day 1-365 (unique) |
-| `topic` | TEXT | Lesson title (e.g., "The Sun") |
-| `universal_truth` | TEXT | Core concept |
-| `learning_objectives` | JSONB | Goals array |
-| `difficulty_level` | TEXT | beginner/intermediate/advanced |
+| `core_lesson_id` | UUID | FK to core_lessons.id |
+| `archetype` | TEXT | "The Survivor" |
+| `phase` | TEXT | "Fact1", "Fact2", "Fact3" |
+| `content` | JSONB | `{script, options, responses}` |
+| `created_at` | TIMESTAMP | |
+| `visual_url` | TEXT | NULL |
 
-### `lesson_atoms` - 21,918 Content Pieces
-Content variants for different archetypes and phases.
+### `lesson_shards` - 38,700 Demographic Variants
 
-| Column | Type | Description |
-|--------|------|-------------|
-| `core_lesson_id` | UUID | FK to core_lessons |
-| `archetype` | TEXT | Persona (e.g., "The Scientist") |
-| `phase` | TEXT | welcome/teaching/practice/wisdom |
-| `content` | JSONB | The actual script/content |
+| Column | Type | Example |
+|--------|------|---------|
+| `id` | UUID | Primary key |
+| `core_lesson_id` | UUID | FK to core_lessons.id |
+| `age` | INTEGER | 5 |
+| `region` | TEXT | "en" |
+| `tone` | TEXT | "playful", "curious", "serious" |
+| `birth_year` | INTEGER | 2020 |
+| `script_content` | JSONB | Personalized script |
 
-### `lesson_shards` - 38,314 Demographic Variants  
-Fine-grained content by age/region/tone.
+### `lessons` - 5 rows (TEST DATA ONLY)
+Different schema - has `title` instead of `topic`. DO NOT USE.
 
-### `lessons` - 5 rows (MINIMAL, use core_lessons instead)
+## Frontend Query Examples
 
-## Frontend Query Example
 ```javascript
-// Load all 365 lessons
+// Load all lessons (for sidebar)
 const { data } = await supabase
   .from('core_lessons')
-  .select('*')
+  .select('id, day_number, topic, universal_truth')
   .order('day_number');
 
-// Load lesson with atoms
+// Load lesson with content atoms
 const { data } = await supabase
   .from('core_lessons')
-  .select('*, lesson_atoms(content)')
+  .select('id, day_number, topic, lesson_atoms(content, archetype, phase)')
   .eq('day_number', dayNumber)
   .single();
 ```

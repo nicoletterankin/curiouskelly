@@ -523,31 +523,35 @@
     async function loadLessonData(day) {
       console.log(`📚 Loading Day ${day}...`);
       
-      // Load from Supabase 'core_lessons' table (365 lessons)
+      // Load from Supabase 'core_lessons' table
+      // ACTUAL COLUMNS: id, day_number, topic, universal_truth, marketing_headline, etc.
       const { data: core, error } = await supabase
         .from('core_lessons')
-        .select('*')
+        .select('id, day_number, topic, universal_truth, marketing_headline')
         .eq('day_number', day)
         .single();
       
       if (error || !core) {
         console.log('⚠️ No lesson in Supabase for day', day);
-        state.lessonData = { topic: 'Unknown', title: 'Lesson Not Found' };
+        state.lessonData = { topic: 'Lesson Not Found' };
         state.atoms = [];
         return;
       }
       
       state.lessonData = {
-        ...core,
-        topic: core.topic || core.title,
-        id: core.id
+        id: core.id,
+        day_number: core.day_number,
+        topic: core.topic,  // ACTUAL field name
+        universal_truth: core.universal_truth,
+        headline: core.marketing_headline
       };
       console.log('✅ Core Lesson Loaded:', state.lessonData.topic);
 
       // Load lesson_atoms for this lesson
+      // ACTUAL COLUMNS: id, core_lesson_id, archetype, phase, content, visual_url
       const { data: atoms } = await supabase
         .from('lesson_atoms')
-        .select('*')
+        .select('id, archetype, phase, content')
         .eq('core_lesson_id', core.id);
         
       state.atoms = atoms || [];

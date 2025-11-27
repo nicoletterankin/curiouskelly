@@ -673,12 +673,13 @@
 
         async function loadAllLessons() {
             try {
-                // Load from Supabase 'core_lessons' table (365 lessons!)
+                // Load from Supabase 'core_lessons' table (365 lessons)
+                // ACTUAL COLUMNS: id, day_number, topic, universal_truth, marketing_headline, etc.
                 console.log('📡 Loading lessons from Supabase core_lessons...');
                 
                 const { data, error } = await supabase
                     .from('core_lessons')
-                    .select('*')
+                    .select('id, day_number, topic, universal_truth, marketing_headline, marketing_tagline')
                     .order('day_number', { ascending: true });
 
                 if (error) {
@@ -687,14 +688,13 @@
                 }
                 
                 if (data && data.length > 0) {
-                    // Map core_lessons fields to expected format
+                    // Map ACTUAL core_lessons fields
                     allLessons = data.map(lesson => ({
+                        id: lesson.id,
                         day: lesson.day_number,
-                        title: lesson.topic || lesson.title,
-                        learning_objective: lesson.universal_truth || lesson.description || '',
-                        content: lesson.content,
-                        difficulty: lesson.difficulty_level,
-                        tags: lesson.tags || []
+                        title: lesson.topic,  // ACTUAL field name is 'topic'
+                        learning_objective: lesson.universal_truth || '',
+                        subtitle: lesson.marketing_tagline || ''
                     }));
                     console.log(`✅ Loaded ${allLessons.length} lessons from Supabase`);
                 } else {
