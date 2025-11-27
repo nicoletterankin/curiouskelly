@@ -2007,6 +2007,12 @@
             speechIndicator.classList.add('active');
             speechContent.textContent = '';
             
+            // ═══════════════════════════════════════════════════════════
+            // UNITY LIP-SYNC HOOK - Triggers when Kelly speaks
+            // When Unity is ready, call: unityInstance.SendMessage('Kelly', 'SpeakText', text)
+            // ═══════════════════════════════════════════════════════════
+            triggerUnityLipSync(text);
+            
             // Simulate typing effect
             setTimeout(() => {
                 speechIndicator.classList.remove('active');
@@ -2029,6 +2035,43 @@
             setTimeout(() => {
                 document.getElementById('kelly-status-text').textContent = 'Kelly is listening';
             }, text.length * 20 + 1000);
+        }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // UNITY LIP-SYNC INTEGRATION
+        // Triggers 3D avatar lip-sync and optional TTS
+        // ═══════════════════════════════════════════════════════════════
+        
+        let unityInstance = null; // Will be set when Unity loads
+        
+        function triggerUnityLipSync(text) {
+            // If Unity is loaded, send lip-sync command
+            if (unityInstance && typeof unityInstance.SendMessage === 'function') {
+                try {
+                    // Send text to Unity for viseme/phoneme processing
+                    unityInstance.SendMessage('KellyAvatar', 'StartLipSync', text);
+                    console.log('🎭 Unity lip-sync triggered');
+                } catch (e) {
+                    console.warn('Unity lip-sync unavailable:', e);
+                }
+            }
+            
+            // Optional: Play ElevenLabs TTS audio
+            if (window.kellyTTS && globalSettings.language) {
+                playKellyVoice(text, globalSettings.language);
+            }
+        }
+        
+        // ElevenLabs TTS integration (when available)
+        async function playKellyVoice(text, language = 'en') {
+            // This will be connected to ElevenLabs API
+            // For now, log the intent
+            console.log(`🔊 TTS requested: "${text.substring(0, 50)}..." (${language})`);
+            
+            // Future: Fetch audio from ElevenLabs and play
+            // const audioUrl = await fetchTTS(text, language);
+            // const audio = new Audio(audioUrl);
+            // audio.play();
             
             // TODO: Send to Unity for lip-sync when available
             console.log(`🗣️ Kelly: ${text}`);
@@ -2084,19 +2127,25 @@
             }
         }
 
-        function advancePhase() {
+        async function advancePhase() {
             currentPhaseIndex++;
+            
+            // Save phase progress
+            await savePhaseProgress();
             
             if (currentPhaseIndex >= PHASES.length) {
                 // Lesson complete!
-                completeLesson();
+                await completeLesson();
             } else {
                 showPhase(PHASES[currentPhaseIndex]);
             }
         }
 
-        function completeLesson() {
+        async function completeLesson() {
             speakKelly(`Wonderful work! You've completed today's lesson on ${currentLesson.title}. See you tomorrow for more learning adventures!`);
+            
+            // Save progress to Supabase
+            await saveProgress(currentLesson.id, 100, true);
             
             document.getElementById('continue-btn').textContent = '✨ Return to Calendar';
             document.getElementById('continue-btn').onclick = () => {
@@ -2106,6 +2155,59 @@
                 currentPhaseIndex = 0;
                 document.getElementById('continue-btn').onclick = advancePhase;
             };
+        }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // PROGRESS TRACKING - Saves to Supabase user_progress table
+        // ═══════════════════════════════════════════════════════════════
+        
+        async function saveProgress(lessonId, progressPercent, completed = false) {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                
+                if (!user) {
+                    console.log('📊 Guest mode - progress saved locally only');
+                    // Save to localStorage for guests
+                    const guestProgress = JSON.parse(localStorage.getItem('kelly-progress') || '{}');
+                    guestProgress[lessonId] = { 
+                        progress_percent: progressPercent, 
+                        completed, 
+                        completed_at: completed ? new Date().toISOString() : null,
+                        phases_completed: currentPhaseIndex + 1
+                    };
+                    localStorage.setItem('kelly-progress', JSON.stringify(guestProgress));
+                    return;
+                }
+                
+                // Upsert to Supabase
+                const { error } = await supabase
+                    .from('user_progress')
+                    .upsert({
+                        user_id: user.id,
+                        lesson_id: lessonId,
+                        progress_percent: progressPercent,
+                        completed: completed,
+                        completed_at: completed ? new Date().toISOString() : null,
+                        phases_completed: currentPhaseIndex + 1,
+                        updated_at: new Date().toISOString()
+                    }, { 
+                        onConflict: 'user_id,lesson_id' 
+                    });
+                
+                if (error) {
+                    console.warn('Progress save error:', error);
+                } else {
+                    console.log(`✅ Progress saved: ${progressPercent}%${completed ? ' (COMPLETED)' : ''}`);
+                }
+            } catch (e) {
+                console.warn('Progress tracking unavailable:', e);
+            }
+        }
+        
+        // Save progress after each phase
+        async function savePhaseProgress() {
+            const progressPercent = Math.round(((currentPhaseIndex + 1) / PHASES.length) * 100);
+            await saveProgress(currentLesson.id, progressPercent, false);
         }
 
         // Wire up continue button
@@ -2315,6 +2417,8 @@
         window.setGlobalLanguage = setGlobalLanguage;
         window.setGlobalAge = setGlobalAge;
         window.setGlobalTone = setGlobalTone;
+        window.advancePhase = advancePhase;
+        window.handleChoice = handleChoice;
         
         // Start App
         init();
