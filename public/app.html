@@ -1,0 +1,794 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Curious Kelly - The AI for Lifelong Learners">
+    <title>Curious Kelly</title>
+    <style>
+        :root {
+            --bg-color: #0f0f11;
+            --sidebar-bg: #18181b;
+            --text-primary: #f4f4f5;
+            --text-secondary: #a1a1aa;
+            --accent-orange: #d97757;
+            --accent-hover: #c56a4d;
+            --border-color: #3f3f46;
+            --input-bg: #27272a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            height: 100vh;
+            display: flex;
+            overflow: hidden;
+        }
+
+        /* Sidebar (Calendar/History) */
+        .sidebar {
+            width: 300px;
+            background-color: var(--sidebar-bg);
+            border-right: 1px solid var(--border-color);
+            display: flex;
+            flex-direction: column;
+            height: 100%;
+            transition: transform 0.3s ease;
+            z-index: 40;
+        }
+
+        .sidebar-header {
+            padding: 20px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .logo-text {
+            font-family: 'Times New Roman', serif;
+            font-size: 1.2rem;
+            font-weight: 600;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 10px;
+        }
+
+        .nav-section {
+            margin-bottom: 20px;
+        }
+
+        .nav-title {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            margin-bottom: 10px;
+            padding-left: 10px;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-item {
+            display: block;
+            padding: 10px;
+            border-radius: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+
+        .nav-item:hover {
+            background-color: rgba(255,255,255,0.05);
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            background-color: rgba(217, 119, 87, 0.1);
+            color: var(--accent-orange);
+        }
+
+        .user-footer {
+            padding: 20px;
+            border-top: 1px solid var(--border-color);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .user-info {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+        }
+
+        .btn-signout {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.8rem;
+        }
+        .btn-signout:hover { color: var(--text-primary); }
+
+        /* Main Content (Kelly Player) */
+        .main-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            position: relative;
+            background-color: #000;
+        }
+
+        .top-bar {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 10;
+            pointer-events: none;
+        }
+
+        .lesson-badge {
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.1);
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            pointer-events: auto;
+        }
+
+        #unity-container {
+            flex: 1;
+            width: 100%;
+            position: relative;
+        }
+
+        #unity-canvas {
+            width: 100%;
+            height: 100%;
+            display: block;
+        }
+
+        .loading-overlay {
+            position: absolute;
+            inset: 0;
+            background: var(--bg-color);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            z-index: 20;
+        }
+
+        /* Chat Interface */
+        .chat-container {
+            height: 150px; /* Fixed height for input area */
+            background-color: var(--bg-color);
+            border-top: 1px solid var(--border-color);
+            padding: 20px;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            z-index: 30;
+        }
+
+        .chat-wrapper {
+            width: 100%;
+            max-width: 800px;
+            position: relative;
+        }
+
+        .chat-input {
+            width: 100%;
+            background-color: var(--input-bg);
+            border: 1px solid var(--border-color);
+            color: var(--text-primary);
+            padding: 16px 50px 16px 20px;
+            border-radius: 12px;
+            font-size: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+            resize: none;
+            height: 56px;
+            overflow: hidden;
+        }
+
+        .chat-input:focus {
+            border-color: var(--accent-orange);
+        }
+
+        .chat-submit {
+            position: absolute;
+            right: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--accent-orange);
+            cursor: pointer;
+            padding: 5px;
+        }
+
+        .chat-submit:disabled {
+            color: var(--text-secondary);
+            cursor: not-allowed;
+        }
+
+        .mobile-toggle {
+            display: none;
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            z-index: 30;
+            background: rgba(0,0,0,0.5);
+            border: none;
+            color: white;
+            padding: 8px;
+            border-radius: 4px;
+        }
+
+        @media (max-width: 768px) {
+            .sidebar {
+                position: absolute;
+                left: -300px;
+                height: 100%;
+            }
+            .sidebar.open {
+                transform: translateX(300px);
+            }
+            .mobile-toggle {
+                display: block;
+            }
+            .chat-container {
+                height: 100px;
+                padding: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Sidebar -->
+    <aside class="sidebar" id="sidebar">
+        <div class="sidebar-header">
+            <span style="font-size: 1.2rem;">✨</span>
+            <span class="logo-text">Curious Kelly</span>
+        </div>
+
+        <div class="sidebar-content">
+            <div class="nav-section">
+                <div class="nav-title">Today</div>
+                <div class="nav-item active" id="nav-today">
+                    Loading...
+                </div>
+            </div>
+
+            <div class="nav-section">
+                <div class="nav-title">History</div>
+                <div id="history-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+            
+            <div class="nav-section">
+                <div class="nav-title">Upcoming</div>
+                <div id="upcoming-list">
+                    <!-- Populated by JS -->
+                </div>
+            </div>
+
+            <div class="nav-section" id="connections-section" style="display: none;">
+                <div class="nav-title">Connections</div>
+                <div class="nav-item" onclick="connectOpenAI()" style="display: flex; align-items: center; justify-content: space-between;">
+                    <span>🤖 OpenAI</span>
+                    <span id="openai-status" style="font-size: 0.75rem; opacity: 0.6;">Not connected</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="user-footer">
+            <div class="user-info" id="user-name">Learner</div>
+            <button class="btn-signout" onclick="handleSignOut()">Sign Out</button>
+        </div>
+    </aside>
+
+    <!-- Main Area -->
+    <main class="main-area">
+        <button class="mobile-toggle" onclick="toggleSidebar()">☰</button>
+        
+        <div class="top-bar">
+            <div class="lesson-badge" id="current-lesson-display">Initializing Neural Avatar...</div>
+        </div>
+
+        <div id="unity-container">
+            <canvas id="unity-canvas" tabindex="-1"></canvas>
+            
+            <div class="loading-overlay" id="loading-overlay">
+                <div style="font-size: 3rem; margin-bottom: 20px;">✨</div>
+                <div style="color: var(--text-secondary);">Connecting to Kelly...</div>
+            </div>
+        </div>
+
+        <!-- Chat Interface -->
+        <div class="chat-container">
+            <div class="chat-wrapper">
+                <input type="text" class="chat-input" id="chat-input" placeholder="Type your answer or ask Kelly for a hint..." autocomplete="off">
+                <button class="chat-submit" id="chat-submit">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
+                        <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+                    </svg>
+                </button>
+            </div>
+        </div>
+    </main>
+
+    <!-- Supabase & Unity Logic -->
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+
+        // Initialize Supabase
+        const SUPABASE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI';
+        
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            auth: {
+                autoRefreshToken: true,
+                persistSession: true,
+                detectSessionInUrl: true,  // Handles OAuth callback
+                storageKey: 'curious-kelly-auth',
+                flowType: 'pkce'
+            }
+        })
+
+        // State
+        let currentLesson = null;
+        let currentPhase = 'welcome';
+        let userProfile = null;
+
+        // --- Auth & Init ---
+        async function init() {
+            try {
+                const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+                const isGuest = localStorage.getItem('guestMode') === 'true';
+                
+                if (!session && !isGuest) {
+                    window.location.href = '/index.html';
+                    return;
+                }
+
+                if (session) {
+                    // Clear guest mode
+                    localStorage.removeItem('guestMode');
+                    
+                    // Track successful auth
+                    const authProvider = sessionStorage.getItem('auth_provider');
+                    const authTimestamp = sessionStorage.getItem('auth_timestamp');
+                    if (authProvider && window.gtag) {
+                        gtag('event', 'login_success', {
+                            method: authProvider,
+                            duration_ms: Date.now() - parseInt(authTimestamp)
+                        });
+                        sessionStorage.removeItem('auth_provider');
+                        sessionStorage.removeItem('auth_timestamp');
+                    }
+                    
+                    // Authenticated user
+                    const { data: { user } } = await supabase.auth.getUser();
+                    const name = user.user_metadata?.full_name || user.user_metadata?.name || user.email.split('@')[0];
+                    document.getElementById('user-name').textContent = name;
+
+                    // Show connections section for logged-in users
+                    document.getElementById('connections-section').style.display = 'block';
+
+                    // Create or fetch user profile
+                    let { data: profile, error: profileError } = await supabase
+                        .from('users')
+                        .select('*')
+                        .eq('id', user.id)
+                        .single();
+                    
+                    // Create profile if doesn't exist
+                    if (profileError && profileError.code === 'PGRST116') {
+                        const { data: newProfile, error: insertError } = await supabase
+                            .from('users')
+                            .insert({
+                                id: user.id,
+                                email: user.email,
+                                full_name: name,
+                                current_day: 1,
+                                streak_days: 0,
+                                created_at: new Date().toISOString()
+                            })
+                            .select()
+                            .single();
+                        
+                        profile = newProfile;
+                        
+                        // Welcome toast for new users
+                        if (!insertError) {
+                            showWelcomeMessage(name);
+                        }
+                    }
+                    
+                    userProfile = profile || { current_day: 1, streak_days: 0 };
+                    
+                    // Check if OpenAI is connected (future feature)
+                    if (profile?.openai_connected) {
+                        document.getElementById('openai-status').textContent = '✓ Connected';
+                        document.getElementById('openai-status').style.color = '#10b981';
+                    }
+                    
+                    // Show upgrade success if coming from guest
+                    if (sessionStorage.getItem('upgraded_from_guest') === 'true') {
+                        showUpgradeSuccess();
+                        sessionStorage.removeItem('upgraded_from_guest');
+                    }
+                } else {
+                    // Guest Mode
+                    document.getElementById('user-name').textContent = 'Guest';
+                    const signOutBtn = document.querySelector('.btn-signout');
+                    signOutBtn.textContent = 'Sign In';
+                    signOutBtn.onclick = () => {
+                        sessionStorage.setItem('upgraded_from_guest', 'true');
+                        window.location.href = '/index.html';
+                    };
+                    
+                    userProfile = { current_day: 1, streak_days: 0 };
+                    
+                    // Show upgrade prompt in sidebar
+                    const sidebar = document.querySelector('.user-footer');
+                    const upgradeMsg = document.createElement('div');
+                    upgradeMsg.style.cssText = 'padding: 12px; background: rgba(217,119,87,0.1); border: 1px solid rgba(217,119,87,0.2); border-radius: 8px; margin-bottom: 10px; font-size: 0.85rem; color: var(--accent-orange); text-align: center; cursor: pointer; transition: all 0.2s;';
+                    upgradeMsg.innerHTML = '🔓 Sign in to save your progress';
+                    upgradeMsg.onmouseover = () => upgradeMsg.style.background = 'rgba(217,119,87,0.15)';
+                    upgradeMsg.onmouseout = () => upgradeMsg.style.background = 'rgba(217,119,87,0.1)';
+                    upgradeMsg.onclick = () => {
+                        sessionStorage.setItem('upgraded_from_guest', 'true');
+                        window.location.href = '/index.html';
+                    };
+                    sidebar.insertBefore(upgradeMsg, sidebar.firstChild);
+                }
+
+                // Load ALL lessons from Supabase, then load current day's syllabus
+                await loadAllLessons();
+                await loadSyllabus();
+                
+            } catch (error) {
+                console.error('Initialization error:', error);
+                // Show friendly error
+                document.getElementById('loading-overlay').innerHTML = `
+                    <div style="text-align: center;">
+                        <div style="font-size: 2rem; margin-bottom: 20px;">😕</div>
+                        <div style="color: var(--text-primary); font-size: 1.2rem; margin-bottom: 10px;">Something went wrong</div>
+                        <div style="color: var(--text-secondary); font-size: 0.9rem; margin-bottom: 20px;">${error.message}</div>
+                        <button onclick="location.reload()" style="
+                            background: var(--accent-orange);
+                            color: white;
+                            border: none;
+                            padding: 12px 24px;
+                            border-radius: 8px;
+                            cursor: pointer;
+                            font-weight: 600;
+                        ">Try Again</button>
+                    </div>
+                `;
+            }
+        }
+        
+        function showWelcomeMessage(name) {
+            const welcome = document.createElement('div');
+            welcome.style.cssText = `
+                position: fixed;
+                top: 50%;
+                left: 50%;
+                transform: translate(-50%, -50%);
+                background: var(--card-bg);
+                border: 1px solid var(--border-color);
+                border-radius: 16px;
+                padding: 40px;
+                max-width: 400px;
+                text-align: center;
+                z-index: 10000;
+                animation: scaleIn 0.5s ease;
+            `;
+            welcome.innerHTML = `
+                <div style="font-size: 3rem; margin-bottom: 20px;">🎉</div>
+                <h2 style="font-size: 1.8rem; margin-bottom: 12px; font-family: 'Times New Roman', serif;">Welcome, ${name}!</h2>
+                <p style="color: var(--text-secondary); font-family: -apple-system, sans-serif; margin-bottom: 24px;">
+                    Your account is ready. Let's start your learning journey!
+                </p>
+            `;
+            document.body.appendChild(welcome);
+            setTimeout(() => {
+                welcome.style.animation = 'fadeOut 0.5s ease';
+                setTimeout(() => welcome.remove(), 500);
+            }, 3000);
+        }
+        
+        function showUpgradeSuccess() {
+            const toast = document.createElement('div');
+            toast.style.cssText = `
+                position: fixed;
+                top: 80px;
+                right: 20px;
+                background: #10b981;
+                color: white;
+                padding: 16px 24px;
+                border-radius: 12px;
+                box-shadow: 0 10px 40px rgba(0,0,0,0.3);
+                z-index: 10000;
+                font-family: -apple-system, sans-serif;
+                animation: slideIn 0.3s ease;
+            `;
+            toast.innerHTML = '✓ Progress now saved!';
+            document.body.appendChild(toast);
+            
+            setTimeout(() => {
+                toast.style.animation = 'slideOut 0.3s ease';
+                setTimeout(() => toast.remove(), 300);
+            }, 3000);
+        }
+
+        let allLessons = [];
+
+        async function loadAllLessons() {
+            try {
+                // Load ALL lessons from Supabase core_lessons or lesson_shards
+                let { data, error } = await supabase
+                    .from('lesson_shards')
+                    .select('*')
+                    .order('day', { ascending: true });
+
+                // Fallback to core_lessons if lesson_shards doesn't exist
+                if (error && error.message.includes('does not exist')) {
+                    console.log('Trying core_lessons table...');
+                    const result = await supabase
+                        .from('core_lessons')
+                        .select('*')
+                        .order('day_number', { ascending: true });
+                    data = result.data;
+                    error = result.error;
+                    
+                    // Map core_lessons fields to expected format
+                    if (data) {
+                        data = data.map(lesson => ({
+                            ...lesson,
+                            day: lesson.day_number,
+                            learning_objective: lesson.description
+                        }));
+                    }
+                }
+
+                if (error) throw error;
+                
+                allLessons = data || [];
+                console.log(`✅ Loaded ${allLessons.length} lessons from Supabase`);
+                
+                // Fallback to local calendar JSON if database is empty
+                if (allLessons.length === 0) {
+                    console.log('📁 Database empty, loading from local calendar...');
+                    await loadFromLocalCalendar();
+                }
+            } catch (e) {
+                console.error('❌ Failed to load lessons from Supabase:', e);
+                // Fallback to local calendar JSON
+                console.log('📁 Falling back to local calendar...');
+                await loadFromLocalCalendar();
+            }
+        }
+        
+        async function loadFromLocalCalendar() {
+            try {
+                const response = await fetch('/data/365_day_calendar.json');
+                const calendarData = await response.json();
+                
+                if (calendarData.lessons && calendarData.lessons.length > 0) {
+                    allLessons = calendarData.lessons.map(lesson => ({
+                        ...lesson,
+                        learning_objective: lesson.learning_objective || lesson.description || ''
+                    }));
+                    console.log(`✅ Loaded ${allLessons.length} lessons from local calendar`);
+                } else {
+                    // Last resort: Create a sample lesson
+                    allLessons = [{
+                        day: 1,
+                        title: "The Sun - Our Star",
+                        learning_objective: "Learn about the center of our solar system"
+                    }];
+                    console.log('⚠️ Using fallback sample lesson');
+                }
+            } catch (localError) {
+                console.error('❌ Failed to load local calendar:', localError);
+                // Absolute fallback
+                allLessons = [{
+                    day: 1,
+                    title: "The Sun - Our Star",
+                    learning_objective: "Learn about the center of our solar system"
+                }];
+            }
+        }
+
+        async function loadSyllabus() {
+            // Get current day
+            const day = userProfile?.current_day || 1;
+            
+            // Find the lesson for today from Supabase data
+            currentLesson = allLessons.find(l => l.day === day);
+            
+            if (!currentLesson) {
+                console.error(`❌ No lesson found for day ${day}`);
+                currentLesson = {
+                    title: "Lesson Not Found",
+                    day: day,
+                    learning_objective: "Please contact support.",
+                    interactions: []
+                };
+            } else {
+                console.log(`✅ Loaded Day ${day}: ${currentLesson.title}`);
+            }
+
+            updateUI();
+        }
+
+        function updateUI() {
+            if (!currentLesson) return;
+
+            const currentDay = userProfile?.current_day || 1;
+
+            // Update Sidebar with real data
+            document.getElementById('nav-today').textContent = `Day ${currentDay}: ${currentLesson.title}`;
+            document.getElementById('current-lesson-display').textContent = currentLesson.title;
+
+            // Populate History/Upcoming from Supabase lessons
+            const upcoming = document.getElementById('upcoming-list');
+            upcoming.innerHTML = '';
+            
+            if (allLessons.length > 0) {
+                // Show next 2 upcoming lessons from Supabase
+                for (let i = 1; i <= 2; i++) {
+                    const nextDay = currentDay + i;
+                    const lesson = allLessons.find(l => l.day === nextDay);
+                    
+                    if (lesson) {
+                        const div = document.createElement('div');
+                        div.className = 'nav-item';
+                        div.style.opacity = '0.5';
+                        div.style.cursor = 'not-allowed';
+                        div.textContent = `Day ${nextDay}: ${lesson.title}`;
+                        div.title = lesson.learning_objective || '';
+                        upcoming.appendChild(div);
+                    }
+                }
+            }
+
+            // Start Interaction Flow
+            startInteraction();
+        }
+
+        // --- Interaction Engine (The "Vanna White" Logic) ---
+        function startInteraction() {
+            // Show lesson info from Supabase
+            if (currentLesson) {
+                const welcomeText = `Hi! Today's lesson: ${currentLesson.title}. ${currentLesson.learning_objective || ''}`;
+                playKellyResponse(welcomeText);
+            }
+        }
+
+        function handleInput() {
+            const input = document.getElementById('chat-input');
+            const text = input.value.trim();
+            if (!text) return;
+
+            input.value = '';
+            
+            // Simulate Kelly "Thinking" / Adapting
+            console.log("User said:", text);
+            
+            // In a real backend, we'd send this to an LLM agent with the Lesson DNA as context
+            // For now, we simulate the adaptive hint system
+            const hints = [
+                "That's an interesting perspective! Have you considered...",
+                "You're on the right track. Think about how the energy travels...",
+                "Exactly! And that connects to what we learned about gravity."
+            ];
+            const randomHint = hints[Math.floor(Math.random() * hints.length)];
+            
+            playKellyResponse(randomHint);
+        }
+
+        function playKellyResponse(text) {
+            // 1. Send text to Unity for TTS/Lip-sync
+            // 2. Show text in chat log (if we had one, but we're keeping it clean Vanna style)
+            
+            // Mock Unity Message
+            if (window.unityInstance) {
+                // window.unityInstance.SendMessage('KellyManager', 'Speak', text);
+                console.log("Kelly Speaks:", text);
+            } else {
+                console.log("Unity not ready, queued:", text);
+            }
+        }
+
+        // --- Event Listeners ---
+        document.getElementById('chat-submit').addEventListener('click', handleInput);
+        document.getElementById('chat-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') handleInput();
+        });
+
+        window.handleSignOut = async function() {
+            await supabase.auth.signOut();
+            window.location.href = '/index.html';
+        }
+
+        window.toggleSidebar = function() {
+            document.getElementById('sidebar').classList.toggle('open');
+        }
+
+        // OpenAI Connection (Future Feature)
+        window.connectOpenAI = function() {
+            if (localStorage.getItem('guestMode') === 'true') {
+                alert('Please sign in to connect external services');
+                window.location.href = '/index.html';
+                return;
+            }
+            
+            // Future: OAuth flow to connect OpenAI account
+            alert('OpenAI integration coming soon! This will allow Kelly to:\n\n• Access your ChatGPT conversation history\n• Learn your interests and preferences\n• Personalize lessons based on your goals\n• Remember context across sessions');
+        }
+
+        // --- Unity Loader ---
+        var canvas = document.querySelector("#unity-canvas");
+        var buildUrl = "unity/kelly-live/Build";
+        var loaderUrl = buildUrl + "/Kelly_Web_Build.loader.js";
+        var config = {
+            dataUrl: buildUrl + "/Kelly_Web_Build.data.br",
+            frameworkUrl: buildUrl + "/Kelly_Web_Build.framework.js.br",
+            codeUrl: buildUrl + "/Kelly_Web_Build.wasm.br",
+            streamingAssetsUrl: "StreamingAssets",
+            companyName: "Curious Kelly PBC",
+            productName: "Curious Kelly",
+            productVersion: "1.0",
+        };
+
+        var script = document.createElement("script");
+        script.src = loaderUrl;
+        script.onload = () => {
+            createUnityInstance(canvas, config, (progress) => {
+                // Loading progress
+            }).then((unityInstance) => {
+                window.unityInstance = unityInstance; // Global ref for interaction
+                document.getElementById('loading-overlay').style.display = 'none';
+                
+                // Trigger initial welcome if lesson loaded
+                if (currentLesson) startInteraction();
+                
+            }).catch((message) => {
+                console.log("Unity load error: " + message);
+                document.getElementById('loading-overlay').innerHTML = 
+                    '<div style="color: #ef4444; text-align: center;">Avatar System Offline<br><span style="font-size: 0.8rem; color: #666;">(Development Mode)</span></div>';
+            });
+        };
+        script.onerror = () => {
+             document.getElementById('loading-overlay').innerHTML = 
+                '<div style="color: #ef4444; text-align: center;">Avatar System Offline<br><span style="font-size: 0.8rem; color: #666;">(Development Mode)</span></div>';
+        }
+        document.body.appendChild(script);
+
+        // Start App
+        init();
+
+    </script>
+</body>
+</html>
