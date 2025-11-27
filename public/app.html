@@ -659,10 +659,10 @@
                     <div style="font-size: 0.7rem; color: var(--text-secondary);">unique lesson variations available</div>
                 </div>
                 
-                <!-- Hidden selects for compatibility -->
-                <select id="lang-select" style="display: none;"><option value="en">EN</option><option value="es">ES</option><option value="fr">FR</option></select>
-                <select id="tone-select" style="display: none;"><option value="curious">Curious</option><option value="playful">Playful</option><option value="serious">Serious</option></select>
-                <select id="age-select" style="display: none;"><option value="5">5</option><option value="10">10</option><option value="15">15</option><option value="25">25</option><option value="50">50</option><option value="70">70</option></select>
+                <!-- Hidden selects for compatibility (truly hidden) -->
+                <select id="lang-select" hidden><option value="en">EN</option><option value="es">ES</option><option value="fr">FR</option></select>
+                <select id="tone-select" hidden><option value="curious">Curious</option><option value="playful">Playful</option><option value="serious">Serious</option></select>
+                <select id="age-select" hidden><option value="5">5</option><option value="10">10</option><option value="15">15</option><option value="25">25</option><option value="50">50</option><option value="70">70</option></select>
             </div>
 
             <!-- LESSON LIST - Scrollable, shows content -->
@@ -1264,16 +1264,26 @@
         async function previewLessonContent() {
             if (!currentLesson) return;
             
-            const tone = document.getElementById('tone-select').value;
-            const age = document.getElementById('age-select').value;
-            const lang = document.getElementById('lang-select').value;
+            const tone = globalSettings.tone;
+            const age = globalSettings.age;
+            const lang = globalSettings.language;
             
             // Show loading state in phases list
             const phasesList = document.getElementById('phases-list');
-            phasesList.innerHTML = '<div style="color: var(--text-secondary); font-size: 0.85rem; padding: 8px;">Loading content...</div>';
+            if (phasesList) {
+                phasesList.innerHTML = '<div style="color: var(--text-secondary); font-size: 0.85rem; padding: 8px;">Loading content...</div>';
+            }
             
-            // Load atoms for preview
+            // Load atoms and shards for preview
             await loadLessonAtomsForPreview(currentLesson.id, tone, age);
+            
+            // Load shards for age/region-specific content
+            const shards = await loadLessonShards(currentLesson.id);
+            const shard = getShardForSettings(shards, age, tone, lang);
+            
+            if (shard && shard.script_content) {
+                console.log(`📜 Found shard for age=${age}, tone=${tone}: `, shard.script_content);
+            }
             
             // Render phases preview
             renderPhasesPreview();
@@ -1611,18 +1621,79 @@
             }, 100);
         }
         
-        // Translation helpers (mock - would come from lesson_shards in production)
+        // ═══════════════════════════════════════════════════════════════
+        // LESSON SHARDS - Real translations from Supabase
+        // lesson_shards table: core_lesson_id, age, region, tone, birth_year, script_content
+        // ═══════════════════════════════════════════════════════════════
+        
+        let lessonShardsCache = {}; // Cache loaded shards
+        
+        async function loadLessonShards(lessonId) {
+            if (lessonShardsCache[lessonId]) {
+                return lessonShardsCache[lessonId];
+            }
+            
+            try {
+                const { data, error } = await supabase
+                    .from('lesson_shards')
+                    .select('age, region, tone, script_content')
+                    .eq('core_lesson_id', lessonId);
+                
+                if (error) throw error;
+                
+                lessonShardsCache[lessonId] = data || [];
+                return lessonShardsCache[lessonId];
+            } catch (e) {
+                console.warn('Could not load shards:', e);
+                return [];
+            }
+        }
+        
+        function getShardForSettings(shards, age, tone, region) {
+            // Try exact match first
+            let shard = shards.find(s => 
+                s.age === age && 
+                s.tone === tone && 
+                (s.region === region || !s.region)
+            );
+            
+            // Fall back to just age match
+            if (!shard) {
+                shard = shards.find(s => s.age === age);
+            }
+            
+            // Fall back to any shard
+            if (!shard && shards.length > 0) {
+                shard = shards[0];
+            }
+            
+            return shard;
+        }
+        
+        // Translation helpers - expand as we add more translations
+        // In production, these would come from lesson_shards with region field
         function getSpanishTitle(englishTitle) {
             const translations = {
                 'Responsibilities': 'Responsabilidades',
                 'Leaves': 'Hojas',
                 'Water': 'Agua',
                 'Clouds': 'Nubes',
+                'Light': 'Luz',
+                'Sound': 'Sonido',
+                'Seeds': 'Semillas',
+                'Stars': 'Estrellas',
+                'Friendship': 'Amistad',
+                'Kindness': 'Bondad',
                 'Meditation': 'Meditación',
                 'Gratitude Practice': 'Práctica de Gratitud',
                 'Reflection': 'Reflexión',
                 'Service': 'Servicio',
-                'Legacy': 'Legado'
+                'Legacy': 'Legado',
+                'Rights': 'Derechos',
+                'Citizenship': 'Ciudadanía',
+                'Wisdom': 'Sabiduría',
+                'Growth Mindset': 'Mentalidad de Crecimiento',
+                'Fixed Mindset': 'Mentalidad Fija'
             };
             return translations[englishTitle];
         }
@@ -1633,11 +1704,22 @@
                 'Leaves': 'Feuilles',
                 'Water': 'Eau',
                 'Clouds': 'Nuages',
+                'Light': 'Lumière',
+                'Sound': 'Son',
+                'Seeds': 'Graines',
+                'Stars': 'Étoiles',
+                'Friendship': 'Amitié',
+                'Kindness': 'Gentillesse',
                 'Meditation': 'Méditation',
                 'Gratitude Practice': 'Pratique de Gratitude',
                 'Reflection': 'Réflexion',
                 'Service': 'Service',
-                'Legacy': 'Héritage'
+                'Legacy': 'Héritage',
+                'Rights': 'Droits',
+                'Citizenship': 'Citoyenneté',
+                'Wisdom': 'Sagesse',
+                'Growth Mindset': 'Mentalité de Croissance',
+                'Fixed Mindset': 'Mentalité Fixe'
             };
             return translations[englishTitle];
         }
