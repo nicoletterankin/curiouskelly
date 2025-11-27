@@ -376,17 +376,10 @@
                 </div>
             </div>
 
-            <div class="nav-section">
-                <div class="nav-title">History</div>
-                <div id="history-list">
-                    <!-- Populated by JS -->
-                </div>
-            </div>
-            
-            <div class="nav-section">
-                <div class="nav-title">Upcoming</div>
-                <div id="upcoming-list">
-                    <!-- Populated by JS -->
+            <div class="nav-section" style="flex: 1; overflow: hidden; display: flex; flex-direction: column;">
+                <div class="nav-title">All 365 Lessons</div>
+                <div id="all-lessons-list" style="flex: 1; overflow-y: auto; max-height: calc(100vh - 300px);">
+                    <!-- Populated by JS with all 365 lessons -->
                 </div>
             </div>
 
@@ -770,26 +763,46 @@
             document.getElementById('nav-today').textContent = `Day ${currentDay}: ${currentLesson.title}`;
             document.getElementById('current-lesson-display').textContent = currentLesson.title;
 
-            // Populate History/Upcoming from Supabase lessons
-            const upcoming = document.getElementById('upcoming-list');
-            upcoming.innerHTML = '';
+            // Populate ALL 365 lessons in sidebar
+            const allLessonsList = document.getElementById('all-lessons-list');
+            allLessonsList.innerHTML = '';
             
             if (allLessons.length > 0) {
-                // Show next 2 upcoming lessons from Supabase
-                for (let i = 1; i <= 2; i++) {
-                    const nextDay = currentDay + i;
-                    const lesson = allLessons.find(l => l.day === nextDay);
+                allLessons.forEach(lesson => {
+                    const div = document.createElement('div');
+                    div.className = 'nav-item';
+                    div.textContent = `Day ${lesson.day}: ${lesson.title}`;
+                    div.title = lesson.learning_objective || '';
                     
-                    if (lesson) {
-                        const div = document.createElement('div');
-                        div.className = 'nav-item';
-                        div.style.opacity = '0.5';
-                        div.style.cursor = 'not-allowed';
-                        div.textContent = `Day ${nextDay}: ${lesson.title}`;
-                        div.title = lesson.learning_objective || '';
-                        upcoming.appendChild(div);
+                    // Style based on progress
+                    if (lesson.day === currentDay) {
+                        div.classList.add('active');
+                        div.style.background = 'var(--kelly-blue, #2563eb)';
+                        div.style.color = 'white';
+                    } else if (lesson.day < currentDay) {
+                        div.style.opacity = '0.6';
+                        div.innerHTML = `✓ Day ${lesson.day}: ${lesson.title}`;
+                    } else {
+                        div.style.opacity = '0.8';
                     }
-                }
+                    
+                    // Click to jump to lesson (for now just log)
+                    div.style.cursor = 'pointer';
+                    div.onclick = () => {
+                        console.log(`Selected Day ${lesson.day}: ${lesson.title}`);
+                        // TODO: Actually load and display this lesson
+                    };
+                    
+                    allLessonsList.appendChild(div);
+                });
+                
+                // Scroll to current day
+                setTimeout(() => {
+                    const activeItem = allLessonsList.querySelector('.active');
+                    if (activeItem) {
+                        activeItem.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                }, 100);
             }
 
             // Start Interaction Flow
