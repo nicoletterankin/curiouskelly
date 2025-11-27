@@ -267,6 +267,15 @@ async function main() {
         filesToValidate.push(...files);
       }
     }
+
+    // Remove duplicates based on filename (prefer first occurrence = main lessons dir)
+    const seen = new Set();
+    filesToValidate = filesToValidate.filter(f => {
+      const name = path.basename(f);
+      if (seen.has(name)) return false;
+      seen.add(name);
+      return true;
+    });
   }
 
   if (filesToValidate.length === 0) {
