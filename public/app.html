@@ -133,12 +133,25 @@
             top: 0;
             left: 0;
             right: 0;
-            padding: 20px;
+            padding: 16px 20px;
             display: flex;
-            justify-content: center;
+            justify-content: space-between;
             align-items: center;
             z-index: 10;
             pointer-events: none;
+        }
+
+        .kelly-status-top {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(0, 0, 0, 0.7);
+            backdrop-filter: blur(12px);
+            border-radius: 20px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            pointer-events: auto;
         }
 
         .lesson-badge {
@@ -620,35 +633,47 @@
                 <div id="calendar-days" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;"></div>
             </div>
 
-            <!-- Selected Lesson Preview -->
+            <!-- Selected Lesson Preview - Full Content Drill-Down -->
             <div id="lesson-preview" style="padding: 16px; flex: 1; overflow-y: auto;">
-                <div id="lesson-title" style="font-size: 1.1rem; font-weight: 600; margin-bottom: 8px;"></div>
-                <div id="lesson-objective" style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 16px; line-height: 1.4;"></div>
+                <div id="lesson-title" style="font-size: 1.1rem; font-weight: 600; margin-bottom: 4px;"></div>
+                <div id="lesson-date" style="font-size: 0.8rem; color: var(--kelly-blue); margin-bottom: 8px;"></div>
+                <div id="lesson-objective" style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4; padding: 10px; background: rgba(37,99,235,0.1); border-radius: 8px; border-left: 3px solid var(--kelly-blue);"></div>
                 
-                <!-- Personalization Options -->
-                <div style="display: flex; gap: 8px; flex-wrap: wrap; margin-bottom: 16px;">
-                    <select id="lang-select" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 10px; border-radius: 6px; font-size: 0.8rem;">
-                        <option value="en">English</option>
-                        <option value="es">Español</option>
-                        <option value="fr">Français</option>
-                    </select>
-                    <select id="tone-select" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 10px; border-radius: 6px; font-size: 0.8rem;">
-                        <option value="curious">Curious</option>
-                        <option value="playful">Playful</option>
-                        <option value="serious">Serious</option>
-                    </select>
-                    <select id="age-select" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-primary); padding: 6px 10px; border-radius: 6px; font-size: 0.8rem;">
-                        <option value="5">Age 5-7</option>
-                        <option value="10">Age 8-12</option>
-                        <option value="15">Age 13-17</option>
-                        <option value="25">Age 18-35</option>
-                        <option value="50">Age 36-60</option>
-                        <option value="70">Age 61+</option>
-                    </select>
+                <!-- Personalization Options - Live Preview -->
+                <div style="margin-bottom: 12px;">
+                    <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Personalize</div>
+                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
+                        <select id="lang-select" onchange="previewLessonContent()" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 8px; font-size: 0.8rem; cursor: pointer;">
+                            <option value="en">🇺🇸 EN</option>
+                            <option value="es">🇪🇸 ES</option>
+                            <option value="fr">🇫🇷 FR</option>
+                        </select>
+                        <select id="tone-select" onchange="previewLessonContent()" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 8px; font-size: 0.8rem; cursor: pointer;">
+                            <option value="curious">🔬 Curious</option>
+                            <option value="playful">🎨 Playful</option>
+                            <option value="serious">📚 Serious</option>
+                        </select>
+                        <select id="age-select" onchange="previewLessonContent()" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 8px; font-size: 0.8rem; cursor: pointer;">
+                            <option value="5">5-7</option>
+                            <option value="10">8-12</option>
+                            <option value="15">13-17</option>
+                            <option value="25">18-35</option>
+                            <option value="50">36-60</option>
+                            <option value="70">61+</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <!-- Lesson Content Preview - 5 Phases -->
+                <div id="phases-preview" style="margin-bottom: 16px;">
+                    <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Lesson Flow</div>
+                    <div id="phases-list" style="display: flex; flex-direction: column; gap: 6px;">
+                        <!-- Populated dynamically -->
+                    </div>
                 </div>
                 
                 <button id="start-lesson-btn" style="width: 100%; padding: 14px; background: var(--kelly-blue); color: white; border: none; border-radius: 10px; font-weight: 600; font-size: 0.95rem; cursor: pointer; transition: all 0.2s;">
-                    Start Today's Lesson →
+                    Start Lesson →
                 </button>
             </div>
 
@@ -672,7 +697,11 @@
         <button class="mobile-toggle" onclick="toggleSidebar()">☰</button>
         
         <div class="top-bar">
-            <div class="lesson-badge" id="current-lesson-display">Initializing Neural Avatar...</div>
+            <div class="lesson-badge" id="current-lesson-display">Select a lesson</div>
+            <div class="kelly-status-top" id="kelly-status">
+                <span class="status-pulse"></span>
+                <span id="kelly-status-text">Ready</span>
+            </div>
         </div>
 
         <!-- Kelly Presence Container (16:9 aspect ratio) - Like a Zoom call -->
@@ -697,18 +726,22 @@
             <!-- ═══════════════════════════════════════════════════════════════ -->
             <div id="lesson-overlay" class="lesson-overlay hidden">
                 
-                <!-- Phase Progress Bar -->
+                <!-- Phase Progress Bar - 5 phases: Welcome, Q1, Q2, Q3, Wisdom -->
                 <div class="phase-progress" id="phase-progress">
                     <div class="phase-dot active" data-phase="welcome">
                         <span class="phase-label">Welcome</span>
                     </div>
                     <div class="phase-line"></div>
-                    <div class="phase-dot" data-phase="teaching">
-                        <span class="phase-label">Learn</span>
+                    <div class="phase-dot" data-phase="q1">
+                        <span class="phase-label">Q1</span>
                     </div>
                     <div class="phase-line"></div>
-                    <div class="phase-dot" data-phase="practice">
-                        <span class="phase-label">Practice</span>
+                    <div class="phase-dot" data-phase="q2">
+                        <span class="phase-label">Q2</span>
+                    </div>
+                    <div class="phase-line"></div>
+                    <div class="phase-dot" data-phase="q3">
+                        <span class="phase-label">Q3</span>
                     </div>
                     <div class="phase-line"></div>
                     <div class="phase-dot" data-phase="wisdom">
@@ -739,11 +772,6 @@
                 </button>
             </div>
             
-            <!-- Kelly Status -->
-            <div class="kelly-status" id="kelly-status">
-                <span class="status-pulse"></span>
-                <span id="kelly-status-text">Kelly is here</span>
-            </div>
         </div>
 
         <!-- Chat Interface (for open-ended responses) -->
@@ -1163,10 +1191,10 @@
             document.getElementById('nav-date-label').textContent = isToday ? 'Today' : dateStr;
             document.getElementById('nav-today').textContent = lesson.title;
             
-            // Update lesson preview
+            // Update lesson preview with full content
             document.getElementById('lesson-title').textContent = lesson.title;
-            document.getElementById('lesson-objective').textContent = 
-                `${dateStr}\n\n${lesson.learning_objective}`;
+            document.getElementById('lesson-date').textContent = dateStr;
+            document.getElementById('lesson-objective').textContent = lesson.learning_objective || 'Explore and discover!';
             document.getElementById('current-lesson-display').textContent = lesson.title;
             
             // Update button
@@ -1174,13 +1202,154 @@
             if (isToday) {
                 btn.textContent = "Start Today's Lesson →";
             } else {
-                btn.textContent = `Explore ${lesson.title} →`;
+                btn.textContent = `Start ${lesson.title} →`;
             }
+            
+            // Load and preview lesson content
+            previewLessonContent();
             
             // Re-render calendar to update selection
             renderCalendar();
             
             console.log(`📅 Selected: ${dateStr} - ${lesson.title}`);
+        }
+        
+        async function previewLessonContent() {
+            if (!currentLesson) return;
+            
+            const tone = document.getElementById('tone-select').value;
+            const age = document.getElementById('age-select').value;
+            const lang = document.getElementById('lang-select').value;
+            
+            // Show loading state in phases list
+            const phasesList = document.getElementById('phases-list');
+            phasesList.innerHTML = '<div style="color: var(--text-secondary); font-size: 0.85rem; padding: 8px;">Loading content...</div>';
+            
+            // Load atoms for preview
+            await loadLessonAtomsForPreview(currentLesson.id, tone, age);
+            
+            // Render phases preview
+            renderPhasesPreview();
+        }
+        
+        async function loadLessonAtomsForPreview(lessonId, archetype, age) {
+            try {
+                const archetypeMap = {
+                    'curious': 'The Scientist',
+                    'playful': 'The Artist',
+                    'serious': 'The Philosopher'
+                };
+                const targetArchetype = archetypeMap[archetype] || 'The Scientist';
+                
+                const { data, error } = await supabase
+                    .from('lesson_atoms')
+                    .select('phase, content, archetype')
+                    .eq('core_lesson_id', lessonId);
+                
+                if (error) throw error;
+                
+                // Filter for archetype
+                lessonAtoms = data?.filter(a => a.archetype === targetArchetype) || [];
+                
+                if (lessonAtoms.length === 0) {
+                    lessonAtoms = data || [];
+                }
+                
+                if (lessonAtoms.length === 0) {
+                    createFallbackContent();
+                }
+                
+            } catch (e) {
+                console.warn('Using fallback content:', e);
+                createFallbackContent();
+            }
+        }
+        
+        function renderPhasesPreview() {
+            const phasesList = document.getElementById('phases-list');
+            phasesList.innerHTML = '';
+            
+            const phaseLabels = {
+                'welcome': '👋 Welcome',
+                'q1': '❓ Question 1',
+                'q2': '❓ Question 2',
+                'q3': '❓ Question 3',
+                'wisdom': '✨ Wisdom'
+            };
+            
+            PHASES.forEach((phase, index) => {
+                const atom = lessonAtoms.find(a => a.phase === phase);
+                const content = atom?.content || {};
+                const script = content.script || '';
+                const options = content.options || [];
+                
+                const phaseEl = document.createElement('div');
+                phaseEl.style.cssText = `
+                    padding: 10px 12px;
+                    background: var(--card-bg);
+                    border-radius: 8px;
+                    border: 1px solid var(--border-color);
+                    cursor: pointer;
+                    transition: all 0.2s;
+                `;
+                
+                phaseEl.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px;">
+                        <span style="font-weight: 600; font-size: 0.85rem;">${phaseLabels[phase] || phase}</span>
+                        <span style="font-size: 0.7rem; color: var(--text-secondary);">${options.length} choices</span>
+                    </div>
+                    <div style="font-size: 0.8rem; color: var(--text-secondary); line-height: 1.4; max-height: 40px; overflow: hidden; text-overflow: ellipsis;">
+                        ${script.substring(0, 80)}${script.length > 80 ? '...' : ''}
+                    </div>
+                `;
+                
+                // Hover effect
+                phaseEl.onmouseenter = () => {
+                    phaseEl.style.borderColor = 'var(--kelly-blue)';
+                    phaseEl.style.background = 'rgba(37,99,235,0.1)';
+                };
+                phaseEl.onmouseleave = () => {
+                    phaseEl.style.borderColor = 'var(--border-color)';
+                    phaseEl.style.background = 'var(--card-bg)';
+                };
+                
+                // Click to expand (show full content)
+                phaseEl.onclick = () => togglePhaseExpand(phaseEl, phase, content);
+                
+                phasesList.appendChild(phaseEl);
+            });
+        }
+        
+        function togglePhaseExpand(element, phase, content) {
+            const isExpanded = element.dataset.expanded === 'true';
+            
+            if (isExpanded) {
+                // Collapse
+                element.dataset.expanded = 'false';
+                renderPhasesPreview(); // Re-render to reset
+            } else {
+                // Expand this one
+                const script = content.script || 'No script available';
+                const options = content.options || [];
+                
+                element.dataset.expanded = 'true';
+                element.innerHTML = `
+                    <div style="font-weight: 600; font-size: 0.85rem; margin-bottom: 8px; color: var(--kelly-blue);">
+                        ${phase.toUpperCase()} — Click to collapse
+                    </div>
+                    <div style="font-size: 0.85rem; color: var(--text-primary); line-height: 1.5; margin-bottom: 10px; padding: 8px; background: rgba(0,0,0,0.2); border-radius: 6px;">
+                        "${script}"
+                    </div>
+                    <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 6px;">Choices:</div>
+                    ${options.map((opt, i) => `
+                        <div style="font-size: 0.8rem; padding: 6px 10px; margin-bottom: 4px; background: rgba(37,99,235,0.1); border-radius: 6px; border-left: 2px solid var(--kelly-blue);">
+                            <div style="font-weight: 500;">${opt.text}</div>
+                            <div style="font-size: 0.75rem; color: var(--text-secondary); margin-top: 2px;">→ ${opt.response?.substring(0, 60)}...</div>
+                        </div>
+                    `).join('')}
+                `;
+                element.style.borderColor = 'var(--kelly-blue)';
+            }
         }
         
         function setupCalendarNav() {
@@ -1204,7 +1373,7 @@
         
         let lessonAtoms = [];
         let currentPhaseIndex = 0;
-        const PHASES = ['welcome', 'teaching', 'practice', 'wisdom'];
+        const PHASES = ['welcome', 'q1', 'q2', 'q3', 'wisdom']; // 5 phases
         let isLessonActive = false;
 
         async function startSelectedLesson() {
@@ -1258,19 +1427,67 @@
                 
             } catch (e) {
                 console.error('❌ Failed to load atoms:', e);
-                // Create fallback content
-                lessonAtoms = PHASES.map(phase => ({
-                    phase,
-                    content: {
-                        script: `This is the ${phase} phase for ${currentLesson.title}.`,
-                        options: phase === 'practice' ? [
-                            { text: 'Option A', response: 'Great thinking!' },
-                            { text: 'Option B', response: 'Interesting choice!' },
-                            { text: 'Option C', response: 'Let me explain more...' }
-                        ] : null
-                    }
-                }));
+                // Create fallback content - all 5 phases with 2 options each
+                createFallbackContent();
             }
+        }
+        
+        function createFallbackContent() {
+            const topic = currentLesson?.title || 'Today\'s Topic';
+            const objective = currentLesson?.learning_objective || '';
+            
+            lessonAtoms = [
+                {
+                    phase: 'welcome',
+                    content: {
+                        script: `Welcome! Today we're exploring ${topic}. ${objective} Are you ready to begin?`,
+                        options: [
+                            { text: "Yes, let's go! 🚀", response: "Wonderful! I love your enthusiasm. Let's dive in!" },
+                            { text: "Tell me more first", response: "Of course! I'll explain everything step by step." }
+                        ]
+                    }
+                },
+                {
+                    phase: 'q1',
+                    content: {
+                        script: `Here's your first question about ${topic}. Think carefully before you answer!`,
+                        options: [
+                            { text: "I think it's A", response: "Interesting perspective! Let's explore why you chose that." },
+                            { text: "I think it's B", response: "Great reasoning! That's a thoughtful answer." }
+                        ]
+                    }
+                },
+                {
+                    phase: 'q2',
+                    content: {
+                        script: `Now for question two. This one builds on what we just learned.`,
+                        options: [
+                            { text: "The first option", response: "You're connecting the dots! Keep going." },
+                            { text: "The second option", response: "I see your thinking. Let me add some context." }
+                        ]
+                    }
+                },
+                {
+                    phase: 'q3',
+                    content: {
+                        script: `Final question! This is where we bring it all together.`,
+                        options: [
+                            { text: "I'll go with this one", response: "Excellent choice! You've really understood the concept." },
+                            { text: "I prefer this one", response: "That's a valid approach! Here's another way to think about it." }
+                        ]
+                    }
+                },
+                {
+                    phase: 'wisdom',
+                    content: {
+                        script: `You've done amazing work today! Here's the wisdom to carry with you: ${objective}`,
+                        options: [
+                            { text: "I'll remember this! ✨", response: "I know you will. You're becoming wiser every day!" },
+                            { text: "Can we review?", response: "Always! Review helps knowledge stick. Here's a quick recap..." }
+                        ]
+                    }
+                }
+            ];
         }
 
         function showPhase(phase) {
@@ -1281,26 +1498,54 @@
                 if (i === currentPhaseIndex) dot.classList.add('active');
             });
             
-            // Find atom for this phase
-            const atom = lessonAtoms.find(a => a.phase === phase);
+            // Update Kelly status
+            setKellyStatus('speaking');
             
+            // Find atom for this phase
+            let atom = lessonAtoms.find(a => a.phase === phase);
+            
+            // Fallback if no atom found
             if (!atom) {
-                console.warn(`No atom found for phase: ${phase}`);
-                speakKelly(`Let's continue with ${phase}...`);
-                showContinueButton();
-                return;
+                console.warn(`No atom found for phase: ${phase}, creating fallback`);
+                createFallbackContent();
+                atom = lessonAtoms.find(a => a.phase === phase);
             }
             
-            const content = atom.content;
+            const content = atom?.content || {};
             
             // Kelly speaks the script
-            speakKelly(content.script || `Welcome to the ${phase} phase!`);
+            const script = content.script || `Let's explore this together!`;
+            speakKelly(script);
             
-            // Show choices if available (usually in practice phase)
-            if (content.options && content.options.length > 0) {
-                showChoices(content.options);
-            } else {
-                showContinueButton();
+            // Hide continue button initially
+            document.getElementById('continue-btn').style.display = 'none';
+            
+            // ALL phases have 2 options - show them after Kelly speaks
+            const options = content.options || [
+                { text: "Continue", response: "Great! Let's keep going." },
+                { text: "Tell me more", response: "Of course! Here's more detail..." }
+            ];
+            
+            // Delay showing choices until Kelly finishes speaking
+            setTimeout(() => {
+                showChoices(options);
+                setKellyStatus('listening');
+            }, Math.min(script.length * 20 + 500, 3000));
+        }
+        
+        function setKellyStatus(status) {
+            const statusText = document.getElementById('kelly-status-text');
+            const statusPulse = document.querySelector('.status-pulse');
+            
+            if (status === 'speaking') {
+                statusText.textContent = 'Kelly is speaking...';
+                statusPulse.style.background = 'var(--kelly-blue)';
+            } else if (status === 'listening') {
+                statusText.textContent = 'Your turn to respond';
+                statusPulse.style.background = '#10b981';
+            } else if (status === 'thinking') {
+                statusText.textContent = 'Kelly is thinking...';
+                statusPulse.style.background = '#f59e0b';
             }
         }
 
