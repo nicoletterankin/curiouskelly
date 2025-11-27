@@ -223,12 +223,12 @@ export const POST: APIRoute = async ({ request }) => {
 
         // 1. Track cancellation in Customer.io
         await trackEvent(stripeCustomerId, {
-          name: 'subscription_cancelled',
-          data: {
-            subscription_id: subscription.id,
-            cancel_at_period_end: subscription.cancel_at_period_end,
-          },
-        });
+            name: 'subscription_cancelled',
+            data: {
+              subscription_id: subscription.id,
+              cancel_at_period_end: subscription.cancel_at_period_end,
+            },
+          });
 
         // 2. Update database - mark as cancelled
         await updateSubscriptionStatus({

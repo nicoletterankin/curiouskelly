@@ -184,3 +184,4 @@ SUPABASE_SERVICE_ROLE_KEY=<your-service-role-key>
 2. Click "PUBLISH APP" to make it available to all users
 3. Or add test users if in testing mode
 ```
+

@@ -7,7 +7,16 @@ import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js
 // Initialize Supabase client
 const supabase = createClient(
   'https://tvjalxxsyryjphkforjv.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcnp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE5NjI3NTcsImV4cCI6MjA0NzUzODc1N30.kLMlC14ckEp-XoL8RX5liw_cMdGs8lR'
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI',
+  {
+    auth: {
+      autoRefreshToken: true,
+      persistSession: true,
+      detectSessionInUrl: true,
+      storageKey: 'curious-kelly-auth',
+      flowType: 'pkce'
+    }
+  }
 )
 
 // ============================================
@@ -18,7 +27,7 @@ export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${window.location.origin}/dashboard.html`,
+      redirectTo: `${window.location.origin}/app.html`,
       queryParams: {
         access_type: 'offline',
         prompt: 'consent',
@@ -38,7 +47,7 @@ export async function signInWithApple() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'apple',
     options: {
-      redirectTo: `${window.location.origin}/dashboard.html`
+      redirectTo: `${window.location.origin}/app.html`
     }
   })
   
@@ -54,7 +63,7 @@ export async function signInWithGitHub() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'github',
     options: {
-      redirectTo: `${window.location.origin}/dashboard.html`
+      redirectTo: `${window.location.origin}/app.html`
     }
   })
   
@@ -70,7 +79,7 @@ export async function signInWithFacebook() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'facebook',
     options: {
-      redirectTo: `${window.location.origin}/dashboard.html`,
+      redirectTo: `${window.location.origin}/app.html`,
       scopes: 'public_profile,email' 
     }
   })
@@ -88,7 +97,7 @@ export async function signInWithOpenAI() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'oidc', // or specific OpenAI provider key if configured
     options: {
-      redirectTo: `${window.location.origin}/dashboard.html`,
+      redirectTo: `${window.location.origin}/app.html`,
       scopes: 'openid profile email'
     }
   })

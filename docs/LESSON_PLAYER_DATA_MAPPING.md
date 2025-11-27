@@ -225,3 +225,4 @@ Lesson complete
 4. Add phase-specific expressions/animations
 5. Add interactive elements (questions, choices)
 
+

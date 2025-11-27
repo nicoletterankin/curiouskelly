@@ -104,3 +104,4 @@ class UnityBridge {
 // Export for use
 window.UnityBridge = UnityBridge;
 
+

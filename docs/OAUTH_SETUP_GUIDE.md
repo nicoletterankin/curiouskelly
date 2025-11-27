@@ -10,17 +10,39 @@ This guide will walk you through setting up each OAuth provider for production. 
 
 1. Go to: https://app.supabase.com/project/tvjalxxsyryjphkforjv/auth/url-configuration
 2. Add these to **Redirect URLs**:
-   - `https://curiouskelly.com/public/app.html`
-   - `https://www.curiouskelly.com/public/app.html`
-   - `http://localhost:5501/public/app.html` (for local testing)
-   - `http://127.0.0.1:5501/public/app.html` (for local testing)
+   - `https://curiouskelly.com/app.html`
+   - `https://www.curiouskelly.com/app.html`
+   - `http://localhost:5501/app.html` (for local testing)
+   - `http://127.0.0.1:5501/app.html` (for local testing)
 
 ---
 
-## 1. Google OAuth (Already Working) ✅
+## 1. Google OAuth ✅
 
 **Status**: Should already be configured
 **Verification**: Test login at https://curiouskelly.com
+
+### 🔴 IMPORTANT: Fix Google Consent Screen Branding
+
+The Google sign-in popup shows "tvjalxxsyryjphkforjv.supabase.co" instead of "Curious Kelly" or "Lesson of the Day PBC". To fix this:
+
+1. Go to: https://console.cloud.google.com/apis/credentials/consent
+2. Select your project
+3. Click **EDIT APP** or go to the "OAuth consent screen" section
+4. Update these fields:
+   - **App name**: `Curious Kelly` (or `Lesson of the Day`)
+   - **User support email**: `hello@curiouskelly.com`
+   - **App logo**: Upload the Curious Kelly logo
+   - **Application home page**: `https://curiouskelly.com`
+   - **Application privacy policy link**: `https://curiouskelly.com/privacy.html`
+   - **Application terms of service link**: `https://curiouskelly.com/terms.html`
+   - **Developer contact email**: `hello@curiouskelly.com`
+5. Click **SAVE AND CONTINUE**
+6. If in production, submit for verification (may take 2-4 weeks)
+
+**Note**: Until verification is complete, users will see a warning. Verified apps display the configured app name.
+
+### OAuth Credentials Setup
 
 If you need to reconfigure:
 1. Go to: https://console.cloud.google.com/apis/credentials

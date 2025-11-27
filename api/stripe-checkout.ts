@@ -1,2 +1,175 @@
-export { default } from '../functions/vercel/api/stripe-checkout';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import Stripe from 'stripe';
 
+interface CheckoutRequest {
+  planType: 'monthly' | 'annual' | 'lifetime' | 'gift_12mo' | 'gift_6mo' | 'gift_3mo';
+  customerEmail: string;
+  promoCode?: string;
+  affiliateCode?: string;
+  giftData?: {
+    recipientEmail: string;
+    gifterName?: string;
+    message?: string;
+    deliveryDate?: string;
+  };
+  utmSource?: string;
+  utmMedium?: string;
+  utmCampaign?: string;
+}
+
+function isValidEmail(email: string): boolean {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim().toLowerCase());
+}
+
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // CORS headers
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  if (req.method === 'OPTIONS') {
+    return res.status(200).end();
+  }
+
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const stripeKey = process.env.STRIPE_SECRET_KEY;
+  if (!stripeKey) {
+    return res.status(503).json({ 
+      error: 'stripe_not_configured',
+      message: 'Stripe is not configured. Please add STRIPE_SECRET_KEY to environment variables.'
+    });
+  }
+
+  const stripe = new Stripe(stripeKey, {
+    apiVersion: '2024-11-20.acacia' as Stripe.LatestApiVersion
+  });
+
+  const body = req.body as CheckoutRequest;
+
+  // Validate email
+  if (!body.customerEmail || !isValidEmail(body.customerEmail)) {
+    return res.status(422).json({ error: 'invalid_email' });
+  }
+
+  // Validate plan type
+  const validPlanTypes = ['monthly', 'annual', 'lifetime', 'gift_12mo', 'gift_6mo', 'gift_3mo'];
+  if (!validPlanTypes.includes(body.planType)) {
+    return res.status(422).json({ error: 'invalid_plan_type' });
+  }
+
+  // Get price IDs from environment
+  const priceIds: Record<string, string | undefined> = {
+    monthly: process.env.STRIPE_PRICE_MONTHLY,
+    annual: process.env.STRIPE_PRICE_ANNUAL,
+    lifetime: process.env.STRIPE_PRICE_LIFETIME,
+    gift_12mo: process.env.STRIPE_PRICE_GIFT_12MO,
+    gift_6mo: process.env.STRIPE_PRICE_GIFT_6MO,
+    gift_3mo: process.env.STRIPE_PRICE_GIFT_3MO
+  };
+
+  const siteUrl = process.env.PUBLIC_SITE_URL || 'https://curiouskelly.com';
+  const isGiftPlan = body.planType.startsWith('gift_');
+
+  // Build metadata
+  const commonMetadata = {
+    source: 'web',
+    utm_source: body.utmSource || 'direct',
+    utm_medium: body.utmMedium || 'none',
+    utm_campaign: body.utmCampaign || 'none',
+    affiliate_code: body.affiliateCode || '',
+    promo_code: body.promoCode || ''
+  };
+
+  try {
+    let sessionConfig: Stripe.Checkout.SessionCreateParams;
+
+    if (isGiftPlan && body.giftData) {
+      const giftPriceId = priceIds[body.planType];
+      if (!giftPriceId) {
+        return res.status(503).json({ 
+          error: `price_not_configured`,
+          message: `Price ID for ${body.planType} is not configured. Add STRIPE_PRICE_${body.planType.toUpperCase()} to environment.`
+        });
+      }
+
+      sessionConfig = {
+        payment_method_types: ['card'],
+        line_items: [{ price: giftPriceId, quantity: 1 }],
+        mode: 'payment',
+        customer_email: body.customerEmail,
+        success_url: `${siteUrl}/gift-success?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${siteUrl}/gifts?canceled=true`,
+        allow_promotion_codes: true,
+        metadata: {
+          ...commonMetadata,
+          type: 'gift',
+          gift_plan: body.planType,
+          recipient_email: body.giftData.recipientEmail,
+          gift_message: body.giftData.message || '',
+          gifter_name: body.giftData.gifterName || '',
+          delivery_date: body.giftData.deliveryDate || new Date().toISOString()
+        }
+      };
+    } else if (body.planType === 'lifetime') {
+      const lifetimePriceId = priceIds.lifetime;
+      if (!lifetimePriceId) {
+        return res.status(503).json({ 
+          error: 'price_not_configured',
+          message: 'Lifetime price ID not configured. Add STRIPE_PRICE_LIFETIME to environment.'
+        });
+      }
+
+      sessionConfig = {
+        payment_method_types: ['card'],
+        line_items: [{ price: lifetimePriceId, quantity: 1 }],
+        mode: 'payment',
+        customer_email: body.customerEmail,
+        success_url: `${siteUrl}/welcome?session_id={CHECKOUT_SESSION_ID}&plan=lifetime`,
+        cancel_url: `${siteUrl}/pricing.html?canceled=true`,
+        allow_promotion_codes: true,
+        metadata: { ...commonMetadata, type: 'lifetime' }
+      };
+    } else {
+      // Subscription plans (monthly, annual)
+      const priceId = priceIds[body.planType];
+      if (!priceId) {
+        return res.status(503).json({ 
+          error: 'price_not_configured',
+          message: `Price ID for ${body.planType} not configured. Add STRIPE_PRICE_${body.planType.toUpperCase()} to environment.`
+        });
+      }
+
+      sessionConfig = {
+        payment_method_types: ['card'],
+        line_items: [{ price: priceId, quantity: 1 }],
+        mode: 'subscription',
+        customer_email: body.customerEmail,
+        success_url: `${siteUrl}/welcome?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${siteUrl}/pricing.html?canceled=true`,
+        metadata: { ...commonMetadata, type: body.planType },
+        subscription_data: {
+          metadata: { ...commonMetadata, plan_type: body.planType },
+          trial_period_days: 7
+        },
+        allow_promotion_codes: true,
+        billing_address_collection: 'auto'
+      };
+    }
+
+    const session = await stripe.checkout.sessions.create(sessionConfig);
+
+    return res.status(200).json({
+      sessionId: session.id,
+      url: session.url
+    });
+  } catch (error) {
+    console.error('Stripe checkout error:', error);
+    return res.status(500).json({
+      error: 'checkout_failed',
+      message: error instanceof Error ? error.message : 'Unknown error'
+    });
+  }
+}
