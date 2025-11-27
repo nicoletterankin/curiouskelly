@@ -1,0 +1,85 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Lesson Database Check</title>
+    <style>
+        body { font-family: monospace; background: #1a1a1a; color: #0f0; padding: 20px; }
+        .stat { font-size: 24px; margin: 20px 0; }
+        .error { color: #f00; }
+        .success { color: #0f0; }
+        table { border-collapse: collapse; margin: 20px 0; }
+        th, td { border: 1px solid #333; padding: 8px; text-align: left; }
+        th { background: #333; }
+    </style>
+</head>
+<body>
+    <h1>🔍 Supabase Lessons Database Check</h1>
+    <div id="output">Loading...</div>
+    
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
+        
+        const supabase = createClient(
+            'https://tvjalxxsyryjphkforjv.supabase.co',
+            'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI'
+        );
+        
+        const output = document.getElementById('output');
+        
+        async function check() {
+            let html = '';
+            
+            // Check lessons table
+            html += '<h2>📊 Lessons Table</h2>';
+            try {
+                const { data, error, count } = await supabase
+                    .from('lessons')
+                    .select('*', { count: 'exact' });
+                
+                if (error) {
+                    html += `<p class="error">❌ Error: ${error.message}</p>`;
+                } else {
+                    const published = data.filter(l => l.is_published).length;
+                    const unpublished = data.filter(l => !l.is_published).length;
+                    
+                    html += `<div class="stat">Total lessons: <strong>${data.length}</strong></div>`;
+                    html += `<div class="stat">Published: <strong class="success">${published}</strong></div>`;
+                    html += `<div class="stat">Unpublished: <strong>${unpublished}</strong></div>`;
+                    
+                    // Show first 10 lessons
+                    html += '<h3>First 10 lessons:</h3>';
+                    html += '<table><tr><th>Day</th><th>Title</th><th>Published</th></tr>';
+                    data.slice(0, 10).forEach(l => {
+                        html += `<tr>
+                            <td>${l.day_number}</td>
+                            <td>${l.title || 'NO TITLE'}</td>
+                            <td>${l.is_published ? '✅' : '❌'}</td>
+                        </tr>`;
+                    });
+                    html += '</table>';
+                    
+                    // Check for gaps
+                    const days = data.map(l => l.day_number).sort((a,b) => a-b);
+                    const gaps = [];
+                    for (let i = 1; i <= 365; i++) {
+                        if (!days.includes(i)) gaps.push(i);
+                    }
+                    if (gaps.length > 0) {
+                        html += `<h3>⚠️ Missing days (${gaps.length}):</h3>`;
+                        html += `<p>${gaps.slice(0, 20).join(', ')}${gaps.length > 20 ? '...' : ''}</p>`;
+                    } else {
+                        html += '<p class="success">✅ All 365 days present!</p>';
+                    }
+                }
+            } catch (e) {
+                html += `<p class="error">❌ Exception: ${e.message}</p>`;
+            }
+            
+            output.innerHTML = html;
+        }
+        
+        check();
+    </script>
+</body>
+</html>
+
