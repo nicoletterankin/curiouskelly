@@ -947,6 +947,33 @@
           data: { session }
         } = await supabase.auth.getSession();
         if (session) {
+          // Check if user was trying to purchase a plan before logging in
+          const selectedPlan = sessionStorage.getItem('selectedPlan');
+          if (selectedPlan) {
+            sessionStorage.removeItem('selectedPlan');
+            // Redirect to checkout
+            try {
+              const response = await fetch('/api/stripe-checkout', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  planType: selectedPlan,
+                  customerEmail: session.user.email
+                })
+              });
+              const data = await response.json();
+              if (data.url) {
+                window.location.href = data.url;
+                return;
+              }
+            } catch (e) {
+              console.error('Checkout error:', e);
+            }
+            // Fallback to pricing page if checkout fails
+            window.location.href = '/pricing.html';
+            return;
+          }
+
           const fromApp =
             document.referrer.includes('/app.html') ||
             sessionStorage.getItem('from_app') === 'true';
