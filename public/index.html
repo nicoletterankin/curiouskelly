@@ -536,7 +536,7 @@
                 font-size: 0.9rem;
               "
             >
-              No account needed • Free today's lesson
+              No account needed • Meet Kelly in 3D!
             </p>
 
             <div class="divider"><span>OR SIGN IN FOR MORE</span></div>
@@ -815,7 +815,7 @@
             const { data, error } = await supabase.auth.signInWithOtp({
               email: email,
               options: {
-                emailRedirectTo: `${window.location.origin}/public/app.html`
+                emailRedirectTo: `${window.location.origin}/app.html`
               }
             });
 
@@ -836,7 +836,7 @@
           const { data, error } = await supabase.auth.signInWithOAuth({
             provider: provider,
             options: {
-              redirectTo: `${window.location.origin}/public/app.html`,
+              redirectTo: `${window.location.origin}/app.html`,
               queryParams:
                 provider === 'google'
                   ? {
@@ -983,10 +983,12 @@
       document.head.appendChild(style);
 
       // Guest Mode - Start without login
+      // Redirects to the Unity WebGL Kelly V2 player on Netlify
       window.startAsGuest = function () {
         // Set guest flag in localStorage
         localStorage.setItem('guestMode', 'true');
-        window.location.href = 'app.html';
+        // Open Kelly V2 Unity player in new tab (Netlify deployment)
+        window.open('https://effervescent-stroopwafel-4cd21d.netlify.app', '_blank');
       };
 
       // Billing Functions
@@ -1184,7 +1186,7 @@
         } = await supabase.auth.getSession();
         if (session) {
           console.log('User already logged in, redirecting to app...');
-          window.location.href = 'app.html';
+          window.location.href = '/app.html';
         }
       };
     </script>
