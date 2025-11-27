@@ -882,8 +882,20 @@
         // Kelly image is already visible - she's here!
         console.log('✅ Kelly image loaded');
         
-        // Now load Unity in the background (from Cloudflare R2 CDN)
+        // Unity 3D Avatar loading (optional enhancement)
+        // Kelly image is ALWAYS visible - Unity is bonus when it works
         var canvas = document.querySelector("#unity-canvas");
+        
+        // TEMPORARILY DISABLED: R2 needs Content-Encoding headers for .br files
+        // TODO: Set up Cloudflare Transform Rules or use uncompressed files
+        var UNITY_ENABLED = false; // Set to true once R2 headers are configured
+        
+        if (!UNITY_ENABLED) {
+            console.log('✅ Kelly image mode (3D avatar coming soon)');
+            kellyStatus.textContent = 'Kelly is here!';
+            statusPulse.classList.remove('loading');
+        }
+        
         var buildUrl = "https://pub-95ad3557cf944f3ea28696e43ddfe4b3.r2.dev";
         var loaderUrl = buildUrl + "/Kelly_Web_Build.loader.js";
         var config = {
@@ -900,48 +912,51 @@
         kellyStatus.textContent = 'Loading 3D avatar...';
         statusPulse.classList.add('loading');
 
-        var script = document.createElement("script");
-        script.src = loaderUrl;
-        script.onload = () => {
-            createUnityInstance(canvas, config, (progress) => {
-                // Update progress
-                const percent = Math.round(progress * 100);
-                kellyStatus.textContent = `Loading 3D avatar... ${percent}%`;
-            }).then((unityInstance) => {
-                window.unityInstance = unityInstance;
-                
-                // Unity is ready! Crossfade from image to 3D
-                console.log('✅ Unity loaded, crossfading to 3D Kelly');
-                kellyStatus.textContent = 'Kelly 3D is live!';
-                statusPulse.classList.remove('loading');
-                
-                // Add class to trigger crossfade animation
-                kellyPresence.classList.add('unity-ready');
-                
-                // Trigger initial welcome if lesson loaded
-                if (currentLesson) startInteraction();
-                
-                // Hide status after 3 seconds
-                setTimeout(() => {
-                    document.getElementById('kelly-status').style.opacity = '0';
-                }, 3000);
-                
-            }).catch((message) => {
-                // Unity failed to load - Kelly image stays visible (graceful degradation)
-                console.log("Unity load error (Kelly image remains): " + message);
+        // Only load Unity if enabled
+        if (UNITY_ENABLED) {
+            var script = document.createElement("script");
+            script.src = loaderUrl;
+            script.onload = () => {
+                createUnityInstance(canvas, config, (progress) => {
+                    // Update progress
+                    const percent = Math.round(progress * 100);
+                    kellyStatus.textContent = `Loading 3D avatar... ${percent}%`;
+                }).then((unityInstance) => {
+                    window.unityInstance = unityInstance;
+                    
+                    // Unity is ready! Crossfade from image to 3D
+                    console.log('✅ Unity loaded, crossfading to 3D Kelly');
+                    kellyStatus.textContent = 'Kelly 3D is live!';
+                    statusPulse.classList.remove('loading');
+                    
+                    // Add class to trigger crossfade animation
+                    kellyPresence.classList.add('unity-ready');
+                    
+                    // Trigger initial welcome if lesson loaded
+                    if (currentLesson) startInteraction();
+                    
+                    // Hide status after 3 seconds
+                    setTimeout(() => {
+                        document.getElementById('kelly-status').style.opacity = '0';
+                    }, 3000);
+                    
+                }).catch((message) => {
+                    // Unity failed to load - Kelly image stays visible (graceful degradation)
+                    console.log("Unity load error (Kelly image remains): " + message);
+                    kellyStatus.textContent = 'Kelly is here';
+                    statusPulse.classList.remove('loading');
+                });
+            };
+            
+            script.onerror = () => {
+                // Unity loader failed - Kelly image stays visible
+                console.log("Unity loader unavailable (Kelly image remains)");
                 kellyStatus.textContent = 'Kelly is here';
                 statusPulse.classList.remove('loading');
-            });
-        };
-        
-        script.onerror = () => {
-            // Unity loader failed - Kelly image stays visible
-            console.log("Unity loader unavailable (Kelly image remains)");
-            kellyStatus.textContent = 'Kelly is here';
-            statusPulse.classList.remove('loading');
+            }
+            
+            document.body.appendChild(script);
         }
-        
-        document.body.appendChild(script);
 
         // Start App
         init();
