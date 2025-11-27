@@ -1,19 +1,22 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>Lesson Database Check</title>
+    <title>Supabase Schema Inspector</title>
     <style>
         body { font-family: monospace; background: #1a1a1a; color: #0f0; padding: 20px; }
-        .stat { font-size: 24px; margin: 20px 0; }
+        .stat { font-size: 20px; margin: 10px 0; }
         .error { color: #f00; }
         .success { color: #0f0; }
-        table { border-collapse: collapse; margin: 20px 0; }
-        th, td { border: 1px solid #333; padding: 8px; text-align: left; }
+        .warn { color: #ff0; }
+        table { border-collapse: collapse; margin: 20px 0; width: 100%; }
+        th, td { border: 1px solid #333; padding: 8px; text-align: left; font-size: 12px; }
         th { background: #333; }
+        pre { background: #000; padding: 10px; overflow-x: auto; font-size: 11px; }
+        h2 { border-bottom: 1px solid #333; padding-bottom: 10px; margin-top: 30px; }
     </style>
 </head>
 <body>
-    <h1>🔍 Supabase Lessons Database Check</h1>
+    <h1>🔍 Supabase Schema Inspector - ZERO TRUST MODE</h1>
     <div id="output">Loading...</div>
     
     <script type="module">
@@ -26,54 +29,69 @@
         
         const output = document.getElementById('output');
         
-        async function check() {
-            let html = '';
+        async function inspectTable(tableName) {
+            let html = `<h2>📋 ${tableName}</h2>`;
             
-            // Check lessons table
-            html += '<h2>📊 Lessons Table</h2>';
             try {
-                const { data, error, count } = await supabase
-                    .from('lessons')
-                    .select('*', { count: 'exact' });
+                const { data, error } = await supabase
+                    .from(tableName)
+                    .select('*')
+                    .limit(3);
                 
                 if (error) {
                     html += `<p class="error">❌ Error: ${error.message}</p>`;
-                } else {
-                    const published = data.filter(l => l.is_published).length;
-                    const unpublished = data.filter(l => !l.is_published).length;
-                    
-                    html += `<div class="stat">Total lessons: <strong>${data.length}</strong></div>`;
-                    html += `<div class="stat">Published: <strong class="success">${published}</strong></div>`;
-                    html += `<div class="stat">Unpublished: <strong>${unpublished}</strong></div>`;
-                    
-                    // Show first 10 lessons
-                    html += '<h3>First 10 lessons:</h3>';
-                    html += '<table><tr><th>Day</th><th>Title</th><th>Published</th></tr>';
-                    data.slice(0, 10).forEach(l => {
-                        html += `<tr>
-                            <td>${l.day_number}</td>
-                            <td>${l.title || 'NO TITLE'}</td>
-                            <td>${l.is_published ? '✅' : '❌'}</td>
-                        </tr>`;
-                    });
-                    html += '</table>';
-                    
-                    // Check for gaps
-                    const days = data.map(l => l.day_number).sort((a,b) => a-b);
-                    const gaps = [];
-                    for (let i = 1; i <= 365; i++) {
-                        if (!days.includes(i)) gaps.push(i);
-                    }
-                    if (gaps.length > 0) {
-                        html += `<h3>⚠️ Missing days (${gaps.length}):</h3>`;
-                        html += `<p>${gaps.slice(0, 20).join(', ')}${gaps.length > 20 ? '...' : ''}</p>`;
-                    } else {
-                        html += '<p class="success">✅ All 365 days present!</p>';
-                    }
+                    return html;
                 }
+                
+                // Count
+                const { count } = await supabase.from(tableName).select('*', { count: 'exact', head: true });
+                html += `<div class="stat">Rows: <strong>${count || data.length}</strong></div>`;
+                
+                if (data.length === 0) {
+                    html += `<p class="warn">⚠️ Table is empty</p>`;
+                    return html;
+                }
+                
+                // Show ACTUAL column names
+                const columns = Object.keys(data[0]);
+                html += `<div class="stat">Columns (${columns.length}): <code>${columns.join(', ')}</code></div>`;
+                
+                // Show first row as JSON
+                html += `<h3>First row (raw JSON):</h3>`;
+                html += `<pre>${JSON.stringify(data[0], null, 2)}</pre>`;
+                
+                // Show first 3 rows as table
+                html += `<h3>First 3 rows:</h3>`;
+                html += '<table><tr>';
+                columns.forEach(c => html += `<th>${c}</th>`);
+                html += '</tr>';
+                data.forEach(row => {
+                    html += '<tr>';
+                    columns.forEach(c => {
+                        let val = row[c];
+                        if (typeof val === 'object') val = JSON.stringify(val).substring(0, 50) + '...';
+                        if (typeof val === 'string' && val.length > 50) val = val.substring(0, 50) + '...';
+                        html += `<td>${val ?? 'NULL'}</td>`;
+                    });
+                    html += '</tr>';
+                });
+                html += '</table>';
+                
             } catch (e) {
                 html += `<p class="error">❌ Exception: ${e.message}</p>`;
             }
+            
+            return html;
+        }
+        
+        async function check() {
+            let html = '<p>Inspecting actual Supabase schema...</p>';
+            
+            // Inspect all relevant tables
+            html += await inspectTable('core_lessons');
+            html += await inspectTable('lesson_atoms');
+            html += await inspectTable('lesson_shards');
+            html += await inspectTable('lessons');
             
             output.innerHTML = html;
         }
