@@ -523,25 +523,33 @@
     async function loadLessonData(day) {
       console.log(`📚 Loading Day ${day}...`);
       
-      // 1. Core Lesson
-      const { data: core } = await supabase
-        .from('core_lessons')
+      // Load from Supabase 'lessons' table (CORRECT production table)
+      // Schema: day_number, title, subtitle, content (JSONB with PhaseDNA)
+      const { data: lesson, error } = await supabase
+        .from('lessons')
         .select('*')
         .eq('day_number', day)
+        .eq('is_published', true)
         .single();
       
-      state.lessonData = core || { topic: 'Unknown' };
-      console.log('✅ Core Loaded:', state.lessonData.topic);
+      if (error || !lesson) {
+        console.log('⚠️ No lesson in Supabase for day', day, '- using fallback');
+        state.lessonData = { topic: 'The Sun', title: 'The Sun - Our Star' };
+        state.atoms = [];
+        return;
+      }
+      
+      // Map to expected format
+      state.lessonData = {
+        ...lesson,
+        topic: lesson.title,
+        id: lesson.id
+      };
+      console.log('✅ Lesson Loaded:', state.lessonData.title);
 
-      // 2. Atoms (Variants)
-      // We load ALL atoms for this lesson so we can swap instantly client-side (Kelly adapts in real time)
-      const { data: atoms } = await supabase
-        .from('lesson_atoms')
-        .select('*')
-        .eq('core_lesson_id', state.lessonData.id);
-        
-      state.atoms = atoms || [];
-      console.log(`✅ Atoms Loaded: ${state.atoms.length}`);
+      // Content contains PhaseDNA - extract phases/atoms from it
+      state.atoms = lesson.content?.phases || [];
+      console.log(`✅ Phases Loaded: ${state.atoms.length}`);
     }
 
     function getBestAtom() {

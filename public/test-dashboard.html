@@ -1,0 +1,906 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🧪 Curious Kelly - Test Dashboard</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+    
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --bg-primary: #0a0a0f;
+      --bg-card: rgba(255, 255, 255, 0.03);
+      --bg-card-hover: rgba(255, 255, 255, 0.06);
+      --border: rgba(255, 255, 255, 0.08);
+      --text-primary: #f4f4f5;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --accent-cyan: #00d9ff;
+      --accent-green: #00ff88;
+      --accent-yellow: #ffd700;
+      --accent-red: #ff4757;
+      --gradient-primary: linear-gradient(135deg, var(--accent-cyan), var(--accent-green));
+    }
+    
+    body {
+      font-family: 'Space Grotesk', system-ui, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      padding: 24px;
+      background-image: 
+        radial-gradient(at 20% 30%, rgba(0, 217, 255, 0.08) 0%, transparent 50%),
+        radial-gradient(at 80% 70%, rgba(0, 255, 136, 0.06) 0%, transparent 50%);
+    }
+    
+    .container { 
+      max-width: 1400px; 
+      margin: 0 auto; 
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 40px;
+    }
+    
+    h1 { 
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 8px;
+    }
+    
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+    }
+    
+    .grid { 
+      display: grid; 
+      grid-template-columns: repeat(auto-fit, minmax(380px, 1fr)); 
+      gap: 20px; 
+    }
+    
+    .card {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 24px;
+      border: 1px solid var(--border);
+      backdrop-filter: blur(10px);
+      transition: all 0.3s ease;
+    }
+    
+    .card:hover {
+      background: var(--bg-card-hover);
+      border-color: rgba(0, 217, 255, 0.2);
+      transform: translateY(-2px);
+    }
+    
+    .card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+    
+    .card h2 { 
+      color: var(--text-primary);
+      font-size: 1.1rem;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    
+    .card h2 .icon {
+      font-size: 1.4rem;
+    }
+    
+    .card p {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-bottom: 16px;
+    }
+    
+    .status {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    
+    .status::before {
+      content: '';
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+    }
+    
+    .status.pending { 
+      background: rgba(113, 113, 122, 0.2); 
+      color: var(--text-muted); 
+    }
+    .status.pending::before { background: var(--text-muted); }
+    
+    .status.testing { 
+      background: rgba(255, 215, 0, 0.15); 
+      color: var(--accent-yellow); 
+    }
+    .status.testing::before { 
+      background: var(--accent-yellow);
+      animation: pulse 1s infinite;
+    }
+    
+    .status.pass { 
+      background: rgba(0, 255, 136, 0.15); 
+      color: var(--accent-green); 
+    }
+    .status.pass::before { background: var(--accent-green); }
+    
+    .status.fail { 
+      background: rgba(255, 71, 87, 0.15); 
+      color: var(--accent-red); 
+    }
+    .status.fail::before { background: var(--accent-red); }
+    
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.4; }
+    }
+    
+    button {
+      background: var(--gradient-primary);
+      color: var(--bg-primary);
+      border: none;
+      padding: 10px 20px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      font-family: inherit;
+      font-size: 0.9rem;
+      margin: 4px;
+      transition: all 0.2s ease;
+    }
+    
+    button:hover { 
+      transform: scale(1.02);
+      box-shadow: 0 4px 20px rgba(0, 217, 255, 0.3);
+    }
+    
+    button:active {
+      transform: scale(0.98);
+    }
+    
+    button:disabled { 
+      opacity: 0.4; 
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+    
+    button.secondary {
+      background: transparent;
+      border: 1px solid var(--border);
+      color: var(--text-secondary);
+    }
+    
+    button.secondary:hover {
+      border-color: var(--accent-cyan);
+      color: var(--accent-cyan);
+      box-shadow: none;
+    }
+    
+    .output {
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 10px;
+      padding: 16px;
+      margin-top: 16px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 12px;
+      max-height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-word;
+      color: var(--text-secondary);
+      border: 1px solid transparent;
+    }
+    
+    .output.success { 
+      border-color: rgba(0, 255, 136, 0.3);
+      background: rgba(0, 255, 136, 0.05);
+    }
+    
+    .output.error { 
+      border-color: rgba(255, 71, 87, 0.3);
+      background: rgba(255, 71, 87, 0.05);
+    }
+    
+    .output::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .output::-webkit-scrollbar-track {
+      background: transparent;
+    }
+    
+    .output::-webkit-scrollbar-thumb {
+      background: var(--border);
+      border-radius: 3px;
+    }
+    
+    audio { 
+      width: 100%; 
+      margin-top: 12px;
+      border-radius: 8px;
+    }
+    
+    input, select {
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      padding: 10px 14px;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 0.9rem;
+      margin: 4px;
+      transition: all 0.2s ease;
+    }
+    
+    input:focus, select:focus {
+      outline: none;
+      border-color: var(--accent-cyan);
+      box-shadow: 0 0 0 3px rgba(0, 217, 255, 0.1);
+    }
+    
+    select {
+      cursor: pointer;
+    }
+    
+    .controls { 
+      margin: 12px 0;
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 8px;
+    }
+    
+    .controls label {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .card.full-width {
+      grid-column: 1 / -1;
+    }
+    
+    .button-group {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 12px;
+      margin-bottom: 20px;
+    }
+    
+    .stat-card {
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    
+    .stat-value {
+      font-size: 1.8rem;
+      font-weight: 700;
+      background: var(--gradient-primary);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .stat-label {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      margin-top: 4px;
+    }
+    
+    @media (max-width: 900px) {
+      .grid {
+        grid-template-columns: 1fr;
+      }
+      .stats-grid {
+        grid-template-columns: repeat(2, 1fr);
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🧪 Curious Kelly Test Dashboard</h1>
+      <p class="subtitle">Integration Testing & Diagnostics</p>
+    </header>
+    
+    <!-- Stats Overview -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="stat-tests">0/6</div>
+        <div class="stat-label">Tests Passed</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-lessons">-</div>
+        <div class="stat-label">Lessons in DB</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-unity">-</div>
+        <div class="stat-label">Unity Status</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="stat-voice">-</div>
+        <div class="stat-label">Voice Status</div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <!-- Environment Test -->
+      <div class="card">
+        <div class="card-header">
+          <h2><span class="icon">🔐</span> Environment</h2>
+          <span class="status pending" id="env-status">Pending</span>
+        </div>
+        <p>Verify .env configuration and API keys</p>
+        <button onclick="testEnvironment()">Run Test</button>
+        <div class="output" id="env-output">Click "Run Test" to check environment variables...</div>
+      </div>
+
+      <!-- Supabase Test -->
+      <div class="card">
+        <div class="card-header">
+          <h2><span class="icon">🗄️</span> Supabase Database</h2>
+          <span class="status pending" id="supabase-status">Pending</span>
+        </div>
+        <p>Test database connection and lesson count</p>
+        <button onclick="testSupabase()">Run Test</button>
+        <button class="secondary" onclick="fetchSampleLesson()">Fetch Sample</button>
+        <div class="output" id="supabase-output">Click "Run Test" to check Supabase connection...</div>
+      </div>
+
+      <!-- ElevenLabs Test -->
+      <div class="card">
+        <div class="card-header">
+          <h2><span class="icon">🎤</span> ElevenLabs Voice</h2>
+          <span class="status pending" id="elevenlabs-status">Pending</span>
+        </div>
+        <p>Test voice generation with Kelly's voice</p>
+        <div class="controls">
+          <input type="text" id="test-text" value="Hello! I'm Kelly, your curious learning companion!" style="width: 100%;">
+        </div>
+        <button onclick="testElevenLabs()">Generate Voice</button>
+        <audio id="audio-player" controls style="display:none;"></audio>
+        <div class="output" id="elevenlabs-output">Click "Generate Voice" to test ElevenLabs...</div>
+      </div>
+
+      <!-- Expression Test -->
+      <div class="card">
+        <div class="card-header">
+          <h2><span class="icon">😊</span> Expression Generator</h2>
+          <span class="status pending" id="expression-status">Pending</span>
+        </div>
+        <p>Test facial expression generation system</p>
+        <div class="controls">
+          <select id="archetype-select">
+            <option value="The Explorer">The Explorer</option>
+            <option value="The Scientist">The Scientist</option>
+            <option value="The Artist">The Artist</option>
+            <option value="The Storyteller">The Storyteller</option>
+            <option value="The Empath">The Empath</option>
+            <option value="The Mystic">The Mystic</option>
+          </select>
+          <select id="tone-select">
+            <option value="enthusiastic">Enthusiastic</option>
+            <option value="serious">Serious</option>
+            <option value="playful">Playful</option>
+            <option value="thoughtful">Thoughtful</option>
+            <option value="warm">Warm</option>
+          </select>
+        </div>
+        <button onclick="testExpressions()">Generate Expressions</button>
+        <div class="output" id="expression-output">Click "Generate Expressions" to test...</div>
+      </div>
+
+      <!-- Unity Test -->
+      <div class="card">
+        <div class="card-header">
+          <h2><span class="icon">🎮</span> Unity WebGL Build</h2>
+          <span class="status pending" id="unity-status">Pending</span>
+        </div>
+        <p>Verify Unity build files and loader</p>
+        <div class="button-group">
+          <button onclick="testUnity()">Check Files</button>
+          <button class="secondary" onclick="loadUnity()">Open Unity Player</button>
+        </div>
+        <div class="output" id="unity-output">Click "Check Files" to verify Unity build...</div>
+      </div>
+
+      <!-- Kelly Engine Test -->
+      <div class="card">
+        <div class="card-header">
+          <h2><span class="icon">⚡</span> Kelly Engine</h2>
+          <span class="status pending" id="engine-status">Pending</span>
+        </div>
+        <p>Test master integration controller</p>
+        <button onclick="testKellyEngine()">Test Engine</button>
+        <div class="output" id="engine-output">Click "Test Engine" to verify Kelly Engine...</div>
+      </div>
+
+      <!-- Full Integration Test -->
+      <div class="card full-width">
+        <div class="card-header">
+          <h2><span class="icon">🚀</span> Full Integration Test</h2>
+          <span class="status pending" id="integration-status">Pending</span>
+        </div>
+        <p>Run complete end-to-end test with lesson loading, voice generation, and expressions</p>
+        <div class="controls">
+          <label>Day: <input type="number" id="day-number" value="1" min="1" max="365" style="width:70px;"></label>
+          <label>Age: <input type="number" id="age-slider" value="27" min="2" max="102" style="width:70px;"></label>
+          <label>
+            <select id="language-select">
+              <option value="en">English</option>
+              <option value="es">Spanish</option>
+              <option value="fr">French</option>
+            </select>
+          </label>
+        </div>
+        <div class="button-group">
+          <button onclick="testFullIntegration()">🧪 Run Full Test</button>
+          <button onclick="runAllTests()">🔄 Run ALL Tests</button>
+          <button class="secondary" onclick="clearAllResults()">Clear Results</button>
+        </div>
+        <div class="output" id="integration-output">Configure settings and click "Run Full Test" to start integration testing...</div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module">
+    // Track test results
+    let testResults = {
+      env: null,
+      supabase: null,
+      elevenlabs: null,
+      expressions: null,
+      unity: null,
+      engine: null,
+    };
+
+    function updateStats() {
+      const passed = Object.values(testResults).filter(r => r === true).length;
+      const total = Object.keys(testResults).length;
+      document.getElementById('stat-tests').textContent = `${passed}/${total}`;
+    }
+
+    // Environment Test
+    window.testEnvironment = async function() {
+      const status = document.getElementById('env-status');
+      const output = document.getElementById('env-output');
+      status.className = 'status testing';
+      status.textContent = 'Testing...';
+      
+      try {
+        const response = await fetch('/api/test-env');
+        const data = await response.json();
+        
+        if (data.success) {
+          status.className = 'status pass';
+          status.textContent = 'Pass';
+          output.className = 'output success';
+          output.textContent = `✅ Environment configured!\n\n${JSON.stringify(data.configured, null, 2)}`;
+          testResults.env = true;
+        } else {
+          throw new Error(data.error || 'Configuration check failed');
+        }
+      } catch (error) {
+        status.className = 'status fail';
+        status.textContent = 'Fail';
+        output.className = 'output error';
+        output.textContent = `❌ Error: ${error.message}\n\n💡 Make sure your .env file is configured and the test server is running:\n   node scripts/test-server.js`;
+        testResults.env = false;
+      }
+      updateStats();
+    };
+
+    // Supabase Test
+    window.testSupabase = async function() {
+      const status = document.getElementById('supabase-status');
+      const output = document.getElementById('supabase-output');
+      status.className = 'status testing';
+      status.textContent = 'Testing...';
+      
+      try {
+        const response = await fetch('/api/test-supabase');
+        const data = await response.json();
+        
+        if (data.success) {
+          status.className = 'status pass';
+          status.textContent = 'Pass';
+          output.className = 'output success';
+          output.textContent = `✅ Supabase connected!\n\n📊 Found ${data.lessonCount} lessons in database`;
+          document.getElementById('stat-lessons').textContent = data.lessonCount;
+          testResults.supabase = true;
+        } else {
+          throw new Error(data.error);
+        }
+      } catch (error) {
+        status.className = 'status fail';
+        status.textContent = 'Fail';
+        output.className = 'output error';
+        output.textContent = `❌ Error: ${error.message}`;
+        testResults.supabase = false;
+      }
+      updateStats();
+    };
+
+    // Fetch Sample Lesson
+    window.fetchSampleLesson = async function() {
+      const output = document.getElementById('supabase-output');
+      output.textContent = '📚 Fetching sample lesson...';
+      
+      try {
+        const response = await fetch('/api/test-supabase?sample=true');
+        const data = await response.json();
+        
+        if (data.sample) {
+          output.className = 'output success';
+          output.textContent = `📚 Sample Lesson (Day ${data.sample.day_number}):\n\n` +
+            `Topic: ${data.sample.topic}\n` +
+            `Universal Truth: ${data.sample.universal_truth || 'N/A'}\n\n` +
+            `Raw data:\n${JSON.stringify(data.sample, null, 2)}`;
+        } else {
+          output.textContent = '⚠️ No sample data available';
+        }
+      } catch (error) {
+        output.className = 'output error';
+        output.textContent = `❌ Error: ${error.message}`;
+      }
+    };
+
+    // ElevenLabs Test
+    window.testElevenLabs = async function() {
+      const status = document.getElementById('elevenlabs-status');
+      const output = document.getElementById('elevenlabs-output');
+      const audioPlayer = document.getElementById('audio-player');
+      const testText = document.getElementById('test-text').value;
+      
+      status.className = 'status testing';
+      status.textContent = 'Generating...';
+      output.textContent = '🎤 Generating voice... This may take a few seconds...';
+      
+      try {
+        const response = await fetch('/api/test-elevenlabs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text: testText })
+        });
+        
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error || 'API request failed');
+        }
+        
+        const blob = await response.blob();
+        const audioUrl = URL.createObjectURL(blob);
+        
+        audioPlayer.src = audioUrl;
+        audioPlayer.style.display = 'block';
+        
+        status.className = 'status pass';
+        status.textContent = 'Pass';
+        output.className = 'output success';
+        output.textContent = `✅ Voice generated successfully!\n\n📦 File size: ${(blob.size / 1024).toFixed(1)} KB\n🎵 Press play to hear Kelly!`;
+        document.getElementById('stat-voice').textContent = '✓';
+        testResults.elevenlabs = true;
+      } catch (error) {
+        status.className = 'status fail';
+        status.textContent = 'Fail';
+        output.className = 'output error';
+        output.textContent = `❌ Error: ${error.message}`;
+        document.getElementById('stat-voice').textContent = '✗';
+        testResults.elevenlabs = false;
+      }
+      updateStats();
+    };
+
+    // Expression Test
+    window.testExpressions = async function() {
+      const status = document.getElementById('expression-status');
+      const output = document.getElementById('expression-output');
+      const archetype = document.getElementById('archetype-select').value;
+      const tone = document.getElementById('tone-select').value;
+      
+      status.className = 'status testing';
+      status.textContent = 'Testing...';
+      
+      try {
+        const response = await fetch('/api/test-expressions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: "Did you know the sun is actually a giant ball of hot plasma? It's so big that about 1.3 million Earths could fit inside it!",
+            archetype,
+            tone,
+            ageBucket: '18-35',
+            language: 'en',
+            phase: 'welcome'
+          })
+        });
+        
+        const data = await response.json();
+        
+        if (data.success) {
+          status.className = 'status pass';
+          status.textContent = 'Pass';
+          output.className = 'output success';
+          output.textContent = `✅ Expressions generated!\n\n` +
+            `😊 ${data.expressions?.length || 0} expression keyframes\n` +
+            `🤚 ${data.gestures?.length || 0} gestures\n` +
+            `🎭 Archetype: ${archetype}\n` +
+            `🎨 Tone: ${tone}\n\n` +
+            `Sample expression:\n${JSON.stringify(data.expressions?.[0], null, 2)}`;
+          testResults.expressions = true;
+        } else {
+          throw new Error(data.error);
+        }
+      } catch (error) {
+        status.className = 'status fail';
+        status.textContent = 'Fail';
+        output.className = 'output error';
+        output.textContent = `❌ Error: ${error.message}`;
+        testResults.expressions = false;
+      }
+      updateStats();
+    };
+
+    // Unity Test
+    window.testUnity = async function() {
+      const status = document.getElementById('unity-status');
+      const output = document.getElementById('unity-output');
+      status.className = 'status testing';
+      status.textContent = 'Checking...';
+      
+      const files = [
+        '/unity/kelly-live/Build/Kelly_Web_Build.loader.js',
+        '/unity/kelly-live/Build/Kelly_Web_Build.data.br',
+        '/unity/kelly-live/Build/Kelly_Web_Build.framework.js.br',
+        '/unity/kelly-live/Build/Kelly_Web_Build.wasm.br'
+      ];
+      
+      let results = [];
+      let allPass = true;
+      
+      for (const file of files) {
+        try {
+          const response = await fetch(file, { method: 'HEAD' });
+          const exists = response.ok;
+          const size = response.headers.get('content-length');
+          const sizeStr = size ? ` (${(parseInt(size) / 1024 / 1024).toFixed(1)} MB)` : '';
+          results.push(`${exists ? '✅' : '❌'} ${file.split('/').pop()}${sizeStr}`);
+          if (!exists) allPass = false;
+        } catch (e) {
+          results.push(`❌ ${file.split('/').pop()} - Error`);
+          allPass = false;
+        }
+      }
+      
+      status.className = allPass ? 'status pass' : 'status fail';
+      status.textContent = allPass ? 'Pass' : 'Fail';
+      output.className = allPass ? 'output success' : 'output error';
+      output.textContent = `Unity WebGL Build Files:\n\n${results.join('\n')}`;
+      document.getElementById('stat-unity').textContent = allPass ? '✓' : '✗';
+      testResults.unity = allPass;
+      updateStats();
+    };
+
+    window.loadUnity = function() {
+      window.open('/unity/kelly-live/', '_blank');
+    };
+
+    // Kelly Engine Test
+    window.testKellyEngine = async function() {
+      const status = document.getElementById('engine-status');
+      const output = document.getElementById('engine-output');
+      status.className = 'status testing';
+      status.textContent = 'Testing...';
+      
+      try {
+        const response = await fetch('/api/test-engine');
+        const data = await response.json();
+        
+        if (data.success) {
+          status.className = 'status pass';
+          status.textContent = 'Pass';
+          output.className = 'output success';
+          output.textContent = `✅ Kelly Engine modules verified!\n\n` +
+            `📦 Modules found:\n${data.modules.map(m => `  • ${m}`).join('\n')}\n\n` +
+            `🔗 All imports resolved successfully`;
+          testResults.engine = true;
+        } else {
+          throw new Error(data.error);
+        }
+      } catch (error) {
+        status.className = 'status fail';
+        status.textContent = 'Fail';
+        output.className = 'output error';
+        output.textContent = `❌ Error: ${error.message}`;
+        testResults.engine = false;
+      }
+      updateStats();
+    };
+
+    // Full Integration Test
+    window.testFullIntegration = async function() {
+      const status = document.getElementById('integration-status');
+      const output = document.getElementById('integration-output');
+      
+      status.className = 'status testing';
+      status.textContent = 'Testing...';
+      output.textContent = '🚀 Running full integration test...\n\n';
+      
+      const day = document.getElementById('day-number').value;
+      const age = document.getElementById('age-slider').value;
+      const language = document.getElementById('language-select').value;
+      
+      const log = (msg) => {
+        output.textContent += msg + '\n';
+      };
+      
+      try {
+        const startTime = performance.now();
+        
+        // Step 1: Test Supabase
+        log('📚 Step 1: Fetching lesson from Supabase...');
+        const lessonResponse = await fetch(`/api/test-integration?day=${day}`);
+        const lessonData = await lessonResponse.json();
+        
+        if (!lessonData.success) {
+          throw new Error(`Failed to fetch lesson: ${lessonData.error}`);
+        }
+        log(`   ✅ Lesson loaded: "${lessonData.lesson.topic}"`);
+        
+        // Step 2: Test Voice Generation
+        log('\n🎤 Step 2: Generating voice audio...');
+        const voiceResponse = await fetch('/api/test-elevenlabs', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ 
+            text: `Hello! Today we're learning about ${lessonData.lesson.topic}!`,
+            age: parseInt(age),
+            language
+          })
+        });
+        
+        if (!voiceResponse.ok) {
+          const error = await voiceResponse.json();
+          throw new Error(`Voice generation failed: ${error.error}`);
+        }
+        const audioBlob = await voiceResponse.blob();
+        log(`   ✅ Audio generated: ${(audioBlob.size / 1024).toFixed(1)} KB`);
+        
+        // Step 3: Test Expression Generation
+        log('\n😊 Step 3: Generating expressions...');
+        const exprResponse = await fetch('/api/test-expressions', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text: `Today we're learning about ${lessonData.lesson.topic}!`,
+            archetype: 'The Explorer',
+            tone: 'enthusiastic',
+            ageBucket: getAgeBucket(parseInt(age)),
+            language,
+            phase: 'welcome'
+          })
+        });
+        
+        const exprData = await exprResponse.json();
+        if (!exprData.success) {
+          throw new Error(`Expression generation failed: ${exprData.error}`);
+        }
+        log(`   ✅ Expressions: ${exprData.expressions?.length || 0} keyframes, ${exprData.gestures?.length || 0} gestures`);
+        
+        const totalTime = (performance.now() - startTime).toFixed(0);
+        
+        status.className = 'status pass';
+        status.textContent = 'Pass';
+        output.className = 'output success';
+        log('\n' + '═'.repeat(50));
+        log('🎉 FULL INTEGRATION TEST PASSED!');
+        log('═'.repeat(50));
+        log(`\n⏱️ Total time: ${totalTime}ms`);
+        log(`📚 Lesson: ${lessonData.lesson.topic}`);
+        log(`🎤 Audio: ${(audioBlob.size / 1024).toFixed(1)} KB`);
+        log(`😊 Expressions: ${exprData.expressions?.length || 0} keyframes`);
+        log(`👤 Age: ${age} (${getAgeBucket(parseInt(age))})`);
+        log(`🌍 Language: ${language}`);
+        
+      } catch (error) {
+        status.className = 'status fail';
+        status.textContent = 'Fail';
+        output.className = 'output error';
+        log('\n❌ INTEGRATION TEST FAILED');
+        log(`Error: ${error.message}`);
+        log('\n💡 Check console for details');
+        console.error('Integration test error:', error);
+      }
+    };
+
+    // Run All Tests
+    window.runAllTests = async function() {
+      await testEnvironment();
+      await new Promise(r => setTimeout(r, 300));
+      await testSupabase();
+      await new Promise(r => setTimeout(r, 300));
+      await testUnity();
+      await new Promise(r => setTimeout(r, 300));
+      await testExpressions();
+      await new Promise(r => setTimeout(r, 300));
+      await testKellyEngine();
+    };
+
+    // Clear Results
+    window.clearAllResults = function() {
+      testResults = {
+        env: null,
+        supabase: null,
+        elevenlabs: null,
+        expressions: null,
+        unity: null,
+        engine: null,
+      };
+      
+      document.querySelectorAll('.status').forEach(el => {
+        el.className = 'status pending';
+        el.textContent = 'Pending';
+      });
+      
+      document.querySelectorAll('.output').forEach(el => {
+        el.className = 'output';
+        el.textContent = 'Ready for testing...';
+      });
+      
+      document.getElementById('audio-player').style.display = 'none';
+      document.getElementById('stat-tests').textContent = '0/6';
+      document.getElementById('stat-lessons').textContent = '-';
+      document.getElementById('stat-unity').textContent = '-';
+      document.getElementById('stat-voice').textContent = '-';
+    };
+
+    // Helper: Get age bucket
+    function getAgeBucket(age) {
+      if (age >= 2 && age <= 5) return '2-5';
+      if (age >= 6 && age <= 12) return '6-12';
+      if (age >= 13 && age <= 17) return '13-17';
+      if (age >= 18 && age <= 35) return '18-35';
+      if (age >= 36 && age <= 60) return '36-60';
+      return '61-102';
+    }
+  </script>
+</body>
+</html>
+
+

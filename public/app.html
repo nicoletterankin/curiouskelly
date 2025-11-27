@@ -672,12 +672,43 @@
         let allLessons = [];
 
         async function loadAllLessons() {
-            // ALWAYS load from local calendar first - it's reliable and has all 365 lessons
-            console.log('📁 Loading lessons from local calendar...');
-            await loadFromLocalCalendar();
-            
-            // Optionally enhance with Supabase data (user progress, etc.) in the future
-            // For now, local JSON is the source of truth for lesson content
+            try {
+                // Load from Supabase 'lessons' table (the CORRECT production table)
+                // Schema: day_number, title, subtitle, content, is_published
+                console.log('📡 Loading lessons from Supabase...');
+                
+                const { data, error } = await supabase
+                    .from('lessons')
+                    .select('day_number, title, subtitle, content, difficulty, tags')
+                    .eq('is_published', true)
+                    .order('day_number', { ascending: true });
+
+                if (error) {
+                    console.error('❌ Supabase error:', error.message);
+                    throw error;
+                }
+                
+                if (data && data.length > 0) {
+                    // Map Supabase fields to expected format
+                    allLessons = data.map(lesson => ({
+                        day: lesson.day_number,
+                        title: lesson.title,
+                        subtitle: lesson.subtitle,
+                        learning_objective: lesson.subtitle || '',
+                        content: lesson.content,
+                        difficulty: lesson.difficulty,
+                        tags: lesson.tags || []
+                    }));
+                    console.log(`✅ Loaded ${allLessons.length} lessons from Supabase`);
+                } else {
+                    console.log('⚠️ No published lessons in Supabase, using local fallback');
+                    await loadFromLocalCalendar();
+                }
+            } catch (e) {
+                console.error('❌ Failed to load from Supabase:', e);
+                console.log('📁 Falling back to local calendar...');
+                await loadFromLocalCalendar();
+            }
         }
         
         async function loadFromLocalCalendar() {

@@ -1,29 +1,41 @@
 # Supabase Database Schema
 
-This document outlines the Supabase database schema used by the Curious Kelly platform. The schema is designed to support the "Unified Aquarium" architecture, handling daily lessons, user progress, and authentication.
+This document outlines the Supabase database schema used by the Curious Kelly platform.
 
-## Core Tables
+## ⚠️ IMPORTANT: THE CORRECT TABLE IS `lessons`
 
-### `core_lessons`
-The master table for the 365-day curriculum.
-- **`day_number`** (Int, Unique): The day of the year (1-365).
-- **`topic`** (String): The main topic of the lesson (e.g., "The Sun", "Gravity").
-- **`universal_truth`** (String): The core concept taught.
-- **`learning_objectives`** (Json): Array of learning goals.
-- **Metadata**: `hero_image_url`, `difficulty_level`, `ideal_age_range`, etc.
+**DO NOT USE:** `core_lessons`, `lesson_atoms`, `lesson_shards` - these are DEPRECATED/NEVER EXISTED.
 
-### `lesson_atoms`
-Contains the actual content pieces (atoms) used to construct a lesson for different archetypes and phases.
-- **`core_lesson_id`** (FK): Links to `core_lessons`.
-- **`archetype`** (String): The persona/archetype the content is tailored for.
-- **`phase`** (String): The phase of the lesson (e.g., "welcome", "teaching", "practice", "wisdom").
-- **`content`** (Json): The actual content payload (script, choices, metadata).
+## Production Tables
 
-### `lesson_shards`
-High-granularity content variations based on specific user demographics.
-- **`core_lesson_id`** (FK): Links to `core_lessons`.
-- **`age`**, **`region`**, **`tone`**, **`birth_year`**: targeting parameters.
-- **`script_content`** (Json): The specific script for this shard.
+### `lessons` ← THE ONLY LESSON TABLE
+The production table for the 365-day curriculum.
+
+```sql
+CREATE TABLE public.lessons (
+  id UUID PRIMARY KEY,
+  day_number INTEGER UNIQUE NOT NULL,  -- Day 1-365
+  title TEXT NOT NULL,                  -- "The Sun - Our Star"
+  subtitle TEXT,                        -- Brief description
+  content JSONB NOT NULL,               -- PhaseDNA structure
+  audio_url TEXT,
+  duration_seconds INTEGER,
+  difficulty TEXT,                      -- 'beginner', 'intermediate', 'advanced'
+  tags TEXT[],
+  is_published BOOLEAN DEFAULT false,   -- Only published lessons are shown
+  created_at TIMESTAMPTZ,
+  updated_at TIMESTAMPTZ
+);
+```
+
+**Frontend Query Example:**
+```javascript
+const { data } = await supabase
+  .from('lessons')
+  .select('day_number, title, subtitle, content')
+  .eq('is_published', true)
+  .order('day_number');
+```
 
 ## User Tables
 

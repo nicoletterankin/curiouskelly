@@ -469,7 +469,8 @@ class KellyOS {
   }
 
   async fetchDailyLesson() {
-    // 1. Try Supabase Loading (Integration)
+    // 1. Try Supabase Loading - CORRECT table is 'lessons'
+    // Schema: day_number, title, subtitle, content (JSONB with PhaseDNA)
     if (this.supabase) {
       try {
         // Calculate Day of Year
@@ -480,25 +481,20 @@ class KellyOS {
         const day = Math.floor(diff / oneDay);
 
         const { data, error } = await this.supabase
-          .from('core_lessons')
-          .select(
-            `
-                    *,
-                    lesson_atoms ( content )
-                `
-          )
+          .from('lessons')
+          .select('day_number, title, subtitle, content')
           .eq('day_number', day)
+          .eq('is_published', true)
           .maybeSingle();
 
-        if (data && data.lesson_atoms && data.lesson_atoms.length > 0) {
-          console.log('Loaded lesson from Supabase:', data.topic);
-          const dna = data.lesson_atoms[0].content;
-          this.setLessonData(dna, data.topic);
+        if (data && data.content) {
+          console.log('✅ Loaded lesson from Supabase:', data.title);
+          this.setLessonData(data.content, data.title);
           return; // Success - skip fallback
         } else if (error) {
           console.warn('Supabase lesson fetch error:', error);
         } else {
-          console.log('No lesson found in Supabase for day', day);
+          console.log('No published lesson in Supabase for day', day);
         }
       } catch (e) {
         console.warn('Supabase fetch failed:', e);
