@@ -1292,6 +1292,32 @@
         
         async function loadLessonAtomsForPreview(lessonId, archetype, age) {
             try {
+                // First, try to get rich content from core_lessons
+                const { data: lessonData, error: lessonError } = await supabase
+                    .from('core_lessons')
+                    .select(`
+                        topic,
+                        universal_truth,
+                        extended_explanation,
+                        fun_facts,
+                        discussion_questions,
+                        quick_quiz_questions,
+                        challenge_questions,
+                        common_misconceptions,
+                        learning_objectives,
+                        hands_on_activities
+                    `)
+                    .eq('id', lessonId)
+                    .maybeSingle();
+                
+                if (lessonData) {
+                    // Build phases from rich content
+                    createPhasesFromRichContent(lessonData);
+                    console.log('✅ Built phases from core_lessons rich content');
+                    return;
+                }
+                
+                // Fallback: Try lesson_atoms
                 const archetypeMap = {
                     'curious': 'The Scientist',
                     'playful': 'The Artist',
@@ -1306,21 +1332,86 @@
                 
                 if (error) throw error;
                 
-                // Filter for archetype
                 lessonAtoms = data?.filter(a => a.archetype === targetArchetype) || [];
-                
-                if (lessonAtoms.length === 0) {
-                    lessonAtoms = data || [];
-                }
-                
-                if (lessonAtoms.length === 0) {
-                    createFallbackContent();
-                }
+                if (lessonAtoms.length === 0) lessonAtoms = data || [];
+                if (lessonAtoms.length === 0) createFallbackContent();
                 
             } catch (e) {
                 console.warn('Using fallback content:', e);
                 createFallbackContent();
             }
+        }
+        
+        // Build 5 phases from core_lessons rich content
+        function createPhasesFromRichContent(data) {
+            const topic = data.topic || 'Today\'s Topic';
+            const truth = data.universal_truth || '';
+            const explanation = data.extended_explanation || '';
+            const funFacts = data.fun_facts || [];
+            const questions = data.discussion_questions || [];
+            const quizQuestions = data.quick_quiz_questions || [];
+            const challenges = data.challenge_questions || [];
+            const misconceptions = data.common_misconceptions || [];
+            const activities = data.hands_on_activities || [];
+            
+            // Pick random items for variety
+            const randomFact = funFacts[Math.floor(Math.random() * funFacts.length)] || '';
+            const q1 = questions[0] || quizQuestions[0] || `What do you think about ${topic}?`;
+            const q2 = questions[1] || quizQuestions[1] || challenges[0] || `Why is ${topic} important?`;
+            const q3 = questions[2] || challenges[1] || `How would you explain ${topic} to a friend?`;
+            
+            lessonAtoms = [
+                {
+                    phase: 'welcome',
+                    content: {
+                        script: `Welcome! Today we're exploring ${topic}. ${truth} ${randomFact ? `Did you know? ${randomFact}` : ''} Ready to discover more?`,
+                        options: [
+                            { text: "Yes, let's explore! 🚀", response: "Wonderful! I love your curiosity. Let's begin!" },
+                            { text: "Tell me more first", response: `Of course! ${explanation.substring(0, 200)}...` }
+                        ]
+                    }
+                },
+                {
+                    phase: 'q1',
+                    content: {
+                        script: `Here's your first question: ${q1}`,
+                        options: [
+                            { text: "I have an idea!", response: "Great thinking! Let's explore your idea together." },
+                            { text: "I'm not sure yet", response: "That's okay! Learning is about discovering. Let me give you a hint." }
+                        ]
+                    }
+                },
+                {
+                    phase: 'q2',
+                    content: {
+                        script: `Now let's go deeper: ${q2}`,
+                        options: [
+                            { text: "I think I understand", response: "You're connecting the dots! Keep going." },
+                            { text: "This is tricky", response: "Good challenges help us grow! Let's work through it together." }
+                        ]
+                    }
+                },
+                {
+                    phase: 'q3',
+                    content: {
+                        script: `Final thought: ${q3}`,
+                        options: [
+                            { text: "I can do that!", response: "I knew you could! Teaching others is the best way to learn." },
+                            { text: "Let me think...", response: "Take your time. The best answers come from reflection." }
+                        ]
+                    }
+                },
+                {
+                    phase: 'wisdom',
+                    content: {
+                        script: `You've done amazing work today! Here's the wisdom to carry with you: ${truth}${activities.length > 0 ? ` Try this activity: ${activities[0]}` : ''}`,
+                        options: [
+                            { text: "I'll remember this! ✨", response: "I know you will. You're becoming wiser every day!" },
+                            { text: "What's next?", response: "Tomorrow brings a new discovery. Keep that curiosity alive!" }
+                        ]
+                    }
+                }
+            ];
         }
         
         function renderPhasesPreview() {
