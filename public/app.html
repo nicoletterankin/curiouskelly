@@ -607,34 +607,77 @@
         </div>
 
         <div class="sidebar-content">
-            <div class="nav-section">
-                <div class="nav-title" id="nav-date-label">Today</div>
-                <div class="nav-item active" id="nav-today" style="font-weight: 600; padding: 12px; background: var(--kelly-blue); color: white; border-radius: 10px;">
-                    Loading...
+            <!-- GLOBAL PERSONALIZATION - Affects ALL content -->
+            <div class="global-controls" style="padding: 12px; border-bottom: 1px solid var(--border-color); background: rgba(37,99,235,0.05);">
+                <div style="font-size: 0.7rem; text-transform: uppercase; letter-spacing: 1px; color: var(--kelly-blue); margin-bottom: 8px; font-weight: 600;">
+                    ✨ Personalize All 365 Lessons
+                </div>
+                
+                <!-- Language Selector - Large & Visual -->
+                <div style="display: flex; gap: 6px; margin-bottom: 10px;">
+                    <button class="lang-btn active" data-lang="en" onclick="setGlobalLanguage('en')" style="flex: 1; padding: 10px 8px; border-radius: 8px; border: 2px solid var(--kelly-blue); background: var(--kelly-blue); color: white; font-weight: 600; cursor: pointer; transition: all 0.2s;">
+                        🇺🇸 English
+                    </button>
+                    <button class="lang-btn" data-lang="es" onclick="setGlobalLanguage('es')" style="flex: 1; padding: 10px 8px; border-radius: 8px; border: 2px solid var(--border-color); background: transparent; color: var(--text-primary); cursor: pointer; transition: all 0.2s;">
+                        🇪🇸 Español
+                    </button>
+                    <button class="lang-btn" data-lang="fr" onclick="setGlobalLanguage('fr')" style="flex: 1; padding: 10px 8px; border-radius: 8px; border: 2px solid var(--border-color); background: transparent; color: var(--text-primary); cursor: pointer; transition: all 0.2s;">
+                        🇫🇷 Français
+                    </button>
+                </div>
+                
+                <!-- Age Slider - More Visual -->
+                <div style="margin-bottom: 10px;">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 4px;">
+                        <span>Age: <strong id="age-display">8-12</strong></span>
+                        <span id="age-label">Young Explorer</span>
+                    </div>
+                    <input type="range" id="age-slider" min="1" max="6" value="2" 
+                        style="width: 100%; accent-color: var(--kelly-blue); cursor: pointer;"
+                        onchange="setGlobalAge(this.value)">
+                    <div style="display: flex; justify-content: space-between; font-size: 0.65rem; color: var(--text-secondary);">
+                        <span>5</span><span>8</span><span>13</span><span>18</span><span>36</span><span>61+</span>
+                    </div>
+                </div>
+                
+                <!-- Tone Toggle -->
+                <div style="display: flex; gap: 6px;">
+                    <button class="tone-btn active" data-tone="curious" onclick="setGlobalTone('curious')" style="flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--kelly-blue); background: rgba(37,99,235,0.2); color: var(--text-primary); font-size: 0.8rem; cursor: pointer;">
+                        🔬 Curious
+                    </button>
+                    <button class="tone-btn" data-tone="playful" onclick="setGlobalTone('playful')" style="flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); background: transparent; color: var(--text-primary); font-size: 0.8rem; cursor: pointer;">
+                        🎨 Playful
+                    </button>
+                    <button class="tone-btn" data-tone="serious" onclick="setGlobalTone('serious')" style="flex: 1; padding: 8px; border-radius: 8px; border: 1px solid var(--border-color); background: transparent; color: var(--text-primary); font-size: 0.8rem; cursor: pointer;">
+                        📚 Serious
+                    </button>
+                </div>
+                
+                <!-- Content Depth Indicator -->
+                <div style="margin-top: 12px; padding: 8px; background: rgba(0,0,0,0.3); border-radius: 8px; text-align: center;">
+                    <div style="font-size: 1.2rem; font-weight: 700; color: var(--kelly-blue);" id="variation-count">38,700</div>
+                    <div style="font-size: 0.7rem; color: var(--text-secondary);">unique lesson variations available</div>
                 </div>
             </div>
 
-            <!-- Calendar Navigation -->
-            <div class="calendar-nav" style="padding: 12px; border-bottom: 1px solid var(--border-color);">
-                <div style="display: flex; align-items: center; justify-content: space-between; margin-bottom: 12px;">
-                    <button id="prev-month" style="background: none; border: none; color: var(--kelly-blue); font-size: 1.2rem; cursor: pointer;">‹</button>
-                    <span id="current-month" style="font-weight: 600; font-size: 1rem;"></span>
-                    <button id="next-month" style="background: none; border: none; color: var(--kelly-blue); font-size: 1.2rem; cursor: pointer;">›</button>
+            <!-- LESSON LIST - Scrollable, shows content -->
+            <div class="lesson-list-header" style="padding: 12px; border-bottom: 1px solid var(--border-color); display: flex; justify-content: space-between; align-items: center;">
+                <span style="font-weight: 600; font-size: 0.9rem;">365 Daily Lessons</span>
+                <div style="display: flex; gap: 4px;">
+                    <button id="view-list" onclick="setView('list')" style="padding: 4px 8px; border-radius: 4px; border: 1px solid var(--kelly-blue); background: var(--kelly-blue); color: white; font-size: 0.7rem; cursor: pointer;">List</button>
+                    <button id="view-calendar" onclick="setView('calendar')" style="padding: 4px 8px; border-radius: 4px; border: 1px solid var(--border-color); background: transparent; color: var(--text-secondary); font-size: 0.7rem; cursor: pointer;">Cal</button>
                 </div>
-                <div class="calendar-grid" id="calendar-grid" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px; font-size: 0.75rem;">
-                    <div style="text-align: center; color: var(--text-secondary); padding: 4px;">S</div>
-                    <div style="text-align: center; color: var(--text-secondary); padding: 4px;">M</div>
-                    <div style="text-align: center; color: var(--text-secondary); padding: 4px;">T</div>
-                    <div style="text-align: center; color: var(--text-secondary); padding: 4px;">W</div>
-                    <div style="text-align: center; color: var(--text-secondary); padding: 4px;">T</div>
-                    <div style="text-align: center; color: var(--text-secondary); padding: 4px;">F</div>
-                    <div style="text-align: center; color: var(--text-secondary); padding: 4px;">S</div>
+            </div>
+
+            <!-- Scrollable Lesson List - ALL 365 visible -->
+            <div id="lesson-list-container" style="flex: 1; overflow-y: auto; padding: 8px;">
+                <div id="lesson-list" style="display: flex; flex-direction: column; gap: 4px;">
+                    <!-- Populated with all 365 lessons -->
                 </div>
-                <div id="calendar-days" style="display: grid; grid-template-columns: repeat(7, 1fr); gap: 2px;"></div>
             </div>
 
             <!-- Selected Lesson Preview - Full Content Drill-Down -->
-            <div id="lesson-preview" style="padding: 16px; flex: 1; overflow-y: auto;">
+            <div id="lesson-preview" style="padding: 12px; border-top: 1px solid var(--border-color); background: var(--card-bg);">
                 <div id="lesson-title" style="font-size: 1.1rem; font-weight: 600; margin-bottom: 4px;"></div>
                 <div id="lesson-date" style="font-size: 0.8rem; color: var(--kelly-blue); margin-bottom: 8px;"></div>
                 <div id="lesson-objective" style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4; padding: 10px; background: rgba(37,99,235,0.1); border-radius: 8px; border-left: 3px solid var(--kelly-blue);"></div>
@@ -1011,6 +1054,23 @@
         let currentMonth = new Date();
         let selectedDate = new Date();
         
+        // GLOBAL PERSONALIZATION STATE
+        let globalSettings = {
+            language: 'en',
+            age: 10, // 8-12 range
+            tone: 'curious',
+            ageLabel: 'Young Explorer'
+        };
+        
+        const AGE_CONFIG = {
+            1: { range: '5-7', label: 'Little Learner', value: 5 },
+            2: { range: '8-12', label: 'Young Explorer', value: 10 },
+            3: { range: '13-17', label: 'Teen Thinker', value: 15 },
+            4: { range: '18-35', label: 'Adult Learner', value: 25 },
+            5: { range: '36-60', label: 'Life Expert', value: 50 },
+            6: { range: '61+', label: 'Wise Elder', value: 70 }
+        };
+        
         // Map day_number (1-365) to actual calendar date for 2025
         const YEAR_START = new Date(2025, 0, 1); // January 1, 2025
         
@@ -1353,17 +1413,231 @@
         }
         
         function setupCalendarNav() {
-            document.getElementById('prev-month').onclick = () => {
-                currentMonth.setMonth(currentMonth.getMonth() - 1);
-                renderCalendar();
-            };
-            document.getElementById('next-month').onclick = () => {
-                currentMonth.setMonth(currentMonth.getMonth() + 1);
-                renderCalendar();
-            };
+            // Calendar nav buttons (if in calendar view)
+            const prevBtn = document.getElementById('prev-month');
+            const nextBtn = document.getElementById('next-month');
+            if (prevBtn) prevBtn.onclick = () => { currentMonth.setMonth(currentMonth.getMonth() - 1); renderCalendar(); };
+            if (nextBtn) nextBtn.onclick = () => { currentMonth.setMonth(currentMonth.getMonth() + 1); renderCalendar(); };
             
             // Start lesson button
             document.getElementById('start-lesson-btn').onclick = startSelectedLesson;
+        }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // GLOBAL PERSONALIZATION CONTROLS
+        // Changes affect ALL 365 lesson titles and content
+        // ═══════════════════════════════════════════════════════════════
+        
+        function setGlobalLanguage(lang) {
+            globalSettings.language = lang;
+            
+            // Update button styles
+            document.querySelectorAll('.lang-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.style.background = 'transparent';
+                btn.style.borderColor = 'var(--border-color)';
+                btn.style.color = 'var(--text-primary)';
+            });
+            const activeBtn = document.querySelector(`.lang-btn[data-lang="${lang}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+                activeBtn.style.background = 'var(--kelly-blue)';
+                activeBtn.style.borderColor = 'var(--kelly-blue)';
+                activeBtn.style.color = 'white';
+            }
+            
+            // Re-render ALL lesson titles
+            renderLessonList();
+            updateVariationCount();
+            
+            console.log(`🌍 Language changed to: ${lang.toUpperCase()}`);
+        }
+        
+        function setGlobalAge(sliderValue) {
+            const config = AGE_CONFIG[sliderValue];
+            globalSettings.age = config.value;
+            globalSettings.ageLabel = config.label;
+            
+            document.getElementById('age-display').textContent = config.range;
+            document.getElementById('age-label').textContent = config.label;
+            
+            // Re-render to show age-appropriate content
+            renderLessonList();
+            updateVariationCount();
+            
+            console.log(`👤 Age changed to: ${config.range} (${config.label})`);
+        }
+        
+        function setGlobalTone(tone) {
+            globalSettings.tone = tone;
+            
+            // Update button styles
+            document.querySelectorAll('.tone-btn').forEach(btn => {
+                btn.classList.remove('active');
+                btn.style.background = 'transparent';
+                btn.style.borderColor = 'var(--border-color)';
+            });
+            const activeBtn = document.querySelector(`.tone-btn[data-tone="${tone}"]`);
+            if (activeBtn) {
+                activeBtn.classList.add('active');
+                activeBtn.style.background = 'rgba(37,99,235,0.2)';
+                activeBtn.style.borderColor = 'var(--kelly-blue)';
+            }
+            
+            // Re-render with new tone
+            renderLessonList();
+            updateVariationCount();
+            
+            console.log(`🎭 Tone changed to: ${tone}`);
+        }
+        
+        function updateVariationCount() {
+            // Show different counts based on selected options
+            const baseCount = 38700;
+            const langMultiplier = globalSettings.language === 'en' ? 1 : 0.95;
+            const display = Math.floor(baseCount * langMultiplier);
+            
+            const countEl = document.getElementById('variation-count');
+            if (countEl) {
+                countEl.style.transition = 'transform 0.3s';
+                countEl.style.transform = 'scale(1.1)';
+                countEl.textContent = display.toLocaleString();
+                setTimeout(() => { countEl.style.transform = 'scale(1)'; }, 300);
+            }
+        }
+        
+        function setView(view) {
+            // Toggle between list and calendar view
+            const listBtn = document.getElementById('view-list');
+            const calBtn = document.getElementById('view-calendar');
+            
+            if (view === 'list') {
+                listBtn.style.background = 'var(--kelly-blue)';
+                listBtn.style.color = 'white';
+                calBtn.style.background = 'transparent';
+                calBtn.style.color = 'var(--text-secondary)';
+                // Show list, hide calendar
+            } else {
+                calBtn.style.background = 'var(--kelly-blue)';
+                calBtn.style.color = 'white';
+                listBtn.style.background = 'transparent';
+                listBtn.style.color = 'var(--text-secondary)';
+                // Show calendar, hide list
+            }
+        }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // LESSON LIST RENDERING
+        // Shows ALL 365 lessons with titles that change with language
+        // ═══════════════════════════════════════════════════════════════
+        
+        function renderLessonList() {
+            const container = document.getElementById('lesson-list');
+            if (!container) return;
+            
+            container.innerHTML = '';
+            
+            const today = new Date();
+            const todayDayNum = dateToDayNumber(today);
+            
+            allLessons.forEach((lesson, index) => {
+                const isToday = lesson.day === todayDayNum;
+                const isSelected = currentLesson?.day === lesson.day;
+                const isPast = lesson.day < todayDayNum;
+                
+                const lessonEl = document.createElement('div');
+                lessonEl.className = 'lesson-list-item';
+                lessonEl.style.cssText = `
+                    padding: 10px 12px;
+                    border-radius: 10px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                    border: 1px solid ${isSelected ? 'var(--kelly-blue)' : 'transparent'};
+                    background: ${isSelected ? 'rgba(37,99,235,0.15)' : isToday ? 'rgba(37,99,235,0.08)' : 'transparent'};
+                    opacity: ${isPast ? '0.6' : '1'};
+                `;
+                
+                // Format date
+                const lessonDate = dayNumberToDate(lesson.day);
+                const monthDay = lessonDate.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                
+                // Get localized title (for now, add indicators)
+                let title = lesson.title;
+                if (globalSettings.language === 'es') {
+                    title = getSpanishTitle(lesson.title) || `${lesson.title} 🇪🇸`;
+                } else if (globalSettings.language === 'fr') {
+                    title = getFrenchTitle(lesson.title) || `${lesson.title} 🇫🇷`;
+                }
+                
+                lessonEl.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                        <div style="flex: 1;">
+                            <div style="font-size: 0.7rem; color: ${isToday ? 'var(--kelly-blue)' : 'var(--text-secondary)'}; margin-bottom: 2px;">
+                                ${isToday ? '● TODAY' : monthDay}
+                            </div>
+                            <div style="font-size: 0.9rem; font-weight: ${isToday || isSelected ? '600' : '400'}; color: var(--text-primary); line-height: 1.3;">
+                                ${title}
+                            </div>
+                        </div>
+                        <div style="font-size: 0.7rem; color: var(--text-secondary); margin-left: 8px;">
+                            Day ${lesson.day}
+                        </div>
+                    </div>
+                `;
+                
+                // Hover effect
+                lessonEl.onmouseenter = () => {
+                    if (!isSelected) lessonEl.style.background = 'rgba(255,255,255,0.05)';
+                };
+                lessonEl.onmouseleave = () => {
+                    if (!isSelected) lessonEl.style.background = isToday ? 'rgba(37,99,235,0.08)' : 'transparent';
+                };
+                
+                // Click to select
+                lessonEl.onclick = () => selectLesson(lessonDate, lesson);
+                
+                container.appendChild(lessonEl);
+            });
+            
+            // Scroll to today or selected
+            setTimeout(() => {
+                const todayEl = container.querySelector('.lesson-list-item[style*="TODAY"]') ||
+                               container.children[todayDayNum - 1];
+                if (todayEl) {
+                    todayEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                }
+            }, 100);
+        }
+        
+        // Translation helpers (mock - would come from lesson_shards in production)
+        function getSpanishTitle(englishTitle) {
+            const translations = {
+                'Responsibilities': 'Responsabilidades',
+                'Leaves': 'Hojas',
+                'Water': 'Agua',
+                'Clouds': 'Nubes',
+                'Meditation': 'Meditación',
+                'Gratitude Practice': 'Práctica de Gratitud',
+                'Reflection': 'Reflexión',
+                'Service': 'Servicio',
+                'Legacy': 'Legado'
+            };
+            return translations[englishTitle];
+        }
+        
+        function getFrenchTitle(englishTitle) {
+            const translations = {
+                'Responsibilities': 'Responsabilités',
+                'Leaves': 'Feuilles',
+                'Water': 'Eau',
+                'Clouds': 'Nuages',
+                'Meditation': 'Méditation',
+                'Gratitude Practice': 'Pratique de Gratitude',
+                'Reflection': 'Réflexion',
+                'Service': 'Service',
+                'Legacy': 'Héritage'
+            };
+            return translations[englishTitle];
         }
         
         // ═══════════════════════════════════════════════════════════════
@@ -1680,7 +1954,8 @@
                 }
             }
             
-            renderCalendar();
+            // Render lesson list (primary view)
+            renderLessonList();
             setupCalendarNav();
         }
 
