@@ -658,6 +658,11 @@
                     <div style="font-size: 1.2rem; font-weight: 700; color: var(--kelly-blue);" id="variation-count">38,700</div>
                     <div style="font-size: 0.7rem; color: var(--text-secondary);">unique lesson variations available</div>
                 </div>
+                
+                <!-- Hidden selects for compatibility -->
+                <select id="lang-select" style="display: none;"><option value="en">EN</option><option value="es">ES</option><option value="fr">FR</option></select>
+                <select id="tone-select" style="display: none;"><option value="curious">Curious</option><option value="playful">Playful</option><option value="serious">Serious</option></select>
+                <select id="age-select" style="display: none;"><option value="5">5</option><option value="10">10</option><option value="15">15</option><option value="25">25</option><option value="50">50</option><option value="70">70</option></select>
             </div>
 
             <!-- LESSON LIST - Scrollable, shows content -->
@@ -670,47 +675,22 @@
             </div>
 
             <!-- Scrollable Lesson List - ALL 365 visible -->
-            <div id="lesson-list-container" style="flex: 1; overflow-y: auto; padding: 8px;">
+            <div id="lesson-list-container" style="max-height: 200px; overflow-y: auto; padding: 8px; border-bottom: 1px solid var(--border-color);">
                 <div id="lesson-list" style="display: flex; flex-direction: column; gap: 4px;">
                     <!-- Populated with all 365 lessons -->
                 </div>
             </div>
 
-            <!-- Selected Lesson Preview - Full Content Drill-Down -->
+            <!-- Selected Lesson Preview -->
             <div id="lesson-preview" style="padding: 12px; border-top: 1px solid var(--border-color); background: var(--card-bg);">
                 <div id="lesson-title" style="font-size: 1.1rem; font-weight: 600; margin-bottom: 4px;"></div>
                 <div id="lesson-date" style="font-size: 0.8rem; color: var(--kelly-blue); margin-bottom: 8px;"></div>
                 <div id="lesson-objective" style="font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 12px; line-height: 1.4; padding: 10px; background: rgba(37,99,235,0.1); border-radius: 8px; border-left: 3px solid var(--kelly-blue);"></div>
                 
-                <!-- Personalization Options - Live Preview -->
-                <div style="margin-bottom: 12px;">
-                    <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">Personalize</div>
-                    <div style="display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 6px;">
-                        <select id="lang-select" onchange="previewLessonContent()" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 8px; font-size: 0.8rem; cursor: pointer;">
-                            <option value="en">🇺🇸 EN</option>
-                            <option value="es">🇪🇸 ES</option>
-                            <option value="fr">🇫🇷 FR</option>
-                        </select>
-                        <select id="tone-select" onchange="previewLessonContent()" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 8px; font-size: 0.8rem; cursor: pointer;">
-                            <option value="curious">🔬 Curious</option>
-                            <option value="playful">🎨 Playful</option>
-                            <option value="serious">📚 Serious</option>
-                        </select>
-                        <select id="age-select" onchange="previewLessonContent()" style="background: var(--card-bg); border: 1px solid var(--border-color); color: var(--text-primary); padding: 8px; border-radius: 8px; font-size: 0.8rem; cursor: pointer;">
-                            <option value="5">5-7</option>
-                            <option value="10">8-12</option>
-                            <option value="15">13-17</option>
-                            <option value="25">18-35</option>
-                            <option value="50">36-60</option>
-                            <option value="70">61+</option>
-                        </select>
-                    </div>
-                </div>
-                
-                <!-- Lesson Content Preview - 5 Phases -->
-                <div id="phases-preview" style="margin-bottom: 16px;">
-                    <div style="font-size: 0.75rem; color: var(--text-secondary); margin-bottom: 8px; text-transform: uppercase; letter-spacing: 0.5px;">Lesson Flow</div>
-                    <div id="phases-list" style="display: flex; flex-direction: column; gap: 6px;">
+                <!-- 5 Phases Preview -->
+                <div id="phases-preview" style="margin-bottom: 12px;">
+                    <div style="font-size: 0.7rem; color: var(--text-secondary); margin-bottom: 6px; text-transform: uppercase; letter-spacing: 0.5px;">5 Phases</div>
+                    <div id="phases-list" style="display: flex; flex-direction: column; gap: 4px;">
                         <!-- Populated dynamically -->
                     </div>
                 </div>
@@ -1453,9 +1433,14 @@
                 activeBtn.style.color = 'white';
             }
             
+            // Sync hidden select
+            const langSelect = document.getElementById('lang-select');
+            if (langSelect) langSelect.value = lang;
+            
             // Re-render ALL lesson titles
             renderLessonList();
             updateVariationCount();
+            if (currentLesson) previewLessonContent();
             
             console.log(`🌍 Language changed to: ${lang.toUpperCase()}`);
         }
@@ -1468,9 +1453,14 @@
             document.getElementById('age-display').textContent = config.range;
             document.getElementById('age-label').textContent = config.label;
             
+            // Sync hidden select
+            const ageSelect = document.getElementById('age-select');
+            if (ageSelect) ageSelect.value = config.value;
+            
             // Re-render to show age-appropriate content
             renderLessonList();
             updateVariationCount();
+            if (currentLesson) previewLessonContent();
             
             console.log(`👤 Age changed to: ${config.range} (${config.label})`);
         }
@@ -1491,9 +1481,14 @@
                 activeBtn.style.borderColor = 'var(--kelly-blue)';
             }
             
+            // Sync hidden select
+            const toneSelect = document.getElementById('tone-select');
+            if (toneSelect) toneSelect.value = tone;
+            
             // Re-render with new tone
             renderLessonList();
             updateVariationCount();
+            if (currentLesson) previewLessonContent();
             
             console.log(`🎭 Tone changed to: ${tone}`);
         }
