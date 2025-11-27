@@ -84,14 +84,42 @@
             return html;
         }
         
+        async function getDistinctValues(tableName, columnName) {
+            try {
+                const { data, error } = await supabase
+                    .from(tableName)
+                    .select(columnName);
+                if (error) return [];
+                const uniqueValues = [...new Set(data.map(row => row[columnName]))];
+                return uniqueValues.filter(v => v != null).slice(0, 20);
+            } catch (e) {
+                return [];
+            }
+        }
+        
         async function check() {
             let html = '<p>Inspecting actual Supabase schema...</p>';
             
-            // Inspect all relevant tables
+            // Inspect core_lessons (just count and columns)
             html += await inspectTable('core_lessons');
+            
+            // Get lesson_atoms PHASE values
+            const atomPhases = await getDistinctValues('lesson_atoms', 'phase');
+            const atomArchetypes = await getDistinctValues('lesson_atoms', 'archetype');
+            html += `<h2>📋 lesson_atoms - CRITICAL INFO</h2>`;
+            html += `<div class="stat success">Distinct PHASE values: <code>${atomPhases.join(', ') || 'NONE'}</code></div>`;
+            html += `<div class="stat success">Distinct ARCHETYPE values: <code>${atomArchetypes.join(', ') || 'NONE'}</code></div>`;
             html += await inspectTable('lesson_atoms');
+            
+            // Get lesson_shards info
+            const shardTones = await getDistinctValues('lesson_shards', 'tone');
+            const shardRegions = await getDistinctValues('lesson_shards', 'region');
+            const shardAges = await getDistinctValues('lesson_shards', 'age');
+            html += `<h2>📋 lesson_shards - CRITICAL INFO</h2>`;
+            html += `<div class="stat success">Distinct TONE values: <code>${shardTones.join(', ') || 'NONE'}</code></div>`;
+            html += `<div class="stat success">Distinct REGION values: <code>${shardRegions.join(', ') || 'NONE'}</code></div>`;
+            html += `<div class="stat success">Distinct AGE values: <code>${shardAges.join(', ') || 'NONE'}</code></div>`;
             html += await inspectTable('lesson_shards');
-            html += await inspectTable('lessons');
             
             output.innerHTML = html;
         }
