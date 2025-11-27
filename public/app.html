@@ -878,11 +878,19 @@
             selectedDate = date;
             currentLesson = lesson;
             
-            // Update preview
+            const today = new Date();
+            const isToday = date.toDateString() === today.toDateString();
+            
+            // Format date
             const dateStr = date.toLocaleDateString('en-US', { 
                 weekday: 'long', month: 'long', day: 'numeric' 
             });
             
+            // Update TODAY section header
+            document.getElementById('nav-date-label').textContent = isToday ? 'Today' : dateStr;
+            document.getElementById('nav-today').textContent = lesson.title;
+            
+            // Update lesson preview
             document.getElementById('lesson-title').textContent = lesson.title;
             document.getElementById('lesson-objective').textContent = 
                 `${dateStr}\n\n${lesson.learning_objective}`;
@@ -890,8 +898,7 @@
             
             // Update button
             const btn = document.getElementById('start-lesson-btn');
-            const today = new Date();
-            if (date.toDateString() === today.toDateString()) {
+            if (isToday) {
                 btn.textContent = "Start Today's Lesson →";
             } else {
                 btn.textContent = `Explore ${lesson.title} →`;
