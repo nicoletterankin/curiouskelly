@@ -222,10 +222,11 @@ class UnityKellyLoader {
   }
 
   /**
-   * Unity object name (Kelly_Live_v2 is the actual model name in the scene)
+   * Unity object name (kelly_fbx_v4 is the actual GameObject name in the scene)
+   * This must match the GameObject that has KellyWebGLBridge.cs attached
    */
   getKellyObjectName() {
-    return 'Kelly_Live_v2';
+    return 'kelly_fbx_v4';
   }
 
   /**
