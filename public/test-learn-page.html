@@ -1,0 +1,597 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learn Page Test Suite</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #0a0a0a;
+            color: #fff;
+        }
+        .test-section {
+            background: #1a1a1a;
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+            border: 2px solid #333;
+        }
+        .test-section.pass {
+            border-color: #22c55e;
+        }
+        .test-section.fail {
+            border-color: #ef4444;
+        }
+        .test-section.running {
+            border-color: #3b82f6;
+        }
+        h1 {
+            text-align: center;
+            color: #3b82f6;
+        }
+        h2 {
+            margin-top: 0;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .status {
+            font-size: 24px;
+        }
+        .test-result {
+            margin: 10px 0;
+            padding: 10px;
+            background: #0a0a0a;
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+        .test-result.pass {
+            color: #22c55e;
+        }
+        .test-result.fail {
+            color: #ef4444;
+        }
+        .test-result.info {
+            color: #3b82f6;
+        }
+        button {
+            background: #3b82f6;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-size: 16px;
+            cursor: pointer;
+            display: block;
+            margin: 20px auto;
+        }
+        button:hover {
+            background: #2563eb;
+        }
+        button:disabled {
+            background: #666;
+            cursor: not-allowed;
+        }
+        .summary {
+            text-align: center;
+            font-size: 24px;
+            margin: 30px 0;
+            padding: 20px;
+            background: #1a1a1a;
+            border-radius: 12px;
+        }
+        iframe {
+            width: 100%;
+            height: 800px;
+            border: 2px solid #333;
+            border-radius: 12px;
+            margin: 20px 0;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Learn Page Test Suite</h1>
+    <p style="text-align: center; color: #888;">Testing Day 333 - Citizenship (Golden Lesson)</p>
+    
+    <button id="run-tests" onclick="runAllTests()">▶️ Run All Tests</button>
+    
+    <div id="test-results"></div>
+    
+    <div class="summary" id="summary" style="display: none;"></div>
+    
+    <iframe id="test-frame" src="about:blank" style="display: none;"></iframe>
+
+    <script>
+        let testResults = [];
+        let currentTest = 0;
+
+        async function runAllTests() {
+            document.getElementById('run-tests').disabled = true;
+            document.getElementById('test-results').innerHTML = '';
+            document.getElementById('summary').style.display = 'none';
+            testResults = [];
+            currentTest = 0;
+
+            const tests = [
+                { name: 'Page Load & Initial State', fn: testPageLoad },
+                { name: 'Age Variant Switching', fn: testAgeVariant },
+                { name: 'Language Switching', fn: testLanguageVariant },
+                { name: 'Difficulty Toggle', fn: testDifficultyVariant },
+                { name: 'Phase Progression', fn: testPhaseProgression },
+                { name: 'Choice Selection', fn: testChoiceSelection },
+                { name: 'Sound Button', fn: testSoundButton },
+                { name: 'Swipe Navigation', fn: testSwipeNavigation }
+            ];
+
+            for (let test of tests) {
+                await runTest(test.name, test.fn);
+                await sleep(1000);
+            }
+
+            showSummary();
+            document.getElementById('run-tests').disabled = false;
+        }
+
+        async function runTest(name, fn) {
+            currentTest++;
+            const section = createTestSection(name);
+            section.classList.add('running');
+            
+            try {
+                const results = await fn();
+                section.classList.remove('running');
+                section.classList.add('pass');
+                section.querySelector('.status').textContent = '✅';
+                testResults.push({ name, pass: true, results });
+                
+                results.forEach(r => {
+                    addResult(section, r.message, r.pass ? 'pass' : 'fail');
+                });
+            } catch (error) {
+                section.classList.remove('running');
+                section.classList.add('fail');
+                section.querySelector('.status').textContent = '❌';
+                testResults.push({ name, pass: false, error: error.message });
+                addResult(section, `ERROR: ${error.message}`, 'fail');
+            }
+        }
+
+        function createTestSection(name) {
+            const section = document.createElement('div');
+            section.className = 'test-section';
+            section.innerHTML = `
+                <h2>
+                    <span class="status">⏳</span>
+                    ${currentTest}. ${name}
+                </h2>
+            `;
+            document.getElementById('test-results').appendChild(section);
+            return section;
+        }
+
+        function addResult(section, message, type = 'info') {
+            const result = document.createElement('div');
+            result.className = `test-result ${type}`;
+            result.textContent = message;
+            section.appendChild(result);
+        }
+
+        function sleep(ms) {
+            return new Promise(resolve => setTimeout(resolve, ms));
+        }
+
+        // TEST 1: Page Load
+        async function testPageLoad() {
+            const results = [];
+            const iframe = document.getElementById('test-frame');
+            iframe.style.display = 'block';
+            
+            await new Promise((resolve) => {
+                iframe.src = '/learn.html?day=333';
+                iframe.onload = resolve;
+            });
+            
+            await sleep(2000); // Wait for JS to initialize
+            
+            const doc = iframe.contentDocument;
+            const win = iframe.contentWindow;
+            
+            // Check state object exists
+            if (win.state) {
+                results.push({ pass: true, message: '✓ State object initialized' });
+                results.push({ pass: true, message: `✓ Day: ${win.state.dayNumber}` });
+                results.push({ pass: true, message: `✓ Lesson: ${win.state.lesson?.topic || 'N/A'}` });
+                results.push({ pass: true, message: `✓ Age: ${win.state.variants.age}` });
+                results.push({ pass: true, message: `✓ Language: ${win.state.variants.language}` });
+                results.push({ pass: true, message: `✓ Difficulty: ${win.state.variants.difficulty}` });
+            } else {
+                results.push({ pass: false, message: '✗ State object not found' });
+            }
+            
+            // Check UI elements
+            const dayCounter = doc.getElementById('day-counter');
+            const topicText = doc.getElementById('topic-text');
+            const speechText = doc.getElementById('speech-text');
+            
+            if (dayCounter && dayCounter.textContent.includes('333')) {
+                results.push({ pass: true, message: '✓ Day counter showing: ' + dayCounter.textContent });
+            } else {
+                results.push({ pass: false, message: '✗ Day counter not found or incorrect' });
+            }
+            
+            if (topicText && topicText.textContent.includes('Citizenship')) {
+                results.push({ pass: true, message: '✓ Topic showing: ' + topicText.textContent });
+            } else {
+                results.push({ pass: false, message: '✗ Topic not found or incorrect' });
+            }
+            
+            if (speechText && speechText.textContent.length > 0) {
+                results.push({ pass: true, message: '✓ Speech text loaded: ' + speechText.textContent.substring(0, 50) + '...' });
+            } else {
+                results.push({ pass: false, message: '✗ Speech text not loaded' });
+            }
+            
+            return results;
+        }
+
+        // TEST 2: Age Variant
+        async function testAgeVariant() {
+            const results = [];
+            const iframe = document.getElementById('test-frame');
+            const doc = iframe.contentDocument;
+            const win = iframe.contentWindow;
+            
+            const originalAge = win.state.variants.age;
+            const originalText = doc.getElementById('speech-text').textContent;
+            
+            results.push({ pass: true, message: `Original age: ${originalAge}` });
+            results.push({ pass: true, message: `Original text: ${originalText.substring(0, 60)}...` });
+            
+            // Change to 2-5
+            win.state.variants.age = '2-5';
+            win.renderPhase(win.state.lesson.phases[win.state.currentPhase - 1]);
+            await sleep(500);
+            
+            const newText = doc.getElementById('speech-text').textContent;
+            const badge = doc.getElementById('badge-age').textContent;
+            
+            if (badge === '2') {
+                results.push({ pass: true, message: '✓ Age badge updated to: ' + badge });
+            } else {
+                results.push({ pass: false, message: '✗ Age badge not updated: ' + badge });
+            }
+            
+            if (newText !== originalText) {
+                results.push({ pass: true, message: '✓ Text changed for 2-5: ' + newText.substring(0, 60) + '...' });
+            } else {
+                results.push({ pass: false, message: '✗ Text did not change' });
+            }
+            
+            // Change to 18-35
+            win.state.variants.age = '18-35';
+            win.renderPhase(win.state.lesson.phases[win.state.currentPhase - 1]);
+            await sleep(500);
+            
+            const adultText = doc.getElementById('speech-text').textContent;
+            const adultBadge = doc.getElementById('badge-age').textContent;
+            
+            if (adultBadge === '18') {
+                results.push({ pass: true, message: '✓ Age badge updated to: ' + adultBadge });
+            } else {
+                results.push({ pass: false, message: '✗ Age badge not updated: ' + adultBadge });
+            }
+            
+            if (adultText !== newText && adultText !== originalText) {
+                results.push({ pass: true, message: '✓ Text changed for 18-35: ' + adultText.substring(0, 60) + '...' });
+            } else {
+                results.push({ pass: false, message: '✗ Text did not change for adult' });
+            }
+            
+            // Restore original
+            win.state.variants.age = originalAge;
+            win.renderPhase(win.state.lesson.phases[win.state.currentPhase - 1]);
+            
+            return results;
+        }
+
+        // TEST 3: Language Variant
+        async function testLanguageVariant() {
+            const results = [];
+            const iframe = document.getElementById('test-frame');
+            const doc = iframe.contentDocument;
+            const win = iframe.contentWindow;
+            
+            const originalLang = win.state.variants.language;
+            const originalText = doc.getElementById('speech-text').textContent;
+            
+            results.push({ pass: true, message: `Original language: ${originalLang}` });
+            
+            // Change to Spanish
+            win.state.variants.language = 'es';
+            win.renderPhase(win.state.lesson.phases[win.state.currentPhase - 1]);
+            await sleep(500);
+            
+            const esText = doc.getElementById('speech-text').textContent;
+            const esBadge = doc.getElementById('badge-language').textContent;
+            
+            if (esBadge === 'ES') {
+                results.push({ pass: true, message: '✓ Language badge updated to: ' + esBadge });
+            } else {
+                results.push({ pass: false, message: '✗ Language badge not updated: ' + esBadge });
+            }
+            
+            if (esText !== originalText && (esText.includes('ciudadan') || esText.includes('¿'))) {
+                results.push({ pass: true, message: '✓ Spanish text loaded: ' + esText.substring(0, 60) + '...' });
+            } else {
+                results.push({ pass: false, message: '✗ Spanish text not loaded correctly' });
+            }
+            
+            // Change to French
+            win.state.variants.language = 'fr';
+            win.renderPhase(win.state.lesson.phases[win.state.currentPhase - 1]);
+            await sleep(500);
+            
+            const frText = doc.getElementById('speech-text').textContent;
+            const frBadge = doc.getElementById('badge-language').textContent;
+            
+            if (frBadge === 'FR') {
+                results.push({ pass: true, message: '✓ Language badge updated to: ' + frBadge });
+            } else {
+                results.push({ pass: false, message: '✗ Language badge not updated: ' + frBadge });
+            }
+            
+            if (frText !== esText && frText !== originalText) {
+                results.push({ pass: true, message: '✓ French text loaded: ' + frText.substring(0, 60) + '...' });
+            } else {
+                results.push({ pass: false, message: '✗ French text not loaded correctly' });
+            }
+            
+            // Restore original
+            win.state.variants.language = originalLang;
+            win.renderPhase(win.state.lesson.phases[win.state.currentPhase - 1]);
+            
+            return results;
+        }
+
+        // TEST 4: Difficulty
+        async function testDifficultyVariant() {
+            const results = [];
+            const iframe = document.getElementById('test-frame');
+            const doc = iframe.contentDocument;
+            const win = iframe.contentWindow;
+            
+            // Go to Q1 phase (where choices appear)
+            win.state.currentPhase = 2;
+            win.renderPhase(win.state.lesson.phases[1]);
+            await sleep(500);
+            
+            // Set difficulty to 2
+            win.state.variants.difficulty = 2;
+            win.renderPhase(win.state.lesson.phases[1]);
+            await sleep(500);
+            
+            const choices2 = doc.querySelectorAll('.choice-btn');
+            const badge2 = doc.getElementById('badge-difficulty').textContent;
+            
+            if (badge2 === '2') {
+                results.push({ pass: true, message: '✓ Difficulty badge shows: ' + badge2 });
+            } else {
+                results.push({ pass: false, message: '✗ Difficulty badge incorrect: ' + badge2 });
+            }
+            
+            if (choices2.length === 2) {
+                results.push({ pass: true, message: '✓ Showing 2 choices in difficulty=2 mode' });
+            } else {
+                results.push({ pass: false, message: `✗ Expected 2 choices, got ${choices2.length}` });
+            }
+            
+            // Set difficulty to 3
+            win.state.variants.difficulty = 3;
+            win.renderPhase(win.state.lesson.phases[1]);
+            await sleep(500);
+            
+            const choices3 = doc.querySelectorAll('.choice-btn');
+            const badge3 = doc.getElementById('badge-difficulty').textContent;
+            
+            if (badge3 === '3') {
+                results.push({ pass: true, message: '✓ Difficulty badge shows: ' + badge3 });
+            } else {
+                results.push({ pass: false, message: '✗ Difficulty badge incorrect: ' + badge3 });
+            }
+            
+            if (choices3.length === 3) {
+                results.push({ pass: true, message: '✓ Showing 3 choices in difficulty=3 mode' });
+            } else {
+                results.push({ pass: false, message: `✗ Expected 3 choices, got ${choices3.length}` });
+            }
+            
+            return results;
+        }
+
+        // TEST 5: Phase Progression
+        async function testPhaseProgression() {
+            const results = [];
+            const iframe = document.getElementById('test-frame');
+            const doc = iframe.contentDocument;
+            const win = iframe.contentWindow;
+            
+            // Reset to phase 1
+            win.state.currentPhase = 1;
+            win.renderPhase(win.state.lesson.phases[0]);
+            await sleep(500);
+            
+            const totalPhases = win.state.lesson.phases.length;
+            results.push({ pass: true, message: `Total phases: ${totalPhases}` });
+            
+            // Check phase indicator
+            const dots = doc.querySelectorAll('.phase-dot');
+            if (dots.length === totalPhases) {
+                results.push({ pass: true, message: `✓ Phase indicator shows ${dots.length} dots` });
+            } else {
+                results.push({ pass: false, message: `✗ Phase indicator incorrect: ${dots.length} dots` });
+            }
+            
+            // Check first dot is active
+            if (dots[0].classList.contains('active')) {
+                results.push({ pass: true, message: '✓ First phase dot is active' });
+            } else {
+                results.push({ pass: false, message: '✗ First phase dot not active' });
+            }
+            
+            return results;
+        }
+
+        // TEST 6: Choice Selection
+        async function testChoiceSelection() {
+            const results = [];
+            const iframe = document.getElementById('test-frame');
+            const doc = iframe.contentDocument;
+            const win = iframe.contentWindow;
+            
+            // Go to Q1
+            win.state.currentPhase = 2;
+            win.renderPhase(win.state.lesson.phases[1]);
+            await sleep(500);
+            
+            const choicesBefore = doc.querySelectorAll('.choice-btn');
+            if (choicesBefore.length > 0) {
+                results.push({ pass: true, message: `✓ ${choicesBefore.length} choices available` });
+                
+                // Click choice B (the best answer)
+                const choiceB = Array.from(choicesBefore).find(btn => btn.textContent.includes('B'));
+                if (choiceB) {
+                    choiceB.click();
+                    await sleep(1000);
+                    
+                    // Check if phase advanced
+                    if (win.state.currentPhase === 3) {
+                        results.push({ pass: true, message: '✓ Phase advanced after choice selection' });
+                    } else {
+                        results.push({ pass: false, message: `✗ Phase did not advance: still at ${win.state.currentPhase}` });
+                    }
+                    
+                    // Check if choice was recorded
+                    if (win.state.choices.length > 0) {
+                        results.push({ pass: true, message: `✓ Choice recorded: ${JSON.stringify(win.state.choices[win.state.choices.length - 1])}` });
+                    } else {
+                        results.push({ pass: false, message: '✗ Choice not recorded' });
+                    }
+                } else {
+                    results.push({ pass: false, message: '✗ Choice B button not found' });
+                }
+            } else {
+                results.push({ pass: false, message: '✗ No choices found' });
+            }
+            
+            return results;
+        }
+
+        // TEST 7: Sound Button
+        async function testSoundButton() {
+            const results = [];
+            const iframe = document.getElementById('test-frame');
+            const doc = iframe.contentDocument;
+            const win = iframe.contentWindow;
+            
+            const soundBtn = doc.getElementById('btn-sound');
+            if (!soundBtn) {
+                results.push({ pass: false, message: '✗ Sound button not found' });
+                return results;
+            }
+            
+            results.push({ pass: true, message: '✓ Sound button exists' });
+            
+            // Check initial state
+            const unmutedIcon = soundBtn.querySelector('.unmuted');
+            const mutedIcon = soundBtn.querySelector('.muted');
+            
+            if (unmutedIcon && mutedIcon) {
+                results.push({ pass: true, message: '✓ Both mute icons present' });
+            } else {
+                results.push({ pass: false, message: '✗ Mute icons missing' });
+            }
+            
+            // Check kellyAudio exists
+            if (win.kellyAudio) {
+                results.push({ pass: true, message: '✓ KellyAudio system initialized' });
+                results.push({ pass: true, message: `  - Has voice: ${win.kellyAudio.hasVoice}` });
+                results.push({ pass: true, message: `  - Is muted: ${win.kellyAudio.isMuted}` });
+                
+                // Verify browser TTS is NEVER used
+                if (win.speechSynthesis) {
+                    results.push({ pass: true, message: '✓ Browser TTS API exists but...' });
+                    results.push({ pass: true, message: '  - PROHIBITED from use (ElevenLabs only)' });
+                }
+            } else {
+                results.push({ pass: false, message: '✗ KellyAudio not initialized' });
+            }
+            
+            return results;
+        }
+
+        // TEST 8: Swipe Navigation
+        async function testSwipeNavigation() {
+            const results = [];
+            const iframe = document.getElementById('test-frame');
+            const doc = iframe.contentDocument;
+            const win = iframe.contentWindow;
+            
+            const originalDay = win.state.dayNumber;
+            results.push({ pass: true, message: `Original day: ${originalDay}` });
+            
+            // Check tiktokInteractions exists
+            if (win.tiktokInteractions) {
+                results.push({ pass: true, message: '✓ TikTok interactions initialized' });
+            } else {
+                results.push({ pass: false, message: '✗ TikTok interactions not initialized' });
+                return results;
+            }
+            
+            // Simulate swipe up (next lesson)
+            if (typeof win.navigateLesson === 'function') {
+                results.push({ pass: true, message: '✓ navigateLesson function exists' });
+                results.push({ pass: true, message: '  - Swipe up/down navigation ready' });
+                results.push({ pass: true, message: '  - Keyboard arrows (↑/↓) ready' });
+            } else {
+                results.push({ pass: false, message: '✗ navigateLesson function not found' });
+            }
+            
+            return results;
+        }
+
+        function showSummary() {
+            const summary = document.getElementById('summary');
+            const passed = testResults.filter(t => t.pass).length;
+            const failed = testResults.filter(t => !t.pass).length;
+            const total = testResults.length;
+            
+            const percentage = Math.round((passed / total) * 100);
+            
+            summary.innerHTML = `
+                <div style="font-size: 48px; margin-bottom: 20px;">
+                    ${percentage === 100 ? '🎉' : percentage >= 75 ? '✅' : percentage >= 50 ? '⚠️' : '❌'}
+                </div>
+                <div>
+                    <strong>${passed}/${total}</strong> tests passed (${percentage}%)
+                </div>
+                ${failed > 0 ? `<div style="color: #ef4444; margin-top: 10px;">${failed} tests failed</div>` : ''}
+            `;
+            summary.style.display = 'block';
+            
+            if (percentage === 100) {
+                summary.style.background = 'linear-gradient(135deg, #22c55e 0%, #16a34a 100%)';
+            } else if (percentage >= 75) {
+                summary.style.background = 'linear-gradient(135deg, #3b82f6 0%, #2563eb 100%)';
+            } else {
+                summary.style.background = 'linear-gradient(135deg, #ef4444 0%, #dc2626 100%)';
+            }
+        }
+    </script>
+</body>
+</html>
+

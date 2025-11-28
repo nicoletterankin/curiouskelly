@@ -1,0 +1,868 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Kelly Frame — Design Mockup</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-dark: #0a0a0b;
+            --bg-overlay: rgba(0, 0, 0, 0.85);
+            --kelly-blue: #3b82f6;
+            --kelly-blue-glow: rgba(59, 130, 246, 0.3);
+            --text-primary: #ffffff;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --success: #22c55e;
+            --border: rgba(255, 255, 255, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            height: 100%;
+            overflow: hidden;
+        }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           LAYER 1: KELLY FRAME (Fullscreen Background)
+           ═══════════════════════════════════════════════════════════════ */
+        .kelly-frame {
+            position: fixed;
+            inset: 0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: linear-gradient(180deg, #111113 0%, #0a0a0b 100%);
+            z-index: 1;
+        }
+
+        .kelly-avatar {
+            max-width: 70%;
+            max-height: 65%;
+            object-fit: contain;
+            filter: drop-shadow(0 20px 60px rgba(0, 0, 0, 0.5));
+            transition: all 0.5s ease;
+        }
+
+        .kelly-avatar.speaking {
+            animation: subtle-bounce 2s ease-in-out infinite;
+        }
+
+        @keyframes subtle-bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-8px); }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           LAYER 2: PHASE INDICATOR (Top)
+           ═══════════════════════════════════════════════════════════════ */
+        .phase-indicator {
+            position: fixed;
+            top: 60px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            align-items: center;
+            gap: 0;
+            padding: 12px 24px;
+            background: var(--bg-overlay);
+            backdrop-filter: blur(20px);
+            border-radius: 50px;
+            border: 1px solid var(--border);
+            z-index: 100;
+        }
+
+        .phase-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--text-muted);
+            transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .phase-dot.active {
+            background: var(--kelly-blue);
+            box-shadow: 0 0 12px var(--kelly-blue-glow);
+        }
+
+        .phase-dot.completed {
+            background: var(--success);
+        }
+
+        .phase-line {
+            width: 24px;
+            height: 2px;
+            background: var(--text-muted);
+            opacity: 0.3;
+        }
+
+        .phase-line.completed {
+            background: var(--success);
+            opacity: 1;
+        }
+
+        .phase-label {
+            position: absolute;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: 10px;
+            color: var(--text-secondary);
+            white-space: nowrap;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .phase-dot.active .phase-label {
+            opacity: 1;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           LAYER 3: SIDE CONTROLS (Right)
+           ═══════════════════════════════════════════════════════════════ */
+        .side-controls {
+            position: fixed;
+            right: 16px;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            z-index: 100;
+        }
+
+        .side-btn {
+            width: 48px;
+            height: 48px;
+            border-radius: 50%;
+            background: var(--bg-overlay);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-primary);
+        }
+
+        .side-btn:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--kelly-blue);
+            transform: scale(1.1);
+        }
+
+        .side-btn:active {
+            transform: scale(0.95);
+        }
+
+        .side-btn .icon {
+            font-size: 20px;
+        }
+
+        .side-btn .label {
+            font-size: 8px;
+            margin-top: 2px;
+            color: var(--text-secondary);
+        }
+
+        /* Badge for current value */
+        .side-btn .badge {
+            position: absolute;
+            top: -4px;
+            right: -4px;
+            background: var(--kelly-blue);
+            color: white;
+            font-size: 9px;
+            font-weight: 700;
+            padding: 2px 5px;
+            border-radius: 10px;
+            min-width: 18px;
+            text-align: center;
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           LAYER 4: SPEECH BUBBLE + CHOICES (Bottom)
+           ═══════════════════════════════════════════════════════════════ */
+        .speech-area {
+            position: fixed;
+            bottom: 100px;
+            left: 16px;
+            right: 16px;
+            z-index: 100;
+        }
+
+        .speech-bubble {
+            background: var(--bg-overlay);
+            backdrop-filter: blur(20px);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 24px;
+            margin-bottom: 16px;
+        }
+
+        .speech-text {
+            font-size: 18px;
+            line-height: 1.5;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .speech-hint {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        /* Choice buttons */
+        .choices {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .choice-btn {
+            background: rgba(59, 130, 246, 0.1);
+            border: 2px solid rgba(59, 130, 246, 0.3);
+            border-radius: 16px;
+            padding: 18px 20px;
+            color: var(--text-primary);
+            font-size: 16px;
+            font-weight: 500;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .choice-btn:hover {
+            background: rgba(59, 130, 246, 0.2);
+            border-color: var(--kelly-blue);
+            transform: translateX(4px);
+        }
+
+        .choice-btn:active {
+            transform: scale(0.98);
+        }
+
+        .choice-btn.selected {
+            background: var(--kelly-blue);
+            border-color: var(--kelly-blue);
+        }
+
+        .choice-letter {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: 700;
+            font-size: 14px;
+            flex-shrink: 0;
+        }
+
+        .choice-btn.selected .choice-letter {
+            background: rgba(255, 255, 255, 0.2);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           LAYER 5: BOTTOM NAVIGATION
+           ═══════════════════════════════════════════════════════════════ */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: var(--bg-overlay);
+            backdrop-filter: blur(20px);
+            border-top: 1px solid var(--border);
+            display: flex;
+            align-items: center;
+            justify-content: space-around;
+            padding-bottom: env(safe-area-inset-bottom, 0);
+            z-index: 100;
+        }
+
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+            padding: 8px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            color: var(--text-secondary);
+        }
+
+        .nav-item:hover {
+            color: var(--text-primary);
+        }
+
+        .nav-item.active {
+            color: var(--kelly-blue);
+        }
+
+        .nav-item .nav-icon {
+            font-size: 24px;
+        }
+
+        .nav-item .nav-label {
+            font-size: 11px;
+            font-weight: 600;
+        }
+
+        /* Center "Learn" button is special */
+        .nav-item.learn {
+            background: var(--kelly-blue);
+            color: white;
+            padding: 12px 24px;
+            margin-top: -20px;
+            border-radius: 20px;
+            box-shadow: 0 4px 20px var(--kelly-blue-glow);
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           RESPONSIVE ADJUSTMENTS
+           ═══════════════════════════════════════════════════════════════ */
+        @media (max-width: 390px) {
+            .speech-text {
+                font-size: 16px;
+            }
+            .choice-btn {
+                padding: 14px 16px;
+                font-size: 14px;
+            }
+            .side-btn {
+                width: 44px;
+                height: 44px;
+            }
+        }
+
+        @media (min-width: 768px) {
+            .speech-area {
+                max-width: 600px;
+                left: 50%;
+                transform: translateX(-50%);
+            }
+            .kelly-avatar {
+                max-width: 50%;
+            }
+        }
+
+        /* ═══════════════════════════════════════════════════════════════
+           VARIANT SELECTOR MODAL
+           ═══════════════════════════════════════════════════════════════ */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(10px);
+            z-index: 200;
+            display: none;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .modal-overlay.open {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #18181b;
+            border-radius: 24px 24px 0 0;
+            width: 100%;
+            max-width: 500px;
+            padding: 24px;
+            padding-bottom: calc(24px + env(safe-area-inset-bottom, 0));
+            animation: slideUp 0.3s ease;
+        }
+
+        @keyframes slideUp {
+            from { transform: translateY(100%); }
+            to { transform: translateY(0); }
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-title {
+            font-size: 20px;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.1);
+            border: none;
+            color: white;
+            font-size: 20px;
+            cursor: pointer;
+        }
+
+        .variant-option {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 8px;
+        }
+
+        .variant-option:hover {
+            background: rgba(255, 255, 255, 0.05);
+        }
+
+        .variant-option.selected {
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid var(--kelly-blue);
+        }
+
+        .variant-radio {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            border: 2px solid var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .variant-option.selected .variant-radio {
+            border-color: var(--kelly-blue);
+            background: var(--kelly-blue);
+        }
+
+        .variant-radio::after {
+            content: '';
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            background: white;
+            opacity: 0;
+        }
+
+        .variant-option.selected .variant-radio::after {
+            opacity: 1;
+        }
+
+        .variant-info {
+            flex: 1;
+        }
+
+        .variant-name {
+            font-weight: 600;
+            font-size: 16px;
+        }
+
+        .variant-desc {
+            font-size: 13px;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <!-- LAYER 1: Kelly Frame -->
+    <div class="kelly-frame">
+        <img 
+            src="/images/kelly/kelly-directors-chair-explaining.png" 
+            alt="Kelly" 
+            class="kelly-avatar speaking"
+            onerror="this.src='https://placehold.co/400x600/1a1a1d/3b82f6?text=Kelly'"
+        >
+    </div>
+
+    <!-- LAYER 2: Phase Indicator -->
+    <div class="phase-indicator">
+        <div class="phase-dot completed">
+            <span class="phase-label">Welcome</span>
+        </div>
+        <div class="phase-line completed"></div>
+        <div class="phase-dot active">
+            <span class="phase-label">Q1</span>
+        </div>
+        <div class="phase-line"></div>
+        <div class="phase-dot">
+            <span class="phase-label">Q2</span>
+        </div>
+        <div class="phase-line"></div>
+        <div class="phase-dot">
+            <span class="phase-label">Q3</span>
+        </div>
+        <div class="phase-line"></div>
+        <div class="phase-dot">
+            <span class="phase-label">✨</span>
+        </div>
+    </div>
+
+    <!-- LAYER 3: Side Controls -->
+    <div class="side-controls">
+        <button class="side-btn" onclick="openModal('age')" style="position: relative;">
+            <span class="icon">🎂</span>
+            <span class="label">Age</span>
+            <span class="badge">13</span>
+        </button>
+        <button class="side-btn" onclick="openModal('language')" style="position: relative;">
+            <span class="icon">🌍</span>
+            <span class="label">Lang</span>
+            <span class="badge">EN</span>
+        </button>
+        <button class="side-btn" onclick="openModal('tone')" style="position: relative;">
+            <span class="icon">🎭</span>
+            <span class="label">Tone</span>
+        </button>
+        <button class="side-btn" onclick="openModal('difficulty')" style="position: relative;">
+            <span class="icon">🎯</span>
+            <span class="label">Level</span>
+            <span class="badge">2</span>
+        </button>
+        <button class="side-btn" onclick="toggle2D3D()">
+            <span class="icon">🔄</span>
+            <span class="label">2D/3D</span>
+        </button>
+        <button class="side-btn">
+            <span class="icon">↗️</span>
+            <span class="label">Share</span>
+        </button>
+    </div>
+
+    <!-- LAYER 4: Speech Area -->
+    <div class="speech-area">
+        <div class="speech-bubble">
+            <p class="speech-text">What does it mean to be a good citizen? Is it about following rules, or something deeper?</p>
+            <p class="speech-hint">Think about your community...</p>
+        </div>
+        <div class="choices" id="choices-container">
+            <button class="choice-btn" onclick="selectChoice(this, 'A')">
+                <span class="choice-letter">A</span>
+                <span>Following laws and paying taxes</span>
+            </button>
+            <button class="choice-btn" onclick="selectChoice(this, 'B')">
+                <span class="choice-letter">B</span>
+                <span>Actively contributing to your community</span>
+            </button>
+        </div>
+    </div>
+
+    <!-- LAYER 5: Bottom Navigation -->
+    <nav class="bottom-nav">
+        <div class="nav-item" onclick="openHub()">
+            <span class="nav-icon">🏠</span>
+            <span class="nav-label">Home</span>
+        </div>
+        <div class="nav-item" onclick="openCalendar()">
+            <span class="nav-icon">📅</span>
+            <span class="nav-label">Calendar</span>
+        </div>
+        <div class="nav-item learn active">
+            <span class="nav-icon">🎓</span>
+            <span class="nav-label">Learn</span>
+        </div>
+        <div class="nav-item">
+            <span class="nav-icon">👤</span>
+            <span class="nav-label">Me</span>
+        </div>
+        <div class="nav-item">
+            <span class="nav-icon">⚙️</span>
+            <span class="nav-label">Settings</span>
+        </div>
+    </nav>
+
+    <!-- MODAL: Age Selector -->
+    <div class="modal-overlay" id="modal-age">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">🎂 Select Age Group</span>
+                <button class="modal-close" onclick="closeModal('age')">×</button>
+            </div>
+            <div class="variant-option" onclick="selectVariant('age', '2-5')">
+                <div class="variant-radio"></div>
+                <div class="variant-info">
+                    <div class="variant-name">2-5 years</div>
+                    <div class="variant-desc">Simple words, lots of wonder</div>
+                </div>
+            </div>
+            <div class="variant-option" onclick="selectVariant('age', '6-12')">
+                <div class="variant-radio"></div>
+                <div class="variant-info">
+                    <div class="variant-name">6-12 years</div>
+                    <div class="variant-desc">Curious explorer level</div>
+                </div>
+            </div>
+            <div class="variant-option selected" onclick="selectVariant('age', '13-17')">
+                <div class="variant-radio"></div>
+                <div class="variant-info">
+                    <div class="variant-name">13-17 years</div>
+                    <div class="variant-desc">Teen-friendly, deeper thinking</div>
+                </div>
+            </div>
+            <div class="variant-option" onclick="selectVariant('age', '18-35')">
+                <div class="variant-radio"></div>
+                <div class="variant-info">
+                    <div class="variant-name">18-35 years</div>
+                    <div class="variant-desc">Adult professional level</div>
+                </div>
+            </div>
+            <div class="variant-option" onclick="selectVariant('age', '36-60')">
+                <div class="variant-radio"></div>
+                <div class="variant-info">
+                    <div class="variant-name">36-60 years</div>
+                    <div class="variant-desc">Experienced perspective</div>
+                </div>
+            </div>
+            <div class="variant-option" onclick="selectVariant('age', '61+')">
+                <div class="variant-radio"></div>
+                <div class="variant-info">
+                    <div class="variant-name">61+ years</div>
+                    <div class="variant-desc">Wisdom and reflection</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Language Selector -->
+    <div class="modal-overlay" id="modal-language">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">🌍 Select Language</span>
+                <button class="modal-close" onclick="closeModal('language')">×</button>
+            </div>
+            <div class="variant-option selected" onclick="selectVariant('language', 'en')">
+                <div class="variant-radio"></div>
+                <div class="variant-info">
+                    <div class="variant-name">🇺🇸 English</div>
+                    <div class="variant-desc">Learn in English</div>
+                </div>
+            </div>
+            <div class="variant-option" onclick="selectVariant('language', 'es')">
+                <div class="variant-radio"></div>
+                <div class="variant-info">
+                    <div class="variant-name">🇪🇸 Español</div>
+                    <div class="variant-desc">Aprende en español</div>
+                </div>
+            </div>
+            <div class="variant-option" onclick="selectVariant('language', 'fr')">
+                <div class="variant-radio"></div>
+                <div class="variant-info">
+                    <div class="variant-name">🇫🇷 Français</div>
+                    <div class="variant-desc">Apprendre en français</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Tone Selector -->
+    <div class="modal-overlay" id="modal-tone">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">🎭 Select Tone</span>
+                <button class="modal-close" onclick="closeModal('tone')">×</button>
+            </div>
+            <div class="variant-option selected" onclick="selectVariant('tone', 'curious')">
+                <div class="variant-radio"></div>
+                <div class="variant-info">
+                    <div class="variant-name">🔬 Curious</div>
+                    <div class="variant-desc">Questioning, exploratory, wonder-filled</div>
+                </div>
+            </div>
+            <div class="variant-option" onclick="selectVariant('tone', 'playful')">
+                <div class="variant-radio"></div>
+                <div class="variant-info">
+                    <div class="variant-name">🎨 Playful</div>
+                    <div class="variant-desc">Fun analogies, humor, creative</div>
+                </div>
+            </div>
+            <div class="variant-option" onclick="selectVariant('tone', 'serious')">
+                <div class="variant-radio"></div>
+                <div class="variant-info">
+                    <div class="variant-name">📚 Serious</div>
+                    <div class="variant-desc">Factual, professional, academic</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- MODAL: Difficulty Selector (NEW!) -->
+    <div class="modal-overlay" id="modal-difficulty">
+        <div class="modal-content">
+            <div class="modal-header">
+                <span class="modal-title">🎯 Challenge Level</span>
+                <button class="modal-close" onclick="closeModal('difficulty')">×</button>
+            </div>
+            <div class="variant-option selected" onclick="selectDifficulty(2)">
+                <div class="variant-radio"></div>
+                <div class="variant-info">
+                    <div class="variant-name">2 Choices</div>
+                    <div class="variant-desc">Standard — great for focused learning</div>
+                </div>
+            </div>
+            <div class="variant-option" onclick="selectDifficulty(3)">
+                <div class="variant-radio"></div>
+                <div class="variant-info">
+                    <div class="variant-name">3 Choices</div>
+                    <div class="variant-desc">Challenge mode — more nuanced options</div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // State
+        let currentVariants = {
+            age: '13-17',
+            language: 'en',
+            tone: 'curious',
+            difficulty: 2,
+            mode: '2D'
+        };
+
+        // Modal controls
+        function openModal(type) {
+            document.getElementById(`modal-${type}`).classList.add('open');
+        }
+
+        function closeModal(type) {
+            document.getElementById(`modal-${type}`).classList.remove('open');
+        }
+
+        // Click outside to close
+        document.querySelectorAll('.modal-overlay').forEach(modal => {
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) {
+                    modal.classList.remove('open');
+                }
+            });
+        });
+
+        // Variant selection
+        function selectVariant(type, value) {
+            currentVariants[type] = value;
+            console.log(`Variant changed: ${type} = ${value}`);
+            console.log('Current variants:', currentVariants);
+            
+            // Update UI
+            const modal = document.getElementById(`modal-${type}`);
+            modal.querySelectorAll('.variant-option').forEach(opt => opt.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+            
+            // Close modal after short delay
+            setTimeout(() => closeModal(type), 300);
+            
+            // Here you would reload the lesson content with new variant
+            // reloadLessonContent(currentVariants);
+        }
+
+        // Difficulty selection (changes number of choices)
+        function selectDifficulty(numChoices) {
+            currentVariants.difficulty = numChoices;
+            console.log(`Difficulty changed to ${numChoices} choices`);
+            
+            // Update the choices display
+            const container = document.getElementById('choices-container');
+            if (numChoices === 3) {
+                container.innerHTML = `
+                    <button class="choice-btn" onclick="selectChoice(this, 'A')">
+                        <span class="choice-letter">A</span>
+                        <span>Following laws and paying taxes</span>
+                    </button>
+                    <button class="choice-btn" onclick="selectChoice(this, 'B')">
+                        <span class="choice-letter">B</span>
+                        <span>Actively contributing to your community</span>
+                    </button>
+                    <button class="choice-btn" onclick="selectChoice(this, 'C')">
+                        <span class="choice-letter">C</span>
+                        <span>Both following rules AND contributing actively</span>
+                    </button>
+                `;
+            } else {
+                container.innerHTML = `
+                    <button class="choice-btn" onclick="selectChoice(this, 'A')">
+                        <span class="choice-letter">A</span>
+                        <span>Following laws and paying taxes</span>
+                    </button>
+                    <button class="choice-btn" onclick="selectChoice(this, 'B')">
+                        <span class="choice-letter">B</span>
+                        <span>Actively contributing to your community</span>
+                    </button>
+                `;
+            }
+            
+            // Update badge
+            document.querySelector('[onclick="openModal(\'difficulty\')"] .badge').textContent = numChoices;
+            
+            // Update modal selection
+            const modal = document.getElementById('modal-difficulty');
+            modal.querySelectorAll('.variant-option').forEach(opt => opt.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+            
+            setTimeout(() => closeModal('difficulty'), 300);
+        }
+
+        // Choice selection
+        function selectChoice(btn, letter) {
+            document.querySelectorAll('.choice-btn').forEach(b => b.classList.remove('selected'));
+            btn.classList.add('selected');
+            console.log(`Selected choice: ${letter}`);
+            
+            // Auto-advance after delay
+            setTimeout(() => {
+                advancePhase();
+            }, 1000);
+        }
+
+        // Phase advancement
+        function advancePhase() {
+            console.log('Advancing to next phase...');
+            // Implementation would update phase indicator and load next content
+        }
+
+        // 2D/3D Toggle
+        function toggle2D3D() {
+            currentVariants.mode = currentVariants.mode === '2D' ? '3D' : '2D';
+            console.log(`Mode switched to: ${currentVariants.mode}`);
+            alert(`Switched to ${currentVariants.mode} mode!\n\n(In production, this would load Unity or show 2D image)`);
+        }
+
+        // Navigation
+        function openHub() {
+            console.log('Opening Kelly Today Hub...');
+            window.location.href = 'kelly-hub-mockup.html';
+        }
+
+        function openCalendar() {
+            console.log('Opening Calendar...');
+            window.location.href = 'kelly-hub-mockup.html#calendar';
+        }
+    </script>
+</body>
+</html>
+

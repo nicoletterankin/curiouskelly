@@ -26,13 +26,20 @@
         box-sizing: border-box;
       }
 
+      /* P1 FIX: Scroll lockdown - prevent unwanted scrolling */
+      html,
+      body {
+        position: fixed;
+        width: 100%;
+        height: 100%;
+        overflow: hidden;
+      }
+
       body {
         font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
         background-color: var(--bg-color);
         color: var(--text-primary);
-        height: 100vh;
         display: flex;
-        overflow: hidden;
       }
 
       /* Sidebar (Calendar/History) */
@@ -270,6 +277,7 @@
         padding: 20px;
         pointer-events: none; /* Allow clicks to pass through to Kelly */
         z-index: 5;
+        overflow: hidden; /* P1 FIX: Prevent scrolling in lesson overlay */
       }
 
       .lesson-overlay > * {
@@ -992,9 +1000,35 @@
 
       <div class="top-bar">
         <div class="lesson-badge" id="current-lesson-display">Select a lesson</div>
-        <div class="kelly-status-top" id="kelly-status">
-          <span class="status-pulse"></span>
-          <span id="kelly-status-text">Ready</span>
+        <div style="display: flex; align-items: center; gap: 12px">
+          <button
+            id="sound-toggle"
+            onclick="toggleSound()"
+            title="Toggle sound"
+            style="
+              background: rgba(0, 0, 0, 0.6);
+              backdrop-filter: blur(10px);
+              border: 1px solid rgba(255, 255, 255, 0.1);
+              border-radius: 50%;
+              width: 40px;
+              height: 40px;
+              color: var(--text-secondary);
+              font-size: 1.2rem;
+              cursor: pointer;
+              display: flex;
+              align-items: center;
+              justify-content: center;
+              transition: all 0.2s;
+            "
+            onmouseover="this.style.background='rgba(0, 0, 0, 0.8)'; this.style.color='var(--text-primary)'"
+            onmouseout="this.style.background='rgba(0, 0, 0, 0.6)'; this.style.color='var(--text-secondary)'"
+          >
+            <span id="sound-icon">🔊</span>
+          </button>
+          <div class="kelly-status-top" id="kelly-status">
+            <span class="status-pulse"></span>
+            <span id="kelly-status-text">Ready</span>
+          </div>
         </div>
       </div>
 
@@ -1096,6 +1130,11 @@
       </footer>
     </main>
 
+    <!-- Load Kelly modules -->
+    <script src="/js/kelly-2d-avatar.js"></script>
+    <script src="/js/kelly-audio.js"></script>
+    <script src="/js/kelly-avatar-controller.js"></script>
+
     <!-- Supabase & Unity Logic -->
     <script type="module">
       import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
@@ -1115,10 +1154,51 @@
         }
       });
 
+      // ═══════════════════════════════════════════════════════════════
+      // KELLY AUDIO & AVATAR SYSTEM - P0 FIX
+      // ═══════════════════════════════════════════════════════════════
+      let kellyAudio = null;
+      let kelly2DAvatar = null;
+
+      // Initialize Kelly systems after DOM loads
+      function initKellySystems() {
+        // Initialize Kelly Audio (uses API key from config.js if available)
+        kellyAudio = new KellyAudio({
+          elevenLabsApiKey: window.ELEVENLABS_API_KEY || null, // From config.js or environment
+          kellyVoiceId: window.ELEVENLABS_VOICE_ID || 'wAdymQH5YucAkXwmrdL0',
+          onSpeakingStart: () => {
+            if (kelly2DAvatar) kelly2DAvatar.setSpeaking(true);
+          },
+          onSpeakingEnd: () => {
+            if (kelly2DAvatar) kelly2DAvatar.setSpeaking(false);
+          }
+        });
+
+        // Initialize Kelly 2D Avatar
+        const kellyContainer = document.getElementById('kelly-presence');
+        if (kellyContainer && window.Kelly2DAvatar) {
+          kelly2DAvatar = new Kelly2DAvatar(kellyContainer, {
+            imageSet: 'directors-chair',
+            basePath: '/images/kelly/',
+            preload: true,
+            enableBreathing: true
+          });
+        }
+
+        console.log('✅ Kelly systems initialized', {
+          audio: !!kellyAudio,
+          avatar: !!kelly2DAvatar,
+          audioMode: kellyAudio?.hasVoiceEnabled() ? 'VOICE' : 'SILENT'
+        });
+      }
+
       // State
       let currentLesson = null;
       let currentPhase = 'welcome';
       let userProfile = null;
+      let currentLanguage = 'en';
+      let currentAge = '18-35';
+      let currentTone = 'curious';
 
       // --- Auth & Init ---
       async function init() {
@@ -1126,28 +1206,30 @@
           // Check if this is an OAuth callback (tokens in URL hash)
           const hashParams = new URLSearchParams(window.location.hash.substring(1));
           const isOAuthCallback = hashParams.has('access_token') || hashParams.has('error');
-          
+
           let session = null;
-          
+
           if (isOAuthCallback) {
             // OAuth callback - wait for Supabase to process the tokens
             console.log('OAuth callback detected, processing tokens...');
-            
+
             // Give Supabase time to detect and process the URL tokens
-            await new Promise(resolve => setTimeout(resolve, 100));
-            
+            await new Promise((resolve) => setTimeout(resolve, 100));
+
             // Get the session after Supabase has processed the URL
             const { data, error: sessionError } = await supabase.auth.getSession();
             session = data?.session;
-            
+
             // If still no session, wait for auth state change
             if (!session) {
               session = await new Promise((resolve, reject) => {
                 const timeout = setTimeout(() => {
                   resolve(null);
                 }, 5000); // 5 second timeout
-                
-                const { data: { subscription } } = supabase.auth.onAuthStateChange((event, sess) => {
+
+                const {
+                  data: { subscription }
+                } = supabase.auth.onAuthStateChange((event, sess) => {
                   if (event === 'SIGNED_IN' && sess) {
                     clearTimeout(timeout);
                     subscription.unsubscribe();
@@ -1156,7 +1238,7 @@
                 });
               });
             }
-            
+
             // Clean up the URL (remove hash tokens)
             if (session && window.history.replaceState) {
               window.history.replaceState(null, '', window.location.pathname);
@@ -1166,7 +1248,7 @@
             const { data, error: sessionError } = await supabase.auth.getSession();
             session = data?.session;
           }
-          
+
           const isGuest = localStorage.getItem('guestMode') === 'true';
 
           if (!session && !isGuest) {
@@ -1270,6 +1352,9 @@
             };
             sidebar.insertBefore(upgradeMsg, sidebar.firstChild);
           }
+
+          // Initialize Kelly audio & avatar systems
+          initKellySystems();
 
           // Load ALL lessons from Supabase, then load current day's syllabus
           await loadAllLessons();
@@ -1900,6 +1985,7 @@
 
       function setGlobalLanguage(lang) {
         globalSettings.language = lang;
+        currentLanguage = lang; // Update global state
 
         // Update button styles
         document.querySelectorAll('.lang-btn').forEach((btn) => {
@@ -1920,6 +2006,9 @@
         const langSelect = document.getElementById('lang-select');
         if (langSelect) langSelect.value = lang;
 
+        // P0 FIX: Update badges when language changes
+        updateLessonBadges();
+
         // Re-render ALL lesson titles
         renderLessonList();
         updateVariationCount();
@@ -1932,6 +2021,7 @@
         const config = AGE_CONFIG[sliderValue];
         globalSettings.age = config.value;
         globalSettings.ageLabel = config.label;
+        currentAge = config.value; // Update global state
 
         document.getElementById('age-display').textContent = config.range;
         document.getElementById('age-label').textContent = config.label;
@@ -1939,6 +2029,9 @@
         // Sync hidden select
         const ageSelect = document.getElementById('age-select');
         if (ageSelect) ageSelect.value = config.value;
+
+        // P0 FIX: Update badges when age changes
+        updateLessonBadges();
 
         // Re-render to show age-appropriate content
         renderLessonList();
@@ -1950,6 +2043,7 @@
 
       function setGlobalTone(tone) {
         globalSettings.tone = tone;
+        currentTone = tone; // Update global state
 
         // Update button styles
         document.querySelectorAll('.tone-btn').forEach((btn) => {
@@ -1967,6 +2061,9 @@
         // Sync hidden select
         const toneSelect = document.getElementById('tone-select');
         if (toneSelect) toneSelect.value = tone;
+
+        // P0 FIX: Update badges when tone changes
+        updateLessonBadges();
 
         // Re-render with new tone
         renderLessonList();
@@ -1990,6 +2087,20 @@
           setTimeout(() => {
             countEl.style.transform = 'scale(1)';
           }, 300);
+        }
+      }
+
+      // P0 FIX: Update lesson display badges when settings change
+      function updateLessonBadges() {
+        const displayEl = document.getElementById('current-lesson-display');
+        if (displayEl && currentLesson) {
+          // Update with age/language/tone info
+          const ageLabel = globalSettings.ageLabel || 'Adult';
+          const langLabel = globalSettings.language.toUpperCase();
+          const toneLabel =
+            globalSettings.tone.charAt(0).toUpperCase() + globalSettings.tone.slice(1);
+
+          displayEl.textContent = `${currentLesson.title} (${ageLabel}, ${langLabel}, ${toneLabel})`;
         }
       }
 
@@ -2596,7 +2707,7 @@
         }
       }
 
-      function speakKelly(text) {
+      async function speakKelly(text, options = {}) {
         const speechContent = document.getElementById('speech-content');
         const speechIndicator = document.getElementById('speech-indicator');
 
@@ -2604,17 +2715,34 @@
         speechIndicator.classList.add('active');
         speechContent.textContent = '';
 
+        // Update Kelly avatar to speaking state
+        if (kelly2DAvatar) {
+          kelly2DAvatar.setSpeaking(true);
+        }
+
+        // Update status
+        document.getElementById('kelly-status-text').textContent = 'Kelly is speaking...';
+
+        // ═══════════════════════════════════════════════════════════
+        // KELLY AUDIO SYSTEM - P0 FIX: Now uses KellyAudio class
+        // ═══════════════════════════════════════════════════════════
+        if (kellyAudio) {
+          await kellyAudio.speak(text, {
+            language: currentLanguage,
+            ...options
+          });
+        }
+
         // ═══════════════════════════════════════════════════════════
         // UNITY LIP-SYNC HOOK - Triggers when Kelly speaks
         // When Unity is ready, call: unityInstance.SendMessage('Kelly', 'SpeakText', text)
         // ═══════════════════════════════════════════════════════════
         triggerUnityLipSync(text);
 
-        // Simulate typing effect
+        // Typewriter effect for text display
         setTimeout(() => {
           speechIndicator.classList.remove('active');
 
-          // Typewriter effect
           let i = 0;
           const typeInterval = setInterval(() => {
             if (i < text.length) {
@@ -2626,11 +2754,13 @@
           }, 20);
         }, 500);
 
-        // Update status
-        document.getElementById('kelly-status-text').textContent = 'Kelly is speaking...';
+        // Update status after speaking
         setTimeout(
           () => {
             document.getElementById('kelly-status-text').textContent = 'Kelly is listening';
+            if (kelly2DAvatar) {
+              kelly2DAvatar.setSpeaking(false);
+            }
           },
           text.length * 20 + 1000
         );
@@ -2916,11 +3046,26 @@
         document.getElementById('sidebar').classList.toggle('open');
       };
 
-      // Expose global personalization functions
+      // P1 FIX: Sound toggle function
+      function toggleSound() {
+        if (kellyAudio) {
+          const isMuted = kellyAudio.toggleMute();
+          const icon = document.getElementById('sound-icon');
+          if (icon) {
+            icon.textContent = isMuted ? '🔇' : '🔊';
+          }
+          console.log(`🔊 Sound ${isMuted ? 'muted' : 'unmuted'}`);
+        } else {
+          console.warn('⚠️ Kelly Audio system not initialized');
+        }
+      }
+
+      // Expose global functions
       window.setGlobalLanguage = setGlobalLanguage;
       window.setGlobalAge = setGlobalAge;
       window.setGlobalTone = setGlobalTone;
       window.setView = setView;
+      window.toggleSound = toggleSound;
 
       // OpenAI Connection (Future Feature)
       window.connectOpenAI = function () {
@@ -2949,9 +3094,9 @@
       // Kelly image is ALWAYS visible - Unity is bonus when it works
       var canvas = document.querySelector('#unity-canvas');
 
-      // TEMPORARILY DISABLED: R2 needs Content-Encoding headers for .br files
-      // TODO: Set up Cloudflare Transform Rules or use uncompressed files
-      var UNITY_ENABLED = false; // Set to true once R2 headers are configured
+      // ✅ ENABLED: Unity 3D mode active
+      // R2 headers configured - Unity WebGL build loads from Cloudflare R2
+      var UNITY_ENABLED = true; // 3D Kelly avatar enabled
 
       if (!UNITY_ENABLED) {
         console.log('✅ Kelly image mode (3D avatar coming soon)');

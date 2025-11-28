@@ -4,10 +4,10 @@
 window.SUPABASE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co';
 window.SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI';
 
-window.ELEVENLABS_API_KEY = ''; // Will be set from environment  
-window.ELEVENLABS_VOICE_ID = ''; // Kelly's voice ID
+window.ELEVENLABS_API_KEY = '07d84a4eff939557aa7004434fac83f2f05bfe17615d9c31641ec99cd512de03'; // Will be set from environment  
+window.ELEVENLABS_VOICE_ID = 'wAdymQH5YucAkXwmrdL0'; // Kelly's voice ID
 
-window.STRIPE_PUBLISHABLE_KEY = ''; // For checkout
+window.STRIPE_PUBLISHABLE_KEY = 'pk_live_51SXAYMEs6ql8qYcKCMClObrDq0eFVaKrhlEypQEVQHbFBfVloknFTitYLHn6TTWjPwMqWZfGT66iGycNiLLqnPQp004efrYmjm'; // For checkout
 
 // Feature flags
 window.FEATURES = {

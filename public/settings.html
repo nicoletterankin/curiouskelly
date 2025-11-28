@@ -1,0 +1,379 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#0a0a0b" />
+    <title>Settings — Curious Kelly</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Config -->
+    <script src="/config.js"></script>
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <style>
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      :root {
+        --bg: #0a0a0b;
+        --bg-elevated: #1a1a1b;
+        --text: #ffffff;
+        --text-secondary: rgba(255, 255, 255, 0.7);
+        --text-muted: rgba(255, 255, 255, 0.5);
+        --border: rgba(255, 255, 255, 0.1);
+        --accent: #3b82f6;
+        --safe-bottom: env(safe-area-inset-bottom, 20px);
+        --safe-top: env(safe-area-inset-top, 44px);
+      }
+
+      html,
+      body {
+        height: 100%;
+        width: 100%;
+        background: var(--bg);
+        font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        color: var(--text);
+        overflow-x: hidden;
+      }
+
+      /* Container */
+      .settings-container {
+        min-height: 100vh;
+        padding: calc(var(--safe-top) + 20px) 20px calc(var(--safe-bottom) + 80px);
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      /* Header */
+      .settings-header {
+        margin-bottom: 32px;
+      }
+
+      .settings-title {
+        font-size: 32px;
+        font-weight: 700;
+        margin-bottom: 8px;
+      }
+
+      .settings-subtitle {
+        font-size: 16px;
+        color: var(--text-secondary);
+      }
+
+      /* Section */
+      .settings-section {
+        margin-bottom: 32px;
+      }
+
+      .section-title {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--text-muted);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-bottom: 12px;
+      }
+
+      .settings-card {
+        background: var(--bg-elevated);
+        border-radius: 16px;
+        border: 1px solid var(--border);
+        overflow: hidden;
+      }
+
+      /* Setting Item */
+      .setting-item {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid var(--border);
+        cursor: pointer;
+        transition: background 0.2s ease;
+      }
+
+      .setting-item:last-child {
+        border-bottom: none;
+      }
+
+      .setting-item:active {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .setting-info {
+        flex: 1;
+      }
+
+      .setting-label {
+        font-size: 16px;
+        font-weight: 500;
+        margin-bottom: 4px;
+      }
+
+      .setting-desc {
+        font-size: 14px;
+        color: var(--text-secondary);
+      }
+
+      .setting-value {
+        font-size: 16px;
+        color: var(--text-secondary);
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .setting-icon {
+        font-size: 20px;
+      }
+
+      /* Bottom Nav */
+      .bottom-nav {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(10, 10, 11, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-top: 1px solid var(--border);
+        padding: 8px 0 calc(var(--safe-bottom) + 8px);
+        z-index: 100;
+      }
+
+      .nav-items {
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+
+      .nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        padding: 8px 16px;
+        text-decoration: none;
+        color: var(--text-muted);
+        transition: color 0.2s ease;
+      }
+
+      .nav-item.active {
+        color: var(--accent);
+      }
+
+      .nav-icon {
+        font-size: 24px;
+      }
+
+      .nav-label {
+        font-size: 12px;
+        font-weight: 500;
+      }
+
+      /* Version Badge */
+      .version-badge {
+        display: inline-block;
+        padding: 4px 12px;
+        background: rgba(59, 130, 246, 0.2);
+        border-radius: 12px;
+        font-size: 12px;
+        font-weight: 600;
+        color: var(--accent);
+      }
+    </style>
+  </head>
+  <body>
+    <div class="settings-container">
+      <!-- Header -->
+      <div class="settings-header">
+        <h1 class="settings-title">Settings</h1>
+        <p class="settings-subtitle">Customize your learning experience</p>
+      </div>
+
+      <!-- Learning Preferences -->
+      <div class="settings-section">
+        <div class="section-title">Learning Preferences</div>
+        <div class="settings-card">
+          <div class="setting-item" onclick="window.location.href='/learn.html'">
+            <div class="setting-info">
+              <div class="setting-label">Age Group</div>
+              <div class="setting-desc">Adjust content complexity</div>
+            </div>
+            <div class="setting-value">
+              <span id="age-value">18-35</span>
+              <span>›</span>
+            </div>
+          </div>
+
+          <div class="setting-item" onclick="window.location.href='/learn.html'">
+            <div class="setting-info">
+              <div class="setting-label">Language</div>
+              <div class="setting-desc">Choose your learning language</div>
+            </div>
+            <div class="setting-value">
+              <span id="language-value">English</span>
+              <span>›</span>
+            </div>
+          </div>
+
+          <div class="setting-item" onclick="window.location.href='/learn.html'">
+            <div class="setting-info">
+              <div class="setting-label">Tone</div>
+              <div class="setting-desc">Kelly's teaching style</div>
+            </div>
+            <div class="setting-value">
+              <span id="tone-value">Curious</span>
+              <span>›</span>
+            </div>
+          </div>
+
+          <div class="setting-item" onclick="window.location.href='/learn.html'">
+            <div class="setting-info">
+              <div class="setting-label">Difficulty</div>
+              <div class="setting-desc">Number of choices per question</div>
+            </div>
+            <div class="setting-value">
+              <span id="difficulty-value">2 choices</span>
+              <span>›</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account -->
+      <div class="settings-section">
+        <div class="section-title">Account</div>
+        <div class="settings-card">
+          <div class="setting-item" onclick="alert('Coming soon!')">
+            <div class="setting-info">
+              <div class="setting-label">Profile</div>
+              <div class="setting-desc">Manage your account</div>
+            </div>
+            <div class="setting-value">
+              <span>›</span>
+            </div>
+          </div>
+
+          <div class="setting-item" onclick="window.location.href='/pricing.html'">
+            <div class="setting-info">
+              <div class="setting-label">Subscription</div>
+              <div class="setting-desc">Manage your plan</div>
+            </div>
+            <div class="setting-value">
+              <span>›</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- About -->
+      <div class="settings-section">
+        <div class="section-title">About</div>
+        <div class="settings-card">
+          <div class="setting-item">
+            <div class="setting-info">
+              <div class="setting-label">Version</div>
+              <div class="setting-desc">Current app version</div>
+            </div>
+            <div class="setting-value">
+              <span class="version-badge">1.0.0</span>
+            </div>
+          </div>
+
+          <div class="setting-item" onclick="window.location.href='/privacy.html'">
+            <div class="setting-info">
+              <div class="setting-label">Privacy Policy</div>
+            </div>
+            <div class="setting-value">
+              <span>›</span>
+            </div>
+          </div>
+
+          <div class="setting-item" onclick="window.location.href='/terms.html'">
+            <div class="setting-info">
+              <div class="setting-label">Terms of Service</div>
+            </div>
+            <div class="setting-value">
+              <span>›</span>
+            </div>
+          </div>
+
+          <div class="setting-item" onclick="window.location.href='/about.html'">
+            <div class="setting-info">
+              <div class="setting-label">About Curious Kelly</div>
+            </div>
+            <div class="setting-value">
+              <span>›</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Bottom Navigation -->
+    <nav class="bottom-nav">
+      <div class="nav-items">
+        <a href="/hub.html" class="nav-item">
+          <span class="nav-icon">🏠</span>
+          <span class="nav-label">Home</span>
+        </a>
+        <a href="/learn.html" class="nav-item">
+          <span class="nav-icon">📚</span>
+          <span class="nav-label">Learn</span>
+        </a>
+        <a href="/calendar.html" class="nav-item">
+          <span class="nav-icon">📅</span>
+          <span class="nav-label">Calendar</span>
+        </a>
+        <a href="/settings.html" class="nav-item active">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-label">Settings</span>
+        </a>
+      </div>
+    </nav>
+
+    <script>
+      // Load user preferences from localStorage
+      const age = localStorage.getItem('kelly_age') || '18-35';
+      const language = localStorage.getItem('kelly_language') || 'en';
+      const tone = localStorage.getItem('kelly_tone') || 'curious';
+      const difficulty = localStorage.getItem('kelly_difficulty') || '2';
+
+      // Display current values
+      document.getElementById('age-value').textContent = age;
+
+      const languageMap = { en: 'English', es: 'Español', fr: 'Français' };
+      document.getElementById('language-value').textContent = languageMap[language] || 'English';
+
+      const toneMap = { curious: 'Curious', playful: 'Playful', serious: 'Serious' };
+      document.getElementById('tone-value').textContent = toneMap[tone] || 'Curious';
+
+      document.getElementById('difficulty-value').textContent = `${difficulty} choices`;
+
+      console.log('[Settings] Loaded user preferences');
+    </script>
+  </body>
+</html>
+

@@ -1,0 +1,2069 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover"
+    />
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <meta name="theme-color" content="#0a0a0b" />
+    <title>Learn with Kelly — Curious Kelly</title>
+
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:wght@400;500;600&display=swap"
+      rel="stylesheet"
+    />
+
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- Avatar System -->
+    <script src="/js/kelly-2d-avatar.js"></script>
+    <script src="/js/unity-kelly-loader.js"></script>
+    <script src="/js/kelly-avatar-controller.js"></script>
+
+    <!-- Golden Lesson Data -->
+    <script src="/js/golden-lesson-citizenship.js"></script>
+
+    <!-- Audio & Interaction System -->
+    <script src="/js/kelly-audio.js"></script>
+
+    <style>
+      /* ═══════════════════════════════════════════════════════════════════
+           TIKTOK-STYLE LESSON PLAYER
+           Designed to match TikTok's exact proportions and interactions
+           ═══════════════════════════════════════════════════════════════════ */
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      :root {
+        --tiktok-bg: #000;
+        --tiktok-text: #fff;
+        --tiktok-text-secondary: rgba(255, 255, 255, 0.75);
+        --tiktok-text-muted: rgba(255, 255, 255, 0.5);
+        --tiktok-accent: #fe2c55;
+        --tiktok-blue: #25f4ee;
+        --tiktok-glass: rgba(0, 0, 0, 0.5);
+
+        /* TikTok sizes */
+        --action-btn-size: 48px;
+        --action-icon-size: 28px;
+        --action-gap: 20px;
+        --safe-bottom: env(safe-area-inset-bottom, 20px);
+        --safe-top: env(safe-area-inset-top, 44px);
+      }
+
+      html,
+      body {
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        background: var(--tiktok-bg);
+        font-family:
+          'DM Sans',
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
+        color: var(--tiktok-text);
+        touch-action: none;
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════
+           MAIN CONTAINER - Full screen lesson "video"
+           ═══════════════════════════════════════════════════════════════════ */
+      .lesson-container {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        background: var(--tiktok-bg);
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════
+           KELLY FRAME - Full-bleed avatar (like TikTok video)
+           ═══════════════════════════════════════════════════════════════════ */
+      .kelly-frame {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+      }
+
+      .kelly-avatar-container {
+        width: 100%;
+        height: 100%;
+        position: relative;
+      }
+
+      .kelly-avatar-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 20%;
+      }
+
+      /* Pause overlay (shows when tapped) */
+      .pause-indicator {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        width: 100px;
+        height: 100px;
+        background: var(--tiktok-glass);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+        opacity: 0;
+        transition: all 0.2s ease;
+        pointer-events: none;
+      }
+
+      .pause-indicator.show {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════
+           TOP BAR - Day counter & progress (like TikTok's Following|For You)
+           ═══════════════════════════════════════════════════════════════════ */
+      .top-bar {
+        position: absolute;
+        top: var(--safe-top);
+        left: 0;
+        right: 0;
+        padding: 0 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 100;
+      }
+
+      .day-badge {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--tiktok-glass);
+        backdrop-filter: blur(12px);
+        padding: 8px 16px;
+        border-radius: 20px;
+      }
+
+      .day-number {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--tiktok-text);
+      }
+
+      .day-progress {
+        font-size: 12px;
+        color: var(--tiktok-text-muted);
+      }
+
+      /* Phase dots (compact) */
+      .phase-dots {
+        display: flex;
+        gap: 6px;
+        background: var(--tiktok-glass);
+        backdrop-filter: blur(12px);
+        padding: 8px 12px;
+        border-radius: 16px;
+      }
+
+      .phase-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: var(--tiktok-text-muted);
+        transition: all 0.3s ease;
+      }
+
+      .phase-dot.active {
+        background: var(--tiktok-blue);
+        box-shadow: 0 0 8px var(--tiktok-blue);
+      }
+
+      .phase-dot.completed {
+        background: var(--tiktok-text);
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════
+           RIGHT SIDE ACTIONS - TikTok-style stacked buttons
+           ═══════════════════════════════════════════════════════════════════ */
+      .action-buttons {
+        position: absolute;
+        right: 12px;
+        bottom: calc(180px + var(--safe-bottom));
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--action-gap);
+        z-index: 100;
+      }
+
+      .action-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .action-btn .icon-wrap {
+        width: var(--action-btn-size);
+        height: var(--action-btn-size);
+        border-radius: 50%;
+        background: var(--tiktok-glass);
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: var(--action-icon-size);
+        transition: all 0.2s ease;
+      }
+
+      .action-btn:active .icon-wrap {
+        transform: scale(0.9);
+      }
+
+      .action-btn .label {
+        font-size: 10px;
+        color: var(--tiktok-text);
+        font-weight: 500;
+      }
+
+      .action-btn .badge {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        min-width: 18px;
+        height: 18px;
+        background: var(--tiktok-accent);
+        border-radius: 9px;
+        font-size: 10px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 4px;
+      }
+
+      .action-btn .icon-wrap {
+        position: relative;
+      }
+
+      /* Sound button at bottom (like TikTok's spinning disc) */
+      .sound-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--tiktok-glass);
+        backdrop-filter: blur(8px);
+        border: 2px solid var(--tiktok-text-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        animation: spin 3s linear infinite;
+        animation-play-state: running;
+      }
+
+      .sound-btn.muted {
+        animation-play-state: paused;
+        opacity: 0.5;
+      }
+
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════
+           BOTTOM OVERLAY - Topic, speech, choices (like TikTok caption area)
+           ═══════════════════════════════════════════════════════════════════ */
+      .bottom-overlay {
+        position: absolute;
+        left: 0;
+        right: 70px; /* Space for action buttons */
+        bottom: calc(60px + var(--safe-bottom));
+        padding: 0 16px;
+        z-index: 90;
+      }
+
+      /* Topic header (like @username) */
+      .topic-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .topic-emoji {
+        font-size: 24px;
+      }
+
+      .topic-name {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--tiktok-text);
+      }
+
+      .topic-tag {
+        font-size: 12px;
+        color: var(--tiktok-blue);
+        font-weight: 600;
+      }
+
+      /* Speech bubble (Kelly's text) */
+      .speech-bubble {
+        background: var(--tiktok-glass);
+        backdrop-filter: blur(12px);
+        border-radius: 16px;
+        padding: 16px;
+        margin-bottom: 12px;
+        max-height: 150px;
+        overflow-y: auto;
+      }
+
+      .speech-text {
+        font-size: 15px;
+        line-height: 1.5;
+        color: var(--tiktok-text);
+      }
+
+      .speech-hint {
+        font-size: 13px;
+        color: var(--tiktok-text-muted);
+        margin-top: 8px;
+        font-style: italic;
+      }
+
+      /* Choice buttons */
+      .choices {
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .choice-btn {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        background: var(--tiktok-glass);
+        backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 12px;
+        padding: 12px 16px;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        text-align: left;
+      }
+
+      .choice-btn:active {
+        transform: scale(0.98);
+      }
+
+      .choice-btn.selected {
+        background: var(--tiktok-accent);
+        border-color: var(--tiktok-accent);
+      }
+
+      .choice-btn.disabled {
+        opacity: 0.5;
+        pointer-events: none;
+      }
+
+      .choice-letter {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+
+      .choice-text {
+        font-size: 14px;
+        color: var(--tiktok-text);
+        flex: 1;
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════
+           BOTTOM NAV - Minimal like TikTok
+           ═══════════════════════════════════════════════════════════════════ */
+      .bottom-nav {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: calc(50px + var(--safe-bottom));
+        padding-bottom: var(--safe-bottom);
+        background: var(--tiktok-bg);
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        z-index: 200;
+      }
+
+      .nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        color: var(--tiktok-text-muted);
+        text-decoration: none;
+        padding: 8px 16px;
+        transition: color 0.2s;
+      }
+
+      .nav-item.active {
+        color: var(--tiktok-text);
+      }
+
+      .nav-icon {
+        font-size: 24px;
+      }
+
+      .nav-label {
+        font-size: 10px;
+        font-weight: 500;
+      }
+
+      /* Learn button (center, highlighted like TikTok's + button) */
+      .nav-item.learn {
+        position: relative;
+      }
+
+      .nav-item.learn .nav-icon {
+        width: 44px;
+        height: 28px;
+        background: linear-gradient(90deg, var(--tiktok-blue), var(--tiktok-accent));
+        border-radius: 8px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--tiktok-text);
+        font-size: 18px;
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════
+           SWIPE INDICATORS
+           ═══════════════════════════════════════════════════════════════════ */
+      .swipe-indicator {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 8px 20px;
+        background: var(--tiktok-glass);
+        backdrop-filter: blur(12px);
+        border-radius: 20px;
+        font-size: 14px;
+        color: var(--tiktok-text);
+        z-index: 150;
+        opacity: 0;
+        transition: all 0.3s ease;
+        pointer-events: none;
+      }
+
+      .swipe-indicator.top {
+        top: calc(var(--safe-top) + 60px);
+      }
+
+      .swipe-indicator.bottom {
+        bottom: calc(250px + var(--safe-bottom));
+      }
+
+      .swipe-indicator.show {
+        opacity: 1;
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════
+           MODALS (same styling)
+           ═══════════════════════════════════════════════════════════════════ */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        z-index: 500;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+
+      .modal-overlay.open {
+        opacity: 1;
+        pointer-events: all;
+      }
+
+      .modal-content {
+        width: 100%;
+        max-width: 500px;
+        max-height: 70vh;
+        background: #1a1a1a;
+        border-radius: 20px 20px 0 0;
+        padding: 20px;
+        transform: translateY(100%);
+        transition: transform 0.3s ease;
+        overflow-y: auto;
+      }
+
+      .modal-overlay.open .modal-content {
+        transform: translateY(0);
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .modal-title {
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .modal-close {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: var(--tiktok-text);
+        font-size: 20px;
+        cursor: pointer;
+      }
+
+      .variant-option {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .variant-option:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .variant-option.selected {
+        background: rgba(37, 244, 238, 0.15);
+        border: 1px solid var(--tiktok-blue);
+      }
+
+      .variant-radio {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 2px solid var(--tiktok-text-muted);
+      }
+
+      .variant-option.selected .variant-radio {
+        border-color: var(--tiktok-blue);
+        background: var(--tiktok-blue);
+      }
+
+      .variant-name {
+        font-weight: 600;
+      }
+
+      .variant-desc {
+        font-size: 13px;
+        color: var(--tiktok-text-muted);
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════
+           HEART ANIMATION (Double tap)
+           ═══════════════════════════════════════════════════════════════════ */
+      @keyframes heart-burst {
+        0% {
+          transform: translate(-50%, -50%) scale(0);
+          opacity: 1;
+        }
+        50% {
+          transform: translate(-50%, -50%) scale(1.2);
+        }
+        100% {
+          transform: translate(-50%, -100%) scale(1);
+          opacity: 0;
+        }
+      }
+
+      .heart-animation {
+        position: fixed;
+        font-size: 80px;
+        pointer-events: none;
+        z-index: 9999;
+        animation: heart-burst 0.8s ease-out forwards;
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════
+           TOAST NOTIFICATIONS
+           ═══════════════════════════════════════════════════════════════════ */
+      .toast-container {
+        position: fixed;
+        top: calc(var(--safe-top) + 80px);
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .toast {
+        background: var(--tiktok-glass);
+        backdrop-filter: blur(12px);
+        padding: 12px 24px;
+        border-radius: 20px;
+        font-size: 14px;
+        animation: toast-in 0.3s ease;
+      }
+
+      .toast.hiding {
+        animation: toast-out 0.3s ease forwards;
+      }
+
+      @keyframes toast-in {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes toast-out {
+        from {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        to {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════
+           POPOVER MENUS (replaces bottom sheet modals for side controls)
+           ═══════════════════════════════════════════════════════════════════ */
+
+      .popover-overlay {
+        position: fixed;
+        inset: 0;
+        background: transparent;
+        z-index: 9998;
+        display: none;
+      }
+
+      .popover-overlay.active {
+        display: block;
+      }
+
+      .popover {
+        position: fixed;
+        background: rgba(30, 30, 35, 0.98);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 16px;
+        padding: 8px;
+        box-shadow:
+          0 8px 32px rgba(0, 0, 0, 0.4),
+          0 0 0 1px rgba(255, 255, 255, 0.1);
+        z-index: 9999;
+        min-width: 200px;
+        max-width: 280px;
+        opacity: 0;
+        transform: scale(0.9);
+        transition:
+          opacity 0.2s ease,
+          transform 0.2s ease;
+        pointer-events: none;
+      }
+
+      .popover.active {
+        opacity: 1;
+        transform: scale(1);
+        pointer-events: all;
+      }
+
+      /* Arrow pointing to button */
+      .popover-arrow {
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        background: rgba(30, 30, 35, 0.98);
+        transform: rotate(45deg);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        z-index: -1;
+      }
+
+      /* Arrow positions based on popover placement */
+      .popover[data-placement='left'] .popover-arrow {
+        right: -8px;
+        top: 50%;
+        margin-top: -8px;
+        border-left: none;
+        border-bottom: none;
+      }
+
+      .popover[data-placement='right'] .popover-arrow {
+        left: -8px;
+        top: 50%;
+        margin-top: -8px;
+        border-right: none;
+        border-top: none;
+      }
+
+      .popover[data-placement='top'] .popover-arrow {
+        bottom: -8px;
+        left: 50%;
+        margin-left: -8px;
+        border-top: none;
+        border-right: none;
+      }
+
+      .popover[data-placement='bottom'] .popover-arrow {
+        top: -8px;
+        left: 50%;
+        margin-left: -8px;
+        border-bottom: none;
+        border-left: none;
+      }
+
+      /* Popover header */
+      .popover-header {
+        padding: 12px 16px 8px;
+        font-size: 13px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.6);
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+      }
+
+      /* Popover options */
+      .popover-option {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 12px 16px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: background 0.2s ease;
+        user-select: none;
+      }
+
+      .popover-option:hover {
+        background: rgba(255, 255, 255, 0.08);
+      }
+
+      .popover-option.selected {
+        background: rgba(59, 130, 246, 0.2);
+      }
+
+      .popover-option-icon {
+        font-size: 20px;
+        width: 24px;
+        text-align: center;
+      }
+
+      .popover-option-info {
+        flex: 1;
+      }
+
+      .popover-option-name {
+        font-size: 15px;
+        font-weight: 500;
+        color: #fff;
+        margin-bottom: 2px;
+      }
+
+      .popover-option-desc {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.5);
+      }
+
+      .popover-option-check {
+        font-size: 18px;
+        color: #3b82f6;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+
+      .popover-option.selected .popover-option-check {
+        opacity: 1;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="lesson-container" id="lesson-container">
+      <!-- KELLY FRAME (Full-bleed) -->
+      <div class="kelly-frame" id="kelly-frame">
+        <div class="kelly-avatar-container" id="kelly-avatar-container">
+          <img
+            src="/images/kelly/kelly-directors-chair-explaining.png"
+            alt="Kelly"
+            id="kelly-avatar"
+            style="width: 100%; height: 100%; object-fit: cover; object-position: center 20%"
+          />
+        </div>
+        <div class="pause-indicator" id="pause-indicator">⏸️</div>
+      </div>
+
+      <!-- TOP BAR -->
+      <div class="top-bar">
+        <div class="day-badge">
+          <span class="day-number" id="day-display">Day 333</span>
+          <span class="day-progress">of 365</span>
+        </div>
+        <div class="phase-dots" id="phase-dots">
+          <div class="phase-dot active" data-phase="1"></div>
+          <div class="phase-dot" data-phase="2"></div>
+          <div class="phase-dot" data-phase="3"></div>
+          <div class="phase-dot" data-phase="4"></div>
+          <div class="phase-dot" data-phase="5"></div>
+        </div>
+      </div>
+
+      <!-- RIGHT SIDE ACTION BUTTONS (TikTok-style) -->
+      <div class="action-buttons">
+        <button class="action-btn" id="btn-age" aria-label="Age variant">
+          <div class="icon-wrap">
+            🎂
+            <span class="badge" id="badge-age">18</span>
+          </div>
+          <span class="label">Age</span>
+        </button>
+
+        <button class="action-btn" id="btn-language" aria-label="Language">
+          <div class="icon-wrap">
+            🌍
+            <span class="badge" id="badge-language">EN</span>
+          </div>
+          <span class="label">Lang</span>
+        </button>
+
+        <button class="action-btn" id="btn-tone" aria-label="Tone">
+          <div class="icon-wrap">
+            🎭
+            <span class="badge" id="badge-tone">C</span>
+          </div>
+          <span class="label">Tone</span>
+        </button>
+
+        <button class="action-btn" id="btn-mode" aria-label="Avatar Mode">
+          <div class="icon-wrap">
+            🎬
+            <span class="badge" id="badge-mode">2D</span>
+          </div>
+          <span class="label">Mode</span>
+        </button>
+
+        <button class="action-btn" id="btn-difficulty" aria-label="Difficulty">
+          <div class="icon-wrap">
+            🎯
+            <span class="badge" id="badge-difficulty">2</span>
+          </div>
+          <span class="label">Level</span>
+        </button>
+
+        <button class="action-btn" id="btn-share" aria-label="Share">
+          <div class="icon-wrap">↗️</div>
+          <span class="label">Share</span>
+        </button>
+
+        <button class="sound-btn" id="btn-sound" aria-label="Sound">🔊</button>
+      </div>
+
+      <!-- BOTTOM OVERLAY (Topic + Speech + Choices) -->
+      <div class="bottom-overlay" id="bottom-overlay">
+        <div class="topic-header">
+          <span class="topic-emoji" id="topic-emoji">🏛️</span>
+          <span class="topic-name" id="topic-name">Citizenship</span>
+          <span class="topic-tag">#DailyLesson</span>
+        </div>
+
+        <div class="speech-bubble" id="speech-bubble">
+          <p class="speech-text" id="speech-text">Loading...</p>
+          <p class="speech-hint" id="speech-hint"></p>
+        </div>
+
+        <div class="choices" id="choices-container"></div>
+      </div>
+
+      <!-- SWIPE INDICATORS -->
+      <div class="swipe-indicator top" id="swipe-up-indicator">
+        ↑ Day <span id="next-day">334</span>
+      </div>
+      <div class="swipe-indicator bottom" id="swipe-down-indicator">
+        ↓ Day <span id="prev-day">332</span>
+      </div>
+
+      <!-- BOTTOM NAV -->
+      <nav class="bottom-nav">
+        <a href="/hub.html" class="nav-item">
+          <span class="nav-icon">🏠</span>
+          <span class="nav-label">Home</span>
+        </a>
+        <a href="/hub.html#calendar" class="nav-item">
+          <span class="nav-icon">📅</span>
+          <span class="nav-label">Calendar</span>
+        </a>
+        <a href="/learn.html" class="nav-item learn active">
+          <span class="nav-icon">📚</span>
+          <span class="nav-label">Learn</span>
+        </a>
+        <a href="/profile.html" class="nav-item">
+          <span class="nav-icon">👤</span>
+          <span class="nav-label">Me</span>
+        </a>
+        <a href="/settings.html" class="nav-item">
+          <span class="nav-icon">⚙️</span>
+          <span class="nav-label">Settings</span>
+        </a>
+      </nav>
+    </div>
+
+    <!-- POPOVERS (for side control buttons) -->
+    <!-- Popover Overlay (dismisses on click) -->
+    <div class="popover-overlay" id="popover-overlay"></div>
+
+    <!-- Age Popover -->
+    <div class="popover" id="popover-age" data-placement="left">
+      <div class="popover-arrow"></div>
+      <div class="popover-header">Age Group</div>
+      <div class="popover-option" data-age="2-5">
+        <span class="popover-option-icon">👶</span>
+        <div class="popover-option-info">
+          <div class="popover-option-name">2-5 years</div>
+          <div class="popover-option-desc">Simple & playful</div>
+        </div>
+        <span class="popover-option-check">✓</span>
+      </div>
+      <div class="popover-option" data-age="6-12">
+        <span class="popover-option-icon">🧒</span>
+        <div class="popover-option-info">
+          <div class="popover-option-name">6-12 years</div>
+          <div class="popover-option-desc">Curious explorer</div>
+        </div>
+        <span class="popover-option-check">✓</span>
+      </div>
+      <div class="popover-option" data-age="13-17">
+        <span class="popover-option-icon">🎓</span>
+        <div class="popover-option-info">
+          <div class="popover-option-name">13-17 years</div>
+          <div class="popover-option-desc">Teen perspective</div>
+        </div>
+        <span class="popover-option-check">✓</span>
+      </div>
+      <div class="popover-option selected" data-age="18-35">
+        <span class="popover-option-icon">💼</span>
+        <div class="popover-option-info">
+          <div class="popover-option-name">18-35 years</div>
+          <div class="popover-option-desc">Young professional</div>
+        </div>
+        <span class="popover-option-check">✓</span>
+      </div>
+      <div class="popover-option" data-age="36-60">
+        <span class="popover-option-icon">👨‍👩‍👧</span>
+        <div class="popover-option-info">
+          <div class="popover-option-name">36-60 years</div>
+          <div class="popover-option-desc">Family focused</div>
+        </div>
+        <span class="popover-option-check">✓</span>
+      </div>
+      <div class="popover-option" data-age="61+">
+        <span class="popover-option-icon">🧓</span>
+        <div class="popover-option-info">
+          <div class="popover-option-name">61+ years</div>
+          <div class="popover-option-desc">Wisdom & legacy</div>
+        </div>
+        <span class="popover-option-check">✓</span>
+      </div>
+    </div>
+
+    <!-- Language Popover -->
+    <div class="popover" id="popover-language" data-placement="left">
+      <div class="popover-arrow"></div>
+      <div class="popover-header">Language</div>
+      <div class="popover-option selected" data-language="en">
+        <span class="popover-option-icon">🇺🇸</span>
+        <div class="popover-option-info">
+          <div class="popover-option-name">English</div>
+        </div>
+        <span class="popover-option-check">✓</span>
+      </div>
+      <div class="popover-option" data-language="es">
+        <span class="popover-option-icon">🇪🇸</span>
+        <div class="popover-option-info">
+          <div class="popover-option-name">Español</div>
+        </div>
+        <span class="popover-option-check">✓</span>
+      </div>
+      <div class="popover-option" data-language="fr">
+        <span class="popover-option-icon">🇫🇷</span>
+        <div class="popover-option-info">
+          <div class="popover-option-name">Français</div>
+        </div>
+        <span class="popover-option-check">✓</span>
+      </div>
+    </div>
+
+    <!-- Tone Popover -->
+    <div class="popover" id="popover-tone" data-placement="left">
+      <div class="popover-arrow"></div>
+      <div class="popover-header">Tone</div>
+      <div class="popover-option selected" data-tone="curious">
+        <span class="popover-option-icon">🔍</span>
+        <div class="popover-option-info">
+          <div class="popover-option-name">Curious</div>
+          <div class="popover-option-desc">Thoughtful & wisdom-seeking</div>
+        </div>
+        <span class="popover-option-check">✓</span>
+      </div>
+      <div class="popover-option" data-tone="playful">
+        <span class="popover-option-icon">🎮</span>
+        <div class="popover-option-info">
+          <div class="popover-option-name">Playful</div>
+          <div class="popover-option-desc">Fun & lighthearted</div>
+        </div>
+        <span class="popover-option-check">✓</span>
+      </div>
+      <div class="popover-option" data-tone="serious">
+        <span class="popover-option-icon">📚</span>
+        <div class="popover-option-info">
+          <div class="popover-option-name">Serious</div>
+          <div class="popover-option-desc">Structured & focused</div>
+        </div>
+        <span class="popover-option-check">✓</span>
+      </div>
+    </div>
+
+    <!-- Difficulty Popover -->
+    <div class="popover" id="popover-difficulty" data-placement="left">
+      <div class="popover-arrow"></div>
+      <div class="popover-header">Difficulty</div>
+      <div class="popover-option" data-difficulty="1">
+        <span class="popover-option-icon">⭐</span>
+        <div class="popover-option-info">
+          <div class="popover-option-name">Simple</div>
+          <div class="popover-option-desc">1 choice - guided learning</div>
+        </div>
+        <span class="popover-option-check">✓</span>
+      </div>
+      <div class="popover-option selected" data-difficulty="2">
+        <span class="popover-option-icon">⭐⭐</span>
+        <div class="popover-option-info">
+          <div class="popover-option-name">Standard</div>
+          <div class="popover-option-desc">2 choices - balanced</div>
+        </div>
+        <span class="popover-option-check">✓</span>
+      </div>
+      <div class="popover-option" data-difficulty="3">
+        <span class="popover-option-icon">⭐⭐⭐</span>
+        <div class="popover-option-info">
+          <div class="popover-option-name">Advanced</div>
+          <div class="popover-option-desc">3 choices - challenging</div>
+        </div>
+        <span class="popover-option-check">✓</span>
+      </div>
+    </div>
+
+    <!-- Toast Container -->
+    <div class="toast-container" id="toast-container"></div>
+
+    <script>
+      // ═══════════════════════════════════════════════════════════════════
+      // CONFIGURATION
+      // ═══════════════════════════════════════════════════════════════════
+      // Use global config from config.js (loaded in <head>)
+      const CONFIG = {
+        SUPABASE_URL: window.SUPABASE_URL || 'https://tvjalxxsyryjphkforjv.supabase.co',
+        SUPABASE_ANON_KEY:
+          window.SUPABASE_ANON_KEY ||
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI',
+        TOTAL_LESSONS: 365
+      };
+
+      // ═══════════════════════════════════════════════════════════════════
+      // STATE
+      // ═══════════════════════════════════════════════════════════════════
+      const state = {
+        dayNumber: 333,
+        lesson: null,
+        currentPhase: 1,
+        isPaused: false,
+        isMuted: false,
+
+        variants: {
+          age: localStorage.getItem('kelly_age') || '18-35',
+          language: localStorage.getItem('kelly_language') || 'en',
+          tone: localStorage.getItem('kelly_tone') || 'curious',
+          difficulty: parseInt(localStorage.getItem('kelly_difficulty') || '2'),
+          mode: localStorage.getItem('kelly_mode') || '2D'
+        },
+
+        choicesMade: {}
+      };
+
+      let kellyAvatar = null;
+      let kellyAudio = null;
+
+      // ═══════════════════════════════════════════════════════════════════
+      // KELLY AVATAR CONTROLLER INITIALIZATION
+      // ═══════════════════════════════════════════════════════════════════
+      function initKellyAvatar() {
+        const container = document.getElementById('kelly-avatar-container');
+
+        if (!container) {
+          console.error('[Learn] Kelly avatar container not found');
+          return;
+        }
+
+        kellyAvatar = new KellyAvatarController(container, {
+          defaultMode: '2D', // Start with 2D (instant load)
+          unityBuildPath: '/unity/kelly/Build', // Unity WebGL build location
+          allow3D: true, // Enable 3D toggle (but hide button until verified)
+          autoSavePreference: true, // Save user's mode preference
+          onModeChange: (mode) => {
+            console.log(`[Learn] Kelly mode changed to: ${mode}`);
+            showToast(`Switched to ${mode} mode`);
+          },
+          onError: (type, error) => {
+            console.warn(`[Learn] Avatar error (${type}):`, error);
+            if (type === '3d_not_supported' || type === 'load_failed') {
+              showToast('3D mode not available on this device');
+            }
+          }
+        });
+
+        // Hide 3D toggle button until Unity build is verified
+        const toggleBtn =
+          document.querySelector('[data-action="toggle-3d"]') ||
+          document.getElementById('toggle-3d-btn');
+        if (toggleBtn) {
+          toggleBtn.style.display = 'none';
+          console.log('[Learn] 3D toggle button hidden until Unity is verified');
+        }
+
+        console.log('[Learn] ✅ Kelly Avatar Controller initialized in 2D mode');
+      }
+
+      // ═══════════════════════════════════════════════════════════════════
+      // SUPABASE CLIENT
+      // ═══════════════════════════════════════════════════════════════════
+      const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+
+      // ═══════════════════════════════════════════════════════════════════
+      // TONE → ARCHETYPE MAPPING
+      // Maps UI tone selection to database archetype names
+      // Database has 12 archetypes - we map to the 3 most relevant
+      // ═══════════════════════════════════════════════════════════════════
+      const TONE_TO_ARCHETYPE = {
+        curious: 'Sage', // Thoughtful, wisdom-seeking → Sage archetype
+        playful: 'Jester', // Fun, lighthearted → Jester archetype
+        serious: 'Ruler' // Structured, focused → Ruler archetype
+      };
+
+      // Fallback archetypes if primary not found (database has these too)
+      const ARCHETYPE_FALLBACKS = {
+        Sage: ['Scientist', 'The Scientist', 'Mystic', 'The Mystic'],
+        Jester: ['The Storyteller', 'Explorer', 'The Explorer'],
+        Ruler: ['The Strategist', 'The Architect', 'Architect']
+      };
+
+      // ═══════════════════════════════════════════════════════════════════
+      // UTILITY FUNCTIONS
+      // ═══════════════════════════════════════════════════════════════════
+      function getDayOfYear() {
+        const now = new Date();
+        const start = new Date(now.getFullYear(), 0, 0);
+        return Math.floor((now - start) / (1000 * 60 * 60 * 24));
+      }
+
+      function showToast(message) {
+        const container = document.getElementById('toast-container');
+        const toast = document.createElement('div');
+        toast.className = 'toast';
+        toast.textContent = message;
+        container.appendChild(toast);
+        setTimeout(() => {
+          toast.classList.add('hiding');
+          setTimeout(() => toast.remove(), 300);
+        }, 2000);
+      }
+
+      function savePreferences() {
+        localStorage.setItem('kelly_age', state.variants.age);
+        localStorage.setItem('kelly_language', state.variants.language);
+        localStorage.setItem('kelly_tone', state.variants.tone);
+        localStorage.setItem('kelly_difficulty', state.variants.difficulty.toString());
+        localStorage.setItem('kelly_mode', state.variants.mode);
+      }
+
+      // ═══════════════════════════════════════════════════════════════════
+      // LESSON DATA - LOAD FROM SUPABASE
+      // ═══════════════════════════════════════════════════════════════════
+      async function loadLesson(dayNumber) {
+        state.dayNumber = dayNumber;
+        state.currentPhase = 1;
+        state.choicesMade = {};
+
+        // Update UI immediately
+        document.getElementById('day-display').textContent = `Day ${dayNumber}`;
+        document.getElementById('next-day').textContent = Math.min(dayNumber + 1, 365);
+        document.getElementById('prev-day').textContent = Math.max(dayNumber - 1, 1);
+
+        // Show loading state
+        document.getElementById('speech-text').textContent = 'Loading lesson...';
+        document.getElementById('choices-container').innerHTML = '';
+
+        try {
+          // Get current tone preference and map to archetype
+          const tone = state.variants.tone || 'curious';
+          const archetype = TONE_TO_ARCHETYPE[tone];
+
+          console.log(
+            `[Learn] Loading Day ${dayNumber} with tone: ${tone} (archetype: ${archetype})`
+          );
+
+          // Step 1: Get core lesson metadata
+          const { data: coreLesson, error: lessonError } = await supabase
+            .from('core_lessons')
+            .select('id, topic, universal_truth, marketing_headline')
+            .eq('day_number', dayNumber)
+            .single();
+
+          if (lessonError || !coreLesson) {
+            console.warn(`[Learn] No core lesson found for day ${dayNumber}:`, lessonError);
+            state.lesson = createPlaceholderLesson(dayNumber);
+            updateUI();
+            renderPhase(state.lesson.phases[0]);
+            return;
+          }
+
+          console.log(`[Learn] ✓ Core lesson loaded: ${coreLesson.topic}`);
+
+          // Step 2: Get lesson atoms for this archetype
+          const { data: atoms, error: atomsError } = await supabase
+            .from('lesson_atoms')
+            .select('phase, content')
+            .eq('core_lesson_id', coreLesson.id)
+            .eq('archetype', archetype)
+            .order('phase');
+
+          if (atomsError || !atoms || atoms.length === 0) {
+            console.warn(`[Learn] No atoms found for archetype ${archetype}:`, atomsError);
+
+            // Try fallback archetypes for this tone
+            const fallbacks = ARCHETYPE_FALLBACKS[archetype] || [];
+            for (const fallbackArchetype of fallbacks) {
+              const { data: fallbackAtoms } = await supabase
+                .from('lesson_atoms')
+                .select('phase, content, archetype')
+                .eq('core_lesson_id', coreLesson.id)
+                .eq('archetype', fallbackArchetype)
+                .order('phase');
+
+              if (fallbackAtoms && fallbackAtoms.length > 0) {
+                console.log(
+                  `[Learn] ⚠️ Using fallback archetype: ${fallbackArchetype} (${tone} tone)`
+                );
+                buildLessonFromAtoms(coreLesson, fallbackAtoms);
+                return;
+              }
+            }
+
+            // Last resort: Try to get ANY archetype for this lesson
+            const { data: anyAtoms } = await supabase
+              .from('lesson_atoms')
+              .select('phase, content, archetype')
+              .eq('core_lesson_id', coreLesson.id)
+              .order('phase')
+              .limit(5);
+
+            if (anyAtoms && anyAtoms.length > 0) {
+              console.log(`[Learn] ⚠️ Using any available archetype: ${anyAtoms[0].archetype}`);
+              buildLessonFromAtoms(coreLesson, anyAtoms);
+              return;
+            }
+
+            // No atoms at all - use placeholder
+            state.lesson = createPlaceholderLesson(dayNumber);
+            updateUI();
+            renderPhase(state.lesson.phases[0]);
+            return;
+          }
+
+          console.log(`[Learn] ✓ Loaded ${atoms.length} atoms for archetype ${archetype}`);
+
+          // Step 3: Build lesson from atoms
+          buildLessonFromAtoms(coreLesson, atoms);
+        } catch (error) {
+          console.error('[Learn] Error loading lesson:', error);
+          showToast('Error loading lesson. Using placeholder.');
+          state.lesson = createPlaceholderLesson(dayNumber);
+          updateUI();
+          renderPhase(state.lesson.phases[0]);
+        }
+      }
+
+      // ═══════════════════════════════════════════════════════════════════
+      // BUILD LESSON FROM ATOMS
+      // ═══════════════════════════════════════════════════════════════════
+      function buildLessonFromAtoms(coreLesson, atoms) {
+        // Map phase names to types
+        const phaseTypeMap = {
+          welcome: 'welcome',
+          q1: 'question',
+          q2: 'question',
+          q3: 'question',
+          wisdom: 'wisdom'
+        };
+
+        // Build phases array
+        const phases = atoms.map((atom, index) => {
+          const content = atom.content;
+          const phaseType = phaseTypeMap[atom.phase] || 'welcome';
+
+          return {
+            order: index + 1,
+            type: phaseType,
+            name:
+              atom.phase === 'welcome'
+                ? 'Welcome'
+                : atom.phase === 'wisdom'
+                  ? 'Wisdom'
+                  : atom.phase.toUpperCase(),
+            text: content.script || content.text || 'Content loading...',
+            hint: content.prompt || null,
+            choices: content.options
+              ? content.options.map((opt, i) => ({
+                  letter: String.fromCharCode(65 + i), // A, B, C
+                  text: opt.text,
+                  response: opt.response
+                }))
+              : null
+          };
+        });
+
+        // Build complete lesson object
+        state.lesson = {
+          dayNumber: state.dayNumber,
+          topic: coreLesson.topic,
+          topicEmoji: getTopicEmoji(coreLesson.topic),
+          universalTruth: coreLesson.universal_truth,
+          phases: phases
+        };
+
+        console.log(`[Learn] ✅ Lesson built: ${phases.length} phases`);
+
+        // Update UI and render first phase
+        updateUI();
+        renderPhase(state.lesson.phases[0]);
+      }
+
+      // ═══════════════════════════════════════════════════════════════════
+      // TOPIC EMOJI MAPPING
+      // ═══════════════════════════════════════════════════════════════════
+      function getTopicEmoji(topic) {
+        const emojiMap = {
+          // Nature & Science
+          Leaves: '🍃',
+          Water: '💧',
+          Clouds: '☁️',
+          Light: '💡',
+          Sound: '🔊',
+          Seeds: '🌱',
+          Stars: '⭐',
+          Energy: '⚡',
+          Growth: '🌿',
+          Colors: '🎨',
+          Patterns: '🔷',
+
+          // Life Skills
+          Friendship: '🤝',
+          Kindness: '💝',
+          Listening: '👂',
+          Patience: '⏳',
+          Gratitude: '🙏',
+          Courage: '🦁',
+          Curiosity: '🔍',
+          Balance: '⚖️',
+          Rest: '😴',
+
+          // Cognitive
+          Memory: '🧠',
+          Time: '⏰',
+          Change: '🔄',
+          Questions: '❓',
+          Imagination: '💭',
+          Stories: '📖',
+          Music: '🎵',
+
+          // Citizenship (legacy)
+          Citizenship: '🏛️'
+        };
+
+        return emojiMap[topic] || '📚';
+      }
+
+      // ═══════════════════════════════════════════════════════════════════
+      // PLACEHOLDER LESSON (fallback when no data)
+      // ═══════════════════════════════════════════════════════════════════
+      function createPlaceholderLesson(day) {
+        const topics = [
+          'Curiosity',
+          'Kindness',
+          'Creativity',
+          'Courage',
+          'Patience',
+          'Gratitude',
+          'Honesty',
+          'Empathy',
+          'Perseverance',
+          'Wisdom'
+        ];
+        const topic = topics[(day - 1) % topics.length];
+
+        return {
+          dayNumber: day,
+          topic: topic,
+          topicEmoji: '📚',
+          phases: [
+            {
+              order: 1,
+              type: 'welcome',
+              name: 'Welcome',
+              text: `Welcome! Today's lesson on ${topic} is being prepared. Check back soon!`,
+              hint: null,
+              choices: null
+            },
+            {
+              order: 2,
+              type: 'wisdom',
+              name: 'Wisdom',
+              text: `${topic} is a journey of continuous learning. We're creating something special for you.`,
+              hint: null,
+              choices: null
+            }
+          ]
+        };
+      }
+
+      // ═══════════════════════════════════════════════════════════════════
+      // VARIANT TEXT EXTRACTION
+      // ═══════════════════════════════════════════════════════════════════
+      function getVariantText(phase) {
+        const { age, language } = state.variants;
+        if (typeof phase.text === 'object' && phase.text !== null) {
+          const ageText = phase.text[age];
+          if (ageText && typeof ageText === 'object') {
+            return ageText[language] || ageText['en'] || Object.values(ageText)[0];
+          }
+        }
+        return phase.text || '';
+      }
+
+      function getVariantHint(phase) {
+        if (!phase.hint) return null;
+        const { age, language } = state.variants;
+        if (typeof phase.hint === 'object') {
+          const ageHint = phase.hint[age];
+          if (ageHint && typeof ageHint === 'object') {
+            return ageHint[language] || ageHint['en'];
+          }
+        }
+        return phase.hint;
+      }
+
+      function getVariantChoices(phase) {
+        if (!phase.choices) return null;
+        const { age, language, difficulty } = state.variants;
+
+        if (typeof phase.choices === 'object' && phase.choices[age]) {
+          const ageChoices = phase.choices[age];
+          if (ageChoices && ageChoices[language]) {
+            return ageChoices[language].slice(0, difficulty);
+          }
+        }
+
+        if (Array.isArray(phase.choices)) {
+          return phase.choices.slice(0, difficulty);
+        }
+
+        return null;
+      }
+
+      // ═══════════════════════════════════════════════════════════════════
+      // UI UPDATES
+      // ═══════════════════════════════════════════════════════════════════
+      function updateUI() {
+        // Update badges
+        const ageMap = {
+          '2-5': '2',
+          '6-12': '6',
+          '13-17': '13',
+          '18-35': '18',
+          '36-60': '36',
+          '61+': '61'
+        };
+        document.getElementById('badge-age').textContent = ageMap[state.variants.age] || '18';
+        document.getElementById('badge-language').textContent =
+          state.variants.language.toUpperCase();
+
+        // Update tone badge
+        const toneMap = { curious: 'C', playful: 'P', serious: 'S' };
+        document.getElementById('badge-tone').textContent = toneMap[state.variants.tone] || 'C';
+
+        // Update mode badge
+        document.getElementById('badge-mode').textContent = state.variants.mode || '2D';
+
+        document.getElementById('badge-difficulty').textContent = state.variants.difficulty;
+
+        // Update topic
+        document.getElementById('topic-name').textContent = state.lesson?.topic || 'Loading...';
+        document.getElementById('topic-emoji').textContent = state.lesson?.topicEmoji || '📚';
+
+        // Update modal AND popover selections
+        document.querySelectorAll('[data-age]').forEach((el) => {
+          el.classList.toggle('selected', el.dataset.age === state.variants.age);
+        });
+        document.querySelectorAll('[data-language]').forEach((el) => {
+          el.classList.toggle('selected', el.dataset.language === state.variants.language);
+        });
+        document.querySelectorAll('[data-tone]').forEach((el) => {
+          el.classList.toggle('selected', el.dataset.tone === state.variants.tone);
+        });
+        document.querySelectorAll('[data-difficulty]').forEach((el) => {
+          el.classList.toggle(
+            'selected',
+            el.dataset.difficulty === state.variants.difficulty.toString()
+          );
+        });
+      }
+
+      function updatePhaseIndicator() {
+        document.querySelectorAll('.phase-dot').forEach((dot, i) => {
+          dot.classList.remove('active', 'completed');
+          if (i + 1 < state.currentPhase) dot.classList.add('completed');
+          if (i + 1 === state.currentPhase) dot.classList.add('active');
+        });
+      }
+
+      // ═══════════════════════════════════════════════════════════════════
+      // PHASE RENDERING
+      // ═══════════════════════════════════════════════════════════════════
+      function renderPhase(phase) {
+        const text = getVariantText(phase);
+        const hint = getVariantHint(phase);
+        const choices = getVariantChoices(phase);
+
+        // Update UI badges (age, language, difficulty)
+        updateUI();
+
+        // ═══════════════════════════════════════════════════════════════
+        // KELLY EXPRESSION MAPPING (based on phase type)
+        // ═══════════════════════════════════════════════════════════════
+        if (kellyAvatar) {
+          const phaseToExpression = {
+            welcome: 'curious', // Welcome phase → curious expression
+            question: 'explaining', // Question phases → explaining
+            wisdom: 'wisdom', // Wisdom phase → wisdom expression
+            celebrating: 'celebrating' // Completion → celebrating
+          };
+
+          const expression = phaseToExpression[phase.type] || 'curious';
+          kellyAvatar.setExpression(expression);
+
+          // Set phase context (if avatar supports it)
+          if (typeof kellyAvatar.setPhase === 'function') {
+            kellyAvatar.setPhase(phase.type);
+          }
+        }
+
+        // Update speech
+        const speechText = document.getElementById('speech-text');
+        const speechHint = document.getElementById('speech-hint');
+
+        speechText.textContent = text;
+        speechHint.textContent = hint || '';
+        speechHint.style.display = hint ? 'block' : 'none';
+
+        // Speak (ElevenLabs only - no browser TTS)
+        if (kellyAudio) {
+          kellyAudio.speak(text, { language: state.variants.language });
+        }
+
+        // Kelly speaking animation
+        if (kellyAvatar && typeof kellyAvatar.setSpeaking === 'function') {
+          kellyAvatar.setSpeaking(true, text);
+        }
+
+        // Render choices
+        const container = document.getElementById('choices-container');
+        container.innerHTML = '';
+
+        if (choices && phase.type === 'question') {
+          choices.forEach((choice) => {
+            const btn = document.createElement('button');
+            btn.className = 'choice-btn';
+            btn.dataset.letter = choice.letter;
+            btn.innerHTML = `
+                        <span class="choice-letter">${choice.letter}</span>
+                        <span class="choice-text">${choice.text}</span>
+                    `;
+            btn.onclick = () => selectChoice(choice);
+            container.appendChild(btn);
+          });
+        } else {
+          // Auto-advance for non-question phases
+          const duration = text.split(/\s+/).length * 200 + 2000;
+          setTimeout(() => {
+            if (phase.type === 'welcome') {
+              advancePhase();
+            } else if (phase.type === 'wisdom') {
+              showToast('🎉 Lesson complete!');
+            }
+          }, duration);
+        }
+
+        updatePhaseIndicator();
+        console.log(`[Phase ${state.currentPhase}] ${text.substring(0, 50)}...`);
+      }
+
+      function selectChoice(choice) {
+        // Visual feedback
+        document.querySelectorAll('.choice-btn').forEach((btn) => {
+          btn.classList.add('disabled');
+          if (btn.dataset.letter === choice.letter) {
+            btn.classList.add('selected');
+          }
+        });
+
+        state.choicesMade[`Q${state.currentPhase - 1}`] = choice.letter;
+
+        // Kelly listens to student's choice
+        if (kellyAvatar && typeof kellyAvatar.setExpression === 'function') {
+          kellyAvatar.setExpression('listening');
+        }
+
+        // Show Kelly's response
+        if (choice.response) {
+          document.getElementById('speech-text').textContent = choice.response;
+          document.getElementById('speech-hint').style.display = 'none';
+
+          // Kelly transitions from listening to explaining
+          setTimeout(() => {
+            if (kellyAvatar && typeof kellyAvatar.setExpression === 'function') {
+              kellyAvatar.setExpression('explaining');
+            }
+            if (kellyAvatar && typeof kellyAvatar.setSpeaking === 'function') {
+              kellyAvatar.setSpeaking(true, choice.response);
+            }
+          }, 800);
+
+          if (kellyAudio) {
+            kellyAudio.speak(choice.response, { language: state.variants.language });
+          }
+
+          setTimeout(() => advancePhase(), choice.response.split(/\s+/).length * 200 + 1500);
+        } else {
+          setTimeout(() => advancePhase(), 1000);
+        }
+      }
+
+      function advancePhase() {
+        state.currentPhase++;
+        if (state.currentPhase <= state.lesson.phases.length) {
+          renderPhase(state.lesson.phases[state.currentPhase - 1]);
+        }
+      }
+
+      // ═══════════════════════════════════════════════════════════════════
+      // GESTURES & INTERACTIONS
+      // ═══════════════════════════════════════════════════════════════════
+      function setupGestures() {
+        const container = document.getElementById('lesson-container');
+        let touchStartY = 0;
+        let touchStartTime = 0;
+        let lastTap = 0;
+
+        container.addEventListener(
+          'touchstart',
+          (e) => {
+            touchStartY = e.touches[0].clientY;
+            touchStartTime = Date.now();
+          },
+          { passive: true }
+        );
+
+        container.addEventListener(
+          'touchend',
+          (e) => {
+            const touchEndY = e.changedTouches[0].clientY;
+            const deltaY = touchEndY - touchStartY;
+            const duration = Date.now() - touchStartTime;
+
+            // Swipe detection
+            if (Math.abs(deltaY) > 80 && duration < 500) {
+              if (deltaY < 0) {
+                // Swipe UP → Next lesson
+                goToLesson(state.dayNumber + 1);
+              } else {
+                // Swipe DOWN → Previous lesson
+                goToLesson(state.dayNumber - 1);
+              }
+              return;
+            }
+
+            // Tap detection (only on Kelly, not on buttons/choices)
+            if (duration < 200 && Math.abs(deltaY) < 20) {
+              const target = e.target;
+              const isInteractive = target.closest(
+                '.action-btn, .choice-btn, .nav-item, .modal-overlay, .bottom-overlay'
+              );
+
+              if (!isInteractive) {
+                const now = Date.now();
+                if (now - lastTap < 300) {
+                  // Double tap → Heart
+                  showHeart(e.changedTouches[0].clientX, e.changedTouches[0].clientY);
+                } else {
+                  // Single tap → Pause/Resume
+                  togglePause();
+                }
+                lastTap = now;
+              }
+            }
+          },
+          { passive: true }
+        );
+
+        // Show swipe indicators on touch move
+        container.addEventListener(
+          'touchmove',
+          (e) => {
+            const deltaY = e.touches[0].clientY - touchStartY;
+            if (deltaY < -40) {
+              document.getElementById('swipe-up-indicator').classList.add('show');
+              document.getElementById('swipe-down-indicator').classList.remove('show');
+            } else if (deltaY > 40) {
+              document.getElementById('swipe-down-indicator').classList.add('show');
+              document.getElementById('swipe-up-indicator').classList.remove('show');
+            } else {
+              document.getElementById('swipe-up-indicator').classList.remove('show');
+              document.getElementById('swipe-down-indicator').classList.remove('show');
+            }
+          },
+          { passive: true }
+        );
+
+        // Hide indicators on touch end
+        container.addEventListener('touchend', () => {
+          document.getElementById('swipe-up-indicator').classList.remove('show');
+          document.getElementById('swipe-down-indicator').classList.remove('show');
+        });
+      }
+
+      function goToLesson(day) {
+        if (day < 1 || day > 365) {
+          showToast(day < 1 ? "You're at Day 1!" : "You've reached Day 365!");
+          return;
+        }
+
+        // Animate transition
+        const container = document.getElementById('lesson-container');
+        container.style.transform =
+          day > state.dayNumber ? 'translateY(-20px)' : 'translateY(20px)';
+        container.style.opacity = '0';
+
+        setTimeout(() => {
+          loadLesson(day);
+          container.style.transform =
+            day > state.dayNumber ? 'translateY(20px)' : 'translateY(-20px)';
+
+          requestAnimationFrame(() => {
+            container.style.transition = 'all 0.3s ease';
+            container.style.transform = 'translateY(0)';
+            container.style.opacity = '1';
+          });
+        }, 200);
+
+        // Update URL
+        history.pushState({}, '', `/learn.html?day=${day}`);
+      }
+
+      function togglePause() {
+        state.isPaused = !state.isPaused;
+
+        const indicator = document.getElementById('pause-indicator');
+        indicator.textContent = state.isPaused ? '▶️' : '⏸️';
+        indicator.classList.add('show');
+
+        setTimeout(() => {
+          indicator.classList.remove('show');
+        }, 600);
+
+        if (kellyAudio) {
+          state.isPaused ? kellyAudio.pause() : kellyAudio.resume();
+        }
+      }
+
+      function showHeart(x, y) {
+        const heart = document.createElement('div');
+        heart.className = 'heart-animation';
+        heart.textContent = '❤️';
+        heart.style.left = `${x}px`;
+        heart.style.top = `${y}px`;
+        document.body.appendChild(heart);
+        setTimeout(() => heart.remove(), 800);
+      }
+
+      // ═══════════════════════════════════════════════════════════════════
+      // POPOVER SYSTEM (for side control buttons)
+      // ═══════════════════════════════════════════════════════════════════
+      function openPopover(popoverId, triggerButton) {
+        const popover = document.getElementById(`popover-${popoverId}`);
+        const overlay = document.getElementById('popover-overlay');
+
+        if (!popover || !triggerButton) return;
+
+        // Close any open modals first
+        document.querySelectorAll('.modal-overlay.open').forEach((m) => m.classList.remove('open'));
+
+        // Get button position
+        const buttonRect = triggerButton.getBoundingClientRect();
+
+        // Show popover to measure it
+        popover.style.visibility = 'hidden';
+        popover.style.display = 'block';
+        const popoverRect = popover.getBoundingClientRect();
+        popover.style.display = '';
+        popover.style.visibility = '';
+
+        // Calculate position (place to the left of button with 12px gap)
+        const gap = 12;
+        let left = buttonRect.left - popoverRect.width - gap;
+        let top = buttonRect.top + buttonRect.height / 2 - popoverRect.height / 2;
+
+        // Ensure popover stays on screen
+        const padding = 16;
+        top = Math.max(padding, Math.min(top, window.innerHeight - popoverRect.height - padding));
+        left = Math.max(padding, left);
+
+        // If popover would go off left edge, place it on the right instead
+        if (left < padding) {
+          left = buttonRect.right + gap;
+          popover.setAttribute('data-placement', 'right');
+        } else {
+          popover.setAttribute('data-placement', 'left');
+        }
+
+        // Position popover
+        popover.style.top = `${top}px`;
+        popover.style.left = `${left}px`;
+
+        // Show popover with animation
+        overlay.classList.add('active');
+        popover.classList.add('active');
+
+        console.log(`[Popover] Opened: ${popoverId}`);
+      }
+
+      function closePopover() {
+        const overlay = document.getElementById('popover-overlay');
+        document.querySelectorAll('.popover').forEach((p) => p.classList.remove('active'));
+        overlay.classList.remove('active');
+      }
+
+      // ═══════════════════════════════════════════════════════════════════
+      // MODALS (removed - all variants now use popovers)
+      // ═══════════════════════════════════════════════════════════════════
+      // Modal functions removed - all side controls now use popover system
+
+      function selectVariant(type, value) {
+        if (type === 'difficulty') {
+          state.variants.difficulty = parseInt(value);
+        } else {
+          state.variants[type] = value;
+        }
+
+        savePreferences();
+        updateUI();
+
+        // For tone changes, reload the entire lesson with new archetype
+        if (type === 'tone') {
+          closePopover();
+          showToast('Reloading lesson with new tone...');
+          loadLesson(state.dayNumber);
+          return;
+        }
+
+        // Re-render current phase with new variant
+        if (state.lesson) {
+          renderPhase(state.lesson.phases[state.currentPhase - 1]);
+        }
+
+        // Popover already closed by individual handlers
+        showToast(`${type.charAt(0).toUpperCase() + type.slice(1)} updated!`);
+      }
+
+      // ═══════════════════════════════════════════════════════════════════
+      // INITIALIZATION
+      // ═══════════════════════════════════════════════════════════════════
+      async function init() {
+        // Initialize Kelly Avatar (2D/3D controller)
+        initKellyAvatar();
+
+        // Initialize audio (ElevenLabs only - NO BROWSER TTS)
+        kellyAudio = new KellyAudio({
+          elevenLabsApiKey: null, // Set in production
+          onSpeakingStart: () => console.log('[Audio] Speaking...'),
+          onSpeakingEnd: () => console.log('[Audio] Done')
+        });
+
+        // Get day from URL or today
+        const urlParams = new URLSearchParams(window.location.search);
+        const day = parseInt(urlParams.get('day')) || getDayOfYear();
+
+        // Load initial lesson
+        await loadLesson(day);
+
+        // Setup gestures
+        setupGestures();
+
+        // Setup button handlers (all use popovers now)
+        document.getElementById('btn-age').onclick = (e) => openPopover('age', e.currentTarget);
+        document.getElementById('btn-language').onclick = (e) =>
+          openPopover('language', e.currentTarget);
+        document.getElementById('btn-tone').onclick = (e) => openPopover('tone', e.currentTarget);
+        document.getElementById('btn-mode').onclick = () => {
+          if (kellyAvatar && typeof kellyAvatar.toggleMode === 'function') {
+            kellyAvatar.toggleMode();
+            // Update badge (will be updated by onModeChange callback)
+            const newMode = kellyAvatar.getMode(); // ✅ FIXED: was getCurrentMode()
+            state.variants.mode = newMode;
+            savePreferences();
+            document.getElementById('badge-mode').textContent = newMode;
+            showToast(`Switched to ${newMode} mode`);
+          } else {
+            showToast('3D mode not available');
+          }
+        };
+        document.getElementById('btn-difficulty').onclick = (e) =>
+          openPopover('difficulty', e.currentTarget);
+        document.getElementById('btn-share').onclick = () => {
+          if (navigator.share) {
+            navigator.share({
+              title: `Day ${state.dayNumber}: ${state.lesson?.topic}`,
+              url: window.location.href
+            });
+          } else {
+            navigator.clipboard.writeText(window.location.href);
+            showToast('Link copied!');
+          }
+        };
+        document.getElementById('btn-sound').onclick = () => {
+          state.isMuted = !state.isMuted;
+          const btn = document.getElementById('btn-sound');
+          btn.textContent = state.isMuted ? '🔇' : '🔊';
+          btn.classList.toggle('muted', state.isMuted);
+          if (kellyAudio) kellyAudio.setMuted(state.isMuted);
+        };
+
+        // Popover overlay handler (close on click outside)
+        document.getElementById('popover-overlay')?.addEventListener('click', closePopover);
+
+        // Popover option handlers (Age)
+        document.querySelectorAll('#popover-age [data-age]').forEach((el) => {
+          el.onclick = () => {
+            selectVariant('age', el.dataset.age);
+            closePopover();
+          };
+        });
+
+        // Popover option handlers (Language)
+        document.querySelectorAll('#popover-language [data-language]').forEach((el) => {
+          el.onclick = () => {
+            selectVariant('language', el.dataset.language);
+            closePopover();
+          };
+        });
+
+        // Popover option handlers (Tone)
+        document.querySelectorAll('#popover-tone [data-tone]').forEach((el) => {
+          el.onclick = () => {
+            selectVariant('tone', el.dataset.tone);
+            closePopover();
+          };
+        });
+
+        // Popover option handlers (Difficulty)
+        document.querySelectorAll('#popover-difficulty [data-difficulty]').forEach((el) => {
+          el.onclick = () => {
+            selectVariant('difficulty', el.dataset.difficulty);
+            closePopover();
+          };
+        });
+
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+          if (e.key === 'ArrowUp') goToLesson(state.dayNumber + 1);
+          if (e.key === 'ArrowDown') goToLesson(state.dayNumber - 1);
+          if (e.key === ' ') {
+            e.preventDefault();
+            togglePause();
+          }
+          if (e.key === 'Escape') closePopover();
+        });
+
+        // Expose to window for testing
+        window.state = state;
+        window.renderPhase = renderPhase;
+        window.selectChoice = selectChoice;
+        window.goToLesson = goToLesson;
+        window.navigateLesson = (direction) => goToLesson(state.dayNumber + direction);
+        window.kellyAudio = kellyAudio;
+
+        console.log('[Learn] 🚀 TikTok-style lesson player ready!');
+      }
+
+      // Start
+      init();
+    </script>
+  </body>
+</html>
