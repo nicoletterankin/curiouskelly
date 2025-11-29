@@ -1354,9 +1354,10 @@
           wisdom: 'wisdom'
         };
 
-        // Build phases array
+        // Build phases array (with null safety)
         const phases = atoms.map((atom, index) => {
-          const content = atom.content;
+          // Null safety: ensure content exists
+          const content = atom.content || {};
           const phaseType = phaseTypeMap[atom.phase] || 'welcome';
 
           return {
@@ -1370,11 +1371,11 @@
                   : atom.phase.toUpperCase(),
             text: content.script || content.text || 'Content loading...',
             hint: content.prompt || null,
-            choices: content.options
+            choices: content.options && Array.isArray(content.options)
               ? content.options.map((opt, i) => ({
                   letter: String.fromCharCode(65 + i), // A, B, C
-                  text: opt.text,
-                  response: opt.response
+                  text: opt?.text || 'Option ' + (i + 1),
+                  response: opt?.response || ''
                 }))
               : null
           };
@@ -1485,42 +1486,74 @@
       }
 
       // ═══════════════════════════════════════════════════════════════════
-      // VARIANT TEXT EXTRACTION
+      // VARIANT TEXT EXTRACTION (with null safety)
       // ═══════════════════════════════════════════════════════════════════
       function getVariantText(phase) {
+        // Null safety: phase might be undefined
+        if (!phase) return '';
+        
         const { age, language } = state.variants;
+        
+        // If text is an object (variant structure)
         if (typeof phase.text === 'object' && phase.text !== null) {
           const ageText = phase.text[age];
           if (ageText && typeof ageText === 'object') {
-            return ageText[language] || ageText['en'] || Object.values(ageText)[0];
+            return ageText[language] || ageText['en'] || Object.values(ageText)[0] || '';
+          }
+          // If age variant doesn't exist, try to get any available age
+          const firstAge = Object.keys(phase.text)[0];
+          if (firstAge && typeof phase.text[firstAge] === 'object') {
+            return phase.text[firstAge][language] || phase.text[firstAge]['en'] || '';
           }
         }
+        
+        // Fallback to direct text or empty string
         return phase.text || '';
       }
 
       function getVariantHint(phase) {
-        if (!phase.hint) return null;
+        // Null safety: phase or hint might be undefined
+        if (!phase || !phase.hint) return null;
+        
         const { age, language } = state.variants;
-        if (typeof phase.hint === 'object') {
+        
+        // If hint is an object (variant structure)
+        if (typeof phase.hint === 'object' && phase.hint !== null) {
           const ageHint = phase.hint[age];
           if (ageHint && typeof ageHint === 'object') {
-            return ageHint[language] || ageHint['en'];
+            return ageHint[language] || ageHint['en'] || null;
+          }
+          // If age variant doesn't exist, try to get any available age
+          const firstAge = Object.keys(phase.hint)[0];
+          if (firstAge && typeof phase.hint[firstAge] === 'object') {
+            return phase.hint[firstAge][language] || phase.hint[firstAge]['en'] || null;
           }
         }
-        return phase.hint;
+        
+        // Fallback to direct hint
+        return phase.hint || null;
       }
 
       function getVariantChoices(phase) {
-        if (!phase.choices) return null;
+        // Null safety: phase or choices might be undefined
+        if (!phase || !phase.choices) return null;
+        
         const { age, language, difficulty } = state.variants;
 
-        if (typeof phase.choices === 'object' && phase.choices[age]) {
+        // If choices is an object (variant structure)
+        if (typeof phase.choices === 'object' && !Array.isArray(phase.choices) && phase.choices !== null) {
           const ageChoices = phase.choices[age];
           if (ageChoices && ageChoices[language]) {
             return ageChoices[language].slice(0, difficulty);
           }
+          // If age variant doesn't exist, try to get any available age
+          const firstAge = Object.keys(phase.choices)[0];
+          if (firstAge && phase.choices[firstAge] && phase.choices[firstAge][language]) {
+            return phase.choices[firstAge][language].slice(0, difficulty);
+          }
         }
 
+        // If choices is a simple array
         if (Array.isArray(phase.choices)) {
           return phase.choices.slice(0, difficulty);
         }
@@ -1585,9 +1618,15 @@
       }
 
       // ═══════════════════════════════════════════════════════════════════
-      // PHASE RENDERING
+      // PHASE RENDERING (with null safety)
       // ═══════════════════════════════════════════════════════════════════
       function renderPhase(phase) {
+        // Null safety: phase might be undefined
+        if (!phase) {
+          console.warn('[Learn] renderPhase called with null/undefined phase');
+          return;
+        }
+
         const text = getVariantText(phase);
         const hint = getVariantHint(phase);
         const choices = getVariantChoices(phase);
@@ -1933,9 +1972,11 @@
           return;
         }
 
-        // Re-render current phase with new variant
-        if (state.lesson) {
+        // Re-render current phase with new variant (with null safety)
+        if (state.lesson && state.lesson.phases && state.lesson.phases[state.currentPhase - 1]) {
           renderPhase(state.lesson.phases[state.currentPhase - 1]);
+        } else {
+          console.warn('[Learn] Cannot re-render phase: lesson or phase data missing');
         }
 
         // Popover already closed by individual handlers
