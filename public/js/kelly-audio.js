@@ -14,8 +14,7 @@
 class KellyAudio {
   constructor(options = {}) {
     this.options = {
-      elevenLabsApiKey: options.elevenLabsApiKey || null,
-      kellyVoiceId: options.kellyVoiceId || 'EXAVITQu4vr4xnSDxMaL', // Kelly's trained voice
+      kellyVoiceId: options.kellyVoiceId || 'wAdymQH5YucAkXwmrdL0', // Kelly's trained voice
       audioBasePath: options.audioBasePath || '/audio/lessons/', // Pre-generated audio
       onSpeakingStart: options.onSpeakingStart || null,
       onSpeakingEnd: options.onSpeakingEnd || null,
@@ -30,20 +29,11 @@ class KellyAudio {
     this.currentText = '';
     this.audioCache = new Map();
 
+    // Voice is always available via /api/tts endpoint
     // ⚠️ NO BROWSER TTS - EVER
-    // If no ElevenLabs key, we run in silent mode (text only)
-    this.hasVoice = !!this.options.elevenLabsApiKey;
+    this.hasVoice = true;
 
-    console.log('[KellyAudio] Initialized', {
-      elevenLabs: this.hasVoice,
-      mode: this.hasVoice ? 'VOICE' : 'SILENT (no ElevenLabs key)'
-    });
-
-    if (!this.hasVoice) {
-      console.warn(
-        '[KellyAudio] ⚠️ No ElevenLabs API key - running in SILENT mode. Browser TTS is PROHIBITED.'
-      );
-    }
+    console.log('[KellyAudio] Initialized with secure TTS API');
   }
 
   /**
@@ -74,11 +64,11 @@ class KellyAudio {
         return;
       }
 
-      // Use ElevenLabs if API key available
-      if (this.options.elevenLabsApiKey && !this.isMuted) {
+      // Use ElevenLabs via secure API
+      if (!this.isMuted) {
         await this._speakWithElevenLabs(text, options);
       } else {
-        // SILENT MODE - No voice, just timing for lip-sync animation
+        // SILENT MODE - Muted, just timing for lip-sync animation
         // ⚠️ NO BROWSER TTS FALLBACK - THIS IS INTENTIONAL
         await this._silentMode(text);
       }
@@ -167,7 +157,7 @@ class KellyAudio {
   }
 
   /**
-   * ElevenLabs TTS
+   * ElevenLabs TTS via secure API proxy
    */
   async _speakWithElevenLabs(text, options) {
     // Check cache first
@@ -176,30 +166,21 @@ class KellyAudio {
       return this._playAudioBuffer(this.audioCache.get(cacheKey));
     }
 
-    const response = await fetch(
-      `https://api.elevenlabs.io/v1/text-to-speech/${this.options.kellyVoiceId}`,
-      {
-        method: 'POST',
-        headers: {
-          Accept: 'audio/mpeg',
-          'Content-Type': 'application/json',
-          'xi-api-key': this.options.elevenLabsApiKey
-        },
-        body: JSON.stringify({
-          text: text,
-          model_id: 'eleven_monolingual_v1',
-          voice_settings: {
-            stability: 0.5,
-            similarity_boost: 0.75,
-            style: 0.5,
-            use_speaker_boost: true
-          }
-        })
-      }
-    );
+    // Call our secure API endpoint (not ElevenLabs directly)
+    const response = await fetch('/api/tts', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        text: text,
+        voiceId: this.options.kellyVoiceId,
+      }),
+    });
 
     if (!response.ok) {
-      throw new Error(`ElevenLabs API error: ${response.status}`);
+      const error = await response.json().catch(() => ({ error: 'TTS failed' }));
+      throw new Error(`TTS API error: ${response.status} - ${error.error || 'Unknown'}`);
     }
 
     const audioBuffer = await response.arrayBuffer();

@@ -1934,17 +1934,7 @@
         speechHint.textContent = hint || '';
         speechHint.style.display = hint ? 'block' : 'none';
 
-        // Speak (ElevenLabs only - no browser TTS)
-        if (kellyAudio) {
-          kellyAudio.speak(text, { language: state.variants.language });
-        }
-
-        // Kelly speaking animation
-        if (kellyAvatar && typeof kellyAvatar.setSpeaking === 'function') {
-          kellyAvatar.setSpeaking(true, text);
-        }
-
-        // Render choices
+        // Render choices FIRST (before speaking)
         const container = document.getElementById('choices-container');
         container.innerHTML = '';
 
@@ -1960,16 +1950,65 @@
             btn.onclick = () => selectChoice(choice);
             container.appendChild(btn);
           });
-        } else {
-          // Auto-advance for non-question phases
-          const duration = text.split(/\s+/).length * 200 + 2000;
-          setTimeout(() => {
-            if (phase.type === 'welcome') {
-              advancePhase();
-            } else if (phase.type === 'wisdom') {
-              showToast('🎉 Lesson complete!');
+        }
+
+        // Speak (ElevenLabs only - no browser TTS)
+        // Auto-advance after audio ends (for non-question phases)
+        if (kellyAudio) {
+          // Kelly speaking animation START
+          if (kellyAvatar && typeof kellyAvatar.setSpeaking === 'function') {
+            kellyAvatar.setSpeaking(true, text);
+          }
+
+          // Speak and wait for completion
+          kellyAudio.speak(text, { language: state.variants.language }).then(() => {
+            console.log('[Learn] ✅ Kelly finished speaking');
+
+            // Kelly speaking animation END
+            if (kellyAvatar && typeof kellyAvatar.setSpeaking === 'function') {
+              kellyAvatar.setSpeaking(false);
             }
-          }, duration);
+
+            // AUTO-ADVANCE for non-question phases
+            if (phase.type !== 'question') {
+              setTimeout(() => {
+                if (phase.type === 'welcome') {
+                  advancePhase();
+                } else if (phase.type === 'wisdom') {
+                  showToast('🎉 Lesson complete!');
+                  // Mark lesson as complete and save progress
+                  saveProgress();
+                }
+              }, 500); // Small delay before advancing
+            }
+          }).catch((error) => {
+            console.error('[Learn] Audio error:', error);
+            // Even if audio fails, still auto-advance after estimated duration
+            if (phase.type !== 'question') {
+              const duration = text.split(/\s+/).length * 200 + 2000;
+              setTimeout(() => {
+                if (phase.type === 'welcome') {
+                  advancePhase();
+                } else if (phase.type === 'wisdom') {
+                  showToast('🎉 Lesson complete!');
+                  saveProgress();
+                }
+              }, duration);
+            }
+          });
+        } else {
+          // No audio - use estimated duration
+          if (phase.type !== 'question') {
+            const duration = text.split(/\s+/).length * 200 + 2000;
+            setTimeout(() => {
+              if (phase.type === 'welcome') {
+                advancePhase();
+              } else if (phase.type === 'wisdom') {
+                showToast('🎉 Lesson complete!');
+                saveProgress();
+              }
+            }, duration);
+          }
         }
 
         updatePhaseIndicator();
@@ -2008,12 +2047,54 @@
           }, 800);
 
           if (kellyAudio) {
-            kellyAudio.speak(choice.response, { language: state.variants.language });
+            kellyAudio.speak(choice.response, { language: state.variants.language }).then(() => {
+              // Advance after Kelly finishes responding
+              setTimeout(() => advancePhase(), 500);
+            }).catch(() => {
+              // Fallback timing if audio fails
+              setTimeout(() => advancePhase(), choice.response.split(/\s+/).length * 200 + 1500);
+            });
+          } else {
+            setTimeout(() => advancePhase(), choice.response.split(/\s+/).length * 200 + 1500);
           }
-
-          setTimeout(() => advancePhase(), choice.response.split(/\s+/).length * 200 + 1500);
         } else {
           setTimeout(() => advancePhase(), 1000);
+        }
+      }
+
+      // ═══════════════════════════════════════════════════════════════════
+      // SAVE PROGRESS TO SUPABASE
+      // ═══════════════════════════════════════════════════════════════════
+      async function saveProgress() {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          
+          if (!user) {
+            console.log('[Progress] No user logged in, skipping save');
+            return;
+          }
+
+          const progressData = {
+            user_id: user.id,
+            day_number: state.dayNumber,
+            completed_at: new Date().toISOString(),
+            choices_made: state.choicesMade,
+            variants_used: state.variants
+          };
+
+          const { error } = await supabase
+            .from('user_progress')
+            .upsert(progressData, {
+              onConflict: 'user_id,day_number'
+            });
+
+          if (error) {
+            console.error('[Progress] Error saving:', error);
+          } else {
+            console.log('[Progress] ✅ Saved for Day', state.dayNumber);
+          }
+        } catch (error) {
+          console.error('[Progress] Save failed:', error);
         }
       }
 
@@ -2268,11 +2349,19 @@
         // Initialize Kelly Avatar (2D/3D controller)
         initKellyAvatar();
 
-        // Initialize audio (ElevenLabs only - NO BROWSER TTS)
+        // Initialize audio (ElevenLabs via secure /api/tts - NO BROWSER TTS)
         kellyAudio = new KellyAudio({
-          elevenLabsApiKey: null, // Set in production
-          onSpeakingStart: () => console.log('[Audio] Speaking...'),
-          onSpeakingEnd: () => console.log('[Audio] Done')
+          kellyVoiceId: window.ELEVENLABS_VOICE_ID || 'wAdymQH5YucAkXwmrdL0',
+          onSpeakingStart: () => {
+            console.log('[Audio] 🎤 Kelly speaking...');
+            // Update UI to show speaking state
+            document.body.classList.add('kelly-speaking');
+          },
+          onSpeakingEnd: () => {
+            console.log('[Audio] ✅ Kelly finished');
+            // Update UI to show not speaking
+            document.body.classList.remove('kelly-speaking');
+          }
         });
 
         // Get day from URL or today
