@@ -103,16 +103,30 @@
         min-height: 100vh;
       }
 
-      /* Left Panel - Auth */
+      /* Left Panel - Kelly (swapped) */
       .left-panel {
+        flex: 1;
+        background: var(--bg-secondary);
+        position: relative;
+        overflow: hidden;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        min-height: 100vh;
+        order: 1;
+      }
+
+      /* Right Panel - Auth (swapped) */
+      .right-panel {
         flex: 0 0 50%;
-        max-width: 600px;
+        max-width: 520px;
         padding: 48px 64px;
         display: flex;
         flex-direction: column;
         justify-content: center;
         position: relative;
         background: var(--bg-color);
+        order: 2;
       }
 
       .logo {
@@ -121,7 +135,7 @@
         left: 64px;
         display: flex;
         align-items: center;
-        gap: 10px;
+        gap: 12px;
         font-weight: 600;
         font-size: 1.1rem;
         text-decoration: none;
@@ -130,11 +144,13 @@
       }
 
       .logo-icon {
-        font-size: 1.4rem;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
       }
 
       .main-content {
-        max-width: 420px;
+        max-width: 400px;
       }
 
       h1 {
@@ -163,7 +179,7 @@
       .auth-container {
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: 10px;
         width: 100%;
       }
 
@@ -172,8 +188,8 @@
         align-items: center;
         justify-content: center;
         gap: 12px;
-        padding: 16px 24px;
-        border-radius: 12px;
+        padding: 14px 20px;
+        border-radius: 10px;
         text-decoration: none;
         font-size: 0.95rem;
         font-weight: 500;
@@ -182,6 +198,17 @@
         border: 1px solid var(--border-color);
         position: relative;
         overflow: hidden;
+      }
+
+      .btn-apple {
+        background: var(--text-primary);
+        color: #18181b;
+        border: none;
+      }
+
+      .btn-apple:hover {
+        background: #e4e4e7;
+        box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
       }
 
       .btn:active {
@@ -563,6 +590,61 @@
         }
       }
 
+      /* Claude-style Footer */
+      .claude-footer {
+        background: var(--bg-color);
+        border-top: 1px solid var(--border-color);
+        padding: 24px 48px;
+      }
+
+      .claude-footer-content {
+        max-width: 1400px;
+        margin: 0 auto;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+      }
+
+      .claude-footer-brand {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .claude-by {
+        font-size: 0.7rem;
+        font-weight: 600;
+        letter-spacing: 0.1em;
+        text-transform: uppercase;
+        color: var(--text-muted);
+      }
+
+      .claude-copyright {
+        font-size: 0.75rem;
+        color: var(--text-secondary);
+      }
+
+      .claude-footer-links {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        font-size: 0.85rem;
+      }
+
+      .claude-footer-links a {
+        color: var(--text-secondary);
+        text-decoration: none;
+        transition: color 0.2s ease;
+      }
+
+      .claude-footer-links a:hover {
+        color: var(--text-primary);
+      }
+
+      .claude-footer-links span {
+        color: var(--text-muted);
+      }
+
       /* Responsive */
       @media (max-width: 1024px) {
         .left-panel {
@@ -586,12 +668,39 @@
       }
 
       @media (max-width: 768px) {
+        .main-container {
+          flex-direction: column;
+        }
+
         .left-panel {
-          padding: 90px 24px 40px;
+          order: 1;
+          min-height: 40vh;
+          height: 40vh;
+          display: block !important;
+        }
+
+        .hero-image {
+          display: block !important;
+          height: 100%;
+          min-height: 280px;
+        }
+
+        .hero-image img {
+          width: 100%;
+          height: 100%;
+          object-fit: cover;
+          object-position: center top;
+        }
+
+        .right-panel {
+          order: 2;
+          padding: 40px 24px;
+          max-width: 100%;
         }
 
         .logo {
           left: 24px;
+          z-index: 10;
         }
 
         h1 {
@@ -617,9 +726,22 @@
   </head>
   <body>
     <div class="main-container">
-      <!-- Left: Auth Panel -->
+      <!-- Left: Kelly Image -->
       <div class="left-panel">
-        <a href="/" class="logo"> <span class="logo-icon">✨</span> Curious Kelly </a>
+        <a href="/" class="logo">
+          <img src="/images/brand/kelly-mark-circle-64.png" alt="Curious Kelly" class="logo-icon">
+          Curious Kelly
+        </a>
+        <img
+          src="/images/kelly-homepage-hero.jpeg"
+          alt="Kelly - Your AI Teacher"
+          class="hero-image"
+        />
+      </div>
+
+      <!-- Right: Auth Panel -->
+      <div class="right-panel">
+        <div class="main-content">
 
         <div class="main-content">
           <h1>
@@ -650,6 +772,15 @@
                 />
               </svg>
               <span>Continue with Google</span>
+              <div class="spinner"></div>
+            </button>
+
+            <!-- Apple Sign In -->
+            <button class="btn btn-apple" onclick="handleLogin(this, 'apple')" id="btn-apple">
+              <svg class="btn-icon" viewBox="0 0 24 24" fill="currentColor">
+                <path d="M17.05 20.28c-.98.95-2.05.88-3.08.4-1.09-.5-2.08-.48-3.24 0-1.44.62-2.2.44-3.06-.4C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"/>
+              </svg>
+              <span>Continue with Apple</span>
               <div class="spinner"></div>
             </button>
 
@@ -685,57 +816,20 @@
           </p>
         </div>
       </div>
+    </div>
 
-      <!-- Right: Hero Image -->
-      <div class="right-panel">
-        <img
-          src="/images/kelly-homepage-hero.jpeg"
-          alt="Kelly - Your AI Teacher"
-          class="hero-image"
-        />
-
-        <!-- Decorative Elements -->
-        <svg class="decoration decoration-1" viewBox="0 0 100 100">
-          <path
-            d="M10,50 Q30,10 50,50 T90,50"
-            fill="none"
-            stroke="#84cc16"
-            stroke-width="3"
-            opacity="0.6"
-          />
-        </svg>
-        <svg class="decoration decoration-2" viewBox="0 0 100 100">
-          <circle
-            cx="50"
-            cy="50"
-            r="40"
-            fill="none"
-            stroke="#f472b6"
-            stroke-width="2"
-            stroke-dasharray="10,5"
-            opacity="0.5"
-          />
-        </svg>
-        <svg class="decoration decoration-3" viewBox="0 0 100 100">
-          <text x="10" y="60" fill="#60a5fa" font-family="monospace" font-size="40" opacity="0.5">
-            &lt;/&gt;
-          </text>
-        </svg>
-
-        <!-- Pricing CTA -->
-        <a href="/pricing.html" class="pricing-cta">
-          <span>View pricing</span>
-          <svg
-            width="16"
-            height="16"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            stroke-width="2"
-          >
-            <path d="M5 12h14M12 5l7 7-7 7" />
-          </svg>
-        </a>
+    <!-- Claude-style Compact Footer -->
+    <div class="claude-footer">
+      <div class="claude-footer-content">
+        <div class="claude-footer-brand">
+          <span class="claude-by">BY LESSON OF THE DAY</span>
+          <span class="claude-copyright">© 2025 LESSON OF THE DAY PBC</span>
+        </div>
+        <div class="claude-footer-links">
+          <a href="/privacy.html">Privacy</a>
+          <span>·</span>
+          <a href="/terms.html">Terms</a>
+        </div>
       </div>
     </div>
 
