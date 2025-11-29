@@ -8,14 +8,31 @@
  * - Breathing animation
  * - Speaking indicator
  * - Phase-based expression mapping
+ *
+ * Image paths: /assets/kelly_canonical/core/chair/kelly-chair-{expression}.png
  */
+
+// Preload all Kelly expressions on module load for instant switching
+const KELLY_EXPRESSIONS = {
+  neutral: '/assets/kelly_canonical/core/chair/kelly-chair-curious.png',
+  curious: '/assets/kelly_canonical/core/chair/kelly-chair-curious.png',
+  explaining: '/assets/kelly_canonical/core/chair/kelly-chair-explaining.png',
+  listening: '/assets/kelly_canonical/core/chair/kelly-chair-listening.png',
+  wisdom: '/assets/kelly_canonical/core/chair/kelly-chair-wisdom.png',
+  celebrating: '/assets/kelly_canonical/core/chair/kelly-chair-celebrating.png',
+  happy: '/assets/kelly_canonical/core/chair/kelly-chair-celebrating.png'
+};
+
+// Preload all images immediately
+Object.values(KELLY_EXPRESSIONS).forEach(src => {
+  const img = new Image();
+  img.src = src;
+});
 
 class Kelly2DAvatar {
   constructor(container, options = {}) {
     this.container = container;
     this.options = {
-      imageSet: options.imageSet || 'directors-chair',
-      basePath: options.basePath || '/images/kelly/',
       transitionDuration: options.transitionDuration || 400,
       enableBreathing: options.enableBreathing !== false,
       preload: options.preload !== false,
@@ -195,7 +212,9 @@ class Kelly2DAvatar {
   }
 
   getImagePath(expression) {
-    return `${this.options.basePath}kelly-${this.options.imageSet}-${expression}.png`;
+    // Use the correct asset paths from KELLY_EXPRESSIONS
+    // Fallback to 'curious' if expression not found
+    return KELLY_EXPRESSIONS[expression] || KELLY_EXPRESSIONS.curious;
   }
 
   async preloadAllImages() {
@@ -224,9 +243,10 @@ class Kelly2DAvatar {
    * Set Kelly's expression
    */
   async setExpression(expression) {
-    if (!this.expressions.includes(expression)) {
-      console.warn(`[Kelly2D] Unknown expression: ${expression}`);
-      return;
+    // Normalize expression - fallback to 'curious' for unknown expressions
+    if (!KELLY_EXPRESSIONS[expression]) {
+      console.warn(`[Kelly2D] Unknown expression: ${expression}, falling back to 'curious'`);
+      expression = 'curious';
     }
 
     if (this.state.expression === expression) return;
@@ -378,4 +398,5 @@ if (typeof module !== 'undefined' && module.exports) {
 
 // Make available globally
 window.Kelly2DAvatar = Kelly2DAvatar;
+
 
