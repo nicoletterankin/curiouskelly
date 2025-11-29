@@ -14,8 +14,8 @@ class UnityKellyLoader {
   constructor(options = {}) {
     this.options = {
       canvasId: options.canvasId || 'unity-canvas',
-      buildPath: options.buildPath || '/unity/kelly/Build',
-      buildName: options.buildName || 'Kelly_Web_Build',
+      buildPath: options.buildPath || 'https://nicoletterankin.github.io/kelly-v2/Build',
+      buildName: options.buildName || 'kelly',
       timeout: options.timeout || 45000, // 45 seconds
       onProgress: options.onProgress || null,
       onLoad: options.onLoad || null,
@@ -143,14 +143,14 @@ class UnityKellyLoader {
           return;
         }
 
-        // Unity configuration
+        // Unity configuration (loading from GitHub Pages CDN)
         const config = {
-          dataUrl: `${this.options.buildPath}/${this.options.buildName}.data.unityweb`,
-          frameworkUrl: `${this.options.buildPath}/${this.options.buildName}.framework.js.unityweb`,
-          codeUrl: `${this.options.buildPath}/${this.options.buildName}.wasm.unityweb`,
-          streamingAssetsUrl: 'StreamingAssets',
+          dataUrl: `${this.options.buildPath}/${this.options.buildName}.data.gz`,
+          frameworkUrl: `${this.options.buildPath}/${this.options.buildName}.framework.js.gz`,
+          codeUrl: `${this.options.buildPath}/${this.options.buildName}.wasm.gz`,
+          streamingAssetsUrl: `${this.options.buildPath.replace('/Build', '')}/StreamingAssets`,
           companyName: 'CuriousKelly',
-          productName: 'KellyAvatar',
+          productName: 'Kelly',
           productVersion: '1.0'
         };
 
