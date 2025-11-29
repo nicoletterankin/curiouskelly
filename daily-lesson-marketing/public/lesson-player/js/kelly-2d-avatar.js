@@ -15,7 +15,7 @@ export class Kelly2DAvatar {
     // Map phases to available Kelly images
     this.expressions = {
       // Welcome phase
-      welcome: 'kelly-chair-curious.png',
+      welcome: 'kelly-chair-curious.jpeg',
       
       // Question phases
       question: 'kelly-chair-side.png',

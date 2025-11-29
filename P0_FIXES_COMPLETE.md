@@ -362,3 +362,4 @@ Need to verify:
 - Real voice (ElevenLabs API key)
 
 **Recommendation:** Deploy NOW to staging for testing, then add content and payment.
+

@@ -378,3 +378,4 @@ if (typeof module !== 'undefined' && module.exports) {
 
 // Make available globally
 window.Kelly2DAvatar = Kelly2DAvatar;
+

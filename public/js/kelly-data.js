@@ -470,3 +470,4 @@ window.KellyData = {
 document.addEventListener('DOMContentLoaded', preloadKellyImages);
 
 console.log('📚 Kelly Data Layer loaded');
+

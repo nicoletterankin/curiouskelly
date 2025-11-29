@@ -100,8 +100,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         line_items: [{ price: giftPriceId, quantity: 1 }],
         mode: 'payment',
         customer_email: body.customerEmail,
-        success_url: `${siteUrl}/gift-success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${siteUrl}/gifts?canceled=true`,
+        success_url: `${siteUrl}/gift-success.html?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${siteUrl}/payment-cancelled.html`,
         allow_promotion_codes: true,
         metadata: {
           ...commonMetadata,
@@ -127,8 +127,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         line_items: [{ price: lifetimePriceId, quantity: 1 }],
         mode: 'payment',
         customer_email: body.customerEmail,
-        success_url: `${siteUrl}/welcome?session_id={CHECKOUT_SESSION_ID}&plan=lifetime`,
-        cancel_url: `${siteUrl}/pricing.html?canceled=true`,
+        success_url: `${siteUrl}/welcome.html?session_id={CHECKOUT_SESSION_ID}&plan=lifetime`,
+        cancel_url: `${siteUrl}/payment-cancelled.html`,
         allow_promotion_codes: true,
         metadata: { ...commonMetadata, type: 'lifetime' }
       };
@@ -147,8 +147,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         line_items: [{ price: priceId, quantity: 1 }],
         mode: 'subscription',
         customer_email: body.customerEmail,
-        success_url: `${siteUrl}/welcome?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${siteUrl}/pricing.html?canceled=true`,
+        success_url: `${siteUrl}/welcome.html?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${siteUrl}/payment-cancelled.html`,
         metadata: { ...commonMetadata, type: body.planType },
         subscription_data: {
           metadata: { ...commonMetadata, plan_type: body.planType },

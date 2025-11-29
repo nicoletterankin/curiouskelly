@@ -123,7 +123,7 @@ export class KellyAvatarSystem {
           <img 
             id="kelly-base-image" 
             class="kelly-base-image" 
-            src="/lessons/images/kelly-directors-chair-curious.png"
+            src="/lessons/images/kelly-directors-chair-curious.jpeg"
             alt="Kelly"
             data-pose="curious"
             data-age="27"
@@ -556,6 +556,7 @@ export class KellyAvatarSystem {
 
 // Export for module usage
 export default KellyAvatarSystem;
+
 
 
 

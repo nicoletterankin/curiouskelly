@@ -362,3 +362,4 @@ This will show which lessons have missing variants.
 
 The app is now resilient to missing variant data and will gracefully degrade instead of crashing.
 
+

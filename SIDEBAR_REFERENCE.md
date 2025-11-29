@@ -426,3 +426,4 @@ document.querySelectorAll('[data-tone]').forEach((el) => {
 - Sound button is special (spinning animation)
 - All buttons have glass morphism effect
 - Active state scales down to 0.9
+

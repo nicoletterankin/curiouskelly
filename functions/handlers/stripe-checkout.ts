@@ -172,8 +172,8 @@ export async function stripeCheckoutHandler(
         ],
         mode: 'payment',
         customer_email: body.customerEmail,
-        success_url: `${siteUrl}/gift-success?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${siteUrl}/gifts?canceled=true`,
+        success_url: `${siteUrl}/gift-success.html?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${siteUrl}/payment-cancelled.html`,
         allow_promotion_codes: true,
         metadata: {
           ...commonMetadata,
@@ -205,8 +205,8 @@ export async function stripeCheckoutHandler(
         ],
         mode: 'payment',
         customer_email: body.customerEmail,
-        success_url: `${siteUrl}/welcome?session_id={CHECKOUT_SESSION_ID}&plan=lifetime`,
-        cancel_url: `${siteUrl}/?canceled=true`,
+        success_url: `${siteUrl}/welcome.html?session_id={CHECKOUT_SESSION_ID}&plan=lifetime`,
+        cancel_url: `${siteUrl}/payment-cancelled.html`,
         allow_promotion_codes: true,
         metadata: {
           ...commonMetadata,
@@ -233,8 +233,8 @@ export async function stripeCheckoutHandler(
         ],
         mode: 'subscription',
         customer_email: body.customerEmail,
-        success_url: `${siteUrl}/welcome?session_id={CHECKOUT_SESSION_ID}`,
-        cancel_url: `${siteUrl}/?canceled=true`,
+        success_url: `${siteUrl}/welcome.html?session_id={CHECKOUT_SESSION_ID}`,
+        cancel_url: `${siteUrl}/payment-cancelled.html`,
         metadata: {
           ...commonMetadata,
           type: body.planType

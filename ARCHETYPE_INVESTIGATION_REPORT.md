@@ -398,3 +398,4 @@ async function loadLesson(dayNumber) {
 - ✅ Keeps UX simple (3 tone choices vs 12 archetype names)
 - ✅ Matches pattern used in player.html
 - ✅ Allows future expansion to full archetype selection
+

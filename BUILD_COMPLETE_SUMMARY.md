@@ -119,3 +119,4 @@ The avatar system is ready for production deployment. To enable 3D mode:
 ---
 
 _Built: November 28, 2025_
+

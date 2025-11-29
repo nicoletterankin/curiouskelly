@@ -147,6 +147,59 @@
         object-position: center 20%;
       }
 
+      /* Unity 3D Loading Overlay */
+      .unity-loading {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 100;
+        gap: 16px;
+      }
+
+      .unity-loading-spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid rgba(255, 255, 255, 0.1);
+        border-top-color: #2563eb;
+        border-radius: 50%;
+        animation: unity-spin 1s linear infinite;
+      }
+
+      @keyframes unity-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .unity-loading-text {
+        color: #a1a1aa;
+        font-size: 14px;
+        text-align: center;
+        font-weight: 500;
+      }
+
+      .unity-loading-progress {
+        width: 200px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+
+      .unity-progress-bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #2563eb 0%, #7c3aed 100%);
+        transition: width 0.3s ease;
+      }
+
       /* Pause overlay (shows when tapped) */
       .pause-indicator {
         position: absolute;
@@ -318,6 +371,18 @@
 
       .nav-item.active svg {
         color: var(--tiktok-blue);
+      }
+
+      /* Mode button - disabled until Unity loads */
+      #btn-mode {
+        opacity: 0.3;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+
+      #btn-mode.enabled {
+        opacity: 1;
+        pointer-events: auto;
       }
 
       /* Sound button at bottom (like TikTok's spinning disc) */
@@ -901,6 +966,15 @@
         <!-- 3D Unity Container (hidden by default) -->
         <div class="kelly-avatar-container" id="kelly-3d-container" style="display: none">
           <canvas id="unity-canvas" style="width: 100%; height: 100%; display: block"></canvas>
+
+          <!-- Unity Loading Overlay -->
+          <div id="unity-loading" class="unity-loading" style="display: none">
+            <div class="unity-loading-spinner"></div>
+            <span class="unity-loading-text">Preparing 3D Kelly...</span>
+            <div class="unity-loading-progress">
+              <div id="unity-progress-bar" class="unity-progress-bar"></div>
+            </div>
+          </div>
         </div>
 
         <div class="pause-indicator" id="pause-indicator">⏸️</div>
@@ -1330,56 +1404,22 @@
 
       async function loadUnity3D() {
         try {
-          console.log('[Unity] Loading 3D avatar from CDN...');
+          console.log('[Unity] Starting Unity 3D load with decompression...');
 
-          const buildUrl = 'https://nicoletterankin.github.io/kelly-v2/Build';
-          const canvas = document.getElementById('unity-canvas');
+          // Use the new decompression loader
+          unityInstance = await window.unityKellyLoader.load();
 
-          if (!canvas) {
-            console.error('[Unity] Canvas not found');
-            return;
+          console.log('[Unity] ✅ 3D avatar loaded successfully');
+
+          // Enable mode toggle button
+          const modeBtn = document.getElementById('btn-mode');
+          if (modeBtn) {
+            modeBtn.classList.add('enabled');
+            console.log('[Unity] Mode toggle enabled');
           }
-
-          // Load Unity loader script
-          const loaderScript = document.createElement('script');
-          loaderScript.src = `${buildUrl}/kelly.loader.js`;
-
-          loaderScript.onload = async () => {
-            try {
-              // Create Unity instance
-              unityInstance = await createUnityInstance(canvas, {
-                dataUrl: `${buildUrl}/kelly.data.gz`,
-                frameworkUrl: `${buildUrl}/kelly.framework.js.gz`,
-                codeUrl: `${buildUrl}/kelly.wasm.gz`,
-                streamingAssetsUrl: 'StreamingAssets',
-                companyName: 'CuriousKelly',
-                productName: 'Kelly3D',
-                productVersion: '1.0',
-              });
-
-              console.log('[Unity] ✅ 3D avatar loaded successfully');
-
-              // Enable mode toggle button
-              const modeBtn = document.getElementById('btn-mode');
-              if (modeBtn) {
-                modeBtn.style.opacity = '1';
-                modeBtn.style.pointerEvents = 'auto';
-                console.log('[Unity] Mode toggle enabled');
-              }
-
-            } catch (error) {
-              console.error('[Unity] Failed to create instance:', error);
-            }
-          };
-
-          loaderScript.onerror = () => {
-            console.error('[Unity] Failed to load Unity loader script');
-          };
-
-          document.head.appendChild(loaderScript);
-
         } catch (error) {
           console.error('[Unity] Load error:', error);
+          showToast('Failed to load 3D mode. Staying in 2D.');
         }
       }
 

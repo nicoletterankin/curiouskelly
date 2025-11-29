@@ -170,12 +170,12 @@ class KellyAudio {
     const response = await fetch('/api/tts', {
       method: 'POST',
       headers: {
-        'Content-Type': 'application/json',
+        'Content-Type': 'application/json'
       },
       body: JSON.stringify({
         text: text,
-        voiceId: this.options.kellyVoiceId,
-      }),
+        voiceId: this.options.kellyVoiceId
+      })
     });
 
     if (!response.ok) {
