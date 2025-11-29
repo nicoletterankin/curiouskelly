@@ -1119,14 +1119,15 @@
       };
 
       // ═══════════════════════════════════════════════════════════════════
-      // STATE
+      // STATE (with defensive initialization)
       // ═══════════════════════════════════════════════════════════════════
       const state = {
         dayNumber: 333,
-        lesson: null,
+        lesson: null, // Will be populated by loadLesson()
         currentPhase: 1,
         isPaused: false,
         isMuted: false,
+        isLoading: false, // Track loading state to prevent race conditions
 
         variants: {
           age: localStorage.getItem('kelly_age') || '18-35',
@@ -1141,6 +1142,7 @@
 
       let kellyAvatar = null;
       let kellyAudio = null;
+      let loadingTimeout = null; // Track loading timeout
 
       // ═══════════════════════════════════════════════════════════════════
       // KELLY AVATAR CONTROLLER INITIALIZATION
@@ -1235,12 +1237,24 @@
       }
 
       // ═══════════════════════════════════════════════════════════════════
-      // LESSON DATA - LOAD FROM SUPABASE
+      // LESSON DATA - LOAD FROM SUPABASE (with loading state & timeout)
       // ═══════════════════════════════════════════════════════════════════
       async function loadLesson(dayNumber) {
+        // Prevent concurrent loads
+        if (state.isLoading) {
+          console.warn('[Learn] Load already in progress, skipping duplicate request');
+          return;
+        }
+
+        state.isLoading = true;
         state.dayNumber = dayNumber;
         state.currentPhase = 1;
         state.choicesMade = {};
+
+        // Clear any existing timeout
+        if (loadingTimeout) {
+          clearTimeout(loadingTimeout);
+        }
 
         // Update UI immediately
         document.getElementById('day-display').textContent = `Day ${dayNumber}`;
@@ -1250,6 +1264,18 @@
         // Show loading state
         document.getElementById('speech-text').textContent = 'Loading lesson...';
         document.getElementById('choices-container').innerHTML = '';
+
+        // Set timeout fallback (10 seconds)
+        loadingTimeout = setTimeout(() => {
+          if (state.isLoading) {
+            console.error('[Learn] Loading timeout - using placeholder');
+            state.lesson = createPlaceholderLesson(dayNumber);
+            state.isLoading = false;
+            updateUI();
+            renderPhase(state.lesson.phases[0]);
+            showToast('⚠️ Loading took too long. Using placeholder content.');
+          }
+        }, 10000);
 
         try {
           // Get current tone preference and map to archetype
@@ -1270,6 +1296,8 @@
           if (lessonError || !coreLesson) {
             console.warn(`[Learn] No core lesson found for day ${dayNumber}:`, lessonError);
             state.lesson = createPlaceholderLesson(dayNumber);
+            state.isLoading = false;
+            clearTimeout(loadingTimeout);
             updateUI();
             renderPhase(state.lesson.phases[0]);
             return;
@@ -1323,6 +1351,8 @@
 
             // No atoms at all - use placeholder
             state.lesson = createPlaceholderLesson(dayNumber);
+            state.isLoading = false;
+            clearTimeout(loadingTimeout);
             updateUI();
             renderPhase(state.lesson.phases[0]);
             return;
@@ -1336,6 +1366,8 @@
           console.error('[Learn] Error loading lesson:', error);
           showToast('Error loading lesson. Using placeholder.');
           state.lesson = createPlaceholderLesson(dayNumber);
+          state.isLoading = false;
+          clearTimeout(loadingTimeout);
           updateUI();
           renderPhase(state.lesson.phases[0]);
         }
@@ -1371,13 +1403,14 @@
                   : atom.phase.toUpperCase(),
             text: content.script || content.text || 'Content loading...',
             hint: content.prompt || null,
-            choices: content.options && Array.isArray(content.options)
-              ? content.options.map((opt, i) => ({
-                  letter: String.fromCharCode(65 + i), // A, B, C
-                  text: opt?.text || 'Option ' + (i + 1),
-                  response: opt?.response || ''
-                }))
-              : null
+            choices:
+              content.options && Array.isArray(content.options)
+                ? content.options.map((opt, i) => ({
+                    letter: String.fromCharCode(65 + i), // A, B, C
+                    text: opt?.text || 'Option ' + (i + 1),
+                    response: opt?.response || ''
+                  }))
+                : null
           };
         });
 
@@ -1391,6 +1424,13 @@
         };
 
         console.log(`[Learn] ✅ Lesson built: ${phases.length} phases`);
+
+        // Clear loading state and timeout
+        state.isLoading = false;
+        if (loadingTimeout) {
+          clearTimeout(loadingTimeout);
+          loadingTimeout = null;
+        }
 
         // Update UI and render first phase
         updateUI();
@@ -1491,9 +1531,9 @@
       function getVariantText(phase) {
         // Null safety: phase might be undefined
         if (!phase) return '';
-        
+
         const { age, language } = state.variants;
-        
+
         // If text is an object (variant structure)
         if (typeof phase.text === 'object' && phase.text !== null) {
           const ageText = phase.text[age];
@@ -1506,7 +1546,7 @@
             return phase.text[firstAge][language] || phase.text[firstAge]['en'] || '';
           }
         }
-        
+
         // Fallback to direct text or empty string
         return phase.text || '';
       }
@@ -1514,9 +1554,9 @@
       function getVariantHint(phase) {
         // Null safety: phase or hint might be undefined
         if (!phase || !phase.hint) return null;
-        
+
         const { age, language } = state.variants;
-        
+
         // If hint is an object (variant structure)
         if (typeof phase.hint === 'object' && phase.hint !== null) {
           const ageHint = phase.hint[age];
@@ -1529,7 +1569,7 @@
             return phase.hint[firstAge][language] || phase.hint[firstAge]['en'] || null;
           }
         }
-        
+
         // Fallback to direct hint
         return phase.hint || null;
       }
@@ -1537,11 +1577,15 @@
       function getVariantChoices(phase) {
         // Null safety: phase or choices might be undefined
         if (!phase || !phase.choices) return null;
-        
+
         const { age, language, difficulty } = state.variants;
 
         // If choices is an object (variant structure)
-        if (typeof phase.choices === 'object' && !Array.isArray(phase.choices) && phase.choices !== null) {
+        if (
+          typeof phase.choices === 'object' &&
+          !Array.isArray(phase.choices) &&
+          phase.choices !== null
+        ) {
           const ageChoices = phase.choices[age];
           if (ageChoices && ageChoices[language]) {
             return ageChoices[language].slice(0, difficulty);
@@ -1618,12 +1662,31 @@
       }
 
       // ═══════════════════════════════════════════════════════════════════
-      // PHASE RENDERING (with null safety)
+      // PHASE RENDERING (with null safety and error recovery)
       // ═══════════════════════════════════════════════════════════════════
       function renderPhase(phase) {
         // Null safety: phase might be undefined
         if (!phase) {
-          console.warn('[Learn] renderPhase called with null/undefined phase');
+          console.error('[Learn] renderPhase called with null/undefined phase');
+          
+          // Show error message to user
+          const speechText = document.getElementById('speech-text');
+          if (speechText) {
+            speechText.textContent = '⚠️ Unable to load lesson content. Please try refreshing the page.';
+          }
+          
+          // If lesson is still loading, wait
+          if (state.isLoading) {
+            console.log('[Learn] Lesson is still loading, please wait...');
+            return;
+          }
+          
+          // If lesson failed to load, try reloading
+          if (!state.lesson && state.dayNumber) {
+            console.log('[Learn] Attempting to reload lesson...');
+            loadLesson(state.dayNumber);
+          }
+          
           return;
         }
 
@@ -1954,7 +2017,7 @@
       // ═══════════════════════════════════════════════════════════════════
       // Modal functions removed - all side controls now use popover system
 
-      function selectVariant(type, value) {
+      async function selectVariant(type, value) {
         if (type === 'difficulty') {
           state.variants.difficulty = parseInt(value);
         } else {
@@ -1968,7 +2031,7 @@
         if (type === 'tone') {
           closePopover();
           showToast('Reloading lesson with new tone...');
-          loadLesson(state.dayNumber);
+          await loadLesson(state.dayNumber); // Wait for lesson to load
           return;
         }
 
@@ -1977,6 +2040,12 @@
           renderPhase(state.lesson.phases[state.currentPhase - 1]);
         } else {
           console.warn('[Learn] Cannot re-render phase: lesson or phase data missing');
+          console.log('[Learn] State:', {
+            hasLesson: !!state.lesson,
+            hasPhases: !!(state.lesson && state.lesson.phases),
+            currentPhase: state.currentPhase,
+            phaseCount: state.lesson?.phases?.length || 0
+          });
         }
 
         // Popover already closed by individual handlers
