@@ -317,11 +317,11 @@ function setUserBirthday(month, day) {
 // ═══════════════════════════════════════════════════════════════════════════════
 
 const KELLY_IMAGES = {
-  curious: '/images/kelly/kelly-directors-chair-curious.png',
-  explaining: '/images/kelly/kelly-directors-chair-explaining.png',
-  listening: '/images/kelly/kelly-directors-chair-listening.png',
-  wisdom: '/images/kelly/kelly-directors-chair-wisdom.png',
-  celebrating: '/images/kelly/kelly-directors-chair-celebrating.png'
+  curious: '/assets/kelly/production/avatars/curious/kelly-curious-512.webp',
+  explaining: '/assets/kelly/production/avatars/explaining/kelly-explaining-512.webp',
+  listening: '/assets/kelly/production/avatars/listening/kelly-listening-512.webp',
+  wisdom: '/assets/kelly/production/avatars/wisdom/kelly-wisdom-512.webp',
+  celebrating: '/assets/kelly/production/avatars/celebrating/kelly-celebrating-512.webp'
 };
 
 /**
