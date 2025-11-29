@@ -11,20 +11,6 @@
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>Curious Kelly - The AI for Lifelong Learners</title>
-    
-    <!-- Redirect to lesson player (main app experience) -->
-    <script>
-      // Get today's day of year
-      function getDayOfYear() {
-        const now = new Date();
-        const start = new Date(now.getFullYear(), 0, 0);
-        return Math.floor((now - start) / (1000 * 60 * 60 * 24));
-      }
-      
-      // Redirect to today's lesson
-      const day = getDayOfYear();
-      window.location.href = `/learn.html?day=${day}`;
-    </script>
 
     <!-- Favicons -->
     <link rel="icon" type="image/png" sizes="16x16" href="/images/brand/favicon-16.png" />
@@ -871,7 +857,7 @@
             const { data, error } = await supabase.auth.signInWithOtp({
               email: email,
               options: {
-                emailRedirectTo: `${window.location.origin}/app.html`
+                emailRedirectTo: `${window.location.origin}/learn.html`
               }
             });
 
@@ -891,7 +877,7 @@
           const { data, error } = await supabase.auth.signInWithOAuth({
             provider: provider,
             options: {
-              redirectTo: `${window.location.origin}/app.html`,
+              redirectTo: `${window.location.origin}/learn.html`,
               queryParams: {
                 access_type: 'offline',
                 prompt: 'consent'
@@ -912,7 +898,7 @@
         e.preventDefault();
         localStorage.setItem('guestMode', 'true');
         localStorage.setItem('guestStarted', new Date().toISOString());
-        window.location.href = '/app.html';
+        window.location.href = '/learn.html';
       };
 
       // Helpers
@@ -1025,10 +1011,10 @@
           }
 
           const fromApp =
-            document.referrer.includes('/app.html') ||
+            document.referrer.includes('/learn.html') ||
             sessionStorage.getItem('from_app') === 'true';
           if (!fromApp) {
-            window.location.href = '/app.html';
+            window.location.href = '/learn.html';
           }
           sessionStorage.removeItem('from_app');
         }
