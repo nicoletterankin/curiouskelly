@@ -50,7 +50,11 @@
         height: 100%;
         width: 100%;
         background: var(--bg);
-        font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        font-family:
+          'DM Sans',
+          -apple-system,
+          BlinkMacSystemFont,
+          sans-serif;
         color: var(--text);
         overflow-x: hidden;
       }
@@ -285,6 +289,16 @@
               <span>›</span>
             </div>
           </div>
+
+          <div class="setting-item" id="sign-out-btn" onclick="handleSignOut()" style="cursor: pointer;">
+            <div class="setting-info">
+              <div class="setting-label" style="color: #ef4444;">Sign Out</div>
+              <div class="setting-desc">End your session</div>
+            </div>
+            <div class="setting-value">
+              <span style="color: #ef4444;">→</span>
+            </div>
+          </div>
         </div>
       </div>
 
@@ -377,7 +391,39 @@
       document.getElementById('difficulty-value').textContent = `${difficulty} choices`;
 
       console.log('[Settings] Loaded user preferences');
+
+      // Sign out function
+      async function handleSignOut() {
+        const confirmSignOut = confirm('Are you sure you want to sign out?');
+        if (!confirmSignOut) return;
+
+        try {
+          const supabase = window.supabase.createClient(
+            window.SUPABASE_URL || 'https://tvjalxxsyryjphkforjv.supabase.co',
+            window.SUPABASE_ANON_KEY ||
+              'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI'
+          );
+
+          const { error } = await supabase.auth.signOut();
+
+          if (error) {
+            console.error('[Settings] Sign out error:', error);
+            alert('Error signing out. Please try again.');
+            return;
+          }
+
+          console.log('[Settings] ✅ Signed out successfully');
+          
+          // Clear local storage
+          localStorage.clear();
+          
+          // Redirect to homepage
+          window.location.href = '/';
+        } catch (error) {
+          console.error('[Settings] Sign out failed:', error);
+          alert('Error signing out. Please try again.');
+        }
+      }
     </script>
   </body>
 </html>
-
