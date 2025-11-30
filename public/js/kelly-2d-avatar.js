@@ -20,7 +20,7 @@ Object.values(KELLY_IMAGES).forEach(src => {
 });
 
 class Kelly2DAvatar {
-  constructor(container) {
+  constructor(container, options = {}) {
     this.container = typeof container === 'string' 
       ? document.querySelector(container) 
       : container;
@@ -29,6 +29,9 @@ class Kelly2DAvatar {
       console.error('[Kelly] Container not found');
       return;
     }
+    
+    this.options = options;
+    this.currentDirection = 'up';
     
     // Clear container
     this.container.innerHTML = '';
@@ -48,16 +51,22 @@ class Kelly2DAvatar {
    * Kelly points UP (to top choice)
    */
   pointUp() {
-    this.img.src = KELLY_IMAGES.up;
-    console.log('[Kelly] Pointing UP');
+    if (this.img) {
+      this.img.src = KELLY_IMAGES.up;
+      this.currentDirection = 'up';
+      console.log('[Kelly] Pointing UP');
+    }
   }
   
   /**
    * Kelly points DOWN (to bottom choice)
    */
   pointDown() {
-    this.img.src = KELLY_IMAGES.down;
-    console.log('[Kelly] Pointing DOWN');
+    if (this.img) {
+      this.img.src = KELLY_IMAGES.down;
+      this.currentDirection = 'down';
+      console.log('[Kelly] Pointing DOWN');
+    }
   }
   
   /**
@@ -73,14 +82,24 @@ class Kelly2DAvatar {
     }
   }
   
-  // Backward compatibility with old avatar system
-  setExpression(expr) {
-    console.log('[Kelly] setExpression called (defaulting to pointUp)');
-    this.pointUp();
+  /**
+   * Set expression - maps old expression names to pointing directions
+   * For backward compatibility with KellyAvatarController
+   */
+  setExpression(expression) {
+    // Map expressions to pointing directions for visual variety
+    const downExpressions = ['explaining', 'wisdom', 'listening'];
+    
+    if (downExpressions.includes(expression)) {
+      this.pointDown();
+    } else {
+      this.pointUp();
+    }
+    console.log(`[Kelly] setExpression('${expression}') -> pointing ${this.currentDirection}`);
   }
   
   setSpeaking(speaking) {
-    // No-op for compatibility
+    // No-op for compatibility - two-frame system doesn't animate speaking
   }
   
   setPhase(phase, choice = null) {
@@ -91,13 +110,15 @@ class Kelly2DAvatar {
       } else {
         this.pointUp();
       }
+    } else if (phase === 'wisdom' || phase === 'complete') {
+      this.pointDown();
     } else {
       this.pointUp();
     }
   }
   
   getExpression() {
-    return this.img.src.includes('up') ? 'up' : 'down';
+    return this.currentDirection === 'up' ? 'curious' : 'explaining';
   }
   
   destroy() {
