@@ -9,8 +9,8 @@
  */
 
 const KELLY_IMAGES = {
-  up: '/images/kelly/kelly-point-up.jpeg',
-  down: '/images/kelly/kelly-point-down.jpeg'
+  up: '/images/kelly-point-up.jpeg',
+  down: '/images/kelly-point-down.jpeg'
 };
 
 // Preload both images immediately for instant switching
