@@ -1,0 +1,594 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔴 LIVE - Curious Kelly</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Kelly Blue - Primary Brand Color */
+            --kelly-blue: #2563eb;
+            --kelly-blue-light: #3b82f6;
+            --kelly-blue-dark: #1d4ed8;
+            --kelly-blue-glow: rgba(37, 99, 235, 0.15);
+            
+            /* Dark Theme */
+            --bg: #0f0f13;
+            --card: #1c1c24;
+            --surface: #252530;
+            
+            /* Text */
+            --text: #f4f4f5;
+            --text-dim: #a1a1aa;
+            
+            /* Accent */
+            --live-red: #ef4444;
+            --success: #22c55e;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Live indicator pulse */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.7; transform: scale(1.1); }
+        }
+        
+        @keyframes count-up {
+            from { transform: translateY(10px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+        
+        /* Header */
+        .live-header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            padding: 16px 24px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.9) 0%, transparent 100%);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            z-index: 100;
+        }
+        
+        .live-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: var(--live-red);
+            border-radius: 8px;
+            font-weight: 700;
+            font-size: 0.85rem;
+        }
+        
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .viewer-count {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.95rem;
+            color: var(--text-dim);
+        }
+        
+        .viewer-count span {
+            color: var(--kelly-blue);
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+        
+        /* Main container */
+        .live-container {
+            display: grid;
+            grid-template-columns: 1fr 360px;
+            height: 100vh;
+        }
+        
+        @media (max-width: 900px) {
+            .live-container {
+                grid-template-columns: 1fr;
+            }
+            .chat-panel { display: none; }
+        }
+        
+        /* Kelly video area */
+        .kelly-stage {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            background: linear-gradient(180deg, #0f0f18 0%, #000 100%);
+        }
+        
+        .kelly-video {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .kelly-avatar {
+            width: 100%;
+            max-width: 600px;
+            aspect-ratio: 1;
+            background: radial-gradient(ellipse at center, #1e3a5f 0%, #000 70%);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+        }
+        
+        .kelly-avatar::before {
+            content: '✨';
+            font-size: 120px;
+            animation: pulse 2s infinite;
+        }
+        
+        .kelly-avatar::after {
+            content: '';
+            position: absolute;
+            inset: -20px;
+            border: 2px solid rgba(37, 99, 235, 0.3);
+            border-radius: 50%;
+            animation: pulse 3s infinite;
+        }
+        
+        /* Speaking indicator */
+        .speaking-text {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            padding: 20px 32px;
+            border-radius: 16px;
+            max-width: 80%;
+            font-size: 1.25rem;
+            line-height: 1.6;
+            text-align: center;
+            border: 1px solid rgba(37, 99, 235, 0.3);
+        }
+        
+        /* Topic banner */
+        .topic-banner {
+            padding: 24px;
+            background: var(--card);
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .topic-day {
+            font-size: 0.8rem;
+            color: var(--kelly-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+        }
+        
+        .topic-title {
+            font-family: 'Fraunces', serif;
+            font-size: 2rem;
+            font-weight: 400;
+            margin-bottom: 12px;
+        }
+        
+        .topic-hook {
+            color: var(--text-dim);
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+        
+        /* Progress bar */
+        .progress-container {
+            padding: 0 24px 24px;
+            background: var(--card);
+        }
+        
+        .progress-bar {
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 2px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--kelly-blue), var(--kelly-blue-light));
+            width: 35%;
+            transition: width 1s linear;
+        }
+        
+        .progress-time {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+        
+        /* Chat panel */
+        .chat-panel {
+            background: var(--card);
+            border-left: 1px solid rgba(255,255,255,0.1);
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .chat-header {
+            padding: 20px;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .chat-header h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .chat-messages {
+            flex: 1;
+            overflow-y: auto;
+            padding: 16px;
+        }
+        
+        .chat-message {
+            margin-bottom: 16px;
+            animation: count-up 0.3s ease-out;
+        }
+        
+        .chat-user {
+            font-size: 0.8rem;
+            color: var(--kelly-blue);
+            margin-bottom: 4px;
+        }
+        
+        .chat-user .flag {
+            margin-right: 4px;
+        }
+        
+        .chat-text {
+            font-size: 0.9rem;
+            color: var(--text);
+            line-height: 1.4;
+        }
+        
+        .chat-input-container {
+            padding: 16px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .chat-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--surface);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 0.9rem;
+            font-family: inherit;
+        }
+        
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--kelly-blue);
+        }
+        
+        .chat-input::placeholder {
+            color: var(--text-dim);
+        }
+        
+        /* Global stats */
+        .global-stats {
+            padding: 16px;
+            background: rgba(37, 99, 235, 0.1);
+            border-top: 1px solid rgba(37, 99, 235, 0.2);
+        }
+        
+        .stats-row {
+            display: flex;
+            justify-content: space-around;
+            text-align: center;
+        }
+        
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--kelly-blue);
+        }
+        
+        .stat-label {
+            font-size: 0.7rem;
+            color: var(--text-dim);
+            text-transform: uppercase;
+        }
+        
+        /* Next class banner */
+        .next-class {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 16px 24px;
+            background: linear-gradient(180deg, transparent 0%, rgba(0,0,0,0.95) 30%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 24px;
+        }
+        
+        .next-class-text {
+            font-size: 0.9rem;
+            color: var(--text-dim);
+        }
+        
+        .next-class-text strong {
+            color: var(--kelly-blue);
+        }
+        
+        .next-class-countdown {
+            font-family: 'Fraunces', serif;
+            font-size: 1.5rem;
+            color: var(--text);
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="live-header">
+        <div class="live-badge">
+            <span class="live-dot"></span>
+            LIVE
+        </div>
+        <div class="viewer-count">
+            👥 <span id="viewer-count">1,247,832</span> watching
+        </div>
+    </header>
+    
+    <!-- Main Content -->
+    <div class="live-container">
+        <!-- Kelly Stage -->
+        <div class="kelly-stage">
+            <div class="kelly-video">
+                <div class="kelly-avatar"></div>
+                <div class="speaking-text" id="speaking-text">
+                    "Here's something wild: when a wave passes through water, the water doesn't actually move forward..."
+                </div>
+            </div>
+            
+            <div class="topic-banner">
+                <div class="topic-day">Day <span id="day-number">47</span> • <span id="date-display">February 16</span></div>
+                <h1 class="topic-title" id="topic-title">How Waves Carry Energy</h1>
+                <p class="topic-hook" id="topic-hook">"The energy travels, but the water stays put. Mind-blowing, right?"</p>
+            </div>
+            
+            <div class="progress-container">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progress-fill"></div>
+                </div>
+                <div class="progress-time">
+                    <span id="time-elapsed">1:45</span>
+                    <span id="time-remaining">3:15 remaining</span>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Chat Panel -->
+        <div class="chat-panel">
+            <div class="chat-header">
+                <h3>💬 Live Reactions</h3>
+            </div>
+            
+            <div class="chat-messages" id="chat-messages">
+                <!-- Messages populated by JS -->
+            </div>
+            
+            <div class="global-stats">
+                <div class="stats-row">
+                    <div class="stat-item">
+                        <span class="stat-value" id="countries-count">147</span>
+                        <span class="stat-label">Countries</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="reactions-count">89K</span>
+                        <span class="stat-label">Reactions</span>
+                    </div>
+                    <div class="stat-item">
+                        <span class="stat-value" id="shares-count">12K</span>
+                        <span class="stat-label">Shares</span>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-input-container">
+                <input type="text" class="chat-input" placeholder="Share your reaction..." id="chat-input">
+            </div>
+        </div>
+    </div>
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        // Initialize Supabase
+        const SUPABASE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Simulated chat messages from around the world
+        const MESSAGES = [
+            { user: "Maria", flag: "🇧🇷", country: "Brazil", text: "Mind blown! 🤯" },
+            { user: "James", flag: "🇬🇧", country: "UK", text: "Showing my kids right now!" },
+            { user: "Yuki", flag: "🇯🇵", country: "Japan", text: "Wait, what?? 😮" },
+            { user: "Ahmed", flag: "🇪🇬", country: "Egypt", text: "This explains so much!" },
+            { user: "Sofia", flag: "🇲🇽", country: "Mexico", text: "Kelly is the best teacher ever ✨" },
+            { user: "Li Wei", flag: "🇨🇳", country: "China", text: "Learning together across the world 🌍" },
+            { user: "Emma", flag: "🇺🇸", country: "USA", text: "My morning ritual! ☕" },
+            { user: "Priya", flag: "🇮🇳", country: "India", text: "This is beautiful knowledge 💫" },
+            { user: "Hans", flag: "🇩🇪", country: "Germany", text: "Sehr interessant!" },
+            { user: "Fatima", flag: "🇸🇦", country: "Saudi Arabia", text: "Kelly makes learning fun!" },
+            { user: "Carlos", flag: "🇦🇷", country: "Argentina", text: "Increíble! 🙌" },
+            { user: "Anya", flag: "🇷🇺", country: "Russia", text: "Every day I learn something new" },
+            { user: "Kofi", flag: "🇬🇭", country: "Ghana", text: "Sharing with my students!" },
+            { user: "Mei", flag: "🇹🇼", country: "Taiwan", text: "Good morning from Taipei! 🌅" },
+            { user: "Lucas", flag: "🇫🇷", country: "France", text: "C'est magnifique!" }
+        ];
+        
+        const KELLY_SCRIPTS = [
+            "Here's something wild: when a wave passes through water, the water doesn't actually move forward...",
+            "Think about it—you're watching the energy travel, but the water molecules are just bobbing in place.",
+            "It's like doing 'the wave' at a stadium. You stand up and sit down, but YOU don't move around the stadium.",
+            "This is why surfers can ride waves. They're not being pushed by water—they're riding energy.",
+            "The wave carries the energy from the storm that created it, sometimes thousands of miles away..."
+        ];
+        
+        let currentScriptIndex = 0;
+        let viewerCount = 1247832;
+        let progress = 35;
+        
+        // Get today's lesson
+        async function loadTodaysLesson() {
+            const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / (1000 * 60 * 60 * 24));
+            
+            const { data: lesson } = await supabase
+                .from('core_lessons')
+                .select('day_number, topic, universal_truth')
+                .eq('day_number', dayOfYear)
+                .single();
+            
+            if (lesson) {
+                document.getElementById('day-number').textContent = lesson.day_number;
+                document.getElementById('topic-title').textContent = lesson.topic;
+                
+                // Get age hook
+                const { data: hook } = await supabase
+                    .from('lesson_age_hooks')
+                    .select('hook')
+                    .eq('day_number', lesson.day_number)
+                    .eq('age_bucket', '18-35')
+                    .single();
+                
+                if (hook) {
+                    document.getElementById('topic-hook').textContent = `"${hook.hook}"`;
+                }
+            }
+            
+            // Format date
+            const options = { month: 'long', day: 'numeric' };
+            document.getElementById('date-display').textContent = new Date().toLocaleDateString('en-US', options);
+        }
+        
+        // Add chat message
+        function addChatMessage(msg) {
+            const container = document.getElementById('chat-messages');
+            const div = document.createElement('div');
+            div.className = 'chat-message';
+            div.innerHTML = `
+                <div class="chat-user"><span class="flag">${msg.flag}</span>${msg.user} • ${msg.country}</div>
+                <div class="chat-text">${msg.text}</div>
+            `;
+            container.appendChild(div);
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        // Update Kelly's speaking text
+        function updateSpeakingText() {
+            currentScriptIndex = (currentScriptIndex + 1) % KELLY_SCRIPTS.length;
+            document.getElementById('speaking-text').textContent = `"${KELLY_SCRIPTS[currentScriptIndex]}"`;
+        }
+        
+        // Update viewer count (simulate)
+        function updateViewerCount() {
+            viewerCount += Math.floor(Math.random() * 100) - 30;
+            document.getElementById('viewer-count').textContent = viewerCount.toLocaleString();
+        }
+        
+        // Update progress
+        function updateProgress() {
+            progress = Math.min(progress + 0.5, 100);
+            document.getElementById('progress-fill').style.width = progress + '%';
+            
+            const elapsed = Math.floor((progress / 100) * 300);
+            const remaining = 300 - elapsed;
+            
+            document.getElementById('time-elapsed').textContent = 
+                `${Math.floor(elapsed / 60)}:${(elapsed % 60).toString().padStart(2, '0')}`;
+            document.getElementById('time-remaining').textContent = 
+                `${Math.floor(remaining / 60)}:${(remaining % 60).toString().padStart(2, '0')} remaining`;
+        }
+        
+        // Initialize
+        async function init() {
+            await loadTodaysLesson();
+            
+            // Add initial messages
+            MESSAGES.slice(0, 5).forEach(msg => addChatMessage(msg));
+            
+            // Simulate live chat
+            let msgIndex = 5;
+            setInterval(() => {
+                if (msgIndex < MESSAGES.length) {
+                    addChatMessage(MESSAGES[msgIndex]);
+                    msgIndex++;
+                } else {
+                    // Loop with slight variations
+                    const msg = MESSAGES[Math.floor(Math.random() * MESSAGES.length)];
+                    addChatMessage(msg);
+                }
+            }, 3000);
+            
+            // Update speaking text
+            setInterval(updateSpeakingText, 8000);
+            
+            // Update viewer count
+            setInterval(updateViewerCount, 2000);
+            
+            // Update progress
+            setInterval(updateProgress, 1000);
+        }
+        
+        // Handle chat input
+        document.getElementById('chat-input').addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && e.target.value.trim()) {
+                addChatMessage({
+                    user: "You",
+                    flag: "✨",
+                    country: "Here",
+                    text: e.target.value
+                });
+                e.target.value = '';
+            }
+        });
+        
+        init();
+    </script>
+</body>
+</html>

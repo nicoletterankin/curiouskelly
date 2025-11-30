@@ -13,14 +13,18 @@
 
 #### Primary Colors
 ```
-Background: #0f0f11 (Deep Black)
+Background: #0f0f13 (Deep Black)
 Use: Main backgrounds, cards, dark mode
 
 Text Primary: #f4f4f5 (Off-White)
 Use: Headlines, body text, primary content
 
-Accent Orange: #d97757 (Warm Orange)
-Use: CTAs, highlights, Kelly's brand color, links
+Kelly Blue: #2563eb (Primary Blue)
+Use: CTAs, highlights, Kelly's brand color, links, buttons
+Note: This is THE brand color. Kelly wears blue. Kelly IS blue.
+
+Kelly Blue Light: #3b82f6
+Use: Hover states, gradients, accents
 ```
 
 #### Secondary Colors
