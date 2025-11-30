@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chat Test - Curious Kelly</title>
+    <style>
+        :root {
+            --tiktok-bg: #0a0a0b;
+            --tiktok-text: #fafafa;
+            --tiktok-text-secondary: rgba(250, 250, 250, 0.75);
+            --tiktok-text-muted: rgba(250, 250, 250, 0.5);
+            --tiktok-accent: #3b82f6;
+            --safe-top: 44px;
+            --safe-right: 16px;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--tiktok-bg);
+            color: var(--tiktok-text);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        h1 {
+            margin-bottom: 20px;
+            color: var(--tiktok-accent);
+        }
+        
+        .test-section {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        
+        .test-section h2 {
+            font-size: 1.2rem;
+            margin-bottom: 12px;
+        }
+        
+        .test-button {
+            background: var(--tiktok-accent);
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 1rem;
+            margin: 8px 8px 8px 0;
+        }
+        
+        .test-button:hover {
+            opacity: 0.9;
+        }
+        
+        .status {
+            margin-top: 12px;
+            padding: 12px;
+            border-radius: 8px;
+            font-family: monospace;
+            font-size: 0.9rem;
+        }
+        
+        .status.success {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: #22c55e;
+        }
+        
+        .status.error {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: #ef4444;
+        }
+        
+        #test-chat-container {
+            background: rgba(255, 255, 255, 0.02);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+            padding: 16px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>🧪 Chat Simulator Test Page</h1>
+    
+    <div class="test-section">
+        <h2>1. Check if ChatSimulator Loaded</h2>
+        <button class="test-button" onclick="testChatSimulatorLoaded()">Test Load</button>
+        <div id="test-load-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>2. Initialize Chat Simulator</h2>
+        <button class="test-button" onclick="testInitialize()">Initialize</button>
+        <div id="test-init-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>3. Start Chat Messages</h2>
+        <button class="test-button" onclick="testStart()">Start Messages</button>
+        <button class="test-button" onclick="testStop()">Stop Messages</button>
+        <div id="test-start-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>4. Manually Add Message</h2>
+        <button class="test-button" onclick="testAddMessage()">Add Message</button>
+        <div id="test-message-status"></div>
+    </div>
+    
+    <div class="test-section">
+        <h2>5. Live Chat Display</h2>
+        <div id="test-chat-container"></div>
+        <div id="test-stats-container"></div>
+    </div>
+    
+    <!-- Load Chat Simulator -->
+    <script src="/js/chat-simulator.js"></script>
+    
+    <script>
+        let chatSim = null;
+        
+        function showStatus(elementId, message, isSuccess) {
+            const el = document.getElementById(elementId);
+            el.className = 'status ' + (isSuccess ? 'success' : 'error');
+            el.textContent = message;
+        }
+        
+        function testChatSimulatorLoaded() {
+            if (typeof ChatSimulator !== 'undefined') {
+                showStatus('test-load-status', '✅ ChatSimulator class loaded successfully!', true);
+                console.log('ChatSimulator:', ChatSimulator);
+            } else {
+                showStatus('test-load-status', '❌ ChatSimulator not found. Check if /js/chat-simulator.js loaded.', false);
+                console.error('ChatSimulator is undefined');
+            }
+        }
+        
+        function testInitialize() {
+            try {
+                if (typeof ChatSimulator === 'undefined') {
+                    throw new Error('ChatSimulator not loaded');
+                }
+                
+                chatSim = new ChatSimulator('test-chat-container', 'test-stats-container');
+                showStatus('test-init-status', '✅ ChatSimulator initialized successfully!', true);
+                console.log('Chat simulator instance:', chatSim);
+            } catch (error) {
+                showStatus('test-init-status', '❌ Error: ' + error.message, false);
+                console.error('Initialization error:', error);
+            }
+        }
+        
+        function testStart() {
+            try {
+                if (!chatSim) {
+                    throw new Error('ChatSimulator not initialized. Click "Initialize" first.');
+                }
+                
+                chatSim.start();
+                showStatus('test-start-status', '✅ Chat messages started! Watch messages appear below.', true);
+                console.log('Chat started');
+            } catch (error) {
+                showStatus('test-start-status', '❌ Error: ' + error.message, false);
+                console.error('Start error:', error);
+            }
+        }
+        
+        function testStop() {
+            try {
+                if (!chatSim) {
+                    throw new Error('ChatSimulator not initialized.');
+                }
+                
+                chatSim.stop();
+                showStatus('test-start-status', '⏸️ Chat messages stopped.', true);
+                console.log('Chat stopped');
+            } catch (error) {
+                showStatus('test-start-status', '❌ Error: ' + error.message, false);
+                console.error('Stop error:', error);
+            }
+        }
+        
+        function testAddMessage() {
+            try {
+                if (!chatSim) {
+                    throw new Error('ChatSimulator not initialized. Click "Initialize" first.');
+                }
+                
+                chatSim.addMessage();
+                showStatus('test-message-status', '✅ Message added! Check display below.', true);
+                console.log('Message added manually');
+            } catch (error) {
+                showStatus('test-message-status', '❌ Error: ' + error.message, false);
+                console.error('Add message error:', error);
+            }
+        }
+        
+        // Auto-run test on load
+        window.addEventListener('load', () => {
+            console.log('🧪 Chat Test Page Loaded');
+            console.log('Testing ChatSimulator...');
+            
+            setTimeout(() => {
+                testChatSimulatorLoaded();
+            }, 100);
+        });
+    </script>
+</body>
+</html>
+
