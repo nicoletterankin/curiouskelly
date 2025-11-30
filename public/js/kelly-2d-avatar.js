@@ -9,8 +9,8 @@
  */
 
 const KELLY_IMAGES = {
-  up: '/assets/kelly/choices/point-up.jpeg',
-  down: '/assets/kelly/choices/point-down.jpeg'
+  up: '/images/kelly/kelly-point-up.jpeg',
+  down: '/images/kelly/kelly-point-down.jpeg'
 };
 
 // Preload both images immediately for instant switching
@@ -44,7 +44,7 @@ class Kelly2DAvatar {
     this.img.style.cssText = 'width:100%;height:100%;object-fit:cover;object-position:center 15%;transition:opacity 0.3s ease;';
     
     this.container.appendChild(this.img);
-    console.log('[Kelly] Avatar ready (two-frame pointing system)');
+    console.log('[Kelly] Avatar ready (two-frame pointing system v3)');
   }
   
   /**
@@ -137,4 +137,4 @@ if (typeof module !== 'undefined' && module.exports) {
 // Make available globally
 window.Kelly2DAvatar = Kelly2DAvatar;
 
-console.log('[Kelly] 2D Avatar module loaded (simple two-frame system)');
+console.log('[Kelly] 2D Avatar module loaded (two-frame pointing v3)');
