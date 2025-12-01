@@ -2008,13 +2008,27 @@
                   : atom.phase.toUpperCase(),
             text: content.script || content.text || 'Content loading...',
             hint: content.prompt || null,
+            // Parse options - format is ["A: text", "B: text", "C: text"]
+            // with responses as {"A": "response", "B": "response", "C": "response"}
             choices:
               content.options && Array.isArray(content.options)
-                ? content.options.map((opt, i) => ({
-                    letter: String.fromCharCode(65 + i), // A, B, C
-                    text: opt?.text || 'Option ' + (i + 1),
-                    response: opt?.response || ''
-                  }))
+                ? content.options.map((opt, i) => {
+                    // Option format: "A: Does it illuminate..." or just "Does it illuminate..."
+                    const letter = String.fromCharCode(65 + i); // A, B, C
+                    let text = opt;
+                    
+                    // Strip "A: " prefix if present
+                    if (typeof opt === 'string' && opt.match(/^[A-C]:\s*/)) {
+                      text = opt.replace(/^[A-C]:\s*/, '');
+                    } else if (typeof opt === 'object' && opt.text) {
+                      text = opt.text;
+                    }
+                    
+                    // Get response from responses object
+                    const response = content.responses?.[letter] || '';
+                    
+                    return { letter, text, response };
+                  })
                 : null
           };
         });
