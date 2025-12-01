@@ -427,3 +427,7 @@ document.querySelectorAll('[data-tone]').forEach((el) => {
 - All buttons have glass morphism effect
 - Active state scales down to 0.9
 
+
+
+
+

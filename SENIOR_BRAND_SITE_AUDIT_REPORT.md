@@ -1300,3 +1300,7 @@ Sitemap: https://curiouskelly.com/sitemap.xml
 *This audit was conducted in accordance with CLAUDE.md operating rules and brand guidelines. All recommendations align with the December 17, 2025 launch timeline.*
 
 
+
+
+
+

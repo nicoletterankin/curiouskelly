@@ -339,3 +339,7 @@ Several interactive elements don't meet minimum 44x44px touch targets:
 
 _This audit was conducted to identify all mobile UX/UI issues before implementing fixes. The goal is to ensure learners have a seamless experience regardless of their device._
 
+
+
+
+

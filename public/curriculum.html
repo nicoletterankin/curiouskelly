@@ -409,9 +409,21 @@
             line-height: 1.3;
         }
 
+        .lesson-hook {
+            font-size: 1.1rem;
+            color: var(--accent-orange);
+            line-height: 1.5;
+            font-weight: 600;
+            margin-bottom: 8px;
+            padding: 8px 12px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 8px;
+            border-left: 3px solid var(--accent-orange);
+        }
+        
         .lesson-truth {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
+            font-size: 0.85rem;
+            color: var(--text-muted);
             line-height: 1.6;
             font-style: italic;
         }
@@ -663,6 +675,7 @@
             </a>
             <div class="nav-links">
                 <a href="/pricing.html" class="nav-link">Pricing</a>
+                <a href="/perspectives.html" class="nav-link">🔮 Perspectives</a>
                 <a href="/gifts.html" class="nav-link">Gifts</a>
                 <a href="/about.html" class="nav-link">About</a>
                 <a href="/" class="btn-nav">Start Learning</a>
@@ -814,12 +827,33 @@
         // State
         let allLessons = [];
         let lessonAtoms = {};
+        let ageHooks = {}; // day -> {age_bucket: hook}
         let currentSettings = {
             language: 'en',
             age: 10,
             tone: 'curious'
         };
         let isCompactView = false;
+        
+        // Map age to bucket label
+        function getAgeBucket(age) {
+            if (age <= 7) return '5-7';
+            if (age <= 12) return '8-12';
+            if (age <= 17) return '13-17';
+            if (age <= 35) return '18-35';
+            if (age <= 60) return '36-60';
+            return '61+';
+        }
+        
+        // Get hook for lesson and current age
+        function getAgeHook(dayNumber) {
+            const bucket = getAgeBucket(currentSettings.age);
+            const hookData = ageHooks[dayNumber];
+            if (hookData && hookData[bucket]) {
+                return hookData[bucket];
+            }
+            return null;
+        }
 
         // Month data
         const months = [
@@ -975,6 +1009,7 @@
         function renderLessonCard(lesson) {
             const welcomeScript = generateWelcomeScript(lesson, currentSettings);
             const variantCount = 6 * 3 * 3; // ages × tones × languages
+            const ageHook = getAgeHook(lesson.day_number);
             
             const phases = ['Welcome', 'Question 1', 'Question 2', 'Question 3', 'Wisdom'];
 
@@ -986,7 +1021,8 @@
                             <span class="lesson-variants">${variantCount} variants</span>
                         </div>
                         <h3 class="lesson-topic">${lesson.topic}</h3>
-                        <p class="lesson-truth">"${lesson.universal_truth || 'Discover the wonder within.'}"</p>
+                        ${ageHook ? `<p class="lesson-hook">"${ageHook}"</p>` : ''}
+                        <p class="lesson-truth">${lesson.universal_truth || 'Discover the wonder within.'}</p>
                     </div>
                     <div class="card-content">
                         <div class="content-label">Preview for ${getAgeLabel(currentSettings.age)}</div>
@@ -1030,10 +1066,31 @@
             renderLessons(filtered);
         }
 
+        // Load age-specific hooks
+        async function loadAgeHooks() {
+            try {
+                const response = await fetch('/age_hooks.json');
+                const data = await response.json();
+                
+                // Convert array to lookup by day number
+                data.hooks.forEach(item => {
+                    ageHooks[item.day] = item.hooks;
+                });
+                
+                console.log(`✅ Loaded ${Object.keys(ageHooks).length} age hooks`);
+            } catch (err) {
+                console.warn('⚠️ Could not load age hooks:', err.message);
+                // Continue without hooks - they're optional enhancement
+            }
+        }
+
         // Load lessons
         async function loadLessons() {
             try {
                 console.log('📚 Loading curriculum...');
+                
+                // Load hooks in parallel with lessons
+                const hooksPromise = loadAgeHooks();
                 
                 const { data, error } = await supabase
                     .from('core_lessons')
@@ -1041,6 +1098,9 @@
                     .order('day_number', { ascending: true });
 
                 if (error) throw error;
+                
+                // Wait for hooks to finish loading
+                await hooksPromise;
 
                 document.getElementById('loading').style.display = 'none';
 

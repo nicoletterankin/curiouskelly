@@ -59,6 +59,12 @@
     <script src="/js/kelly-2d-avatar.js?v=3"></script>
     <script src="/js/unity-kelly-loader.js"></script>
     <script src="/js/kelly-avatar-controller.js"></script>
+    
+    <!-- Production Kelly Assets -->
+    <script src="/js/kelly-production-assets.js"></script>
+    
+    <!-- Chat Overlay (YouTube Live style) -->
+    <script src="/js/chat-overlay.js"></script>
 
     <!-- Golden Lesson Data -->
     <script src="/js/golden-lesson-citizenship.js"></script>
@@ -956,14 +962,21 @@
       <div class="kelly-frame" id="kelly-frame">
         <!-- 2D Avatar Container (default, visible) -->
         <div class="kelly-avatar-container" id="kelly-2d-container" style="display: block">
-          <!-- Kelly 2DAvatar will render here via Kelly2DAvatar class -->
-          <!-- Placeholder: Kelly pointing UP (will be replaced by avatar controller) -->
-          <img
-            src="/images/kelly/kelly-point-up.jpeg"
-            alt="Kelly"
-            id="kelly-avatar"
-            style="width: 100%; height: 100%; object-fit: cover; object-position: center 15%"
-          />
+          <!-- Kelly Production Avatar - Optimized WebP with JPEG fallback -->
+          <picture>
+            <source 
+              srcset="/assets/kelly/production/webp/hello-640.webp 640w,
+                      /assets/kelly/production/webp/hello-1280.webp 1280w,
+                      /assets/kelly/production/webp/hello-1920.webp 1920w"
+              type="image/webp"
+              sizes="100vw">
+            <img
+              src="/assets/kelly/production/jpeg/hello.jpeg"
+              alt="Kelly"
+              id="kelly-avatar"
+              style="width: 100%; height: 100%; object-fit: cover; object-position: center 20%; transition: opacity 0.3s ease;"
+            />
+          </picture>
         </div>
 
         <!-- 3D Unity Container (hidden by default) -->
@@ -2022,7 +2035,12 @@
         container.innerHTML = '';
 
         if (choices && phase.type === 'question') {
-          choices.forEach((choice) => {
+          // Kelly goes to thinking state for questions
+          if (window.kellyAssets) {
+            window.kellyAssets.setState('thinking');
+          }
+          
+          choices.forEach((choice, index) => {
             const btn = document.createElement('button');
             btn.className = 'choice-btn';
             btn.dataset.letter = choice.letter;
@@ -2030,9 +2048,28 @@
                         <span class="choice-letter">${choice.letter}</span>
                         <span class="choice-text">${choice.text}</span>
                     `;
-            btn.onclick = () => selectChoice(choice);
+            
+            // Kelly points when hovering over choices
+            btn.onmouseenter = () => {
+              if (window.kellyAssets) {
+                // A = left, B = right
+                window.kellyAssets.setState(index === 0 ? 'pointing-left' : 'pointing-right');
+              }
+            };
+            btn.onmouseleave = () => {
+              if (window.kellyAssets) {
+                window.kellyAssets.setState('thinking');
+              }
+            };
+            
+            btn.onclick = () => selectChoice(choice, index);
             container.appendChild(btn);
           });
+        } else if (phase.type === 'welcome' || phase.type === 'wisdom') {
+          // Kelly greets/celebrates for welcome and wisdom
+          if (window.kellyAssets) {
+            window.kellyAssets.setState('hello');
+          }
         }
 
         // Speak (ElevenLabs only - no browser TTS)
@@ -2101,7 +2138,7 @@
         console.log(`[Phase ${state.currentPhase}] ${text.substring(0, 50)}...`);
       }
 
-      function selectChoice(choice) {
+      function selectChoice(choice, index = 0) {
         // Visual feedback
         document.querySelectorAll('.choice-btn').forEach((btn) => {
           btn.classList.add('disabled');
@@ -2111,6 +2148,11 @@
         });
 
         state.choicesMade[`Q${state.currentPhase - 1}`] = choice.letter;
+        
+        // Kelly points to selected choice (A = left, B = right)
+        if (window.kellyAssets) {
+          window.kellyAssets.setState(index === 0 ? 'pointing-left' : 'pointing-right');
+        }
 
         // Kelly listens to student's choice
         if (kellyAvatar && typeof kellyAvatar.setExpression === 'function') {
@@ -2553,205 +2595,20 @@
       init();
     </script>
     
-    <!-- Chat Simulator -->
-    <script src="/js/chat-simulator.js"></script>
-    
-    <!-- EPIC ENHANCEMENT: Social Learning Chat Panel -->
-    <div id="chat-panel" style="
-      position: fixed;
-      top: 0;
-      right: -360px;
-      width: 360px;
-      height: 100vh;
-      background: var(--tiktok-bg);
-      border-left: 1px solid rgba(255, 255, 255, 0.1);
-      display: flex;
-      flex-direction: column;
-      z-index: 9999;
-      transition: right 0.3s ease;
-    ">
-      <!-- Chat Header -->
-      <div style="
-        padding: 20px;
-        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      ">
-        <h3 style="
-          font-size: 1rem;
-          font-weight: 600;
-          display: flex;
-          align-items: center;
-          gap: 8px;
-          margin: 0;
-        ">
-          💬 Live Reactions
-        </h3>
-        <button id="chat-close-btn" style="
-          background: none;
-          border: none;
-          color: var(--tiktok-text-secondary);
-          font-size: 1.5rem;
-          cursor: pointer;
-          padding: 0;
-          width: 32px;
-          height: 32px;
-        ">×</button>
-      </div>
-      
-      <!-- Chat Messages -->
-      <div id="chat-messages" style="
-        flex: 1;
-        overflow-y: auto;
-        padding: 16px;
-      "></div>
-      
-      <!-- Global Stats -->
-      <div id="chat-stats"></div>
-      
-      <!-- Chat Input (disabled for simulated chat) -->
-      <div style="
-        padding: 16px;
-        border-top: 1px solid rgba(255, 255, 255, 0.1);
-      ">
-        <input type="text" placeholder="Share your reaction..." style="
-          width: 100%;
-          padding: 12px 16px;
-          background: rgba(255, 255, 255, 0.05);
-          border: 1px solid rgba(255, 255, 255, 0.1);
-          border-radius: 12px;
-          color: var(--tiktok-text);
-          font-size: 0.9rem;
-          font-family: inherit;
-        " disabled>
-        <p style="
-          margin-top: 8px;
-          font-size: 0.75rem;
-          color: var(--tiktok-text-muted);
-          text-align: center;
-        ">Showing simulated reactions from global learners</p>
-      </div>
-    </div>
-    
-    <!-- Chat Toggle Button -->
-    <button id="chat-toggle-btn" style="
-      position: fixed;
-      top: calc(var(--safe-top) + 60px);
-      right: calc(var(--safe-right) + 16px);
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
-      background: rgba(0, 0, 0, 0.6);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.2);
-      color: white;
-      font-size: 1.2rem;
-      cursor: pointer;
-      z-index: 9998;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.2s ease;
-    ">
-      💬
-    </button>
-    
-    <!-- Live Indicator Badge -->
-    <div id="live-badge" style="
-      position: fixed;
-      top: var(--safe-top);
-      left: 50%;
-      transform: translateX(-50%);
-      padding: 8px 16px;
-      background: rgba(239, 68, 68, 0.9);
-      backdrop-filter: blur(10px);
-      border-radius: 8px;
-      font-weight: 700;
-      font-size: 0.85rem;
-      z-index: 9997;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      animation: fadeIn 0.3s ease;
-    ">
-      <span style="
-        width: 8px;
-        height: 8px;
-        background: white;
-        border-radius: 50%;
-        animation: pulse 1.5s infinite;
-      "></span>
-      LIVE
-    </div>
-    
-    <style>
-      @keyframes pulse {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.7; transform: scale(1.1); }
-      }
-      
-      @keyframes fadeIn {
-        from { opacity: 0; transform: translate(-50%, -10px); }
-        to { opacity: 1; transform: translate(-50%, 0); }
-      }
-      
-      #chat-toggle-btn:hover {
-        transform: scale(1.1);
-        background: rgba(0, 0, 0, 0.8);
-      }
-      
-      #chat-toggle-btn:active {
-        transform: scale(0.95);
-      }
-      
-      /* Hide chat on mobile */
-      @media (max-width: 768px) {
-        #chat-panel {
-          width: 100%;
-          right: -100%;
-        }
-      }
-    </style>
-    
+    <!-- EPIC: Chat Overlay (YouTube Live / Movie Style) -->
     <script>
-      // Initialize chat simulator
-      const chatSim = new ChatSimulator('chat-messages', 'chat-stats');
-      chatSim.start();
-      
-      // Chat toggle functionality
-      const chatPanel = document.getElementById('chat-panel');
-      const chatToggleBtn = document.getElementById('chat-toggle-btn');
-      const chatCloseBtn = document.getElementById('chat-close-btn');
-      let chatOpen = false;
-      
-      function toggleChat() {
-        chatOpen = !chatOpen;
-        if (chatOpen) {
-          chatPanel.style.right = '0';
-          chatToggleBtn.style.right = 'calc(360px + var(--safe-right) + 16px)';
-          chatToggleBtn.textContent = '×';
-        } else {
-          chatPanel.style.right = '-360px';
-          chatToggleBtn.style.right = 'calc(var(--safe-right) + 16px)';
-          chatToggleBtn.textContent = '💬';
+      // Initialize chat overlay - transparent floating messages
+      document.addEventListener('DOMContentLoaded', () => {
+        const chatOverlay = new ChatOverlay();
+        chatOverlay.start();
+        
+        // Initialize Kelly Asset Manager
+        const kellyImg = document.getElementById('kelly-avatar');
+        if (kellyImg && window.KellyAssetManager) {
+          window.kellyAssets = new KellyAssetManager(kellyImg);
+          window.kellyAssets.preloadEssential();
         }
-      }
-      
-      chatToggleBtn.addEventListener('click', toggleChat);
-      chatCloseBtn.addEventListener('click', toggleChat);
-      
-      // Auto-open chat after 5 seconds (first time hint)
-      setTimeout(() => {
-        if (!chatOpen && !localStorage.getItem('chat_seen')) {
-          toggleChat();
-          localStorage.setItem('chat_seen', 'true');
-          // Auto-close after 3 seconds
-          setTimeout(() => {
-            if (chatOpen) toggleChat();
-          }, 3000);
-        }
-      }, 5000);
+      });
     </script>
   </body>
 </html>

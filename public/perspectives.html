@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Perspective Explorer - See Any Topic Through Any Eyes</title>
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-dark: #0a0a0c;
+            --bg-card: #12121a;
+            --bg-elevated: #1a1a24;
+            --text-primary: #f8f8fc;
+            --text-secondary: #a0a0b0;
+            --text-muted: #606070;
+            --accent-gold: #f4a93a;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --accent-pink: #ec4899;
+            --accent-teal: #14b8a6;
+            --border: rgba(255,255,255,0.08);
+            --glow: rgba(244, 169, 58, 0.15);
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Space Grotesk', -apple-system, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Animated background */
+        .bg-gradient {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: 
+                radial-gradient(ellipse at 20% 20%, rgba(139, 92, 246, 0.1) 0%, transparent 50%),
+                radial-gradient(ellipse at 80% 80%, rgba(244, 169, 58, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse at 50% 50%, rgba(59, 130, 246, 0.05) 0%, transparent 70%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 0 32px;
+        }
+        
+        /* Header */
+        .header {
+            padding: 80px 0 40px;
+            text-align: center;
+        }
+        
+        .header-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(244, 169, 58, 0.1);
+            border: 1px solid rgba(244, 169, 58, 0.3);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            color: var(--accent-gold);
+            margin-bottom: 24px;
+        }
+        
+        h1 {
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: 3.5rem;
+            font-weight: 400;
+            letter-spacing: -0.03em;
+            margin-bottom: 16px;
+            line-height: 1.1;
+        }
+        
+        h1 span {
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-pink));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .header p {
+            font-size: 1.2rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        /* Topic Selector */
+        .topic-selector {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 32px;
+            margin-bottom: 40px;
+        }
+        
+        .topic-selector h2 {
+            font-family: 'Fraunces', serif;
+            font-size: 1.25rem;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .topic-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+        }
+        
+        .topic-btn {
+            padding: 12px 20px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .topic-btn:hover {
+            background: rgba(244, 169, 58, 0.1);
+            border-color: var(--accent-gold);
+            color: var(--text-primary);
+        }
+        
+        .topic-btn.active {
+            background: var(--accent-gold);
+            border-color: var(--accent-gold);
+            color: #000;
+            font-weight: 600;
+        }
+        
+        /* Time Slider */
+        .time-machine {
+            background: linear-gradient(180deg, var(--bg-card) 0%, var(--bg-elevated) 100%);
+            border: 1px solid var(--border);
+            border-radius: 24px;
+            padding: 40px;
+            margin-bottom: 40px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .time-machine::before {
+            content: '';
+            position: absolute;
+            top: -100px;
+            right: -100px;
+            width: 300px;
+            height: 300px;
+            background: radial-gradient(circle, var(--glow) 0%, transparent 70%);
+            pointer-events: none;
+        }
+        
+        .time-machine h2 {
+            font-family: 'Fraunces', serif;
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .time-machine > p {
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+        
+        .birth-year-display {
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        
+        .year-big {
+            font-family: 'Fraunces', serif;
+            font-size: 5rem;
+            font-weight: 300;
+            background: linear-gradient(135deg, var(--accent-gold), var(--accent-purple));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            line-height: 1;
+        }
+        
+        .year-context {
+            font-size: 1.1rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+        
+        .year-context span {
+            color: var(--accent-gold);
+            font-weight: 600;
+        }
+        
+        /* Custom slider */
+        .slider-container {
+            position: relative;
+            padding: 20px 0;
+        }
+        
+        .slider-track {
+            position: relative;
+            height: 8px;
+            background: var(--bg-elevated);
+            border-radius: 4px;
+            margin: 0 20px;
+        }
+        
+        .slider-fill {
+            position: absolute;
+            left: 0;
+            top: 0;
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-purple), var(--accent-gold));
+            border-radius: 4px;
+            transition: width 0.1s;
+        }
+        
+        input[type="range"] {
+            position: absolute;
+            width: calc(100% - 40px);
+            left: 20px;
+            top: 50%;
+            transform: translateY(-50%);
+            -webkit-appearance: none;
+            background: transparent;
+            cursor: pointer;
+            z-index: 2;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 32px;
+            height: 32px;
+            background: var(--accent-gold);
+            border-radius: 50%;
+            border: 4px solid var(--bg-dark);
+            box-shadow: 0 4px 20px rgba(244, 169, 58, 0.4);
+            cursor: grab;
+            transition: transform 0.2s;
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+        }
+        
+        input[type="range"]::-webkit-slider-thumb:active {
+            cursor: grabbing;
+            transform: scale(0.95);
+        }
+        
+        .slider-labels {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 20px 0;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        
+        /* Generation quick picks */
+        .generation-picks {
+            display: flex;
+            justify-content: center;
+            gap: 12px;
+            margin-top: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .gen-btn {
+            padding: 10px 16px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .gen-btn:hover {
+            border-color: var(--accent-gold);
+            color: var(--text-primary);
+        }
+        
+        .gen-btn .gen-name {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+        
+        .gen-btn .gen-years {
+            font-size: 0.7rem;
+        }
+        
+        /* Perspective Cards */
+        .perspectives-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 24px;
+            margin-bottom: 60px;
+        }
+        
+        .perspective-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            padding: 28px;
+            position: relative;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+        
+        .perspective-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--card-accent, var(--accent-gold)), transparent);
+        }
+        
+        .perspective-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--card-accent, var(--accent-gold));
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+        
+        .perspective-card.current {
+            --card-accent: var(--accent-gold);
+            border-color: var(--accent-gold);
+            background: linear-gradient(180deg, rgba(244, 169, 58, 0.1) 0%, var(--bg-card) 100%);
+        }
+        
+        .perspective-card.older { --card-accent: var(--accent-purple); }
+        .perspective-card.younger { --card-accent: var(--accent-teal); }
+        
+        .card-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+        
+        .card-year {
+            font-family: 'Fraunces', serif;
+            font-size: 2rem;
+            font-weight: 400;
+        }
+        
+        .card-badge {
+            padding: 6px 12px;
+            background: var(--bg-elevated);
+            border-radius: 8px;
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+        }
+        
+        .card-badge.you {
+            background: var(--accent-gold);
+            color: #000;
+            font-weight: 600;
+        }
+        
+        .card-age {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 20px;
+        }
+        
+        .card-hook {
+            font-size: 1.25rem;
+            color: var(--text-primary);
+            line-height: 1.5;
+            margin-bottom: 16px;
+            padding: 16px;
+            background: var(--bg-elevated);
+            border-radius: 12px;
+            border-left: 3px solid var(--card-accent, var(--accent-gold));
+        }
+        
+        .card-context {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+        
+        .card-context strong {
+            color: var(--accent-gold);
+        }
+        
+        /* Insight box */
+        .insight-box {
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1), rgba(244, 169, 58, 0.1));
+            border: 1px solid rgba(139, 92, 246, 0.2);
+            border-radius: 20px;
+            padding: 32px;
+            text-align: center;
+            margin-bottom: 60px;
+        }
+        
+        .insight-box h3 {
+            font-family: 'Fraunces', serif;
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+        }
+        
+        .insight-box p {
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+        
+        .insight-stats {
+            display: flex;
+            justify-content: center;
+            gap: 48px;
+            margin-top: 24px;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-family: 'Fraunces', serif;
+            font-size: 2.5rem;
+            color: var(--accent-gold);
+        }
+        
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+        
+        /* CTA */
+        .cta-section {
+            text-align: center;
+            padding: 60px 0 100px;
+        }
+        
+        .cta-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 36px;
+            background: linear-gradient(135deg, var(--accent-gold), #f59e0b);
+            color: #000;
+            border: none;
+            border-radius: 14px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            cursor: pointer;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .cta-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 20px 40px rgba(244, 169, 58, 0.3);
+        }
+        
+        /* Responsive */
+        @media (max-width: 768px) {
+            h1 { font-size: 2.5rem; }
+            .year-big { font-size: 3.5rem; }
+            .perspectives-grid { grid-template-columns: 1fr; }
+            .insight-stats { flex-direction: column; gap: 24px; }
+        }
+    </style>
+</head>
+<body>
+    <div class="bg-gradient"></div>
+    
+    <div class="container">
+        <header class="header">
+            <div class="header-badge">
+                <span>🔮</span>
+                <span>Perspective Explorer</span>
+            </div>
+            <h1>See Any Topic Through <span>Any Eyes</span></h1>
+            <p>The same lesson, experienced differently based on when you were born. Explore how Kelly adapts to your generation.</p>
+        </header>
+        
+        <!-- Topic Selector -->
+        <section class="topic-selector">
+            <h2>📚 Choose a Topic</h2>
+            <div class="topic-grid" id="topic-grid">
+                <!-- Populated by JS -->
+            </div>
+        </section>
+        
+        <!-- Time Machine Slider -->
+        <section class="time-machine">
+            <h2>⏰ Set Your Birth Year</h2>
+            <p>Drag the slider to travel through time and see how this topic speaks to different generations.</p>
+            
+            <div class="birth-year-display">
+                <div class="year-big" id="year-display">1990</div>
+                <div class="year-context">
+                    You'd be <span id="age-display">35</span> years old today
+                </div>
+            </div>
+            
+            <div class="slider-container">
+                <div class="slider-track">
+                    <div class="slider-fill" id="slider-fill"></div>
+                </div>
+                <input type="range" min="1945" max="2020" value="1990" id="year-slider">
+                <div class="slider-labels">
+                    <span>1945</span>
+                    <span>1960</span>
+                    <span>1980</span>
+                    <span>2000</span>
+                    <span>2020</span>
+                </div>
+            </div>
+            
+            <div class="generation-picks">
+                <button class="gen-btn" data-year="1955">
+                    <span class="gen-name">Silent Gen</span>
+                    <span class="gen-years">1928-1945</span>
+                </button>
+                <button class="gen-btn" data-year="1960">
+                    <span class="gen-name">Boomer</span>
+                    <span class="gen-years">1946-1964</span>
+                </button>
+                <button class="gen-btn" data-year="1975">
+                    <span class="gen-name">Gen X</span>
+                    <span class="gen-years">1965-1980</span>
+                </button>
+                <button class="gen-btn" data-year="1990">
+                    <span class="gen-name">Millennial</span>
+                    <span class="gen-years">1981-1996</span>
+                </button>
+                <button class="gen-btn" data-year="2002">
+                    <span class="gen-name">Gen Z</span>
+                    <span class="gen-years">1997-2012</span>
+                </button>
+                <button class="gen-btn" data-year="2015">
+                    <span class="gen-name">Gen Alpha</span>
+                    <span class="gen-years">2013-2025</span>
+                </button>
+            </div>
+        </section>
+        
+        <!-- Perspective Cards -->
+        <section class="perspectives-grid" id="perspectives-grid">
+            <!-- Populated by JS -->
+        </section>
+        
+        <!-- Insight Box -->
+        <section class="insight-box">
+            <h3>💡 Why This Matters</h3>
+            <p>The same knowledge lands differently depending on your life experience. Kelly doesn't just teach—she speaks your language, references your world, and meets you where you are.</p>
+            <div class="insight-stats">
+                <div class="stat">
+                    <div class="stat-value">70</div>
+                    <div class="stat-label">Birth Years</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">366</div>
+                    <div class="stat-label">Topics</div>
+                </div>
+                <div class="stat">
+                    <div class="stat-value">25,620</div>
+                    <div class="stat-label">Unique Perspectives</div>
+                </div>
+            </div>
+        </section>
+        
+        <!-- CTA -->
+        <section class="cta-section">
+            <a href="/" class="cta-btn">
+                <span>Start Learning Your Way</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                    <path d="M5 12h14M12 5l7 7-7 7"/>
+                </svg>
+            </a>
+        </section>
+    </div>
+    
+    <script>
+        // Sample topics (would come from Supabase)
+        const SAMPLE_TOPICS = [
+            { day: 1, topic: "How Leaves Feed the World" },
+            { day: 8, topic: "What Makes a Real Friend" },
+            { day: 31, topic: "How the Sun Powers Earth" },
+            { day: 79, topic: "Your Body's Instruction Manual" },
+            { day: 117, topic: "How Computers Think" },
+            { day: 119, topic: "How AI Learns" },
+            { day: 120, topic: "How the Internet Works" },
+            { day: 162, topic: "Why Play Matters" },
+            { day: 200, topic: "What Leaders Actually Do" },
+            { day: 338, topic: "How Money Works" }
+        ];
+        
+        // Sample hooks by generation (would come from Supabase/generated)
+        const HOOKS_BY_YEAR = {
+            1: { // How Leaves Feed the World
+                1950: { hook: "We learned this from encyclopedias and nature walks. The science hasn't changed, but our appreciation has deepened.", context: "You grew up when 'going outside to play' meant actual exploration." },
+                1965: { hook: "Remember pressing leaves in books? The science behind that childhood ritual is remarkable.", context: "You straddled the analog and digital worlds—you appreciate both." },
+                1980: { hook: "Before Google, leaves were one of our first science experiments. The magic hasn't faded.", context: "You learned to learn the hard way. Now you can appreciate the shortcuts." },
+                1990: { hook: "Photosynthesis felt abstract in textbooks. Here's why it's actually the coolest thing happening right now.", context: "You grew up with the internet but before smartphones changed everything." },
+                2005: { hook: "TikTok can't capture this in 60 seconds. Some things need time to understand.", context: "You've never known a world without Wikipedia. This goes deeper." },
+                2015: { hook: "Ever wonder why your games have green worlds? Plants are the original content creators!", context: "You're growing up with AI. Kelly is just getting started with you." }
+            },
+            119: { // How AI Learns
+                1950: { hook: "We imagined this in science fiction. Now you're talking to one.", context: "From punch cards to ChatGPT—what a journey you've witnessed." },
+                1965: { hook: "You saw computers fill rooms. Now they fit in pockets and think.", context: "You've watched the impossible become routine, over and over." },
+                1980: { hook: "We thought The Terminator was the future. Reality is weirder and more interesting.", context: "You grew up with dial-up. Now you're having this conversation instantly." },
+                1990: { hook: "We grew up with AOL and AIM. Now AI can write our emails better than we can.", context: "You're the generation that will decide how this technology is used." },
+                2005: { hook: "AI isn't science fiction for you—it's homework help. But do you know how it actually works?", context: "You've never known a world without smart assistants. Time to understand them." },
+                2015: { hook: "Kelly is AI! And you're learning from her. Let's peek behind the curtain together.", context: "You'll grow up alongside AI. Understanding it is your superpower." }
+            },
+            338: { // How Money Works
+                1950: { hook: "We watched money change from cash to cards to apps. The fundamentals never changed.", context: "You've seen inflation, recessions, and recoveries. Perspective is everything." },
+                1965: { hook: "From checkbooks to Venmo—the tools changed, the principles didn't.", context: "You saved for retirement the hard way. You have wisdom to share." },
+                1980: { hook: "We learned about compound interest the slow way. Your generation has different challenges.", context: "You remember when a house cost what a car costs now." },
+                1990: { hook: "We entered the workforce during a recession. Money lessons hit different after that.", context: "Student loans, gig economy, crypto—your relationship with money is complicated." },
+                2005: { hook: "Robinhood made investing feel like a game. Here's what the app doesn't teach you.", context: "You can buy stocks on your phone but might not know how a bank works." },
+                2015: { hook: "Your parents pay with phones. Coins feel like ancient artifacts. But money is real!", context: "You're growing up in a cashless world. Let's understand what's behind the screen." }
+            }
+        };
+        
+        let currentTopic = 1;
+        let currentYear = 1990;
+        
+        // Initialize
+        function init() {
+            renderTopics();
+            setupSlider();
+            setupGenerationButtons();
+            updateDisplay();
+        }
+        
+        function renderTopics() {
+            const grid = document.getElementById('topic-grid');
+            grid.innerHTML = SAMPLE_TOPICS.map(t => `
+                <button class="topic-btn ${t.day === currentTopic ? 'active' : ''}" data-day="${t.day}">
+                    Day ${t.day}: ${t.topic}
+                </button>
+            `).join('');
+            
+            grid.querySelectorAll('.topic-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.topic-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentTopic = parseInt(btn.dataset.day);
+                    updateDisplay();
+                });
+            });
+        }
+        
+        function setupSlider() {
+            const slider = document.getElementById('year-slider');
+            const fill = document.getElementById('slider-fill');
+            
+            slider.addEventListener('input', (e) => {
+                currentYear = parseInt(e.target.value);
+                updateDisplay();
+            });
+        }
+        
+        function setupGenerationButtons() {
+            document.querySelectorAll('.gen-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    currentYear = parseInt(btn.dataset.year);
+                    document.getElementById('year-slider').value = currentYear;
+                    updateDisplay();
+                });
+            });
+        }
+        
+        function updateDisplay() {
+            const currentAge = 2025 - currentYear;
+            
+            // Update year display
+            document.getElementById('year-display').textContent = currentYear;
+            document.getElementById('age-display').textContent = currentAge;
+            
+            // Update slider fill
+            const slider = document.getElementById('year-slider');
+            const percent = ((currentYear - 1945) / (2020 - 1945)) * 100;
+            document.getElementById('slider-fill').style.width = percent + '%';
+            
+            // Update perspective cards
+            renderPerspectives();
+        }
+        
+        function getHookForYear(day, year) {
+            const hooks = HOOKS_BY_YEAR[day];
+            if (!hooks) {
+                // Generate a placeholder based on age
+                const age = 2025 - year;
+                if (age >= 70) return { hook: "Wisdom comes from experience. This lesson connects to a lifetime of learning.", context: "You've seen it all. Now let's see it together." };
+                if (age >= 55) return { hook: "You've watched the world transform. Here's how this topic fits the bigger picture.", context: "Experience gives you context others lack." };
+                if (age >= 40) return { hook: "Old enough to remember, young enough to adapt. The sweet spot for learning.", context: "You bridge generations. That's your superpower." };
+                if (age >= 25) return { hook: "You're building your life. This knowledge will serve you well.", context: "Peak learning years. Make them count." };
+                if (age >= 15) return { hook: "School teaches you facts. We'll teach you why they matter.", context: "You're figuring things out. We're here to help." };
+                return { hook: "You're just starting your learning journey. Let's make it amazing!", context: "Everything is new. That's exciting!" };
+            }
+            
+            // Find closest year
+            const years = Object.keys(hooks).map(Number).sort((a,b) => a-b);
+            let closest = years[0];
+            for (const y of years) {
+                if (Math.abs(y - year) < Math.abs(closest - year)) {
+                    closest = y;
+                }
+            }
+            return hooks[closest];
+        }
+        
+        function renderPerspectives() {
+            const grid = document.getElementById('perspectives-grid');
+            const comparisons = [
+                { year: currentYear - 30, label: "30 years older" },
+                { year: currentYear, label: "Your perspective" },
+                { year: Math.min(currentYear + 20, 2020), label: "20 years younger" }
+            ];
+            
+            grid.innerHTML = comparisons.map((c, i) => {
+                const hookData = getHookForYear(currentTopic, c.year);
+                const age = 2025 - c.year;
+                const cardClass = i === 0 ? 'older' : (i === 1 ? 'current' : 'younger');
+                const badgeClass = i === 1 ? 'you' : '';
+                
+                return `
+                    <div class="perspective-card ${cardClass}">
+                        <div class="card-header">
+                            <div class="card-year">${c.year}</div>
+                            <div class="card-badge ${badgeClass}">${i === 1 ? '← You' : c.label}</div>
+                        </div>
+                        <div class="card-age">${age} years old today</div>
+                        <div class="card-hook">"${hookData.hook}"</div>
+                        <div class="card-context">${hookData.context}</div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        // Start
+        init();
+    </script>
+</body>
+</html>
+
+
+
+

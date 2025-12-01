@@ -399,3 +399,7 @@ async function loadLesson(dayNumber) {
 - ✅ Matches pattern used in player.html
 - ✅ Allows future expansion to full archetype selection
 
+
+
+
+

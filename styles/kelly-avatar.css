@@ -1,0 +1,190 @@
+/**
+ * Kelly Avatar Styles
+ * 
+ * Responsive styles for the Kelly avatar component.
+ * Handles horizontal (desktop) and vertical (mobile) layouts.
+ */
+
+/* Kelly avatar container */
+.kelly-avatar {
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+/* Kelly character image */
+.kelly-character {
+  object-fit: contain;
+  transition: opacity 0.2s ease-out, transform 0.3s ease-out;
+  will-change: opacity, transform;
+}
+
+/* Loading state */
+.kelly-avatar[data-loaded="false"] .kelly-character {
+  opacity: 0;
+}
+
+.kelly-avatar[data-loaded="true"] .kelly-character {
+  opacity: 1;
+}
+
+/* Desktop: horizontal layout, Kelly on side */
+.kelly-horizontal {
+  width: 400px;
+  height: 300px;
+  aspect-ratio: 4 / 3;
+}
+
+/* Vertical layout (mobile override) */
+.kelly-vertical {
+  width: 100%;
+  max-width: 300px;
+  height: auto;
+  aspect-ratio: 3 / 4;
+  margin: 0 auto 1rem;
+}
+
+/* Mobile responsive */
+@media (max-width: 767px) {
+  .kelly-horizontal,
+  .kelly-vertical {
+    width: 100%;
+    max-width: 300px;
+    height: auto;
+    aspect-ratio: 3 / 4;
+    margin: 0 auto 1rem;
+  }
+  
+  .kelly-character {
+    width: 100%;
+    height: auto;
+  }
+}
+
+/* Tablet */
+@media (min-width: 768px) and (max-width: 1023px) {
+  .kelly-horizontal {
+    width: 350px;
+    height: 262px;
+  }
+}
+
+/* Desktop large */
+@media (min-width: 1024px) {
+  .kelly-horizontal {
+    width: 400px;
+    height: 300px;
+  }
+}
+
+/* State-specific animations */
+.kelly-avatar[data-state="celebrating"] .kelly-character {
+  animation: celebrate 0.6s ease-out;
+}
+
+@keyframes celebrate {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.05); }
+}
+
+.kelly-avatar[data-state="thinking"] .kelly-character {
+  animation: think 2s ease-in-out infinite;
+}
+
+@keyframes think {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-4px); }
+}
+
+.kelly-avatar[data-state="encouraging"] .kelly-character {
+  animation: encourage 1s ease-in-out;
+}
+
+@keyframes encourage {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.02); }
+}
+
+/* Pointing states - subtle pulse */
+.kelly-avatar[data-state^="pointing"] .kelly-character {
+  animation: point 1.5s ease-in-out infinite;
+}
+
+@keyframes point {
+  0%, 100% { transform: scale(1); }
+  50% { transform: scale(1.01); }
+}
+
+/* Prevent layout shift during load */
+.kelly-avatar::before {
+  content: "";
+  display: block;
+  padding-bottom: 75%; /* 4:3 aspect ratio for horizontal */
+  width: 100%;
+}
+
+.kelly-vertical::before {
+  padding-bottom: 133.33%; /* 3:4 aspect ratio for vertical */
+}
+
+@media (max-width: 767px) {
+  .kelly-avatar::before {
+    padding-bottom: 133.33%; /* 3:4 for mobile */
+  }
+}
+
+/* Position image absolutely to prevent shift */
+.kelly-avatar {
+  position: relative;
+}
+
+.kelly-character {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Accessibility */
+@media (prefers-reduced-motion: reduce) {
+  .kelly-character,
+  .kelly-avatar[data-state] .kelly-character {
+    animation: none;
+    transition: opacity 0.1s;
+  }
+}
+
+/* High contrast mode support */
+@media (prefers-contrast: high) {
+  .kelly-avatar {
+    outline: 2px solid currentColor;
+  }
+}
+
+/* Dark mode adjustments (if needed) */
+@media (prefers-color-scheme: dark) {
+  .kelly-avatar {
+    /* Kelly's white background looks good in dark mode */
+    /* No adjustments needed */
+  }
+}
+
+/* Focus styles for interactive states */
+.kelly-avatar:focus-within {
+  outline: 2px solid #4A90E2;
+  outline-offset: 4px;
+  border-radius: 8px;
+}
+
+/* Print styles */
+@media print {
+  .kelly-avatar[data-state] .kelly-character {
+    animation: none;
+  }
+}
+
+
+
