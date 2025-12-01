@@ -1880,6 +1880,21 @@
               console.log(`[Learn] Available phases: ${phases.join(', ')}`);
             }
 
+            // Try fallback: get ANY atoms for this lesson (ignore archetype)
+            console.log(`[Learn] Trying to load atoms without archetype filter...`);
+            const { data: anyAtoms } = await supabase
+              .from('lesson_atoms')
+              .select('phase, content, archetype')
+              .eq('core_lesson_id', coreLesson.id)
+              .order('phase');
+            
+            if (anyAtoms && anyAtoms.length > 0) {
+              console.log(`[Learn] ✓ Found ${anyAtoms.length} atoms (any archetype)`);
+              // Use the first set we find
+              buildLessonFromAtoms(coreLesson, anyAtoms);
+              return;
+            }
+
             // Try fallback archetypes for this tone
             const fallbacks = ARCHETYPE_FALLBACKS[archetype] || [];
             for (const fallbackArchetype of fallbacks) {
@@ -1942,19 +1957,27 @@
       // ═══════════════════════════════════════════════════════════════════
       function buildLessonFromAtoms(coreLesson, atoms) {
         // Map phase names to types
-        // Database uses: welcome, Fact1/Fact2/Fact3, teaching, practice, reflection, wisdom
+        // Database actually uses: Hook, Fact1, Fact2, Fact3, Wisdom
         const phaseTypeMap = {
-          // Standard phases
+          // Hook = Welcome/intro phase
+          Hook: 'welcome',
+          hook: 'welcome',
           welcome: 'welcome',
-          wisdom: 'wisdom',
-          // Question phases (Fact1, Fact2, Fact3 or q1, q2, q3)
+          // Fact phases = Question/interactive phases
           Fact1: 'question',
           Fact2: 'question', 
           Fact3: 'question',
+          fact1: 'question',
+          fact2: 'question',
+          fact3: 'question',
+          // Legacy q1/q2/q3 format
           q1: 'question',
           q2: 'question',
           q3: 'question',
-          // Teaching phases (map to welcome for now)
+          // Wisdom = Conclusion phase
+          Wisdom: 'wisdom',
+          wisdom: 'wisdom',
+          // Other possible phases
           teaching: 'welcome',
           practice: 'question',
           reflection: 'wisdom'
