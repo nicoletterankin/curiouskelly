@@ -1914,20 +1914,6 @@
               }
             }
 
-            // Last resort: Try to get ANY archetype for this lesson
-            const { data: anyAtoms } = await supabase
-              .from('lesson_atoms')
-              .select('phase, content, archetype')
-              .eq('core_lesson_id', coreLesson.id)
-              .order('phase')
-              .limit(5);
-
-            if (anyAtoms && anyAtoms.length > 0) {
-              console.log(`[Learn] ⚠️ Using any available archetype: ${anyAtoms[0].archetype}`);
-              buildLessonFromAtoms(coreLesson, anyAtoms);
-              return;
-            }
-
             // No atoms at all - use placeholder
             state.lesson = createPlaceholderLesson(dayNumber);
             state.isLoading = false;
