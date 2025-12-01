@@ -999,8 +999,7 @@
       <!-- TOP BAR -->
       <div class="top-bar">
         <div class="day-badge">
-          <span class="day-number" id="day-display">Day 333</span>
-          <span class="day-progress">of 365</span>
+          <span class="day-number" id="day-display">November 29, 2025</span>
         </div>
         <div class="phase-dots" id="phase-dots">
           <div class="phase-dot active" data-phase="1"></div>
@@ -1360,10 +1359,29 @@
       };
 
       // ═══════════════════════════════════════════════════════════════════
+      // DATE HELPER - Convert day number to formatted date
+      // ═══════════════════════════════════════════════════════════════════
+      function dayNumberToDate(dayNumber, year = 2025) {
+        // Day 1 = January 1, Day 365 = December 31
+        const date = new Date(year, 0, dayNumber); // Month is 0-indexed
+        const options = { month: 'long', day: 'numeric', year: 'numeric' };
+        return date.toLocaleDateString('en-US', options);
+      }
+      
+      function getTodaysDayNumber() {
+        // Calculate day of year for current date
+        const now = new Date();
+        const start = new Date(now.getFullYear(), 0, 0);
+        const diff = now - start;
+        const oneDay = 1000 * 60 * 60 * 24;
+        return Math.floor(diff / oneDay);
+      }
+
+      // ═══════════════════════════════════════════════════════════════════
       // STATE (with defensive initialization)
       // ═══════════════════════════════════════════════════════════════════
       const state = {
-        dayNumber: 333,
+        dayNumber: getTodaysDayNumber(), // Use today's date
         lesson: null, // Will be populated by loadLesson()
         currentPhase: 1,
         isPaused: false,
@@ -1555,10 +1573,8 @@
           clearTimeout(loadingTimeout);
         }
 
-        // Update UI immediately
-        document.getElementById('day-display').textContent = `Day ${dayNumber}`;
-        document.getElementById('next-day').textContent = Math.min(dayNumber + 1, 365);
-        document.getElementById('prev-day').textContent = Math.max(dayNumber - 1, 1);
+        // Update UI immediately - show date instead of day number
+        document.getElementById('day-display').textContent = dayNumberToDate(dayNumber);
 
         // Show loading state
         document.getElementById('speech-text').textContent = 'Loading lesson...';
@@ -2222,7 +2238,7 @@
           if (error) {
             console.error('[Progress] Error saving:', error);
           } else {
-            console.log('[Progress] ✅ Saved for Day', state.dayNumber);
+            console.log('[Progress] ✅ Saved for', dayNumberToDate(state.dayNumber));
           }
         } catch (error) {
           console.error('[Progress] Save failed:', error);
@@ -2518,7 +2534,7 @@
         document.getElementById('btn-share').onclick = () => {
           if (navigator.share) {
             navigator.share({
-              title: `Day ${state.dayNumber}: ${state.lesson?.topic}`,
+              title: `${dayNumberToDate(state.dayNumber)}: ${state.lesson?.topic}`,
               url: window.location.href
             });
           } else {

@@ -58,20 +58,24 @@ class ChatOverlay {
       <style>
         #chat-overlay {
           position: fixed;
-          bottom: 100px;
-          left: 16px;
-          width: 320px;
-          max-height: 200px;
+          top: 80px;
+          right: 70px;
+          width: 280px;
+          max-height: 180px;
           pointer-events: none;
           z-index: 1000;
           overflow: hidden;
+          display: flex;
+          flex-direction: column;
+          align-items: flex-end;
         }
         
         @media (max-width: 768px) {
           #chat-overlay {
-            width: calc(100% - 80px);
-            bottom: 80px;
-            left: 12px;
+            width: 200px;
+            top: 60px;
+            right: 60px;
+            max-height: 150px;
           }
         }
         
@@ -112,7 +116,7 @@ class ChatOverlay {
         @keyframes chatSlideIn {
           from {
             opacity: 0;
-            transform: translateX(-20px);
+            transform: translateX(20px);
           }
           to {
             opacity: 1;
@@ -126,15 +130,16 @@ class ChatOverlay {
           }
         }
         
-        /* Stats bar at bottom */
+        /* Stats bar at top right, below chat */
         #live-stats-bar {
           position: fixed;
-          bottom: 60px;
-          left: 16px;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
           display: flex;
           gap: 16px;
-          padding: 8px 16px;
-          background: rgba(0, 0, 0, 0.7);
+          padding: 6px 16px;
+          background: rgba(0, 0, 0, 0.6);
           backdrop-filter: blur(8px);
           border-radius: 20px;
           z-index: 999;
@@ -142,10 +147,9 @@ class ChatOverlay {
         
         @media (max-width: 768px) {
           #live-stats-bar {
-            left: 12px;
-            bottom: 70px;
-            gap: 12px;
-            padding: 6px 12px;
+            top: 16px;
+            gap: 10px;
+            padding: 5px 12px;
           }
         }
         
