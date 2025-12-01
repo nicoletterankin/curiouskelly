@@ -1691,17 +1691,21 @@
       // Maps UI tone selection to database archetype names
       // Database has 12 archetypes - we map to the 3 most relevant
       // ═══════════════════════════════════════════════════════════════════
+      // ═══════════════════════════════════════════════════════════════════
+      // ARCHETYPE MAPPING - Match what's actually in Supabase lesson_atoms
+      // Database has: The Scientist, The Survivor, The Explorer, etc.
+      // ═══════════════════════════════════════════════════════════════════
       const TONE_TO_ARCHETYPE = {
-        curious: 'Sage', // Thoughtful, wisdom-seeking → Sage archetype
-        playful: 'Jester', // Fun, lighthearted → Jester archetype
-        serious: 'Ruler' // Structured, focused → Ruler archetype
+        curious: 'The Scientist', // Analytical, evidence-based
+        playful: 'The Explorer',  // Adventurous, discovery-focused
+        serious: 'The Survivor'   // Practical, real-world application
       };
 
-      // Fallback archetypes if primary not found (database has these too)
+      // Fallback archetypes if primary not found
       const ARCHETYPE_FALLBACKS = {
-        Sage: ['Scientist', 'The Scientist', 'Mystic', 'The Mystic'],
-        Jester: ['The Storyteller', 'Explorer', 'The Explorer'],
-        Ruler: ['The Strategist', 'The Architect', 'Architect']
+        'The Scientist': ['Scientist', 'Sage', 'The Sage'],
+        'The Explorer': ['Explorer', 'Jester', 'The Storyteller'],
+        'The Survivor': ['Survivor', 'Ruler', 'The Strategist']
       };
 
       // ═══════════════════════════════════════════════════════════════════
@@ -1850,7 +1854,20 @@
             .order('phase');
 
           if (atomsError || !atoms || atoms.length === 0) {
-            console.warn(`[Learn] No atoms found for archetype ${archetype}:`, atomsError);
+            console.warn(`[Learn] No atoms found for archetype "${archetype}":`, atomsError);
+            
+            // Log what archetypes ARE available for this lesson
+            const { data: availableAtoms } = await supabase
+              .from('lesson_atoms')
+              .select('archetype, phase')
+              .eq('core_lesson_id', coreLesson.id);
+            
+            if (availableAtoms && availableAtoms.length > 0) {
+              const archetypes = [...new Set(availableAtoms.map(a => a.archetype))];
+              const phases = [...new Set(availableAtoms.map(a => a.phase))];
+              console.log(`[Learn] Available archetypes: ${archetypes.join(', ')}`);
+              console.log(`[Learn] Available phases: ${phases.join(', ')}`);
+            }
 
             // Try fallback archetypes for this tone
             const fallbacks = ARCHETYPE_FALLBACKS[archetype] || [];
@@ -1914,19 +1931,37 @@
       // ═══════════════════════════════════════════════════════════════════
       function buildLessonFromAtoms(coreLesson, atoms) {
         // Map phase names to types
+        // Database uses: welcome, Fact1/Fact2/Fact3, teaching, practice, reflection, wisdom
         const phaseTypeMap = {
+          // Standard phases
           welcome: 'welcome',
+          wisdom: 'wisdom',
+          // Question phases (Fact1, Fact2, Fact3 or q1, q2, q3)
+          Fact1: 'question',
+          Fact2: 'question', 
+          Fact3: 'question',
           q1: 'question',
           q2: 'question',
           q3: 'question',
-          wisdom: 'wisdom'
+          // Teaching phases (map to welcome for now)
+          teaching: 'welcome',
+          practice: 'question',
+          reflection: 'wisdom'
         };
 
         // Build phases array (with null safety)
+        console.log(`[Learn] Building lesson from ${atoms.length} atoms:`);
+        
         const phases = atoms.map((atom, index) => {
           // Null safety: ensure content exists
           const content = atom.content || {};
           const phaseType = phaseTypeMap[atom.phase] || 'welcome';
+          
+          // Debug: log what we're getting from each atom
+          console.log(`[Learn] Atom ${index + 1}: phase="${atom.phase}" → type="${phaseType}"`);
+          console.log(`[Learn]   content keys: ${Object.keys(content).join(', ') || 'EMPTY'}`);
+          if (content.script) console.log(`[Learn]   script: ${content.script.substring(0, 50)}...`);
+          if (content.options) console.log(`[Learn]   options: ${content.options.length} choices`);
 
           return {
             order: index + 1,
