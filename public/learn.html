@@ -2016,26 +2016,37 @@
         // ═══════════════════════════════════════════════════════════════
         // KELLY EXPRESSION MAPPING (based on phase type)
         // ═══════════════════════════════════════════════════════════════
-        if (kellyAvatar) {
-          const phaseToExpression = {
-            welcome: 'curious', // Welcome phase → curious expression
-            question: 'explaining', // Question phases → explaining
-            wisdom: 'wisdom', // Wisdom phase → wisdom expression
-            celebrating: 'celebrating' // Completion → celebrating
+        // Use new Kelly Production Assets if available
+        if (window.kellyAssets) {
+          const phaseToState = {
+            welcome: 'hello',
+            question: 'thinking', 
+            wisdom: 'hello',
+            celebrating: 'hello'
           };
-
+          const state = phaseToState[phase.type] || 'thinking';
+          window.kellyAssets.setState(state);
+          console.log(`[Learn] Kelly state set to: ${state}`);
+        }
+        
+        // Legacy avatar controller (with safety check)
+        if (kellyAvatar && typeof kellyAvatar.setExpression === 'function') {
+          const phaseToExpression = {
+            welcome: 'curious',
+            question: 'explaining',
+            wisdom: 'wisdom',
+            celebrating: 'celebrating'
+          };
           const expression = phaseToExpression[phase.type] || 'curious';
-          kellyAvatar.setExpression(expression);
-
-          // Set phase context (if avatar supports it)
-          if (typeof kellyAvatar.setPhase === 'function') {
-            kellyAvatar.setPhase(phase.type);
+          try {
+            kellyAvatar.setExpression(expression);
+            if (typeof kellyAvatar.setPhase === 'function') {
+              kellyAvatar.setPhase(phase.type);
+            }
+            setUnityExpression(expression, 1.0);
+          } catch (e) {
+            console.warn('[Learn] Legacy avatar error:', e.message);
           }
-
-          // Also set Unity 3D expression if in 3D mode
-          setUnityExpression(expression, 1.0);
-
-          console.log(`[Learn] Kelly expression set to: ${expression}`);
         }
 
         // Update speech
