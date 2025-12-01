@@ -2122,22 +2122,53 @@
             return date.toLocaleDateString('en-US', options);
         }
 
+        // ═══════════════════════════════════════════════════════════════
+        // SPEED OPTIMIZATION: Cache + Parallel Loading
+        // ═══════════════════════════════════════════════════════════════
+        const CACHE_KEY = 'ck_lessons_cache';
+        const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+        
+        function getCachedLessons() {
+            try {
+                const cached = localStorage.getItem(CACHE_KEY);
+                if (cached) {
+                    const { data, timestamp } = JSON.parse(cached);
+                    if (Date.now() - timestamp < CACHE_TTL) {
+                        console.log('[Index] ⚡ Using cached lessons');
+                        return data;
+                    }
+                }
+            } catch (e) {}
+            return null;
+        }
+        
+        function cacheLessons(data) {
+            try {
+                localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
+            } catch (e) {}
+        }
+
         // Load today's lesson
-        async function loadTodaysLesson() {
+        async function loadTodaysLesson(cachedLessons = null) {
             try {
                 const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
-                const { data, error } = await supabase
-                    .from('core_lessons')
-                    .select('day_number, topic')
-                    .eq('day_number', dayOfYear)
-                    .single();
-
-                if (error) throw error;
+                
+                // Try cache first for instant display
+                let data = cachedLessons?.find(l => l.day_number === dayOfYear);
+                
+                if (!data) {
+                    const { data: fetched, error } = await supabase
+                        .from('core_lessons')
+                        .select('day_number, topic')
+                        .eq('day_number', dayOfYear)
+                        .single();
+                    if (error) throw error;
+                    data = fetched;
+                }
 
                 if (data) {
                     document.getElementById('today-topic').textContent = data.topic;
                     document.getElementById('today-thumbnail-text').textContent = data.topic;
-                    // Show date instead of day number
                     const formattedDate = dayNumberToDate(data.day_number);
                     document.getElementById('today-day-badge').textContent = formattedDate;
                     const dateMeta = document.getElementById('today-date-meta');
@@ -2145,7 +2176,6 @@
                 }
             } catch (error) {
                 console.error('Error loading today\'s lesson:', error);
-                // Show fallback content
                 document.getElementById('today-topic').textContent = 'Daily Lesson';
                 document.getElementById('today-thumbnail-text').textContent = 'Loading...';
             }
@@ -2176,11 +2206,22 @@
             return `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`;
         }
 
-        // Load curriculum
+        // Load curriculum (with caching for Spotify-speed)
         async function loadCurriculum() {
             const grid = document.getElementById('month-grid');
             
-            // Show loading state
+            // Try cache FIRST for instant render
+            const cached = getCachedLessons();
+            if (cached) {
+                renderCurriculum(cached, grid);
+                // Still fetch fresh data in background
+                fetchAndCacheLessons().then(fresh => {
+                    if (fresh) renderCurriculum(fresh, grid);
+                });
+                return;
+            }
+            
+            // Show loading state only if no cache
             grid.innerHTML = `
                 <div class="loading-skeleton">
                     <div class="skeleton-card"></div>
@@ -2189,6 +2230,11 @@
                 </div>
             `;
 
+            const lessons = await fetchAndCacheLessons();
+            if (lessons) renderCurriculum(lessons, grid);
+        }
+        
+        async function fetchAndCacheLessons() {
             try {
                 const { data: lessons, error } = await supabase
                     .from('core_lessons')
@@ -2196,7 +2242,16 @@
                     .order('day_number');
 
                 if (error) throw error;
-                if (!lessons) return;
+                if (lessons) cacheLessons(lessons);
+                return lessons;
+            } catch (error) {
+                console.error('Error fetching lessons:', error);
+                return null;
+            }
+        }
+        
+        function renderCurriculum(lessons, grid) {
+            if (!lessons) return;
 
                 // Clear loading state
                 grid.innerHTML = '';
@@ -2234,10 +2289,6 @@
                     card.classList.toggle('collapsed');
                 });
             });
-            } catch (error) {
-                console.error('Error loading curriculum:', error);
-                grid.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Unable to load curriculum. Please try again later.</p>';
-            }
         }
 
         // Perspective explorer
@@ -2595,9 +2646,13 @@
             });
         }, 2000);
 
-        loadTodaysLesson();
-        loadCurriculum();
-        updatePerspectives();
+        // ⚡ PARALLEL LOADING for Spotify-speed
+        const cached = getCachedLessons();
+        Promise.all([
+            loadTodaysLesson(cached),
+            loadCurriculum(),
+            updatePerspectives()
+        ]).then(() => console.log('[Index] ⚡ All content loaded'));
         updateCalculator();
 
         // Check session

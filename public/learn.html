@@ -1554,6 +1554,33 @@
       }
 
       // ═══════════════════════════════════════════════════════════════════
+      // SPEED: Lesson Cache for instant loads
+      // ═══════════════════════════════════════════════════════════════════
+      const LESSON_CACHE_KEY = 'ck_lesson_cache';
+      const LESSON_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
+      
+      function getCachedLesson(dayNumber, tone) {
+        try {
+          const cached = localStorage.getItem(`${LESSON_CACHE_KEY}_${dayNumber}_${tone}`);
+          if (cached) {
+            const { lesson, timestamp } = JSON.parse(cached);
+            if (Date.now() - timestamp < LESSON_CACHE_TTL) {
+              console.log(`[Learn] ⚡ Using cached lesson for day ${dayNumber}`);
+              return lesson;
+            }
+          }
+        } catch (e) {}
+        return null;
+      }
+      
+      function cacheLesson(dayNumber, tone, lesson) {
+        try {
+          localStorage.setItem(`${LESSON_CACHE_KEY}_${dayNumber}_${tone}`, 
+            JSON.stringify({ lesson, timestamp: Date.now() }));
+        } catch (e) {}
+      }
+
+      // ═══════════════════════════════════════════════════════════════════
       // LESSON DATA - LOAD FROM SUPABASE (with loading state & timeout)
       // ═══════════════════════════════════════════════════════════════════
       async function loadLesson(dayNumber) {
@@ -1567,6 +1594,20 @@
         state.dayNumber = dayNumber;
         state.currentPhase = 1;
         state.choicesMade = {};
+        
+        const tone = state.variants.tone || 'curious';
+
+        // ⚡ TRY CACHE FIRST for instant load
+        const cached = getCachedLesson(dayNumber, tone);
+        if (cached) {
+          state.lesson = cached;
+          state.isLoading = false;
+          document.getElementById('day-display').textContent = dayNumberToDate(dayNumber);
+          updateUI();
+          renderPhase(state.lesson.phases[0]);
+          console.log('[Learn] ⚡ Instant load from cache!');
+          return;
+        }
 
         // Clear any existing timeout
         if (loadingTimeout) {
@@ -1739,6 +1780,9 @@
         };
 
         console.log(`[Learn] ✅ Lesson built: ${phases.length} phases`);
+        
+        // ⚡ CACHE for instant future loads
+        cacheLesson(state.dayNumber, state.variants.tone || 'curious', state.lesson);
 
         // Clear loading state and timeout
         state.isLoading = false;
