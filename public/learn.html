@@ -1743,6 +1743,17 @@
       const LESSON_CACHE_KEY = 'ck_lesson_cache';
       const LESSON_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
       
+      // Clear cache if ?clearcache=1 in URL
+      if (new URLSearchParams(window.location.search).get('clearcache')) {
+        console.log('[Learn] 🗑️ Clearing lesson cache...');
+        Object.keys(localStorage).forEach(key => {
+          if (key.startsWith(LESSON_CACHE_KEY)) {
+            localStorage.removeItem(key);
+          }
+        });
+        console.log('[Learn] ✅ Cache cleared');
+      }
+      
       function getCachedLesson(dayNumber, tone) {
         try {
           const cached = localStorage.getItem(`${LESSON_CACHE_KEY}_${dayNumber}_${tone}`);
