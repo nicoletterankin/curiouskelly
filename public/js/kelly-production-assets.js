@@ -3,12 +3,14 @@
  * Manages optimized Kelly images with responsive loading
  */
 
+// Kelly Production Assets v2.0 - HIGH QUALITY
 const KELLY_ASSETS = {
   hello: {
     webp: {
       640: '/assets/kelly/production/webp/hello-640.webp',
       1280: '/assets/kelly/production/webp/hello-1280.webp',
-      1920: '/assets/kelly/production/webp/hello-1920.webp'
+      1920: '/assets/kelly/production/webp/hello-1920.webp',
+      2560: '/assets/kelly/production/webp/hello-2560.webp'
     },
     jpeg: '/assets/kelly/production/jpeg/hello.jpeg'
   },
@@ -16,7 +18,8 @@ const KELLY_ASSETS = {
     webp: {
       640: '/assets/kelly/production/webp/thinking-640.webp',
       1280: '/assets/kelly/production/webp/thinking-1280.webp',
-      1920: '/assets/kelly/production/webp/thinking-1920.webp'
+      1920: '/assets/kelly/production/webp/thinking-1920.webp',
+      2560: '/assets/kelly/production/webp/thinking-2560.webp'
     },
     jpeg: '/assets/kelly/production/jpeg/thinking.jpeg'
   },
@@ -24,7 +27,8 @@ const KELLY_ASSETS = {
     webp: {
       640: '/assets/kelly/production/webp/pointing-left-640.webp',
       1280: '/assets/kelly/production/webp/pointing-left-1280.webp',
-      1920: '/assets/kelly/production/webp/pointing-left-1920.webp'
+      1920: '/assets/kelly/production/webp/pointing-left-1920.webp',
+      2560: '/assets/kelly/production/webp/pointing-left-2560.webp'
     },
     jpeg: '/assets/kelly/production/jpeg/pointing-left.jpeg'
   },
@@ -32,7 +36,8 @@ const KELLY_ASSETS = {
     webp: {
       640: '/assets/kelly/production/webp/pointing-right-640.webp',
       1280: '/assets/kelly/production/webp/pointing-right-1280.webp',
-      1920: '/assets/kelly/production/webp/pointing-right-1920.webp'
+      1920: '/assets/kelly/production/webp/pointing-right-1920.webp',
+      2560: '/assets/kelly/production/webp/pointing-right-2560.webp'
     },
     jpeg: '/assets/kelly/production/jpeg/pointing-right.jpeg'
   },
@@ -40,7 +45,8 @@ const KELLY_ASSETS = {
     webp: {
       640: '/assets/kelly/production/webp/out-left-640.webp',
       1280: '/assets/kelly/production/webp/out-left-1280.webp',
-      1920: '/assets/kelly/production/webp/out-left-1920.webp'
+      1920: '/assets/kelly/production/webp/out-left-1920.webp',
+      2560: '/assets/kelly/production/webp/out-left-2560.webp'
     },
     jpeg: '/assets/kelly/production/jpeg/out-left.jpeg'
   },
@@ -48,7 +54,8 @@ const KELLY_ASSETS = {
     webp: {
       640: '/assets/kelly/production/webp/out-right-640.webp',
       1280: '/assets/kelly/production/webp/out-right-1280.webp',
-      1920: '/assets/kelly/production/webp/out-right-1920.webp'
+      1920: '/assets/kelly/production/webp/out-right-1920.webp',
+      2560: '/assets/kelly/production/webp/out-right-2560.webp'
     },
     jpeg: '/assets/kelly/production/jpeg/out-right.jpeg'
   },
@@ -56,7 +63,8 @@ const KELLY_ASSETS = {
     webp: {
       640: '/assets/kelly/production/webp/mid-left-640.webp',
       1280: '/assets/kelly/production/webp/mid-left-1280.webp',
-      1920: '/assets/kelly/production/webp/mid-left-1920.webp'
+      1920: '/assets/kelly/production/webp/mid-left-1920.webp',
+      2560: '/assets/kelly/production/webp/mid-left-2560.webp'
     },
     jpeg: '/assets/kelly/production/jpeg/mid-left.jpeg'
   },
@@ -64,7 +72,8 @@ const KELLY_ASSETS = {
     webp: {
       640: '/assets/kelly/production/webp/mid-right-640.webp',
       1280: '/assets/kelly/production/webp/mid-right-1280.webp',
-      1920: '/assets/kelly/production/webp/mid-right-1920.webp'
+      1920: '/assets/kelly/production/webp/mid-right-1920.webp',
+      2560: '/assets/kelly/production/webp/mid-right-2560.webp'
     },
     jpeg: '/assets/kelly/production/jpeg/mid-right.jpeg'
   },
@@ -72,7 +81,8 @@ const KELLY_ASSETS = {
     webp: {
       640: '/assets/kelly/production/webp/in-left-640.webp',
       1280: '/assets/kelly/production/webp/in-left-1280.webp',
-      1920: '/assets/kelly/production/webp/in-left-1920.webp'
+      1920: '/assets/kelly/production/webp/in-left-1920.webp',
+      2560: '/assets/kelly/production/webp/in-left-2560.webp'
     },
     jpeg: '/assets/kelly/production/jpeg/in-left.jpeg'
   },
@@ -80,7 +90,8 @@ const KELLY_ASSETS = {
     webp: {
       640: '/assets/kelly/production/webp/in-right-640.webp',
       1280: '/assets/kelly/production/webp/in-right-1280.webp',
-      1920: '/assets/kelly/production/webp/in-right-1920.webp'
+      1920: '/assets/kelly/production/webp/in-right-1920.webp',
+      2560: '/assets/kelly/production/webp/in-right-2560.webp'
     },
     jpeg: '/assets/kelly/production/jpeg/in-right.jpeg'
   }
@@ -112,10 +123,12 @@ class KellyAssetManager {
   }
   
   getOptimalSize() {
+    // Use device pixel ratio for crisp images on retina/high-DPI displays
     const width = window.innerWidth * window.devicePixelRatio;
     if (width <= 640) return '640';
     if (width <= 1280) return '1280';
-    return '1920';
+    if (width <= 1920) return '1920';
+    return '2560'; // 4K quality for high-DPI displays
   }
   
   getAssetUrl(state) {
