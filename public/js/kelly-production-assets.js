@@ -156,9 +156,10 @@ class KellyAssetManager {
     const asset = KELLY_ASSETS[state];
     if (!asset) {
       console.warn(`[KellyAssets] Unknown state: ${state}, falling back to hello`);
-      return KELLY_ASSETS.hello.png;
+      return KELLY_ASSETS.hello.png + '?v=20251202';
     }
-    return asset.png;
+    // Add version cache buster to ensure fresh images after deployment
+    return asset.png + '?v=20251202';
   }
   
   async preloadState(state) {

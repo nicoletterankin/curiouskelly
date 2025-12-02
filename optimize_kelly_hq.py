@@ -168,3 +168,5 @@ if __name__ == "__main__":
         print(f"   WebP: {WEBP_DIR}")
         print(f"   JPEG: {JPEG_DIR}")
 
+
+

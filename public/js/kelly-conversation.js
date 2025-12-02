@@ -856,3 +856,5 @@ window.KellyTextChat = KellyTextChat;
 
 console.log('[KellyConversation] ✅ Loaded - Voice conversation system ready');
 
+
+

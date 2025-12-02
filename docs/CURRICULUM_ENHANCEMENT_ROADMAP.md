@@ -291,3 +291,5 @@ Review `marketing_headline`, `marketing_tagline`, `marketing_pitch`:
 - `CLAUDE.md` - Operating rules for AI contributions
 - `scripts/sync_supabase_to_calendar.py` - Sync tooling
 
+
+

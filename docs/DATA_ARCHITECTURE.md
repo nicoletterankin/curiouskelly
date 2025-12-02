@@ -238,3 +238,5 @@ echo $PUBLIC_SUPABASE_ANON_KEY
 | 2.0.0 | Nov 30, 2025 | Calendar synced from Supabase |
 | 1.0.0 | Nov 13, 2025 | Initial calendar with DNA references |
 
+
+

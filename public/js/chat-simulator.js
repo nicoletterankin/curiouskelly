@@ -214,3 +214,5 @@ document.head.appendChild(chatStyles);
 // Export
 window.ChatSimulator = ChatSimulator;
 
+
+

@@ -2497,7 +2497,7 @@
           <!-- Available poses: kelly_welcome, kelly_idle, kelly_hint, kelly_clasp, 
                kelly_choice_left, kelly_choice_right, kelly_listening -->
           <img
-            src="/kelly/poses/kelly_welcome.png"
+            src="/kelly/poses/kelly_hint.png?v=20251202"
             alt="Kelly"
             id="kelly-avatar"
             style="width: 100%; height: 100%; object-fit: cover; object-position: center 20%; transition: opacity 0.3s ease;"
@@ -5416,6 +5416,15 @@
         
         // Initialize Kelly Avatar (2D/3D controller)
         initKellyAvatar();
+        
+        // 🔧 FIX: Initialize Kelly Asset Manager BEFORE loading lesson
+        // This prevents race condition where renderPhase() is called before kellyAssets exists
+        const kellyImg = document.getElementById('kelly-avatar');
+        if (kellyImg && window.KellyAssetManager) {
+          window.kellyAssets = new KellyAssetManager(kellyImg);
+          window.kellyAssets.preloadEssential();
+          console.log('[Learn] ✅ Kelly Asset Manager initialized early');
+        }
 
         // Initialize audio (ElevenLabs via secure /api/tts - NO BROWSER TTS)
         kellyAudio = new KellyAudio({
@@ -5532,7 +5541,7 @@
         
         setTimeout(initChat, 1000);
         
-        // Initialize Kelly Pose Manager
+        // Initialize Kelly Pose Manager (backup system)
         if (window.KellyPoseManager) {
           const kellyImg = document.getElementById('kelly-avatar');
           if (kellyImg) {
@@ -5540,11 +5549,22 @@
           }
         }
         
-        // Initialize Kelly Asset Manager
-        const kellyImg = document.getElementById('kelly-avatar');
-        if (kellyImg && window.KellyAssetManager) {
-          window.kellyAssets = new KellyAssetManager(kellyImg);
-          window.kellyAssets.preloadEssential();
+        // Kelly Asset Manager already initialized in init() - just verify
+        if (!window.kellyAssets) {
+          console.warn('[Learn] kellyAssets not found, initializing late');
+          const kellyImg = document.getElementById('kelly-avatar');
+          if (kellyImg && window.KellyAssetManager) {
+            window.kellyAssets = new KellyAssetManager(kellyImg);
+            window.kellyAssets.preloadEssential();
+          }
+        }
+        
+        // Force correct pose for current phase
+        if (window.kellyAssets && window.state?.lesson?.phases?.[0]) {
+          const phaseType = window.state.lesson.phases[window.state.currentPhase - 1]?.type || 'question';
+          const stateMap = { welcome: 'hello', question: 'thinking', wisdom: 'hello' };
+          window.kellyAssets.setState(stateMap[phaseType] || 'thinking');
+          console.log('[Learn] ✅ Forced Kelly pose for phase:', phaseType);
         }
       });
       

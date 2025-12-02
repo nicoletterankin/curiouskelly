@@ -148,3 +148,5 @@ $$;
 COMMENT ON FUNCTION get_lesson_comments IS 'Get comments for a specific lesson day and phase, optionally filtered by option context';
 COMMENT ON FUNCTION get_random_comments IS 'Get random comments for a phase (fallback when lesson-specific not available)';
 
+
+

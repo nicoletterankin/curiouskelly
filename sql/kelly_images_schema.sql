@@ -452,3 +452,5 @@ SELECT 'kelly_generation_jobs', count(*) FROM kelly_generation_jobs
 UNION ALL
 SELECT 'kelly_generation_usage', count(*) FROM kelly_generation_usage;
 
+
+
