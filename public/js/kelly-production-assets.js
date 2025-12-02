@@ -3,97 +3,40 @@
  * Manages optimized Kelly images with responsive loading
  */
 
-// Kelly Production Assets v2.0 - HIGH QUALITY
+// Kelly Production Assets v3.0 - Using /kelly/poses/ directory
 const KELLY_ASSETS = {
   hello: {
-    webp: {
-      640: '/assets/kelly/production/webp/hello-640.webp',
-      1280: '/assets/kelly/production/webp/hello-1280.webp',
-      1920: '/assets/kelly/production/webp/hello-1920.webp',
-      2560: '/assets/kelly/production/webp/hello-2560.webp'
-    },
-    jpeg: '/assets/kelly/production/jpeg/hello.jpeg'
+    png: '/kelly/poses/kelly_welcome.png'
   },
   thinking: {
-    webp: {
-      640: '/assets/kelly/production/webp/thinking-640.webp',
-      1280: '/assets/kelly/production/webp/thinking-1280.webp',
-      1920: '/assets/kelly/production/webp/thinking-1920.webp',
-      2560: '/assets/kelly/production/webp/thinking-2560.webp'
-    },
-    jpeg: '/assets/kelly/production/jpeg/thinking.jpeg'
+    png: '/kelly/poses/kelly_idle.png'
   },
   'pointing-left': {
-    webp: {
-      640: '/assets/kelly/production/webp/pointing-left-640.webp',
-      1280: '/assets/kelly/production/webp/pointing-left-1280.webp',
-      1920: '/assets/kelly/production/webp/pointing-left-1920.webp',
-      2560: '/assets/kelly/production/webp/pointing-left-2560.webp'
-    },
-    jpeg: '/assets/kelly/production/jpeg/pointing-left.jpeg'
+    png: '/kelly/poses/kelly_choice_left.png'
   },
   'pointing-right': {
-    webp: {
-      640: '/assets/kelly/production/webp/pointing-right-640.webp',
-      1280: '/assets/kelly/production/webp/pointing-right-1280.webp',
-      1920: '/assets/kelly/production/webp/pointing-right-1920.webp',
-      2560: '/assets/kelly/production/webp/pointing-right-2560.webp'
-    },
-    jpeg: '/assets/kelly/production/jpeg/pointing-right.jpeg'
+    png: '/kelly/poses/kelly_choice_right.png'
   },
-  'out-left': {
-    webp: {
-      640: '/assets/kelly/production/webp/out-left-640.webp',
-      1280: '/assets/kelly/production/webp/out-left-1280.webp',
-      1920: '/assets/kelly/production/webp/out-left-1920.webp',
-      2560: '/assets/kelly/production/webp/out-left-2560.webp'
-    },
-    jpeg: '/assets/kelly/production/jpeg/out-left.jpeg'
+  'hint': {
+    png: '/kelly/poses/kelly_hint.png'
   },
-  'out-right': {
-    webp: {
-      640: '/assets/kelly/production/webp/out-right-640.webp',
-      1280: '/assets/kelly/production/webp/out-right-1280.webp',
-      1920: '/assets/kelly/production/webp/out-right-1920.webp',
-      2560: '/assets/kelly/production/webp/out-right-2560.webp'
-    },
-    jpeg: '/assets/kelly/production/jpeg/out-right.jpeg'
+  'hint-flip': {
+    png: '/kelly/poses/kelly_hint_flip.png'
   },
-  'mid-left': {
-    webp: {
-      640: '/assets/kelly/production/webp/mid-left-640.webp',
-      1280: '/assets/kelly/production/webp/mid-left-1280.webp',
-      1920: '/assets/kelly/production/webp/mid-left-1920.webp',
-      2560: '/assets/kelly/production/webp/mid-left-2560.webp'
-    },
-    jpeg: '/assets/kelly/production/jpeg/mid-left.jpeg'
+  'listening': {
+    png: '/kelly/poses/kelly_listening.png'
   },
-  'mid-right': {
-    webp: {
-      640: '/assets/kelly/production/webp/mid-right-640.webp',
-      1280: '/assets/kelly/production/webp/mid-right-1280.webp',
-      1920: '/assets/kelly/production/webp/mid-right-1920.webp',
-      2560: '/assets/kelly/production/webp/mid-right-2560.webp'
-    },
-    jpeg: '/assets/kelly/production/jpeg/mid-right.jpeg'
+  'clasp': {
+    png: '/kelly/poses/kelly_clasp.png'
   },
-  'in-left': {
-    webp: {
-      640: '/assets/kelly/production/webp/in-left-640.webp',
-      1280: '/assets/kelly/production/webp/in-left-1280.webp',
-      1920: '/assets/kelly/production/webp/in-left-1920.webp',
-      2560: '/assets/kelly/production/webp/in-left-2560.webp'
-    },
-    jpeg: '/assets/kelly/production/jpeg/in-left.jpeg'
+  'bot-right-index': {
+    png: '/kelly/poses/bot_right_index.png'
   },
-  'in-right': {
-    webp: {
-      640: '/assets/kelly/production/webp/in-right-640.webp',
-      1280: '/assets/kelly/production/webp/in-right-1280.webp',
-      1920: '/assets/kelly/production/webp/in-right-1920.webp',
-      2560: '/assets/kelly/production/webp/in-right-2560.webp'
-    },
-    jpeg: '/assets/kelly/production/jpeg/in-right.jpeg'
+  'cam-right-index': {
+    png: '/kelly/poses/cam_right_index.png'
+  },
+  'rail-left-thumb': {
+    png: '/kelly/poses/rail_left_thumb.png'
   }
 };
 
@@ -135,14 +78,10 @@ class KellyAssetManager {
     const asset = KELLY_ASSETS[state];
     if (!asset) {
       console.warn(`[KellyAssets] Unknown state: ${state}`);
-      return KELLY_ASSETS.hello.jpeg;
+      return KELLY_ASSETS.hello.png;
     }
     
-    if (this.supportsWebP) {
-      const size = this.getOptimalSize();
-      return asset.webp[size];
-    }
-    return asset.jpeg;
+    return asset.png;
   }
   
   async preloadState(state) {
