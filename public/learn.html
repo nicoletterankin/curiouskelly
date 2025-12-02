@@ -1836,33 +1836,273 @@
         font-weight: 600;
       }
 
-      /* Time display - top right */
-      .top-time {
+      /* === TOP HEADER - Title, Date, Time === */
+      .top-header {
         position: fixed;
-        top: 16px;
-        right: 16px;
+        top: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: calc(var(--safe-top, 12px) + 8px) 16px 8px;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 70%, transparent 100%);
+        z-index: 120;
+      }
+      
+      .top-header-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        min-width: 0;
+      }
+      
+      .top-title-emoji {
+        font-size: 20px;
+        flex-shrink: 0;
+      }
+      
+      .top-title-name {
+        font-size: 15px;
+        font-weight: 600;
+        color: #fff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      
+      .top-header-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-shrink: 0;
+      }
+      
+      .top-date {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 500;
+      }
+      
+      .top-time {
         background: rgba(0, 0, 0, 0.4);
         backdrop-filter: blur(8px);
         -webkit-backdrop-filter: blur(8px);
-        border-radius: 12px;
-        padding: 6px 14px;
-        font-size: 13px;
+        border-radius: 10px;
+        padding: 4px 10px;
+        font-size: 12px;
         font-weight: 500;
         color: rgba(255, 255, 255, 0.9);
-        z-index: 100;
-        cursor: pointer;
-        transition: background 0.2s;
       }
-      .top-time:hover {
-        background: rgba(0, 0, 0, 0.6);
-      }
+      
       @media (max-width: 600px) {
-        .top-time {
-          top: 12px;
-          right: 12px;
-          font-size: 11px;
-          padding: 4px 10px;
+        .top-header {
+          padding: calc(var(--safe-top, 8px) + 4px) 12px 6px;
         }
+        .top-title-name {
+          font-size: 13px;
+          max-width: 150px;
+        }
+        .top-date {
+          display: none;
+        }
+      }
+      
+      /* === TALK TO KELLY BUTTON - Main Interaction === */
+      .talk-to-kelly-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 16px 20px;
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+        margin-bottom: 12px;
+      }
+      
+      .talk-to-kelly-btn:hover {
+        transform: scale(1.03);
+        box-shadow: 0 6px 28px rgba(59, 130, 246, 0.5);
+      }
+      
+      .talk-to-kelly-btn:active {
+        transform: scale(0.98);
+      }
+      
+      .talk-btn-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .talk-btn-icon svg {
+        width: 28px;
+        height: 28px;
+        color: #fff;
+      }
+      
+      .talk-btn-label {
+        font-size: 15px;
+        font-weight: 600;
+        color: #fff;
+      }
+      
+      .talk-btn-hint {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.7);
+        text-align: center;
+      }
+      
+      /* Pulse animation when Kelly is listening */
+      .talk-to-kelly-btn.listening {
+        animation: talkPulse 1.5s ease-in-out infinite;
+      }
+      
+      .talk-to-kelly-btn.listening .talk-btn-icon {
+        background: rgba(255, 255, 255, 0.4);
+      }
+      
+      @keyframes talkPulse {
+        0%, 100% { box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4); }
+        50% { box-shadow: 0 4px 30px rgba(139, 92, 246, 0.6); }
+      }
+      
+      /* === BOTTOM CHAT AREA === */
+      .bottom-chat-area {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        flex-direction: column;
+        padding: 0 12px calc(var(--safe-bottom, 20px) + 8px);
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.6) 60%, transparent 100%);
+        z-index: 90;
+        max-height: 35vh;
+      }
+      
+      .chat-messages-container {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px 0;
+        max-height: 150px;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      
+      .chat-messages-container::-webkit-scrollbar {
+        display: none;
+      }
+      
+      /* Chat message styling */
+      .chat-message {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 6px 10px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        animation: chatSlideIn 0.3s ease-out;
+      }
+      
+      @keyframes chatSlideIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      
+      .chat-message-avatar {
+        font-size: 16px;
+        flex-shrink: 0;
+      }
+      
+      .chat-message-content {
+        flex: 1;
+        min-width: 0;
+      }
+      
+      .chat-message-name {
+        font-size: 11px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.7);
+      }
+      
+      .chat-message-text {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.9);
+        line-height: 1.4;
+      }
+      
+      /* Chat Input Bar */
+      .chat-input-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 0;
+      }
+      
+      .chat-input {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 24px;
+        padding: 12px 18px;
+        font-size: 14px;
+        color: #fff;
+        outline: none;
+        transition: all 0.2s ease;
+      }
+      
+      .chat-input::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+      }
+      
+      .chat-input:focus {
+        background: rgba(255, 255, 255, 0.18);
+        border-color: rgba(59, 130, 246, 0.5);
+      }
+      
+      .chat-send-btn {
+        width: 44px;
+        height: 44px;
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        border: none;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+      }
+      
+      .chat-send-btn svg {
+        color: #fff;
+      }
+      
+      .chat-send-btn:hover {
+        transform: scale(1.05);
+      }
+      
+      .chat-send-btn:active {
+        transform: scale(0.95);
       }
 
       /* Desktop day navigation arrows */
@@ -2033,9 +2273,21 @@
         padding: 8px 0;
       }
 
-      /* Hide ALL live badges from chat-overlay */
+      /* Hide ALL live badges and floating chat from chat-overlay */
       #live-badge,
-      body > div#live-badge {
+      body > div#live-badge,
+      #chat-overlay {
+        display: none !important;
+      }
+      
+      /* Comments now go to bottom chat area instead */
+      .comments-float {
+        display: none !important;
+      }
+      
+      /* Hide old mic button - we have the new Talk to Kelly button */
+      #kelly-mic-btn,
+      .kelly-mic-btn {
         display: none !important;
       }
 
@@ -2782,8 +3034,21 @@
         </div>
       </div>
 
-      <!-- RIGHT RAIL - Options -->
+      <!-- RIGHT RAIL - Talk Button + Options -->
       <div class="right-rail" id="right-rail">
+        <!-- TALK TO KELLY - Main Interaction -->
+        <button class="talk-to-kelly-btn" id="talk-to-kelly-btn" aria-label="Talk to Kelly">
+          <div class="talk-btn-icon">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
+              <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
+            </svg>
+          </div>
+          <span class="talk-btn-label">Talk to Kelly</span>
+          <span class="talk-btn-hint">Ask anything about today's lesson</span>
+        </button>
+        
+        <!-- Options -->
         <div class="option-card" id="option-a" data-letter="A" style="display: none;">
           <span class="option-letter">A</span>
           <span class="option-text" id="option-a-text"></span>
@@ -2803,15 +3068,48 @@
         <p class="caption-text" id="caption-text"></p>
       </div>
 
-      <!-- TIME DISPLAY - Top Right -->
-      <div class="top-time" id="top-time"></div>
+      <!-- TOP HEADER - Title, Date, Time -->
+      <div class="top-header" id="top-header">
+        <div class="top-header-left">
+          <span class="top-title-emoji" id="top-title-emoji">🏛️</span>
+          <span class="top-title-name" id="top-title-name">Rules Everyone Agrees On</span>
+        </div>
+        <div class="top-header-right">
+          <span class="top-date" id="top-date">Today</span>
+          <span class="top-time" id="top-time"></span>
+        </div>
+      </div>
 
       <!-- DESKTOP NAV ARROWS -->
       <button class="day-nav day-nav-prev" id="nav-prev" aria-label="Previous day">↓</button>
       <button class="day-nav day-nav-next" id="nav-next" aria-label="Next day">↑</button>
 
-      <!-- BOTTOM BAR - Title -->
-      <div class="bottom-bar" id="bottom-bar">
+      <!-- BOTTOM CHAT AREA - Messages & Input -->
+      <div class="bottom-chat-area" id="bottom-chat-area">
+        <!-- Live Comments Feed -->
+        <div class="chat-messages-container" id="chat-messages-container">
+          <!-- Comments will be injected here by chat-overlay.js -->
+        </div>
+        
+        <!-- Chat Input -->
+        <div class="chat-input-bar" id="chat-input-bar">
+          <input 
+            type="text" 
+            class="chat-input" 
+            id="chat-input" 
+            placeholder="Say something to Kelly or the world..."
+            autocomplete="off"
+          />
+          <button class="chat-send-btn" id="chat-send-btn" aria-label="Send message">
+            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+            </svg>
+          </button>
+        </div>
+      </div>
+
+      <!-- Hidden legacy bottom bar for compatibility -->
+      <div class="bottom-bar" id="bottom-bar" style="display: none;">
         <div class="bottom-date" id="bottom-date"></div>
         <div class="bottom-title">
           <span class="bottom-emoji" id="bottom-emoji">🏛️</span>
@@ -3060,6 +3358,10 @@
         const diff = now - start;
         const oneDay = 1000 * 60 * 60 * 24;
         return Math.floor(diff / oneDay);
+      }
+      
+      function isToday(dayNumber) {
+        return dayNumber === getTodaysDayNumber();
       }
 
       // ═══════════════════════════════════════════════════════════════════
@@ -3756,6 +4058,11 @@
         // Update topic (with null safety)
         setBadge('topic-name', state.lesson?.topic || 'Loading...');
         setBadge('topic-emoji', state.lesson?.topicEmoji || '📚');
+        
+        // ✨ NEW: Update top header with title and date
+        setBadge('top-title-name', state.lesson?.topic || 'Loading...');
+        setBadge('top-title-emoji', state.lesson?.topicEmoji || '📚');
+        setBadge('top-date', isToday(state.dayNumber) ? 'Today' : dayNumberToDate(state.dayNumber));
         
         // V2: Also update bottom bar
         if (typeof updateBottomBarV2 === 'function') {
@@ -5569,6 +5876,80 @@
           window.kellyAssets.setState(stateMap[phaseType] || 'thinking');
           console.log('[Learn] ✅ Forced Kelly pose for phase:', phaseType);
         }
+        
+        // ✨ Wire up Talk to Kelly button
+        const talkBtn = document.getElementById('talk-to-kelly-btn');
+        if (talkBtn && window.KellyConversation) {
+          talkBtn.addEventListener('click', () => {
+            if (KellyConversation.isActive) {
+              KellyConversation.endConversation();
+              talkBtn.classList.remove('listening');
+            } else {
+              KellyConversation.startConversation();
+              talkBtn.classList.add('listening');
+            }
+          });
+          console.log('[Learn] ✅ Talk to Kelly button wired up');
+        }
+        
+        // ✨ Wire up bottom chat input
+        const chatInput = document.getElementById('chat-input');
+        const chatSendBtn = document.getElementById('chat-send-btn');
+        const chatContainer = document.getElementById('chat-messages-container');
+        
+        function sendChatMessage() {
+          const text = chatInput?.value?.trim();
+          if (!text) return;
+          
+          // Add user message to chat
+          addChatMessage('You', text, '👤');
+          chatInput.value = '';
+          
+          // If KellyTextChat is available, use it
+          if (window.KellyTextChat) {
+            KellyTextChat.sendMessage(text);
+          } else {
+            // Fallback: Just show message was sent
+            setTimeout(() => {
+              addChatMessage('Kelly', "I heard you! Voice chat is ready - tap 'Talk to Kelly' to have a real conversation with me! 💙", '👩‍🏫');
+            }, 1000);
+          }
+        }
+        
+        function addChatMessage(name, text, avatar = '💬') {
+          if (!chatContainer) return;
+          
+          const msg = document.createElement('div');
+          msg.className = 'chat-message';
+          msg.innerHTML = `
+            <span class="chat-message-avatar">${avatar}</span>
+            <div class="chat-message-content">
+              <span class="chat-message-name">${name}</span>
+              <p class="chat-message-text">${text}</p>
+            </div>
+          `;
+          chatContainer.appendChild(msg);
+          chatContainer.scrollTop = chatContainer.scrollHeight;
+          
+          // Remove old messages if too many
+          while (chatContainer.children.length > 20) {
+            chatContainer.removeChild(chatContainer.firstChild);
+          }
+        }
+        
+        // Expose for chat-overlay.js to use
+        window.addChatMessage = addChatMessage;
+        
+        if (chatSendBtn) {
+          chatSendBtn.addEventListener('click', sendChatMessage);
+        }
+        if (chatInput) {
+          chatInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter') sendChatMessage();
+          });
+        }
+        
+        console.log('[Learn] ✅ Bottom chat system initialized');
       });
       
       // Hook into phase changes for phase-aware comments
