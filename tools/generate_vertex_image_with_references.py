@@ -83,7 +83,7 @@ def parse_args() -> GenerationRequest:
     )
     parser.add_argument(
         "--model",
-        default="imagen-3.0-generate-002",
+        default="imagegeneration@006",
         help="Vertex AI Imagen model name.",
     )
     parser.add_argument(

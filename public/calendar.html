@@ -1,356 +1,1149 @@
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <meta name="theme-color" content="#2563eb" />
-    <title>365 Days — Curious Kelly</title>
-
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>365 Days of Wonder — Curious Kelly</title>
+    
     <!-- Favicons -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png" />
-    <link rel="apple-touch-icon" sizes="180x180" href="/images/brand/apple-touch-icon.png" />
-
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png">
+    <link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
+    
     <!-- Brand CSS -->
-    <link rel="stylesheet" href="/css/brand-colors.css" />
-
+    <link rel="stylesheet" href="/css/brand-colors.css">
+    
     <!-- Config -->
     <script src="/config.js"></script>
-
-    <!-- Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
+    
     <style>
-      * {
-        margin: 0;
-        padding: 0;
-        box-sizing: border-box;
-      }
+        :root {
+            --bg-void: #000000;
+            --bg-deep: #050506;
+            --bg-surface: #0a0a0b;
+            --bg-elevated: #111113;
+            --bg-card: #18181b;
+            --text-primary: #fafafa;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --accent-kelly: #3b82f6;
+            --accent-gold: #f59e0b;
+            --accent-emerald: #10b981;
+            --border-subtle: #27272a;
+            --border-visible: #3f3f46;
+            --glow-kelly: rgba(59, 130, 246, 0.15);
+            --glow-gold: rgba(245, 158, 11, 0.15);
+        }
 
-      body {
-        font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-        background: var(--bg-dark);
-        color: var(--text-primary);
-        min-height: 100vh;
-        padding-bottom: 80px;
-      }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Bricolage Grotesque', -apple-system, sans-serif;
+            background: var(--bg-void);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding-bottom: 80px;
+        }
 
-      .header {
-        padding: 20px;
-        text-align: center;
-        background: var(--surface-dark);
-        border-bottom: 1px solid var(--border-dark);
-      }
+        /* Header */
+        .header {
+            padding: 20px 24px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-subtle);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            backdrop-filter: blur(12px);
+        }
 
-      .header h1 {
-        font-size: 24px;
-        margin-bottom: 8px;
-      }
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
 
-      .streak-display {
-        display: inline-flex;
-        align-items: center;
-        gap: 8px;
-        padding: 8px 16px;
-        background: rgba(245, 158, 11, 0.1);
-        border: 1px solid var(--gold);
-        border-radius: 20px;
-        font-size: 18px;
-        font-weight: 600;
-        color: var(--gold);
-      }
+        .header h1 {
+            font-family: 'Instrument Serif', Georgia, serif;
+            font-size: 1.5rem;
+            font-weight: 400;
+        }
 
-      .stats {
-        display: flex;
-        justify-content: space-around;
-        padding: 20px;
-        gap: 12px;
-      }
+        .header h1 .emoji {
+            margin-right: 8px;
+        }
 
-      .stat-card {
-        flex: 1;
-        padding: 16px;
-        background: var(--surface-dark);
-        border-radius: 12px;
-        text-align: center;
-      }
+        /* View Toggles */
+        .view-toggles {
+            display: flex;
+            gap: 8px;
+        }
 
-      .stat-value {
-        font-size: 28px;
-        font-weight: 700;
-        color: var(--kelly-blue);
-        margin-bottom: 4px;
-      }
+        .view-btn {
+            padding: 8px 16px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
 
-      .stat-label {
-        font-size: 12px;
-        color: var(--text-secondary);
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-      }
+        .view-btn:hover { 
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
 
-      .calendar-container {
-        padding: 20px;
-        max-width: 1200px;
-        margin: 0 auto;
-      }
+        .view-btn.active {
+            background: var(--accent-kelly);
+            border-color: var(--accent-kelly);
+            color: white;
+        }
 
-      .calendar-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(48px, 1fr));
-        gap: 8px;
-      }
+        /* Stats Row */
+        .stats-row {
+            display: flex;
+            gap: 24px;
+            padding: 16px 24px;
+            background: var(--bg-deep);
+            border-bottom: 1px solid var(--border-subtle);
+            justify-content: center;
+            flex-wrap: wrap;
+        }
 
-      .day-cell {
-        aspect-ratio: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        background: var(--surface-dark);
-        border: 1px solid var(--border-dark);
-        border-radius: 8px;
-        cursor: pointer;
-        transition: all 0.2s;
-        position: relative;
-      }
+        .stat-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
 
-      .day-cell:hover {
-        border-color: var(--kelly-blue);
-        transform: scale(1.05);
-      }
+        .stat-icon {
+            font-size: 1.25rem;
+        }
 
-      .day-number {
-        font-size: 16px;
-        font-weight: 600;
-      }
+        .stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent-kelly);
+        }
 
-      .day-cell.completed {
-        background: rgba(37, 99, 235, 0.2);
-        border-color: var(--kelly-blue);
-      }
+        .stat-label {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
 
-      .day-cell.completed::after {
-        content: '✓';
-        position: absolute;
-        top: 2px;
-        right: 4px;
-        font-size: 12px;
-        color: var(--success);
-      }
+        /* Main Container */
+        .main-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
 
-      .day-cell.today {
-        border: 2px solid var(--gold);
-        box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
-      }
+        /* Month Section */
+        .month-section {
+            margin-bottom: 48px;
+        }
 
-      /* Bottom Navigation */
-      .bottom-nav {
-        position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
-        height: 70px;
-        background: var(--surface-dark);
-        border-top: 1px solid var(--border-dark);
-        display: flex;
-        justify-content: space-around;
-        align-items: center;
-        z-index: 1000;
-      }
+        .month-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 16px;
+            padding-bottom: 12px;
+            border-bottom: 1px solid var(--border-subtle);
+        }
 
-      .nav-item {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 4px;
-        text-decoration: none;
-        color: var(--text-secondary);
-        transition: all 0.2s;
-        padding: 8px;
-      }
+        .month-icon {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--glow-kelly);
+            border-radius: 12px;
+            font-size: 1.5rem;
+        }
 
-      .nav-item:hover,
-      .nav-item.active {
-        color: var(--kelly-blue);
-      }
+        .month-info h2 {
+            font-family: 'Instrument Serif', Georgia, serif;
+            font-size: 1.5rem;
+            font-weight: 400;
+        }
 
-      .nav-icon {
-        font-size: 24px;
-      }
+        .month-meta {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
 
-      .nav-label {
-        font-size: 11px;
-        font-weight: 500;
-      }
-
-      @media (max-width: 640px) {
+        /* Calendar Grid View */
         .calendar-grid {
-          grid-template-columns: repeat(7, 1fr);
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 8px;
         }
 
-        .stats {
-          flex-direction: column;
+        .weekday-header {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            padding: 8px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
         }
-      }
+
+        .day-cell {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .day-cell:hover {
+            border-color: var(--accent-kelly);
+            transform: scale(1.05);
+            z-index: 10;
+        }
+
+        .day-cell.today {
+            border: 2px solid var(--accent-gold);
+            box-shadow: 0 0 16px var(--glow-gold);
+        }
+
+        .day-cell.completed {
+            background: linear-gradient(135deg, var(--glow-kelly) 0%, var(--bg-elevated) 100%);
+            border-color: var(--accent-kelly);
+        }
+
+        .day-cell.completed::after {
+            content: '✓';
+            position: absolute;
+            top: 4px;
+            right: 6px;
+            font-size: 10px;
+            color: var(--accent-emerald);
+        }
+
+        .day-number {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .day-emoji {
+            font-size: 1.25rem;
+            margin-bottom: 2px;
+        }
+
+        .day-topic {
+            font-size: 0.6rem;
+            color: var(--text-muted);
+            text-align: center;
+            line-height: 1.2;
+            max-width: 90%;
+            overflow: hidden;
+            text-overflow: ellipsis;
+            white-space: nowrap;
+        }
+
+        /* Card View */
+        .lessons-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 16px;
+        }
+
+        .lesson-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 16px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+
+        .lesson-card:hover {
+            border-color: var(--accent-kelly);
+            transform: translateY(-4px);
+            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+        }
+
+        .lesson-card.completed {
+            background: linear-gradient(135deg, var(--glow-kelly) 0%, var(--bg-elevated) 100%);
+        }
+
+        .lesson-card.today {
+            border: 2px solid var(--accent-gold);
+        }
+
+        .card-header {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .card-emoji {
+            width: 48px;
+            height: 48px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-card);
+            border-radius: 12px;
+            font-size: 1.5rem;
+            flex-shrink: 0;
+        }
+
+        .card-info {
+            flex: 1;
+            min-width: 0;
+        }
+
+        .card-day {
+            font-size: 0.75rem;
+            color: var(--accent-kelly);
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .card-topic {
+            font-size: 1.1rem;
+            font-weight: 600;
+            line-height: 1.3;
+        }
+
+        .card-truth {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 12px;
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .card-stats {
+            display: flex;
+            gap: 16px;
+            padding-top: 12px;
+            border-top: 1px solid var(--border-subtle);
+        }
+
+        .card-stat {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .card-stat strong {
+            color: var(--text-primary);
+        }
+
+        /* Lesson Preview Popup */
+        .lesson-popup {
+            position: fixed;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-visible);
+            border-radius: 16px;
+            padding: 20px;
+            width: 320px;
+            max-width: calc(100vw - 48px);
+            z-index: 1000;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.2s;
+            pointer-events: none;
+        }
+
+        .lesson-popup.show {
+            opacity: 1;
+            visibility: visible;
+            pointer-events: all;
+        }
+
+        .popup-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .popup-emoji {
+            width: 44px;
+            height: 44px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: var(--bg-card);
+            border-radius: 10px;
+            font-size: 1.5rem;
+        }
+
+        .popup-day {
+            font-size: 0.75rem;
+            color: var(--accent-kelly);
+            font-weight: 600;
+        }
+
+        .popup-topic {
+            font-size: 1.1rem;
+            font-weight: 600;
+        }
+
+        .popup-truth {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 16px;
+        }
+
+        .popup-stats {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+            margin-bottom: 16px;
+            padding: 12px;
+            background: var(--bg-card);
+            border-radius: 10px;
+        }
+
+        .popup-stat {
+            text-align: center;
+        }
+
+        .popup-stat-value {
+            font-size: 1.25rem;
+            font-weight: 700;
+            color: var(--accent-kelly);
+        }
+
+        .popup-stat-label {
+            font-size: 0.65rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .popup-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .popup-btn {
+            flex: 1;
+            padding: 10px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-decoration: none;
+            text-align: center;
+        }
+
+        .popup-btn-primary {
+            background: var(--accent-kelly);
+            color: white;
+            border: none;
+        }
+
+        .popup-btn-primary:hover {
+            background: #2563eb;
+        }
+
+        .popup-btn-secondary {
+            background: var(--bg-surface);
+            color: var(--text-secondary);
+            border: 1px solid var(--border-subtle);
+        }
+
+        .popup-btn-secondary:hover {
+            background: var(--bg-card);
+            color: var(--text-primary);
+        }
+
+        /* Completed Badge */
+        .popup-completed {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            background: var(--glow-kelly);
+            border-radius: 6px;
+            font-size: 0.75rem;
+            color: var(--accent-emerald);
+            margin-bottom: 12px;
+        }
+
+        /* Bottom Navigation */
+        .bottom-nav {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 70px;
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border-subtle);
+            display: flex;
+            justify-content: space-around;
+            align-items: center;
+            z-index: 1000;
+        }
+
+        .nav-item {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            text-decoration: none;
+            color: var(--text-muted);
+            transition: all 0.2s;
+            padding: 8px;
+        }
+
+        .nav-item:hover, .nav-item.active {
+            color: var(--accent-kelly);
+        }
+
+        .nav-icon { font-size: 24px; }
+        .nav-label { font-size: 11px; font-weight: 500; }
+
+        /* Search Bar */
+        .search-container {
+            padding: 16px 24px;
+            background: var(--bg-deep);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .search-box {
+            max-width: 600px;
+            margin: 0 auto;
+            position: relative;
+        }
+
+        .search-box input {
+            width: 100%;
+            padding: 12px 16px 12px 44px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-subtle);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .search-box input:focus {
+            outline: none;
+            border-color: var(--accent-kelly);
+            box-shadow: 0 0 0 3px var(--glow-kelly);
+        }
+
+        .search-box input::placeholder { color: var(--text-muted); }
+
+        .search-box::before {
+            content: '🔍';
+            position: absolute;
+            left: 14px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 1rem;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .calendar-grid {
+                gap: 4px;
+            }
+            
+            .day-cell {
+                border-radius: 8px;
+            }
+            
+            .day-number {
+                font-size: 0.85rem;
+            }
+            
+            .day-emoji {
+                font-size: 1rem;
+            }
+            
+            .day-topic {
+                display: none;
+            }
+
+            .stats-row {
+                gap: 16px;
+            }
+
+            .stat-item {
+                flex-direction: column;
+                gap: 4px;
+                text-align: center;
+            }
+
+            .lessons-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .lesson-popup {
+                left: 24px !important;
+                right: 24px;
+                width: auto;
+                bottom: 90px !important;
+                top: auto !important;
+            }
+        }
     </style>
-  </head>
-  <body>
-    <div class="header">
-      <h1>📅 365 Days with Kelly</h1>
-      <div class="streak-display">
-        <span>🔥</span>
-        <span id="streak-count">0</span>
-        <span>day streak</span>
-      </div>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <h1><span class="emoji">📅</span> 365 Days of Wonder</h1>
+        </div>
+        <div class="view-toggles">
+            <button class="view-btn active" id="view-calendar">📆 Calendar</button>
+            <button class="view-btn" id="view-cards">📋 Cards</button>
+        </div>
+    </header>
+
+    <!-- Stats Row -->
+    <div class="stats-row">
+        <div class="stat-item">
+            <span class="stat-icon">🔥</span>
+            <span class="stat-value" id="streak-count">0</span>
+            <span class="stat-label">day streak</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-icon">✓</span>
+            <span class="stat-value" id="completed-count">0</span>
+            <span class="stat-label">completed</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-icon">📚</span>
+            <span class="stat-value" id="remaining-count">365</span>
+            <span class="stat-label">to explore</span>
+        </div>
+        <div class="stat-item">
+            <span class="stat-icon">📊</span>
+            <span class="stat-value" id="percent-complete">0%</span>
+            <span class="stat-label">progress</span>
+        </div>
     </div>
 
-    <div class="stats">
-      <div class="stat-card">
-        <div class="stat-value" id="completed-count">0</div>
-        <div class="stat-label">Completed</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="remaining-count">365</div>
-        <div class="stat-label">Remaining</div>
-      </div>
-      <div class="stat-card">
-        <div class="stat-value" id="percent-complete">0%</div>
-        <div class="stat-label">Progress</div>
-      </div>
+    <!-- Search -->
+    <div class="search-container">
+        <div class="search-box">
+            <input type="text" id="search-input" placeholder="Search lessons by topic...">
+        </div>
     </div>
 
-    <div class="calendar-container">
-      <div class="calendar-grid" id="calendar-grid"></div>
+    <!-- Main Content -->
+    <main class="main-container" id="main-content">
+        <!-- Populated by JS -->
+    </main>
+
+    <!-- Lesson Preview Popup -->
+    <div class="lesson-popup" id="lesson-popup">
+        <div class="popup-header">
+            <div class="popup-emoji" id="popup-emoji">📚</div>
+            <div>
+                <div class="popup-day" id="popup-day">Day 1 • January 1</div>
+                <div class="popup-topic" id="popup-topic">Topic</div>
+            </div>
+        </div>
+        <div class="popup-completed" id="popup-completed" style="display: none;">
+            <span>✓</span> Completed
+        </div>
+        <p class="popup-truth" id="popup-truth">Loading...</p>
+        <div class="popup-stats">
+            <div class="popup-stat">
+                <div class="popup-stat-value" id="popup-archetypes">6</div>
+                <div class="popup-stat-label">Perspectives</div>
+            </div>
+            <div class="popup-stat">
+                <div class="popup-stat-value" id="popup-variants">54</div>
+                <div class="popup-stat-label">Variants</div>
+            </div>
+        </div>
+        <div class="popup-actions">
+            <a href="#" class="popup-btn popup-btn-primary" id="popup-start">Start Lesson →</a>
+            <a href="#" class="popup-btn popup-btn-secondary" id="popup-details">Details</a>
+        </div>
     </div>
 
     <!-- Bottom Navigation -->
     <nav class="bottom-nav">
-      <a href="/" class="nav-item">
-        <div class="nav-icon">⌂</div>
-        <div class="nav-label">Home</div>
-      </a>
-      <a href="/calendar.html" class="nav-item active">
-        <div class="nav-icon">🗓️</div>
-        <div class="nav-label">Calendar</div>
-      </a>
-      <a href="/learn.html" class="nav-item">
-        <div class="nav-icon">📖</div>
-        <div class="nav-label">Learn</div>
-      </a>
-      <a href="/me.html" class="nav-item">
-        <div class="nav-icon">👤</div>
-        <div class="nav-label">Me</div>
-      </a>
-      <a href="/settings.html" class="nav-item">
-        <div class="nav-icon">⚙️</div>
-        <div class="nav-label">Settings</div>
-      </a>
+        <a href="/" class="nav-item">
+            <div class="nav-icon">⌂</div>
+            <div class="nav-label">Home</div>
+        </a>
+        <a href="/calendar.html" class="nav-item active">
+            <div class="nav-icon">🗓️</div>
+            <div class="nav-label">Calendar</div>
+        </a>
+        <a href="/learn.html" class="nav-item">
+            <div class="nav-icon">📖</div>
+            <div class="nav-label">Learn</div>
+        </a>
+        <a href="/me.html" class="nav-item">
+            <div class="nav-icon">👤</div>
+            <div class="nav-label">Me</div>
+        </a>
+        <a href="/settings.html" class="nav-item">
+            <div class="nav-icon">⚙️</div>
+            <div class="nav-label">Settings</div>
+        </a>
     </nav>
 
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
     <script>
-      const supabase = window.supabase.createClient(
-        window.SUPABASE_URL || 'https://tvjalxxsyryjphkforjv.supabase.co',
-        window.SUPABASE_ANON_KEY ||
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI'
-      );
+        // Supabase client
+        const supabase = window.supabase.createClient(
+            window.SUPABASE_URL || 'https://tvjalxxsyryjphkforjv.supabase.co',
+            window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI'
+        );
 
-      let completedDays = new Set();
-      let streakCount = 0;
+        // State
+        let allLessons = [];
+        let completedDays = new Set();
+        let streakCount = 0;
+        let currentView = 'calendar'; // 'calendar' or 'cards'
+        let lessonAtomCounts = {}; // day_number -> archetype count
 
-      async function loadProgress() {
-        try {
-          const {
-            data: { user }
-          } = await supabase.auth.getUser();
+        // Constants
+        const MONTHS = [
+            { name: 'January', icon: '❄️', days: 31 },
+            { name: 'February', icon: '💝', days: 28 },
+            { name: 'March', icon: '🌱', days: 31 },
+            { name: 'April', icon: '🌸', days: 30 },
+            { name: 'May', icon: '🌻', days: 31 },
+            { name: 'June', icon: '☀️', days: 30 },
+            { name: 'July', icon: '🌊', days: 31 },
+            { name: 'August', icon: '🌅', days: 31 },
+            { name: 'September', icon: '🍂', days: 30 },
+            { name: 'October', icon: '🎃', days: 31 },
+            { name: 'November', icon: '🦃', days: 30 },
+            { name: 'December', icon: '🎄', days: 31 }
+        ];
 
-          if (user) {
-            const { data, error } = await supabase
-              .from('user_progress')
-              .select('day_number')
-              .eq('user_id', user.id);
+        const TOPIC_EMOJIS = {
+            'Leaves': '🍃', 'Water': '💧', 'Clouds': '☁️', 'Light': '💡',
+            'Sound': '🔊', 'Seeds': '🌱', 'Stars': '⭐', 'Energy': '⚡',
+            'Growth': '🌿', 'Colors': '🎨', 'Patterns': '🔷', 'Friendship': '🤝',
+            'Kindness': '💝', 'Listening': '👂', 'Patience': '⏳', 'Gratitude': '🙏',
+            'Courage': '🦁', 'Curiosity': '🔍', 'Balance': '⚖️', 'Rest': '😴',
+            'Memory': '🧠', 'Time': '⏰', 'Change': '🔄', 'Questions': '❓'
+        };
 
-            if (!error && data) {
-              completedDays = new Set(data.map((p) => p.day_number));
-              calculateStreak();
+        function getTopicEmoji(topic) {
+            return TOPIC_EMOJIS[topic] || '📚';
+        }
+
+        function getDayOfYear() {
+            const now = new Date();
+            const start = new Date(now.getFullYear(), 0, 0);
+            return Math.floor((now - start) / (1000 * 60 * 60 * 24));
+        }
+
+        function dayToDate(dayNumber) {
+            let cumulative = 0;
+            for (let i = 0; i < MONTHS.length; i++) {
+                if (dayNumber <= cumulative + MONTHS[i].days) {
+                    return `${MONTHS[i].name} ${dayNumber - cumulative}`;
+                }
+                cumulative += MONTHS[i].days;
             }
-          }
-        } catch (error) {
-          console.error('[Calendar] Error loading progress:', error);
+            return 'December 31';
         }
 
-        updateStats();
-        renderCalendar();
-      }
-
-      function calculateStreak() {
-        if (completedDays.size === 0) {
-          streakCount = 0;
-          return;
+        function getMonthForDay(dayNumber) {
+            let cumulative = 0;
+            for (let i = 0; i < MONTHS.length; i++) {
+                cumulative += MONTHS[i].days;
+                if (dayNumber <= cumulative) return i;
+            }
+            return 11;
         }
 
-        const sorted = Array.from(completedDays).sort((a, b) => b - a);
-        const today = getDayOfYear();
+        // Calculate streak
+        function calculateStreak() {
+            if (completedDays.size === 0) {
+                streakCount = 0;
+                return;
+            }
 
-        let streak = 0;
-        let checkDay = today;
+            const sorted = Array.from(completedDays).sort((a, b) => b - a);
+            const today = getDayOfYear();
 
-        // Count backwards from today
-        while (sorted.includes(checkDay)) {
-          streak++;
-          checkDay--;
+            let streak = 0;
+            let checkDay = today;
+
+            while (sorted.includes(checkDay)) {
+                streak++;
+                checkDay--;
+            }
+
+            streakCount = streak;
         }
 
-        streakCount = streak;
-      }
+        // Update stats display
+        function updateStats() {
+            const completed = completedDays.size;
+            const remaining = 365 - completed;
+            const percent = Math.round((completed / 365) * 100);
 
-      function getDayOfYear() {
-        const now = new Date();
-        const start = new Date(now.getFullYear(), 0, 0);
-        return Math.floor((now - start) / (1000 * 60 * 60 * 24));
-      }
-
-      function updateStats() {
-        const completed = completedDays.size;
-        const remaining = 365 - completed;
-        const percent = Math.round((completed / 365) * 100);
-
-        document.getElementById('streak-count').textContent = streakCount;
-        document.getElementById('completed-count').textContent = completed;
-        document.getElementById('remaining-count').textContent = remaining;
-        document.getElementById('percent-complete').textContent = `${percent}%`;
-      }
-
-      function renderCalendar() {
-        const grid = document.getElementById('calendar-grid');
-        grid.innerHTML = '';
-
-        const today = getDayOfYear();
-
-        for (let day = 1; day <= 365; day++) {
-          const cell = document.createElement('div');
-          cell.className = 'day-cell';
-          cell.innerHTML = `<div class="day-number">${day}</div>`;
-
-          if (completedDays.has(day)) {
-            cell.classList.add('completed');
-          }
-
-          if (day === today) {
-            cell.classList.add('today');
-          }
-
-          cell.onclick = () => {
-            window.location.href = `/learn.html?day=${day}`;
-          };
-
-          grid.appendChild(cell);
+            document.getElementById('streak-count').textContent = streakCount;
+            document.getElementById('completed-count').textContent = completed;
+            document.getElementById('remaining-count').textContent = remaining;
+            document.getElementById('percent-complete').textContent = `${percent}%`;
         }
-      }
 
-      // Initialize
-      loadProgress();
+        // Load lessons from Supabase
+        async function loadLessons() {
+            try {
+                const { data, error } = await supabase
+                    .from('core_lessons')
+                    .select('id, day_number, topic, universal_truth, marketing_headline')
+                    .order('day_number');
+
+                if (error) throw error;
+                allLessons = data || [];
+                
+                // Also load atom counts per lesson
+                const { data: atomCounts } = await supabase
+                    .from('lesson_atoms')
+                    .select('core_lesson_id');
+                
+                if (atomCounts) {
+                    // Count atoms per lesson
+                    const countMap = {};
+                    atomCounts.forEach(atom => {
+                        countMap[atom.core_lesson_id] = (countMap[atom.core_lesson_id] || 0) + 1;
+                    });
+                    
+                    // Map to day numbers
+                    allLessons.forEach(lesson => {
+                        lessonAtomCounts[lesson.day_number] = countMap[lesson.id] || 0;
+                    });
+                }
+
+                return allLessons;
+            } catch (err) {
+                console.error('Error loading lessons:', err);
+                return [];
+            }
+        }
+
+        // Load user progress
+        async function loadProgress() {
+            try {
+                const { data: { user } } = await supabase.auth.getUser();
+                if (user) {
+                    const { data } = await supabase
+                        .from('user_progress')
+                        .select('day_number')
+                        .eq('user_id', user.id);
+
+                    if (data) {
+                        completedDays = new Set(data.map(p => p.day_number));
+                        calculateStreak();
+                    }
+                }
+            } catch (err) {
+                console.error('Error loading progress:', err);
+            }
+            updateStats();
+        }
+
+        // Render calendar view
+        function renderCalendar(lessons = allLessons) {
+            const container = document.getElementById('main-content');
+            const today = getDayOfYear();
+            
+            // Group lessons by month
+            const byMonth = {};
+            lessons.forEach(lesson => {
+                const monthIndex = getMonthForDay(lesson.day_number);
+                if (!byMonth[monthIndex]) byMonth[monthIndex] = [];
+                byMonth[monthIndex].push(lesson);
+            });
+
+            let html = '';
+            
+            Object.keys(byMonth).sort((a, b) => a - b).forEach(monthIndex => {
+                const month = MONTHS[monthIndex];
+                const monthLessons = byMonth[monthIndex];
+                const completedInMonth = monthLessons.filter(l => completedDays.has(l.day_number)).length;
+                
+                // Calculate starting day offset (for proper calendar alignment)
+                let dayOffset = 0;
+                for (let i = 0; i < monthIndex; i++) {
+                    dayOffset += MONTHS[i].days;
+                }
+                const firstDayNumber = dayOffset + 1;
+                const firstDate = new Date(2025, parseInt(monthIndex), 1);
+                const startDayOfWeek = firstDate.getDay(); // 0 = Sunday
+
+                html += `
+                    <div class="month-section">
+                        <div class="month-header">
+                            <div class="month-icon">${month.icon}</div>
+                            <div class="month-info">
+                                <h2>${month.name}</h2>
+                                <div class="month-meta">
+                                    ${monthLessons.length} lessons • ${completedInMonth}/${monthLessons.length} completed
+                                </div>
+                            </div>
+                        </div>
+                        <div class="calendar-grid">
+                            ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => 
+                                `<div class="weekday-header">${d}</div>`
+                            ).join('')}
+                            ${Array(startDayOfWeek).fill('<div></div>').join('')}
+                            ${monthLessons.map(lesson => {
+                                const isToday = lesson.day_number === today;
+                                const isCompleted = completedDays.has(lesson.day_number);
+                                const dayInMonth = lesson.day_number - dayOffset;
+                                
+                                return `
+                                    <div class="day-cell ${isToday ? 'today' : ''} ${isCompleted ? 'completed' : ''}" 
+                                         data-day="${lesson.day_number}"
+                                         data-topic="${lesson.topic || ''}"
+                                         data-truth="${(lesson.universal_truth || '').replace(/"/g, '&quot;')}"
+                                         data-completed="${isCompleted}">
+                                        <div class="day-emoji">${getTopicEmoji(lesson.topic)}</div>
+                                        <div class="day-number">${dayInMonth}</div>
+                                        <div class="day-topic">${lesson.topic || 'Day ' + lesson.day_number}</div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            attachCellListeners();
+        }
+
+        // Render card view
+        function renderCards(lessons = allLessons) {
+            const container = document.getElementById('main-content');
+            const today = getDayOfYear();
+            
+            // Group by month
+            const byMonth = {};
+            lessons.forEach(lesson => {
+                const monthIndex = getMonthForDay(lesson.day_number);
+                if (!byMonth[monthIndex]) byMonth[monthIndex] = [];
+                byMonth[monthIndex].push(lesson);
+            });
+
+            let html = '';
+            
+            Object.keys(byMonth).sort((a, b) => a - b).forEach(monthIndex => {
+                const month = MONTHS[monthIndex];
+                const monthLessons = byMonth[monthIndex];
+                const completedInMonth = monthLessons.filter(l => completedDays.has(l.day_number)).length;
+
+                html += `
+                    <div class="month-section">
+                        <div class="month-header">
+                            <div class="month-icon">${month.icon}</div>
+                            <div class="month-info">
+                                <h2>${month.name}</h2>
+                                <div class="month-meta">
+                                    ${monthLessons.length} lessons • ${completedInMonth}/${monthLessons.length} completed
+                                </div>
+                            </div>
+                        </div>
+                        <div class="lessons-grid">
+                            ${monthLessons.map(lesson => {
+                                const isToday = lesson.day_number === today;
+                                const isCompleted = completedDays.has(lesson.day_number);
+                                const atomCount = lessonAtomCounts[lesson.day_number] || 0;
+                                const archetypeCount = Math.floor(atomCount / 5) || 6; // ~5 phases per archetype
+                                
+                                return `
+                                    <div class="lesson-card ${isToday ? 'today' : ''} ${isCompleted ? 'completed' : ''}"
+                                         data-day="${lesson.day_number}">
+                                        <div class="card-header">
+                                            <div class="card-emoji">${getTopicEmoji(lesson.topic)}</div>
+                                            <div class="card-info">
+                                                <div class="card-day">Day ${lesson.day_number} • ${dayToDate(lesson.day_number)}</div>
+                                                <div class="card-topic">${lesson.topic || 'Lesson'}</div>
+                                            </div>
+                                        </div>
+                                        <p class="card-truth">${lesson.universal_truth || lesson.marketing_headline || 'Discover something new today.'}</p>
+                                        <div class="card-stats">
+                                            <div class="card-stat"><strong>${archetypeCount}</strong> perspectives</div>
+                                            <div class="card-stat"><strong>${archetypeCount * 9}</strong> variants</div>
+                                            ${isCompleted ? '<div class="card-stat" style="color: var(--accent-emerald);">✓ Completed</div>' : ''}
+                                        </div>
+                                    </div>
+                                `;
+                            }).join('')}
+                        </div>
+                    </div>
+                `;
+            });
+
+            container.innerHTML = html;
+            attachCardListeners();
+        }
+
+        // Attach event listeners to day cells
+        function attachCellListeners() {
+            document.querySelectorAll('.day-cell').forEach(cell => {
+                cell.addEventListener('click', (e) => {
+                    const day = parseInt(cell.dataset.day);
+                    showLessonPopup(day, e);
+                });
+            });
+        }
+
+        // Attach event listeners to cards
+        function attachCardListeners() {
+            document.querySelectorAll('.lesson-card').forEach(card => {
+                card.addEventListener('click', () => {
+                    const day = parseInt(card.dataset.day);
+                    window.location.href = `/learn.html?day=${day}`;
+                });
+            });
+        }
+
+        // Show lesson popup
+        function showLessonPopup(dayNumber, event) {
+            const lesson = allLessons.find(l => l.day_number === dayNumber);
+            if (!lesson) return;
+
+            const popup = document.getElementById('lesson-popup');
+            const isCompleted = completedDays.has(dayNumber);
+            const atomCount = lessonAtomCounts[dayNumber] || 0;
+            const archetypeCount = Math.floor(atomCount / 5) || 6;
+
+            // Update popup content
+            document.getElementById('popup-emoji').textContent = getTopicEmoji(lesson.topic);
+            document.getElementById('popup-day').textContent = `Day ${dayNumber} • ${dayToDate(dayNumber)}`;
+            document.getElementById('popup-topic').textContent = lesson.topic || 'Lesson';
+            document.getElementById('popup-truth').textContent = lesson.universal_truth || lesson.marketing_headline || 'Discover something new.';
+            document.getElementById('popup-archetypes').textContent = archetypeCount;
+            document.getElementById('popup-variants').textContent = archetypeCount * 9;
+            document.getElementById('popup-completed').style.display = isCompleted ? 'inline-flex' : 'none';
+            document.getElementById('popup-start').href = `/learn.html?day=${dayNumber}`;
+            document.getElementById('popup-details').href = `/lesson-detail.html?day=${dayNumber}`;
+
+            // Position popup
+            const rect = event.target.closest('.day-cell').getBoundingClientRect();
+            const popupWidth = 320;
+            const popupHeight = 300;
+
+            let left = rect.right + 12;
+            let top = rect.top;
+
+            // Keep popup on screen
+            if (left + popupWidth > window.innerWidth) {
+                left = rect.left - popupWidth - 12;
+            }
+            if (top + popupHeight > window.innerHeight) {
+                top = window.innerHeight - popupHeight - 100;
+            }
+            if (top < 100) top = 100;
+
+            popup.style.left = `${left}px`;
+            popup.style.top = `${top}px`;
+            popup.classList.add('show');
+
+            // Close popup when clicking outside
+            setTimeout(() => {
+                document.addEventListener('click', closeLessonPopup, { once: true });
+            }, 100);
+        }
+
+        function closeLessonPopup(e) {
+            const popup = document.getElementById('lesson-popup');
+            if (!popup.contains(e.target) && !e.target.closest('.day-cell')) {
+                popup.classList.remove('show');
+            }
+        }
+
+        // Search functionality
+        function searchLessons(query) {
+            const q = query.toLowerCase().trim();
+            if (!q) {
+                currentView === 'calendar' ? renderCalendar() : renderCards();
+                return;
+            }
+
+            const filtered = allLessons.filter(lesson =>
+                (lesson.topic && lesson.topic.toLowerCase().includes(q)) ||
+                (lesson.universal_truth && lesson.universal_truth.toLowerCase().includes(q))
+            );
+
+            currentView === 'calendar' ? renderCalendar(filtered) : renderCards(filtered);
+        }
+
+        // View toggle handlers
+        function setupViewToggle() {
+            document.getElementById('view-calendar').addEventListener('click', () => {
+                currentView = 'calendar';
+                document.getElementById('view-calendar').classList.add('active');
+                document.getElementById('view-cards').classList.remove('active');
+                renderCalendar();
+            });
+
+            document.getElementById('view-cards').addEventListener('click', () => {
+                currentView = 'cards';
+                document.getElementById('view-cards').classList.add('active');
+                document.getElementById('view-calendar').classList.remove('active');
+                renderCards();
+            });
+        }
+
+        // Setup search
+        function setupSearch() {
+            const searchInput = document.getElementById('search-input');
+            let timeout;
+            searchInput.addEventListener('input', (e) => {
+                clearTimeout(timeout);
+                timeout = setTimeout(() => searchLessons(e.target.value), 300);
+            });
+        }
+
+        // Initialize
+        async function init() {
+            setupViewToggle();
+            setupSearch();
+            
+            // Load data in parallel
+            await Promise.all([loadLessons(), loadProgress()]);
+            
+            renderCalendar();
+            console.log('✅ Calendar loaded with', allLessons.length, 'lessons');
+        }
+
+        init();
     </script>
-  </body>
+</body>
 </html>

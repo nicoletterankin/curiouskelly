@@ -2525,34 +2525,33 @@
         `;
         document.head.appendChild(enhancementStyles);
         
-        // ENHANCEMENT 3: Curriculum Month Preview
-        const monthPreviewData = {
-            'January': [
-                { day: 1, topic: 'How Time Works', hook: 'Why January 1st feels like a fresh start' },
-                { day: 15, topic: 'Why We Dream', hook: 'Your brain rehearses life while you sleep' },
-                { day: 31, topic: 'How Habits Form', hook: 'The 21-day myth, debunked' }
-            ],
-            'February': [
-                { day: 32, topic: 'Why We Fall in Love', hook: 'Chemistry, literally' },
-                { day: 45, topic: 'How Vaccines Work', hook: 'Teaching your immune system' },
-                { day: 59, topic: 'Why Leap Years Exist', hook: 'Earth doesn\'t care about our calendar' }
-            ],
-            'March': [
-                { day: 60, topic: 'How Spring Happens', hook: 'The planet tilts, life awakens' },
-                { day: 75, topic: 'Why We Procrastinate', hook: 'Your brain vs. your future self' },
-                { day: 90, topic: 'How Earthquakes Work', hook: 'The ground beneath us is always moving' }
-            ],
-            'April': [
-                { day: 91, topic: 'How Flowers Bloom', hook: 'Nature\'s perfect timing' },
-                { day: 105, topic: 'Why Taxes Exist', hook: 'The social contract, explained' },
-                { day: 120, topic: 'How Music Moves Us', hook: 'Sound becomes emotion' }
-            ]
+        // ENHANCEMENT 3: Dynamic Curriculum Month Preview (loads from Supabase)
+        const monthStartDays = {
+            'January': 1, 'February': 32, 'March': 60, 'April': 91,
+            'May': 121, 'June': 152, 'July': 182, 'August': 213,
+            'September': 244, 'October': 274, 'November': 305, 'December': 335
+        };
+        const monthDayCount = {
+            'January': 31, 'February': 28, 'March': 31, 'April': 30,
+            'May': 31, 'June': 30, 'July': 31, 'August': 31,
+            'September': 30, 'October': 31, 'November': 30, 'December': 31
         };
         
-        window.showMonthPreview = function(month) {
-            const lessons = monthPreviewData[month] || [];
-            if (lessons.length === 0) return;
+        // Topic emoji mapping
+        const topicEmojis = {
+            'Leaves': '🍃', 'Water': '💧', 'Clouds': '☁️', 'Light': '💡',
+            'Sound': '🔊', 'Seeds': '🌱', 'Stars': '⭐', 'Energy': '⚡',
+            'Growth': '🌿', 'Colors': '🎨', 'Patterns': '🔷', 'Friendship': '🤝',
+            'Kindness': '💝', 'Listening': '👂', 'Patience': '⏳', 'Gratitude': '🙏',
+            'Courage': '🦁', 'Curiosity': '🔍', 'Balance': '⚖️', 'Rest': '😴',
+            'Memory': '🧠', 'Time': '⏰', 'Change': '🔄', 'Questions': '❓'
+        };
+        
+        window.showMonthPreview = async function(month) {
+            const startDay = monthStartDays[month];
+            const endDay = startDay + monthDayCount[month] - 1;
             
+            // Create modal immediately with loading state
             const modal = document.createElement('div');
             modal.style.cssText = `
                 position: fixed;
@@ -2575,57 +2574,14 @@
                     border: 1px solid var(--border-color);
                     border-radius: 20px;
                     padding: 40px;
-                    max-width: 600px;
+                    max-width: 700px;
                     width: 100%;
-                    max-height: 80vh;
+                    max-height: 85vh;
                     overflow-y: auto;
-                ">
-                    <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px;">
-                        <h2 style="font-family: 'Fraunces', serif; font-size: 1.75rem; margin: 0;">${month} Preview</h2>
-                        <button onclick="this.closest('div[style*=fixed]').remove()" style="
-                            background: none;
-                            border: none;
-                            color: var(--text-secondary);
-                            font-size: 2rem;
-                            cursor: pointer;
-                            padding: 0;
-                            width: 40px;
-                            height: 40px;
-                        ">×</button>
-                    </div>
-                    
-                    ${lessons.map(lesson => `
-                        <div style="
-                            background: var(--bg-secondary);
-                            border: 1px solid var(--border-color);
-                            border-radius: 12px;
-                            padding: 20px;
-                            margin-bottom: 16px;
-                        ">
-                            <div style="color: var(--accent-primary); font-size: 0.85rem; font-weight: 600; margin-bottom: 8px;">
-                                Day ${lesson.day}
-                            </div>
-                            <h3 style="font-size: 1.1rem; margin-bottom: 8px;">${lesson.topic}</h3>
-                            <p style="color: var(--text-secondary); font-size: 0.9rem; font-style: italic;">
-                                "${lesson.hook}"
-                            </p>
-                        </div>
-                    `).join('')}
-                    
-                    <div style="
-                        margin-top: 32px;
-                        padding: 24px;
-                        background: linear-gradient(135deg, var(--accent-glow), transparent);
-                        border: 1px solid var(--accent-primary);
-                        border-radius: 12px;
-                        text-align: center;
-                    ">
-                        <p style="margin-bottom: 16px; color: var(--text-secondary);">
-                            Want to explore all 366 lessons?
-                        </p>
-                        <button onclick="window.location.href='#pricing'" class="btn btn-primary">
-                            Unlock Full Curriculum
-                        </button>
+                " id="month-preview-content">
+                    <div style="text-align: center; padding: 40px;">
+                        <div style="width: 40px; height: 40px; border: 3px solid var(--border-color); border-top-color: var(--accent-primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
+                        <p style="color: var(--text-secondary);">Loading ${month} lessons...</p>
                     </div>
                 </div>
             `;
@@ -2634,6 +2590,112 @@
             modal.addEventListener('click', (e) => {
                 if (e.target === modal) modal.remove();
             });
+            
+            try {
+                // Fetch lessons for this month
+                const { data: lessons, error } = await supabase
+                    .from('core_lessons')
+                    .select('day_number, topic, universal_truth, marketing_headline')
+                    .gte('day_number', startDay)
+                    .lte('day_number', endDay)
+                    .order('day_number');
+                
+                if (error) throw error;
+                
+                // Count atoms for these lessons
+                const { data: atomCounts } = await supabase
+                    .from('lesson_atoms')
+                    .select('core_lesson_id')
+                    .in('core_lesson_id', (await supabase.from('core_lessons').select('id').gte('day_number', startDay).lte('day_number', endDay)).data?.map(l => l.id) || []);
+                
+                const totalAtoms = atomCounts?.length || 0;
+                const avgPerspectives = Math.round(totalAtoms / Math.max(lessons?.length || 1, 1) / 5);
+                
+                const contentEl = document.getElementById('month-preview-content');
+                contentEl.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
+                        <div>
+                            <h2 style="font-family: 'Fraunces', serif; font-size: 1.75rem; margin: 0 0 8px 0;">${month} Curriculum</h2>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">
+                                ${lessons?.length || 0} lessons • ~${avgPerspectives} perspectives each • ${(lessons?.length || 0) * avgPerspectives * 9} total variants
+                            </p>
+                        </div>
+                        <button onclick="this.closest('div[style*=fixed]').remove()" style="
+                            background: var(--bg-secondary);
+                            border: 1px solid var(--border-color);
+                            color: var(--text-secondary);
+                            font-size: 1.25rem;
+                            cursor: pointer;
+                            padding: 8px 12px;
+                            border-radius: 8px;
+                            line-height: 1;
+                        ">✕</button>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-bottom: 24px;">
+                        ${(lessons || []).map(lesson => `
+                            <div onclick="window.location.href='/lesson-detail.html?day=${lesson.day_number}'" style="
+                                background: var(--bg-secondary);
+                                border: 1px solid var(--border-color);
+                                border-radius: 12px;
+                                padding: 16px;
+                                cursor: pointer;
+                                transition: all 0.2s;
+                            " onmouseover="this.style.borderColor='var(--accent-primary)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border-color)';this.style.transform='none'">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                    <span style="font-size: 1.5rem;">${topicEmojis[lesson.topic] || '📚'}</span>
+                                    <div>
+                                        <div style="color: var(--accent-primary); font-size: 0.75rem; font-weight: 600;">Day ${lesson.day_number}</div>
+                                        <div style="font-weight: 600; font-size: 0.95rem;">${lesson.topic}</div>
+                                    </div>
+                                </div>
+                                <p style="color: var(--text-secondary); font-size: 0.8rem; margin: 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                    ${lesson.universal_truth || lesson.marketing_headline || 'Discover something new'}
+                                </p>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px;">
+                        <a href="/calendar.html" style="
+                            flex: 1;
+                            padding: 14px 20px;
+                            background: var(--bg-secondary);
+                            border: 1px solid var(--border-color);
+                            border-radius: 10px;
+                            color: var(--text-primary);
+                            text-decoration: none;
+                            font-weight: 600;
+                            text-align: center;
+                            transition: all 0.2s;
+                        " onmouseover="this.style.background='var(--bg-card)'" onmouseout="this.style.background='var(--bg-secondary)'">
+                            📅 View Full Calendar
+                        </a>
+                        <a href="/curriculum.html" style="
+                            flex: 1;
+                            padding: 14px 20px;
+                            background: var(--accent-primary);
+                            border: none;
+                            border-radius: 10px;
+                            color: white;
+                            text-decoration: none;
+                            font-weight: 600;
+                            text-align: center;
+                            transition: all 0.2s;
+                        " onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                            ✨ Explore All 365 Days
+                        </a>
+                    </div>
+                `;
+            } catch (err) {
+                console.error('Error loading month preview:', err);
+                document.getElementById('month-preview-content').innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <p style="color: var(--text-secondary);">Unable to load lessons. Please try again.</p>
+                        <button onclick="this.closest('div[style*=fixed]').remove()" class="btn btn-secondary" style="margin-top: 16px;">Close</button>
+                    </div>
+                `;
+            }
         };
         
         // Make month cards clickable after they load

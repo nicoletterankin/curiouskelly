@@ -153,10 +153,19 @@ class ChatOverlay {
     this.messageQueue = [];
     this.currentTopic = options.topic || 'learning';
     this.currentPhase = options.phase || 'welcome';
+    this.currentLessonDay = options.lessonDay || null;
     this.viewerCount = 847000 + Math.floor(Math.random() * 400000);
     this.countriesCount = 142 + Math.floor(Math.random() * 10);
     this.likesCount = 0;
     this.commentsCount = 0;
+    
+    // Supabase integration
+    this.supabase = options.supabase || window.supabase?.createClient?.(
+      window.CONFIG?.SUPABASE_URL,
+      window.CONFIG?.SUPABASE_ANON_KEY
+    ) || null;
+    this.dbComments = new Map(); // Cache: phase -> comments[]
+    this.useDatabase = options.useDatabase !== false; // Default true
     
     // Comment timing
     this.minInterval = options.minInterval || 1500;
@@ -167,6 +176,12 @@ class ChatOverlay {
       welcome: { breakthrough: 0.3, kelly_love: 0.3, social: 0.3, reactions: 0.1 },
       question: { engagement: 0.3, choice_phase: 0.4, reactions: 0.2, breakthrough: 0.1 },
       wisdom: { wisdom_phase: 0.4, breakthrough: 0.3, kelly_love: 0.2, reactions: 0.1 },
+      // Map new phase IDs to weights
+      q1: { engagement: 0.3, choice_phase: 0.4, reactions: 0.2, breakthrough: 0.1 },
+      q2: { engagement: 0.3, choice_phase: 0.4, reactions: 0.2, breakthrough: 0.1 },
+      q3: { engagement: 0.3, choice_phase: 0.4, reactions: 0.2, breakthrough: 0.1 },
+      hook: { wisdom_phase: 0.4, breakthrough: 0.3, kelly_love: 0.2, reactions: 0.1 },
+      complete: { kelly_love: 0.4, social: 0.3, reactions: 0.3 },
     };
     
     this.init();
@@ -422,11 +437,105 @@ class ChatOverlay {
   setPhase(phase) {
     this.currentPhase = phase;
     console.log(`[ChatOverlay] Phase changed to: ${phase}`);
+    
+    // Preload comments from database for this phase
+    if (this.useDatabase && this.currentLessonDay) {
+      this.loadCommentsFromDB(this.currentLessonDay, phase);
+    }
   }
   
   setTopic(topic) {
     this.currentTopic = topic;
     console.log(`[ChatOverlay] Topic set to: ${topic}`);
+  }
+  
+  setLessonDay(dayNumber) {
+    this.currentLessonDay = dayNumber;
+    console.log(`[ChatOverlay] Lesson day set to: ${dayNumber}`);
+    // Clear cache when lesson changes
+    this.dbComments.clear();
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // SUPABASE INTEGRATION
+  // ═══════════════════════════════════════════════════════════════════
+  
+  async loadCommentsFromDB(lessonDay, phase) {
+    if (!this.supabase || !lessonDay) return;
+    
+    const cacheKey = `${lessonDay}-${phase}`;
+    if (this.dbComments.has(cacheKey)) {
+      return this.dbComments.get(cacheKey);
+    }
+    
+    try {
+      const { data, error } = await this.supabase
+        .from('lesson_comments')
+        .select('*')
+        .eq('lesson_day', lessonDay)
+        .eq('phase', phase)
+        .is('option_context', null);
+      
+      if (error) {
+        console.warn('[ChatOverlay] DB fetch error:', error.message);
+        return null;
+      }
+      
+      if (data && data.length > 0) {
+        this.dbComments.set(cacheKey, data);
+        console.log(`[ChatOverlay] Loaded ${data.length} comments from DB for ${phase}`);
+        return data;
+      }
+    } catch (e) {
+      console.warn('[ChatOverlay] DB error:', e.message);
+    }
+    
+    return null;
+  }
+  
+  async loadOptionComments(lessonDay, phase, optionLetter) {
+    if (!this.supabase || !lessonDay) return null;
+    
+    const cacheKey = `${lessonDay}-${phase}-${optionLetter}`;
+    if (this.dbComments.has(cacheKey)) {
+      return this.dbComments.get(cacheKey);
+    }
+    
+    try {
+      const { data, error } = await this.supabase
+        .from('lesson_comments')
+        .select('*')
+        .eq('lesson_day', lessonDay)
+        .eq('phase', phase)
+        .eq('option_context', optionLetter);
+      
+      if (!error && data && data.length > 0) {
+        this.dbComments.set(cacheKey, data);
+        return data;
+      }
+    } catch (e) {
+      console.warn('[ChatOverlay] Option comment fetch error:', e.message);
+    }
+    
+    return null;
+  }
+  
+  getDBComment() {
+    // Try to get a comment from the database cache
+    const cacheKey = `${this.currentLessonDay}-${this.currentPhase}`;
+    const dbComments = this.dbComments.get(cacheKey);
+    
+    if (dbComments && dbComments.length > 0) {
+      const comment = dbComments[Math.floor(Math.random() * dbComments.length)];
+      return {
+        user: comment.persona_name,
+        flag: comment.persona_flag,
+        text: comment.comment_text,
+        verified: false
+      };
+    }
+    
+    return null;
   }
   
   scheduleNext() {
@@ -455,6 +564,15 @@ class ChatOverlay {
   }
   
   getRandomComment() {
+    // Try database first (50% of the time if available)
+    if (this.useDatabase && this.currentLessonDay && Math.random() > 0.5) {
+      const dbComment = this.getDBComment();
+      if (dbComment) {
+        return dbComment;
+      }
+    }
+    
+    // Fallback to hardcoded banks
     const bank = this.selectCommentBank();
     const comment = bank[Math.floor(Math.random() * bank.length)];
     
@@ -573,6 +691,50 @@ class ChatOverlay {
   triggerBreakthrough() {
     const breakthrough = COMMENT_BANKS.breakthrough[Math.floor(Math.random() * COMMENT_BANKS.breakthrough.length)];
     this.addSpecificComment(breakthrough.text, { user: breakthrough.user, flag: breakthrough.flag });
+  }
+  
+  // Show option-specific comments when user hovers/selects an option
+  async showOptionComments(optionLetter) {
+    if (!this.useDatabase || !this.currentLessonDay) {
+      // Fallback to choice_phase comments
+      const comment = COMMENT_BANKS.choice_phase[Math.floor(Math.random() * COMMENT_BANKS.choice_phase.length)];
+      this.addSpecificComment(comment.text, { user: comment.user, flag: comment.flag });
+      return;
+    }
+    
+    const comments = await this.loadOptionComments(
+      this.currentLessonDay, 
+      this.currentPhase, 
+      optionLetter.toUpperCase()
+    );
+    
+    if (comments && comments.length > 0) {
+      const comment = comments[Math.floor(Math.random() * comments.length)];
+      this.addSpecificComment(comment.comment_text, {
+        user: comment.persona_name,
+        flag: comment.persona_flag
+      });
+    } else {
+      // Fallback
+      const fallback = COMMENT_BANKS.choice_phase[Math.floor(Math.random() * COMMENT_BANKS.choice_phase.length)];
+      this.addSpecificComment(fallback.text, { user: fallback.user, flag: fallback.flag });
+    }
+  }
+  
+  // Trigger completion celebration comments
+  triggerCompletion() {
+    const count = 4;
+    for (let i = 0; i < count; i++) {
+      setTimeout(() => {
+        const dbComment = this.getDBComment();
+        if (dbComment) {
+          this.addSpecificComment(dbComment.text, { user: dbComment.user, flag: dbComment.flag });
+        } else {
+          const comment = COMMENT_BANKS.social[Math.floor(Math.random() * COMMENT_BANKS.social.length)];
+          this.addSpecificComment(comment.text, { user: comment.user, flag: comment.flag });
+        }
+      }, i * 400);
+    }
   }
   
   destroy() {

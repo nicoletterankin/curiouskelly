@@ -71,6 +71,15 @@
 
     <!-- Audio & Interaction System -->
     <script src="/js/kelly-audio.js"></script>
+    
+    <!-- Kelly Lesson System (Phases, Poses, Completion) -->
+    <script src="/js/kelly-lesson-system.js"></script>
+    
+    <!-- Share Hub Overlay -->
+    <script src="/js/share-hub.js"></script>
+    
+    <!-- Kelly Conversational AI (Voice Chat) -->
+    <script src="/js/kelly-conversation.js"></script>
 
     <style>
       /* ═══════════════════════════════════════════════════════════════════
@@ -1805,6 +1814,190 @@
         margin-bottom: 6px;
       }
 
+      /* Clickable date parts */
+      .date-month, .date-day, .date-year {
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border-radius: 4px;
+        padding: 2px 4px;
+        margin: -2px -4px;
+        text-decoration: underline;
+        text-decoration-color: rgba(255, 255, 255, 0.2);
+        text-underline-offset: 3px;
+      }
+      .date-month:hover, .date-day:hover, .date-year:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: #60a5fa;
+        text-decoration-color: #60a5fa;
+      }
+      .date-today {
+        color: #22c55e;
+        font-weight: 600;
+      }
+
+      /* Time display - top right */
+      .top-time {
+        position: fixed;
+        top: 16px;
+        right: 16px;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-radius: 12px;
+        padding: 6px 14px;
+        font-size: 13px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.9);
+        z-index: 100;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .top-time:hover {
+        background: rgba(0, 0, 0, 0.6);
+      }
+      @media (max-width: 600px) {
+        .top-time {
+          top: 12px;
+          right: 12px;
+          font-size: 11px;
+          padding: 4px 10px;
+        }
+      }
+
+      /* Desktop day navigation arrows */
+      .day-nav {
+        position: fixed;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        color: white;
+        font-size: 18px;
+        cursor: pointer;
+        opacity: 0.5;
+        transition: all 0.2s;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .day-nav:hover {
+        opacity: 1;
+        transform: translateX(-50%) scale(1.1);
+      }
+      .day-nav-prev { bottom: 100px; }
+      .day-nav-next { top: 80px; }
+      @media (max-width: 768px) {
+        .day-nav { display: none; }
+      }
+
+      /* Search overlay */
+      .search-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        z-index: 700;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s, visibility 0.3s;
+      }
+      .search-overlay.open { opacity: 1; visibility: visible; }
+      .search-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 80px 20px 20px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      .search-header {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 24px;
+      }
+      .search-input {
+        flex: 1;
+        background: rgba(255,255,255,0.1);
+        border: 2px solid rgba(255,255,255,0.2);
+        border-radius: 16px;
+        padding: 16px 20px;
+        font-size: 18px;
+        color: white;
+        outline: none;
+      }
+      .search-input:focus { border-color: #3b82f6; }
+      .search-input::placeholder { color: rgba(255,255,255,0.4); }
+      .search-close {
+        width: 52px;
+        height: 52px;
+        background: rgba(255,255,255,0.1);
+        border: none;
+        border-radius: 16px;
+        color: white;
+        font-size: 20px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .search-close:hover { background: rgba(255,255,255,0.2); }
+      .search-results {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .search-result {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .search-result:hover {
+        background: rgba(255,255,255,0.1);
+        transform: translateX(4px);
+      }
+      .search-result-emoji { font-size: 28px; width: 40px; text-align: center; }
+      .search-result-info { flex: 1; }
+      .search-result-date { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 2px; }
+      .search-result-topic { font-size: 15px; font-weight: 500; }
+      .search-empty { text-align: center; padding: 60px 20px; display: none; }
+      .search-empty p { color: rgba(255,255,255,0.5); margin-bottom: 24px; }
+      .search-generate-btn {
+        padding: 14px 28px;
+        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        border: none;
+        border-radius: 25px;
+        color: white;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      .search-generate-btn:hover { transform: scale(1.05); }
+      .search-hint {
+        text-align: center;
+        font-size: 12px;
+        color: rgba(255,255,255,0.3);
+        margin-top: 16px;
+      }
+      .search-hint kbd {
+        background: rgba(255,255,255,0.1);
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin: 0 2px;
+      }
+
       .bottom-title {
         font-size: 17px;
         font-weight: 600;
@@ -2300,21 +2493,15 @@
       <div class="kelly-frame" id="kelly-frame">
         <!-- 2D Avatar Container (default, visible) -->
         <div class="kelly-avatar-container" id="kelly-2d-container" style="display: block">
-          <!-- Kelly Production Avatar - Optimized WebP with JPEG fallback -->
-          <picture>
-            <source 
-              srcset="/assets/kelly/production/webp/hello-640.webp 640w,
-                      /assets/kelly/production/webp/hello-1280.webp 1280w,
-                      /assets/kelly/production/webp/hello-1920.webp 1920w"
-              type="image/webp"
-              sizes="100vw">
-            <img
-              src="/assets/kelly/production/jpeg/hello.jpeg"
-              alt="Kelly"
-              id="kelly-avatar"
-              style="width: 100%; height: 100%; object-fit: cover; object-position: center 20%; transition: opacity 0.3s ease;"
-            />
-          </picture>
+          <!-- Kelly 2D Avatar - Uses /kelly/poses/ directory -->
+          <!-- Available poses: kelly_welcome, kelly_idle, kelly_hint, kelly_clasp, 
+               kelly_choice_left, kelly_choice_right, kelly_listening -->
+          <img
+            src="/kelly/poses/kelly_welcome.png"
+            alt="Kelly"
+            id="kelly-avatar"
+            style="width: 100%; height: 100%; object-fit: cover; object-position: center 20%; transition: opacity 0.3s ease;"
+          />
         </div>
 
         <!-- 3D Unity Container (hidden by default) -->
@@ -2615,9 +2802,16 @@
         <p class="caption-text" id="caption-text"></p>
       </div>
 
+      <!-- TIME DISPLAY - Top Right -->
+      <div class="top-time" id="top-time"></div>
+
+      <!-- DESKTOP NAV ARROWS -->
+      <button class="day-nav day-nav-prev" id="nav-prev" aria-label="Previous day">↓</button>
+      <button class="day-nav day-nav-next" id="nav-next" aria-label="Next day">↑</button>
+
       <!-- BOTTOM BAR - Title -->
       <div class="bottom-bar" id="bottom-bar">
-        <div class="bottom-date" id="bottom-date">December 2, 2025 · Day 336 of 365</div>
+        <div class="bottom-date" id="bottom-date"></div>
         <div class="bottom-title">
           <span class="bottom-emoji" id="bottom-emoji">🏛️</span>
           <span class="bottom-name" id="bottom-name">Citizenship</span>
@@ -2876,6 +3070,7 @@
         isPaused: false,
         isMuted: false,
         isLoading: false, // Track loading state to prevent race conditions
+        startTime: null, // Track when lesson started for completion stats
 
         variants: {
           age: localStorage.getItem('kelly_age') || '18-35',
@@ -3106,6 +3301,7 @@
         if (cached) {
           state.lesson = cached;
           state.isLoading = false;
+          state.startTime = Date.now(); // Track lesson start time
           document.getElementById('day-display').textContent = dayNumberToDate(dayNumber);
           updateUI();
           renderPhase(state.lesson.phases[0]);
@@ -3344,6 +3540,7 @@
 
         // Clear loading state and timeout
         state.isLoading = false;
+        state.startTime = Date.now(); // Track lesson start time
         if (loadingTimeout) {
           clearTimeout(loadingTimeout);
           loadingTimeout = null;
@@ -3769,9 +3966,8 @@
                   if (phase.type === 'welcome') {
                     advancePhase();
                   } else if (phase.type === 'wisdom') {
-                    showToast('🎉 Lesson complete!');
-                    // Mark lesson as complete and save progress
-                    saveProgress();
+                    // Show completion overlay instead of just a toast
+                    handleLessonComplete();
                   }
                 }, 500); // Small delay before advancing
               }
@@ -3785,8 +3981,7 @@
                   if (phase.type === 'welcome') {
                     advancePhase();
                   } else if (phase.type === 'wisdom') {
-                    showToast('🎉 Lesson complete!');
-                    saveProgress();
+                    handleLessonComplete();
                   }
                 }, duration);
               }
@@ -3799,8 +3994,7 @@
               if (phase.type === 'welcome') {
                 advancePhase();
               } else if (phase.type === 'wisdom') {
-                showToast('🎉 Lesson complete!');
-                saveProgress();
+                handleLessonComplete();
               }
             }, duration);
           }
@@ -3885,6 +4079,49 @@
           }
         } else {
           setTimeout(() => advancePhase(), 1000);
+        }
+      }
+
+      // ═══════════════════════════════════════════════════════════════════
+      // LESSON COMPLETION
+      // ═══════════════════════════════════════════════════════════════════
+      async function handleLessonComplete() {
+        console.log('[Learn] 🎉 Lesson complete!');
+        
+        // Calculate stats
+        const correctCount = Object.values(state.choicesMade).filter((_, i) => {
+          // This is a simplified check - actual correctness would need phase data
+          return true;
+        }).length;
+        
+        const stats = {
+          lessonDay: state.dayNumber,
+          duration: Date.now() - (state.startTime || Date.now()),
+          correctCount: correctCount,
+          totalQuestions: Object.keys(state.choicesMade).length || 3
+        };
+        
+        // Trigger chat celebration
+        if (chatOverlay) {
+          chatOverlay.setPhase('complete');
+          chatOverlay.triggerCompletion();
+        }
+        
+        // Kelly celebrates
+        if (window.KellyPoseManager) {
+          KellyPoseManager.celebrate();
+        }
+        
+        // Save progress
+        await saveProgress();
+        
+        // Show completion overlay
+        if (window.CompletionOverlay) {
+          setTimeout(() => {
+            CompletionOverlay.show(stats);
+          }, 1500);
+        } else {
+          showToast('🎉 Lesson complete!');
         }
       }
 
@@ -5006,16 +5243,9 @@
           if (nextNumEl) nextNumEl.textContent = Math.min(currentDay + 1, 365);
           if (prevNumEl) prevNumEl.textContent = Math.max(currentDay - 1, 1);
           
-          // Update bottom bar date
-          const dateEl = document.getElementById('bottom-date');
-          if (dateEl && state) {
-            const date = new Date(2025, 0, currentDay); // Day 1 = Jan 1, 2025
-            const formatted = date.toLocaleDateString('en-US', { 
-              month: 'long', 
-              day: 'numeric', 
-              year: 'numeric' 
-            });
-            dateEl.textContent = `${formatted} · Day ${currentDay} of 365`;
+          // Update bottom bar date with clickable parts
+          if (typeof updateBottomDate === 'function') {
+            updateBottomDate(currentDay);
           }
         },
         
@@ -5050,14 +5280,8 @@
         }
         
         // Update date display
-        if (dateEl && state?.dayNumber) {
-          const date = new Date(2025, 0, state.dayNumber);
-          const formatted = date.toLocaleDateString('en-US', { 
-            month: 'long', 
-            day: 'numeric', 
-            year: 'numeric' 
-          });
-          dateEl.textContent = `${formatted} · Day ${state.dayNumber} of 365`;
+        if (state?.dayNumber && typeof updateBottomDate === 'function') {
+          updateBottomDate(state.dayNumber);
         }
         
         // Update day indicators
@@ -5228,7 +5452,10 @@
         // Note: btn-age, btn-language, btn-tone, btn-mode are now handled by SettingsUI
         // bindBtn('btn-difficulty', (e) => openPopover('difficulty', e.currentTarget));
         bindBtn('btn-share', () => {
-          if (navigator.share) {
+          // Open Share Hub overlay instead of basic share
+          if (window.ShareHub) {
+            ShareHub.open();
+          } else if (navigator.share) {
             navigator.share({
               title: `${dayNumberToDate(state.dayNumber)}: ${state.lesson?.topic}`,
               url: window.location.href
@@ -5238,9 +5465,7 @@
             showToast('Link copied!');
           }
         });
-        bindBtn('btn-search', () => {
-          showToast('🔍 Search coming soon!');
-        });
+        // Search is now handled by LessonSearch module
         
         bindBtn('btn-sound', () => {
           state.isMuted = !state.isMuted;
@@ -5292,11 +5517,13 @@
             chatOverlay = new ChatOverlay({
               topic: state.lesson.topic,
               phase: 'welcome',
+              lessonDay: state.dayNumber,
+              useDatabase: true, // Enable Supabase comments
               minInterval: 2000,
               maxInterval: 5000
             });
             chatOverlay.start();
-            console.log(`[Chat] 🎭 Initialized with topic: ${state.lesson.topic}`);
+            console.log(`[Chat] 🎭 Initialized with topic: ${state.lesson.topic}, day: ${state.dayNumber}`);
           } else {
             // Retry until lesson loads
             setTimeout(initChat, 500);
@@ -5304,6 +5531,14 @@
         };
         
         setTimeout(initChat, 1000);
+        
+        // Initialize Kelly Pose Manager
+        if (window.KellyPoseManager) {
+          const kellyImg = document.getElementById('kelly-avatar');
+          if (kellyImg) {
+            KellyPoseManager.init(kellyImg);
+          }
+        }
         
         // Initialize Kelly Asset Manager
         const kellyImg = document.getElementById('kelly-avatar');
@@ -5318,7 +5553,25 @@
       window.renderPhase = function(phase) {
         // Update chat overlay phase
         if (chatOverlay && phase) {
-          chatOverlay.setPhase(phase.type || 'welcome');
+          // Update lesson day if changed
+          if (chatOverlay.currentLessonDay !== state.dayNumber) {
+            chatOverlay.setLessonDay(state.dayNumber);
+          }
+          
+          // Map phase type to new phase IDs
+          const phaseId = phase.type === 'question' 
+            ? `q${state.currentPhase - 1}` // Q1, Q2, Q3
+            : phase.type === 'wisdom' 
+              ? 'hook' 
+              : phase.type || 'welcome';
+          
+          chatOverlay.setPhase(phaseId);
+          
+          // Update Kelly pose via new system
+          if (window.KellyPoseManager) {
+            const pose = KellyPoseManager.getPoseForPhase(phaseId);
+            KellyPoseManager.setPose(pose);
+          }
           
           // Trigger specific reactions on phase changes
           if (phase.type === 'wisdom') {
@@ -5360,6 +5613,267 @@
         
         return result;
       };
+    </script>
+
+    <!-- SEARCH OVERLAY -->
+    <div class="search-overlay" id="search-overlay">
+      <div class="search-container">
+        <div class="search-header">
+          <input type="text" id="search-input" class="search-input" placeholder="Search 365 lessons..." autocomplete="off">
+          <button class="search-close" id="search-close">✕</button>
+        </div>
+        <div class="search-results" id="search-results"></div>
+        <div class="search-empty" id="search-empty">
+          <p>No lessons found for "<span id="search-query-echo"></span>"</p>
+          <button class="search-generate-btn" id="search-generate-btn">✨ Generate a custom lesson</button>
+        </div>
+        <div class="search-hint">Press <kbd>Esc</kbd> to close · <kbd>⌘</kbd><kbd>K</kbd> to open</div>
+      </div>
+    </div>
+
+    <script>
+      // ═══════════════════════════════════════════════════════════════════
+      // TIME DISPLAY
+      // ═══════════════════════════════════════════════════════════════════
+      function updateTimeDisplay() {
+        const el = document.getElementById('top-time');
+        if (el) {
+          el.textContent = new Date().toLocaleTimeString('en-US', {
+            hour: 'numeric',
+            minute: '2-digit',
+            hour12: true
+          });
+        }
+      }
+      updateTimeDisplay();
+      setInterval(updateTimeDisplay, 60000);
+      
+      document.getElementById('top-time')?.addEventListener('click', () => {
+        openCalendar('day', { day: getDayOfYear() });
+      });
+
+      // ═══════════════════════════════════════════════════════════════════
+      // CLICKABLE DATE RENDERING
+      // ═══════════════════════════════════════════════════════════════════
+      function renderLessonDate(dayNumber) {
+        const year = new Date().getFullYear();
+        const date = new Date(year, 0, dayNumber);
+        
+        const month = date.toLocaleDateString('en-US', { month: 'long' });
+        const day = date.getDate();
+        const yearStr = date.getFullYear();
+        
+        const today = getDayOfYear();
+        const isToday = dayNumber === today;
+        
+        const todayPrefix = isToday ? `<span class="date-today">Today · </span>` : '';
+        
+        return `${todayPrefix}<span class="date-month" data-view="month" data-month="${date.getMonth()}">${month}</span> <span class="date-day" data-view="day" data-day="${dayNumber}">${day}</span>, <span class="date-year" data-view="year" data-year="${yearStr}">${yearStr}</span>`;
+      }
+
+      function bindDateNavigation() {
+        document.querySelectorAll('.date-month').forEach(el => {
+          el.addEventListener('click', e => {
+            e.stopPropagation();
+            openCalendar('month', { month: parseInt(el.dataset.month) });
+          });
+        });
+        
+        document.querySelectorAll('.date-day').forEach(el => {
+          el.addEventListener('click', e => {
+            e.stopPropagation();
+            openCalendar('day', { day: parseInt(el.dataset.day) });
+          });
+        });
+        
+        document.querySelectorAll('.date-year').forEach(el => {
+          el.addEventListener('click', e => {
+            e.stopPropagation();
+            openCalendar('year', { year: parseInt(el.dataset.year) });
+          });
+        });
+      }
+
+      function openCalendar(view = 'day', params = {}) {
+        console.log(`[Calendar] Opening ${view} view`, params);
+        window.calendarRequestedView = { view, params };
+        
+        // Navigate to calendar page with params
+        const calendarUrl = new URL('/calendar.html', window.location.origin);
+        if (view === 'day' && params.day) calendarUrl.searchParams.set('day', params.day);
+        if (view === 'month' && params.month !== undefined) calendarUrl.searchParams.set('month', params.month);
+        if (view === 'year' && params.year) calendarUrl.searchParams.set('year', params.year);
+        calendarUrl.searchParams.set('view', view);
+        window.location.href = calendarUrl.toString();
+      }
+
+      // Update bottom date on lesson load
+      function updateBottomDate(dayNumber) {
+        const dateEl = document.getElementById('bottom-date');
+        if (dateEl) {
+          dateEl.innerHTML = renderLessonDate(dayNumber);
+          bindDateNavigation();
+        }
+      }
+
+      // ═══════════════════════════════════════════════════════════════════
+      // DESKTOP NAVIGATION ARROWS
+      // ═══════════════════════════════════════════════════════════════════
+      function getCurrentDayFromURL() {
+        return parseInt(new URLSearchParams(window.location.search).get('day')) || getDayOfYear();
+      }
+
+      document.getElementById('nav-prev')?.addEventListener('click', () => {
+        const day = getCurrentDayFromURL();
+        if (day > 1) goToLesson(day - 1);
+      });
+
+      document.getElementById('nav-next')?.addEventListener('click', () => {
+        const day = getCurrentDayFromURL();
+        if (day < 365) goToLesson(day + 1);
+      });
+
+      // Keyboard: ↑/↓ or j/k for day navigation
+      document.addEventListener('keydown', e => {
+        if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
+        if (LessonSearch?.isOpen) return;
+        
+        const day = getCurrentDayFromURL();
+        if (e.key === 'ArrowUp' || e.key === 'k') {
+          e.preventDefault();
+          if (day < 365) goToLesson(day + 1);
+        }
+        if (e.key === 'ArrowDown' || e.key === 'j') {
+          e.preventDefault();
+          if (day > 1) goToLesson(day - 1);
+        }
+      });
+
+      // ═══════════════════════════════════════════════════════════════════
+      // LESSON SEARCH
+      // ═══════════════════════════════════════════════════════════════════
+      const LessonSearch = {
+        lessons: [],
+        isOpen: false,
+        
+        async init() {
+          try {
+            const { data } = await supabase
+              .from('core_lessons')
+              .select('day_number, topic, emoji, category')
+              .order('day_number');
+            if (data) this.lessons = data;
+            console.log(`[Search] Loaded ${this.lessons.length} lessons`);
+          } catch (e) {
+            console.warn('[Search] Could not load lessons:', e);
+          }
+          
+          this.bind();
+        },
+        
+        bind() {
+          document.getElementById('btn-search')?.addEventListener('click', () => this.open());
+          document.getElementById('search-close')?.addEventListener('click', () => this.close());
+          document.getElementById('search-overlay')?.addEventListener('click', e => {
+            if (e.target.id === 'search-overlay') this.close();
+          });
+          document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && this.isOpen) this.close();
+            if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+              e.preventDefault();
+              this.open();
+            }
+          });
+          document.getElementById('search-input')?.addEventListener('input', e => this.search(e.target.value));
+          document.getElementById('search-generate-btn')?.addEventListener('click', () => {
+            showToast('✨ Custom lessons coming soon!');
+            this.close();
+          });
+        },
+        
+        open() {
+          this.isOpen = true;
+          document.getElementById('search-overlay')?.classList.add('open');
+          document.getElementById('search-input')?.focus();
+          this.showNearby();
+        },
+        
+        close() {
+          this.isOpen = false;
+          document.getElementById('search-overlay')?.classList.remove('open');
+          const input = document.getElementById('search-input');
+          if (input) input.value = '';
+        },
+        
+        showNearby() {
+          const today = getDayOfYear();
+          const nearby = this.lessons
+            .filter(l => Math.abs(l.day_number - today) <= 7)
+            .sort((a, b) => Math.abs(a.day_number - today) - Math.abs(b.day_number - today));
+          this.render(nearby.slice(0, 15));
+          document.getElementById('search-empty').style.display = 'none';
+        },
+        
+        search(q) {
+          if (!q || q.length < 2) {
+            this.showNearby();
+            return;
+          }
+          const matches = this.lessons.filter(l =>
+            (l.topic || '').toLowerCase().includes(q.toLowerCase()) ||
+            (l.category || '').toLowerCase().includes(q.toLowerCase()) ||
+            String(l.day_number).includes(q)
+          );
+          if (matches.length) {
+            this.render(matches.slice(0, 20));
+            document.getElementById('search-empty').style.display = 'none';
+          } else {
+            document.getElementById('search-results').innerHTML = '';
+            document.getElementById('search-query-echo').textContent = q;
+            document.getElementById('search-empty').style.display = 'block';
+          }
+        },
+        
+        render(lessons) {
+          const container = document.getElementById('search-results');
+          const today = getDayOfYear();
+          container.innerHTML = lessons.map(l => {
+            const date = new Date(new Date().getFullYear(), 0, l.day_number);
+            const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+            const isToday = l.day_number === today;
+            return `<div class="search-result" data-day="${l.day_number}">
+              <div class="search-result-emoji">${l.emoji || '📚'}</div>
+              <div class="search-result-info">
+                <div class="search-result-date">${isToday ? '🔴 Today · ' : ''}${dateStr} · Day ${l.day_number}</div>
+                <div class="search-result-topic">${l.topic}</div>
+              </div>
+            </div>`;
+          }).join('');
+          container.querySelectorAll('.search-result').forEach(el => {
+            el.addEventListener('click', () => this.goTo(parseInt(el.dataset.day)));
+          });
+        },
+        
+        goTo(day) {
+          this.close();
+          const url = new URL(window.location);
+          url.searchParams.set('day', day);
+          window.history.pushState({}, '', url);
+          if (typeof goToLesson === 'function') goToLesson(day);
+          else if (typeof loadLesson === 'function') loadLesson(day);
+          else location.reload();
+        }
+      };
+
+      // Initialize search after DOM ready
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => LessonSearch.init());
+      } else {
+        LessonSearch.init();
+      }
+
+      // Update bottom date on initial load
+      updateBottomDate(getCurrentDayFromURL());
     </script>
   </body>
 </html>

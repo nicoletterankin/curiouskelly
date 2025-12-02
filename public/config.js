@@ -9,6 +9,10 @@ window.SUPABASE_ANON_KEY =
 // Voice ID is still used client-side for API requests
 window.ELEVENLABS_VOICE_ID = 'wAdymQH5YucAkXwmrdL0'; // Kelly's voice ID
 
+// ElevenLabs Conversational AI (for voice chat with Kelly)
+// Get your Agent ID from: https://elevenlabs.io/conversational-ai
+window.ELEVENLABS_AGENT_ID = 'agent_3501kbg14w37er08w0mq13bvhy64'; // Kelly's conversation agent
+
 window.STRIPE_PUBLISHABLE_KEY =
   'pk_live_51SXAYMEs6ql8qYcKCMClObrDq0eFVaKrhlEypQEVQHbFBfVloknFTitYLHn6TTWjPwMqWZfGT66iGycNiLLqnPQp004efrYmjm'; // For checkout
 

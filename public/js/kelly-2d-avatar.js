@@ -8,9 +8,13 @@
  *   kelly.pointDown();  // Kelly points to bottom choice
  */
 
+// Kelly 2D Avatar Images - Using /kelly/poses/ directory
 const KELLY_IMAGES = {
-  up: '/images/kelly-point-up.jpeg',
-  down: '/images/kelly-point-down.jpeg'
+  up: '/kelly/poses/kelly_choice_left.png',     // Pointing to top/first option
+  down: '/kelly/poses/kelly_choice_right.png',  // Pointing to bottom/second option
+  welcome: '/kelly/poses/kelly_welcome.png',
+  thinking: '/kelly/poses/kelly_hint.png',
+  listening: '/kelly/poses/kelly_listening.png'
 };
 
 // Preload both images immediately for instant switching
