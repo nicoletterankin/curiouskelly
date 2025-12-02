@@ -1014,407 +1014,68 @@
         border-left: none;
       }
 
-      /* ═══════════════════════════════════════════════════════════════
-         SETTINGS UI - Modern Interaction Patterns (replaces popovers)
-         ═══════════════════════════════════════════════════════════════ */
-
-      /* === SHARED: Overlay backdrop === */
-      .settings-overlay {
-        position: fixed;
-        inset: 0;
-        background: rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(4px);
-        -webkit-backdrop-filter: blur(4px);
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.3s ease;
-        z-index: 500;
-      }
-
-      .settings-overlay.open {
-        opacity: 1;
-        pointer-events: auto;
-      }
-
-      /* === PATTERN 1: Horizontal Expand (Language, Mode) === */
-      .expand-container {
-        position: absolute;
-        left: 6px;
-        display: flex;
-        align-items: center;
-        z-index: 510;
-        pointer-events: none;
-        opacity: 0;
-      }
-
-      .expand-container.open {
-        pointer-events: auto;
-        opacity: 1;
-      }
-
-      .expand-trigger {
-        width: 44px;
-        height: 44px;
-        border-radius: 14px;
-        background: rgba(59, 130, 246, 0.9);
-        backdrop-filter: blur(10px);
-        -webkit-backdrop-filter: blur(10px);
-        border: none;
-        color: white;
-        font-size: 18px;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        flex-shrink: 0;
-      }
-
-      .expand-panel {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        background: rgba(0, 0, 0, 0.9);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border-radius: 16px;
-        padding: 8px 12px;
-        margin-left: 10px;
-        transform: translateX(-20px) scale(0.9);
-        opacity: 0;
-        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-      }
-
-      .expand-container.open .expand-panel {
-        transform: translateX(0) scale(1);
-        opacity: 1;
-      }
-
-      .expand-option {
-        width: 48px;
-        height: 48px;
-        background: rgba(255, 255, 255, 0.1);
-        border: 2px solid transparent;
-        border-radius: 12px;
-        color: white;
-        cursor: pointer;
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        justify-content: center;
-        gap: 2px;
-        transition: all 0.2s ease;
-      }
-
-      .expand-option:hover {
-        background: rgba(255, 255, 255, 0.2);
-        transform: scale(1.08);
-      }
-
-      .expand-option.selected {
-        border-color: #22c55e;
-        background: rgba(34, 197, 94, 0.3);
-      }
-
-      .expand-option .flag {
-        font-size: 22px;
-        line-height: 1;
-      }
-
-      .expand-option .label {
-        font-size: 9px;
-        font-weight: 600;
-        opacity: 0.8;
-      }
-
-      /* === PATTERN 2: Age Scrubber === */
-      .age-scrubber {
-        position: fixed;
-        left: 70px;
-        right: 20px;
-        top: 50%;
-        transform: translateY(-50%) scale(0.9);
-        background: rgba(0, 0, 0, 0.95);
-        backdrop-filter: blur(30px);
-        -webkit-backdrop-filter: blur(30px);
-        border-radius: 24px;
-        padding: 24px;
-        z-index: 520;
-        opacity: 0;
-        pointer-events: none;
-        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-      }
-
-      .age-scrubber.open {
-        transform: translateY(-50%) scale(1);
-        opacity: 1;
-        pointer-events: auto;
-      }
-
-      .age-header {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        margin-bottom: 20px;
-      }
-
-      .age-title {
+      /* Popover header */
+      .popover-header {
+        padding: 12px 16px 8px;
         font-size: 13px;
+        font-weight: 600;
         color: rgba(255, 255, 255, 0.6);
         text-transform: uppercase;
-        letter-spacing: 1px;
+        letter-spacing: 0.5px;
       }
 
-      .age-value {
-        font-size: 48px;
-        font-weight: 800;
-        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        background-clip: text;
-      }
-
-      .age-track {
-        position: relative;
-        height: 70px;
-        background: rgba(255, 255, 255, 0.1);
-        border-radius: 16px;
-        margin-bottom: 16px;
-        overflow: hidden;
-        cursor: pointer;
-      }
-
-      .age-track-fill {
-        position: absolute;
-        left: 0;
-        top: 0;
-        bottom: 0;
-        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
-        border-radius: 16px;
-        transition: width 0.1s ease;
-      }
-
-      .age-thumb {
-        position: absolute;
-        top: 50%;
-        transform: translate(-50%, -50%);
-        width: 80px;
-        height: 56px;
-        background: white;
-        border-radius: 14px;
+      /* Popover options */
+      .popover-option {
         display: flex;
         align-items: center;
-        justify-content: center;
-        cursor: grab;
-        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        transition: box-shadow 0.2s, transform 0.1s;
+        gap: 12px;
+        padding: 12px 16px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: background 0.2s ease;
         user-select: none;
       }
 
-      .age-thumb:active {
-        cursor: grabbing;
-        transform: translate(-50%, -50%) scale(1.05);
-        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      .popover-option:hover {
+        background: rgba(255, 255, 255, 0.08);
       }
 
-      .age-thumb-emoji {
-        font-size: 36px;
+      .popover-option.selected {
+        background: rgba(59, 130, 246, 0.2);
       }
 
-      .age-markers {
-        display: flex;
-        justify-content: space-between;
-        padding: 0 10px;
-        margin-bottom: 20px;
-      }
-
-      .age-marker {
-        font-size: 12px;
-        color: rgba(255, 255, 255, 0.4);
-        cursor: pointer;
-        padding: 4px 8px;
-        border-radius: 8px;
-        transition: all 0.2s;
-      }
-
-      .age-marker:hover {
-        color: white;
-        background: rgba(255, 255, 255, 0.1);
-      }
-
-      .age-presets {
-        display: flex;
-        gap: 10px;
-        justify-content: center;
-        flex-wrap: wrap;
-      }
-
-      .age-preset {
-        padding: 12px 20px;
-        background: rgba(255, 255, 255, 0.1);
-        border: 2px solid transparent;
-        border-radius: 30px;
-        color: white;
-        font-size: 13px;
-        font-weight: 600;
-        cursor: pointer;
-        transition: all 0.2s ease;
-        display: flex;
-        align-items: center;
-        gap: 8px;
-      }
-
-      .age-preset:hover {
-        background: rgba(255, 255, 255, 0.2);
-        transform: translateY(-2px);
-      }
-
-      .age-preset.active {
-        border-color: #22c55e;
-        background: rgba(34, 197, 94, 0.2);
-      }
-
-      .age-preset-emoji {
+      .popover-option-icon {
         font-size: 20px;
-      }
-
-      .age-close {
-        position: absolute;
-        top: 16px;
-        right: 16px;
-        width: 36px;
-        height: 36px;
-        background: rgba(255, 255, 255, 0.1);
-        border: none;
-        border-radius: 50%;
-        color: white;
-        font-size: 18px;
-        cursor: pointer;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        transition: all 0.2s;
-      }
-
-      .age-close:hover {
-        background: rgba(255, 255, 255, 0.2);
-      }
-
-      /* === PATTERN 3: Bottom Sheet (Tone) === */
-      .tone-sheet {
-        position: fixed;
-        left: 0;
-        right: 0;
-        bottom: 0;
-        background: #1a1a24;
-        border-radius: 28px 28px 0 0;
-        padding: 20px 20px 40px;
-        transform: translateY(100%);
-        transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
-        z-index: 520;
-        max-height: 70vh;
-        overflow-y: auto;
-      }
-
-      .tone-sheet.open {
-        transform: translateY(0);
-      }
-
-      .tone-handle {
-        width: 40px;
-        height: 4px;
-        background: rgba(255, 255, 255, 0.3);
-        border-radius: 2px;
-        margin: 0 auto 20px;
-      }
-
-      .tone-title {
-        font-size: 20px;
-        font-weight: 700;
+        width: 24px;
         text-align: center;
-        margin-bottom: 8px;
       }
 
-      .tone-subtitle {
-        font-size: 13px;
-        color: rgba(255, 255, 255, 0.5);
-        text-align: center;
-        margin-bottom: 24px;
+      .popover-option-info {
+        flex: 1;
       }
 
-      .tone-grid {
-        display: grid;
-        grid-template-columns: repeat(2, 1fr);
-        gap: 12px;
-      }
-
-      @media (min-width: 400px) {
-        .tone-grid {
-          grid-template-columns: repeat(3, 1fr);
-        }
-      }
-
-      .tone-option {
-        background: rgba(255, 255, 255, 0.06);
-        border: 2px solid transparent;
-        border-radius: 20px;
-        padding: 20px 12px;
-        text-align: center;
-        cursor: pointer;
-        transition: all 0.25s ease;
-        color: white;
-      }
-
-      .tone-option:hover {
-        background: rgba(255, 255, 255, 0.12);
-        transform: translateY(-4px);
-      }
-
-      .tone-option.selected {
-        border-color: #3b82f6;
-        background: rgba(59, 130, 246, 0.15);
-      }
-
-      .tone-emoji {
-        font-size: 40px;
-        margin-bottom: 12px;
-      }
-
-      .tone-name {
+      .popover-option-name {
         font-size: 15px;
-        font-weight: 700;
-        margin-bottom: 6px;
+        font-weight: 500;
+        color: #fff;
+        margin-bottom: 2px;
       }
 
-      .tone-desc {
-        font-size: 11px;
+      .popover-option-desc {
+        font-size: 12px;
         color: rgba(255, 255, 255, 0.5);
-        line-height: 1.4;
       }
 
-      /* === Kelly Transform Animation === */
-      .kelly-transforming {
-        animation: kellyTransform 0.6s ease;
+      .popover-option-check {
+        font-size: 18px;
+        color: #3b82f6;
+        opacity: 0;
+        transition: opacity 0.2s ease;
       }
 
-      @keyframes kellyTransform {
-        0% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0; transform: scale(1.1); filter: blur(10px); }
-        100% { opacity: 1; transform: scale(1); }
+      .popover-option.selected .popover-option-check {
+        opacity: 1;
       }
-
-      /* === Feedback flash === */
-      .setting-changed-flash {
-        animation: settingFlash 0.4s ease;
-      }
-
-      @keyframes settingFlash {
-        0% { filter: brightness(1); }
-        50% { filter: brightness(1.3); }
-        100% { filter: brightness(1); }
-      }
-
-      /* Hide old popover system */
-      .popover, .popover-overlay { display: none !important; }
 
       /* ═══════════════════════════════════════════════════════════════════
            MOBILE-FIRST LAYOUT - Clean TikTok-style experience
@@ -2481,117 +2142,6 @@
             <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
           </svg>
         </button>
-      </div>
-
-      <!-- ═══════════════════════════════════════════════════════════════
-           SETTINGS UI COMPONENTS
-           ═══════════════════════════════════════════════════════════════ -->
-
-      <!-- Settings overlay (shared backdrop) -->
-      <div class="settings-overlay" id="settings-overlay"></div>
-
-      <!-- LANGUAGE: Horizontal Expand -->
-      <div class="expand-container" id="expand-language" style="top: 320px;">
-        <button class="expand-trigger">🌐</button>
-        <div class="expand-panel">
-          <button class="expand-option selected" data-lang="EN">
-            <span class="flag">🇺🇸</span><span class="label">EN</span>
-          </button>
-          <button class="expand-option" data-lang="ES">
-            <span class="flag">🇪🇸</span><span class="label">ES</span>
-          </button>
-          <button class="expand-option" data-lang="FR">
-            <span class="flag">🇫🇷</span><span class="label">FR</span>
-          </button>
-          <button class="expand-option" data-lang="JA">
-            <span class="flag">🇯🇵</span><span class="label">JA</span>
-          </button>
-          <button class="expand-option" data-lang="DE">
-            <span class="flag">🇩🇪</span><span class="label">DE</span>
-          </button>
-          <button class="expand-option" data-lang="PT">
-            <span class="flag">🇧🇷</span><span class="label">PT</span>
-          </button>
-          <button class="expand-option" data-lang="ZH">
-            <span class="flag">🇨🇳</span><span class="label">ZH</span>
-          </button>
-          <button class="expand-option" data-lang="KO">
-            <span class="flag">🇰🇷</span><span class="label">KO</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- MODE: Horizontal Expand -->
-      <div class="expand-container" id="expand-mode" style="top: 370px;">
-        <button class="expand-trigger">📺</button>
-        <div class="expand-panel">
-          <button class="expand-option selected" data-mode="2D">
-            <span class="flag">📷</span><span class="label">2D</span>
-          </button>
-          <button class="expand-option" data-mode="3D">
-            <span class="flag">🎮</span><span class="label">3D</span>
-          </button>
-        </div>
-      </div>
-
-      <!-- AGE: Scrubber -->
-      <div class="age-scrubber" id="age-scrubber">
-        <button class="age-close" aria-label="Close">✕</button>
-        <div class="age-header">
-          <span class="age-title">Kelly's Teaching Age</span>
-          <span class="age-value" id="age-display">18</span>
-        </div>
-        <div class="age-track" id="age-track">
-          <div class="age-track-fill" id="age-track-fill" style="width: 16%;"></div>
-          <div class="age-thumb" id="age-thumb" style="left: 16%;">
-            <span class="age-thumb-emoji" id="age-thumb-emoji">👩</span>
-          </div>
-        </div>
-        <div class="age-markers">
-          <span class="age-marker" data-age="2">2</span>
-          <span class="age-marker" data-age="5">5</span>
-          <span class="age-marker" data-age="10">10</span>
-          <span class="age-marker" data-age="18">18</span>
-          <span class="age-marker" data-age="35">35</span>
-          <span class="age-marker" data-age="50">50</span>
-          <span class="age-marker" data-age="65">65</span>
-          <span class="age-marker" data-age="102">102</span>
-        </div>
-        <div class="age-presets">
-          <button class="age-preset" data-age="2"><span class="age-preset-emoji">👶</span> Toddler</button>
-          <button class="age-preset" data-age="8"><span class="age-preset-emoji">🧒</span> Child</button>
-          <button class="age-preset active" data-age="18"><span class="age-preset-emoji">👩</span> Young Adult</button>
-          <button class="age-preset" data-age="35"><span class="age-preset-emoji">👩‍💼</span> Adult</button>
-          <button class="age-preset" data-age="65"><span class="age-preset-emoji">👵</span> Senior</button>
-          <button class="age-preset" data-age="102"><span class="age-preset-emoji">🧓</span> Elder</button>
-        </div>
-      </div>
-
-      <!-- TONE: Bottom Sheet -->
-      <div class="tone-sheet" id="tone-sheet">
-        <div class="tone-handle"></div>
-        <div class="tone-title">Kelly's Teaching Style</div>
-        <div class="tone-subtitle">Choose how Kelly explains things to you</div>
-        <div class="tone-grid">
-          <button class="tone-option" data-tone="curious">
-            <div class="tone-emoji">🤔</div><div class="tone-name">Curious</div><div class="tone-desc">Questions everything</div>
-          </button>
-          <button class="tone-option selected" data-tone="friendly">
-            <div class="tone-emoji">😊</div><div class="tone-name">Friendly</div><div class="tone-desc">Warm & supportive</div>
-          </button>
-          <button class="tone-option" data-tone="playful">
-            <div class="tone-emoji">🎮</div><div class="tone-name">Playful</div><div class="tone-desc">Fun & games</div>
-          </button>
-          <button class="tone-option" data-tone="wise">
-            <div class="tone-emoji">🦉</div><div class="tone-name">Wise</div><div class="tone-desc">Deep insights</div>
-          </button>
-          <button class="tone-option" data-tone="coach">
-            <div class="tone-emoji">💪</div><div class="tone-name">Coach</div><div class="tone-desc">Motivating</div>
-          </button>
-          <button class="tone-option" data-tone="scholar">
-            <div class="tone-emoji">📚</div><div class="tone-name">Scholar</div><div class="tone-desc">Academic</div>
-          </button>
-        </div>
       </div>
 
       <!-- RIGHT RAIL - Options -->
@@ -4396,400 +3946,6 @@
       };
 
       // ═══════════════════════════════════════════════════════════════════
-      // SETTINGS UI - Modern Interaction System
-      // ═══════════════════════════════════════════════════════════════════
-      const SettingsUI = {
-        currentOpen: null,
-        currentAge: 18,
-        currentLanguage: 'EN',
-        currentTone: 'friendly',
-        currentMode: '2D',
-        isDraggingAge: false,
-        
-        init() {
-          this.setupAgeDrag();
-          this.setupEventListeners();
-          this.positionExpandContainers();
-          
-          // Initialize from state if available
-          if (typeof state !== 'undefined' && state) {
-            this.currentAge = parseInt(state.variants?.age) || 18;
-            this.currentLanguage = state.variants?.language?.toUpperCase() || 'EN';
-            this.currentTone = state.variants?.tone || 'friendly';
-            this.currentMode = state.variants?.mode || '2D';
-          }
-          
-          this.updateAllUI();
-          
-          // Close on escape
-          document.addEventListener('keydown', (e) => {
-            if (e.key === 'Escape') this.closeAll();
-          });
-          
-          // Close on overlay click
-          document.getElementById('settings-overlay')?.addEventListener('click', () => this.closeAll());
-          
-          console.log('[SettingsUI] Initialized');
-        },
-        
-        positionExpandContainers() {
-          // Position language expand to match btn-language
-          const langBtn = document.getElementById('btn-language');
-          const langExpand = document.getElementById('expand-language');
-          if (langBtn && langExpand) {
-            const rect = langBtn.getBoundingClientRect();
-            langExpand.style.top = rect.top + 'px';
-          }
-          
-          // Position mode expand to match btn-mode
-          const modeBtn = document.getElementById('btn-mode');
-          const modeExpand = document.getElementById('expand-mode');
-          if (modeBtn && modeExpand) {
-            const rect = modeBtn.getBoundingClientRect();
-            modeExpand.style.top = rect.top + 'px';
-          }
-        },
-        
-        setupEventListeners() {
-          // Rail button clicks - remove old onclick handlers
-          const ageBtn = document.getElementById('btn-age');
-          const langBtn = document.getElementById('btn-language');
-          const toneBtn = document.getElementById('btn-tone');
-          const modeBtn = document.getElementById('btn-mode');
-          
-          if (ageBtn) ageBtn.onclick = (e) => { e.stopPropagation(); this.toggle('age'); };
-          if (langBtn) langBtn.onclick = (e) => { e.stopPropagation(); this.toggle('language'); };
-          if (toneBtn) toneBtn.onclick = (e) => { e.stopPropagation(); this.toggle('tone'); };
-          if (modeBtn) modeBtn.onclick = (e) => { e.stopPropagation(); this.toggle('mode'); };
-          
-          // Language options
-          document.querySelectorAll('#expand-language .expand-option').forEach(opt => {
-            opt.addEventListener('click', () => this.setLanguage(opt.dataset.lang));
-          });
-          
-          // Mode options
-          document.querySelectorAll('#expand-mode .expand-option').forEach(opt => {
-            opt.addEventListener('click', () => this.setMode(opt.dataset.mode));
-          });
-          
-          // Age markers
-          document.querySelectorAll('.age-marker').forEach(marker => {
-            marker.addEventListener('click', () => this.setAge(parseInt(marker.dataset.age)));
-          });
-          
-          // Age presets
-          document.querySelectorAll('.age-preset').forEach(preset => {
-            preset.addEventListener('click', () => this.setAge(parseInt(preset.dataset.age)));
-          });
-          
-          // Age close button
-          document.querySelector('.age-close')?.addEventListener('click', () => this.closeAll());
-          
-          // Tone options
-          document.querySelectorAll('.tone-option').forEach(opt => {
-            opt.addEventListener('click', () => this.setTone(opt.dataset.tone));
-          });
-        },
-        
-        toggle(setting) {
-          if (this.currentOpen === setting) {
-            this.closeAll();
-            return;
-          }
-          
-          this.closeAll();
-          this.currentOpen = setting;
-          
-          const overlay = document.getElementById('settings-overlay');
-          overlay?.classList.add('open');
-          
-          switch(setting) {
-            case 'language':
-              document.getElementById('expand-language')?.classList.add('open');
-              break;
-            case 'mode':
-              document.getElementById('expand-mode')?.classList.add('open');
-              break;
-            case 'age':
-              document.getElementById('age-scrubber')?.classList.add('open');
-              break;
-            case 'tone':
-              document.getElementById('tone-sheet')?.classList.add('open');
-              break;
-          }
-        },
-        
-        closeAll() {
-          this.currentOpen = null;
-          document.getElementById('settings-overlay')?.classList.remove('open');
-          document.getElementById('expand-language')?.classList.remove('open');
-          document.getElementById('expand-mode')?.classList.remove('open');
-          document.getElementById('age-scrubber')?.classList.remove('open');
-          document.getElementById('tone-sheet')?.classList.remove('open');
-        },
-        
-        // ═══════════════════════════════════════════════════════════════
-        // LANGUAGE
-        // ═══════════════════════════════════════════════════════════════
-        
-        setLanguage(code) {
-          this.currentLanguage = code;
-          
-          // Update UI
-          document.querySelectorAll('#expand-language .expand-option').forEach(opt => {
-            opt.classList.toggle('selected', opt.dataset.lang === code);
-          });
-          
-          // Update badge
-          const badge = document.getElementById('badge-language');
-          if (badge) badge.textContent = code;
-          
-          // Update state
-          if (typeof state !== 'undefined') state.variants.language = code.toLowerCase();
-          
-          // Reload lesson
-          this.reloadLesson();
-          
-          setTimeout(() => this.closeAll(), 250);
-          console.log(`[SettingsUI] Language: ${code}`);
-        },
-        
-        // ═══════════════════════════════════════════════════════════════
-        // AGE
-        // ═══════════════════════════════════════════════════════════════
-        
-        setAge(age) {
-          age = Math.max(2, Math.min(102, Math.round(age)));
-          this.currentAge = age;
-          
-          this.updateAgeUI(age);
-          
-          // Update badge
-          const badge = document.getElementById('badge-age');
-          if (badge) badge.textContent = age;
-          
-          // Update presets
-          document.querySelectorAll('.age-preset').forEach(btn => {
-            const presetAge = parseInt(btn.dataset.age);
-            const isActive = 
-              (presetAge === 2 && age <= 4) ||
-              (presetAge === 8 && age >= 5 && age <= 12) ||
-              (presetAge === 18 && age >= 13 && age <= 25) ||
-              (presetAge === 35 && age >= 26 && age <= 50) ||
-              (presetAge === 65 && age >= 51 && age <= 85) ||
-              (presetAge === 102 && age > 85);
-            btn.classList.toggle('active', isActive);
-          });
-          
-          // Update state with age range mapping
-          if (typeof state !== 'undefined') {
-            const ageRanges = ['2-5', '6-12', '13-17', '18-35', '36-60', '61+'];
-            if (age <= 5) state.variants.age = '2-5';
-            else if (age <= 12) state.variants.age = '6-12';
-            else if (age <= 17) state.variants.age = '13-17';
-            else if (age <= 35) state.variants.age = '18-35';
-            else if (age <= 60) state.variants.age = '36-60';
-            else state.variants.age = '61+';
-          }
-          
-          // Transform Kelly
-          this.transformKelly(age);
-          
-          // Reload lesson (debounced during drag)
-          if (!this.isDraggingAge) {
-            this.reloadLesson();
-          }
-          
-          console.log(`[SettingsUI] Age: ${age}`);
-        },
-        
-        updateAgeUI(age) {
-          const percent = ((age - 2) / 100) * 100;
-          
-          const display = document.getElementById('age-display');
-          if (display) display.textContent = age;
-          
-          const fill = document.getElementById('age-track-fill');
-          if (fill) fill.style.width = percent + '%';
-          
-          const thumb = document.getElementById('age-thumb');
-          if (thumb) thumb.style.left = percent + '%';
-          
-          const emoji = document.getElementById('age-thumb-emoji');
-          if (emoji) {
-            if (age <= 4) emoji.textContent = '👶';
-            else if (age <= 12) emoji.textContent = '🧒';
-            else if (age <= 25) emoji.textContent = '👩';
-            else if (age <= 50) emoji.textContent = '👩‍💼';
-            else if (age <= 75) emoji.textContent = '👵';
-            else emoji.textContent = '🧓';
-          }
-        },
-        
-        setupAgeDrag() {
-          const track = document.getElementById('age-track');
-          const thumb = document.getElementById('age-thumb');
-          if (!track || !thumb) return;
-          
-          const handleDrag = (clientX) => {
-            const rect = track.getBoundingClientRect();
-            let percent = (clientX - rect.left) / rect.width;
-            percent = Math.max(0, Math.min(1, percent));
-            const age = Math.round(2 + percent * 100);
-            this.setAge(age);
-          };
-          
-          // Mouse
-          thumb.addEventListener('mousedown', (e) => {
-            e.preventDefault();
-            this.isDraggingAge = true;
-          });
-          
-          document.addEventListener('mousemove', (e) => {
-            if (this.isDraggingAge) handleDrag(e.clientX);
-          });
-          
-          document.addEventListener('mouseup', () => {
-            if (this.isDraggingAge) {
-              this.isDraggingAge = false;
-              this.reloadLesson();
-            }
-          });
-          
-          // Touch
-          thumb.addEventListener('touchstart', () => {
-            this.isDraggingAge = true;
-          }, { passive: true });
-          
-          document.addEventListener('touchmove', (e) => {
-            if (this.isDraggingAge && e.touches[0]) {
-              handleDrag(e.touches[0].clientX);
-            }
-          }, { passive: true });
-          
-          document.addEventListener('touchend', () => {
-            if (this.isDraggingAge) {
-              this.isDraggingAge = false;
-              this.reloadLesson();
-            }
-          });
-          
-          // Click track to jump
-          track.addEventListener('click', (e) => {
-            if (e.target !== thumb && !thumb.contains(e.target)) {
-              handleDrag(e.clientX);
-            }
-          });
-        },
-        
-        transformKelly(age) {
-          const container = document.getElementById('kelly-2d-container') || 
-                            document.querySelector('.kelly-avatar-container');
-          if (container) {
-            container.classList.add('kelly-transforming');
-            setTimeout(() => container.classList.remove('kelly-transforming'), 600);
-          }
-          
-          // If kellyAssets has setAge method, call it
-          if (window.kellyAssets?.setAge) {
-            window.kellyAssets.setAge(age);
-          }
-        },
-        
-        // ═══════════════════════════════════════════════════════════════
-        // TONE
-        // ═══════════════════════════════════════════════════════════════
-        
-        setTone(tone) {
-          this.currentTone = tone;
-          
-          document.querySelectorAll('.tone-option').forEach(opt => {
-            opt.classList.toggle('selected', opt.dataset.tone === tone);
-          });
-          
-          const badge = document.getElementById('badge-tone');
-          if (badge) {
-            const labels = { curious: 'C', friendly: 'F', playful: 'P', wise: 'W', coach: 'M', scholar: 'S' };
-            badge.textContent = labels[tone] || tone[0].toUpperCase();
-          }
-          
-          if (typeof state !== 'undefined') state.variants.tone = tone;
-          
-          this.reloadLesson();
-          
-          setTimeout(() => this.closeAll(), 250);
-          console.log(`[SettingsUI] Tone: ${tone}`);
-        },
-        
-        // ═══════════════════════════════════════════════════════════════
-        // MODE
-        // ═══════════════════════════════════════════════════════════════
-        
-        setMode(mode) {
-          this.currentMode = mode;
-          
-          document.querySelectorAll('#expand-mode .expand-option').forEach(opt => {
-            opt.classList.toggle('selected', opt.dataset.mode === mode);
-          });
-          
-          const badge = document.getElementById('badge-mode');
-          if (badge) badge.textContent = mode;
-          
-          // Toggle containers
-          const container2D = document.getElementById('kelly-2d-container');
-          const container3D = document.getElementById('kelly-3d-container');
-          
-          if (mode === '3D') {
-            if (container2D) container2D.style.display = 'none';
-            if (container3D) container3D.style.display = 'block';
-            if (typeof initUnity === 'function') initUnity();
-          } else {
-            if (container2D) container2D.style.display = 'block';
-            if (container3D) container3D.style.display = 'none';
-          }
-          
-          setTimeout(() => this.closeAll(), 250);
-          console.log(`[SettingsUI] Mode: ${mode}`);
-        },
-        
-        // ═══════════════════════════════════════════════════════════════
-        // RELOAD LESSON
-        // ═══════════════════════════════════════════════════════════════
-        
-        reloadLesson() {
-          console.log(`[SettingsUI] Reloading with age=${this.currentAge}, lang=${this.currentLanguage}, tone=${this.currentTone}`);
-          
-          if (typeof loadLesson === 'function' && typeof state !== 'undefined' && state.dayNumber) {
-            setTimeout(() => loadLesson(state.dayNumber), 100);
-          }
-        },
-        
-        updateAllUI() {
-          // Set initial badge values
-          const ageBadge = document.getElementById('badge-age');
-          const langBadge = document.getElementById('badge-language');
-          const toneBadge = document.getElementById('badge-tone');
-          const modeBadge = document.getElementById('badge-mode');
-          
-          if (ageBadge) ageBadge.textContent = this.currentAge;
-          if (langBadge) langBadge.textContent = this.currentLanguage;
-          if (modeBadge) modeBadge.textContent = this.currentMode;
-          if (toneBadge) {
-            const labels = { curious: 'C', friendly: 'F', playful: 'P', wise: 'W', coach: 'M', scholar: 'S' };
-            toneBadge.textContent = labels[this.currentTone] || 'F';
-          }
-          
-          // Set initial selected states
-          document.querySelector(`[data-lang="${this.currentLanguage}"]`)?.classList.add('selected');
-          document.querySelector(`[data-mode="${this.currentMode}"]`)?.classList.add('selected');
-          document.querySelector(`[data-tone="${this.currentTone}"]`)?.classList.add('selected');
-          
-          // Update age UI
-          this.updateAgeUI(this.currentAge);
-        }
-      };
-
-      // ═══════════════════════════════════════════════════════════════════
       // V2 SWIPE NAVIGATION - TikTok-style day switching
       // ═══════════════════════════════════════════════════════════════════
       const SwipeNav = {
@@ -5187,7 +4343,6 @@
         CaptionSystem.init();
         OptionsSystem.init();
         SwipeNav.init();
-        SettingsUI.init();
         initPhaseNavigation();
         
         // Initialize Kelly Avatar (2D/3D controller)
@@ -5225,8 +4380,11 @@
           if (el) el.onclick = handler;
         };
         
-        // Note: btn-age, btn-language, btn-tone, btn-mode are now handled by SettingsUI
-        // bindBtn('btn-difficulty', (e) => openPopover('difficulty', e.currentTarget));
+        bindBtn('btn-age', (e) => openPopover('age', e.currentTarget));
+        bindBtn('btn-language', (e) => openPopover('language', e.currentTarget));
+        bindBtn('btn-tone', (e) => openPopover('tone', e.currentTarget));
+        bindBtn('btn-mode', () => toggleAvatarMode());
+        bindBtn('btn-difficulty', (e) => openPopover('difficulty', e.currentTarget));
         bindBtn('btn-share', () => {
           if (navigator.share) {
             navigator.share({
@@ -5252,7 +4410,40 @@
           if (kellyAudio) kellyAudio.setMuted(state.isMuted);
         });
 
-        // Old popover handlers removed - now handled by SettingsUI
+        // Popover overlay handler (close on click outside)
+        document.getElementById('popover-overlay')?.addEventListener('click', closePopover);
+
+        // Popover option handlers (Age)
+        document.querySelectorAll('#popover-age [data-age]').forEach((el) => {
+          el.onclick = () => {
+            selectVariant('age', el.dataset.age);
+            closePopover();
+          };
+        });
+
+        // Popover option handlers (Language)
+        document.querySelectorAll('#popover-language [data-language]').forEach((el) => {
+          el.onclick = () => {
+            selectVariant('language', el.dataset.language);
+            closePopover();
+          };
+        });
+
+        // Popover option handlers (Tone)
+        document.querySelectorAll('#popover-tone [data-tone]').forEach((el) => {
+          el.onclick = () => {
+            selectVariant('tone', el.dataset.tone);
+            closePopover();
+          };
+        });
+
+        // Popover option handlers (Difficulty)
+        document.querySelectorAll('#popover-difficulty [data-difficulty]').forEach((el) => {
+          el.onclick = () => {
+            selectVariant('difficulty', el.dataset.difficulty);
+            closePopover();
+          };
+        });
 
         // Keyboard shortcuts
         document.addEventListener('keydown', (e) => {

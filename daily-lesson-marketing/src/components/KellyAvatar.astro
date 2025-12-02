@@ -1,0 +1,130 @@
+---
+/**
+ * Kelly 2D Avatar Component
+ * Professional, pixel-perfect Kelly representation
+ * Kelly IS the brand. Every pixel matters.
+ */
+
+import { getKellyAsset, type KellyZoom, type KellyPose } from '../lib/kelly-assets';
+
+interface Props {
+  zoom?: KellyZoom;
+  pose?: KellyPose;
+  className?: string;
+  aspectRatio?: '21/9' | '16/9' | '4/3' | '9/16' | '1/1';
+  alt?: string;
+  loading?: 'eager' | 'lazy';
+  priority?: boolean;
+}
+
+const { 
+  zoom = 'mid', 
+  pose = 'left', 
+  className = '',
+  aspectRatio = '16/9',
+  alt = `Kelly - ${pose}`,
+  loading = 'lazy',
+  priority = false
+} = Astro.props;
+
+const imgSrc = getKellyAsset(zoom, pose);
+
+// Calculate dimensions based on aspect ratio for proper sizing
+const aspectRatioMap = {
+  '21/9': { width: 2100, height: 900 },
+  '16/9': { width: 1920, height: 1080 },
+  '4/3': { width: 1600, height: 1200 },
+  '9/16': { width: 1080, height: 1920 },
+  '1/1': { width: 1200, height: 1200 }
+};
+
+const dimensions = aspectRatioMap[aspectRatio];
+---
+
+<div 
+  class:list={['kelly-avatar', className]}
+  data-zoom={zoom}
+  data-pose={pose}
+  style={`aspect-ratio: ${aspectRatio}`}
+>
+  <img
+    src={imgSrc}
+    alt={alt}
+    width={dimensions.width}
+    height={dimensions.height}
+    loading={priority ? 'eager' : loading}
+    fetchpriority={priority ? 'high' : 'auto'}
+    decoding="async"
+  />
+</div>
+
+<style>
+  .kelly-avatar {
+    position: relative;
+    width: 100%;
+    overflow: hidden;
+    border-radius: 0; /* Clean, no rounding by default */
+  }
+
+  .kelly-avatar img {
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    object-position: center;
+    display: block;
+  }
+
+  /* Ensure Kelly looks perfect at all sizes */
+  .kelly-avatar img {
+    image-rendering: -webkit-optimize-contrast;
+    image-rendering: crisp-edges;
+  }
+
+  /* Responsive aspect ratios */
+  @media (min-width: 1800px) {
+    .kelly-avatar:not([style*="aspect-ratio"]) {
+      aspect-ratio: 21/9;
+    }
+  }
+
+  @media (min-width: 1024px) and (max-width: 1799px) {
+    .kelly-avatar:not([style*="aspect-ratio"]) {
+      aspect-ratio: 16/9;
+    }
+  }
+
+  @media (min-width: 768px) and (max-width: 1023px) {
+    .kelly-avatar:not([style*="aspect-ratio"]) {
+      aspect-ratio: 4/3;
+    }
+  }
+
+  @media (max-width: 767px) {
+    .kelly-avatar:not([style*="aspect-ratio"]) {
+      aspect-ratio: 9/16;
+    }
+  }
+
+  /* Hover effects (subtle, professional) */
+  .kelly-avatar:hover img {
+    transform: scale(1.02);
+    transition: transform 0.3s ease;
+  }
+
+  /* Loading state */
+  .kelly-avatar img[loading="lazy"] {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+  }
+
+  @keyframes shimmer {
+    0% { background-position: 200% 0; }
+    100% { background-position: -200% 0; }
+  }
+
+  /* Ensure no layout shift */
+  .kelly-avatar {
+    contain: layout style paint;
+  }
+</style>
