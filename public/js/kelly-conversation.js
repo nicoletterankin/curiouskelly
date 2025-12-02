@@ -95,7 +95,8 @@ Kelly: "I hear you! But here's the thing - ${ctx.topic || 'this topic'} actually
     this.config.apiKey = options.apiKey || window.ELEVENLABS_API_KEY || null;
     this.config.voiceId = options.voiceId || window.ELEVENLABS_VOICE_ID || this.config.voiceId;
     
-    this.createMicButton();
+    // Skip mic button - we have the new "Talk to Kelly" button in learn.html
+    // this.createMicButton();
     this.createTranscriptUI();
     this.bindEvents();
     
