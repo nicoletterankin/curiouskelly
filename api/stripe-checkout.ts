@@ -46,7 +46,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // eslint-disable-next-line @typescript-eslint/no-require-imports
   const Stripe = require('stripe');
   const stripe = new Stripe(stripeKey, {
-    apiVersion: '2024-11-20.acacia'
+    apiVersion: '2023-10-16' // Compatible with stripe v14
   });
 
   const body = req.body as CheckoutRequest;
