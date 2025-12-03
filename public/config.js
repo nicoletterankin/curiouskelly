@@ -14,7 +14,7 @@ window.ELEVENLABS_VOICE_ID = 'wAdymQH5YucAkXwmrdL0'; // Kelly's voice ID
 window.ELEVENLABS_AGENT_ID = 'agent_3501kbg14w37er08w0mq13bvhy64'; // Kelly's conversation agent
 
 window.STRIPE_PUBLISHABLE_KEY =
-  'pk_live_51SXAYMEs6ql8qYcKCMClObrDq0eFVaKrhlEypQEVQHbFBfVloknFTitYLHn6TTWjPwMqWZfGT66iGycNiLLqnPQp004efrYmjm'; // For checkout
+  'pk_live_your-stripe-publishable-key-here'; // For checkout - set via environment or replace with your key
 
 // Feature flags
 window.FEATURES = {

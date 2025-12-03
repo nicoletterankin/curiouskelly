@@ -4,7 +4,7 @@
 November 1, 2025
 
 ## Test Configuration
-- **API Key**: `AQ.Ab8RN6LBV_L6oEGGWj8K3Xc8fjH3SXqG5YdOpvuBXkltfF8pMA`
+- **API Key**: `AQ.your-vertex-ai-api-key-here`
 - **Model**: `imagen-3.0-generate-002`
 - **Project ID**: `gen-lang-client-0005524332`
 - **Location**: `us-central1`

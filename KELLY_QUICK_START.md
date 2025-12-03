@@ -20,7 +20,7 @@ cp scripts/kelly-visual-identity/env-template.txt .env.local
 # Edit .env.local and fill in:
 # - CLOUDFLARE_R2_ACCESS_KEY_ID (get from Step 3)
 # - CLOUDFLARE_R2_SECRET_ACCESS_KEY (get from Step 3)
-# - GOOGLE_AI_API_KEY (already provided: AIzaSyBVPxRvxDfA07qyAjbZ6FfRqo5L_rxquHE)
+# - GOOGLE_AI_API_KEY (get from Google AI Studio)
 # - Supabase credentials (already in your existing .env)
 ```
 
@@ -167,6 +167,7 @@ import KellyAvatar from "@/components/KellyAvatar";
 ---
 
 **🎯 Result:** Production-ready Kelly avatar system in 24 hours!
+
 
 
 

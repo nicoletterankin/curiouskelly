@@ -92,14 +92,14 @@ Add to `.env.local`:
 
 ```env
 # Cloudflare R2 Configuration
-CLOUDFLARE_ACCOUNT_ID=47ebb2a1adc311cb106acc89720e352c
+CLOUDFLARE_ACCOUNT_ID=your-cloudflare-account-id
 CLOUDFLARE_R2_ACCESS_KEY_ID=[your-access-key-id]
 CLOUDFLARE_R2_SECRET_ACCESS_KEY=[your-secret-access-key]
 KELLY_ASSETS_BUCKET=kelly-assets
 KELLY_ASSETS_CDN_URL=https://kelly-assets.curiouskelly.com
 
 # Google AI Studio (for image generation)
-GOOGLE_AI_API_KEY=AIzaSyBVPxRvxDfA07qyAjbZ6FfRqo5L_rxquHE
+GOOGLE_AI_API_KEY=AIzaSyXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXXX
 ```
 
 ## Step 7: Test Upload Script
@@ -193,6 +193,7 @@ For Kelly assets:
 - Use Vercel/Cloudflare secrets for production
 - Rotate API tokens every 90 days
 - Monitor access logs for unusual activity
+
 
 
 

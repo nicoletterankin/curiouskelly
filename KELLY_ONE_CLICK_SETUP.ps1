@@ -109,7 +109,7 @@ KELLY_ASSETS_CDN_URL=https://kelly-assets.curiouskelly.com
 # ============================================================================
 # GOOGLE AI STUDIO (IMAGEN 3)
 # ============================================================================
-GOOGLE_AI_API_KEY=AIzaSyBVPxRvxDfA07qyAjbZ6FfRqo5L_rxquHE
+GOOGLE_AI_API_KEY=your-google-ai-api-key-here
 
 # ============================================================================
 # REPLICATE (OPTIONAL - FOR FLUX WITH LORA)
@@ -431,6 +431,7 @@ Write-Host ""
 
 Write-Action "Press Enter to exit..."
 Read-Host
+
 
 
 
