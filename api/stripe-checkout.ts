@@ -1,5 +1,4 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import Stripe from 'stripe';
 
 interface CheckoutRequest {
   planType: 'monthly' | 'annual' | 'lifetime' | 'family' | 'gift';
@@ -43,8 +42,21 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
+  // Dynamic import for ESM compatibility
+  let Stripe: typeof import('stripe').default;
+  try {
+    const stripeModule = await import('stripe');
+    Stripe = stripeModule.default;
+  } catch (error) {
+    console.error('Failed to load Stripe module:', error);
+    return res.status(503).json({ 
+      error: 'stripe_module_unavailable',
+      message: 'Failed to load Stripe module'
+    });
+  }
+
   const stripe = new Stripe(stripeKey, {
-    apiVersion: '2024-11-20.acacia' as Stripe.LatestApiVersion
+    apiVersion: '2024-11-20.acacia' as any
   });
 
   const body = req.body as CheckoutRequest;
@@ -83,7 +95,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   };
 
   try {
-    let sessionConfig: Stripe.Checkout.SessionCreateParams;
+    let sessionConfig: import('stripe').Stripe.Checkout.SessionCreateParams;
 
     if (isGiftPlan) {
       const giftPriceId = priceIds.gift;
