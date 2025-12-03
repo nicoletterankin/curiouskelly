@@ -2,7 +2,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import Stripe from 'stripe';
 
 interface CheckoutRequest {
-  planType: 'monthly' | 'annual' | 'lifetime' | 'gift_12mo' | 'gift_6mo' | 'gift_3mo';
+  planType: 'monthly' | 'annual' | 'lifetime' | 'family' | 'gift';
   customerEmail: string;
   promoCode?: string;
   affiliateCode?: string;
@@ -55,23 +55,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Validate plan type
-  const validPlanTypes = ['monthly', 'annual', 'lifetime', 'gift_12mo', 'gift_6mo', 'gift_3mo'];
+  const validPlanTypes = ['monthly', 'annual', 'lifetime', 'family', 'gift'];
   if (!validPlanTypes.includes(body.planType)) {
     return res.status(422).json({ error: 'invalid_plan_type' });
   }
 
-  // Get price IDs from environment
+  // Get price IDs from environment (support multiple naming conventions)
   const priceIds: Record<string, string | undefined> = {
     monthly: process.env.STRIPE_PRICE_MONTHLY,
     annual: process.env.STRIPE_PRICE_ANNUAL,
-    lifetime: process.env.STRIPE_PRICE_LIFETIME,
-    gift_12mo: process.env.STRIPE_PRICE_GIFT_12MO,
-    gift_6mo: process.env.STRIPE_PRICE_GIFT_6MO,
-    gift_3mo: process.env.STRIPE_PRICE_GIFT_3MO
+    lifetime: process.env.STRIPE_PRICE_LIFETIME || process.env.STRIPE_PRICE_FAMILY,
+    family: process.env.STRIPE_PRICE_FAMILY || process.env.STRIPE_PRICE_LIFETIME,
+    gift: process.env.STRIPE_PRICE_GIFT
   };
 
   const siteUrl = process.env.PUBLIC_SITE_URL || 'https://curiouskelly.com';
-  const isGiftPlan = body.planType.startsWith('gift_');
+  const isGiftPlan = body.planType === 'gift';
 
   // Build metadata
   const commonMetadata = {
@@ -86,15 +85,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     let sessionConfig: Stripe.Checkout.SessionCreateParams;
 
-    if (isGiftPlan && body.giftData) {
-      const giftPriceId = priceIds[body.planType];
+    if (isGiftPlan) {
+      const giftPriceId = priceIds.gift;
       if (!giftPriceId) {
         return res.status(503).json({ 
           error: `price_not_configured`,
-          message: `Price ID for ${body.planType} is not configured. Add STRIPE_PRICE_${body.planType.toUpperCase()} to environment.`
+          message: `Gift price ID not configured. Add STRIPE_PRICE_GIFT to environment.`
         });
       }
 
+      const giftMeta = body.giftData || {};
       sessionConfig = {
         payment_method_types: ['card'],
         line_items: [{ price: giftPriceId, quantity: 1 }],
@@ -106,31 +106,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         metadata: {
           ...commonMetadata,
           type: 'gift',
-          gift_plan: body.planType,
-          recipient_email: body.giftData.recipientEmail,
-          gift_message: body.giftData.message || '',
-          gifter_name: body.giftData.gifterName || '',
-          delivery_date: body.giftData.deliveryDate || new Date().toISOString()
+          recipient_email: giftMeta.recipientEmail || '',
+          gift_message: giftMeta.message || '',
+          gifter_name: giftMeta.gifterName || '',
+          delivery_date: giftMeta.deliveryDate || new Date().toISOString()
         }
       };
-    } else if (body.planType === 'lifetime') {
-      const lifetimePriceId = priceIds.lifetime;
-      if (!lifetimePriceId) {
+    } else if (body.planType === 'lifetime' || body.planType === 'family') {
+      const oneTimePriceId = priceIds[body.planType];
+      if (!oneTimePriceId) {
         return res.status(503).json({ 
           error: 'price_not_configured',
-          message: 'Lifetime price ID not configured. Add STRIPE_PRICE_LIFETIME to environment.'
+          message: `${body.planType} price ID not configured. Add STRIPE_PRICE_${body.planType.toUpperCase()} to environment.`
         });
       }
 
       sessionConfig = {
         payment_method_types: ['card'],
-        line_items: [{ price: lifetimePriceId, quantity: 1 }],
+        line_items: [{ price: oneTimePriceId, quantity: 1 }],
         mode: 'payment',
         customer_email: body.customerEmail,
-        success_url: `${siteUrl}/welcome.html?session_id={CHECKOUT_SESSION_ID}&plan=lifetime`,
+        success_url: `${siteUrl}/welcome.html?session_id={CHECKOUT_SESSION_ID}&plan=${body.planType}`,
         cancel_url: `${siteUrl}/payment-cancelled.html`,
         allow_promotion_codes: true,
-        metadata: { ...commonMetadata, type: 'lifetime' }
+        metadata: { ...commonMetadata, type: body.planType }
       };
     } else {
       // Subscription plans (monthly, annual)
