@@ -6,8 +6,8 @@ Shader "Kelly/RealisticSkin"
         _BaseColor ("Color", Color) = (1,1,1,1)
         
         [Header(Subsurface Scattering)]
-        _SSSColor ("SSS Color", Color) = (1, 0.3, 0.3, 1)
-        _SSSIntensity ("SSS Intensity", Range(0, 1)) = 0.5
+        _SSSColor ("SSS Color", Color) = (1, 0.35, 0.28, 1)
+        _SSSIntensity ("SSS Intensity", Range(0, 1)) = 0.7
         _SSSDistortion ("SSS Distortion", Range(0, 1)) = 0.5
         _SSSPower ("SSS Power", Range(0.1, 10)) = 2
         _SSSScale ("SSS Scale", Range(0, 10)) = 2
@@ -15,7 +15,7 @@ Shader "Kelly/RealisticSkin"
         [Header(Surface)]
         _NormalMap ("Normal Map", 2D) = "bump" {}
         _NormalScale ("Normal Scale", Range(0, 2)) = 1
-        _Smoothness ("Smoothness", Range(0, 1)) = 0.6
+        _Smoothness ("Smoothness", Range(0, 1)) = 0.55
         _Metallic ("Metallic", Range(0, 1)) = 0
         
         [Header(Micro Details)]

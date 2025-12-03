@@ -1,15 +1,19 @@
 /**
- * Kelly Conversational AI v1.0
- * ElevenLabs Conversational AI Integration
+ * Kelly Conversational AI v2.0
+ * ElevenLabs Conversational AI Integration (Fixed)
  * 
  * Enables real-time voice conversation with Kelly during lessons.
  * Kelly stays on-topic and relates everything back to the current lesson.
  * 
- * Per CURIOUS-KELLY-COMPLETE-SYSTEM-SPEC.md
+ * FIXES in v2.0:
+ * - Proper audio format handling (PCM 16-bit for input)
+ * - Support for both public agents and signed URLs
+ * - Expression bridge to Kelly avatar
+ * - Correct message type handling
  */
 
 // ═══════════════════════════════════════════════════════════════════
-// KELLY CONVERSATION SYSTEM
+// KELLY CONVERSATION SYSTEM v2
 // ═══════════════════════════════════════════════════════════════════
 
 const KellyConversation = {
@@ -18,26 +22,45 @@ const KellyConversation = {
   isSpeaking: false,
   conversationHistory: [],
   lessonContext: null,
+  conversationId: null,
   
   // ElevenLabs configuration
   config: {
     agentId: null,           // Set via init() or environment
-    apiKey: null,            // Optional: for signed URLs
     voiceId: 'wAdymQH5YucAkXwmrdL0', // Kelly's trained voice
+    signedUrl: null,         // For private agents
+    isPublic: true,          // Whether agent is public
+  },
+  
+  // Audio configuration
+  audio: {
+    context: null,
+    mediaStream: null,
+    audioWorklet: null,
+    gainNode: null,
+    sampleRate: 16000,       // ElevenLabs expects 16kHz
   },
   
   // WebSocket connection
   ws: null,
-  audioContext: null,
-  mediaRecorder: null,
+  
+  // Audio playback queue
   audioQueue: [],
+  isPlayingAudio: false,
   
   // UI elements
-  micButton: null,
+  talkButton: null,
   transcriptContainer: null,
   
+  // Expression callbacks
+  onExpression: null,
+  onSpeakingStart: null,
+  onSpeakingEnd: null,
+  onListeningStart: null,
+  onListeningEnd: null,
+  
   // ═══════════════════════════════════════════════════════════════════
-  // SYSTEM PROMPT
+  // SYSTEM PROMPT (Sent via conversation_config_override)
   // ═══════════════════════════════════════════════════════════════════
   
   getSystemPrompt() {
@@ -73,17 +96,7 @@ IMPORTANT RULES:
 - Relate EVERYTHING back to today's topic: "${ctx.topic || 'learning'}"
 - Sound natural, like a friendly teacher, not a robot
 - Use "we" and "us" to create togetherness
-- Express genuine excitement about learning
-
-EXAMPLE INTERACTIONS:
-User: "What should I have for dinner?"
-Kelly: "Ooh, dinner! You know, choosing what to eat is actually a great example of what we're exploring today. What 'rules' do you usually follow when picking dinner?"
-
-User: "I don't understand"
-Kelly: "That's totally okay! Let's break it down together. What part feels tricky? Sometimes it helps to think about a real example from your own life."
-
-User: "This is boring"
-Kelly: "I hear you! But here's the thing - ${ctx.topic || 'this topic'} actually shows up everywhere in life. Can you think of a time when...?"`;
+- Express genuine excitement about learning`;
   },
   
   // ═══════════════════════════════════════════════════════════════════
@@ -92,16 +105,25 @@ Kelly: "I hear you! But here's the thing - ${ctx.topic || 'this topic'} actually
   
   init(options = {}) {
     this.config.agentId = options.agentId || window.ELEVENLABS_AGENT_ID || null;
-    this.config.apiKey = options.apiKey || window.ELEVENLABS_API_KEY || null;
     this.config.voiceId = options.voiceId || window.ELEVENLABS_VOICE_ID || this.config.voiceId;
     
-    // Skip mic button - we have the new "Talk to Kelly" button in learn.html
-    // this.createMicButton();
-    this.createTranscriptUI();
-    this.bindEvents();
+    // Set up expression callbacks
+    this.onExpression = options.onExpression || this.defaultExpressionHandler.bind(this);
+    this.onSpeakingStart = options.onSpeakingStart || null;
+    this.onSpeakingEnd = options.onSpeakingEnd || null;
+    this.onListeningStart = options.onListeningStart || null;
+    this.onListeningEnd = options.onListeningEnd || null;
     
-    console.log('[KellyConversation] Initialized', {
+    // Create UI elements
+    this.createTranscriptUI();
+    this.addStyles();
+    
+    // Wire up the talk button if it exists
+    this.talkButton = document.getElementById('talk-to-kelly-btn');
+    
+    console.log('[KellyConversation v2] Initialized', {
       hasAgentId: !!this.config.agentId,
+      agentId: this.config.agentId,
       voiceId: this.config.voiceId
     });
     
@@ -117,203 +139,635 @@ Kelly: "I hear you! But here's the thing - ${ctx.topic || 'this topic'} actually
       dayNumber: lesson?.day_number || null
     };
     
-    console.log('[KellyConversation] Context updated:', this.lessonContext.topic);
+    console.log('[KellyConversation v2] Context updated:', this.lessonContext.topic);
   },
   
   // ═══════════════════════════════════════════════════════════════════
-  // MIC BUTTON UI
+  // DEFAULT EXPRESSION HANDLER
+  // Connects voice events to Kelly's visual state
   // ═══════════════════════════════════════════════════════════════════
   
-  createMicButton() {
-    // Don't create if already exists
-    if (document.getElementById('kelly-mic-btn')) {
-      this.micButton = document.getElementById('kelly-mic-btn');
+  defaultExpressionHandler(expression, data = {}) {
+    console.log('[KellyConversation v2] Expression:', expression, data);
+    
+    // Update KellyPoseManager if available (2D avatar)
+    if (window.KellyPoseManager) {
+      const poseMap = {
+        'listening': 'listening',
+        'thinking': 'curious',
+        'speaking': 'explaining',
+        'celebrating': 'celebrating',
+        'idle': 'hello',
+        'curious': 'curious',
+        'explaining': 'explaining',
+        'wisdom': 'wisdom'
+      };
+      
+      const pose = poseMap[expression] || 'hello';
+      KellyPoseManager.setPose(pose);
+      
+      // Handle mouth state
+      if (expression === 'speaking') {
+        KellyPoseManager.setMouthState?.('speaking');
+      } else {
+        KellyPoseManager.setMouthState?.('idle');
+      }
+    }
+    
+    // Update Kelly 2D Avatar if available
+    if (window.kellyAssets) {
+      const stateMap = {
+        'listening': 'listening',
+        'thinking': 'thinking',
+        'speaking': 'hello',
+        'celebrating': 'hello',
+        'idle': 'hello'
+      };
+      kellyAssets.setState?.(stateMap[expression] || 'thinking');
+    }
+    
+    // Send to Unity WebGL if available
+    if (window.unityInstance) {
+      try {
+        window.unityInstance.SendMessage('kelly_fbx_v4', 'SetExpression', expression);
+        
+        if (expression === 'speaking' && data.text) {
+          window.unityInstance.SendMessage('kelly_fbx_v4', 'StartLipSync', data.text);
+        } else if (expression !== 'speaking') {
+          window.unityInstance.SendMessage('kelly_fbx_v4', 'StopLipSync');
+        }
+      } catch (e) {
+        // Unity not loaded, ignore
+      }
+    }
+  },
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // CONVERSATION FLOW
+  // ═══════════════════════════════════════════════════════════════════
+  
+  async startConversation() {
+    if (this.isActive) {
+      console.log('[KellyConversation v2] Already active');
       return;
     }
     
-    // Create button
-    this.micButton = document.createElement('button');
-    this.micButton.id = 'kelly-mic-btn';
-    this.micButton.className = 'kelly-mic-btn';
-    this.micButton.setAttribute('aria-label', 'Talk to Kelly');
-    this.micButton.innerHTML = `
-      <svg class="mic-icon" viewBox="0 0 24 24" fill="currentColor">
-        <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-        <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-      </svg>
-      <span class="mic-pulse"></span>
-      <span class="mic-waves">
-        <span class="wave"></span>
-        <span class="wave"></span>
-        <span class="wave"></span>
-      </span>
-    `;
+    // Check for agent ID
+    if (!this.config.agentId) {
+      this.showNotConfiguredMessage();
+      return;
+    }
     
-    // Add styles
-    this.addMicStyles();
+    console.log('[KellyConversation v2] Starting conversation...');
     
-    document.body.appendChild(this.micButton);
+    this.isActive = true;
+    this.conversationHistory = [];
+    this.conversationId = null;
+    
+    // Update UI
+    this.updateTalkButton('connecting');
+    this.showTranscript();
+    
+    try {
+      // Initialize audio
+      await this.initAudio();
+      
+      // Try to get signed URL first, fall back to public agent
+      await this.getSignedUrlIfNeeded();
+      
+      // Connect to ElevenLabs
+      await this.connectToElevenLabs();
+      
+      // Start listening
+      this.startListening();
+      
+    } catch (error) {
+      console.error('[KellyConversation v2] Error starting:', error);
+      this.showError('Could not start conversation. ' + (error.message || 'Please check microphone permissions.'));
+      this.endConversation();
+    }
   },
   
-  addMicStyles() {
-    if (document.getElementById('kelly-mic-styles')) return;
+  endConversation() {
+    console.log('[KellyConversation v2] Ending conversation');
+    
+    this.isActive = false;
+    this.isListening = false;
+    this.isSpeaking = false;
+    
+    // Stop audio
+    this.stopListening();
+    this.stopAudioPlayback();
+    
+    // Close WebSocket
+    if (this.ws) {
+      if (this.ws.readyState === WebSocket.OPEN) {
+        this.ws.close(1000, 'Conversation ended by user');
+      }
+      this.ws = null;
+    }
+    
+    // Update UI
+    this.updateTalkButton('idle');
+    this.onExpression?.('idle');
+    
+    // Hide transcript after delay
+    setTimeout(() => {
+      if (!this.isActive) {
+        this.hideTranscript();
+      }
+    }, 3000);
+  },
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // SIGNED URL HANDLING
+  // ═══════════════════════════════════════════════════════════════════
+  
+  async getSignedUrlIfNeeded() {
+    try {
+      const response = await fetch('/api/elevenlabs-signed-url', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        if (data.signedUrl) {
+          this.config.signedUrl = data.signedUrl;
+          this.config.isPublic = false;
+          console.log('[KellyConversation v2] Using signed URL (private agent)');
+        } else {
+          this.config.isPublic = true;
+          console.log('[KellyConversation v2] Using public agent connection');
+        }
+      }
+    } catch (e) {
+      // If we can't get signed URL, try public connection
+      console.log('[KellyConversation v2] Signed URL not available, trying public connection');
+      this.config.isPublic = true;
+    }
+  },
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // AUDIO INITIALIZATION
+  // ═══════════════════════════════════════════════════════════════════
+  
+  async initAudio() {
+    // Create AudioContext
+    if (!this.audio.context) {
+      this.audio.context = new (window.AudioContext || window.webkitAudioContext)({
+        sampleRate: this.audio.sampleRate
+      });
+    }
+    
+    // Resume if suspended (browser autoplay policy)
+    if (this.audio.context.state === 'suspended') {
+      await this.audio.context.resume();
+    }
+    
+    // Create gain node for output
+    this.audio.gainNode = this.audio.context.createGain();
+    this.audio.gainNode.gain.value = 1.0;
+    this.audio.gainNode.connect(this.audio.context.destination);
+    
+    console.log('[KellyConversation v2] Audio initialized, sample rate:', this.audio.context.sampleRate);
+  },
+  
+  async startListening() {
+    try {
+      // Get microphone stream
+      this.audio.mediaStream = await navigator.mediaDevices.getUserMedia({
+        audio: {
+          echoCancellation: true,
+          noiseSuppression: true,
+          autoGainControl: true,
+          sampleRate: this.audio.sampleRate,
+          channelCount: 1
+        }
+      });
+      
+      // Create media stream source
+      const source = this.audio.context.createMediaStreamSource(this.audio.mediaStream);
+      
+      // Create script processor for capturing audio
+      // Note: ScriptProcessorNode is deprecated but widely supported
+      // For production, consider using AudioWorklet
+      const bufferSize = 4096;
+      const processor = this.audio.context.createScriptProcessor(bufferSize, 1, 1);
+      
+      processor.onaudioprocess = (e) => {
+        if (!this.isActive || !this.ws || this.ws.readyState !== WebSocket.OPEN) return;
+        if (this.isSpeaking) return; // Don't send audio while Kelly is speaking
+        
+        const inputData = e.inputBuffer.getChannelData(0);
+        
+        // Convert Float32 to Int16 PCM
+        const pcm16 = this.float32ToInt16(inputData);
+        
+        // Convert to base64
+        const base64 = this.arrayBufferToBase64(pcm16.buffer);
+        
+        // Send to ElevenLabs
+        this.ws.send(JSON.stringify({
+          user_audio_chunk: base64
+        }));
+      };
+      
+      source.connect(processor);
+      processor.connect(this.audio.context.destination);
+      
+      this.audio.processor = processor;
+      this.audio.source = source;
+      
+      this.isListening = true;
+      this.updateTalkButton('listening');
+      this.onExpression?.('listening');
+      this.onListeningStart?.();
+      
+      console.log('[KellyConversation v2] Listening started');
+      
+    } catch (error) {
+      console.error('[KellyConversation v2] Microphone error:', error);
+      throw new Error('Microphone access denied. Please allow microphone access.');
+    }
+  },
+  
+  stopListening() {
+    // Stop media stream
+    if (this.audio.mediaStream) {
+      this.audio.mediaStream.getTracks().forEach(track => track.stop());
+      this.audio.mediaStream = null;
+    }
+    
+    // Disconnect processor
+    if (this.audio.processor) {
+      this.audio.processor.disconnect();
+      this.audio.processor = null;
+    }
+    
+    if (this.audio.source) {
+      this.audio.source.disconnect();
+      this.audio.source = null;
+    }
+    
+    this.isListening = false;
+    this.onListeningEnd?.();
+  },
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // WEBSOCKET CONNECTION
+  // ═══════════════════════════════════════════════════════════════════
+  
+  async connectToElevenLabs() {
+    return new Promise((resolve, reject) => {
+      // Build WebSocket URL
+      let wsUrl;
+      if (this.config.signedUrl) {
+        wsUrl = this.config.signedUrl;
+      } else {
+        wsUrl = `wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${this.config.agentId}`;
+      }
+      
+      console.log('[KellyConversation v2] Connecting to:', wsUrl.substring(0, 60) + '...');
+      
+      this.ws = new WebSocket(wsUrl);
+      
+      this.ws.onopen = () => {
+        console.log('[KellyConversation v2] WebSocket connected');
+        
+        // Send initial configuration
+        const initMessage = {
+          type: 'conversation_initiation_client_data',
+          conversation_config_override: {
+            agent: {
+              prompt: {
+                prompt: this.getSystemPrompt()
+              },
+              first_message: "Hey there! What's on your mind about today's lesson?",
+              language: 'en'
+            },
+            tts: {
+              voice_id: this.config.voiceId
+            }
+          },
+          custom_llm_extra_body: {
+            lesson_context: this.lessonContext
+          }
+        };
+        
+        this.ws.send(JSON.stringify(initMessage));
+        
+        // Add initial greeting to transcript
+        this.addToTranscript('kelly', "Hey there! What's on your mind about today's lesson?");
+        
+        resolve();
+      };
+      
+      this.ws.onmessage = (event) => {
+        this.handleWSMessage(event);
+      };
+      
+      this.ws.onerror = (error) => {
+        console.error('[KellyConversation v2] WebSocket error:', error);
+        reject(new Error('Connection failed. The agent may not be available.'));
+      };
+      
+      this.ws.onclose = (event) => {
+        console.log('[KellyConversation v2] WebSocket closed:', event.code, event.reason);
+        if (this.isActive) {
+          // Unexpected close
+          if (event.code !== 1000) {
+            this.showError('Connection lost. Please try again.');
+          }
+          this.endConversation();
+        }
+      };
+    });
+  },
+  
+  handleWSMessage(event) {
+    try {
+      const data = JSON.parse(event.data);
+      
+      // Log message type
+      const logTypes = ['audio', 'ping'];
+      if (!logTypes.includes(data.type)) {
+        console.log('[KellyConversation v2] Message:', data.type, data);
+      }
+      
+      switch (data.type) {
+        case 'conversation_initiation_metadata':
+          // Conversation started, store ID
+          this.conversationId = data.conversation_id;
+          console.log('[KellyConversation v2] Conversation ID:', this.conversationId);
+          break;
+          
+        case 'user_transcript':
+          // User's speech transcribed
+          const userText = data.user_transcription_event?.user_transcript || 
+                          data.user_transcript;
+          if (userText) {
+            this.addToTranscript('user', userText);
+          }
+          break;
+          
+        case 'agent_response':
+          // Kelly's response text (before audio)
+          const agentText = data.agent_response_event?.agent_response || 
+                           data.agent_response;
+          if (agentText) {
+            this.addToTranscript('kelly', agentText);
+            this.onExpression?.('speaking', { text: agentText });
+          }
+          break;
+          
+        case 'audio':
+          // Kelly's voice audio chunk
+          if (data.audio_event?.audio_base_64 || data.audio) {
+            const audioData = data.audio_event?.audio_base_64 || data.audio;
+            this.queueAudio(audioData);
+            
+            if (!this.isSpeaking) {
+              this.isSpeaking = true;
+              this.updateTalkButton('speaking');
+              this.onSpeakingStart?.();
+            }
+          }
+          break;
+          
+        case 'audio_end':
+        case 'agent_response_end':
+          // Kelly finished speaking
+          this.finishAudioPlayback();
+          break;
+          
+        case 'interruption':
+          // User interrupted Kelly
+          console.log('[KellyConversation v2] User interrupted');
+          this.stopAudioPlayback();
+          this.onExpression?.('listening');
+          break;
+          
+        case 'ping':
+          // Keep-alive
+          this.ws.send(JSON.stringify({ type: 'pong' }));
+          break;
+          
+        case 'error':
+          console.error('[KellyConversation v2] Server error:', data);
+          this.showError(data.message || data.error || 'Connection error');
+          break;
+          
+        case 'internal_tentative_agent_response':
+          // Agent is formulating response
+          this.onExpression?.('thinking');
+          break;
+      }
+    } catch (e) {
+      console.warn('[KellyConversation v2] Message parse error:', e, event.data);
+    }
+  },
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // AUDIO PLAYBACK
+  // ═══════════════════════════════════════════════════════════════════
+  
+  queueAudio(base64Audio) {
+    this.audioQueue.push(base64Audio);
+    
+    if (!this.isPlayingAudio) {
+      this.playNextAudio();
+    }
+  },
+  
+  async playNextAudio() {
+    if (this.audioQueue.length === 0) {
+      this.isPlayingAudio = false;
+      return;
+    }
+    
+    this.isPlayingAudio = true;
+    const base64Audio = this.audioQueue.shift();
+    
+    try {
+      // Decode base64 to ArrayBuffer
+      const binaryString = atob(base64Audio);
+      const bytes = new Uint8Array(binaryString.length);
+      for (let i = 0; i < binaryString.length; i++) {
+        bytes[i] = binaryString.charCodeAt(i);
+      }
+      
+      // ElevenLabs sends MP3 audio
+      const audioBuffer = await this.audio.context.decodeAudioData(bytes.buffer.slice(0));
+      
+      // Create buffer source
+      const source = this.audio.context.createBufferSource();
+      source.buffer = audioBuffer;
+      source.connect(this.audio.gainNode);
+      
+      source.onended = () => {
+        this.playNextAudio();
+      };
+      
+      source.start();
+      
+    } catch (e) {
+      console.warn('[KellyConversation v2] Audio playback error:', e);
+      // Try next chunk
+      this.playNextAudio();
+    }
+  },
+  
+  stopAudioPlayback() {
+    this.audioQueue = [];
+    this.isPlayingAudio = false;
+    this.isSpeaking = false;
+    this.onSpeakingEnd?.();
+  },
+  
+  finishAudioPlayback() {
+    // Wait for queue to empty
+    const checkQueue = () => {
+      if (this.audioQueue.length === 0 && !this.isPlayingAudio) {
+        this.isSpeaking = false;
+        this.updateTalkButton('listening');
+        this.onExpression?.('listening');
+        this.onSpeakingEnd?.();
+      } else {
+        setTimeout(checkQueue, 100);
+      }
+    };
+    setTimeout(checkQueue, 100);
+  },
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // UTILITY FUNCTIONS
+  // ═══════════════════════════════════════════════════════════════════
+  
+  float32ToInt16(float32Array) {
+    const int16Array = new Int16Array(float32Array.length);
+    for (let i = 0; i < float32Array.length; i++) {
+      const s = Math.max(-1, Math.min(1, float32Array[i]));
+      int16Array[i] = s < 0 ? s * 0x8000 : s * 0x7FFF;
+    }
+    return int16Array;
+  },
+  
+  arrayBufferToBase64(buffer) {
+    let binary = '';
+    const bytes = new Uint8Array(buffer);
+    for (let i = 0; i < bytes.byteLength; i++) {
+      binary += String.fromCharCode(bytes[i]);
+    }
+    return btoa(binary);
+  },
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // UI MANAGEMENT
+  // ═══════════════════════════════════════════════════════════════════
+  
+  updateTalkButton(state) {
+    if (!this.talkButton) return;
+    
+    // Remove all state classes
+    this.talkButton.classList.remove('connecting', 'listening', 'speaking', 'idle');
+    
+    // Add current state class
+    this.talkButton.classList.add(state);
+    
+    // Update label
+    const label = this.talkButton.querySelector('.talk-btn-label');
+    const hint = this.talkButton.querySelector('.talk-btn-hint');
+    
+    if (label) {
+      const labels = {
+        'idle': 'Talk to Kelly',
+        'connecting': 'Connecting...',
+        'listening': 'Listening...',
+        'speaking': 'Kelly is speaking'
+      };
+      label.textContent = labels[state] || 'Talk to Kelly';
+    }
+    
+    if (hint) {
+      const hints = {
+        'idle': 'Ask anything about today\'s lesson',
+        'connecting': 'Please wait...',
+        'listening': 'Go ahead, I\'m listening!',
+        'speaking': 'Tap to end conversation'
+      };
+      hint.textContent = hints[state] || '';
+    }
+  },
+  
+  createTranscriptUI() {
+    if (document.getElementById('kelly-transcript')) {
+      this.transcriptContainer = document.getElementById('kelly-transcript');
+      return;
+    }
+    
+    this.transcriptContainer = document.createElement('div');
+    this.transcriptContainer.id = 'kelly-transcript';
+    this.transcriptContainer.className = 'kelly-transcript';
+    
+    document.body.appendChild(this.transcriptContainer);
+  },
+  
+  addToTranscript(role, text) {
+    if (!text) return;
+    
+    this.conversationHistory.push({ role, text, timestamp: Date.now() });
+    
+    if (this.transcriptContainer) {
+      const messageEl = document.createElement('div');
+      messageEl.className = 'message';
+      messageEl.innerHTML = `
+        <div class="message-role ${role}">${role === 'kelly' ? '✨ Kelly' : 'You'}</div>
+        <div class="message-text">${this.escapeHtml(text)}</div>
+      `;
+      
+      this.transcriptContainer.appendChild(messageEl);
+      this.transcriptContainer.scrollTop = this.transcriptContainer.scrollHeight;
+    }
+  },
+  
+  escapeHtml(text) {
+    const div = document.createElement('div');
+    div.textContent = text;
+    return div.innerHTML;
+  },
+  
+  showTranscript() {
+    if (this.transcriptContainer) {
+      this.transcriptContainer.innerHTML = '';
+      this.transcriptContainer.classList.add('visible');
+    }
+  },
+  
+  hideTranscript() {
+    if (this.transcriptContainer) {
+      this.transcriptContainer.classList.remove('visible');
+    }
+  },
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // STYLES
+  // ═══════════════════════════════════════════════════════════════════
+  
+  addStyles() {
+    if (document.getElementById('kelly-conversation-styles')) return;
     
     const styles = document.createElement('style');
-    styles.id = 'kelly-mic-styles';
+    styles.id = 'kelly-conversation-styles';
     styles.textContent = `
-      .kelly-mic-btn {
-        position: fixed;
-        bottom: 100px;
-        right: 20px;
-        width: 60px;
-        height: 60px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-        border: none;
-        color: white;
-        cursor: pointer;
-        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
-        z-index: 1000;
-        transition: all 0.3s ease;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        overflow: hidden;
-      }
-      
-      .kelly-mic-btn:hover {
-        transform: scale(1.1);
-        box-shadow: 0 6px 30px rgba(59, 130, 246, 0.5);
-      }
-      
-      .kelly-mic-btn:active {
-        transform: scale(0.95);
-      }
-      
-      .kelly-mic-btn .mic-icon {
-        width: 28px;
-        height: 28px;
-        z-index: 2;
-        transition: transform 0.3s ease;
-      }
-      
-      .kelly-mic-btn .mic-pulse {
-        display: none;
-        position: absolute;
-        inset: -8px;
-        border-radius: 50%;
-        border: 3px solid rgba(239, 68, 68, 0.5);
-        animation: micPulse 1.5s infinite;
-      }
-      
-      .kelly-mic-btn .mic-waves {
-        display: none;
-        position: absolute;
-        inset: 0;
-        align-items: center;
-        justify-content: center;
-      }
-      
-      .kelly-mic-btn .wave {
-        position: absolute;
-        width: 4px;
-        height: 20px;
-        background: rgba(255, 255, 255, 0.8);
-        border-radius: 2px;
-        animation: micWave 0.5s ease-in-out infinite;
-      }
-      
-      .kelly-mic-btn .wave:nth-child(1) { left: 14px; animation-delay: 0s; }
-      .kelly-mic-btn .wave:nth-child(2) { left: 28px; animation-delay: 0.1s; }
-      .kelly-mic-btn .wave:nth-child(3) { left: 42px; animation-delay: 0.2s; }
-      
-      /* Listening state */
-      .kelly-mic-btn.listening {
-        background: linear-gradient(135deg, #ef4444, #f97316);
-        animation: micGlow 1.5s ease-in-out infinite;
-      }
-      
-      .kelly-mic-btn.listening .mic-pulse {
-        display: block;
-      }
-      
-      .kelly-mic-btn.listening .mic-icon {
-        transform: scale(0.9);
-      }
-      
-      /* Speaking state */
-      .kelly-mic-btn.speaking {
-        background: linear-gradient(135deg, #10b981, #3b82f6);
-      }
-      
-      .kelly-mic-btn.speaking .mic-icon {
-        display: none;
-      }
-      
-      .kelly-mic-btn.speaking .mic-waves {
-        display: flex;
-      }
-      
-      /* Disabled state */
-      .kelly-mic-btn.disabled {
-        opacity: 0.5;
-        cursor: not-allowed;
-        pointer-events: none;
-      }
-      
-      /* Tooltip */
-      .kelly-mic-btn::after {
-        content: 'Talk to Kelly';
-        position: absolute;
-        bottom: 100%;
-        right: 0;
-        margin-bottom: 8px;
-        padding: 8px 12px;
-        background: rgba(0, 0, 0, 0.9);
-        color: white;
-        font-size: 0.85rem;
-        border-radius: 8px;
-        white-space: nowrap;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.2s;
-      }
-      
-      .kelly-mic-btn:hover::after {
-        opacity: 1;
-      }
-      
-      .kelly-mic-btn.listening::after {
-        content: 'Listening...';
-      }
-      
-      .kelly-mic-btn.speaking::after {
-        content: 'Kelly is speaking';
-      }
-      
-      @keyframes micPulse {
-        0% { transform: scale(1); opacity: 1; }
-        100% { transform: scale(1.4); opacity: 0; }
-      }
-      
-      @keyframes micGlow {
-        0%, 100% { box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4); }
-        50% { box-shadow: 0 4px 40px rgba(239, 68, 68, 0.7); }
-      }
-      
-      @keyframes micWave {
-        0%, 100% { height: 10px; }
-        50% { height: 30px; }
-      }
-      
-      /* Transcript UI */
+      /* Transcript Container */
       .kelly-transcript {
         position: fixed;
         bottom: 180px;
         right: 20px;
-        width: 300px;
-        max-height: 200px;
-        background: rgba(0, 0, 0, 0.85);
+        width: 320px;
+        max-height: 250px;
+        background: rgba(0, 0, 0, 0.9);
         backdrop-filter: blur(20px);
         -webkit-backdrop-filter: blur(20px);
         border-radius: 16px;
@@ -324,6 +778,7 @@ Kelly: "I hear you! But here's the thing - ${ctx.topic || 'this topic'} actually
         pointer-events: none;
         transition: all 0.3s ease;
         overflow-y: auto;
+        border: 1px solid rgba(255, 255, 255, 0.1);
       }
       
       .kelly-transcript.visible {
@@ -350,6 +805,7 @@ Kelly: "I hear you! But here's the thing - ${ctx.topic || 'this topic'} actually
         color: #3b82f6;
         margin-bottom: 4px;
         text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
       
       .kelly-transcript .message-role.user {
@@ -359,20 +815,73 @@ Kelly: "I hear you! But here's the thing - ${ctx.topic || 'this topic'} actually
       .kelly-transcript .message-text {
         font-size: 0.9rem;
         color: #e5e5e5;
-        line-height: 1.4;
+        line-height: 1.5;
+      }
+      
+      /* Talk Button States */
+      .talk-to-kelly-btn.connecting {
+        animation: pulse-connecting 1.5s ease-in-out infinite;
+      }
+      
+      .talk-to-kelly-btn.listening {
+        background: linear-gradient(135deg, #ef4444, #f97316) !important;
+        animation: pulse-listening 1.5s ease-in-out infinite;
+      }
+      
+      .talk-to-kelly-btn.speaking {
+        background: linear-gradient(135deg, #10b981, #3b82f6) !important;
+      }
+      
+      @keyframes pulse-connecting {
+        0%, 100% { opacity: 0.7; }
+        50% { opacity: 1; }
+      }
+      
+      @keyframes pulse-listening {
+        0%, 100% { box-shadow: 0 4px 20px rgba(239, 68, 68, 0.4); }
+        50% { box-shadow: 0 4px 40px rgba(239, 68, 68, 0.7); }
+      }
+      
+      /* Toast Notifications */
+      .kelly-conversation-toast {
+        position: fixed;
+        bottom: 180px;
+        right: 20px;
+        background: rgba(239, 68, 68, 0.95);
+        color: white;
+        padding: 16px 20px;
+        border-radius: 12px;
+        font-size: 0.9rem;
+        z-index: 10000;
+        max-width: 300px;
+        animation: fadeInUp 0.3s ease;
+      }
+      
+      .kelly-conversation-toast strong {
+        display: block;
+        margin-bottom: 4px;
+      }
+      
+      .kelly-conversation-toast p {
+        margin: 0;
+        opacity: 0.9;
+      }
+      
+      @keyframes fadeInUp {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
       
       /* Mobile adjustments */
       @media (max-width: 768px) {
-        .kelly-mic-btn {
-          bottom: 140px;
-          right: 16px;
-          width: 56px;
-          height: 56px;
-        }
-        
         .kelly-transcript {
-          bottom: 210px;
+          bottom: 200px;
           right: 16px;
           left: 16px;
           width: auto;
@@ -383,372 +892,6 @@ Kelly: "I hear you! But here's the thing - ${ctx.topic || 'this topic'} actually
     document.head.appendChild(styles);
   },
   
-  createTranscriptUI() {
-    if (document.getElementById('kelly-transcript')) {
-      this.transcriptContainer = document.getElementById('kelly-transcript');
-      return;
-    }
-    
-    this.transcriptContainer = document.createElement('div');
-    this.transcriptContainer.id = 'kelly-transcript';
-    this.transcriptContainer.className = 'kelly-transcript';
-    
-    document.body.appendChild(this.transcriptContainer);
-  },
-  
-  // ═══════════════════════════════════════════════════════════════════
-  // EVENT BINDING
-  // ═══════════════════════════════════════════════════════════════════
-  
-  bindEvents() {
-    if (!this.micButton) return;
-    
-    // Click to toggle conversation
-    this.micButton.addEventListener('click', () => {
-      if (this.isActive) {
-        this.endConversation();
-      } else {
-        this.startConversation();
-      }
-    });
-    
-    // Keyboard shortcut (hold space to talk)
-    document.addEventListener('keydown', (e) => {
-      if (e.code === 'Space' && e.target.tagName !== 'INPUT' && e.target.tagName !== 'TEXTAREA') {
-        if (!this.isActive && !e.repeat) {
-          e.preventDefault();
-          this.startConversation();
-        }
-      }
-    });
-    
-    document.addEventListener('keyup', (e) => {
-      if (e.code === 'Space' && this.isActive) {
-        // Optional: end on space release for push-to-talk mode
-        // this.endConversation();
-      }
-    });
-  },
-  
-  // ═══════════════════════════════════════════════════════════════════
-  // CONVERSATION FLOW
-  // ═══════════════════════════════════════════════════════════════════
-  
-  async startConversation() {
-    if (this.isActive) return;
-    
-    // Check for agent ID
-    if (!this.config.agentId) {
-      this.showNotConfiguredMessage();
-      return;
-    }
-    
-    console.log('[KellyConversation] Starting conversation...');
-    
-    this.isActive = true;
-    this.isListening = true;
-    this.conversationHistory = [];
-    
-    // Update UI
-    this.micButton.classList.add('listening');
-    this.showTranscript();
-    
-    // Kelly's initial greeting
-    this.addToTranscript('kelly', "I'm here! What's on your mind about today's lesson?");
-    
-    try {
-      // Initialize audio context
-      await this.initAudio();
-      
-      // Connect to ElevenLabs
-      await this.connectToElevenLabs();
-      
-      // Start recording
-      await this.startRecording();
-      
-    } catch (error) {
-      console.error('[KellyConversation] Error starting:', error);
-      this.showError('Could not start conversation. Please check microphone permissions.');
-      this.endConversation();
-    }
-  },
-  
-  endConversation() {
-    console.log('[KellyConversation] Ending conversation');
-    
-    this.isActive = false;
-    this.isListening = false;
-    this.isSpeaking = false;
-    
-    // Stop recording
-    this.stopRecording();
-    
-    // Close WebSocket
-    if (this.ws) {
-      this.ws.close();
-      this.ws = null;
-    }
-    
-    // Update UI
-    this.micButton.classList.remove('listening', 'speaking');
-    
-    // Hide transcript after delay
-    setTimeout(() => {
-      if (!this.isActive) {
-        this.hideTranscript();
-      }
-    }, 3000);
-  },
-  
-  // ═══════════════════════════════════════════════════════════════════
-  // AUDIO HANDLING
-  // ═══════════════════════════════════════════════════════════════════
-  
-  async initAudio() {
-    if (!this.audioContext) {
-      this.audioContext = new (window.AudioContext || window.webkitAudioContext)();
-    }
-    
-    if (this.audioContext.state === 'suspended') {
-      await this.audioContext.resume();
-    }
-  },
-  
-  async startRecording() {
-    try {
-      const stream = await navigator.mediaDevices.getUserMedia({ 
-        audio: {
-          echoCancellation: true,
-          noiseSuppression: true,
-          sampleRate: 16000
-        } 
-      });
-      
-      this.mediaRecorder = new MediaRecorder(stream, {
-        mimeType: 'audio/webm;codecs=opus'
-      });
-      
-      this.mediaRecorder.ondataavailable = (event) => {
-        if (event.data.size > 0 && this.ws && this.ws.readyState === WebSocket.OPEN) {
-          // Convert to base64 and send
-          const reader = new FileReader();
-          reader.onloadend = () => {
-            const base64Audio = reader.result.split(',')[1];
-            this.ws.send(JSON.stringify({
-              type: 'audio',
-              audio: base64Audio
-            }));
-          };
-          reader.readAsDataURL(event.data);
-        }
-      };
-      
-      // Record in 100ms chunks for low latency
-      this.mediaRecorder.start(100);
-      
-      console.log('[KellyConversation] Recording started');
-      
-    } catch (error) {
-      console.error('[KellyConversation] Microphone error:', error);
-      throw new Error('Microphone access denied');
-    }
-  },
-  
-  stopRecording() {
-    if (this.mediaRecorder && this.mediaRecorder.state !== 'inactive') {
-      this.mediaRecorder.stop();
-      this.mediaRecorder.stream.getTracks().forEach(track => track.stop());
-      this.mediaRecorder = null;
-    }
-  },
-  
-  // ═══════════════════════════════════════════════════════════════════
-  // ELEVENLABS WEBSOCKET
-  // ═══════════════════════════════════════════════════════════════════
-  
-  async connectToElevenLabs() {
-    return new Promise((resolve, reject) => {
-      const wsUrl = `wss://api.elevenlabs.io/v1/convai/conversation?agent_id=${this.config.agentId}`;
-      
-      this.ws = new WebSocket(wsUrl);
-      
-      this.ws.onopen = () => {
-        console.log('[KellyConversation] WebSocket connected');
-        
-        // Send initial configuration
-        this.ws.send(JSON.stringify({
-          type: 'conversation_initiation_client_data',
-          conversation_config_override: {
-            agent: {
-              prompt: {
-                prompt: this.getSystemPrompt()
-              },
-              first_message: "I'm here! What's on your mind about today's lesson?",
-              language: 'en'
-            },
-            tts: {
-              voice_id: this.config.voiceId
-            }
-          }
-        }));
-        
-        resolve();
-      };
-      
-      this.ws.onmessage = (event) => {
-        this.handleWSMessage(event);
-      };
-      
-      this.ws.onerror = (error) => {
-        console.error('[KellyConversation] WebSocket error:', error);
-        reject(error);
-      };
-      
-      this.ws.onclose = () => {
-        console.log('[KellyConversation] WebSocket closed');
-        if (this.isActive) {
-          this.endConversation();
-        }
-      };
-    });
-  },
-  
-  handleWSMessage(event) {
-    try {
-      const data = JSON.parse(event.data);
-      
-      switch (data.type) {
-        case 'user_transcript':
-          // User's speech transcribed
-          if (data.user_transcript_event?.user_transcript) {
-            this.addToTranscript('user', data.user_transcript_event.user_transcript);
-          }
-          break;
-          
-        case 'agent_response':
-          // Kelly's response text
-          if (data.agent_response_event?.agent_response) {
-            this.addToTranscript('kelly', data.agent_response_event.agent_response);
-          }
-          break;
-          
-        case 'audio':
-          // Kelly's voice audio
-          this.playAudio(data.audio_event?.audio_base_64);
-          this.isSpeaking = true;
-          this.micButton.classList.add('speaking');
-          this.micButton.classList.remove('listening');
-          
-          // Update Kelly's visual state
-          if (window.KellyPoseManager) {
-            KellyPoseManager.setPose('explaining');
-            KellyPoseManager.setMouthState('speaking');
-          }
-          break;
-          
-        case 'audio_done':
-          // Kelly finished speaking
-          this.isSpeaking = false;
-          this.micButton.classList.remove('speaking');
-          if (this.isActive) {
-            this.micButton.classList.add('listening');
-          }
-          
-          // Update Kelly's visual state
-          if (window.KellyPoseManager) {
-            KellyPoseManager.setPose('listening');
-            KellyPoseManager.setMouthState('idle');
-          }
-          break;
-          
-        case 'interruption':
-          // User interrupted Kelly
-          this.stopCurrentAudio();
-          break;
-          
-        case 'ping':
-          // Keep-alive
-          this.ws.send(JSON.stringify({ type: 'pong' }));
-          break;
-          
-        case 'error':
-          console.error('[KellyConversation] Server error:', data);
-          this.showError(data.message || 'Connection error');
-          break;
-      }
-    } catch (e) {
-      console.warn('[KellyConversation] Message parse error:', e);
-    }
-  },
-  
-  async playAudio(base64Audio) {
-    if (!base64Audio || !this.audioContext) return;
-    
-    try {
-      const audioData = atob(base64Audio);
-      const arrayBuffer = new ArrayBuffer(audioData.length);
-      const view = new Uint8Array(arrayBuffer);
-      
-      for (let i = 0; i < audioData.length; i++) {
-        view[i] = audioData.charCodeAt(i);
-      }
-      
-      const audioBuffer = await this.audioContext.decodeAudioData(arrayBuffer);
-      const source = this.audioContext.createBufferSource();
-      source.buffer = audioBuffer;
-      source.connect(this.audioContext.destination);
-      source.start();
-      
-      this.currentAudioSource = source;
-    } catch (e) {
-      console.warn('[KellyConversation] Audio playback error:', e);
-    }
-  },
-  
-  stopCurrentAudio() {
-    if (this.currentAudioSource) {
-      try {
-        this.currentAudioSource.stop();
-      } catch (e) {}
-      this.currentAudioSource = null;
-    }
-  },
-  
-  // ═══════════════════════════════════════════════════════════════════
-  // TRANSCRIPT UI
-  // ═══════════════════════════════════════════════════════════════════
-  
-  addToTranscript(role, text) {
-    if (!text) return;
-    
-    this.conversationHistory.push({ role, text, timestamp: Date.now() });
-    
-    if (this.transcriptContainer) {
-      const messageEl = document.createElement('div');
-      messageEl.className = 'message';
-      messageEl.innerHTML = `
-        <div class="message-role ${role}">${role === 'kelly' ? 'Kelly' : 'You'}</div>
-        <div class="message-text">${text}</div>
-      `;
-      
-      this.transcriptContainer.appendChild(messageEl);
-      this.transcriptContainer.scrollTop = this.transcriptContainer.scrollHeight;
-    }
-  },
-  
-  showTranscript() {
-    if (this.transcriptContainer) {
-      this.transcriptContainer.innerHTML = '';
-      this.transcriptContainer.classList.add('visible');
-    }
-  },
-  
-  hideTranscript() {
-    if (this.transcriptContainer) {
-      this.transcriptContainer.classList.remove('visible');
-    }
-  },
-  
   // ═══════════════════════════════════════════════════════════════════
   // ERROR HANDLING
   // ═══════════════════════════════════════════════════════════════════
@@ -757,21 +900,8 @@ Kelly: "I hear you! But here's the thing - ${ctx.topic || 'this topic'} actually
     const toast = document.createElement('div');
     toast.className = 'kelly-conversation-toast';
     toast.innerHTML = `
-      <strong>Voice Chat Not Configured</strong>
-      <p>Add ELEVENLABS_AGENT_ID to enable voice conversations with Kelly.</p>
-    `;
-    toast.style.cssText = `
-      position: fixed;
-      bottom: 180px;
-      right: 20px;
-      background: rgba(239, 68, 68, 0.95);
-      color: white;
-      padding: 16px 20px;
-      border-radius: 12px;
-      font-size: 0.9rem;
-      z-index: 10000;
-      max-width: 300px;
-      animation: fadeIn 0.3s ease;
+      <strong>Voice Chat Not Available</strong>
+      <p>Kelly's voice chat isn't configured yet. Please check back soon!</p>
     `;
     
     document.body.appendChild(toast);
@@ -780,50 +910,14 @@ Kelly: "I hear you! But here's the thing - ${ctx.topic || 'this topic'} actually
   
   showError(message) {
     const toast = document.createElement('div');
-    toast.className = 'kelly-conversation-toast error';
-    toast.textContent = message;
-    toast.style.cssText = `
-      position: fixed;
-      bottom: 180px;
-      right: 20px;
-      background: rgba(239, 68, 68, 0.95);
-      color: white;
-      padding: 12px 20px;
-      border-radius: 12px;
-      font-size: 0.9rem;
-      z-index: 10000;
-      animation: fadeIn 0.3s ease;
+    toast.className = 'kelly-conversation-toast';
+    toast.innerHTML = `
+      <strong>Oops!</strong>
+      <p>${this.escapeHtml(message)}</p>
     `;
     
     document.body.appendChild(toast);
-    setTimeout(() => toast.remove(), 4000);
-  }
-};
-
-// ═══════════════════════════════════════════════════════════════════
-// FALLBACK: Text-based conversation (when voice not available)
-// ═══════════════════════════════════════════════════════════════════
-
-const KellyTextChat = {
-  isOpen: false,
-  chatContainer: null,
-  
-  init() {
-    // Only init if voice conversation not available
-    if (window.ELEVENLABS_AGENT_ID) return;
-    
-    this.createChatUI();
-    console.log('[KellyTextChat] Text fallback initialized');
-  },
-  
-  createChatUI() {
-    // Text chat UI as fallback - simplified for now
-    // Full implementation would include input field and message display
-  },
-  
-  async sendMessage(text) {
-    // Use Claude/OpenAI for text responses when voice not available
-    // This is a fallback for when ElevenLabs is not configured
+    setTimeout(() => toast.remove(), 5000);
   }
 };
 
@@ -834,6 +928,19 @@ const KellyTextChat = {
 document.addEventListener('DOMContentLoaded', () => {
   // Initialize conversation system
   KellyConversation.init();
+  
+  // Wire up the Talk to Kelly button
+  const talkBtn = document.getElementById('talk-to-kelly-btn');
+  if (talkBtn) {
+    talkBtn.addEventListener('click', () => {
+      if (KellyConversation.isActive) {
+        KellyConversation.endConversation();
+      } else {
+        KellyConversation.startConversation();
+      }
+    });
+    console.log('[KellyConversation v2] Talk button wired up');
+  }
   
   // Update context when lesson loads
   const checkLesson = () => {
@@ -853,9 +960,5 @@ document.addEventListener('DOMContentLoaded', () => {
 // ═══════════════════════════════════════════════════════════════════
 
 window.KellyConversation = KellyConversation;
-window.KellyTextChat = KellyTextChat;
 
-console.log('[KellyConversation] ✅ Loaded - Voice conversation system ready');
-
-
-
+console.log('[KellyConversation v2] ✅ Loaded - Voice conversation system ready');

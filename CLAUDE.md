@@ -120,6 +120,22 @@ The project uses a "Unified Aquarium" architecture where `index.astro` serves as
 - Reinmaker integrations follow `docs/reinmaker/API_OVERVIEW.md`; shared manifests live under `content/manifests/reinmaker/`.
 - Billing flows must align with `docs/billing/GLOBAL_ROADMAP.md`. Web presence changes must respect `docs/web/SITE_MAP.md`.
 
+### Trust & Safety for Simulated Social Content (MANDATORY)
+- **Philosophy:** Social media hijacked social learning. Kelly provides safe, predictable social mirrors while being radically transparent.
+- **Disclosure:** ALL simulated social content MUST be marked with ✨ indicator. No exceptions.
+- **User Control:** Master toggle in Settings to disable simulated content. Learning experience must work fully without it.
+- **Documentation:** Follow `docs/trust-safety/TRUST_AND_SAFETY_INDEX.md`, `SIMULATED_SOCIAL_CONTENT.md`, `USER_CONTROLS.md`, `TRUST_SAFETY_PRINCIPLES.md`, `DISCLOSURE_STANDARDS.md`, `SAFETY_TEAM_CHARTER.md`.
+- **Red Lines (NEVER violate):**
+  - Never claim simulated users are real people
+  - Never use simulated content to manipulate emotions
+  - Never add variable rewards or addiction mechanics
+  - Never hide disclosure indicators
+  - Never make it hard to turn off
+  - Never use simulated content to sell/upsell
+- **Review Required:** Any feature involving simulated social content requires Trust & Safety review before launch.
+- **Honesty Principle:** Never show fake metrics (viewer counts, learner counts) as real. Aspirational numbers must be clearly labeled as goals, not facts.
+- **Company Name:** Always use "Lesson of the Day PBC" (not "Curious Kelly PBC") in legal/footer contexts.
+
 ### Social media automation and community building (APPROVED)
 - **Budget:** $400/month approved for social media tools (Buffer, OpenAI API, Canva Pro, analytics).
 - **Logo:** ✨ Curious Kelly (sparkles symbol LOCKED - see `docs/social-media/LOGO_DECISION.md`).

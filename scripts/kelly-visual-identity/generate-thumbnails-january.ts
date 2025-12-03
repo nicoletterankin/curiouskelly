@@ -195,49 +195,74 @@ const LESSONS = [
 
 const OUTPUT_DIR = path.join(process.cwd(), "public", "kelly", "thumbnails", "raw");
 
-async function generateThumbnail(lesson: { id: string; slug: string; prompt_middle: string }) {
+async function generateThumbnail(lesson: { id: string; slug: string; prompt_middle: string }, retries = 3): Promise<boolean> {
   const filename = `lesson-${lesson.id}-${lesson.slug}.png`;
+  const filepath = path.join(OUTPUT_DIR, filename);
+  
+  // Skip if already exists
+  if (fs.existsSync(filepath)) {
+    console.log(`\n⏭️  Skipping ${filename} (already exists)`);
+    return true;
+  }
+  
   // Prompt construction: Anchor + Scene + Style Locks + Negative
   const fullPrompt = `${KELLY_ANCHOR}, ${lesson.prompt_middle}, ${STYLE_LOCKS}`;
   
   console.log(`\n🎨 Generating: ${filename}`);
   
-  try {
-    const output = await replicate.run(
-      "lucataco/flux-dev-lora:a22c463f11808638ad5e2ebd582e07a469031f48dd567366fb4c6fdab91d614d",
-      {
-        input: {
-          prompt: fullPrompt,
-          hf_lora: LORA_URL,
-          lora_scale: 0.95, 
-          num_outputs: 1,
-          aspect_ratio: "16:9",
-          output_format: "png",
-          guidance_scale: 3.5,
-          output_quality: 100,
-          num_inference_steps: 30,
-          extra_lora_scale: 0.8 
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    try {
+      const output = await replicate.run(
+        "lucataco/flux-dev-lora:a22c463f11808638ad5e2ebd582e07a469031f48dd567366fb4c6fdab91d614d",
+        {
+          input: {
+            prompt: fullPrompt,
+            hf_lora: LORA_URL,
+            lora_scale: 0.95, 
+            num_outputs: 1,
+            aspect_ratio: "16:9",
+            output_format: "png",
+            guidance_scale: 3.5,
+            output_quality: 100,
+            num_inference_steps: 30,
+            extra_lora_scale: 0.8 
+          }
         }
+      ) as any;
+      
+      const imageUrl = Array.isArray(output) ? output[0] : output;
+      const response = await fetch(imageUrl);
+      if (!response.ok) throw new Error(`Download failed`);
+      
+      const buffer = Buffer.from(await response.arrayBuffer());
+      
+      // Ensure directory exists
+      fs.mkdirSync(OUTPUT_DIR, { recursive: true });
+      fs.writeFileSync(filepath, buffer);
+      
+      console.log(`   ✅ Saved (attempt ${attempt})`);
+      return true;
+      
+    } catch (error: any) {
+      const msg = error.message || '';
+      
+      // Handle rate limiting
+      if (msg.includes('429') || msg.includes('rate limit') || msg.includes('throttled')) {
+        const waitTime = 15; // Wait 15 seconds on rate limit
+        console.log(`   ⏳ Rate limited, waiting ${waitTime}s... (attempt ${attempt}/${retries})`);
+        await new Promise(r => setTimeout(r, waitTime * 1000));
+        continue;
       }
-    ) as any;
-    
-    const imageUrl = Array.isArray(output) ? output[0] : output;
-    const response = await fetch(imageUrl);
-    if (!response.ok) throw new Error(`Download failed`);
-    
-    const buffer = Buffer.from(await response.arrayBuffer());
-    
-    // Ensure directory exists
-    fs.mkdirSync(OUTPUT_DIR, { recursive: true });
-    fs.writeFileSync(path.join(OUTPUT_DIR, filename), buffer);
-    
-    console.log(`   ✅ Saved`);
-    return true;
-    
-  } catch (error: any) {
-    console.log(`   ❌ Error: ${error.message}`);
-    return false;
+      
+      console.log(`   ❌ Error (attempt ${attempt}/${retries}): ${msg.substring(0, 100)}`);
+      
+      if (attempt < retries) {
+        await new Promise(r => setTimeout(r, 5000)); // Wait 5s before retry
+      }
+    }
   }
+  
+  return false;
 }
 
 async function main() {
@@ -249,11 +274,20 @@ async function main() {
   
   let success = 0;
   
-  // Process sequentially to monitor progress
-  for (const lesson of LESSONS) {
+  // Process sequentially with rate limit awareness
+  // With low credit: 6 requests/min = 10s delay minimum
+  const DELAY_MS = 12000; // 12 seconds between requests (safe for low credit accounts)
+  
+  for (let i = 0; i < LESSONS.length; i++) {
+    const lesson = LESSONS[i];
+    console.log(`\n[${i + 1}/${LESSONS.length}]`);
     if (await generateThumbnail(lesson)) success++;
-    // Small delay to be safe
-    await new Promise(r => setTimeout(r, 1500));
+    
+    // Don't delay after last item
+    if (i < LESSONS.length - 1) {
+      console.log(`   ⏱️  Waiting ${DELAY_MS/1000}s before next...`);
+      await new Promise(r => setTimeout(r, DELAY_MS));
+    }
   }
   
   console.log("\n" + "=".repeat(60));

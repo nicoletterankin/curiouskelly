@@ -1,12 +1,26 @@
 /**
- * Chat Overlay v2 - TikTok-Style Social Learning
+ * Chat Overlay v3 - TikTok-Style Social Learning with Trust & Safety Disclosure
  * 
- * The "dirty secret": Curated comments that trigger social learning psychology
- * - Social proof ("I finally get it!")
- * - Engagement hooks ("Wait, so that means...")
- * - Kelly appreciation ("Best teacher ever")
- * - Learning moments ("Mind = blown")
- * - Safe, simulated social environment
+ * TRUST & SAFETY DISCLOSURE:
+ * All comments shown in this overlay are AI-generated simulated social content.
+ * They are designed to provide the psychological benefits of social learning
+ * (belonging, normalized struggle, shared experience) while being fully transparent.
+ * 
+ * Every comment is marked with ✨ to indicate it's simulated.
+ * Users can disable this feature in Settings.
+ * 
+ * Why we simulate social learning:
+ * - Humans are inherently social learners
+ * - Social media hijacked this need with harmful, addictive patterns
+ * - Kelly provides the social mirror learners need—safely and predictably
+ * 
+ * How we're different from social media:
+ * - No variable rewards (predictable, not addictive)
+ * - No engagement optimization (learning-focused)
+ * - Full disclosure (every comment marked ✨)
+ * - Full user control (can be disabled)
+ * 
+ * See: /trust for full Trust & Safety documentation
  */
 
 // ═══════════════════════════════════════════════════════════════════
@@ -188,7 +202,10 @@ class ChatOverlay {
   }
   
   init() {
-    // Create overlay container with TikTok-style design
+    // Check user preference for simulated content
+    this.simulatedEnabled = this.getSimulatedContentPref();
+    
+    // Create overlay container with TikTok-style design + Trust & Safety disclosure
     this.container = document.createElement('div');
     this.container.id = 'chat-overlay';
     this.container.innerHTML = `
@@ -197,7 +214,7 @@ class ChatOverlay {
           position: fixed;
           bottom: 220px;
           left: 16px;
-          width: 260px;
+          width: 280px;
           max-height: 200px;
           pointer-events: none;
           z-index: 500;
@@ -207,9 +224,13 @@ class ChatOverlay {
           gap: 6px;
         }
         
+        #chat-overlay.simulated-hidden {
+          display: none !important;
+        }
+        
         @media (max-width: 768px) {
           #chat-overlay {
-            width: 220px;
+            width: 240px;
             bottom: 260px;
             left: 12px;
             max-height: 160px;
@@ -218,12 +239,12 @@ class ChatOverlay {
         
         @media (max-width: 375px) {
           #chat-overlay {
-            width: 180px;
+            width: 200px;
             max-height: 140px;
           }
         }
         
-        /* TikTok-style comment bubble */
+        /* TikTok-style comment bubble with ✨ disclosure */
         .chat-comment {
           display: flex;
           align-items: flex-start;
@@ -236,6 +257,7 @@ class ChatOverlay {
           animation: commentSlideIn 0.25s cubic-bezier(0.4, 0, 0.2, 1);
           max-width: fit-content;
           transform-origin: left center;
+          position: relative;
         }
         
         .chat-comment.fading {
@@ -274,6 +296,15 @@ class ChatOverlay {
           opacity: 0.9;
         }
         
+        /* ✨ TRUST & SAFETY: Simulated content indicator */
+        .chat-comment .simulated-indicator {
+          font-size: 10px;
+          opacity: 0.7;
+          margin-left: 2px;
+          cursor: help;
+          pointer-events: auto;
+        }
+        
         .chat-comment .verified {
           font-size: 10px;
         }
@@ -303,7 +334,7 @@ class ChatOverlay {
           }
         }
         
-        /* Live stats badge (TikTok style) */
+        /* Live stats badge - UPDATED: Shows "Simulated" disclosure */
         #live-badge {
           position: fixed;
           top: calc(env(safe-area-inset-top, 44px) + 60px);
@@ -317,6 +348,12 @@ class ChatOverlay {
           -webkit-backdrop-filter: blur(8px);
           border-radius: 20px;
           z-index: 500;
+          pointer-events: auto;
+          cursor: pointer;
+        }
+        
+        #live-badge.simulated-hidden {
+          display: none !important;
         }
         
         @media (max-width: 768px) {
@@ -330,7 +367,7 @@ class ChatOverlay {
         .live-dot {
           width: 8px;
           height: 8px;
-          background: #ef4444;
+          background: #f59e0b; /* Amber for "simulated" vs red for "live" */
           border-radius: 50%;
           animation: livePulse 1.5s ease-in-out infinite;
         }
@@ -351,6 +388,83 @@ class ChatOverlay {
         .live-viewers {
           font-size: 12px;
           color: rgba(255, 255, 255, 0.8);
+        }
+        
+        .simulated-label {
+          font-size: 9px;
+          color: rgba(255, 255, 255, 0.6);
+          margin-left: 4px;
+        }
+        
+        /* Disclosure tooltip */
+        #simulated-tooltip {
+          position: fixed;
+          top: calc(env(safe-area-inset-top, 44px) + 100px);
+          left: 16px;
+          background: rgba(0, 0, 0, 0.9);
+          backdrop-filter: blur(12px);
+          -webkit-backdrop-filter: blur(12px);
+          border: 1px solid rgba(255, 255, 255, 0.1);
+          border-radius: 12px;
+          padding: 16px;
+          width: 280px;
+          z-index: 600;
+          display: none;
+          pointer-events: auto;
+        }
+        
+        #simulated-tooltip.show {
+          display: block;
+          animation: tooltipFadeIn 0.2s ease-out;
+        }
+        
+        @keyframes tooltipFadeIn {
+          from { opacity: 0; transform: translateY(-8px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+        
+        #simulated-tooltip h4 {
+          color: #f59e0b;
+          font-size: 14px;
+          font-weight: 600;
+          margin: 0 0 8px 0;
+        }
+        
+        #simulated-tooltip p {
+          color: rgba(255, 255, 255, 0.85);
+          font-size: 13px;
+          line-height: 1.5;
+          margin: 0 0 12px 0;
+        }
+        
+        #simulated-tooltip .tooltip-actions {
+          display: flex;
+          gap: 8px;
+          flex-wrap: wrap;
+        }
+        
+        #simulated-tooltip .tooltip-btn {
+          padding: 8px 12px;
+          border-radius: 8px;
+          font-size: 12px;
+          font-weight: 500;
+          cursor: pointer;
+          border: none;
+          transition: all 0.2s;
+        }
+        
+        #simulated-tooltip .tooltip-btn.primary {
+          background: #3b82f6;
+          color: white;
+        }
+        
+        #simulated-tooltip .tooltip-btn.secondary {
+          background: rgba(255, 255, 255, 0.1);
+          color: rgba(255, 255, 255, 0.9);
+        }
+        
+        #simulated-tooltip .tooltip-btn:hover {
+          transform: scale(1.02);
         }
         
         /* Engagement counter (bottom right, like TikTok) */
@@ -401,13 +515,92 @@ class ChatOverlay {
       </style>
     `;
     
-    // Create live badge
+    // Create live badge with simulated disclosure
     this.liveBadge = document.createElement('div');
     this.liveBadge.id = 'live-badge';
     this.updateLiveBadge();
     
+    // Create disclosure tooltip
+    this.tooltip = document.createElement('div');
+    this.tooltip.id = 'simulated-tooltip';
+    this.tooltip.innerHTML = `
+      <h4>✨ Simulated Learning Community</h4>
+      <p>These comments are AI-generated to create a supportive social learning experience. They're designed to make you feel less alone while learning—without the harmful effects of social media.</p>
+      <p style="font-size: 11px; color: rgba(255,255,255,0.6); margin-bottom: 12px;">Every comment is marked with ✨</p>
+      <div class="tooltip-actions">
+        <button class="tooltip-btn primary" onclick="window.chatOverlay?.hideTooltip()">Got it</button>
+        <button class="tooltip-btn secondary" onclick="window.chatOverlay?.toggleSimulated()">Turn off</button>
+        <a href="/trust" class="tooltip-btn secondary" style="text-decoration: none;">Learn more</a>
+      </div>
+    `;
+    
     document.body.appendChild(this.container);
     document.body.appendChild(this.liveBadge);
+    document.body.appendChild(this.tooltip);
+    
+    // Click handler for disclosure
+    this.liveBadge.addEventListener('click', () => this.showTooltip());
+    
+    // Close tooltip on outside click
+    document.addEventListener('click', (e) => {
+      if (!this.tooltip.contains(e.target) && !this.liveBadge.contains(e.target)) {
+        this.hideTooltip();
+      }
+    });
+    
+    // Apply user preference
+    if (!this.simulatedEnabled) {
+      this.container.classList.add('simulated-hidden');
+      this.liveBadge.classList.add('simulated-hidden');
+    }
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // TRUST & SAFETY: User Preference Management
+  // ═══════════════════════════════════════════════════════════════════
+  
+  getSimulatedContentPref() {
+    try {
+      const prefs = JSON.parse(localStorage.getItem('kellySimulatedContentPrefs') || '{}');
+      return prefs.enabled !== false; // Default to true
+    } catch {
+      return true;
+    }
+  }
+  
+  setSimulatedContentPref(enabled) {
+    try {
+      const prefs = JSON.parse(localStorage.getItem('kellySimulatedContentPrefs') || '{}');
+      prefs.enabled = enabled;
+      localStorage.setItem('kellySimulatedContentPrefs', JSON.stringify(prefs));
+    } catch (e) {
+      console.warn('[ChatOverlay] Could not save preference:', e);
+    }
+  }
+  
+  toggleSimulated() {
+    this.simulatedEnabled = !this.simulatedEnabled;
+    this.setSimulatedContentPref(this.simulatedEnabled);
+    
+    if (this.simulatedEnabled) {
+      this.container.classList.remove('simulated-hidden');
+      this.liveBadge.classList.remove('simulated-hidden');
+      console.log('[ChatOverlay] Simulated content enabled');
+    } else {
+      this.container.classList.add('simulated-hidden');
+      this.liveBadge.classList.add('simulated-hidden');
+      console.log('[ChatOverlay] Simulated content disabled by user');
+    }
+    
+    this.hideTooltip();
+  }
+  
+  showTooltip() {
+    this.tooltip.classList.add('show');
+  }
+  
+  hideTooltip() {
+    this.tooltip.classList.remove('show');
   }
   
   start() {
@@ -596,16 +789,21 @@ class ChatOverlay {
   }
   
   addComment() {
+    if (!this.simulatedEnabled) return; // Respect user preference
+    
     const comment = this.getRandomComment();
     this.commentsCount++;
     
     const el = document.createElement('div');
     el.className = 'chat-comment';
+    el.setAttribute('data-simulated', 'true');
+    el.setAttribute('aria-label', `Simulated learner ${comment.user} says: ${comment.text}`);
     el.innerHTML = `
       <div class="avatar">${comment.flag}</div>
       <div class="content">
         <div class="header">
           <span class="username">${comment.user}</span>
+          <span class="simulated-indicator" title="Simulated learner - tap badge above to learn more">✨</span>
           ${comment.verified ? '<span class="verified">✓</span>' : ''}
         </div>
         <span class="text">${comment.text}</span>
@@ -638,15 +836,21 @@ class ChatOverlay {
   
   // Add a specific comment (for phase-triggered comments)
   addSpecificComment(text, options = {}) {
+    if (!this.simulatedEnabled) return; // Respect user preference
+    
     const person = GLOBAL_NAMES[Math.floor(Math.random() * GLOBAL_NAMES.length)];
+    const userName = options.user || person.name;
     
     const el = document.createElement('div');
     el.className = 'chat-comment';
+    el.setAttribute('data-simulated', 'true');
+    el.setAttribute('aria-label', `Simulated learner ${userName} says: ${text}`);
     el.innerHTML = `
       <div class="avatar">${options.flag || person.flag}</div>
       <div class="content">
         <div class="header">
-          <span class="username">${options.user || person.name}</span>
+          <span class="username">${userName}</span>
+          <span class="simulated-indicator" title="Simulated learner - tap badge above to learn more">✨</span>
         </div>
         <span class="text">${text}</span>
       </div>
@@ -661,18 +865,14 @@ class ChatOverlay {
   }
   
   updateLiveBadge() {
-    // Simulate realistic viewer fluctuations
-    this.viewerCount += Math.floor(Math.random() * 1000) - 400;
-    this.viewerCount = Math.max(750000, this.viewerCount);
-    
-    const viewers = this.viewerCount > 1000000 
-      ? (this.viewerCount / 1000000).toFixed(1) + 'M'
-      : (this.viewerCount / 1000).toFixed(0) + 'K';
+    // TRUST & SAFETY: Updated to show "Simulated" not "LIVE"
+    // We don't show fake viewer counts - that would be deceptive
+    // Instead, we show this is a simulated social experience
     
     this.liveBadge.innerHTML = `
       <div class="live-dot"></div>
-      <span class="live-text">LIVE</span>
-      <span class="live-viewers">${viewers} learning</span>
+      <span class="live-text">✨ Social</span>
+      <span class="live-viewers">Tap to learn more</span>
     `;
   }
   
