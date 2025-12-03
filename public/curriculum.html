@@ -977,108 +977,86 @@
             }
         }
 
-        // Thumbnail generator instance
-        let thumbnailGenerator = null;
+        // ============================================
+        // THUMBNAIL SYSTEM - Using manifest.json
+        // ============================================
         
-        // Initialize thumbnail generator
-        function initThumbnailGenerator() {
-            if (!thumbnailGenerator && typeof KellyThumbnailGenerator !== 'undefined') {
-                thumbnailGenerator = new KellyThumbnailGenerator(null, {
-                    animated: true,
-                    showKelly: true,
-                    showText: true,
-                    clickable: false // We handle clicks ourselves
-                });
+        let thumbnailManifest = null;
+        const thumbnailCache = {};
+        
+        // Load thumbnail manifest
+        async function loadThumbnailManifest() {
+            if (thumbnailManifest) return thumbnailManifest;
+            
+            try {
+                const response = await fetch('/kelly/thumbnails/manifest.json');
+                thumbnailManifest = await response.json();
+                console.log(`📸 Loaded ${Object.keys(thumbnailManifest.thumbnails).length} Kelly thumbnails`);
+                return thumbnailManifest;
+            } catch (err) {
+                console.warn('⚠️ Could not load thumbnail manifest:', err.message);
+                thumbnailManifest = { basePath: '/kelly/thumbnails/raw/', thumbnails: {} };
+                return thumbnailManifest;
             }
         }
-
-        // Thumbnail availability cache (populated dynamically)
-        let availableThumbnails = {};
-        let thumbnailsLoaded = false;
         
-        // Load available thumbnails by checking which files exist
-        async function loadAvailableThumbnails() {
-            if (thumbnailsLoaded) return;
-            
-            // Check for each lesson if thumbnail exists
-            for (let day = 1; day <= 365; day++) {
-                const lesson = allLessons.find(l => l.day_number === day);
-                if (!lesson) continue;
-                
-                const lessonId = lesson.topic.toLowerCase()
-                    .replace(/[^a-z0-9]+/g, '-')
-                    .replace(/^-|-$/g, '');
-                const dayStr = String(day).padStart(3, '0');
-                const path = `/kelly/thumbnails/raw/lesson-${dayStr}-${lessonId}.png`;
-                
-                // We'll assume thumbnails exist for days we've generated
-                // This mapping will be updated as images are generated
-                availableThumbnails[day] = path;
-            }
-            
-            thumbnailsLoaded = true;
-            console.log(`📸 Loaded ${Object.keys(availableThumbnails).length} thumbnail mappings`);
-        }
-        
-        // Get thumbnail path for a lesson
-        // Uses thumbnail_slug from database (populated from actual filenames)
+        // Get thumbnail path from manifest
         function getThumbnailPath(lesson) {
             const day = lesson.day_number;
-            const dayStr = String(day).padStart(3, '0');
             
-            // Use the canonical thumbnail_slug from the database
-            if (lesson.thumbnail_slug) {
-                return `/kelly/thumbnails/raw/lesson-${dayStr}-${lesson.thumbnail_slug}.png`;
+            // Check manifest first
+            if (thumbnailManifest?.thumbnails?.[day]) {
+                return thumbnailManifest.basePath + thumbnailManifest.thumbnails[day];
             }
             
-            // Fallback: try per-lesson folder structure
-            return `/kelly/lessons/${dayStr}/lesson-${day}-hero.png`;
-        }
-        
-        // Check if lesson has a real Kelly thumbnail (tries to load image)
-        const thumbnailCache = {};
-        function checkThumbnailExists(path, callback) {
-            if (thumbnailCache[path] !== undefined) {
-                callback(thumbnailCache[path]);
-                return;
+            // Fallback to webp production thumbnails for January
+            if (day <= 31) {
+                return `/assets/kelly/production/thumbnails/january/lesson-${day}.webp`;
             }
             
-            const img = new Image();
-            img.onload = () => {
-                thumbnailCache[path] = true;
-                callback(true);
-            };
-            img.onerror = () => {
-                thumbnailCache[path] = false;
-                callback(false);
-            };
-            img.src = path;
+            return null;
         }
         
-        // Synchronous check using cache
+        // Check if thumbnail exists (synchronous from cache)
         function hasRealThumbnail(dayNumber) {
-            const lesson = allLessons.find(l => l.day_number === dayNumber);
-            if (!lesson) return false;
-            const path = getThumbnailPath(lesson);
-            return thumbnailCache[path] === true;
+            // Check manifest
+            if (thumbnailManifest?.thumbnails?.[dayNumber]) {
+                return true;
+            }
+            // January has webp versions
+            if (dayNumber <= 31) {
+                return true;
+            }
+            return thumbnailCache[dayNumber] === true;
         }
         
-        // Get thumbnail URL if available
+        // Get thumbnail URL
         function getRealThumbnailUrl(dayNumber) {
             const lesson = allLessons.find(l => l.day_number === dayNumber);
             if (!lesson) return null;
             return getThumbnailPath(lesson);
         }
         
-        // Preload thumbnails for visible lessons
+        // Preload thumbnails (now just loads manifest)
         async function preloadThumbnails(lessons) {
-            const promises = lessons.map(lesson => {
-                return new Promise(resolve => {
-                    const path = getThumbnailPath(lesson);
-                    checkThumbnailExists(path, resolve);
-                });
+            await loadThumbnailManifest();
+            
+            // Preload first 20 images for fast initial render
+            const toPreload = lessons.slice(0, 20);
+            toPreload.forEach(lesson => {
+                const path = getThumbnailPath(lesson);
+                if (path && !thumbnailCache[lesson.day_number]) {
+                    const img = new Image();
+                    img.onload = () => { thumbnailCache[lesson.day_number] = true; };
+                    img.onerror = () => { thumbnailCache[lesson.day_number] = false; };
+                    img.src = path;
+                }
             });
-            await Promise.all(promises);
+        }
+        
+        // Initialize (replaced old init)
+        function initThumbnailGenerator() {
+            // No-op - using manifest instead
         }
         
         // Render single lesson card - COMPACT VIEW (thumbnail only)
