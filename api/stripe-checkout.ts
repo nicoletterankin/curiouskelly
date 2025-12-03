@@ -42,21 +42,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
-  // Dynamic import for ESM compatibility
-  let Stripe: typeof import('stripe').default;
-  try {
-    const stripeModule = await import('stripe');
-    Stripe = stripeModule.default;
-  } catch (error) {
-    console.error('Failed to load Stripe module:', error);
-    return res.status(503).json({ 
-      error: 'stripe_module_unavailable',
-      message: 'Failed to load Stripe module'
-    });
-  }
-
+  // Use require for CommonJS compatibility with Vercel
+  // eslint-disable-next-line @typescript-eslint/no-require-imports
+  const Stripe = require('stripe');
   const stripe = new Stripe(stripeKey, {
-    apiVersion: '2024-11-20.acacia' as any
+    apiVersion: '2024-11-20.acacia'
   });
 
   const body = req.body as CheckoutRequest;
@@ -95,7 +85,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   };
 
   try {
-    let sessionConfig: import('stripe').Stripe.Checkout.SessionCreateParams;
+    let sessionConfig: any; // Stripe.Checkout.SessionCreateParams
 
     if (isGiftPlan) {
       const giftPriceId = priceIds.gift;
