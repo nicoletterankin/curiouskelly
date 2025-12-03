@@ -37,12 +37,15 @@ class KellyMagic {
     };
     
     // Kelly's eye and hand positions (percentages of image)
-    // Based on her walking, looking over shoulder pose with director's chair behind
-    // She's facing away but looking back at camera with a smile
+    // Based on her walking, looking back over shoulder pose
+    // Calibrated for the hero image where she's mid-stride, glancing back
     this.KELLY_POINTS = {
-      eye: { x: 0.55, y: 0.16 },      // Her visible eye (looking back over shoulder)
-      hand: { x: 0.62, y: 0.48 }       // Snap position (her right hand near hip)
+      eye: { x: 0.48, y: 0.12 },      // Her visible eye (looking back over right shoulder)
+      hand: { x: 0.55, y: 0.52 }       // Snap position (her right hand/hip area)
     };
+    
+    // Enable calibration mode with ?calibrate in URL
+    this.calibrationMode = window.location.search.includes('calibrate');
     
     this.init();
   }
@@ -69,6 +72,85 @@ class KellyMagic {
     this.createMagicElements();
     this.createCanvas();
     this.setupIntersectionObserver();
+    this.setupHoverInteractions();
+    
+    // Calibration mode for fine-tuning positions
+    if (this.calibrationMode) {
+      this.setupCalibration();
+    }
+  }
+  
+  setupCalibration() {
+    console.log('🎯 Calibration Mode Active - Click on Kelly to log position');
+    
+    this.heroImage.style.cursor = 'crosshair';
+    this.heroImage.addEventListener('click', (e) => {
+      const rect = this.heroImage.getBoundingClientRect();
+      const x = ((e.clientX - rect.left) / rect.width).toFixed(2);
+      const y = ((e.clientY - rect.top) / rect.height).toFixed(2);
+      
+      console.log(`📍 Position: { x: ${x}, y: ${y} }`);
+      
+      // Show visual marker
+      const marker = document.createElement('div');
+      marker.style.cssText = `
+        position: fixed;
+        left: ${e.clientX}px;
+        top: ${e.clientY}px;
+        width: 20px;
+        height: 20px;
+        background: red;
+        border-radius: 50%;
+        transform: translate(-50%, -50%);
+        pointer-events: none;
+        z-index: 10000;
+        animation: pulse 1s ease-out forwards;
+      `;
+      document.body.appendChild(marker);
+      setTimeout(() => marker.remove(), 1000);
+    });
+  }
+  
+  setupHoverInteractions() {
+    // Sparkle trail on hover
+    let hoverSparkleInterval = null;
+    
+    this.heroImage.addEventListener('mouseenter', () => {
+      this.heroImage.style.filter = 'brightness(1.1) contrast(1.1)';
+      
+      // Create subtle sparkles while hovering
+      hoverSparkleInterval = setInterval(() => {
+        if (Math.random() > 0.7) {
+          const rect = this.heroImage.getBoundingClientRect();
+          this.sparkles.push({
+            x: rect.left + Math.random() * rect.width,
+            y: rect.top + Math.random() * rect.height * 0.4, // Upper portion
+            size: 2 + Math.random() * 3,
+            life: 1,
+            decay: 0.03,
+            color: this.getSparkleColor(),
+            vx: (Math.random() - 0.5) * 1,
+            vy: -Math.random() * 1
+          });
+          this.startParticleAnimation();
+        }
+      }, 100);
+    });
+    
+    this.heroImage.addEventListener('mouseleave', () => {
+      this.heroImage.style.filter = 'brightness(1.05) contrast(1.1)';
+      if (hoverSparkleInterval) {
+        clearInterval(hoverSparkleInterval);
+        hoverSparkleInterval = null;
+      }
+    });
+    
+    // Click to trigger magic (in addition to auto-play)
+    this.heroImage.addEventListener('click', () => {
+      if (!this.calibrationMode) {
+        this.replay();
+      }
+    });
   }
   
   createMagicElements() {
@@ -444,10 +526,8 @@ class KellyMagic {
       }, i * 20);
     }
     
-    // Scroll to lesson section smoothly
-    setTimeout(() => {
-      this.todayLesson.scrollIntoView({ behavior: 'smooth', block: 'center' });
-    }, 300);
+    // Don't auto-scroll - let the user discover naturally
+    // The glow effect draws attention without being pushy
   }
   
   createAttentionBadge() {
