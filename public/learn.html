@@ -432,16 +432,16 @@
         color: var(--tiktok-blue);
       }
 
-      /* Mode button - disabled until Unity loads */
+      /* Mode button - always enabled, Unity loads on demand */
       #btn-mode {
-        opacity: 0.3;
-        pointer-events: none;
+        opacity: 1;
+        pointer-events: auto;
         transition: opacity 0.3s ease;
       }
 
-      #btn-mode.enabled {
-        opacity: 1;
-        pointer-events: auto;
+      #btn-mode.loading {
+        opacity: 0.6;
+        animation: pulse 1s infinite;
       }
 
       /* Sound button at bottom (like TikTok's spinning disc) */
@@ -2775,10 +2775,10 @@
       </div>
 
       <!-- TOP BAR - V2 Minimal -->
-      <!-- LIVE indicator - centered at very top -->
-      <div class="live-badge-v2" id="live-badge-v2">
-        <span class="live-dot"></span>
-        <span class="live-text">LIVE</span>
+      <!-- Social Learning indicator - centered at very top (Trust & Safety compliant) -->
+      <div class="live-badge-v2" id="live-badge-v2" title="Tap to learn about simulated social content" onclick="chatOverlay?.showTooltip?.()">
+        <span class="live-dot" style="background: #f59e0b;"></span>
+        <span class="live-text">✨ Social</span>
       </div>
 
       <!-- PHASE NAVIGATION - Clickable phase dots -->
@@ -2894,6 +2894,16 @@
             <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
           </svg>
         </a>
+        
+        <button class="rail-btn" id="btn-commons" aria-label="Learner Commons">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+            <circle cx="9" cy="7" r="4"></circle>
+            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+          </svg>
+          <span class="rail-badge" id="badge-commons">🗳️</span>
+        </button>
         
         <div class="rail-flex"></div>
         
@@ -3418,10 +3428,10 @@
           }
         });
 
-        // Load Unity 3D (async, non-blocking)
-        loadUnity3D();
+        // Unity 3D loads on-demand when user clicks 3D mode
+        // loadUnity3D(); // Disabled - now loads on demand via setMode('3D')
 
-        console.log('[Learn] ✅ Kelly Avatar initialized (2D active, 3D loading...)');
+        console.log('[Learn] ✅ Kelly Avatar initialized (2D active, 3D available on demand)');
       }
 
       async function loadUnity3D() {
@@ -5272,7 +5282,7 @@
         // MODE
         // ═══════════════════════════════════════════════════════════════
         
-        setMode(mode) {
+        async setMode(mode) {
           this.currentMode = mode;
           
           document.querySelectorAll('#expand-mode .expand-option').forEach(opt => {
@@ -5280,19 +5290,43 @@
           });
           
           const badge = document.getElementById('badge-mode');
-          if (badge) badge.textContent = mode;
+          const modeBtn = document.getElementById('btn-mode');
           
           // Toggle containers
           const container2D = document.getElementById('kelly-2d-container');
           const container3D = document.getElementById('kelly-3d-container');
           
           if (mode === '3D') {
-            if (container2D) container2D.style.display = 'none';
-            if (container3D) container3D.style.display = 'block';
-            if (typeof initUnity === 'function') initUnity();
+            // Show loading state
+            if (badge) badge.textContent = '⏳';
+            if (modeBtn) modeBtn.classList.add('loading');
+            
+            try {
+              // Load Unity 3D on demand
+              console.log('[Mode] Loading 3D Kelly...');
+              if (window.unityKellyLoader && !window.unityInstance) {
+                window.unityInstance = await window.unityKellyLoader.load();
+                console.log('[Mode] ✅ 3D Kelly loaded!');
+              }
+              
+              // Switch to 3D view
+              if (container2D) container2D.style.display = 'none';
+              if (container3D) container3D.style.display = 'block';
+              if (badge) badge.textContent = '3D';
+              
+            } catch (err) {
+              console.error('[Mode] 3D load failed:', err);
+              // Fallback to 2D
+              if (badge) badge.textContent = '2D';
+              this.currentMode = '2D';
+              alert('3D mode failed to load. Staying in 2D mode.');
+            } finally {
+              if (modeBtn) modeBtn.classList.remove('loading');
+            }
           } else {
             if (container2D) container2D.style.display = 'block';
             if (container3D) container3D.style.display = 'none';
+            if (badge) badge.textContent = '2D';
           }
           
           setTimeout(() => this.closeAll(), 250);
@@ -6035,6 +6069,237 @@
       </div>
     </div>
 
+    <!-- COMMONS OVERLAY -->
+    <div class="commons-overlay" id="commons-overlay">
+      <div class="commons-container">
+        <div class="commons-header">
+          <h2>🏛️ Learner Commons</h2>
+          <button class="commons-close" id="commons-close">✕</button>
+        </div>
+        
+        <div class="commons-lesson-info" id="commons-lesson-info">
+          <span class="commons-lesson-badge">Day <span id="commons-day">1</span></span>
+          <span class="commons-lesson-topic" id="commons-topic">Loading...</span>
+        </div>
+        
+        <div class="commons-actions">
+          <button class="commons-action-btn" id="commons-suggest">
+            <span class="commons-action-icon">💡</span>
+            <span class="commons-action-text">Suggest Improvement</span>
+          </button>
+          <button class="commons-action-btn" id="commons-vote">
+            <span class="commons-action-icon">🗳️</span>
+            <span class="commons-action-text">Vote on Proposals</span>
+          </button>
+          <button class="commons-action-btn" id="commons-discuss">
+            <span class="commons-action-icon">💬</span>
+            <span class="commons-action-text">Join Discussion</span>
+          </button>
+          <button class="commons-action-btn" id="commons-notes">
+            <span class="commons-action-icon">📝</span>
+            <span class="commons-action-text">Add Knowledge</span>
+          </button>
+        </div>
+        
+        <div class="commons-proposals" id="commons-proposals">
+          <h3>Open Proposals</h3>
+          <div class="commons-proposals-list" id="commons-proposals-list">
+            <div class="commons-loading">Loading proposals...</div>
+          </div>
+        </div>
+        
+        <a href="/commons.html" class="commons-full-link">
+          View Full Learner Commons →
+        </a>
+      </div>
+    </div>
+
+    <style>
+      /* Commons Overlay Styles */
+      .commons-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s, visibility 0.3s;
+      }
+      .commons-overlay.open { opacity: 1; visibility: visible; }
+      
+      .commons-container {
+        flex: 1;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        overflow-y: auto;
+        width: 100%;
+      }
+      
+      .commons-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      
+      .commons-header h2 {
+        font-family: 'Fraunces', Georgia, serif;
+        font-size: 1.5rem;
+        font-weight: 500;
+        color: #fff;
+      }
+      
+      .commons-close {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: #fff;
+        font-size: 1.25rem;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .commons-close:hover { background: rgba(255, 255, 255, 0.2); }
+      
+      .commons-lesson-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px;
+        background: rgba(59, 130, 246, 0.15);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 12px;
+        margin-bottom: 24px;
+      }
+      
+      .commons-lesson-badge {
+        background: #2563eb;
+        color: #fff;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+      
+      .commons-lesson-topic {
+        font-size: 1rem;
+        color: #fff;
+        font-weight: 500;
+      }
+      
+      .commons-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 24px;
+      }
+      
+      .commons-action-btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        color: #fff;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: left;
+      }
+      .commons-action-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(59, 130, 246, 0.5);
+        transform: translateY(-2px);
+      }
+      
+      .commons-action-icon { font-size: 1.5rem; }
+      .commons-action-text { font-size: 0.9rem; font-weight: 500; }
+      
+      .commons-proposals h3 {
+        font-size: 1rem;
+        color: #a1a1aa;
+        margin-bottom: 12px;
+        font-weight: 500;
+      }
+      
+      .commons-proposals-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .commons-proposal-card {
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .commons-proposal-card:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(59, 130, 246, 0.3);
+      }
+      
+      .commons-proposal-title {
+        font-size: 0.95rem;
+        color: #fff;
+        margin-bottom: 6px;
+        font-weight: 500;
+      }
+      
+      .commons-proposal-meta {
+        display: flex;
+        gap: 12px;
+        font-size: 0.8rem;
+        color: #71717a;
+      }
+      
+      .commons-proposal-score {
+        color: #22c55e;
+        font-weight: 600;
+      }
+      
+      .commons-loading {
+        text-align: center;
+        padding: 20px;
+        color: #71717a;
+      }
+      
+      .commons-empty {
+        text-align: center;
+        padding: 24px;
+        color: #71717a;
+      }
+      
+      .commons-full-link {
+        display: block;
+        text-align: center;
+        padding: 16px;
+        margin-top: 20px;
+        color: #3b82f6;
+        text-decoration: none;
+        font-weight: 600;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 12px;
+        transition: all 0.2s;
+      }
+      .commons-full-link:hover {
+        background: rgba(59, 130, 246, 0.1);
+      }
+      
+      @media (max-width: 480px) {
+        .commons-actions {
+          grid-template-columns: 1fr;
+        }
+      }
+    </style>
+
     <script>
       // ═══════════════════════════════════════════════════════════════════
       // TIME DISPLAY
@@ -6278,6 +6543,142 @@
 
       // Update bottom date on initial load
       updateBottomDate(getCurrentDayFromURL());
+
+      // ═══════════════════════════════════════════════════════════════════
+      // LEARNER COMMONS
+      // ═══════════════════════════════════════════════════════════════════
+      const LearnerCommons = {
+        isOpen: false,
+        currentDay: null,
+        currentLesson: null,
+        
+        init() {
+          this.bind();
+        },
+        
+        bind() {
+          document.getElementById('btn-commons')?.addEventListener('click', () => this.open());
+          document.getElementById('commons-close')?.addEventListener('click', () => this.close());
+          document.getElementById('commons-overlay')?.addEventListener('click', e => {
+            if (e.target.id === 'commons-overlay') this.close();
+          });
+          
+          // Action buttons
+          document.getElementById('commons-suggest')?.addEventListener('click', () => {
+            this.close();
+            window.location.href = `/commons.html?action=propose&day=${this.currentDay}`;
+          });
+          document.getElementById('commons-vote')?.addEventListener('click', () => {
+            this.close();
+            window.location.href = `/commons.html?tab=proposals&day=${this.currentDay}`;
+          });
+          document.getElementById('commons-discuss')?.addEventListener('click', () => {
+            this.close();
+            window.location.href = `/commons.html?tab=discussions&day=${this.currentDay}`;
+          });
+          document.getElementById('commons-notes')?.addEventListener('click', () => {
+            this.close();
+            window.location.href = `/commons.html?tab=knowledge&day=${this.currentDay}`;
+          });
+          
+          document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && this.isOpen) this.close();
+          });
+        },
+        
+        async open() {
+          this.isOpen = true;
+          this.currentDay = getCurrentDayFromURL();
+          
+          // Update UI with current lesson
+          document.getElementById('commons-day').textContent = this.currentDay;
+          
+          // Get lesson topic
+          const topicEl = document.getElementById('commons-topic');
+          try {
+            const { data } = await supabase
+              .from('core_lessons')
+              .select('topic')
+              .eq('day_number', this.currentDay)
+              .single();
+            if (data) {
+              topicEl.textContent = data.topic;
+              this.currentLesson = data;
+            }
+          } catch (e) {
+            topicEl.textContent = 'Today\'s Lesson';
+          }
+          
+          document.getElementById('commons-overlay')?.classList.add('open');
+          this.loadProposals();
+        },
+        
+        close() {
+          this.isOpen = false;
+          document.getElementById('commons-overlay')?.classList.remove('open');
+        },
+        
+        async loadProposals() {
+          const listEl = document.getElementById('commons-proposals-list');
+          
+          try {
+            // Try to load from database
+            const { data, error } = await supabase
+              .from('commons_proposals')
+              .select('id, title, type, upvotes, downvotes, created_at')
+              .eq('status', 'open')
+              .order('vote_score', { ascending: false })
+              .limit(5);
+            
+            if (error) throw error;
+            
+            if (data && data.length > 0) {
+              listEl.innerHTML = data.map(p => `
+                <div class="commons-proposal-card" onclick="window.location.href='/commons.html?proposal=${p.id}'">
+                  <div class="commons-proposal-title">${p.title}</div>
+                  <div class="commons-proposal-meta">
+                    <span class="commons-proposal-score">👍 ${p.upvotes - p.downvotes}</span>
+                    <span>${this.getTypeLabel(p.type)}</span>
+                  </div>
+                </div>
+              `).join('');
+            } else {
+              this.showSampleProposals();
+            }
+          } catch (e) {
+            // Database tables don't exist yet - show sample
+            console.log('[Commons] Using sample proposals');
+            this.showSampleProposals();
+          }
+        },
+        
+        showSampleProposals() {
+          const listEl = document.getElementById('commons-proposals-list');
+          listEl.innerHTML = `
+            <div class="commons-empty">
+              <p>No proposals yet for this lesson.</p>
+              <p style="margin-top: 8px; font-size: 0.85rem;">Be the first to suggest an improvement!</p>
+            </div>
+          `;
+        },
+        
+        getTypeLabel(type) {
+          const labels = {
+            enhance: '✨ Enhance',
+            expand: '📚 Expand',
+            correct: '🔧 Correct',
+            simplify: '🎯 Simplify'
+          };
+          return labels[type] || type;
+        }
+      };
+      
+      // Initialize Commons
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => LearnerCommons.init());
+      } else {
+        LearnerCommons.init();
+      }
     </script>
   </body>
 </html>
