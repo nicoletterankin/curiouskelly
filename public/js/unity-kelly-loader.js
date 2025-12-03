@@ -5,7 +5,8 @@
 
 class UnityKellyLoader {
   constructor() {
-    this.buildUrl = '/unity/kelly-live/Build';
+    // Use GitHub Pages for Unity build (handles CORS and compression)
+    this.buildUrl = 'https://nicoletterankin.github.io/kelly-v2/Build';
     this.unityInstance = null;
     this.isLoading = false;
     this.isLoaded = false;
@@ -55,7 +56,7 @@ class UnityKellyLoader {
     this._updateLoading(loadingOverlay, loadingText, progressBar, 'Loading Unity engine...', 5);
 
     // Step 1: Load the Unity loader script
-    await this._loadScript(`${this.buildUrl}/Kelly_Web_Build.loader.js`);
+    await this._loadScript(`${this.buildUrl}/WebGL.loader.js`);
 
     if (typeof createUnityInstance !== 'function') {
       throw new Error('Unity loader script failed - createUnityInstance not found');
@@ -63,11 +64,12 @@ class UnityKellyLoader {
 
     this._updateLoading(loadingOverlay, loadingText, progressBar, 'Preparing Kelly 3D...', 15);
 
-    // Step 2: Configure Unity - try Brotli first, fall back to uncompressed
+    // Step 2: Configure Unity with GitHub Pages hosted files
+    // Files are gzip compressed (.unityweb) - Unity handles decompression
     const config = {
-      dataUrl: `${this.buildUrl}/Kelly_Web_Build.data.br`,
-      frameworkUrl: `${this.buildUrl}/Kelly_Web_Build.framework.js.br`,
-      codeUrl: `${this.buildUrl}/Kelly_Web_Build.wasm.br`,
+      dataUrl: `${this.buildUrl}/WebGL.data.unityweb`,
+      frameworkUrl: `${this.buildUrl}/WebGL.framework.js.unityweb`,
+      codeUrl: `${this.buildUrl}/WebGL.wasm.unityweb`,
       streamingAssetsUrl: `${this.buildUrl}/../StreamingAssets`,
       companyName: 'LessonOfTheDay',
       productName: 'CuriousKelly',
