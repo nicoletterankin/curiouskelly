@@ -1,0 +1,134 @@
+name: Unity CDN Health Check
+
+on:
+  schedule:
+    # Run every 6 hours
+    - cron: '0 */6 * * *'
+  workflow_dispatch:
+
+jobs:
+  health-check:
+    name: Check Unity CDN Health
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Check CDN endpoints
+        id: health
+        run: |
+          CDN_URL="https://unity-cdn.nicoletterankin.workers.dev"
+          BUILD_NAME="Kelly_Web_Build"
+          
+          echo "=== Unity CDN Health Check ==="
+          echo ""
+          
+          FAILED=0
+          
+          # Check each required file
+          FILES=(
+            "${BUILD_NAME}.loader.js"
+            "${BUILD_NAME}.data.br"
+            "${BUILD_NAME}.framework.js.br"
+            "${BUILD_NAME}.wasm.br"
+          )
+          
+          for file in "${FILES[@]}"; do
+            echo -n "Checking $file... "
+            
+            RESPONSE=$(curl -s -o /dev/null -w "%{http_code}|%{time_total}|%{size_download}" "$CDN_URL/$file")
+            HTTP_CODE=$(echo $RESPONSE | cut -d'|' -f1)
+            TIME=$(echo $RESPONSE | cut -d'|' -f2)
+            SIZE=$(echo $RESPONSE | cut -d'|' -f3)
+            
+            if [ "$HTTP_CODE" == "200" ]; then
+              echo "✅ OK (${TIME}s, ${SIZE} bytes)"
+            else
+              echo "❌ FAILED (HTTP $HTTP_CODE)"
+              FAILED=$((FAILED + 1))
+            fi
+          done
+          
+          echo ""
+          
+          # Check CORS headers
+          echo "=== Checking CORS headers ==="
+          HEADERS=$(curl -s -I "$CDN_URL/${BUILD_NAME}.loader.js" -H "Origin: https://curiouskelly.com")
+          
+          if echo "$HEADERS" | grep -qi "access-control-allow-origin"; then
+            echo "✅ CORS headers present"
+          else
+            echo "❌ CORS headers missing"
+            FAILED=$((FAILED + 1))
+          fi
+          
+          # Check Content-Encoding for Brotli
+          echo ""
+          echo "=== Checking Brotli encoding ==="
+          BR_HEADERS=$(curl -s -I "$CDN_URL/${BUILD_NAME}.framework.js.br" -H "Accept-Encoding: br")
+          
+          if echo "$BR_HEADERS" | grep -qi "content-encoding: br"; then
+            echo "✅ Content-Encoding: br header present"
+          else
+            echo "⚠️ Content-Encoding: br header might be missing (check browser compatibility)"
+          fi
+          
+          echo ""
+          echo "=== Summary ==="
+          
+          if [ $FAILED -eq 0 ]; then
+            echo "✅ All checks passed!"
+            echo "status=healthy" >> $GITHUB_OUTPUT
+          else
+            echo "❌ $FAILED check(s) failed"
+            echo "status=unhealthy" >> $GITHUB_OUTPUT
+            exit 1
+          fi
+
+      - name: Measure load times
+        run: |
+          CDN_URL="https://unity-cdn.nicoletterankin.workers.dev"
+          BUILD_NAME="Kelly_Web_Build"
+          
+          echo "=== Load Time Measurements ==="
+          echo ""
+          
+          # Measure loader.js (should be fast - it's small)
+          LOADER_TIME=$(curl -s -o /dev/null -w "%{time_total}" "$CDN_URL/${BUILD_NAME}.loader.js")
+          echo "loader.js: ${LOADER_TIME}s"
+          
+          # Measure framework.js.br (medium size)
+          FRAMEWORK_TIME=$(curl -s -o /dev/null -w "%{time_total}" "$CDN_URL/${BUILD_NAME}.framework.js.br")
+          echo "framework.js.br: ${FRAMEWORK_TIME}s"
+          
+          # Measure wasm.br (larger, but compressed)
+          WASM_TIME=$(curl -s -o /dev/null -w "%{time_total}" "$CDN_URL/${BUILD_NAME}.wasm.br")
+          echo "wasm.br: ${WASM_TIME}s"
+          
+          # Measure data.br (largest)
+          DATA_TIME=$(curl -s -o /dev/null -w "%{time_total}" "$CDN_URL/${BUILD_NAME}.data.br")
+          echo "data.br: ${DATA_TIME}s"
+          
+          # Total estimated load time
+          TOTAL=$(echo "$LOADER_TIME + $FRAMEWORK_TIME + $WASM_TIME + $DATA_TIME" | bc)
+          echo ""
+          echo "Estimated sequential load: ${TOTAL}s"
+          echo "(Parallel loading will be faster)"
+
+      - name: Create summary
+        if: always()
+        run: |
+          echo "## 🏥 Unity CDN Health Check" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Status:** ${{ steps.health.outputs.status || 'unknown' }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**CDN URL:** https://unity-cdn.nicoletterankin.workers.dev" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Timestamp:** $(date -u +"%Y-%m-%d %H:%M:%S UTC")" >> $GITHUB_STEP_SUMMARY
+
+      - name: Alert on failure
+        if: failure()
+        run: |
+          echo "::error::Unity CDN health check failed! Some assets may be unavailable."
+          # Add your notification mechanism here (Slack, email, etc.)
+

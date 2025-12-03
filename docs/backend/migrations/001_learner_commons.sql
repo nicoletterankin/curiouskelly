@@ -483,3 +483,4 @@ COMMENT ON TABLE commons_lesson_notes IS 'Community-contributed knowledge for le
 COMMENT ON TABLE commons_user_contributions IS 'User contribution statistics and levels';
 COMMENT ON TABLE commons_activity_log IS 'Activity log for transparency';
 
+

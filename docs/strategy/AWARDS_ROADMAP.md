@@ -324,3 +324,4 @@ Kelly appears on TIME's 2026 coverage—either:
 *Document owner: Marketing & Communications*  
 *Contact: hello@curiouskelly.com*
 
+

@@ -723,7 +723,8 @@ class CalendarApp {
     }
 
     updatePhaseProgress() {
-        const phases = ['welcome', 'q1', 'q2', 'q3', 'wisdom'];
+        // Phase order: hook → q1 → q2 → q3 → wisdom
+        const phases = ['welcome', 'hook', 'q1', 'q2', 'q3', 'wisdom'];
         phases.forEach((phase, index) => {
             const indicator = document.querySelector(`.phase-indicator[data-phase="${phase}"]`);
             if (!indicator) return;
@@ -913,7 +914,8 @@ class CalendarApp {
     }
 
     goToPreviousPhase() {
-        const phases = ['welcome', 'q1', 'q2', 'q3', 'wisdom'];
+        // Phase order: hook → q1 → q2 → q3 → wisdom
+        const phases = ['welcome', 'hook', 'q1', 'q2', 'q3', 'wisdom'];
         const currentIndex = phases.indexOf(this.currentPhase);
         if (currentIndex > 0) {
             this.currentPhase = phases[currentIndex - 1];
@@ -924,7 +926,8 @@ class CalendarApp {
     }
 
     goToNextPhase() {
-        const phases = ['welcome', 'q1', 'q2', 'q3', 'wisdom'];
+        // Phase order: hook → q1 → q2 → q3 → wisdom
+        const phases = ['welcome', 'hook', 'q1', 'q2', 'q3', 'wisdom'];
         const currentIndex = phases.indexOf(this.currentPhase);
         if (currentIndex < phases.length - 1) {
             this.currentPhase = phases[currentIndex + 1];
@@ -935,7 +938,8 @@ class CalendarApp {
     }
 
     updateControls() {
-        const phases = ['welcome', 'q1', 'q2', 'q3', 'wisdom'];
+        // Phase order: hook → q1 → q2 → q3 → wisdom
+        const phases = ['welcome', 'hook', 'q1', 'q2', 'q3', 'wisdom'];
         const currentIndex = phases.indexOf(this.currentPhase);
         
         const prevBtn = document.getElementById('prev-phase');
@@ -947,6 +951,7 @@ class CalendarApp {
 
         const phaseNames = {
             'welcome': 'Welcome',
+            'hook': 'The Hook',
             'q1': 'Question 1',
             'q2': 'Question 2',
             'q3': 'Question 3',

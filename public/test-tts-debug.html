@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ElevenLabs TTS Debug Test</title>
+  <style>
+    * { box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #0a0a0a;
+      color: #e5e5e5;
+    }
+    h1 { color: #3b82f6; }
+    .test-section {
+      background: #1a1a1a;
+      border: 1px solid #333;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .test-section h2 {
+      margin-top: 0;
+      color: #f97316;
+      font-size: 1.1rem;
+    }
+    button {
+      background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+      color: white;
+      border: none;
+      padding: 12px 24px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 16px;
+      margin: 5px;
+    }
+    button:hover { opacity: 0.9; }
+    button:disabled { opacity: 0.5; cursor: not-allowed; }
+    .log {
+      background: #000;
+      border: 1px solid #333;
+      border-radius: 8px;
+      padding: 15px;
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 13px;
+      max-height: 400px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    .log-entry { margin: 4px 0; }
+    .log-info { color: #60a5fa; }
+    .log-success { color: #34d399; }
+    .log-error { color: #f87171; }
+    .log-warn { color: #fbbf24; }
+    .log-data { color: #a78bfa; }
+    .status {
+      display: inline-block;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+    .status-pending { background: #374151; color: #9ca3af; }
+    .status-running { background: #1e3a8a; color: #60a5fa; }
+    .status-success { background: #14532d; color: #34d399; }
+    .status-error { background: #7f1d1d; color: #f87171; }
+    input[type="text"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #333;
+      border-radius: 8px;
+      background: #0a0a0a;
+      color: #e5e5e5;
+      font-size: 14px;
+      margin: 10px 0;
+    }
+    audio {
+      width: 100%;
+      margin: 10px 0;
+    }
+    .result-box {
+      margin-top: 15px;
+      padding: 15px;
+      background: #0a0a0a;
+      border-radius: 8px;
+      border: 1px solid #333;
+    }
+  </style>
+</head>
+<body>
+  <h1>🔊 ElevenLabs TTS Debug Test</h1>
+  <p>This page tests the full TTS request/response cycle to identify where failures occur.</p>
+
+  <!-- Test 1: API Endpoint Availability -->
+  <div class="test-section">
+    <h2>Test 1: API Endpoint Check</h2>
+    <p>Checks if <code>/api/tts</code> endpoint exists and responds.</p>
+    <button onclick="runTest1()">Run Test</button>
+    <span id="test1-status" class="status status-pending">Pending</span>
+    <div id="test1-log" class="log" style="margin-top: 15px;"></div>
+  </div>
+
+  <!-- Test 2: Full TTS Request -->
+  <div class="test-section">
+    <h2>Test 2: Full TTS Request</h2>
+    <p>Makes a real TTS request and logs the complete request/response cycle.</p>
+    <input type="text" id="test-text" value="Hello! I'm Kelly, your curious learning companion." placeholder="Enter text to synthesize">
+    <button onclick="runTest2()">Generate Audio</button>
+    <span id="test2-status" class="status status-pending">Pending</span>
+    <div id="test2-log" class="log" style="margin-top: 15px;"></div>
+    <div id="test2-result" class="result-box" style="display: none;">
+      <strong>Audio Result:</strong>
+      <audio id="test2-audio" controls></audio>
+    </div>
+  </div>
+
+  <!-- Test 3: CORS Check -->
+  <div class="test-section">
+    <h2>Test 3: CORS Headers Check</h2>
+    <p>Checks for CORS headers on the API response.</p>
+    <button onclick="runTest3()">Check CORS</button>
+    <span id="test3-status" class="status status-pending">Pending</span>
+    <div id="test3-log" class="log" style="margin-top: 15px;"></div>
+  </div>
+
+  <!-- Test 4: Direct ElevenLabs Test (for comparison) -->
+  <div class="test-section">
+    <h2>Test 4: Environment Check</h2>
+    <p>Checks client-side configuration and environment.</p>
+    <button onclick="runTest4()">Check Environment</button>
+    <span id="test4-status" class="status status-pending">Pending</span>
+    <div id="test4-log" class="log" style="margin-top: 15px;"></div>
+  </div>
+
+  <!-- Summary -->
+  <div class="test-section">
+    <h2>📋 Run All Tests</h2>
+    <button onclick="runAllTests()">Run All Tests</button>
+    <div id="summary-log" class="log" style="margin-top: 15px;"></div>
+  </div>
+
+  <script>
+    // Logging helper
+    function log(elementId, message, type = 'info') {
+      const el = document.getElementById(elementId);
+      const entry = document.createElement('div');
+      entry.className = `log-entry log-${type}`;
+      entry.textContent = `[${new Date().toISOString().split('T')[1].split('.')[0]}] ${message}`;
+      el.appendChild(entry);
+      el.scrollTop = el.scrollHeight;
+    }
+
+    function setStatus(elementId, status) {
+      const el = document.getElementById(elementId);
+      el.className = `status status-${status}`;
+      el.textContent = status.charAt(0).toUpperCase() + status.slice(1);
+    }
+
+    function clearLog(elementId) {
+      document.getElementById(elementId).innerHTML = '';
+    }
+
+    // Test 1: API Endpoint Check
+    async function runTest1() {
+      clearLog('test1-log');
+      setStatus('test1-status', 'running');
+      
+      log('test1-log', 'Testing API endpoint availability...', 'info');
+      log('test1-log', 'Endpoint: /api/tts', 'info');
+      
+      try {
+        // First try OPTIONS (preflight)
+        log('test1-log', 'Sending OPTIONS request (preflight check)...', 'info');
+        const optionsRes = await fetch('/api/tts', { method: 'OPTIONS' });
+        log('test1-log', `OPTIONS Response: ${optionsRes.status} ${optionsRes.statusText}`, 
+            optionsRes.ok ? 'success' : 'warn');
+        
+        // Try GET (should return 405 Method Not Allowed)
+        log('test1-log', 'Sending GET request (should be 405)...', 'info');
+        const getRes = await fetch('/api/tts', { method: 'GET' });
+        const getData = await getRes.json().catch(() => ({}));
+        log('test1-log', `GET Response: ${getRes.status} ${getRes.statusText}`, 
+            getRes.status === 405 ? 'success' : 'error');
+        log('test1-log', `GET Body: ${JSON.stringify(getData)}`, 'data');
+        
+        if (getRes.status === 405) {
+          log('test1-log', '✅ API endpoint exists and correctly rejects GET requests', 'success');
+          setStatus('test1-status', 'success');
+        } else if (getRes.status === 404) {
+          log('test1-log', '❌ API endpoint not found (404) - endpoint may not be deployed', 'error');
+          setStatus('test1-status', 'error');
+        } else {
+          log('test1-log', `⚠️ Unexpected response: ${getRes.status}`, 'warn');
+          setStatus('test1-status', 'error');
+        }
+      } catch (error) {
+        log('test1-log', `❌ Network error: ${error.message}`, 'error');
+        log('test1-log', 'This could mean:', 'error');
+        log('test1-log', '  - API endpoint is not deployed', 'error');
+        log('test1-log', '  - CORS is blocking the request', 'error');
+        log('test1-log', '  - Network connectivity issue', 'error');
+        setStatus('test1-status', 'error');
+      }
+    }
+
+    // Test 2: Full TTS Request
+    async function runTest2() {
+      clearLog('test2-log');
+      setStatus('test2-status', 'running');
+      document.getElementById('test2-result').style.display = 'none';
+      
+      const text = document.getElementById('test-text').value;
+      if (!text) {
+        log('test2-log', '❌ Please enter some text', 'error');
+        setStatus('test2-status', 'error');
+        return;
+      }
+      
+      log('test2-log', '=== FULL TTS REQUEST DEBUG ===', 'info');
+      log('test2-log', `Text to synthesize: "${text}"`, 'info');
+      log('test2-log', `Text length: ${text.length} characters`, 'info');
+      
+      // Build request
+      const requestBody = {
+        text: text,
+        voiceId: window.ELEVENLABS_VOICE_ID || 'wAdymQH5YucAkXwmrdL0'
+      };
+      
+      log('test2-log', '', 'info');
+      log('test2-log', '--- REQUEST ---', 'info');
+      log('test2-log', `URL: ${window.location.origin}/api/tts`, 'data');
+      log('test2-log', `Method: POST`, 'data');
+      log('test2-log', `Headers: Content-Type: application/json`, 'data');
+      log('test2-log', `Body: ${JSON.stringify(requestBody, null, 2)}`, 'data');
+      
+      const startTime = performance.now();
+      
+      try {
+        log('test2-log', '', 'info');
+        log('test2-log', 'Sending request...', 'info');
+        
+        const response = await fetch('/api/tts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify(requestBody)
+        });
+        
+        const endTime = performance.now();
+        const duration = (endTime - startTime).toFixed(0);
+        
+        log('test2-log', '', 'info');
+        log('test2-log', '--- RESPONSE ---', 'info');
+        log('test2-log', `Status: ${response.status} ${response.statusText}`, 
+            response.ok ? 'success' : 'error');
+        log('test2-log', `Duration: ${duration}ms`, 'info');
+        
+        // Log all response headers
+        log('test2-log', '', 'info');
+        log('test2-log', 'Response Headers:', 'info');
+        response.headers.forEach((value, key) => {
+          log('test2-log', `  ${key}: ${value}`, 'data');
+        });
+        
+        if (response.ok) {
+          const contentType = response.headers.get('Content-Type');
+          log('test2-log', '', 'info');
+          log('test2-log', `Content-Type: ${contentType}`, 'info');
+          
+          if (contentType && contentType.includes('audio')) {
+            const audioBuffer = await response.arrayBuffer();
+            log('test2-log', `Audio size: ${audioBuffer.byteLength} bytes`, 'success');
+            
+            // Create audio element
+            const blob = new Blob([audioBuffer], { type: 'audio/mpeg' });
+            const url = URL.createObjectURL(blob);
+            document.getElementById('test2-audio').src = url;
+            document.getElementById('test2-result').style.display = 'block';
+            
+            log('test2-log', '', 'info');
+            log('test2-log', '✅ SUCCESS! Audio generated and ready to play', 'success');
+            setStatus('test2-status', 'success');
+          } else {
+            // Unexpected content type
+            const text = await response.text();
+            log('test2-log', `Unexpected response body: ${text.substring(0, 500)}`, 'error');
+            setStatus('test2-status', 'error');
+          }
+        } else {
+          // Error response
+          const contentType = response.headers.get('Content-Type');
+          let errorBody;
+          
+          if (contentType && contentType.includes('application/json')) {
+            errorBody = await response.json();
+            log('test2-log', '', 'info');
+            log('test2-log', 'Error Response (JSON):', 'error');
+            log('test2-log', JSON.stringify(errorBody, null, 2), 'error');
+          } else {
+            errorBody = await response.text();
+            log('test2-log', '', 'info');
+            log('test2-log', `Error Response (Text): ${errorBody}`, 'error');
+          }
+          
+          // Analyze the error
+          log('test2-log', '', 'info');
+          log('test2-log', '--- ERROR ANALYSIS ---', 'error');
+          
+          if (response.status === 500) {
+            log('test2-log', '❌ Server Error (500):', 'error');
+            if (errorBody.error === 'TTS service not configured') {
+              log('test2-log', '  → ELEVENLABS_API_KEY is not set in environment', 'error');
+              log('test2-log', '  → Add it to Vercel Dashboard → Settings → Environment Variables', 'error');
+            } else {
+              log('test2-log', `  → ${errorBody.error || errorBody.message || 'Unknown error'}`, 'error');
+            }
+          } else if (response.status === 401 || response.status === 403) {
+            log('test2-log', '❌ Authentication Error:', 'error');
+            log('test2-log', '  → API key may be invalid or expired', 'error');
+            log('test2-log', '  → Check ELEVENLABS_API_KEY value', 'error');
+          } else if (response.status === 429) {
+            log('test2-log', '❌ Rate Limited:', 'error');
+            log('test2-log', '  → Too many requests to ElevenLabs', 'error');
+            log('test2-log', '  → Wait and try again or upgrade plan', 'error');
+          } else if (response.status === 404) {
+            log('test2-log', '❌ Endpoint Not Found:', 'error');
+            log('test2-log', '  → /api/tts endpoint may not be deployed', 'error');
+            log('test2-log', '  → Check Vercel deployment', 'error');
+          }
+          
+          setStatus('test2-status', 'error');
+        }
+      } catch (error) {
+        log('test2-log', '', 'info');
+        log('test2-log', '❌ Network/Fetch Error:', 'error');
+        log('test2-log', `  Name: ${error.name}`, 'error');
+        log('test2-log', `  Message: ${error.message}`, 'error');
+        
+        if (error.name === 'TypeError' && error.message.includes('Failed to fetch')) {
+          log('test2-log', '', 'info');
+          log('test2-log', 'Possible causes:', 'error');
+          log('test2-log', '  1. CORS blocking the request', 'error');
+          log('test2-log', '  2. Network connectivity issue', 'error');
+          log('test2-log', '  3. API endpoint not accessible', 'error');
+        }
+        
+        setStatus('test2-status', 'error');
+      }
+    }
+
+    // Test 3: CORS Headers Check
+    async function runTest3() {
+      clearLog('test3-log');
+      setStatus('test3-status', 'running');
+      
+      log('test3-log', 'Checking CORS configuration...', 'info');
+      
+      try {
+        // Send a request and check response headers
+        const response = await fetch('/api/tts', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Origin': window.location.origin
+          },
+          body: JSON.stringify({ text: 'test' })
+        });
+        
+        log('test3-log', '', 'info');
+        log('test3-log', 'CORS-Related Headers:', 'info');
+        
+        const corsHeaders = [
+          'Access-Control-Allow-Origin',
+          'Access-Control-Allow-Methods',
+          'Access-Control-Allow-Headers',
+          'Access-Control-Expose-Headers',
+          'Access-Control-Max-Age'
+        ];
+        
+        let hasCorsHeaders = false;
+        corsHeaders.forEach(header => {
+          const value = response.headers.get(header);
+          if (value) {
+            log('test3-log', `  ${header}: ${value}`, 'success');
+            hasCorsHeaders = true;
+          }
+        });
+        
+        if (!hasCorsHeaders) {
+          log('test3-log', '  No CORS headers found in response', 'warn');
+          log('test3-log', '', 'info');
+          log('test3-log', 'Note: CORS headers may not be needed if:', 'info');
+          log('test3-log', '  - Request is same-origin (frontend and API on same domain)', 'info');
+          log('test3-log', '  - Using Vercel serverless functions (handles CORS automatically)', 'info');
+        }
+        
+        log('test3-log', '', 'info');
+        log('test3-log', `Current Origin: ${window.location.origin}`, 'info');
+        log('test3-log', `API URL: ${window.location.origin}/api/tts`, 'info');
+        
+        if (window.location.origin.includes('localhost') || 
+            window.location.origin.includes('127.0.0.1')) {
+          log('test3-log', '', 'warn');
+          log('test3-log', '⚠️ Running on localhost - API may not work without Vercel dev', 'warn');
+          log('test3-log', 'Run: vercel dev (to test API routes locally)', 'warn');
+        }
+        
+        setStatus('test3-status', 'success');
+      } catch (error) {
+        log('test3-log', `❌ CORS check failed: ${error.message}`, 'error');
+        log('test3-log', '', 'info');
+        log('test3-log', 'If you see "Failed to fetch" this usually means:', 'error');
+        log('test3-log', '  1. CORS is blocking the request', 'error');
+        log('test3-log', '  2. The API endpoint is not accessible', 'error');
+        setStatus('test3-status', 'error');
+      }
+    }
+
+    // Test 4: Environment Check
+    async function runTest4() {
+      clearLog('test4-log');
+      setStatus('test4-status', 'running');
+      
+      log('test4-log', '=== CLIENT-SIDE ENVIRONMENT ===', 'info');
+      log('test4-log', '', 'info');
+      
+      // Check window globals
+      log('test4-log', 'Window Globals:', 'info');
+      log('test4-log', `  ELEVENLABS_VOICE_ID: ${window.ELEVENLABS_VOICE_ID || '❌ Not set'}`, 
+          window.ELEVENLABS_VOICE_ID ? 'success' : 'error');
+      log('test4-log', `  ELEVENLABS_AGENT_ID: ${window.ELEVENLABS_AGENT_ID || '❌ Not set'}`,
+          window.ELEVENLABS_AGENT_ID ? 'success' : 'warn');
+      log('test4-log', `  SUPABASE_URL: ${window.SUPABASE_URL ? '✅ Set' : '❌ Not set'}`,
+          window.SUPABASE_URL ? 'success' : 'warn');
+      
+      log('test4-log', '', 'info');
+      log('test4-log', 'Browser Info:', 'info');
+      log('test4-log', `  User Agent: ${navigator.userAgent.substring(0, 80)}...`, 'data');
+      log('test4-log', `  Online: ${navigator.onLine ? '✅ Yes' : '❌ No'}`, 
+          navigator.onLine ? 'success' : 'error');
+      
+      log('test4-log', '', 'info');
+      log('test4-log', 'Page Info:', 'info');
+      log('test4-log', `  Protocol: ${window.location.protocol}`, 'data');
+      log('test4-log', `  Host: ${window.location.host}`, 'data');
+      log('test4-log', `  Origin: ${window.location.origin}`, 'data');
+      
+      // Check if running locally
+      const isLocal = window.location.hostname === 'localhost' || 
+                      window.location.hostname === '127.0.0.1';
+      
+      if (isLocal) {
+        log('test4-log', '', 'warn');
+        log('test4-log', '⚠️ RUNNING LOCALLY', 'warn');
+        log('test4-log', 'API routes (/api/*) require either:', 'warn');
+        log('test4-log', '  1. vercel dev - to run Vercel serverless locally', 'warn');
+        log('test4-log', '  2. Deploy to Vercel - API routes work in production', 'warn');
+        log('test4-log', '', 'info');
+        log('test4-log', 'Current static server will NOT run API routes', 'warn');
+      }
+      
+      // Check KellyAudio availability
+      log('test4-log', '', 'info');
+      log('test4-log', 'Kelly Systems:', 'info');
+      log('test4-log', `  KellyAudio: ${typeof window.KellyAudio !== 'undefined' ? '✅ Loaded' : '❌ Not loaded'}`,
+          typeof window.KellyAudio !== 'undefined' ? 'success' : 'error');
+      log('test4-log', `  KellyConversation: ${typeof window.KellyConversation !== 'undefined' ? '✅ Loaded' : '❌ Not loaded'}`,
+          typeof window.KellyConversation !== 'undefined' ? 'success' : 'warn');
+      
+      setStatus('test4-status', 'success');
+    }
+
+    // Run All Tests
+    async function runAllTests() {
+      clearLog('summary-log');
+      log('summary-log', '🚀 Running all tests...', 'info');
+      log('summary-log', '', 'info');
+      
+      await runTest1();
+      log('summary-log', 'Test 1 complete', 'info');
+      
+      await runTest2();
+      log('summary-log', 'Test 2 complete', 'info');
+      
+      await runTest3();
+      log('summary-log', 'Test 3 complete', 'info');
+      
+      await runTest4();
+      log('summary-log', 'Test 4 complete', 'info');
+      
+      log('summary-log', '', 'info');
+      log('summary-log', '✅ All tests complete! Check individual sections for results.', 'success');
+    }
+  </script>
+
+  <!-- Load config for ELEVENLABS_VOICE_ID -->
+  <script src="/config.js"></script>
+</body>
+</html>
+
+

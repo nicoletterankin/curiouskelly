@@ -266,3 +266,4 @@ Kelly must embody the four pillars:
 
 *IP, trademarks, and patents owned by Nicolette Rankin / Lesson of the Day PBC*
 
+

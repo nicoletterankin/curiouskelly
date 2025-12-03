@@ -1,5 +1,3 @@
-import type { Request, Response } from '@vercel/node';
-
 export async function configHandler(
   request: Request,
   context: { env: Record<string, string | undefined> }

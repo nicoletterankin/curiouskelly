@@ -5,6 +5,22 @@
   command = "git config --global lfs.fetchexclude '*' && git lfs install --skip-smudge || true"
   publish = "public"
 
+# CORS headers for Unity WebGL build (required for SharedArrayBuffer/WebAssembly)
+[[headers]]
+  for = "/unity/*"
+  [headers.values]
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Embedder-Policy = "require-corp"
+    Access-Control-Allow-Origin = "*"
+
+[[headers]]
+  for = "/unity/kelly-live/Build/*"
+  [headers.values]
+    Cross-Origin-Opener-Policy = "same-origin"
+    Cross-Origin-Embedder-Policy = "require-corp"
+    Access-Control-Allow-Origin = "*"
+    Cache-Control = "public, max-age=31536000, immutable"
+
 [build.environment]
   # Skip Git LFS smudge filter to prevent LFS download errors
   # This tells Git to skip downloading LFS objects (like .ccProject files)

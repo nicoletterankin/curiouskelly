@@ -327,6 +327,7 @@ export class KellyEngine {
 
   /**
    * Manual phase loading (fallback when PhaseLoader unavailable)
+   * Supports both pre-generated video and dynamic image+audio
    * @private
    */
   async loadPhaseManually(phase) {
@@ -338,6 +339,41 @@ export class KellyEngine {
     if (!content || !content.script) {
       throw new Error(`No content available for phase: ${phase}`);
     }
+
+    // Check for pre-generated video first (ElevenLabs Omnihuman)
+    const media = await this.getPhaseMedia(
+      lesson.day_number,
+      phase,
+      this.state.ageBucket,
+      this.state.language
+    );
+
+    if (media.type === 'video' && media.url) {
+      console.log(`[KellyEngine] 🎬 Playing pre-generated video for ${phase}`);
+      
+      // Emit video load event for the video player to handle
+      this.emit('kelly-video-load', {
+        url: media.url,
+        phase,
+        durationMs: media.durationMs,
+        autoplay: true
+      });
+
+      // If Unity is available, set speaking state
+      if (this.unityBridge && this.state.unityReady) {
+        this.unityBridge.emit('phase-start', { phase });
+      }
+
+      return { 
+        content, 
+        mediaType: 'video',
+        videoUrl: media.url,
+        durationMs: media.durationMs 
+      };
+    }
+
+    // Fallback: Generate audio + show static image (original behavior)
+    console.log(`[KellyEngine] 🎵 Generating audio for ${phase} (no video cache)`);
     
     // Generate audio
     const audio = await this.voiceEngine.generatePhaseAudio(
@@ -372,8 +408,139 @@ export class KellyEngine {
         gestures: expressions.gestures,
       });
     }
+
+    // Emit image+audio event for 2D fallback display
+    this.emit('kelly-image-audio-load', {
+      phase,
+      imageUrl: this.getPhaseImage(phase),
+      audioUrl: audio.audioUrl
+    });
     
-    return { content, audio, expressions };
+    return { content, audio, expressions, mediaType: 'image-audio' };
+  }
+
+  // ===========================================================================
+  // VIDEO MEDIA METHODS (ElevenLabs Omnihuman Integration)
+  // ===========================================================================
+
+  /**
+   * Get phase media - video if available, otherwise fallback info
+   * @param {number} lessonDay - Day number (1-365)
+   * @param {string} phase - Phase name
+   * @param {string} ageBucket - Age bucket
+   * @param {string} language - Language code
+   * @returns {Promise<Object>} Media info with type and URL
+   */
+  async getPhaseMedia(lessonDay, phase, ageBucket, language = 'en') {
+    try {
+      // Query kelly_video_assets for pre-generated video
+      const { data: videoAsset, error } = await this.supabase
+        .from('kelly_video_assets')
+        .select('video_public_url, video_duration_ms, status')
+        .eq('lesson_day', lessonDay)
+        .eq('phase', phase)
+        .eq('age_bucket', this.mapAgeBucketToDb(ageBucket))
+        .eq('language', language)
+        .eq('status', 'completed')
+        .single();
+
+      if (!error && videoAsset?.video_public_url) {
+        return {
+          type: 'video',
+          url: videoAsset.video_public_url,
+          durationMs: videoAsset.video_duration_ms
+        };
+      }
+    } catch (err) {
+      // Table may not exist yet, or no video found - that's okay
+      console.log(`[KellyEngine] No cached video for Day ${lessonDay} ${phase}`);
+    }
+
+    // Fallback to image + TTS audio (will be generated on-demand)
+    return {
+      type: 'image-audio',
+      imageUrl: this.getPhaseImage(phase)
+    };
+  }
+
+  /**
+   * Get the static Kelly image for a phase
+   * @param {string} phase - Phase name
+   * @returns {string} Image URL
+   */
+  getPhaseImage(phase) {
+    const phaseImages = {
+      'welcome': '/kelly/poses/kelly_welcome.png',
+      'q1': '/kelly/poses/kelly_hint.png',
+      'q2': '/kelly/poses/kelly_listening.png',
+      'q3': '/kelly/poses/kelly_hint_flip.png',
+      'wisdom': '/kelly/poses/kelly_clasp.png',
+    };
+    return phaseImages[phase] || '/kelly/poses/kelly_idle.png';
+  }
+
+  /**
+   * Map internal age bucket to database format
+   * @param {string} ageBucket - Internal age bucket (e.g., '18-35')
+   * @returns {string} Database age bucket format
+   */
+  mapAgeBucketToDb(ageBucket) {
+    const mapping = {
+      '2-5': 'toddler',
+      '6-12': 'child',
+      '13-17': 'teen',
+      '18-35': 'young_adult',
+      '36-60': 'adult',
+      '61-102': 'elder'
+    };
+    return mapping[ageBucket] || 'young_adult';
+  }
+
+  /**
+   * Request video generation for a phase (async, returns immediately)
+   * @param {number} lessonDay - Day number
+   * @param {string} phase - Phase name
+   * @param {string} text - Script text
+   * @returns {Promise<Object>} Generation status
+   */
+  async requestVideoGeneration(lessonDay, phase, text) {
+    try {
+      const response = await fetch('/api/elevenlabs-video', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          lessonDay,
+          phase,
+          ageBucket: this.mapAgeBucketToDb(this.state.ageBucket),
+          language: this.state.language,
+          text,
+          archetype: this.state.archetype
+        })
+      });
+
+      const result = await response.json();
+      
+      if (result.success) {
+        console.log(`[KellyEngine] Video generated: ${result.videoUrl}`);
+      }
+      
+      return result;
+    } catch (error) {
+      console.error('[KellyEngine] Video generation request failed:', error);
+      return { success: false, error: error.message };
+    }
+  }
+
+  /**
+   * Emit custom event
+   * @param {string} eventName - Event name
+   * @param {Object} data - Event data
+   */
+  emit(eventName, data) {
+    if (typeof window !== 'undefined') {
+      const event = new CustomEvent(eventName, { detail: data, bubbles: true });
+      document.dispatchEvent(event);
+    }
   }
 
   /**
@@ -616,6 +783,7 @@ export function createKellyEngine(config = {}) {
 // =============================================================================
 
 export default KellyEngine;
+
 
 
 

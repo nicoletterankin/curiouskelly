@@ -292,3 +292,4 @@ A: We specifically design against addiction: no variable rewards, no notificatio
 *Document owner: Trust & Safety*  
 *Contact: hello@curiouskelly.com*
 
+

@@ -124,3 +124,4 @@ Curious Kelly: hello@curiouskelly.com
 5. Only use hello@curiouskelly.com for Curious Kelly
 6. Quantify impact whenever possible
 
+

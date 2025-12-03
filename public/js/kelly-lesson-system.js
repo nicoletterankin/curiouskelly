@@ -23,9 +23,18 @@ const LESSON_PHASES = {
     autoAdvance: 5000,    // Auto-advance after 5s or user tap
     requiresAnswer: false,
   },
+  HOOK: {
+    id: 'hook',
+    order: 1,
+    name: 'The Hook',
+    kellyPose: 'excited',
+    kellyReveal: true,    // Kelly delivers the engaging hook first!
+    autoAdvance: 8000,
+    requiresAnswer: false,
+  },
   Q1: {
     id: 'q1',
-    order: 1,
+    order: 2,
     name: 'Question 1',
     kellyPose: 'thinking',
     hasOptions: true,
@@ -33,7 +42,7 @@ const LESSON_PHASES = {
   },
   Q2: {
     id: 'q2', 
-    order: 2,
+    order: 3,
     name: 'Question 2',
     kellyPose: 'thinking',
     hasOptions: true,
@@ -41,20 +50,11 @@ const LESSON_PHASES = {
   },
   Q3: {
     id: 'q3',
-    order: 3,
+    order: 4,
     name: 'Question 3',
     kellyPose: 'thinking',
     hasOptions: true,
     requiresAnswer: true,
-  },
-  HOOK: {
-    id: 'hook',
-    order: 4,
-    name: 'The Hook',
-    kellyPose: 'excited',
-    kellyReveal: true,    // Kelly delivers the insight
-    autoAdvance: 8000,
-    requiresAnswer: false,
   },
   COMPLETE: {
     id: 'complete',
@@ -419,7 +419,8 @@ const PhaseProgressUI = {
   render(currentPhaseId) {
     if (!this.container) return;
     
-    const phases = ['welcome', 'q1', 'q2', 'q3', 'hook', 'complete'];
+    // Hook comes FIRST after welcome (engaging opening)
+    const phases = ['welcome', 'hook', 'q1', 'q2', 'q3', 'complete'];
     const currentIndex = phases.indexOf(currentPhaseId);
     
     this.container.innerHTML = phases.map((phaseId, i) => {

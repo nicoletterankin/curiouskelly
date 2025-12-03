@@ -1,0 +1,225 @@
+name: Unity WebGL Build & Deploy to R2
+
+on:
+  workflow_dispatch:
+    inputs:
+      version:
+        description: 'Version tag (e.g., v1, v2.0.1)'
+        required: true
+        default: 'v1'
+      deploy:
+        description: 'Deploy to R2 CDN after build'
+        type: boolean
+        default: true
+  push:
+    branches: [main]
+    paths:
+      - 'digital-kelly/engines/Kelly_Engine_V2/onlykelly/Assets/**'
+      - 'digital-kelly/engines/Kelly_Engine_V2/onlykelly/ProjectSettings/**'
+      - '.github/workflows/unity-build-deploy.yml'
+
+env:
+  UNITY_PROJECT_PATH: digital-kelly/engines/Kelly_Engine_V2/onlykelly
+  BUILD_NAME: Kelly_Web_Build
+  UNITY_VERSION: 2022.3.22f1
+
+jobs:
+  build:
+    name: Build Unity WebGL
+    runs-on: ubuntu-latest
+    outputs:
+      build_version: ${{ steps.version.outputs.version }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          lfs: true
+
+      - name: Determine version
+        id: version
+        run: |
+          if [ "${{ github.event_name }}" == "workflow_dispatch" ]; then
+            echo "version=${{ github.event.inputs.version }}" >> $GITHUB_OUTPUT
+          else
+            echo "version=v$(date +%Y%m%d-%H%M%S)" >> $GITHUB_OUTPUT
+          fi
+
+      - name: Cache Unity Library
+        uses: actions/cache@v4
+        with:
+          path: ${{ env.UNITY_PROJECT_PATH }}/Library
+          key: unity-library-${{ env.UNITY_VERSION }}-${{ hashFiles(format('{0}/Assets/**', env.UNITY_PROJECT_PATH)) }}
+          restore-keys: |
+            unity-library-${{ env.UNITY_VERSION }}-
+
+      - name: Build Unity WebGL
+        uses: game-ci/unity-builder@v4
+        env:
+          UNITY_LICENSE: ${{ secrets.UNITY_LICENSE }}
+          UNITY_EMAIL: ${{ secrets.UNITY_EMAIL }}
+          UNITY_PASSWORD: ${{ secrets.UNITY_PASSWORD }}
+        with:
+          targetPlatform: WebGL
+          projectPath: ${{ env.UNITY_PROJECT_PATH }}
+          buildName: ${{ env.BUILD_NAME }}
+          unityVersion: ${{ env.UNITY_VERSION }}
+          versioning: Custom
+          version: ${{ steps.version.outputs.version }}
+          allowDirtyBuild: true
+
+      - name: List build output
+        run: |
+          echo "=== Build Output ==="
+          ls -la ${{ env.UNITY_PROJECT_PATH }}/Builds/WebGL/
+          ls -la ${{ env.UNITY_PROJECT_PATH }}/Builds/WebGL/Build/
+
+      - name: Upload build artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: unity-webgl-build
+          path: ${{ env.UNITY_PROJECT_PATH }}/Builds/WebGL
+          retention-days: 7
+
+  compress:
+    name: Compress with Brotli
+    needs: build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download build artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: unity-webgl-build
+          path: build
+
+      - name: Install Brotli
+        run: sudo apt-get install -y brotli
+
+      - name: Compress Unity assets
+        run: |
+          cd build/Build
+          
+          # Compress .wasm file
+          if [ -f "${{ env.BUILD_NAME }}.wasm" ]; then
+            brotli -q 11 -f "${{ env.BUILD_NAME }}.wasm" -o "${{ env.BUILD_NAME }}.wasm.br"
+            echo "Compressed ${{ env.BUILD_NAME }}.wasm → ${{ env.BUILD_NAME }}.wasm.br"
+          elif [ -f "WebGL.wasm" ]; then
+            brotli -q 11 -f "WebGL.wasm" -o "${{ env.BUILD_NAME }}.wasm.br"
+            echo "Compressed WebGL.wasm → ${{ env.BUILD_NAME }}.wasm.br"
+          fi
+          
+          # Compress .data file
+          if [ -f "${{ env.BUILD_NAME }}.data" ]; then
+            brotli -q 11 -f "${{ env.BUILD_NAME }}.data" -o "${{ env.BUILD_NAME }}.data.br"
+            echo "Compressed ${{ env.BUILD_NAME }}.data → ${{ env.BUILD_NAME }}.data.br"
+          elif [ -f "WebGL.data" ]; then
+            brotli -q 11 -f "WebGL.data" -o "${{ env.BUILD_NAME }}.data.br"
+            echo "Compressed WebGL.data → ${{ env.BUILD_NAME }}.data.br"
+          fi
+          
+          # Compress .framework.js file
+          if [ -f "${{ env.BUILD_NAME }}.framework.js" ]; then
+            brotli -q 11 -f "${{ env.BUILD_NAME }}.framework.js" -o "${{ env.BUILD_NAME }}.framework.js.br"
+            echo "Compressed ${{ env.BUILD_NAME }}.framework.js → ${{ env.BUILD_NAME }}.framework.js.br"
+          elif [ -f "WebGL.framework.js" ]; then
+            brotli -q 11 -f "WebGL.framework.js" -o "${{ env.BUILD_NAME }}.framework.js.br"
+            echo "Compressed WebGL.framework.js → ${{ env.BUILD_NAME }}.framework.js.br"
+          fi
+          
+          # Copy loader (usually small, doesn't need compression)
+          if [ -f "${{ env.BUILD_NAME }}.loader.js" ]; then
+            cp "${{ env.BUILD_NAME }}.loader.js" "${{ env.BUILD_NAME }}.loader.js"
+          elif [ -f "WebGL.loader.js" ]; then
+            cp "WebGL.loader.js" "${{ env.BUILD_NAME }}.loader.js"
+          fi
+          
+          echo ""
+          echo "=== Compression Summary ==="
+          ls -lh *.br *.loader.js 2>/dev/null || true
+
+      - name: Upload compressed artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: unity-webgl-compressed
+          path: build/Build
+          retention-days: 7
+
+  deploy:
+    name: Deploy to Cloudflare R2
+    needs: [build, compress]
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.deploy != 'false' }}
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Download compressed artifact
+        uses: actions/download-artifact@v4
+        with:
+          name: unity-webgl-compressed
+          path: build
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+
+      - name: Install Wrangler
+        run: npm install -g wrangler
+
+      - name: Upload to R2
+        env:
+          CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+          R2_BUCKET_NAME: curious-kelly-unity
+          BUILD_VERSION: ${{ needs.build.outputs.build_version }}
+        run: |
+          echo "=== Uploading to R2: $R2_BUCKET_NAME ==="
+          echo "Version: $BUILD_VERSION"
+          
+          cd build
+          
+          # Upload Brotli compressed files to root (for backward compatibility)
+          for file in ${{ env.BUILD_NAME }}.*.br ${{ env.BUILD_NAME }}.loader.js; do
+            if [ -f "$file" ]; then
+              echo "Uploading $file..."
+              wrangler r2 object put "$R2_BUCKET_NAME/$file" --file="$file"
+            fi
+          done
+          
+          # Also upload to versioned path
+          echo ""
+          echo "=== Uploading versioned copies to /$BUILD_VERSION/ ==="
+          for file in ${{ env.BUILD_NAME }}.*.br ${{ env.BUILD_NAME }}.loader.js; do
+            if [ -f "$file" ]; then
+              echo "Uploading $BUILD_VERSION/$file..."
+              wrangler r2 object put "$R2_BUCKET_NAME/$BUILD_VERSION/$file" --file="$file"
+            fi
+          done
+          
+          echo ""
+          echo "=== Upload Complete ==="
+          echo "CDN URL: https://unity-cdn.nicoletterankin.workers.dev"
+          echo "Files available at root and /$BUILD_VERSION/"
+
+      - name: Verify deployment
+        run: |
+          echo "Testing CDN endpoint..."
+          curl -s -I "https://unity-cdn.nicoletterankin.workers.dev/${{ env.BUILD_NAME }}.loader.js" | head -20
+
+      - name: Create deployment summary
+        run: |
+          echo "## 🚀 Unity WebGL Deployment Complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Version:** ${{ needs.build.outputs.build_version }}" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**CDN URL:** https://unity-cdn.nicoletterankin.workers.dev" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "**Files Deployed:**" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ env.BUILD_NAME }}.loader.js\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ env.BUILD_NAME }}.data.br\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ env.BUILD_NAME }}.framework.js.br\`" >> $GITHUB_STEP_SUMMARY
+          echo "- \`${{ env.BUILD_NAME }}.wasm.br\`" >> $GITHUB_STEP_SUMMARY
+

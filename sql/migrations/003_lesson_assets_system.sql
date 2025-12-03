@@ -259,3 +259,4 @@ SELECT
     WHERE table_name = 'core_lessons' AND column_name = 'thumbnail_slug'
   ) as exists;
 
+

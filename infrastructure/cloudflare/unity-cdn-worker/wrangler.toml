@@ -1,0 +1,34 @@
+# Unity CDN Worker Configuration
+# Serves Unity WebGL assets from R2 with proper CORS and Content-Encoding headers
+
+name = "unity-cdn"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# R2 bucket binding
+[[r2_buckets]]
+binding = "UNITY_BUCKET"
+bucket_name = "curious-kelly-unity"
+
+# Custom domain routing (set up in Cloudflare dashboard after deployment)
+# Recommended: cdn.curiouskelly.com
+# routes = [
+#   { pattern = "cdn.curiouskelly.com/*", zone_name = "curiouskelly.com" }
+# ]
+
+# Alternative: workers.dev subdomain (default)
+# Will be accessible at: unity-cdn.<your-subdomain>.workers.dev
+
+[vars]
+ENVIRONMENT = "production"
+
+# Development settings
+[env.dev]
+name = "unity-cdn-dev"
+vars = { ENVIRONMENT = "development" }
+
+# Preview/staging settings  
+[env.staging]
+name = "unity-cdn-staging"
+vars = { ENVIRONMENT = "staging" }
+
