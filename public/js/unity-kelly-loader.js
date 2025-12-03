@@ -5,8 +5,8 @@
 
 class UnityKellyLoader {
   constructor() {
-    // Use GitHub Pages for Unity build (handles CORS and compression)
-    this.buildUrl = 'https://nicoletterankin.github.io/kelly-v2/Build';
+    // Production Unity build on Netlify
+    this.buildUrl = 'https://meek-hamster-500f3c.netlify.app/Build';
     this.unityInstance = null;
     this.isLoading = false;
     this.isLoaded = false;
@@ -64,12 +64,11 @@ class UnityKellyLoader {
 
     this._updateLoading(loadingOverlay, loadingText, progressBar, 'Preparing Kelly 3D...', 15);
 
-    // Step 2: Configure Unity with GitHub Pages hosted files
-    // Files are gzip compressed (.unityweb) - Unity handles decompression
+    // Step 2: Configure Unity with Netlify hosted files (uncompressed dev build)
     const config = {
-      dataUrl: `${this.buildUrl}/WebGL.data.unityweb`,
-      frameworkUrl: `${this.buildUrl}/WebGL.framework.js.unityweb`,
-      codeUrl: `${this.buildUrl}/WebGL.wasm.unityweb`,
+      dataUrl: `${this.buildUrl}/WebGL.data`,
+      frameworkUrl: `${this.buildUrl}/WebGL.framework.js`,
+      codeUrl: `${this.buildUrl}/WebGL.wasm`,
       streamingAssetsUrl: `${this.buildUrl}/../StreamingAssets`,
       companyName: 'LessonOfTheDay',
       productName: 'CuriousKelly',
