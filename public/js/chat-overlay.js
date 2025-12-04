@@ -804,79 +804,64 @@ class ChatOverlay {
   }
   
   addComment() {
-    if (!this.simulatedEnabled) return; // Respect user preference
+    if (!this.simulatedEnabled) return;
     
     const comment = this.getRandomComment();
     this.commentsCount++;
     
+    // Use the new minimal live-comments container if available
+    const container = document.getElementById('live-comments') || this.container;
+    
     const el = document.createElement('div');
-    el.className = 'chat-comment';
+    el.className = 'live-comment';
     el.setAttribute('data-simulated', 'true');
-    el.setAttribute('aria-label', `Simulated learner ${comment.user} says: ${comment.text}`);
     el.innerHTML = `
-      <div class="avatar">${comment.flag}</div>
-      <div class="content">
-        <div class="header">
-          <span class="username">${comment.user}</span>
-          <span class="simulated-indicator" title="Simulated learner - tap badge above to learn more">✨</span>
-          ${comment.verified ? '<span class="verified">✓</span>' : ''}
-        </div>
-        <span class="text">${comment.text}</span>
-      </div>
+      <span class="comment-user">${comment.user}</span>
+      <span class="comment-badge">✨</span>
+      <span class="comment-text">${comment.text}</span>
     `;
     
-    // Add to top (newest at bottom, flexbox column-reverse)
-    this.container.appendChild(el);
+    container.appendChild(el);
     
-    // Fade out after 6 seconds
+    // Fade out after 5 seconds
     setTimeout(() => {
       el.classList.add('fading');
-      setTimeout(() => el.remove(), 400);
-    }, 6000);
+      setTimeout(() => el.remove(), 500);
+    }, 5000);
     
-    // Keep max 5 comments visible
-    while (this.container.querySelectorAll('.chat-comment:not(.fading)').length > 5) {
-      const oldest = this.container.querySelector('.chat-comment:not(.fading)');
-      if (oldest) {
-        oldest.classList.add('fading');
-        setTimeout(() => oldest.remove(), 400);
-      }
-    }
-    
-    // Random like increments
-    if (Math.random() > 0.3) {
-      this.likesCount += Math.floor(Math.random() * 50) + 10;
+    // Keep max 6 comments visible
+    const comments = container.querySelectorAll('.live-comment:not(.fading)');
+    if (comments.length > 6) {
+      const oldest = comments[0];
+      oldest.classList.add('fading');
+      setTimeout(() => oldest.remove(), 500);
     }
   }
   
   // Add a specific comment (for phase-triggered comments)
   addSpecificComment(text, options = {}) {
-    if (!this.simulatedEnabled) return; // Respect user preference
+    if (!this.simulatedEnabled) return;
     
     const person = GLOBAL_NAMES[Math.floor(Math.random() * GLOBAL_NAMES.length)];
     const userName = options.user || person.name;
     
+    const container = document.getElementById('live-comments') || this.container;
+    
     const el = document.createElement('div');
-    el.className = 'chat-comment';
+    el.className = 'live-comment';
     el.setAttribute('data-simulated', 'true');
-    el.setAttribute('aria-label', `Simulated learner ${userName} says: ${text}`);
     el.innerHTML = `
-      <div class="avatar">${options.flag || person.flag}</div>
-      <div class="content">
-        <div class="header">
-          <span class="username">${userName}</span>
-          <span class="simulated-indicator" title="Simulated learner - tap badge above to learn more">✨</span>
-        </div>
-        <span class="text">${text}</span>
-      </div>
+      <span class="comment-user">${userName}</span>
+      <span class="comment-badge">✨</span>
+      <span class="comment-text">${text}</span>
     `;
     
-    this.container.appendChild(el);
+    container.appendChild(el);
     
     setTimeout(() => {
       el.classList.add('fading');
-      setTimeout(() => el.remove(), 400);
-    }, 6000);
+      setTimeout(() => el.remove(), 500);
+    }, 5000);
   }
   
   updateLiveBadge() {
@@ -964,38 +949,29 @@ class ChatOverlay {
   
   /**
    * Add a Kelly host message to the chat
-   * Kelly's messages have special styling and a "Host" badge
+   * Kelly appears inline with special styling
    */
   addKellyMessage(text, options = {}) {
     if (!this.simulatedEnabled) return;
     
+    const container = document.getElementById('live-comments') || this.container;
+    
     const el = document.createElement('div');
-    el.className = 'chat-comment kelly-host';
+    el.className = 'live-comment kelly-comment';
     el.setAttribute('aria-label', `Kelly (Host) says: ${text}`);
     el.innerHTML = `
-      <div class="avatar">
-        <img src="/images/brand/kelly-mark-circle-64.png" alt="Kelly" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />
-      </div>
-      <div class="content">
-        <div class="header">
-          <span class="username">Kelly</span>
-          <span class="host-badge" style="background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:white;font-size:9px;padding:2px 6px;border-radius:8px;font-weight:600;">Host</span>
-        </div>
-        <span class="text">${text}</span>
-      </div>
+      <span class="comment-user">Kelly</span>
+      <span class="host-badge">HOST</span>
+      <span class="comment-text">${text}</span>
     `;
     
-    // Apply kelly-host styling inline for the overlay container
-    el.style.background = 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2))';
-    el.style.border = '1px solid rgba(59, 130, 246, 0.4)';
+    container.appendChild(el);
     
-    this.container.appendChild(el);
-    
-    // Kelly messages stay longer (12 seconds)
-    const duration = options.duration || 12000;
+    // Kelly messages stay longer (10 seconds)
+    const duration = options.duration || 10000;
     setTimeout(() => {
       el.classList.add('fading');
-      setTimeout(() => el.remove(), 400);
+      setTimeout(() => el.remove(), 500);
     }, duration);
   }
   

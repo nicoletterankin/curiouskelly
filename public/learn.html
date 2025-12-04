@@ -2015,228 +2015,245 @@
         50% { box-shadow: 0 4px 30px rgba(139, 92, 246, 0.6); }
       }
       
-      /* === UNIFIED CHAT PANEL (LEFT SIDE - Zoom/TikTok Style) === */
+      /* ═══════════════════════════════════════════════════════════════
+         MINIMAL LIVE COMMENTS (TikTok/IG Live Style)
+         Clean floating text, no backgrounds, professional feel
+         ═══════════════════════════════════════════════════════════════ */
+      
+      /* Hide old chat panel - replaced with minimal comments */
       .chat-panel {
+        display: none !important;
+      }
+      
+      /* Live comments container - bottom left, floating up */
+      .live-comments {
         position: fixed;
-        left: 60px; /* After left rail */
-        bottom: calc(var(--safe-bottom, 20px) + 10px);
-        width: min(320px, calc(100vw - 80px));
-        max-height: 50vh;
+        left: 60px;
+        bottom: calc(var(--safe-bottom, 20px) + 80px);
+        width: min(280px, calc(100vw - 120px));
+        max-height: 200px;
         display: flex;
         flex-direction: column;
-        z-index: 90;
-        pointer-events: auto;
-      }
-      
-      /* Chat Header with Live Badge */
-      .chat-panel-header {
-        display: flex;
-        align-items: center;
-        justify-content: space-between;
-        padding: 8px 12px;
-        background: rgba(0, 0, 0, 0.7);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border-radius: 16px 16px 0 0;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-bottom: none;
-      }
-      
-      .chat-panel-title {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        font-size: 12px;
-        font-weight: 600;
-        color: rgba(255, 255, 255, 0.9);
-      }
-      
-      .chat-live-dot {
-        width: 8px;
-        height: 8px;
-        background: #22c55e;
-        border-radius: 50%;
-        animation: livePulse 2s ease-in-out infinite;
-      }
-      
-      .chat-panel-toggle {
-        background: none;
-        border: none;
-        color: rgba(255, 255, 255, 0.6);
-        cursor: pointer;
-        padding: 4px;
-        font-size: 14px;
-      }
-      
-      /* Chat Messages Container */
-      .chat-messages-container {
-        flex: 1;
-        overflow-y: auto;
-        display: flex;
-        flex-direction: column;
-        gap: 4px;
-        padding: 12px;
-        background: rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border-left: 1px solid rgba(255, 255, 255, 0.1);
-        border-right: 1px solid rgba(255, 255, 255, 0.1);
-        max-height: 240px;
-        scrollbar-width: none;
-        -ms-overflow-style: none;
-      }
-      
-      .chat-messages-container::-webkit-scrollbar {
-        display: none;
-      }
-      
-      /* === CHAT COMMENT STYLING (TikTok Live Style) === */
-      .chat-comment {
-        display: flex;
-        align-items: flex-start;
-        gap: 10px;
-        padding: 8px 10px;
-        background: rgba(255, 255, 255, 0.06);
-        border-radius: 12px;
-        animation: chatSlideIn 0.3s ease-out;
-        transition: opacity 0.4s ease;
-      }
-      
-      .chat-comment.fading {
-        opacity: 0;
-        transform: translateY(-10px);
-      }
-      
-      /* Avatar - supports images or flag emojis */
-      .chat-comment .avatar {
-        width: 32px;
-        height: 32px;
-        border-radius: 50%;
-        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        font-size: 16px;
-        flex-shrink: 0;
+        justify-content: flex-end;
+        gap: 6px;
+        z-index: 85;
+        pointer-events: none;
         overflow: hidden;
       }
       
-      .chat-comment .avatar img {
-        width: 100%;
-        height: 100%;
-        object-fit: cover;
-      }
-      
-      .chat-comment .content {
-        flex: 1;
-        min-width: 0;
-      }
-      
-      .chat-comment .header {
+      /* Individual comment - minimal, no background */
+      .live-comment {
         display: flex;
-        align-items: center;
+        align-items: baseline;
         gap: 6px;
-        margin-bottom: 2px;
+        padding: 4px 0;
+        animation: commentFloat 0.4s ease-out;
+        transform-origin: bottom left;
       }
       
-      .chat-comment .username {
-        font-size: 12px;
-        font-weight: 600;
-        color: rgba(255, 255, 255, 0.85);
+      .live-comment.fading {
+        animation: commentFadeUp 0.5s ease-out forwards;
       }
       
-      .chat-comment .simulated-indicator {
-        font-size: 10px;
-        opacity: 0.7;
-      }
-      
-      .chat-comment .verified {
-        font-size: 10px;
-        color: #3b82f6;
-      }
-      
-      .chat-comment .text {
-        font-size: 13px;
-        color: rgba(255, 255, 255, 0.9);
-        line-height: 1.4;
-        word-break: break-word;
-      }
-      
-      /* === KELLY HOST MESSAGE (Special Styling) === */
-      .chat-comment.kelly-host {
-        background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
-        border: 1px solid rgba(59, 130, 246, 0.3);
-      }
-      
-      .chat-comment.kelly-host .avatar {
-        background: none;
-        border: 2px solid #3b82f6;
-      }
-      
-      .chat-comment.kelly-host .username {
-        color: #60a5fa;
-      }
-      
-      .chat-comment.kelly-host .host-badge {
-        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-        color: white;
-        font-size: 9px;
-        padding: 2px 6px;
-        border-radius: 8px;
-        font-weight: 600;
-        text-transform: uppercase;
-        letter-spacing: 0.5px;
-      }
-      
-      @keyframes chatSlideIn {
+      @keyframes commentFloat {
         from {
           opacity: 0;
-          transform: translateY(10px);
+          transform: translateY(20px) scale(0.95);
         }
         to {
           opacity: 1;
-          transform: translateY(0);
+          transform: translateY(0) scale(1);
         }
       }
       
-      /* Chat Input Bar */
-      .chat-input-bar {
-        display: flex;
-        align-items: center;
-        gap: 8px;
-        padding: 10px 12px;
-        background: rgba(0, 0, 0, 0.7);
-        backdrop-filter: blur(16px);
-        -webkit-backdrop-filter: blur(16px);
-        border-radius: 0 0 16px 16px;
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        border-top: none;
+      @keyframes commentFadeUp {
+        to {
+          opacity: 0;
+          transform: translateY(-30px);
+        }
       }
       
-      .chat-input {
+      /* Username - colored */
+      .live-comment .comment-user {
+        font-size: 13px;
+        font-weight: 600;
+        color: #60a5fa;
+        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
+        white-space: nowrap;
+      }
+      
+      /* Simulated indicator */
+      .live-comment .comment-badge {
+        font-size: 10px;
+        opacity: 0.6;
+      }
+      
+      /* Message text - white */
+      .live-comment .comment-text {
+        font-size: 13px;
+        color: #fff;
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9), 0 2px 8px rgba(0, 0, 0, 0.5);
+        line-height: 1.3;
+      }
+      
+      /* Kelly's comments - special styling */
+      .live-comment.kelly-comment .comment-user {
+        color: #a78bfa;
+        font-weight: 700;
+      }
+      
+      .live-comment.kelly-comment .host-badge {
+        font-size: 9px;
+        font-weight: 700;
+        color: #a78bfa;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        margin-left: 2px;
+      }
+      
+      /* Mobile adjustments */
+      @media (max-width: 768px) {
+        .live-comments {
+          left: 12px;
+          bottom: calc(var(--safe-bottom, 20px) + 100px);
+          width: calc(100vw - 80px);
+          max-height: 180px;
+        }
+      }
+      
+      /* ═══════════════════════════════════════════════════════════════
+         ENHANCED TALK TO KELLY BUTTON
+         Corner position, opens voice OR text input
+         ═══════════════════════════════════════════════════════════════ */
+      
+      .talk-to-kelly-btn {
+        position: fixed;
+        bottom: calc(var(--safe-bottom, 20px) + 16px);
+        left: 60px;
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 12px 20px;
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.9) 0%, rgba(139, 92, 246, 0.9) 100%);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 28px;
+        cursor: pointer;
+        z-index: 90;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.3);
+      }
+      
+      .talk-to-kelly-btn:hover {
+        transform: translateY(-2px);
+        box-shadow: 0 6px 25px rgba(59, 130, 246, 0.4);
+      }
+      
+      .talk-to-kelly-btn:active {
+        transform: scale(0.98);
+      }
+      
+      .talk-to-kelly-btn .btn-icon {
+        width: 24px;
+        height: 24px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .talk-to-kelly-btn .btn-icon svg {
+        width: 20px;
+        height: 20px;
+        color: white;
+      }
+      
+      .talk-to-kelly-btn .btn-text {
+        font-size: 14px;
+        font-weight: 600;
+        color: white;
+        letter-spacing: 0.3px;
+      }
+      
+      .talk-to-kelly-btn .btn-hint {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.7);
+        margin-left: -4px;
+      }
+      
+      /* Mobile: smaller button */
+      @media (max-width: 768px) {
+        .talk-to-kelly-btn {
+          left: 12px;
+          padding: 10px 16px;
+          gap: 8px;
+        }
+        
+        .talk-to-kelly-btn .btn-text {
+          font-size: 13px;
+        }
+        
+        .talk-to-kelly-btn .btn-hint {
+          display: none;
+        }
+      }
+      
+      /* ═══════════════════════════════════════════════════════════════
+         MINIMAL SLIDE-UP INPUT BAR
+         Appears when Talk to Kelly is tapped
+         ═══════════════════════════════════════════════════════════════ */
+      
+      .kelly-input-overlay {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        background: rgba(0, 0, 0, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        padding: 16px;
+        padding-bottom: calc(var(--safe-bottom, 20px) + 16px);
+        transform: translateY(100%);
+        transition: transform 0.3s ease;
+        z-index: 200;
+      }
+      
+      .kelly-input-overlay.open {
+        transform: translateY(0);
+      }
+      
+      .kelly-input-container {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+      
+      .kelly-input-field {
         flex: 1;
         background: rgba(255, 255, 255, 0.1);
-        border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 20px;
-        padding: 10px 16px;
-        font-size: 13px;
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        border-radius: 24px;
+        padding: 14px 20px;
+        font-size: 15px;
         color: #fff;
         outline: none;
         transition: all 0.2s ease;
       }
       
-      .chat-input::placeholder {
-        color: rgba(255, 255, 255, 0.4);
+      .kelly-input-field::placeholder {
+        color: rgba(255, 255, 255, 0.5);
       }
       
-      .chat-input:focus {
+      .kelly-input-field:focus {
         background: rgba(255, 255, 255, 0.15);
         border-color: rgba(59, 130, 246, 0.5);
       }
       
-      .chat-send-btn {
-        width: 36px;
-        height: 36px;
+      .kelly-voice-btn {
+        width: 48px;
+        height: 48px;
         background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
         border: none;
         border-radius: 50%;
@@ -2248,18 +2265,46 @@
         flex-shrink: 0;
       }
       
-      .chat-send-btn:hover {
+      .kelly-voice-btn:hover {
         transform: scale(1.05);
-        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
       }
       
-      .chat-send-btn svg {
+      .kelly-voice-btn svg {
+        width: 22px;
+        height: 22px;
         color: white;
-        width: 16px;
-        height: 16px;
       }
       
-      /* Mobile: Full-width bottom chat */
+      .kelly-close-input {
+        width: 40px;
+        height: 40px;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 18px;
+        transition: all 0.2s ease;
+      }
+      
+      .kelly-close-input:hover {
+        background: rgba(255, 255, 255, 0.2);
+        color: white;
+      }
+      
+      /* OLD STYLES - Hidden */
+      .chat-panel-header,
+      .chat-messages-container,
+      .chat-input-bar,
+      .chat-input,
+      .chat-send-btn {
+        display: none !important;
+      }
+      
+      /* Mobile: Full-width bottom chat - HIDDEN */
       @media (max-width: 768px) {
         .chat-panel {
           left: 0;
@@ -3442,56 +3487,56 @@
       <button class="day-nav day-nav-prev" id="nav-prev" aria-label="Previous day">↓</button>
       <button class="day-nav day-nav-next" id="nav-next" aria-label="Next day">↑</button>
 
-      <!-- UNIFIED CHAT PANEL (Left Side - Zoom/TikTok Style) -->
-      <div class="chat-panel" id="chat-panel">
-        <!-- Chat Header -->
-        <div class="chat-panel-header">
-          <div class="chat-panel-title">
-            <span class="chat-live-dot"></span>
-            <span>Live Chat</span>
-            <span class="simulated-badge" title="Simulated social learning">✨</span>
-          </div>
-          <button class="chat-panel-toggle" id="chat-toggle" aria-label="Minimize chat">−</button>
+      <!-- ═══════════════════════════════════════════════════════════════
+           MINIMAL LIVE COMMENTS (TikTok/IG Live Style)
+           Clean floating text, no backgrounds
+           ═══════════════════════════════════════════════════════════════ -->
+      <div class="live-comments" id="live-comments">
+        <!-- Comments injected here by JS - format:
+        <div class="live-comment">
+          <span class="comment-user">Maria</span>
+          <span class="comment-badge">✨</span>
+          <span class="comment-text">Good point</span>
         </div>
-        
-        <!-- Chat Messages -->
-        <div class="chat-messages-container" id="chat-messages-container">
-          <!-- Kelly's Welcome Message (Host) -->
-          <div class="chat-comment kelly-host" id="kelly-host-message">
-            <div class="avatar">
-              <img src="/images/brand/kelly-mark-circle-64.png" alt="Kelly" />
-            </div>
-            <div class="content">
-              <div class="header">
-                <span class="username">Kelly</span>
-                <span class="host-badge">Host</span>
-              </div>
-              <span class="text">Welcome to today's lesson! Let's learn together 💙</span>
-            </div>
-          </div>
-          <!-- More comments injected by chat-overlay.js -->
-        </div>
-        
-        <!-- Chat Input -->
-        <div class="chat-input-bar" id="chat-input-bar">
+        -->
+      </div>
+      
+      <!-- ENHANCED TALK TO KELLY BUTTON -->
+      <button class="talk-to-kelly-btn" id="talk-to-kelly-btn" aria-label="Talk or text Kelly">
+        <span class="btn-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </span>
+        <span class="btn-text">Talk to Kelly</span>
+        <span class="btn-hint">voice or text</span>
+      </button>
+      
+      <!-- MINIMAL SLIDE-UP INPUT OVERLAY -->
+      <div class="kelly-input-overlay" id="kelly-input-overlay">
+        <div class="kelly-input-container">
           <input 
             type="text" 
-            class="chat-input" 
-            id="chat-input" 
-            placeholder="Say something..."
+            class="kelly-input-field" 
+            id="kelly-input-field"
+            placeholder="Ask Kelly anything..."
             autocomplete="off"
           />
-          <button class="chat-send-btn" id="chat-send-btn" aria-label="Send message">
-            <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+          <button class="kelly-voice-btn" id="kelly-voice-btn" aria-label="Voice input">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+              <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+              <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+              <line x1="12" y1="19" x2="12" y2="23"></line>
+              <line x1="8" y1="23" x2="16" y2="23"></line>
             </svg>
           </button>
+          <button class="kelly-close-input" id="kelly-close-input" aria-label="Close">✕</button>
         </div>
       </div>
       
-      <!-- OLD BOTTOM CHAT AREA - Deprecated, hidden for compatibility -->
-      <div class="bottom-chat-area" id="bottom-chat-area" style="display: none;">
-      </div>
+      <!-- Hidden for compatibility -->
+      <div class="bottom-chat-area" id="bottom-chat-area" style="display: none;"></div>
+      <div class="chat-messages-container" id="chat-messages-container" style="display: none;"></div>
 
       <!-- Hidden legacy bottom bar for compatibility -->
       <div class="bottom-bar" id="bottom-bar" style="display: none;">
@@ -6445,22 +6490,79 @@
           console.log('[Learn] ✅ Forced Kelly pose for phase:', phaseType);
         }
         
-        // ✨ Wire up Talk to Kelly button
+        // ═══════════════════════════════════════════════════════════════
+        // ENHANCED TALK TO KELLY - Opens minimal input overlay
+        // ═══════════════════════════════════════════════════════════════
         const talkBtn = document.getElementById('talk-to-kelly-btn');
-        if (talkBtn && window.KellyConversation) {
+        const inputOverlay = document.getElementById('kelly-input-overlay');
+        const inputField = document.getElementById('kelly-input-field');
+        const voiceBtn = document.getElementById('kelly-voice-btn');
+        const closeInputBtn = document.getElementById('kelly-close-input');
+        
+        // Open input overlay
+        if (talkBtn && inputOverlay) {
           talkBtn.addEventListener('click', () => {
-            if (KellyConversation.isActive) {
-              KellyConversation.endConversation();
-              talkBtn.classList.remove('listening');
-            } else {
-              KellyConversation.startConversation();
-              talkBtn.classList.add('listening');
-            }
+            inputOverlay.classList.add('open');
+            setTimeout(() => inputField?.focus(), 300);
           });
-          console.log('[Learn] ✅ Talk to Kelly button wired up');
         }
         
-        // ✨ Wire up bottom chat input
+        // Close input overlay
+        if (closeInputBtn && inputOverlay) {
+          closeInputBtn.addEventListener('click', () => {
+            inputOverlay.classList.remove('open');
+          });
+        }
+        
+        // Voice button - start voice conversation
+        if (voiceBtn && window.KellyConversation) {
+          voiceBtn.addEventListener('click', () => {
+            inputOverlay?.classList.remove('open');
+            if (!KellyConversation.isActive) {
+              KellyConversation.startConversation();
+              talkBtn?.classList.add('listening');
+            }
+          });
+        }
+        
+        // Text input - send message to Kelly
+        if (inputField) {
+          inputField.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && inputField.value.trim()) {
+              const text = inputField.value.trim();
+              
+              // Add user's message to live comments
+              const container = document.getElementById('live-comments');
+              if (container) {
+                const el = document.createElement('div');
+                el.className = 'live-comment';
+                el.innerHTML = `
+                  <span class="comment-user" style="color: #22c55e;">You</span>
+                  <span class="comment-text">${text}</span>
+                `;
+                container.appendChild(el);
+                setTimeout(() => {
+                  el.classList.add('fading');
+                  setTimeout(() => el.remove(), 500);
+                }, 8000);
+              }
+              
+              // Kelly responds
+              if (chatOverlay && chatOverlay.addKellyMessage) {
+                setTimeout(() => {
+                  chatOverlay.addKellyMessage("Thanks for your question! Let me think about that...");
+                }, 1500);
+              }
+              
+              inputField.value = '';
+              inputOverlay?.classList.remove('open');
+            }
+          });
+        }
+        
+        console.log('[Learn] ✅ Talk to Kelly enhanced input wired up');
+        
+        // Legacy chat wiring (hidden, for compatibility)
         const chatInput = document.getElementById('chat-input');
         const chatSendBtn = document.getElementById('chat-send-btn');
         const chatContainer = document.getElementById('chat-messages-container');
