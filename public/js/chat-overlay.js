@@ -220,7 +220,17 @@ class ChatOverlay {
     // Check user preference for simulated content
     this.simulatedEnabled = this.getSimulatedContentPref();
     
-    // Create overlay container with TikTok-style design + Trust & Safety disclosure
+    // V3: Try to use existing HTML container first
+    this.container = document.getElementById('live-comments');
+    if (this.container) {
+      console.log('[ChatOverlay] V3: Using existing #live-comments container from HTML');
+      // Skip creating old-style container, just setup badge and tooltip
+      this.setupBadgeAndTooltip();
+      return;
+    }
+    
+    // Fallback: Create overlay container with TikTok-style design + Trust & Safety disclosure
+    console.log('[ChatOverlay] Fallback: Creating #chat-overlay container');
     this.container = document.createElement('div');
     this.container.id = 'chat-overlay';
     this.container.innerHTML = `
@@ -567,6 +577,66 @@ class ChatOverlay {
     if (!this.simulatedEnabled) {
       this.container.classList.add('simulated-hidden');
       this.liveBadge.classList.add('simulated-hidden');
+    }
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // V3: Simplified setup when using existing HTML containers
+  // ═══════════════════════════════════════════════════════════════════
+  
+  setupBadgeAndTooltip() {
+    // Use existing live badge from HTML (#live-badge-v2) if available
+    this.liveBadge = document.getElementById('live-badge-v2');
+    if (!this.liveBadge) {
+      // Fallback badge creation
+      this.liveBadge = document.createElement('div');
+      this.liveBadge.id = 'live-badge';
+      this.liveBadge.className = 'live-badge-v2';
+      this.liveBadge.innerHTML = `
+        <span class="live-dot" style="background: #f59e0b;"></span>
+        <span class="live-text">✨ Social</span>
+      `;
+      this.liveBadge.style.cssText = 'position:fixed;top:8px;left:50%;transform:translateX(-50%);background:rgba(239,68,68,0.9);color:white;padding:4px 12px;border-radius:16px;font-size:12px;font-weight:600;z-index:100;display:flex;align-items:center;gap:6px;cursor:pointer;';
+      document.body.appendChild(this.liveBadge);
+    }
+    
+    // Create tooltip for disclosure
+    this.tooltip = document.getElementById('simulated-tooltip');
+    if (!this.tooltip) {
+      this.tooltip = document.createElement('div');
+      this.tooltip.id = 'simulated-tooltip';
+      this.tooltip.style.cssText = 'position:fixed;top:50%;left:50%;transform:translate(-50%,-50%);background:rgba(0,0,0,0.95);backdrop-filter:blur(12px);border:1px solid rgba(255,255,255,0.1);border-radius:16px;padding:20px;width:min(320px,90vw);z-index:1000;display:none;';
+      this.tooltip.innerHTML = `
+        <h4 style="color:#f59e0b;font-size:16px;font-weight:600;margin:0 0 12px 0;">✨ Simulated Learning Community</h4>
+        <p style="color:rgba(255,255,255,0.85);font-size:14px;line-height:1.5;margin:0 0 16px 0;">These comments are AI-generated to create a supportive social learning experience. They help you feel less alone while learning—without the harmful effects of social media.</p>
+        <p style="font-size:12px;color:rgba(255,255,255,0.6);margin-bottom:16px;">Every simulated comment is marked with ✨</p>
+        <div style="display:flex;gap:10px;flex-wrap:wrap;">
+          <button onclick="window.chatOverlay?.hideTooltip()" style="padding:10px 16px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:#3b82f6;color:white;">Got it</button>
+          <button onclick="window.chatOverlay?.toggleSimulated()" style="padding:10px 16px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.9);">Turn off</button>
+          <a href="/trust" style="padding:10px 16px;border-radius:10px;font-size:13px;font-weight:500;cursor:pointer;border:none;background:rgba(255,255,255,0.1);color:rgba(255,255,255,0.9);text-decoration:none;">Learn more</a>
+        </div>
+      `;
+      document.body.appendChild(this.tooltip);
+    }
+    
+    // Click handler for disclosure
+    if (this.liveBadge) {
+      this.liveBadge.style.cursor = 'pointer';
+      this.liveBadge.addEventListener('click', () => this.showTooltip());
+    }
+    
+    // Close tooltip on outside click
+    document.addEventListener('click', (e) => {
+      if (this.tooltip && !this.tooltip.contains(e.target) && 
+          this.liveBadge && !this.liveBadge.contains(e.target)) {
+        this.hideTooltip();
+      }
+    });
+    
+    // Apply user preference
+    if (!this.simulatedEnabled) {
+      if (this.container) this.container.classList.add('simulated-hidden');
+      if (this.liveBadge) this.liveBadge.classList.add('simulated-hidden');
     }
   }
   
