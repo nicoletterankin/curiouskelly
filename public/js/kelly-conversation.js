@@ -48,6 +48,9 @@ const KellyConversation = {
   audioQueue: [],
   isPlayingAudio: false,
   
+  // Lip-sync integration
+  lipSyncEnabled: true,
+  
   // UI elements
   talkButton: null,
   transcriptContainer: null,
@@ -114,6 +117,20 @@ IMPORTANT RULES:
     this.onListeningStart = options.onListeningStart || null;
     this.onListeningEnd = options.onListeningEnd || null;
     
+    // Lip-sync configuration
+    this.lipSyncEnabled = options.lipSyncEnabled !== false;
+    
+    // Initialize lip-sync system if available
+    if (this.lipSyncEnabled && window.KellyLipSync) {
+      window.KellyLipSync.init({
+        sendToUnity: true,
+        sendTo2D: true,
+        sensitivity: 1.6,
+        smoothing: 0.55,
+      });
+      console.log('[KellyConversation v2] Lip-sync system initialized');
+    }
+    
     // Create UI elements
     this.createTranscriptUI();
     this.addStyles();
@@ -124,7 +141,8 @@ IMPORTANT RULES:
     console.log('[KellyConversation v2] Initialized', {
       hasAgentId: !!this.config.agentId,
       agentId: this.config.agentId,
-      voiceId: this.config.voiceId
+      voiceId: this.config.voiceId,
+      lipSyncEnabled: this.lipSyncEnabled
     });
     
     return this;
@@ -232,6 +250,13 @@ IMPORTANT RULES:
       // Initialize audio
       await this.initAudio();
       
+      // Start lip-sync streaming mode
+      if (this.lipSyncEnabled && window.KellyLipSync) {
+        await window.KellyLipSync.resume();
+        window.KellyLipSync.startStreaming();
+        console.log('[KellyConversation v2] Lip-sync streaming started');
+      }
+      
       // Try to get signed URL first, fall back to public agent
       await this.getSignedUrlIfNeeded();
       
@@ -258,6 +283,12 @@ IMPORTANT RULES:
     // Stop audio
     this.stopListening();
     this.stopAudioPlayback();
+    
+    // Stop lip-sync
+    if (this.lipSyncEnabled && window.KellyLipSync) {
+      window.KellyLipSync.stop();
+      console.log('[KellyConversation v2] Lip-sync stopped');
+    }
     
     // Close WebSocket
     if (this.ws) {
@@ -574,6 +605,11 @@ IMPORTANT RULES:
   
   queueAudio(base64Audio) {
     this.audioQueue.push(base64Audio);
+    
+    // Feed audio to lip-sync system for real-time mouth animation
+    if (this.lipSyncEnabled && window.KellyLipSync) {
+      window.KellyLipSync.addAudioChunk(base64Audio);
+    }
     
     if (!this.isPlayingAudio) {
       this.playNextAudio();

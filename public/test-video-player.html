@@ -1,0 +1,167 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Kelly Video Player Test</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'DM Sans', system-ui, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      padding: 2rem;
+      color: white;
+    }
+    
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+      color: #00d4aa;
+    }
+    
+    .test-container {
+      max-width: 800px;
+      margin: 0 auto;
+    }
+    
+    .video-wrapper {
+      margin-bottom: 2rem;
+    }
+    
+    .controls {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 2rem;
+    }
+    
+    button {
+      padding: 12px 24px;
+      border-radius: 8px;
+      border: none;
+      background: linear-gradient(135deg, #00d4aa 0%, #00b894 100%);
+      color: white;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 212, 170, 0.4);
+    }
+    
+    button.secondary {
+      background: linear-gradient(135deg, #6366f1 0%, #4f46e5 100%);
+    }
+    
+    .log {
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 12px;
+      padding: 1rem;
+      font-family: monospace;
+      font-size: 13px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .log-entry {
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .log-entry.success { color: #00d4aa; }
+    .log-entry.error { color: #ff6b6b; }
+    .log-entry.info { color: #74b9ff; }
+  </style>
+</head>
+<body>
+  <div class="test-container">
+    <h1>🎬 Kelly Video Player Test</h1>
+    
+    <div class="video-wrapper">
+      <div id="kelly-video-container"></div>
+    </div>
+    
+    <div class="controls">
+      <button onclick="testGeneratedVideo()">▶ Play Generated Video</button>
+      <button onclick="testFallbackImage()" class="secondary">🖼 Test Fallback (Image Only)</button>
+      <button onclick="testLesson1()">📚 Play Lesson 1 Welcome</button>
+      <button onclick="stopVideo()" class="secondary">⏹ Stop</button>
+    </div>
+    
+    <h3>📋 Log</h3>
+    <div id="log" class="log"></div>
+  </div>
+  
+  <script src="/js/kelly-video-player.js"></script>
+  <script>
+    // Log helper
+    function log(message, type = 'info') {
+      const logEl = document.getElementById('log');
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      logEl.insertBefore(entry, logEl.firstChild);
+    }
+    
+    // Initialize player
+    window.addEventListener('DOMContentLoaded', () => {
+      KellyVideoPlayer.init({
+        containerId: 'kelly-video-container',
+      });
+      log('Video player initialized', 'success');
+    });
+    
+    // Test with a generated video from the generated-videos folder
+    async function testGeneratedVideo() {
+      log('Testing generated video...');
+      
+      // Get latest generated video
+      KellyVideoPlayer.play({
+        videoUrl: '/kelly/videos/001/welcome.mp4',
+        fallbackImage: '/kelly/poses/kelly_welcome.png',
+        onStart: () => log('Video started', 'success'),
+        onEnd: () => log('Video ended', 'info'),
+        onError: (err) => log(`Error: ${err}`, 'error'),
+      });
+    }
+    
+    // Test fallback with just an image
+    function testFallbackImage() {
+      log('Testing fallback mode (image only)...');
+      
+      KellyVideoPlayer.play({
+        fallbackImage: '/kelly/poses/kelly_welcome.png',
+        onStart: () => log('Fallback started', 'success'),
+        onEnd: () => log('Fallback ended', 'info'),
+        onError: (err) => log(`Error: ${err}`, 'error'),
+      });
+    }
+    
+    // Test Lesson 1 welcome
+    function testLesson1() {
+      log('Playing Lesson 1 welcome video...');
+      
+      KellyVideoPlayer.playLessonPhase(1, 'welcome', {
+        onStart: () => log('Lesson video started', 'success'),
+        onEnd: () => log('Lesson video ended', 'info'),
+        onError: (err) => log(`Error: ${err}`, 'error'),
+      });
+    }
+    
+    // Stop video
+    function stopVideo() {
+      KellyVideoPlayer.stop();
+      log('Video stopped', 'info');
+    }
+  </script>
+</body>
+</html>
+

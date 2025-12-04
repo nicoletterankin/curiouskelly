@@ -1,0 +1,558 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kelly Lip-Sync Test</title>
+  <style>
+    :root {
+      --bg: #0f0f1a;
+      --surface: #1a1a2e;
+      --primary: #00d4aa;
+      --secondary: #7c3aed;
+      --text: #e2e8f0;
+      --text-dim: #94a3b8;
+    }
+    
+    * {
+      box-sizing: border-box;
+    }
+    
+    body {
+      margin: 0;
+      padding: 20px;
+      min-height: 100vh;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+    
+    h1 {
+      text-align: center;
+      background: linear-gradient(135deg, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 30px;
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    
+    .section {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 24px;
+      margin-bottom: 24px;
+    }
+    
+    .section h2 {
+      margin-top: 0;
+      color: var(--primary);
+      font-size: 1.2rem;
+    }
+    
+    .controls {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-bottom: 16px;
+    }
+    
+    button {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    button.primary {
+      background: var(--primary);
+      color: var(--bg);
+    }
+    
+    button.secondary {
+      background: var(--secondary);
+      color: white;
+    }
+    
+    button.outline {
+      background: transparent;
+      border: 2px solid var(--primary);
+      color: var(--primary);
+    }
+    
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0, 212, 170, 0.3);
+    }
+    
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    .status {
+      padding: 12px 16px;
+      border-radius: 8px;
+      background: rgba(0, 0, 0, 0.3);
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 13px;
+      margin-bottom: 16px;
+    }
+    
+    .status.active {
+      border-left: 4px solid var(--primary);
+    }
+    
+    .status.error {
+      border-left: 4px solid #ef4444;
+    }
+    
+    #kellyFace {
+      width: 200px;
+      height: 200px;
+      background: linear-gradient(135deg, #2a2a4a, #1a1a2e);
+      border-radius: 50%;
+      margin: 0 auto 20px;
+      position: relative;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .eyes {
+      display: flex;
+      gap: 40px;
+      margin-bottom: 30px;
+    }
+    
+    .eye {
+      width: 30px;
+      height: 30px;
+      background: white;
+      border-radius: 50%;
+      position: relative;
+    }
+    
+    .eye::after {
+      content: '';
+      position: absolute;
+      width: 15px;
+      height: 15px;
+      background: #1a1a2e;
+      border-radius: 50%;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+    }
+    
+    #mouth {
+      width: 60px;
+      height: 10px;
+      background: #333;
+      border-radius: 0 0 30px 30px;
+      transition: all 0.05s ease-out;
+    }
+    
+    #blendshapeOutput {
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 11px;
+      background: rgba(0, 0, 0, 0.3);
+      padding: 16px;
+      border-radius: 8px;
+      max-height: 200px;
+      overflow-y: auto;
+      white-space: pre-wrap;
+    }
+    
+    .expression-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(120px, 1fr));
+      gap: 8px;
+    }
+    
+    .expression-btn {
+      padding: 8px 12px;
+      font-size: 12px;
+    }
+    
+    select {
+      padding: 10px 16px;
+      border-radius: 8px;
+      background: var(--surface);
+      border: 2px solid var(--primary);
+      color: var(--text);
+      font-size: 14px;
+      cursor: pointer;
+    }
+    
+    .log {
+      font-family: 'Monaco', 'Menlo', monospace;
+      font-size: 11px;
+      background: rgba(0, 0, 0, 0.4);
+      padding: 12px;
+      border-radius: 8px;
+      max-height: 150px;
+      overflow-y: auto;
+    }
+    
+    .log-entry {
+      padding: 4px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .log-entry.info { color: var(--primary); }
+    .log-entry.error { color: #ef4444; }
+    .log-entry.warn { color: #f59e0b; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>✨ Kelly Lip-Sync Test</h1>
+    
+    <!-- Visual Preview -->
+    <div class="section">
+      <h2>🎭 Visual Preview</h2>
+      <div id="kellyFace">
+        <div class="eyes">
+          <div class="eye" id="leftEye"></div>
+          <div class="eye" id="rightEye"></div>
+        </div>
+        <div id="mouth"></div>
+      </div>
+      <div id="blendshapeOutput">Blendshapes will appear here...</div>
+    </div>
+    
+    <!-- Audio Test -->
+    <div class="section">
+      <h2>🔊 Audio Lip-Sync Test</h2>
+      <div class="status" id="audioStatus">Status: Ready</div>
+      <div class="controls">
+        <button class="primary" id="initBtn">Initialize System</button>
+        <button class="secondary" id="testAudioBtn" disabled>Play Test Audio</button>
+        <button class="outline" id="stopBtn" disabled>Stop</button>
+      </div>
+      <p style="color: var(--text-dim); font-size: 13px;">
+        Note: Click "Initialize System" first (requires user interaction for AudioContext).
+      </p>
+    </div>
+    
+    <!-- Streaming Test -->
+    <div class="section">
+      <h2>🎙️ Streaming Lip-Sync Test (Simulated)</h2>
+      <div class="controls">
+        <button class="primary" id="startStreamBtn" disabled>Start Streaming Mode</button>
+        <button class="outline" id="simulateAudioBtn" disabled>Simulate Audio Input</button>
+        <button class="outline" id="stopStreamBtn" disabled>Stop Streaming</button>
+      </div>
+    </div>
+    
+    <!-- Expression Test -->
+    <div class="section">
+      <h2>😊 Expression Bridge Test</h2>
+      <div class="controls" style="margin-bottom: 16px;">
+        <select id="archetypeSelect">
+          <option value="The Explorer">The Explorer</option>
+          <option value="The Scientist">The Scientist</option>
+          <option value="The Storyteller">The Storyteller</option>
+          <option value="The Empath">The Empath</option>
+          <option value="The Coach">The Coach</option>
+        </select>
+      </div>
+      <div class="expression-grid">
+        <button class="outline expression-btn" data-expr="neutral">Neutral</button>
+        <button class="outline expression-btn" data-expr="curious">Curious</button>
+        <button class="outline expression-btn" data-expr="thinking">Thinking</button>
+        <button class="outline expression-btn" data-expr="explaining">Explaining</button>
+        <button class="outline expression-btn" data-expr="excited">Excited</button>
+        <button class="outline expression-btn" data-expr="surprised">Surprised</button>
+        <button class="outline expression-btn" data-expr="listening">Listening</button>
+        <button class="outline expression-btn" data-expr="celebrating">Celebrating</button>
+        <button class="outline expression-btn" data-expr="wisdom">Wisdom</button>
+      </div>
+    </div>
+    
+    <!-- Console Log -->
+    <div class="section">
+      <h2>📋 Log</h2>
+      <div class="log" id="log"></div>
+    </div>
+  </div>
+  
+  <!-- Scripts -->
+  <script src="js/kelly-lipsync.js"></script>
+  <script src="js/kelly-expression-bridge.js"></script>
+  
+  <script>
+    // Elements
+    const mouth = document.getElementById('mouth');
+    const leftEye = document.getElementById('leftEye');
+    const rightEye = document.getElementById('rightEye');
+    const blendshapeOutput = document.getElementById('blendshapeOutput');
+    const audioStatus = document.getElementById('audioStatus');
+    const logEl = document.getElementById('log');
+    
+    // Buttons
+    const initBtn = document.getElementById('initBtn');
+    const testAudioBtn = document.getElementById('testAudioBtn');
+    const stopBtn = document.getElementById('stopBtn');
+    const startStreamBtn = document.getElementById('startStreamBtn');
+    const simulateAudioBtn = document.getElementById('simulateAudioBtn');
+    const stopStreamBtn = document.getElementById('stopStreamBtn');
+    const archetypeSelect = document.getElementById('archetypeSelect');
+    
+    // State
+    let isInitialized = false;
+    let testAudio = null;
+    
+    // Logging
+    function log(message, type = 'info') {
+      const entry = document.createElement('div');
+      entry.className = `log-entry ${type}`;
+      entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+      logEl.prepend(entry);
+      
+      // Keep only last 50 entries
+      while (logEl.children.length > 50) {
+        logEl.removeChild(logEl.lastChild);
+      }
+    }
+    
+    // Update visual preview
+    function updateVisuals(blendshapes) {
+      // Mouth
+      const jawOpen = blendshapes.jawOpen || 0;
+      const smile = ((blendshapes.mouthSmileLeft || 0) + (blendshapes.mouthSmileRight || 0)) / 2;
+      
+      mouth.style.height = `${10 + jawOpen * 0.4}px`;
+      mouth.style.width = `${60 + smile * 0.3}px`;
+      mouth.style.borderRadius = jawOpen > 20 ? '30px' : '0 0 30px 30px';
+      
+      // Eyes
+      const eyeWide = ((blendshapes.eyeWideLeft || 0) + (blendshapes.eyeWideRight || 0)) / 2;
+      const eyeSquint = ((blendshapes.eyeSquintLeft || 0) + (blendshapes.eyeSquintRight || 0)) / 2;
+      
+      leftEye.style.transform = `scaleY(${1 + eyeWide * 0.003 - eyeSquint * 0.005})`;
+      rightEye.style.transform = `scaleY(${1 + eyeWide * 0.003 - eyeSquint * 0.005})`;
+      
+      // Blendshape output
+      const formatted = Object.entries(blendshapes)
+        .filter(([, v]) => Math.abs(v) > 0.1)
+        .map(([k, v]) => `${k}: ${v.toFixed(1)}`)
+        .join('\n');
+      blendshapeOutput.textContent = formatted || 'All values at rest';
+    }
+    
+    // Initialize
+    initBtn.addEventListener('click', async () => {
+      try {
+        log('Initializing lip-sync system...');
+        
+        // Initialize lip-sync
+        KellyLipSync.init();
+        await KellyLipSync.resume();
+        
+        // Set up blendshape update callback
+        KellyLipSync.onBlendshapesUpdate = updateVisuals;
+        
+        // Initialize expression bridge
+        if (window.KellyExpressionBridge) {
+          KellyExpressionBridge.init();
+          log('Expression bridge initialized');
+        }
+        
+        isInitialized = true;
+        
+        // Enable buttons
+        testAudioBtn.disabled = false;
+        stopBtn.disabled = false;
+        startStreamBtn.disabled = false;
+        simulateAudioBtn.disabled = false;
+        stopStreamBtn.disabled = false;
+        
+        audioStatus.textContent = 'Status: Initialized ✓';
+        audioStatus.className = 'status active';
+        
+        log('System initialized successfully!', 'info');
+        
+      } catch (error) {
+        log(`Initialization error: ${error.message}`, 'error');
+        audioStatus.textContent = `Status: Error - ${error.message}`;
+        audioStatus.className = 'status error';
+      }
+    });
+    
+    // Test Audio (using Web Audio API to generate tone)
+    testAudioBtn.addEventListener('click', () => {
+      if (!isInitialized) return;
+      
+      log('Starting test audio...');
+      audioStatus.textContent = 'Status: Playing test audio...';
+      
+      // Start streaming mode for real-time analysis
+      KellyLipSync.startStreaming();
+      
+      // Create oscillator for test tone
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const oscillator = audioCtx.createOscillator();
+      const gainNode = audioCtx.createGain();
+      
+      // Modulate frequency for varied mouth shapes
+      oscillator.type = 'sine';
+      oscillator.frequency.setValueAtTime(150, audioCtx.currentTime);
+      
+      // Modulate gain for amplitude variation
+      gainNode.gain.setValueAtTime(0, audioCtx.currentTime);
+      gainNode.gain.linearRampToValueAtTime(0.5, audioCtx.currentTime + 0.1);
+      
+      // Add frequency modulation
+      let time = 0;
+      const modulateFreq = () => {
+        if (!oscillator.context) return;
+        
+        time += 0.1;
+        const freq = 150 + Math.sin(time) * 100 + Math.sin(time * 3) * 50;
+        oscillator.frequency.setValueAtTime(freq, audioCtx.currentTime);
+        
+        const amp = 0.3 + Math.sin(time * 2) * 0.2;
+        gainNode.gain.setValueAtTime(amp, audioCtx.currentTime);
+        
+        requestAnimationFrame(modulateFreq);
+      };
+      
+      oscillator.connect(gainNode);
+      gainNode.connect(audioCtx.destination);
+      
+      // Connect to lip-sync analyser
+      gainNode.connect(KellyLipSync.analyser);
+      
+      oscillator.start();
+      modulateFreq();
+      
+      // Store for stopping
+      testAudio = { oscillator, gainNode, audioCtx };
+      
+      // Stop after 5 seconds
+      setTimeout(() => {
+        if (testAudio) {
+          testAudio.oscillator.stop();
+          testAudio.audioCtx.close();
+          testAudio = null;
+          KellyLipSync.stop();
+          audioStatus.textContent = 'Status: Test complete';
+          log('Test audio complete');
+        }
+      }, 5000);
+    });
+    
+    // Stop
+    stopBtn.addEventListener('click', () => {
+      if (testAudio) {
+        testAudio.oscillator.stop();
+        testAudio.audioCtx.close();
+        testAudio = null;
+      }
+      KellyLipSync.stop();
+      audioStatus.textContent = 'Status: Stopped';
+      log('Stopped');
+    });
+    
+    // Streaming mode
+    startStreamBtn.addEventListener('click', () => {
+      if (!isInitialized) return;
+      
+      KellyLipSync.startStreaming();
+      audioStatus.textContent = 'Status: Streaming mode active';
+      log('Streaming mode started');
+    });
+    
+    simulateAudioBtn.addEventListener('click', () => {
+      if (!isInitialized || !KellyLipSync.isStreaming) {
+        log('Start streaming mode first', 'warn');
+        return;
+      }
+      
+      // Generate fake audio data to simulate streaming
+      const audioCtx = new (window.AudioContext || window.webkitAudioContext)();
+      const sampleRate = 22050;
+      const duration = 1; // 1 second
+      const buffer = audioCtx.createBuffer(1, sampleRate * duration, sampleRate);
+      const data = buffer.getChannelData(0);
+      
+      // Generate speech-like waveform
+      for (let i = 0; i < data.length; i++) {
+        const t = i / sampleRate;
+        // Mix of frequencies to simulate speech
+        data[i] = Math.sin(2 * Math.PI * 150 * t) * 0.3 + // Fundamental
+                  Math.sin(2 * Math.PI * 400 * t) * 0.2 + // Formant
+                  Math.sin(2 * Math.PI * 2500 * t) * 0.1 + // Consonants
+                  (Math.random() - 0.5) * 0.1; // Noise
+        
+        // Apply envelope
+        const envelope = Math.min(1, t * 10) * Math.min(1, (duration - t) * 10);
+        data[i] *= envelope;
+      }
+      
+      // Convert to wav blob and then to base64
+      // (Simplified - in reality, would need proper WAV encoding)
+      log('Simulated audio burst sent', 'info');
+      
+      // For demo, just trigger the analyser manually
+      setTimeout(() => {
+        KellyLipSync.energyHistory = [0.3, 0.5, 0.7, 0.5, 0.3];
+        KellyLipSync.isSpeaking = true;
+      }, 100);
+      
+      setTimeout(() => {
+        KellyLipSync.energyHistory = [0.1, 0.05, 0.02, 0.01, 0];
+        KellyLipSync.isSpeaking = false;
+      }, 800);
+    });
+    
+    stopStreamBtn.addEventListener('click', () => {
+      KellyLipSync.stop();
+      audioStatus.textContent = 'Status: Ready';
+      log('Streaming stopped');
+    });
+    
+    // Expression buttons
+    document.querySelectorAll('.expression-btn').forEach(btn => {
+      btn.addEventListener('click', () => {
+        const expr = btn.dataset.expr;
+        if (window.KellyExpressionBridge) {
+          KellyExpressionBridge.setExpression(expr);
+          log(`Expression: ${expr}`);
+          
+          // Update visual
+          setTimeout(() => {
+            updateVisuals(KellyExpressionBridge.getBlendshapes());
+          }, 50);
+        }
+      });
+    });
+    
+    // Archetype select
+    archetypeSelect.addEventListener('change', (e) => {
+      if (window.KellyExpressionBridge) {
+        KellyExpressionBridge.setArchetype(e.target.value);
+        log(`Archetype: ${e.target.value}`);
+      }
+    });
+    
+    // Initial log
+    log('Page loaded. Click "Initialize System" to begin.');
+    log('KellyLipSync available: ' + !!window.KellyLipSync);
+    log('KellyExpressionBridge available: ' + !!window.KellyExpressionBridge);
+  </script>
+</body>
+</html>
+

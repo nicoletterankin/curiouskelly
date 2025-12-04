@@ -19,6 +19,7 @@ class KellyAudio {
       onSpeakingStart: options.onSpeakingStart || null,
       onSpeakingEnd: options.onSpeakingEnd || null,
       onWordSpoken: options.onWordSpoken || null,
+      lipSyncEnabled: options.lipSyncEnabled !== false, // Enable lip-sync by default
       ...options
     };
 
@@ -32,8 +33,11 @@ class KellyAudio {
     // Voice is always available via /api/tts endpoint
     // ⚠️ NO BROWSER TTS - EVER
     this.hasVoice = true;
+    
+    // Lip-sync integration
+    this.lipSyncConnected = false;
 
-    console.log('[KellyAudio] Initialized with secure TTS API');
+    console.log('[KellyAudio] Initialized with secure TTS API and lip-sync support');
   }
 
   /**
@@ -104,20 +108,66 @@ class KellyAudio {
       this.currentAudio = new Audio(url);
       this.currentAudio.volume = this.isMuted ? 0 : 1;
 
+      // Connect lip-sync to this audio element
+      this._connectLipSync();
+
       this.currentAudio.onended = () => {
         this.isPlaying = false;
+        this._disconnectLipSync();
         this._notifySpeakingEnd();
         resolve();
       };
 
       this.currentAudio.onerror = (e) => {
         this.isPlaying = false;
+        this._disconnectLipSync();
         this._notifySpeakingEnd();
         reject(e);
       };
 
       this.currentAudio.play().catch(reject);
     });
+  }
+  
+  /**
+   * Connect lip-sync to current audio element
+   * @private
+   */
+  _connectLipSync() {
+    if (!this.options.lipSyncEnabled || !this.currentAudio) return;
+    
+    try {
+      if (window.KellyLipSync && !this.lipSyncConnected) {
+        // Initialize if needed
+        if (!window.KellyLipSync.isInitialized) {
+          window.KellyLipSync.init();
+        }
+        
+        // Connect to audio element
+        window.KellyLipSync.startFromAudioElement(this.currentAudio);
+        this.lipSyncConnected = true;
+        console.log('[KellyAudio] Lip-sync connected to audio');
+      }
+    } catch (e) {
+      console.warn('[KellyAudio] Lip-sync connection failed:', e);
+    }
+  }
+  
+  /**
+   * Disconnect lip-sync from current audio element
+   * @private
+   */
+  _disconnectLipSync() {
+    if (!this.options.lipSyncEnabled) return;
+    
+    try {
+      if (window.KellyLipSync && this.currentAudio && this.lipSyncConnected) {
+        window.KellyLipSync.stopFromAudioElement(this.currentAudio);
+        this.lipSyncConnected = false;
+      }
+    } catch (e) {
+      // Ignore disconnect errors
+    }
   }
 
   /**
@@ -201,10 +251,14 @@ class KellyAudio {
 
       this.currentAudio = new Audio(url);
       this.currentAudio.volume = this.isMuted ? 0 : 1;
+      
+      // Connect lip-sync to this audio element
+      this._connectLipSync();
 
       this.currentAudio.onended = () => {
         URL.revokeObjectURL(url);
         this.isPlaying = false;
+        this._disconnectLipSync();
         this._notifySpeakingEnd();
         resolve();
       };
@@ -212,6 +266,7 @@ class KellyAudio {
       this.currentAudio.onerror = (e) => {
         URL.revokeObjectURL(url);
         this.isPlaying = false;
+        this._disconnectLipSync();
         this._notifySpeakingEnd();
         reject(e);
       };
@@ -258,6 +313,9 @@ class KellyAudio {
   stop() {
     this.isPlaying = false;
     this.isPaused = false;
+
+    // Disconnect lip-sync before stopping audio
+    this._disconnectLipSync();
 
     if (this.currentAudio) {
       this.currentAudio.pause();

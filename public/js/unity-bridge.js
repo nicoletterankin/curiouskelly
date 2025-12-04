@@ -1,12 +1,17 @@
 // Unity Bridge - Communicates with Kelly 3D Avatar
 // GameObject: kelly_fbx_v4
 // Script: KellyWebGLBridge.cs
+// Updated with blendshape support for lip-sync integration
 
 class UnityBridge {
   constructor(unityInstance) {
     this.unity = unityInstance;
     this.ready = false;
     this.gameObjectName = 'kelly_fbx_v4';
+    
+    // Blendshape throttling (prevent overwhelming Unity with updates)
+    this.lastBlendshapeUpdate = 0;
+    this.blendshapeUpdateInterval = 33; // ~30fps
     
     // Listen for Unity ready signal
     window.UnityReady = () => {
@@ -85,6 +90,80 @@ class UnityBridge {
       console.log('🔇 Unity StopLipSync');
     } catch (error) {
       console.warn('Unity StopLipSync failed:', error);
+    }
+  }
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // BLENDSHAPE LIP-SYNC METHODS
+  // High-fidelity facial animation via blendshape values
+  // ═══════════════════════════════════════════════════════════════════
+  
+  /**
+   * Set facial blendshapes directly (for advanced lip-sync)
+   * @param {Object} blendshapes - Object with blendshape names and values (0-100)
+   * @example setBlendshapes({ jawOpen: 50, mouthSmileLeft: 30, mouthSmileRight: 30 })
+   */
+  setBlendshapes(blendshapes) {
+    if (!this.ready || !this.unity) return;
+    
+    // Throttle updates
+    const now = performance.now();
+    if (now - this.lastBlendshapeUpdate < this.blendshapeUpdateInterval) {
+      return;
+    }
+    this.lastBlendshapeUpdate = now;
+    
+    try {
+      // Convert object to JSON for Unity
+      const json = typeof blendshapes === 'string' ? blendshapes : JSON.stringify(blendshapes);
+      this.unity.SendMessage(this.gameObjectName, 'SetBlendshapes', json);
+    } catch (error) {
+      // Fail silently - blendshapes are called frequently
+    }
+  }
+  
+  /**
+   * Set a single blendshape value
+   * @param {string} name - Blendshape name (e.g., 'jawOpen', 'mouthSmileLeft')
+   * @param {number} value - Value from 0-100
+   */
+  setSingleBlendshape(name, value) {
+    if (!this.ready || !this.unity) return;
+    
+    try {
+      const data = JSON.stringify({ name, value: Math.max(0, Math.min(100, value)) });
+      this.unity.SendMessage(this.gameObjectName, 'SetSingleBlendshape', data);
+    } catch (error) {
+      console.warn('Unity SetSingleBlendshape failed:', error);
+    }
+  }
+  
+  /**
+   * Reset all blendshapes to default (neutral face)
+   */
+  resetBlendshapes() {
+    if (!this.ready || !this.unity) return;
+    
+    try {
+      this.unity.SendMessage(this.gameObjectName, 'ResetBlendshapes', '');
+      console.log('🔄 Unity ResetBlendshapes');
+    } catch (error) {
+      console.warn('Unity ResetBlendshapes failed:', error);
+    }
+  }
+  
+  /**
+   * Enable/disable real-time blendshape updates
+   * @param {boolean} enabled - Whether to enable blendshape updates
+   */
+  setBlendshapesEnabled(enabled) {
+    if (!this.ready || !this.unity) return;
+    
+    try {
+      this.unity.SendMessage(this.gameObjectName, 'SetBlendshapesEnabled', enabled ? 'true' : 'false');
+      console.log(`🎭 Unity blendshapes ${enabled ? 'enabled' : 'disabled'}`);
+    } catch (error) {
+      console.warn('Unity SetBlendshapesEnabled failed:', error);
     }
   }
   

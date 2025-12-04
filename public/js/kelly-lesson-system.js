@@ -234,8 +234,11 @@ class LessonController {
       this.options.onPhaseChange(phase, this);
     }
     
-    // Kelly speaks if needed
-    if ((phase.kellyGreeting || phase.kellyReveal) && this.options.kellyAudio) {
+    // Try to play lip-sync video if available
+    const videoPlayed = await this.tryPlayPhaseVideo(phase);
+    
+    // If no video, fall back to static image + TTS
+    if (!videoPlayed && (phase.kellyGreeting || phase.kellyReveal) && this.options.kellyAudio) {
       const script = this.getPhaseScript(phase);
       if (script) {
         KellyPoseManager.setMouthState('speaking');
@@ -254,6 +257,55 @@ class LessonController {
     // Handle completion phase
     if (phase.showCompletion) {
       await this.handleCompletion();
+    }
+  }
+  
+  /**
+   * Try to play a pre-generated lip-sync video for this phase
+   * @param {Object} phase - The current phase
+   * @returns {Promise<boolean>} - Whether video was played
+   */
+  async tryPlayPhaseVideo(phase) {
+    // Only try videos for speaking phases
+    if (!phase.kellyGreeting && !phase.kellyReveal) {
+      return false;
+    }
+    
+    // Only if video player is available
+    if (typeof KellyVideoPlayer === 'undefined') {
+      return false;
+    }
+    
+    // Get lesson day number
+    const dayNumber = this.lesson?.day || this.options.day || 1;
+    const dayStr = dayNumber.toString().padStart(3, '0');
+    
+    // Build video URL
+    const videoUrl = `/kelly/videos/${dayStr}/${phase.id}.mp4`;
+    
+    // Check if video exists
+    try {
+      const response = await fetch(videoUrl, { method: 'HEAD' });
+      if (!response.ok) {
+        console.log(`[LessonController] No video for ${phase.id}`);
+        return false;
+      }
+      
+      // Get fallback image
+      const fallbackImage = `/kelly/lessons/${dayStr}/lesson-${dayNumber}-hero.png`;
+      
+      console.log(`[LessonController] Playing video: ${videoUrl}`);
+      
+      return new Promise((resolve) => {
+        KellyVideoPlayer.play({
+          videoUrl,
+          fallbackImage,
+          onEnd: () => resolve(true),
+          onError: () => resolve(false),
+        });
+      });
+    } catch {
+      return false;
     }
   }
   
