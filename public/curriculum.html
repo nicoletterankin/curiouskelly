@@ -1903,8 +1903,40 @@
             });
         }
 
+        // Read URL parameters and apply settings
+        function applyURLParams() {
+            const params = new URLSearchParams(window.location.search);
+            const birthYear = params.get('year');
+            
+            if (birthYear) {
+                const age = 2025 - parseInt(birthYear);
+                
+                // Map age to bucket value (the data-value on buttons)
+                let ageValue;
+                if (age <= 7) ageValue = '5';
+                else if (age <= 12) ageValue = '10';
+                else if (age <= 17) ageValue = '15';
+                else if (age <= 35) ageValue = '25';
+                else if (age <= 60) ageValue = '45';
+                else ageValue = '70';
+                
+                currentSettings.age = parseInt(ageValue);
+                
+                // Update active state on age buttons
+                document.querySelectorAll('#age-options .control-btn').forEach(btn => {
+                    btn.classList.remove('active');
+                    if (btn.dataset.value === ageValue) {
+                        btn.classList.add('active');
+                    }
+                });
+                
+                console.log(`📅 Birth year ${birthYear} → age ${age} → bucket ${ageValue}`);
+            }
+        }
+        
         // Initialize
         document.addEventListener('DOMContentLoaded', () => {
+            applyURLParams();
             loadLessons();
             setupControls();
         });
