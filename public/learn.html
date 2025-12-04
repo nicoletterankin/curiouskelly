@@ -2015,28 +2015,73 @@
         50% { box-shadow: 0 4px 30px rgba(139, 92, 246, 0.6); }
       }
       
-      /* === BOTTOM CHAT AREA === */
-      .bottom-chat-area {
+      /* === UNIFIED CHAT PANEL (LEFT SIDE - Zoom/TikTok Style) === */
+      .chat-panel {
         position: fixed;
-        bottom: 0;
-        left: 0;
-        right: 0;
+        left: 60px; /* After left rail */
+        bottom: calc(var(--safe-bottom, 20px) + 10px);
+        width: min(320px, calc(100vw - 80px));
+        max-height: 50vh;
         display: flex;
         flex-direction: column;
-        padding: 0 12px calc(var(--safe-bottom, 20px) + 8px);
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.6) 60%, transparent 100%);
         z-index: 90;
-        max-height: 35vh;
+        pointer-events: auto;
       }
       
+      /* Chat Header with Live Badge */
+      .chat-panel-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 8px 12px;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-radius: 16px 16px 0 0;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-bottom: none;
+      }
+      
+      .chat-panel-title {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 12px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.9);
+      }
+      
+      .chat-live-dot {
+        width: 8px;
+        height: 8px;
+        background: #22c55e;
+        border-radius: 50%;
+        animation: livePulse 2s ease-in-out infinite;
+      }
+      
+      .chat-panel-toggle {
+        background: none;
+        border: none;
+        color: rgba(255, 255, 255, 0.6);
+        cursor: pointer;
+        padding: 4px;
+        font-size: 14px;
+      }
+      
+      /* Chat Messages Container */
       .chat-messages-container {
         flex: 1;
         overflow-y: auto;
         display: flex;
         flex-direction: column;
-        gap: 8px;
-        padding: 8px 0;
-        max-height: 150px;
+        gap: 4px;
+        padding: 12px;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-left: 1px solid rgba(255, 255, 255, 0.1);
+        border-right: 1px solid rgba(255, 255, 255, 0.1);
+        max-height: 240px;
         scrollbar-width: none;
         -ms-overflow-style: none;
       }
@@ -2045,15 +2090,102 @@
         display: none;
       }
       
-      /* Chat message styling */
-      .chat-message {
+      /* === CHAT COMMENT STYLING (TikTok Live Style) === */
+      .chat-comment {
         display: flex;
         align-items: flex-start;
-        gap: 8px;
-        padding: 6px 10px;
-        background: rgba(255, 255, 255, 0.08);
+        gap: 10px;
+        padding: 8px 10px;
+        background: rgba(255, 255, 255, 0.06);
         border-radius: 12px;
         animation: chatSlideIn 0.3s ease-out;
+        transition: opacity 0.4s ease;
+      }
+      
+      .chat-comment.fading {
+        opacity: 0;
+        transform: translateY(-10px);
+      }
+      
+      /* Avatar - supports images or flag emojis */
+      .chat-comment .avatar {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+        flex-shrink: 0;
+        overflow: hidden;
+      }
+      
+      .chat-comment .avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      
+      .chat-comment .content {
+        flex: 1;
+        min-width: 0;
+      }
+      
+      .chat-comment .header {
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        margin-bottom: 2px;
+      }
+      
+      .chat-comment .username {
+        font-size: 12px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.85);
+      }
+      
+      .chat-comment .simulated-indicator {
+        font-size: 10px;
+        opacity: 0.7;
+      }
+      
+      .chat-comment .verified {
+        font-size: 10px;
+        color: #3b82f6;
+      }
+      
+      .chat-comment .text {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.9);
+        line-height: 1.4;
+        word-break: break-word;
+      }
+      
+      /* === KELLY HOST MESSAGE (Special Styling) === */
+      .chat-comment.kelly-host {
+        background: linear-gradient(135deg, rgba(59, 130, 246, 0.15) 0%, rgba(139, 92, 246, 0.15) 100%);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+      }
+      
+      .chat-comment.kelly-host .avatar {
+        background: none;
+        border: 2px solid #3b82f6;
+      }
+      
+      .chat-comment.kelly-host .username {
+        color: #60a5fa;
+      }
+      
+      .chat-comment.kelly-host .host-badge {
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        color: white;
+        font-size: 9px;
+        padding: 2px 6px;
+        border-radius: 8px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
       }
       
       @keyframes chatSlideIn {
@@ -2067,43 +2199,27 @@
         }
       }
       
-      .chat-message-avatar {
-        font-size: 16px;
-        flex-shrink: 0;
-      }
-      
-      .chat-message-content {
-        flex: 1;
-        min-width: 0;
-      }
-      
-      .chat-message-name {
-        font-size: 11px;
-        font-weight: 600;
-        color: rgba(255, 255, 255, 0.7);
-      }
-      
-      .chat-message-text {
-        font-size: 13px;
-        color: rgba(255, 255, 255, 0.9);
-        line-height: 1.4;
-      }
-      
       /* Chat Input Bar */
       .chat-input-bar {
         display: flex;
         align-items: center;
         gap: 8px;
-        padding: 8px 0;
+        padding: 10px 12px;
+        background: rgba(0, 0, 0, 0.7);
+        backdrop-filter: blur(16px);
+        -webkit-backdrop-filter: blur(16px);
+        border-radius: 0 0 16px 16px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-top: none;
       }
       
       .chat-input {
         flex: 1;
-        background: rgba(255, 255, 255, 0.12);
+        background: rgba(255, 255, 255, 0.1);
         border: 1px solid rgba(255, 255, 255, 0.15);
-        border-radius: 24px;
-        padding: 12px 18px;
-        font-size: 14px;
+        border-radius: 20px;
+        padding: 10px 16px;
+        font-size: 13px;
         color: #fff;
         outline: none;
         transition: all 0.2s ease;
@@ -2114,13 +2230,13 @@
       }
       
       .chat-input:focus {
-        background: rgba(255, 255, 255, 0.18);
+        background: rgba(255, 255, 255, 0.15);
         border-color: rgba(59, 130, 246, 0.5);
       }
       
       .chat-send-btn {
-        width: 44px;
-        height: 44px;
+        width: 36px;
+        height: 36px;
         background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
         border: none;
         border-radius: 50%;
@@ -2130,6 +2246,43 @@
         cursor: pointer;
         transition: all 0.2s ease;
         flex-shrink: 0;
+      }
+      
+      .chat-send-btn:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 15px rgba(59, 130, 246, 0.4);
+      }
+      
+      .chat-send-btn svg {
+        color: white;
+        width: 16px;
+        height: 16px;
+      }
+      
+      /* Mobile: Full-width bottom chat */
+      @media (max-width: 768px) {
+        .chat-panel {
+          left: 0;
+          right: 0;
+          bottom: 0;
+          width: 100%;
+          max-height: 40vh;
+          border-radius: 0;
+        }
+        
+        .chat-panel-header {
+          border-radius: 0;
+        }
+        
+        .chat-input-bar {
+          border-radius: 0;
+          padding-bottom: calc(var(--safe-bottom, 20px) + 10px);
+        }
+      }
+      
+      /* OLD BOTTOM CHAT AREA - DEPRECATED, hidden */
+      .bottom-chat-area {
+        display: none !important;
       }
       
       .chat-send-btn svg {
@@ -3289,11 +3442,34 @@
       <button class="day-nav day-nav-prev" id="nav-prev" aria-label="Previous day">↓</button>
       <button class="day-nav day-nav-next" id="nav-next" aria-label="Next day">↑</button>
 
-      <!-- BOTTOM CHAT AREA - Messages & Input -->
-      <div class="bottom-chat-area" id="bottom-chat-area">
-        <!-- Live Comments Feed -->
+      <!-- UNIFIED CHAT PANEL (Left Side - Zoom/TikTok Style) -->
+      <div class="chat-panel" id="chat-panel">
+        <!-- Chat Header -->
+        <div class="chat-panel-header">
+          <div class="chat-panel-title">
+            <span class="chat-live-dot"></span>
+            <span>Live Chat</span>
+            <span class="simulated-badge" title="Simulated social learning">✨</span>
+          </div>
+          <button class="chat-panel-toggle" id="chat-toggle" aria-label="Minimize chat">−</button>
+        </div>
+        
+        <!-- Chat Messages -->
         <div class="chat-messages-container" id="chat-messages-container">
-          <!-- Comments will be injected here by chat-overlay.js -->
+          <!-- Kelly's Welcome Message (Host) -->
+          <div class="chat-comment kelly-host" id="kelly-host-message">
+            <div class="avatar">
+              <img src="/images/brand/kelly-mark-circle-64.png" alt="Kelly" />
+            </div>
+            <div class="content">
+              <div class="header">
+                <span class="username">Kelly</span>
+                <span class="host-badge">Host</span>
+              </div>
+              <span class="text">Welcome to today's lesson! Let's learn together 💙</span>
+            </div>
+          </div>
+          <!-- More comments injected by chat-overlay.js -->
         </div>
         
         <!-- Chat Input -->
@@ -3302,7 +3478,7 @@
             type="text" 
             class="chat-input" 
             id="chat-input" 
-            placeholder="Say something to Kelly or the world..."
+            placeholder="Say something..."
             autocomplete="off"
           />
           <button class="chat-send-btn" id="chat-send-btn" aria-label="Send message">
@@ -3311,6 +3487,10 @@
             </svg>
           </button>
         </div>
+      </div>
+      
+      <!-- OLD BOTTOM CHAT AREA - Deprecated, hidden for compatibility -->
+      <div class="bottom-chat-area" id="bottom-chat-area" style="display: none;">
       </div>
 
       <!-- Hidden legacy bottom bar for compatibility -->
@@ -6366,6 +6546,17 @@
           
           chatOverlay.setPhase(phaseId);
           
+          // === KELLY HOST MESSAGES ===
+          // Kelly participates in chat with contextual messages
+          const topic = state.lesson?.topic || 'today\'s topic';
+          
+          // Add delay so Kelly's message appears after phase content
+          setTimeout(() => {
+            if (chatOverlay.triggerKellyPhaseMessage) {
+              chatOverlay.triggerKellyPhaseMessage(phaseId, topic);
+            }
+          }, 2500);
+          
           // Update Kelly pose via new system
           if (window.KellyPoseManager) {
             const pose = KellyPoseManager.getPoseForPhase(phaseId);
@@ -6375,10 +6566,14 @@
           // Trigger specific reactions on phase changes
           if (phase.type === 'wisdom') {
             // Wisdom phase gets breakthrough comments
-            setTimeout(() => chatOverlay.triggerBreakthrough(), 2000);
+            setTimeout(() => chatOverlay.triggerBreakthrough(), 4000);
           } else if (phase.type === 'question') {
-            // Question phases get engagement
-            chatOverlay.addSpecificComment("This one's interesting! 🤔");
+            // Question phases - Kelly occasionally responds to learners
+            setTimeout(() => {
+              if (Math.random() > 0.6 && chatOverlay.kellyRespondTo) {
+                chatOverlay.kellyRespondTo(null, 'encourage');
+              }
+            }, 6000);
           }
         }
         

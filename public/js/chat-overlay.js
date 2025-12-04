@@ -957,7 +957,171 @@ class ChatOverlay {
     if (this.container) this.container.remove();
     if (this.liveBadge) this.liveBadge.remove();
   }
+  
+  // ═══════════════════════════════════════════════════════════════════
+  // KELLY HOST MESSAGES - Kelly participates as the host
+  // ═══════════════════════════════════════════════════════════════════
+  
+  /**
+   * Add a Kelly host message to the chat
+   * Kelly's messages have special styling and a "Host" badge
+   */
+  addKellyMessage(text, options = {}) {
+    if (!this.simulatedEnabled) return;
+    
+    const el = document.createElement('div');
+    el.className = 'chat-comment kelly-host';
+    el.setAttribute('aria-label', `Kelly (Host) says: ${text}`);
+    el.innerHTML = `
+      <div class="avatar">
+        <img src="/images/brand/kelly-mark-circle-64.png" alt="Kelly" style="width:100%;height:100%;object-fit:cover;border-radius:50%;" />
+      </div>
+      <div class="content">
+        <div class="header">
+          <span class="username">Kelly</span>
+          <span class="host-badge" style="background:linear-gradient(135deg,#3b82f6,#8b5cf6);color:white;font-size:9px;padding:2px 6px;border-radius:8px;font-weight:600;">Host</span>
+        </div>
+        <span class="text">${text}</span>
+      </div>
+    `;
+    
+    // Apply kelly-host styling inline for the overlay container
+    el.style.background = 'linear-gradient(135deg, rgba(59, 130, 246, 0.2), rgba(139, 92, 246, 0.2))';
+    el.style.border = '1px solid rgba(59, 130, 246, 0.4)';
+    
+    this.container.appendChild(el);
+    
+    // Kelly messages stay longer (12 seconds)
+    const duration = options.duration || 12000;
+    setTimeout(() => {
+      el.classList.add('fading');
+      setTimeout(() => el.remove(), 400);
+    }, duration);
+  }
+  
+  /**
+   * Kelly's contextual messages for each phase
+   */
+  getKellyPhaseMessage(phase, topic) {
+    const messages = {
+      welcome: [
+        `Welcome everyone! Today we're exploring ${topic}. Let's learn together 💙`,
+        `Great to see you all! Ready to dive into ${topic}?`,
+        `Hello, learners! Today's topic: ${topic}. Let's go!`,
+      ],
+      hook: [
+        `Here's something interesting about ${topic}...`,
+        `Think about this for a moment...`,
+        `Let me explain why this matters...`,
+      ],
+      q1: [
+        `Take your time with this question`,
+        `What do you think? There's no wrong answer for learning`,
+        `Think about what we just discussed...`,
+      ],
+      q2: [
+        `This one builds on the first question`,
+        `Consider the connection here...`,
+        `Good thinking, everyone!`,
+      ],
+      q3: [
+        `Last question — let's bring it together`,
+        `Think about the bigger picture here`,
+        `You've got this!`,
+      ],
+      wisdom: [
+        `Here's the key takeaway...`,
+        `This is what I want you to remember`,
+        `Let this sink in for a moment`,
+      ],
+      complete: [
+        `Great work today, everyone! See you tomorrow 🌟`,
+        `You did it! Another day of learning complete`,
+        `Thanks for learning with me today 💙`,
+      ],
+    };
+    
+    const phaseMessages = messages[phase] || messages.welcome;
+    return phaseMessages[Math.floor(Math.random() * phaseMessages.length)];
+  }
+  
+  /**
+   * Trigger Kelly's phase-specific message
+   */
+  triggerKellyPhaseMessage(phase, topic) {
+    const message = this.getKellyPhaseMessage(phase, topic || this.currentTopic);
+    this.addKellyMessage(message);
+  }
+  
+  /**
+   * Kelly responds to a learner's comment
+   */
+  kellyRespondTo(learnerComment, responseType = 'acknowledge') {
+    const responses = {
+      acknowledge: [
+        `Great observation!`,
+        `I see what you mean`,
+        `Good thinking!`,
+        `That's a thoughtful point`,
+      ],
+      encourage: [
+        `You're on the right track!`,
+        `Keep going, you've got this`,
+        `That's the spirit!`,
+      ],
+      clarify: [
+        `Let me explain that a bit more...`,
+        `Good question — here's the key...`,
+        `Think of it this way...`,
+      ],
+    };
+    
+    const pool = responses[responseType] || responses.acknowledge;
+    const message = pool[Math.floor(Math.random() * pool.length)];
+    
+    // Delay Kelly's response slightly
+    setTimeout(() => {
+      this.addKellyMessage(message, { duration: 8000 });
+    }, 1500);
+  }
 }
+
+// ═══════════════════════════════════════════════════════════════════
+// KELLY HOST COMMENTS - Pre-defined contextual messages
+// ═══════════════════════════════════════════════════════════════════
+
+const KELLY_COMMENTS = {
+  // Welcome/intro phase
+  welcome: [
+    "Welcome to today's lesson! 💙",
+    "Great to see everyone here",
+    "Let's learn something new together",
+    "Ready? Let's dive in!",
+  ],
+  // During questions
+  thinking: [
+    "Take your time with this one",
+    "No pressure — think it through",
+    "What's your gut telling you?",
+    "Trust your instincts here",
+  ],
+  // Encouragement
+  encourage: [
+    "You're doing great!",
+    "Good thinking, everyone",
+    "I love seeing you engage with this",
+    "Keep those great questions coming",
+  ],
+  // Wrap up
+  complete: [
+    "Great work today! See you tomorrow 🌟",
+    "You did it! Another lesson complete",
+    "Thanks for learning with me 💙",
+    "Until next time, stay curious!",
+  ],
+};
+
+window.KELLY_COMMENTS = KELLY_COMMENTS;
 
 // ═══════════════════════════════════════════════════════════════════
 // EXPORT
