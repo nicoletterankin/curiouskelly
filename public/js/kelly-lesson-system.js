@@ -104,6 +104,9 @@ const KellyPoseManager = {
     'attentive': 'kelly_clasp.png',         // Hands clasped = attentive
   },
   
+  isInitialized: false,
+  warnedOnce: false,
+  
   init(containerOrImg) {
     if (typeof containerOrImg === 'string') {
       this.container = document.getElementById(containerOrImg);
@@ -121,13 +124,18 @@ const KellyPoseManager = {
       ? this.container 
       : this.container.querySelector('img') || this.container.querySelector('.kelly-avatar');
     
-    console.log('[KellyPose] Initialized with container:', this.container?.id);
-    return true;
+    this.isInitialized = !!this.kellyImg;
+    console.log('[KellyPose] Initialized with container:', this.container?.id, 'kellyImg:', !!this.kellyImg);
+    return this.isInitialized;
   },
   
   setPose(pose) {
     if (!this.kellyImg) {
-      console.warn('[KellyPose] No Kelly image found');
+      // Only warn once to prevent console spam
+      if (!this.warnedOnce) {
+        console.warn('[KellyPose] No Kelly image found - will not repeat this warning');
+        this.warnedOnce = true;
+      }
       return;
     }
     
