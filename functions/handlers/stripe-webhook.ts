@@ -159,6 +159,7 @@ async function handleCheckoutComplete(
     customerEmail: session.customer_email,
     mode: session.mode,
     metadata: session.metadata,
+    clientReferenceId: session.client_reference_id,
   });
 
   const metadata = session.metadata || {};
@@ -169,9 +170,20 @@ async function handleCheckoutComplete(
     return;
   }
 
-  // Track affiliate attribution
-  if (metadata.affiliate_code) {
-    await trackAffiliateConversion(metadata.affiliate_code, session, context);
+  // Track affiliate attribution - check both metadata and client_reference_id
+  // client_reference_id format from Payment Links: aff_CODE_timestamp
+  let affiliateCode = metadata.affiliate_code;
+  
+  if (!affiliateCode && session.client_reference_id) {
+    const refId = session.client_reference_id;
+    if (refId.startsWith('aff_')) {
+      affiliateCode = refId; // Pass the full string, trackAffiliateConversion will parse it
+      console.info('[handleCheckoutComplete] Found affiliate code in client_reference_id', { refId });
+    }
+  }
+
+  if (affiliateCode) {
+    await trackAffiliateConversion(affiliateCode, session, context);
   }
 
   // Handle gift purchases
@@ -314,15 +326,119 @@ async function trackAffiliateConversion(
   session: import('stripe').Stripe.Checkout.Session,
   context: HandlerContext
 ) {
+  // Extract affiliate code from client_reference_id (format: aff_CODE_timestamp)
+  let code = affiliateCode;
+  if (affiliateCode.startsWith('aff_')) {
+    code = affiliateCode.split('_')[1];
+  }
+
   console.info('[trackAffiliateConversion]', {
-    affiliateCode,
+    originalCode: affiliateCode,
+    parsedCode: code,
     sessionId: session.id,
     amountTotal: session.amount_total,
   });
 
-  // TODO: Record in affiliate_conversions table
-  // Calculate commission based on affiliate tier
-  // Update affiliate pending balance
+  const supabaseUrl = context.env.PUBLIC_SUPABASE_URL;
+  const supabaseKey = context.env.SUPABASE_SERVICE_KEY || context.env.PUBLIC_SUPABASE_ANON_KEY;
+
+  if (!supabaseUrl || !supabaseKey) {
+    console.warn('[trackAffiliateConversion] Missing Supabase config');
+    return;
+  }
+
+  try {
+    // Find affiliate by referral code
+    const affiliateResponse = await fetch(
+      `${supabaseUrl}/rest/v1/affiliates?referral_code=eq.${code}&select=id,commission_rate,tier`,
+      {
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+        },
+      }
+    );
+
+    const affiliates = await affiliateResponse.json();
+    
+    if (!affiliates || affiliates.length === 0) {
+      console.warn('[trackAffiliateConversion] Affiliate not found', { code });
+      return;
+    }
+
+    const affiliate = affiliates[0];
+    const subscriptionValue = (session.amount_total || 0) / 100; // Convert from cents
+    const commissionRate = affiliate.commission_rate || 20;
+    const commissionEarned = subscriptionValue * (commissionRate / 100);
+
+    console.info('[trackAffiliateConversion] Creating referral record', {
+      affiliateId: affiliate.id,
+      subscriptionValue,
+      commissionRate,
+      commissionEarned,
+    });
+
+    // Create referral record
+    const referralResponse = await fetch(
+      `${supabaseUrl}/rest/v1/referrals`,
+      {
+        method: 'POST',
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json',
+          'Prefer': 'return=representation',
+        },
+        body: JSON.stringify({
+          affiliate_id: affiliate.id,
+          referred_user_id: session.client_reference_id || session.id, // Use session ID as fallback
+          referral_code: code,
+          subscription_value: subscriptionValue,
+          commission_earned: commissionEarned,
+          status: 'confirmed',
+        }),
+      }
+    );
+
+    if (!referralResponse.ok) {
+      const error = await referralResponse.text();
+      console.error('[trackAffiliateConversion] Failed to create referral', { error });
+      return;
+    }
+
+    // Update affiliate stats (increment referral count)
+    const updateResponse = await fetch(
+      `${supabaseUrl}/rest/v1/affiliates?id=eq.${affiliate.id}`,
+      {
+        method: 'PATCH',
+        headers: {
+          'apikey': supabaseKey,
+          'Authorization': `Bearer ${supabaseKey}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          total_referrals: affiliate.total_referrals ? affiliate.total_referrals + 1 : 1,
+          active_referrals: affiliate.active_referrals ? affiliate.active_referrals + 1 : 1,
+          lifetime_earnings: affiliate.lifetime_earnings 
+            ? parseFloat(affiliate.lifetime_earnings) + commissionEarned 
+            : commissionEarned,
+        }),
+      }
+    );
+
+    if (!updateResponse.ok) {
+      console.error('[trackAffiliateConversion] Failed to update affiliate stats');
+    }
+
+    console.info('[trackAffiliateConversion] Successfully tracked conversion', {
+      affiliateId: affiliate.id,
+      code,
+      commissionEarned,
+    });
+
+  } catch (error) {
+    console.error('[trackAffiliateConversion] Error', { error });
+  }
 }
 
 async function createGiftCode(

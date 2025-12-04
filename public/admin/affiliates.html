@@ -1,0 +1,739 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Affiliate Admin - Curious Kelly</title>
+    
+    <style>
+        :root {
+            --bg-color: #0f0f11;
+            --bg-card: #18181b;
+            --text-primary: #f4f4f5;
+            --text-secondary: #a1a1aa;
+            --accent: #2563eb;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --border: #3f3f46;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        /* Header */
+        .header {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header h1 {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-success { background: var(--success); color: white; }
+        .btn-danger { background: var(--error); color: white; }
+        .btn-outline { background: transparent; border: 1px solid var(--border); color: var(--text-primary); }
+
+        /* Layout */
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* Stats */
+        .stats-row {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px 24px;
+            min-width: 180px;
+        }
+
+        .stat-label { font-size: 0.85rem; color: var(--text-secondary); }
+        .stat-value { font-size: 2rem; font-weight: 600; margin-top: 4px; }
+        .stat-value.warning { color: var(--warning); }
+        .stat-value.success { color: var(--success); }
+
+        /* Tabs */
+        .tabs {
+            display: flex;
+            gap: 4px;
+            margin-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 0;
+        }
+
+        .tab {
+            padding: 12px 24px;
+            cursor: pointer;
+            border-bottom: 2px solid transparent;
+            color: var(--text-secondary);
+            transition: all 0.2s;
+        }
+
+        .tab:hover { color: var(--text-primary); }
+        .tab.active {
+            color: var(--accent);
+            border-bottom-color: var(--accent);
+        }
+
+        /* Table */
+        .table-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+
+        .table-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .search-box {
+            padding: 10px 16px;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            width: 300px;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 14px 20px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            font-weight: 500;
+            background: var(--bg-color);
+        }
+
+        tr:hover td {
+            background: rgba(37, 99, 235, 0.05);
+        }
+
+        /* Status Badge */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .badge.pending { background: rgba(245, 158, 11, 0.1); color: var(--warning); }
+        .badge.approved { background: rgba(16, 185, 129, 0.1); color: var(--success); }
+        .badge.rejected { background: rgba(239, 68, 68, 0.1); color: var(--error); }
+        .badge.active { background: rgba(37, 99, 235, 0.1); color: var(--accent); }
+
+        /* Actions */
+        .actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .action-btn {
+            padding: 6px 12px;
+            border-radius: 6px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            border: none;
+            transition: opacity 0.2s;
+        }
+
+        .action-btn:hover { opacity: 0.8; }
+
+        /* Modal */
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-overlay.active { display: flex; }
+
+        .modal {
+            background: var(--bg-card);
+            border-radius: 16px;
+            padding: 32px;
+            max-width: 500px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal h2 { margin-bottom: 24px; }
+
+        .modal-field {
+            margin-bottom: 16px;
+        }
+
+        .modal-field label {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 4px;
+        }
+
+        .modal-field .value {
+            font-size: 1rem;
+        }
+
+        .modal-actions {
+            display: flex;
+            gap: 12px;
+            margin-top: 24px;
+        }
+
+        .modal-actions .btn {
+            flex: 1;
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        /* Auth */
+        .auth-box {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 40px;
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+            text-align: left;
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Auth -->
+    <div id="auth-section" class="auth-box">
+        <h2>Admin Login</h2>
+        <p style="color: var(--text-secondary); margin-bottom: 24px;">Sign in with admin credentials</p>
+        <form id="login-form">
+            <div class="form-group">
+                <input type="email" class="form-input" id="login-email" placeholder="Admin email" required>
+            </div>
+            <div class="form-group">
+                <input type="password" class="form-input" id="login-password" placeholder="Password" required>
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%;">Sign In</button>
+        </form>
+    </div>
+
+    <!-- Main Admin Interface -->
+    <div id="admin-panel" style="display: none;">
+        <header class="header">
+            <h1>🎯 Affiliate Admin</h1>
+            <div style="display: flex; gap: 16px; align-items: center;">
+                <span id="admin-email" style="color: var(--text-secondary);"></span>
+                <button class="btn btn-outline" onclick="logout()">Sign Out</button>
+            </div>
+        </header>
+
+        <div class="container">
+            <!-- Stats -->
+            <div class="stats-row">
+                <div class="stat-card">
+                    <div class="stat-label">Pending Applications</div>
+                    <div class="stat-value warning" id="pending-count">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Affiliates</div>
+                    <div class="stat-value" id="total-affiliates">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Active Affiliates</div>
+                    <div class="stat-value success" id="active-affiliates">0</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Founding 100 Remaining</div>
+                    <div class="stat-value" id="founding-remaining">100</div>
+                </div>
+            </div>
+
+            <!-- Tabs -->
+            <div class="tabs">
+                <div class="tab active" data-tab="applications" onclick="switchTab('applications')">Applications</div>
+                <div class="tab" data-tab="affiliates" onclick="switchTab('affiliates')">Active Affiliates</div>
+            </div>
+
+            <!-- Applications Tab -->
+            <div id="applications-tab" class="table-card">
+                <div class="table-header">
+                    <h3>Pending Applications</h3>
+                    <input type="text" class="search-box" placeholder="Search by name or email..." id="search-apps" oninput="filterApplications()">
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Name</th>
+                            <th>Email</th>
+                            <th>Platform</th>
+                            <th>Audience</th>
+                            <th>Status</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="applications-table">
+                    </tbody>
+                </table>
+                <div class="empty-state" id="empty-applications" style="display: none;">
+                    <p>No pending applications</p>
+                </div>
+            </div>
+
+            <!-- Affiliates Tab -->
+            <div id="affiliates-tab" class="table-card" style="display: none;">
+                <div class="table-header">
+                    <h3>Active Affiliates</h3>
+                    <input type="text" class="search-box" placeholder="Search affiliates..." id="search-affiliates" oninput="filterAffiliates()">
+                </div>
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Name</th>
+                            <th>Code</th>
+                            <th>Tier</th>
+                            <th>Referrals</th>
+                            <th>Earnings</th>
+                            <th>Founding</th>
+                            <th>Actions</th>
+                        </tr>
+                    </thead>
+                    <tbody id="affiliates-table">
+                    </tbody>
+                </table>
+                <div class="empty-state" id="empty-affiliates" style="display: none;">
+                    <p>No affiliates yet</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Application Detail Modal -->
+    <div class="modal-overlay" id="app-modal">
+        <div class="modal">
+            <h2>Application Details</h2>
+            <div class="modal-field">
+                <label>Name</label>
+                <div class="value" id="modal-name"></div>
+            </div>
+            <div class="modal-field">
+                <label>Email</label>
+                <div class="value" id="modal-email"></div>
+            </div>
+            <div class="modal-field">
+                <label>Platform</label>
+                <div class="value" id="modal-platform"></div>
+            </div>
+            <div class="modal-field">
+                <label>URL</label>
+                <div class="value"><a id="modal-url" href="#" target="_blank"></a></div>
+            </div>
+            <div class="modal-field">
+                <label>Audience Size</label>
+                <div class="value" id="modal-audience"></div>
+            </div>
+            <div class="modal-field">
+                <label>Content Focus</label>
+                <div class="value" id="modal-focus"></div>
+            </div>
+            <div class="modal-field">
+                <label>Why Curious Kelly?</label>
+                <div class="value" id="modal-why"></div>
+            </div>
+            <div class="modal-field">
+                <label>Applied</label>
+                <div class="value" id="modal-date"></div>
+            </div>
+            <div class="modal-actions">
+                <button class="btn btn-danger" onclick="rejectApplication()">Reject</button>
+                <button class="btn btn-success" onclick="approveApplication()">Approve</button>
+            </div>
+            <button class="btn btn-outline" style="width: 100%; margin-top: 12px;" onclick="closeModal()">Cancel</button>
+        </div>
+    </div>
+
+    <script>
+        // Supabase Config
+        const SUPABASE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcnp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE5NjI3NTcsImV4cCI6MjA0NzUzODc1N30.KLMlC14ckEp-XoL8RX5liw_cMdGs8lR';
+        
+        let supabaseClient = null;
+        let currentUser = null;
+        let applications = [];
+        let affiliates = [];
+        let selectedApp = null;
+
+        // Admin emails (hardcoded for now)
+        const ADMIN_EMAILS = ['hello@curiouskelly.com', 'admin@curiouskelly.com', 'nicolette.rankin@gmail.com'];
+
+        async function initSupabase() {
+            const { createClient } = supabase;
+            supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+            
+            const { data: { session } } = await supabaseClient.auth.getSession();
+            if (session && ADMIN_EMAILS.includes(session.user.email)) {
+                currentUser = session.user;
+                showAdminPanel();
+                await loadData();
+            }
+        }
+
+        // Login
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value;
+            const password = document.getElementById('login-password').value;
+            
+            try {
+                const { data, error } = await supabaseClient.auth.signInWithPassword({ email, password });
+                if (error) throw error;
+                
+                if (!ADMIN_EMAILS.includes(data.user.email)) {
+                    throw new Error('Unauthorized: Not an admin account');
+                }
+                
+                currentUser = data.user;
+                showAdminPanel();
+                await loadData();
+            } catch (error) {
+                alert('Login failed: ' + error.message);
+            }
+        });
+
+        async function logout() {
+            await supabaseClient.auth.signOut();
+            location.reload();
+        }
+
+        function showAdminPanel() {
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('admin-panel').style.display = 'block';
+            document.getElementById('admin-email').textContent = currentUser.email;
+        }
+
+        // Load Data
+        async function loadData() {
+            // Load applications
+            const { data: apps } = await supabaseClient
+                .from('affiliate_applications')
+                .select('*')
+                .order('created_at', { ascending: false });
+            applications = apps || [];
+            
+            // Load affiliates
+            const { data: affs } = await supabaseClient
+                .from('affiliates')
+                .select('*')
+                .order('created_at', { ascending: false });
+            affiliates = affs || [];
+            
+            updateStats();
+            renderApplications();
+            renderAffiliates();
+        }
+
+        function updateStats() {
+            const pending = applications.filter(a => a.status === 'pending').length;
+            const founding = affiliates.filter(a => a.is_founding_100).length;
+            
+            document.getElementById('pending-count').textContent = pending;
+            document.getElementById('total-affiliates').textContent = affiliates.length;
+            document.getElementById('active-affiliates').textContent = affiliates.filter(a => a.status === 'active').length;
+            document.getElementById('founding-remaining').textContent = Math.max(0, 100 - founding);
+        }
+
+        // Render Applications
+        function renderApplications() {
+            const tbody = document.getElementById('applications-table');
+            const empty = document.getElementById('empty-applications');
+            const pending = applications.filter(a => a.status === 'pending');
+            
+            if (pending.length === 0) {
+                tbody.innerHTML = '';
+                empty.style.display = 'block';
+                return;
+            }
+            
+            empty.style.display = 'none';
+            tbody.innerHTML = pending.map(app => `
+                <tr>
+                    <td>${formatDate(app.created_at)}</td>
+                    <td>${app.name}</td>
+                    <td>${app.email}</td>
+                    <td>${app.platform}</td>
+                    <td>${app.audience || 'N/A'}</td>
+                    <td><span class="badge pending">Pending</span></td>
+                    <td>
+                        <div class="actions">
+                            <button class="action-btn btn-primary" onclick="viewApplication('${app.id}')">View</button>
+                            <button class="action-btn btn-success" onclick="quickApprove('${app.id}')">✓</button>
+                            <button class="action-btn btn-danger" onclick="quickReject('${app.id}')">✗</button>
+                        </div>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // Render Affiliates
+        function renderAffiliates() {
+            const tbody = document.getElementById('affiliates-table');
+            const empty = document.getElementById('empty-affiliates');
+            
+            if (affiliates.length === 0) {
+                tbody.innerHTML = '';
+                empty.style.display = 'block';
+                return;
+            }
+            
+            empty.style.display = 'none';
+            tbody.innerHTML = affiliates.map(aff => `
+                <tr>
+                    <td>${aff.name || 'N/A'}</td>
+                    <td><code>${aff.referral_code}</code></td>
+                    <td>${aff.tier}</td>
+                    <td>${aff.total_referrals || 0}</td>
+                    <td>$${parseFloat(aff.lifetime_earnings || 0).toFixed(2)}</td>
+                    <td>${aff.is_founding_100 ? '⭐' : '-'}</td>
+                    <td>
+                        <button class="action-btn btn-outline" onclick="editAffiliate('${aff.id}')">Edit</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        // View Application
+        function viewApplication(id) {
+            selectedApp = applications.find(a => a.id === id);
+            if (!selectedApp) return;
+            
+            document.getElementById('modal-name').textContent = selectedApp.name;
+            document.getElementById('modal-email').textContent = selectedApp.email;
+            document.getElementById('modal-platform').textContent = selectedApp.platform;
+            document.getElementById('modal-url').textContent = selectedApp.url || 'Not provided';
+            document.getElementById('modal-url').href = selectedApp.url || '#';
+            document.getElementById('modal-audience').textContent = selectedApp.audience || 'Not specified';
+            document.getElementById('modal-focus').textContent = selectedApp.focus || 'Not provided';
+            document.getElementById('modal-why').textContent = selectedApp.why || 'Not provided';
+            document.getElementById('modal-date').textContent = formatDate(selectedApp.created_at);
+            
+            document.getElementById('app-modal').classList.add('active');
+        }
+
+        function closeModal() {
+            document.getElementById('app-modal').classList.remove('active');
+            selectedApp = null;
+        }
+
+        // Generate referral code
+        function generateCode(name) {
+            const base = name.split(' ')[0].toUpperCase().substring(0, 6);
+            const random = Math.floor(Math.random() * 1000);
+            return `${base}${random}`;
+        }
+
+        // Approve Application
+        async function approveApplication() {
+            if (!selectedApp) return;
+            
+            const foundingCount = affiliates.filter(a => a.is_founding_100).length;
+            const isFounding = foundingCount < 100;
+            
+            try {
+                // First, create a user account (they'll need to set password via email)
+                // For now, just create the affiliate record
+                
+                const code = generateCode(selectedApp.name);
+                
+                // Create affiliate record
+                const { data: newAff, error: affError } = await supabaseClient
+                    .from('affiliates')
+                    .insert({
+                        user_id: crypto.randomUUID(), // Placeholder until auth is set up
+                        referral_code: code,
+                        name: selectedApp.name,
+                        email: selectedApp.email,
+                        tier: isFounding ? 'ambassador' : 'scholar',
+                        commission_rate: isFounding ? 30 : 20,
+                        is_founding_100: isFounding,
+                        status: 'active'
+                    })
+                    .select()
+                    .single();
+                
+                if (affError) throw affError;
+                
+                // Update application status
+                await supabaseClient
+                    .from('affiliate_applications')
+                    .update({ status: 'approved' })
+                    .eq('id', selectedApp.id);
+                
+                alert(`✅ Approved!\n\nReferral Code: ${code}\n${isFounding ? '⭐ Founding 100 member!' : ''}\n\nSend welcome email to: ${selectedApp.email}`);
+                
+                closeModal();
+                await loadData();
+                
+            } catch (error) {
+                console.error('Approval error:', error);
+                alert('Error approving: ' + error.message);
+            }
+        }
+
+        async function rejectApplication() {
+            if (!selectedApp) return;
+            
+            if (!confirm('Reject this application?')) return;
+            
+            try {
+                await supabaseClient
+                    .from('affiliate_applications')
+                    .update({ status: 'rejected' })
+                    .eq('id', selectedApp.id);
+                
+                alert('Application rejected');
+                closeModal();
+                await loadData();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        async function quickApprove(id) {
+            selectedApp = applications.find(a => a.id === id);
+            await approveApplication();
+        }
+
+        async function quickReject(id) {
+            if (!confirm('Reject this application?')) return;
+            
+            try {
+                await supabaseClient
+                    .from('affiliate_applications')
+                    .update({ status: 'rejected' })
+                    .eq('id', id);
+                
+                await loadData();
+            } catch (error) {
+                alert('Error: ' + error.message);
+            }
+        }
+
+        function editAffiliate(id) {
+            alert('Edit feature coming soon!');
+        }
+
+        // Tab switching
+        function switchTab(tab) {
+            document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+            document.querySelector(`[data-tab="${tab}"]`).classList.add('active');
+            
+            document.getElementById('applications-tab').style.display = tab === 'applications' ? 'block' : 'none';
+            document.getElementById('affiliates-tab').style.display = tab === 'affiliates' ? 'block' : 'none';
+        }
+
+        // Search/Filter
+        function filterApplications() {
+            const query = document.getElementById('search-apps').value.toLowerCase();
+            // Simple filter - re-render with filtered data
+            // For now, just reload
+        }
+
+        function filterAffiliates() {
+            const query = document.getElementById('search-affiliates').value.toLowerCase();
+            // Simple filter
+        }
+
+        function formatDate(dateStr) {
+            return new Date(dateStr).toLocaleDateString('en-US', {
+                month: 'short', day: 'numeric', year: 'numeric'
+            });
+        }
+
+        // Init
+        document.addEventListener('DOMContentLoaded', () => {
+            const script = document.createElement('script');
+            script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+            script.onload = initSupabase;
+            document.head.appendChild(script);
+        });
+    </script>
+
+</body>
+</html>
+

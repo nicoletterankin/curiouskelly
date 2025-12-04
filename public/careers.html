@@ -506,6 +506,8 @@
             .tiers-grid, .stories-grid { grid-template-columns: 1fr; }
         }
     </style>
+    <!-- Affiliate Tracking -->
+    <script src="/js/affiliate-tracking.js"></script>
 </head>
 <body>
 
@@ -893,19 +895,71 @@
         updateCountdown();
         setInterval(updateCountdown, 3600000); // Update every hour
 
+        // Supabase client for affiliate applications
+        const SUPABASE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcnp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE5NjI3NTcsImV4cCI6MjA0NzUzODc1N30.KLMlC14ckEp-XoL8RX5liw_cMdGs8lR';
+
         // Form Submission
         const form = document.getElementById('affiliate-form');
-        form.addEventListener('submit', function(e) {
+        const submitBtn = form.querySelector('button[type="submit"]');
+        
+        form.addEventListener('submit', async function(e) {
             e.preventDefault();
             
-            // In production, this would POST to /api/affiliate/apply
+            // Show loading state
+            const originalText = submitBtn.textContent;
+            submitBtn.textContent = 'Submitting...';
+            submitBtn.disabled = true;
+            
             const formData = new FormData(form);
             const data = Object.fromEntries(formData);
             
-            console.log('Affiliate application submitted:', data);
-            
-            alert('Thank you for applying! We\'ll review your application and get back to you within 2-3 business days.');
-            form.reset();
+            try {
+                // Save to Supabase affiliate_applications table
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/affiliate_applications`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify({
+                        name: data.name,
+                        email: data.email,
+                        platform: data.platform,
+                        url: data.url || null,
+                        audience: data.audience,
+                        focus: data.focus || null,
+                        why: data.why || null,
+                        status: 'pending'
+                    })
+                });
+                
+                if (!response.ok) {
+                    const errorData = await response.json();
+                    throw new Error(errorData.message || 'Failed to submit application');
+                }
+                
+                // Success!
+                alert('🎉 Thank you for applying!\n\nWe\'ll review your application and get back to you within 2-3 business days.\n\nCheck your email for confirmation.');
+                form.reset();
+                
+                // Track conversion
+                if (window.gtag) {
+                    gtag('event', 'affiliate_application', {
+                        'event_category': 'engagement',
+                        'event_label': data.platform
+                    });
+                }
+                
+            } catch (error) {
+                console.error('Application error:', error);
+                alert('Sorry, there was an error submitting your application.\n\nPlease email us directly at hello@curiouskelly.com with your application details.');
+            } finally {
+                submitBtn.textContent = originalText;
+                submitBtn.disabled = false;
+            }
         });
     </script>
 </body>
