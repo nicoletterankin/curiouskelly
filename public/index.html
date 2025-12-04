@@ -2500,39 +2500,6 @@
             } catch (e) {}
         }
 
-        // Load today's lesson
-        async function loadTodaysLesson(cachedLessons = null) {
-            try {
-                const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
-                
-                // Try cache first for instant display
-                let data = cachedLessons?.find(l => l.day_number === dayOfYear);
-                
-                if (!data) {
-                    const { data: fetched, error } = await supabase
-                        .from('core_lessons')
-                        .select('day_number, topic')
-                        .eq('day_number', dayOfYear)
-                        .single();
-                    if (error) throw error;
-                    data = fetched;
-                }
-
-                if (data) {
-                    document.getElementById('today-topic').textContent = data.topic;
-                    document.getElementById('today-thumbnail-text').textContent = data.topic;
-                    const formattedDate = dayNumberToDate(data.day_number);
-                    document.getElementById('today-day-badge').textContent = formattedDate;
-                    const dateMeta = document.getElementById('today-date-meta');
-                    if (dateMeta) dateMeta.textContent = formattedDate;
-                }
-            } catch (error) {
-                console.error('Error loading today\'s lesson:', error);
-                document.getElementById('today-topic').textContent = 'Daily Lesson';
-                document.getElementById('today-thumbnail-text').textContent = 'Loading...';
-            }
-        }
-
         // Generate lesson thumbnail gradient based on topic
         function generateLessonThumbnail(topic) {
             const categories = {
