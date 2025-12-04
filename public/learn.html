@@ -3794,9 +3794,10 @@
           // LOAD VISUAL ASSETS FOR THIS LESSON (backgrounds, props, Kelly poses)
           // ═══════════════════════════════════════════════════════════════════
           if (kellyVisualSystem) {
-            kellyVisualSystem.loadLesson(dayNumber).catch(e => 
-              console.warn('[Learn] Visual assets not available for day', dayNumber, e.message)
-            );
+            console.log('[Learn] 🎨 Loading visual assets for day', dayNumber);
+            kellyVisualSystem.loadLesson(dayNumber)
+              .then(() => console.log('[Learn] 🎨 Visual assets loaded for day', dayNumber))
+              .catch(e => console.warn('[Learn] Visual assets not available for day', dayNumber, e.message));
           }
           
           updateUI();
@@ -4347,13 +4348,20 @@
         // This sets background, Kelly pose, props based on phase type
         // ═══════════════════════════════════════════════════════════════
         if (kellyVisualSystem) {
-          const phaseMapping = {
-            welcome: 'welcome',
-            hook: 'hook',
-            question: `q${state.currentPhase - 1}`, // q1, q2, q3
-            wisdom: 'wisdom'
-          };
-          const visualPhase = phaseMapping[phase.type] || 'welcome';
+          // Map phase types to visual system phases
+          // For questions, we track Q1/Q2/Q3 based on the question index in the lesson
+          let visualPhase = 'welcome';
+          if (phase.type === 'welcome') visualPhase = 'welcome';
+          else if (phase.type === 'hook') visualPhase = 'hook';
+          else if (phase.type === 'question') {
+            // Find which question number this is (1, 2, or 3)
+            const questionPhases = state.lesson?.phases?.filter(p => p.type === 'question') || [];
+            const questionIndex = questionPhases.findIndex(p => p === phase);
+            visualPhase = `q${Math.max(1, questionIndex + 1)}`; // q1, q2, or q3
+          }
+          else if (phase.type === 'wisdom') visualPhase = 'wisdom';
+          else if (phase.type === 'complete') visualPhase = 'complete';
+          
           kellyVisualSystem.setPhase(visualPhase, state.lesson).catch(e => 
             console.warn('[Visual] Phase transition error:', e.message)
           );
