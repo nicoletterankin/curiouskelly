@@ -476,22 +476,18 @@
     <!-- Auth Section (shown when not logged in) -->
     <div id="auth-section" class="auth-section">
         <h2>Affiliate Dashboard</h2>
-        <p>Sign in with your affiliate account to view your stats.</p>
+        <p>Enter your email to view your affiliate stats.</p>
         
         <form id="login-form">
             <div class="form-group">
-                <label class="form-label">Email</label>
+                <label class="form-label">Email Address</label>
                 <input type="email" class="form-input" id="login-email" required placeholder="your@email.com">
             </div>
-            <div class="form-group">
-                <label class="form-label">Password</label>
-                <input type="password" class="form-input" id="login-password" required placeholder="••••••••">
-            </div>
-            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px;">Sign In</button>
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px;">View My Stats</button>
         </form>
         
         <p style="margin-top: 24px; font-size: 0.85rem;">
-            Not an affiliate yet? <a href="/careers.html">Apply here</a>
+            Not an affiliate yet? <a href="/careers.html">Sign up instantly →</a>
         </p>
     </div>
 
@@ -589,17 +585,29 @@
             <div class="resource-card">
                 <h4>📸 Brand Assets</h4>
                 <p>Download logos, screenshots, and Kelly images for your content.</p>
-                <a href="#" class="btn btn-outline" style="width: 100%;">Download Kit</a>
+                <a href="/affiliate-assets.html" class="btn btn-outline" style="width: 100%;">Download Kit</a>
             </div>
             <div class="resource-card">
                 <h4>📝 Content Templates</h4>
                 <p>Ready-to-use social posts, email templates, and video scripts.</p>
-                <a href="#" class="btn btn-outline" style="width: 100%;">View Templates</a>
+                <a href="/affiliate-assets.html#copy" class="btn btn-outline" style="width: 100%;">View Templates</a>
             </div>
             <div class="resource-card">
                 <h4>📊 Performance Tips</h4>
                 <p>Best practices from top-performing affiliates.</p>
-                <a href="#" class="btn btn-outline" style="width: 100%;">Read Guide</a>
+                <a href="/affiliate-assets.html#tips" class="btn btn-outline" style="width: 100%;">Read Guide</a>
+            </div>
+        </div>
+        
+        <!-- Payout Section -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-top: 32px;">
+            <h3 style="margin-bottom: 16px;">💰 Payouts</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                Commissions are paid monthly via PayPal. To receive payouts, make sure your PayPal email matches your affiliate email.
+            </p>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <a href="mailto:hello@curiouskelly.com?subject=Payout Request" class="btn btn-outline">Request Payout</a>
+                <a href="mailto:hello@curiouskelly.com?subject=Update PayPal Email" class="btn btn-outline">Update PayPal Email</a>
             </div>
         </div>
     </div>
@@ -622,72 +630,58 @@
         const SUPABASE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcnp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE5NjI3NTcsImV4cCI6MjA0NzUzODc1N30.KLMlC14ckEp-XoL8RX5liw_cMdGs8lR';
         
-        let supabaseClient = null;
-        let currentUser = null;
         let affiliateData = null;
+        let currentEmail = null;
 
-        // Initialize Supabase
-        async function initSupabase() {
-            const { createClient } = supabase;
-            supabaseClient = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-            
-            // Check for existing session
-            const { data: { session } } = await supabaseClient.auth.getSession();
-            if (session) {
-                currentUser = session.user;
-                await loadDashboard();
+        // Check for stored email on load
+        function init() {
+            const storedEmail = localStorage.getItem('affiliate_email');
+            if (storedEmail) {
+                document.getElementById('login-email').value = storedEmail;
+                loadDashboardByEmail(storedEmail);
             }
         }
 
-        // Login
+        // Email lookup form
         document.getElementById('login-form').addEventListener('submit', async (e) => {
             e.preventDefault();
-            
-            const email = document.getElementById('login-email').value;
-            const password = document.getElementById('login-password').value;
-            
-            try {
-                const { data, error } = await supabaseClient.auth.signInWithPassword({
-                    email,
-                    password
-                });
-                
-                if (error) throw error;
-                
-                currentUser = data.user;
-                await loadDashboard();
-            } catch (error) {
-                alert('Login failed: ' + error.message);
-            }
+            const email = document.getElementById('login-email').value.trim().toLowerCase();
+            await loadDashboardByEmail(email);
         });
 
-        // Logout
-        async function logout() {
-            await supabaseClient.auth.signOut();
-            currentUser = null;
+        // Logout (clear stored email)
+        function logout() {
+            localStorage.removeItem('affiliate_email');
+            currentEmail = null;
             affiliateData = null;
             showAuthSection();
         }
 
-        // Load Dashboard Data
-        async function loadDashboard() {
+        // Load Dashboard by Email
+        async function loadDashboardByEmail(email) {
             showLoading();
+            currentEmail = email;
             
             try {
-                // Get affiliate data
-                const { data: affiliate, error } = await supabaseClient
-                    .from('affiliates')
-                    .select('*')
-                    .eq('user_id', currentUser.id)
-                    .single();
+                // Look up affiliate by email
+                const response = await fetch(
+                    `${SUPABASE_URL}/rest/v1/affiliates?email=eq.${encodeURIComponent(email)}&select=*`,
+                    {
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                        }
+                    }
+                );
                 
-                if (error && error.code === 'PGRST116') {
-                    // No affiliate record - check if they applied
-                    showNotApproved();
+                const affiliates = await response.json();
+                
+                if (!affiliates || affiliates.length === 0) {
+                    showNotFound();
                     return;
                 }
                 
-                if (error) throw error;
+                const affiliate = affiliates[0];
                 
                 if (affiliate.status !== 'active') {
                     showNotApproved();
@@ -696,16 +690,24 @@
                 
                 affiliateData = affiliate;
                 
+                // Store email for quick access
+                localStorage.setItem('affiliate_email', email);
+                
                 // Get referrals
-                const { data: referrals } = await supabaseClient
-                    .from('referrals')
-                    .select('*')
-                    .eq('affiliate_id', affiliate.id)
-                    .order('created_at', { ascending: false })
-                    .limit(20);
+                const referralsResponse = await fetch(
+                    `${SUPABASE_URL}/rest/v1/referrals?affiliate_id=eq.${affiliate.id}&select=*&order=created_at.desc&limit=20`,
+                    {
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                        }
+                    }
+                );
+                
+                const referrals = await referralsResponse.json() || [];
                 
                 // Update UI
-                updateDashboard(affiliate, referrals || []);
+                updateDashboard(affiliate, referrals);
                 showDashboard();
                 
             } catch (error) {
@@ -718,7 +720,7 @@
         // Update Dashboard UI
         function updateDashboard(affiliate, referrals) {
             // User info
-            document.getElementById('user-email').textContent = currentUser.email;
+            document.getElementById('user-email').textContent = currentEmail || affiliate.email;
             document.getElementById('affiliate-name').textContent = affiliate.name || 'Affiliate';
             
             // Stats
@@ -844,14 +846,14 @@
             document.getElementById('loading').style.display = 'block';
         }
 
-        // Initialize on load
-        document.addEventListener('DOMContentLoaded', () => {
-            // Load Supabase JS
-            const script = document.createElement('script');
-            script.src = 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
-            script.onload = initSupabase;
-            document.head.appendChild(script);
-        });
+        function showNotFound() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('auth-section').style.display = 'block';
+            alert('No affiliate account found for this email.\n\nSign up at curiouskelly.com/careers.html to become an affiliate!');
+        }
+
+        // Initialize on load - no Supabase JS needed, using REST API directly
+        document.addEventListener('DOMContentLoaded', init);
     </script>
 
 </body>

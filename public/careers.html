@@ -899,7 +899,30 @@
         const SUPABASE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcnp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE5NjI3NTcsImV4cCI6MjA0NzUzODc1N30.KLMlC14ckEp-XoL8RX5liw_cMdGs8lR';
 
-        // Form Submission
+        // Generate unique referral code from name
+        function generateReferralCode(name) {
+            const base = name.split(' ')[0].toUpperCase().replace(/[^A-Z]/g, '').substring(0, 6);
+            const random = Math.floor(Math.random() * 9000) + 1000;
+            return `${base}${random}`;
+        }
+
+        // Check how many founding members we have
+        async function getFoundingCount() {
+            try {
+                const response = await fetch(`${SUPABASE_URL}/rest/v1/affiliates?is_founding_100=eq.true&select=id`, {
+                    headers: {
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                    }
+                });
+                const data = await response.json();
+                return data.length || 0;
+            } catch (e) {
+                return 0;
+            }
+        }
+
+        // Form Submission - INSTANT AUTO-APPROVAL
         const form = document.getElementById('affiliate-form');
         const submitBtn = form.querySelector('button[type="submit"]');
         
@@ -908,21 +931,29 @@
             
             // Show loading state
             const originalText = submitBtn.textContent;
-            submitBtn.textContent = 'Submitting...';
+            submitBtn.textContent = 'Creating your account...';
             submitBtn.disabled = true;
             
             const formData = new FormData(form);
             const data = Object.fromEntries(formData);
             
             try {
-                // Save to Supabase affiliate_applications table
-                const response = await fetch(`${SUPABASE_URL}/rest/v1/affiliate_applications`, {
+                // Generate referral code
+                const referralCode = generateReferralCode(data.name);
+                
+                // Check founding 100 status
+                const foundingCount = await getFoundingCount();
+                const isFounding = foundingCount < 100;
+                const commissionRate = isFounding ? 30 : 20;
+                const tier = isFounding ? 'ambassador' : 'scholar';
+                
+                // 1. Save application for records
+                await fetch(`${SUPABASE_URL}/rest/v1/affiliate_applications`, {
                     method: 'POST',
                     headers: {
                         'Content-Type': 'application/json',
                         'apikey': SUPABASE_ANON_KEY,
-                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
-                        'Prefer': 'return=representation'
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
                     },
                     body: JSON.stringify({
                         name: data.name,
@@ -932,35 +963,132 @@
                         audience: data.audience,
                         focus: data.focus || null,
                         why: data.why || null,
-                        status: 'pending'
+                        status: 'approved'
                     })
                 });
                 
-                if (!response.ok) {
-                    const errorData = await response.json();
-                    throw new Error(errorData.message || 'Failed to submit application');
+                // 2. Create affiliate record IMMEDIATELY (auto-approve)
+                const affiliateResponse = await fetch(`${SUPABASE_URL}/rest/v1/affiliates`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'apikey': SUPABASE_ANON_KEY,
+                        'Authorization': `Bearer ${SUPABASE_ANON_KEY}`,
+                        'Prefer': 'return=representation'
+                    },
+                    body: JSON.stringify({
+                        user_id: crypto.randomUUID(),
+                        referral_code: referralCode,
+                        name: data.name,
+                        email: data.email,
+                        tier: tier,
+                        commission_rate: commissionRate,
+                        is_founding_100: isFounding,
+                        total_referrals: 0,
+                        active_referrals: 0,
+                        lifetime_earnings: 0,
+                        status: 'active'
+                    })
+                });
+                
+                if (!affiliateResponse.ok) {
+                    const errorData = await affiliateResponse.json();
+                    // Check if it's a duplicate email
+                    if (errorData.message && errorData.message.includes('duplicate')) {
+                        throw new Error('You already have an affiliate account! Check your email for your referral code.');
+                    }
+                    throw new Error(errorData.message || 'Failed to create affiliate account');
                 }
                 
-                // Success!
-                alert('🎉 Thank you for applying!\n\nWe\'ll review your application and get back to you within 2-3 business days.\n\nCheck your email for confirmation.');
-                form.reset();
+                // SUCCESS - Show the affiliate their info!
+                const referralLink = `https://curiouskelly.com/?ref=${referralCode}`;
+                
+                // Hide form, show success
+                form.style.display = 'none';
+                
+                const successHTML = `
+                    <div style="text-align: center; padding: 40px; background: var(--card-bg); border-radius: 16px; border: 1px solid var(--border-color);">
+                        <div style="font-size: 4rem; margin-bottom: 20px;">🎉</div>
+                        <h2 style="margin-bottom: 8px;">Welcome to the Team${isFounding ? ', Founding Member' : ''}!</h2>
+                        <p style="color: var(--text-secondary); margin-bottom: 32px;">
+                            ${isFounding ? '⭐ You\'re one of our Founding 100 - locked in at 30% forever!' : 'You\'re all set with 20% commission. Grow to unlock higher tiers!'}
+                        </p>
+                        
+                        <div style="background: var(--bg-color); border-radius: 12px; padding: 24px; margin-bottom: 24px; text-align: left;">
+                            <div style="margin-bottom: 16px;">
+                                <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">Your Referral Link</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <input type="text" value="${referralLink}" readonly id="ref-link" 
+                                        style="flex: 1; padding: 12px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-family: monospace;">
+                                    <button onclick="copyText('ref-link')" class="btn btn-accent" style="padding: 12px 20px;">Copy</button>
+                                </div>
+                            </div>
+                            <div>
+                                <label style="display: block; font-size: 0.85rem; color: var(--text-secondary); margin-bottom: 8px;">Your Promo Code</label>
+                                <div style="display: flex; gap: 8px;">
+                                    <input type="text" value="${referralCode}" readonly id="ref-code"
+                                        style="flex: 1; padding: 12px; background: var(--card-bg); border: 1px solid var(--border-color); border-radius: 8px; color: var(--text-primary); font-family: monospace; font-size: 1.2rem; font-weight: 600;">
+                                    <button onclick="copyText('ref-code')" class="btn btn-accent" style="padding: 12px 20px;">Copy</button>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px; margin-bottom: 24px;">
+                            <div style="background: var(--bg-color); padding: 16px; border-radius: 8px;">
+                                <div style="font-size: 0.85rem; color: var(--text-secondary);">Commission Rate</div>
+                                <div style="font-size: 2rem; font-weight: 600; color: var(--success-green);">${commissionRate}%</div>
+                            </div>
+                            <div style="background: var(--bg-color); padding: 16px; border-radius: 8px;">
+                                <div style="font-size: 0.85rem; color: var(--text-secondary);">Per Annual Sub</div>
+                                <div style="font-size: 2rem; font-weight: 600; color: var(--success-green);">$${(99 * commissionRate / 100).toFixed(0)}</div>
+                            </div>
+                        </div>
+                        
+                        <div style="background: rgba(37, 99, 235, 0.1); border: 1px solid rgba(37, 99, 235, 0.2); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                            <h4 style="margin-bottom: 8px;">📧 Check Your Email</h4>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">
+                                We sent your referral details to <strong>${data.email}</strong>.<br>
+                                Save this page or bookmark your dashboard!
+                            </p>
+                        </div>
+                        
+                        <div style="display: flex; gap: 12px; justify-content: center;">
+                            <a href="/affiliate-assets.html" class="btn btn-primary">Download Marketing Kit</a>
+                            <a href="/" class="btn btn-accent">Start Sharing</a>
+                        </div>
+                    </div>
+                `;
+                
+                form.parentElement.innerHTML = successHTML;
                 
                 // Track conversion
                 if (window.gtag) {
-                    gtag('event', 'affiliate_application', {
-                        'event_category': 'engagement',
-                        'event_label': data.platform
+                    gtag('event', 'affiliate_signup', {
+                        'event_category': 'conversion',
+                        'event_label': data.platform,
+                        'value': isFounding ? 1 : 0
                     });
                 }
                 
             } catch (error) {
                 console.error('Application error:', error);
-                alert('Sorry, there was an error submitting your application.\n\nPlease email us directly at hello@curiouskelly.com with your application details.');
-            } finally {
+                alert(error.message || 'Sorry, there was an error. Please email hello@curiouskelly.com');
                 submitBtn.textContent = originalText;
                 submitBtn.disabled = false;
             }
         });
+        
+        // Copy helper
+        window.copyText = function(inputId) {
+            const input = document.getElementById(inputId);
+            input.select();
+            document.execCommand('copy');
+            
+            const btn = input.nextElementSibling;
+            const original = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = original, 2000);
+        };
     </script>
 </body>
 </html>
