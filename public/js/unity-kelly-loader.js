@@ -168,12 +168,12 @@ class UnityKellyLoader {
         productVersion: '2.0'
       };
     } else {
-      // Local build - uncompressed
-      loaderUrl = `${buildUrl}/WebGL.loader.js`;
+      // Local build - try unityweb first (new build), fallback to uncompressed
+      loaderUrl = `${buildUrl}/Kelly_Web_Build.loader.js`;
       config = {
-        dataUrl: `${buildUrl}/WebGL.data`,
-        frameworkUrl: `${buildUrl}/WebGL.framework.js`,
-        codeUrl: `${buildUrl}/WebGL.wasm`,
+        dataUrl: `${buildUrl}/Kelly_Web_Build.data.unityweb`,
+        frameworkUrl: `${buildUrl}/Kelly_Web_Build.framework.js.unityweb`,
+        codeUrl: `${buildUrl}/Kelly_Web_Build.wasm.unityweb`,
         streamingAssetsUrl: `${buildUrl}/../StreamingAssets`,
         companyName: 'LessonOfTheDay',
         productName: 'CuriousKelly',
