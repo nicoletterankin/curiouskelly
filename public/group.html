@@ -1,0 +1,663 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="View your learning group on Curious Kelly.">
+    <title>Learning Group - Curious Kelly</title>
+    
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/brand/apple-touch-icon.png" />
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,400;9..144,500;9..144,600&family=Inter:wght@400;500;600&display=swap" rel="stylesheet" />
+    
+    <style>
+        :root {
+            --bg-color: #0a0a0b;
+            --bg-card: #111113;
+            --bg-elevated: #18181b;
+            --text-primary: #fafafa;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --border: #27272a;
+            --success: #22c55e;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            background: rgba(10, 10, 11, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 24px;
+            z-index: 100;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .back-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.95rem;
+            transition: color 0.2s;
+        }
+        
+        .back-link:hover { color: var(--text-primary); }
+        
+        .logo {
+            font-family: 'Fraunces', serif;
+            font-weight: 500;
+            font-size: 1.2rem;
+            color: var(--text-primary);
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .logo img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+        }
+        
+        /* Main Content */
+        .main {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 40px 24px;
+        }
+        
+        /* Group Header */
+        .group-header {
+            text-align: center;
+            padding: 40px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 40px;
+        }
+        
+        .group-emoji {
+            font-size: 5rem;
+            margin-bottom: 16px;
+        }
+        
+        .group-name {
+            font-family: 'Fraunces', serif;
+            font-size: 2.5rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+        
+        .group-meta {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        
+        /* Invite Section */
+        .invite-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+        
+        .invite-section h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .invite-code-box {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+        }
+        
+        .invite-code {
+            flex: 1;
+            font-family: monospace;
+            font-size: 1.4rem;
+            font-weight: 700;
+            letter-spacing: 3px;
+            color: var(--accent);
+        }
+        
+        .copy-btn {
+            padding: 10px 20px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .copy-btn:hover {
+            background: var(--accent-hover);
+        }
+        
+        .invite-url {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 12px;
+            word-break: break-all;
+        }
+        
+        /* Members Section */
+        .members-section {
+            margin-bottom: 32px;
+        }
+        
+        .members-section h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .members-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .member-card {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+        }
+        
+        .member-avatar {
+            width: 48px;
+            height: 48px;
+            background: linear-gradient(135deg, var(--accent), #8b5cf6);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: white;
+        }
+        
+        .member-info {
+            flex: 1;
+        }
+        
+        .member-name {
+            font-weight: 600;
+            margin-bottom: 2px;
+        }
+        
+        .member-stats {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+        }
+        
+        .member-streak {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            color: var(--success);
+            font-weight: 600;
+        }
+        
+        .member-role {
+            padding: 4px 10px;
+            background: rgba(59, 130, 246, 0.1);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            color: var(--accent);
+            font-weight: 600;
+        }
+        
+        /* Activity Section */
+        .activity-section h3 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .activity-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+        
+        .activity-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 12px;
+            padding: 16px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+        }
+        
+        .activity-icon {
+            font-size: 1.5rem;
+        }
+        
+        .activity-content {
+            flex: 1;
+        }
+        
+        .activity-text {
+            margin-bottom: 4px;
+        }
+        
+        .activity-text strong {
+            color: var(--text-primary);
+        }
+        
+        .activity-time {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 80px 24px;
+            color: var(--text-secondary);
+        }
+        
+        .loading-spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+        
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        
+        /* Error State */
+        .error-state {
+            text-align: center;
+            padding: 80px 24px;
+        }
+        
+        .error-icon {
+            font-size: 4rem;
+            margin-bottom: 16px;
+        }
+        
+        .error-state h2 {
+            font-family: 'Fraunces', serif;
+            margin-bottom: 8px;
+        }
+        
+        .error-state p {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+        
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 24px;
+            background: var(--accent);
+            color: white;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 600;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+        }
+        
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            color: var(--text-secondary);
+        }
+        
+        .empty-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+        
+        /* Footer */
+        .footer {
+            text-align: center;
+            padding: 40px 24px;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 60px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <a href="/learn.html" class="back-link">
+            ← Back to Learning
+        </a>
+        <a href="/" class="logo">
+            <img src="/images/brand/kelly-mark-circle-64.png" alt="" />
+            Curious Kelly
+        </a>
+    </header>
+    
+    <main class="main">
+        <!-- Loading State -->
+        <div class="loading" id="loading-state">
+            <div class="loading-spinner"></div>
+            <p>Loading group...</p>
+        </div>
+        
+        <!-- Error State -->
+        <div class="error-state" id="error-state" style="display: none;">
+            <div class="error-icon">🔍</div>
+            <h2>Group Not Found</h2>
+            <p>This group doesn't exist or you don't have access to it.</p>
+            <a href="/learn.html" class="btn">← Back to Learning</a>
+        </div>
+        
+        <!-- Group Content -->
+        <div id="group-content" style="display: none;">
+            <div class="group-header">
+                <div class="group-emoji" id="group-emoji">👨‍👩‍👧‍👦</div>
+                <h1 class="group-name" id="group-name">Loading...</h1>
+                <p class="group-meta" id="group-meta">0 members</p>
+            </div>
+            
+            <section class="invite-section">
+                <h3>💌 Invite Others</h3>
+                <div class="invite-code-box">
+                    <div class="invite-code" id="invite-code">------</div>
+                    <button class="copy-btn" id="copy-invite-btn">Copy Link</button>
+                </div>
+                <p class="invite-url" id="invite-url">https://curiouskelly.com/join?code=------</p>
+            </section>
+            
+            <section class="members-section">
+                <h3>👥 Members</h3>
+                <div class="members-list" id="members-list">
+                    <!-- Populated dynamically -->
+                </div>
+            </section>
+            
+            <section class="activity-section">
+                <h3>📊 Recent Activity</h3>
+                <div class="activity-list" id="activity-list">
+                    <!-- Populated dynamically -->
+                </div>
+            </section>
+        </div>
+    </main>
+    
+    <footer class="footer">
+        <p>© 2025 Lesson of the Day PBC.</p>
+    </footer>
+    
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const GroupPage = {
+            supabase: null,
+            groupId: null,
+            group: null,
+            members: [],
+            
+            async init() {
+                // Get group ID from URL
+                const params = new URLSearchParams(window.location.search);
+                this.groupId = params.get('id');
+                
+                if (!this.groupId) {
+                    this.showError();
+                    return;
+                }
+                
+                // Initialize Supabase
+                if (window.supabase) {
+                    this.supabase = window.supabase;
+                } else if (window.supabaseClient) {
+                    this.supabase = window.supabaseClient;
+                }
+                
+                await this.loadGroup();
+            },
+            
+            async loadGroup() {
+                if (!this.supabase) {
+                    // Demo mode without Supabase
+                    this.showDemoGroup();
+                    return;
+                }
+                
+                try {
+                    // Load group details
+                    const { data: group, error: groupError } = await this.supabase
+                        .from('learning_groups')
+                        .select('*')
+                        .eq('id', this.groupId)
+                        .single();
+                    
+                    if (groupError || !group) {
+                        this.showError();
+                        return;
+                    }
+                    
+                    this.group = group;
+                    
+                    // Load members
+                    const { data: members, error: membersError } = await this.supabase
+                        .from('group_members')
+                        .select(`
+                            user_id,
+                            role,
+                            joined_at,
+                            users (
+                                id,
+                                name,
+                                email,
+                                current_day,
+                                streak_days
+                            )
+                        `)
+                        .eq('group_id', this.groupId);
+                    
+                    if (!membersError && members) {
+                        this.members = members.map(m => ({
+                            ...m.users,
+                            role: m.role,
+                            joined_at: m.joined_at
+                        })).filter(Boolean);
+                    }
+                    
+                    this.renderGroup();
+                    
+                } catch (e) {
+                    console.error('[GroupPage] Load failed:', e);
+                    this.showError();
+                }
+            },
+            
+            showDemoGroup() {
+                // Demo group for when Supabase isn't connected
+                this.group = {
+                    name: 'Demo Group',
+                    emoji: '🌟',
+                    invite_code: 'DEMO01'
+                };
+                this.members = [];
+                this.renderGroup();
+            },
+            
+            renderGroup() {
+                document.getElementById('loading-state').style.display = 'none';
+                document.getElementById('group-content').style.display = 'block';
+                
+                // Header
+                document.getElementById('group-emoji').textContent = this.group.emoji || '👨‍👩‍👧‍👦';
+                document.getElementById('group-name').textContent = this.group.name;
+                document.getElementById('group-meta').textContent = `${this.members.length} member${this.members.length !== 1 ? 's' : ''}`;
+                
+                // Invite
+                document.getElementById('invite-code').textContent = this.group.invite_code;
+                const inviteUrl = `https://curiouskelly.com/join?code=${this.group.invite_code}`;
+                document.getElementById('invite-url').textContent = inviteUrl;
+                
+                document.getElementById('copy-invite-btn').addEventListener('click', () => {
+                    navigator.clipboard.writeText(inviteUrl).then(() => {
+                        const btn = document.getElementById('copy-invite-btn');
+                        btn.textContent = 'Copied!';
+                        setTimeout(() => btn.textContent = 'Copy Link', 2000);
+                    });
+                });
+                
+                // Members
+                this.renderMembers();
+                
+                // Activity
+                this.renderActivity();
+            },
+            
+            renderMembers() {
+                const list = document.getElementById('members-list');
+                
+                if (this.members.length === 0) {
+                    list.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">👥</div>
+                            <p>No members yet. Share the invite code to add people!</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                list.innerHTML = this.members.map(member => `
+                    <div class="member-card">
+                        <div class="member-avatar">${this.getInitials(member.name || member.email)}</div>
+                        <div class="member-info">
+                            <div class="member-name">${this.escapeHtml(member.name || 'Anonymous')}</div>
+                            <div class="member-stats">
+                                Day ${member.current_day || 1} · 
+                                <span class="member-streak">🔥 ${member.streak_days || 0} day streak</span>
+                            </div>
+                        </div>
+                        ${member.role === 'owner' ? '<span class="member-role">Owner</span>' : ''}
+                    </div>
+                `).join('');
+            },
+            
+            renderActivity() {
+                const list = document.getElementById('activity-list');
+                
+                // Generate activity based on members
+                if (this.members.length === 0) {
+                    list.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">📊</div>
+                            <p>Activity will appear here as members complete lessons.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                // Show recent completions (simulated for now)
+                const activities = this.members
+                    .filter(m => m.current_day > 1)
+                    .slice(0, 5)
+                    .map(member => ({
+                        icon: '✅',
+                        text: `<strong>${this.escapeHtml(member.name || 'A member')}</strong> completed Day ${member.current_day - 1}`,
+                        time: 'Recently'
+                    }));
+                
+                if (activities.length === 0) {
+                    list.innerHTML = `
+                        <div class="empty-state">
+                            <div class="empty-icon">📊</div>
+                            <p>Activity will appear here as members complete lessons.</p>
+                        </div>
+                    `;
+                    return;
+                }
+                
+                list.innerHTML = activities.map(activity => `
+                    <div class="activity-item">
+                        <div class="activity-icon">${activity.icon}</div>
+                        <div class="activity-content">
+                            <div class="activity-text">${activity.text}</div>
+                            <div class="activity-time">${activity.time}</div>
+                        </div>
+                    </div>
+                `).join('');
+            },
+            
+            showError() {
+                document.getElementById('loading-state').style.display = 'none';
+                document.getElementById('error-state').style.display = 'block';
+            },
+            
+            getInitials(name) {
+                if (!name) return '?';
+                return name.split(' ').map(n => n[0]).join('').toUpperCase().slice(0, 2);
+            },
+            
+            escapeHtml(text) {
+                const div = document.createElement('div');
+                div.textContent = text;
+                return div.innerHTML;
+            }
+        };
+        
+        document.addEventListener('DOMContentLoaded', () => GroupPage.init());
+    </script>
+</body>
+</html>
+
