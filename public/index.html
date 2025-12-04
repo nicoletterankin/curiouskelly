@@ -482,45 +482,341 @@
         }
 
         /* ========================================
-           CURRICULUM
+           TODAY'S LESSON - Calendar-First Experience
            ======================================== */
-        .curriculum {
+        .todays-lesson {
             background: var(--bg-color);
         }
 
-        .age-selector {
-            display: flex;
-            justify-content: center;
-            gap: 12px;
-            margin-bottom: 40px;
-            flex-wrap: wrap;
+        .daily-lesson-container {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 32px;
+            max-width: 900px;
+            margin: 0 auto;
+            align-items: start;
         }
 
-        .age-btn {
-            padding: 12px 24px;
+        /* Mini Calendar */
+        .mini-calendar-wrapper {
             background: var(--bg-elevated);
             border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 24px;
+        }
+
+        .mini-calendar {
+            width: 100%;
+        }
+
+        .calendar-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .cal-nav-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--bg-secondary);
             border-radius: 10px;
             color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .cal-nav-btn:hover {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .cal-month-title {
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .calendar-weekdays span {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 8px 0;
+        }
+
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .cal-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+            position: relative;
+            text-decoration: none;
+        }
+
+        .cal-day:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .cal-day.past {
+            color: var(--text-muted);
+        }
+
+        .cal-day.past::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background: var(--success);
+            border-radius: 50%;
+        }
+
+        .cal-day.today {
+            background: var(--accent-primary);
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+        }
+
+        .cal-day.future {
+            color: var(--text-secondary);
+        }
+
+        .cal-day.empty {
+            visibility: hidden;
+        }
+
+        .calendar-legend {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.past { background: var(--success); }
+        .legend-dot.today { background: var(--accent-primary); }
+        .legend-dot.future { background: var(--border-color); }
+
+        /* Today's Lesson Card */
+        .today-card {
+            background: linear-gradient(145deg, var(--bg-elevated) 0%, var(--bg-secondary) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .today-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-primary), #60a5fa, var(--accent-primary));
+            background-size: 200% 100%;
+            animation: shimmer-bar 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer-bar {
+            0%, 100% { background-position: 0% 0; }
+            50% { background-position: 100% 0; }
+        }
+
+        .today-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 16px;
+        }
+
+        .today-icon {
+            font-size: 1rem;
+        }
+
+        .today-date {
             font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .today-topic {
+            font-family: 'Fraunces', Georgia, serif;
+            font-size: 1.75rem;
+            font-weight: 500;
+            line-height: 1.3;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .today-truth {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .today-thumbnail {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin-bottom: 24px;
+        }
+
+        .kelly-preview {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--accent-primary);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+        }
+
+        .today-cta {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 18px 32px;
+            background: var(--accent-primary);
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-size: 1.05rem;
+            font-weight: 600;
+            text-decoration: none;
             cursor: pointer;
             transition: all 0.2s;
         }
 
-        .age-btn:hover {
-            border-color: var(--accent-primary);
-            color: var(--text-primary);
-        }
-
-        .age-btn.active {
+        .today-cta:hover {
             background: var(--accent-hover);
-            border-color: var(--accent-hover);
-            color: white;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
         }
 
-        .month-grid {
-            display: grid;
-            gap: 24px;
+        .today-meta {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 16px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Curriculum CTA */
+        .curriculum-cta {
+            text-align: center;
+            margin-top: 48px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .view-all-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 32px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .view-all-btn:hover {
+            background: var(--bg-secondary);
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+
+        .calendar-link {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .calendar-link:hover {
+            color: var(--accent-primary);
+        }
+
+        /* Responsive for Today's Lesson */
+        @media (max-width: 768px) {
+            .daily-lesson-container {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+            
+            .mini-calendar-wrapper {
+                order: 2;
+            }
+            
+            .today-card {
+                order: 1;
+            }
+            
+            .today-topic {
+                font-size: 1.5rem;
+            }
         }
 
         /* Loading States */
@@ -1665,26 +1961,76 @@
     </section>
 
     <!-- ========================================
-         CURRICULUM
+         TODAY'S LESSON - Calendar-First Experience
          ======================================== -->
-    <section class="curriculum" id="curriculum">
+    <section class="todays-lesson" id="curriculum">
         <div class="section-header">
-            <span class="section-label">365 Days of Wonder</span>
-            <h2>The Complete Curriculum</h2>
-            <p>One topic per day, personalized for your age. From "How Leaves Feed the World" to "What Leaders Actually Do."</p>
+            <span class="section-label">📅 The Daily Lesson</span>
+            <h2>One Topic. Every Day. All Year.</h2>
+            <p>365 days of wonder, personalized for your age. Today's lesson is always free.</p>
         </div>
 
-        <div class="age-selector">
-            <button class="age-btn active" onclick="selectAge(this, '2-5')">Ages 2-5</button>
-            <button class="age-btn" onclick="selectAge(this, '6-12')">Ages 6-12</button>
-            <button class="age-btn" onclick="selectAge(this, '13-17')">Ages 13-17</button>
-            <button class="age-btn" onclick="selectAge(this, '18-29')">Ages 18-29</button>
-            <button class="age-btn" onclick="selectAge(this, '30-54')">Ages 30-54</button>
-            <button class="age-btn" onclick="selectAge(this, '55+')">Ages 55+</button>
+        <div class="daily-lesson-container">
+            <!-- Mini Calendar -->
+            <div class="mini-calendar-wrapper">
+                <div class="mini-calendar">
+                    <div class="calendar-nav">
+                        <button class="cal-nav-btn" onclick="navigateMonth(-1)" aria-label="Previous month">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                        </button>
+                        <span class="cal-month-title" id="cal-month-title">December 2025</span>
+                        <button class="cal-nav-btn" onclick="navigateMonth(1)" aria-label="Next month">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                        </button>
+                    </div>
+                    <div class="calendar-weekdays">
+                        <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+                    </div>
+                    <div class="calendar-days" id="calendar-days">
+                        <!-- Generated by JavaScript -->
+                    </div>
+                </div>
+                <div class="calendar-legend">
+                    <span class="legend-item"><span class="legend-dot past"></span> Completed</span>
+                    <span class="legend-item"><span class="legend-dot today"></span> Today</span>
+                    <span class="legend-item"><span class="legend-dot future"></span> Coming</span>
+                </div>
+            </div>
+
+            <!-- Today's Lesson Card -->
+            <div class="today-card" id="today-card">
+                <div class="today-badge">
+                    <span class="today-icon">🎯</span>
+                    <span>TODAY</span>
+                </div>
+                <div class="today-date" id="today-date">December 4, 2025 · Day 339</div>
+                <h3 class="today-topic" id="today-topic">Loading today's lesson...</h3>
+                <p class="today-truth" id="today-truth">Every day brings a new opportunity to learn something wonderful.</p>
+                
+                <div class="today-thumbnail" id="today-thumbnail">
+                    <img src="/images/brand/kelly-mark-circle-512.png" alt="Kelly" class="kelly-preview">
+                </div>
+
+                <a href="/learn" class="today-cta">
+                    <span>Begin Today's Lesson</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+
+                <div class="today-meta">
+                    <span>⏱️ ~5 minutes</span>
+                    <span>🎓 Personalized for you</span>
+                </div>
+            </div>
         </div>
 
-        <div class="month-grid" id="month-grid">
-            <!-- Populated by JavaScript -->
+        <div class="curriculum-cta">
+            <a href="/curriculum.html" class="view-all-btn">
+                <span>View All 365 Days</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </a>
+            <a href="/calendar.html" class="calendar-link">
+                Or explore by month →
+            </a>
         </div>
     </section>
 
@@ -2212,39 +2558,165 @@
             return `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`;
         }
 
-        // Load curriculum (with caching for Spotify-speed)
-        async function loadCurriculum() {
-            const grid = document.getElementById('month-grid');
+        // ========================================
+        // TODAY'S LESSON - Mini Calendar System
+        // ========================================
+        let calendarMonth = new Date().getMonth(); // 0-indexed
+        let calendarYear = 2025;
+        const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+        // Convert date to day number (1-366)
+        function dateToDayNumber(date) {
+            const start = new Date(date.getFullYear(), 0, 0);
+            const diff = date - start;
+            const oneDay = 1000 * 60 * 60 * 24;
+            return Math.floor(diff / oneDay);
+        }
+
+        // Convert day number to Date object
+        function dayNumberToDateObj(dayNum, year = 2025) {
+            const date = new Date(year, 0);
+            date.setDate(dayNum);
+            return date;
+        }
+
+        // Get today's day number
+        function getTodayDayNumber() {
+            const now = new Date();
+            return dateToDayNumber(now);
+        }
+
+        // Navigate calendar months
+        function navigateMonth(direction) {
+            calendarMonth += direction;
+            if (calendarMonth < 0) {
+                calendarMonth = 0;
+            } else if (calendarMonth > 11) {
+                calendarMonth = 11;
+            }
+            renderMiniCalendar();
+        }
+
+        // Render the mini calendar
+        function renderMiniCalendar() {
+            const titleEl = document.getElementById('cal-month-title');
+            const daysEl = document.getElementById('calendar-days');
             
-            // Try cache FIRST for instant render
-            const cached = getCachedLessons();
-            if (cached) {
-                renderCurriculum(cached, grid);
-                // Still fetch fresh data in background
-                fetchAndCacheLessons().then(fresh => {
-                    if (fresh) renderCurriculum(fresh, grid);
-                });
-                return;
+            if (!titleEl || !daysEl) return;
+
+            titleEl.textContent = `${MONTHS[calendarMonth]} ${calendarYear}`;
+
+            // Calculate the first day of the month (0 = Sunday)
+            const firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
+            const daysInMonth = MONTH_DAYS[calendarMonth];
+            
+            // Calculate day number offset for this month
+            let dayOffset = 0;
+            for (let i = 0; i < calendarMonth; i++) {
+                dayOffset += MONTH_DAYS[i];
+            }
+
+            const today = getTodayDayNumber();
+            
+            let html = '';
+            
+            // Empty cells for days before the 1st
+            for (let i = 0; i < firstDay; i++) {
+                html += '<div class="cal-day empty"></div>';
             }
             
-            // Show loading state only if no cache
-            grid.innerHTML = `
-                <div class="loading-skeleton">
-                    <div class="skeleton-card"></div>
-                    <div class="skeleton-card"></div>
-                    <div class="skeleton-card"></div>
-                </div>
-            `;
-
-            const lessons = await fetchAndCacheLessons();
-            if (lessons) renderCurriculum(lessons, grid);
+            // Calendar days
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayNum = dayOffset + day;
+                let className = 'cal-day';
+                
+                if (dayNum < today) {
+                    className += ' past';
+                } else if (dayNum === today) {
+                    className += ' today';
+                } else {
+                    className += ' future';
+                }
+                
+                html += `<a href="/day/${dayNum}" class="${className}" title="Day ${dayNum}">${day}</a>`;
+            }
+            
+            daysEl.innerHTML = html;
         }
-        
+
+        // Load today's lesson
+        async function loadTodaysLesson() {
+            const todayNum = getTodayDayNumber();
+            const today = new Date();
+            
+            // Update date display
+            const dateEl = document.getElementById('today-date');
+            if (dateEl) {
+                const options = { month: 'long', day: 'numeric', year: 'numeric' };
+                dateEl.textContent = `${today.toLocaleDateString('en-US', options)} · Day ${todayNum}`;
+            }
+            
+            try {
+                // First try cache
+                const cached = getCachedLessons();
+                if (cached) {
+                    const todayLesson = cached.find(l => l.day_number === todayNum);
+                    if (todayLesson) {
+                        displayTodaysLesson(todayLesson);
+                        return;
+                    }
+                }
+                
+                // Fetch from Supabase
+                const { data: lesson, error } = await supabase
+                    .from('core_lessons')
+                    .select('day_number, topic, big_truth')
+                    .eq('day_number', todayNum)
+                    .single();
+
+                if (error) throw error;
+                if (lesson) {
+                    displayTodaysLesson(lesson);
+                }
+            } catch (error) {
+                console.error('Error loading today\'s lesson:', error);
+                // Show fallback
+                const topicEl = document.getElementById('today-topic');
+                if (topicEl) {
+                    topicEl.textContent = 'Discover something new today';
+                }
+            }
+        }
+
+        // Display today's lesson in the card
+        function displayTodaysLesson(lesson) {
+            const topicEl = document.getElementById('today-topic');
+            const truthEl = document.getElementById('today-truth');
+            
+            if (topicEl && lesson.topic) {
+                topicEl.textContent = lesson.topic;
+            }
+            
+            if (truthEl && lesson.big_truth) {
+                truthEl.textContent = lesson.big_truth;
+            } else if (truthEl) {
+                truthEl.textContent = 'Every day brings a new opportunity to learn something wonderful.';
+            }
+        }
+
+        // Initialize calendar and today's lesson
+        async function initDailyLesson() {
+            renderMiniCalendar();
+            await loadTodaysLesson();
+        }
+
+        // Legacy functions kept for compatibility
         async function fetchAndCacheLessons() {
             try {
                 const { data: lessons, error } = await supabase
                     .from('core_lessons')
-                    .select('day_number, topic')
+                    .select('day_number, topic, big_truth')
                     .order('day_number');
 
                 if (error) throw error;
@@ -2254,47 +2726,6 @@
                 console.error('Error fetching lessons:', error);
                 return null;
             }
-        }
-        
-        function renderCurriculum(lessons, grid) {
-            if (!lessons) return;
-
-                // Clear loading state
-                grid.innerHTML = '';
-
-                const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-                const monthDays = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-
-            let dayIndex = 0;
-            months.forEach((month, i) => {
-                const monthLessons = lessons.slice(dayIndex, dayIndex + monthDays[i]);
-                dayIndex += monthDays[i];
-
-                const card = document.createElement('div');
-                card.className = 'month-card';
-                card.innerHTML = `
-                    <div class="month-header">
-                        <h3>${month}</h3>
-                        <span class="month-count">${monthLessons.length} lessons</span>
-                    </div>
-                    <div class="month-lessons">
-                        <div class="lesson-grid">
-                            ${monthLessons.map(l => `
-                                <div class="lesson-item" onclick="window.location.href='/learn.html?day=${l.day_number}'">
-                                    <div class="lesson-item-day">${dayNumberToDate(l.day_number)}</div>
-                                    <div class="lesson-item-title">${l.topic}</div>
-                                    <div class="lesson-item-thumbnail" style="background: ${generateLessonThumbnail(l.topic)}"></div>
-                                </div>
-                            `).join('')}
-                        </div>
-                    </div>
-                `;
-                grid.appendChild(card);
-
-                card.querySelector('.month-header').addEventListener('click', function() {
-                    card.classList.toggle('collapsed');
-                });
-            });
         }
 
         // Perspective explorer
@@ -2725,10 +3156,8 @@
         }, 2000);
 
         // ⚡ PARALLEL LOADING for Spotify-speed
-        const cached = getCachedLessons();
         Promise.all([
-            loadTodaysLesson(cached),
-            loadCurriculum(),
+            initDailyLesson(),
             updatePerspectives()
         ]).then(() => console.log('[Index] ⚡ All content loaded'));
         updateCalculator();
