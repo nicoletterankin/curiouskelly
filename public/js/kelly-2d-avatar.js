@@ -121,6 +121,42 @@ class Kelly2DAvatar {
     }
   }
   
+  /**
+   * Load phase-specific visual (Kelly in educational context)
+   * @param {number} dayNumber - Lesson day (1-365)
+   * @param {string} phase - Phase name ('hook', 'q1', 'q2', 'q3', 'wisdom')
+   */
+  loadPhaseVisual(dayNumber, phase) {
+    const paddedDay = String(dayNumber).padStart(3, '0');
+    const phaseMap = {
+      'welcome': 'hook',
+      'hook': 'hook',
+      'q1': 'q1',
+      'q2': 'q2', 
+      'q3': 'q3',
+      'question': 'q1',
+      'wisdom': 'wisdom',
+      'complete': 'wisdom'
+    };
+    
+    const phaseFile = phaseMap[phase] || 'hook';
+    const phasePath = `/kelly/phases/${paddedDay}/${phaseFile}.png`;
+    
+    // Try to load phase visual, fall back to default pose on error
+    const testImg = new Image();
+    testImg.onload = () => {
+      if (this.img) {
+        this.img.src = phasePath;
+        console.log(`[Kelly] Phase visual loaded: day ${dayNumber}, ${phaseFile}`);
+      }
+    };
+    testImg.onerror = () => {
+      console.log(`[Kelly] Phase visual not found for day ${dayNumber}/${phaseFile}, using default pose`);
+      // Keep current pose image
+    };
+    testImg.src = phasePath;
+  }
+  
   getExpression() {
     return this.currentDirection === 'up' ? 'curious' : 'explaining';
   }

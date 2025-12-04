@@ -4380,7 +4380,25 @@
         }
 
         // ═══════════════════════════════════════════════════════════════
-        // KELLY EXPRESSION MAPPING (based on phase type)
+        // KELLY PHASE VISUAL (Kelly in educational context)
+        // Load phase-specific image showing Kelly in the lesson environment
+        // ═══════════════════════════════════════════════════════════════
+        if (kellyAvatar && kellyAvatar.loadPhaseVisual && state.dayNumber) {
+          // Map phase type to phase file name
+          let phaseFile = 'hook';
+          if (phase.type === 'question') {
+            const questionPhases = state.lesson?.phases?.filter(p => p.type === 'question') || [];
+            const questionIndex = questionPhases.findIndex(p => p === phase);
+            phaseFile = `q${Math.max(1, questionIndex + 1)}`;
+          } else if (phase.type === 'wisdom' || phase.type === 'complete') {
+            phaseFile = 'wisdom';
+          }
+          kellyAvatar.loadPhaseVisual(state.dayNumber, phaseFile);
+        }
+        
+        // ═══════════════════════════════════════════════════════════════
+        // KELLY EXPRESSION MAPPING (based on phase type) - FALLBACK
+        // Only used when phase visuals are not available
         // ═══════════════════════════════════════════════════════════════
         // Use new Kelly Production Assets if available
         if (window.kellyAssets) {
