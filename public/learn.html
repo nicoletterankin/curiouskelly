@@ -1766,15 +1766,17 @@
         flex: 1;
       }
 
-      /* === CAPTION BAR - Aligned with answer options (right side) === */
+      /* === CAPTION BAR - Centered above chat, aligned with options === */
       .caption-bar {
         position: absolute;
-        /* Position to align with right-rail options (top: 35% + some offset) */
-        top: 38%;
-        bottom: auto;
-        left: 60px;
-        right: 165px;
-        max-width: calc(100% - 225px); /* Don't overlap with right rail */
+        /* Position centered horizontally, above the chat area */
+        top: auto;
+        bottom: 40%; /* Above chat comments (which are at bottom ~80px) */
+        left: 50%;
+        right: auto;
+        transform: translateX(-50%) translateY(10px);
+        width: min(480px, calc(100% - 200px)); /* Don't overlap rails */
+        max-width: 480px;
         z-index: 90;
         background: rgba(0, 0, 0, 0.75);
         backdrop-filter: blur(12px);
@@ -1782,13 +1784,13 @@
         border-radius: 14px;
         padding: 14px 18px;
         opacity: 0;
-        transform: translateY(10px);
         transition: all 0.3s ease;
+        text-align: center; /* Center the text */
       }
 
       .caption-bar.visible {
         opacity: 1;
-        transform: translateY(0);
+        transform: translateX(-50%) translateY(0);
       }
 
       .caption-text {
@@ -3247,19 +3249,27 @@
         50% { transform: translateY(-8px); }
       }
 
-      /* Swipe hint - positioned under Talk to Kelly button (bottom-right) */
+      /* Swipe hint - positioned UNDER Talk to Kelly button (bottom-right) */
       .swipe-hint {
         position: fixed;
-        bottom: calc(var(--safe-bottom, 20px) + 100px); /* Below Talk to Kelly */
+        /* Talk to Kelly button is at bottom: ~36px, height ~50px, so top of button is ~86px
+           Position swipe hint just below the button, accounting for safe area */
+        bottom: calc(var(--safe-bottom, 20px) + 90px); /* Above Talk to Kelly button */
         right: 16px;
         display: flex;
         flex-direction: column;
         align-items: center;
         gap: 4px;
-        z-index: 90;
+        z-index: 85; /* Below Talk to Kelly button (95) */
         opacity: 0.6;
         animation: swipeHintPulse 3s ease-in-out infinite;
         pointer-events: none;
+        /* Make it compact and unobtrusive */
+        background: rgba(0, 0, 0, 0.3);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        border-radius: 12px;
+        padding: 6px 10px;
       }
 
       .swipe-hint.hidden {
@@ -3267,23 +3277,25 @@
       }
 
       .swipe-hint-arrow {
-        font-size: 16px;
+        font-size: 14px;
         animation: swipeBounce 1.5s ease-in-out infinite;
-        color: rgba(255, 255, 255, 0.8);
+        color: rgba(255, 255, 255, 0.9);
       }
 
       .swipe-hint-text {
-        font-size: 10px;
-        color: rgba(255, 255, 255, 0.7);
-        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.5);
+        font-size: 9px;
+        color: rgba(255, 255, 255, 0.8);
+        text-shadow: 0 1px 2px rgba(0, 0, 0, 0.5);
         text-align: center;
-        max-width: 80px;
+        max-width: 70px;
+        letter-spacing: 0.3px;
       }
       
       @media (max-width: 768px) {
         .swipe-hint {
           right: 12px;
-          bottom: calc(var(--safe-bottom, 20px) + 90px);
+          bottom: calc(var(--safe-bottom, 20px) + 80px);
+          padding: 5px 8px;
         }
       }
 
@@ -3356,11 +3368,11 @@
         }
 
         .caption-bar {
-          left: 52px;
-          right: 145px;
-          top: 45%; /* Slightly lower on mobile */
+          /* Centered on mobile too, slightly lower */
+          bottom: 35%;
+          width: min(360px, calc(100% - 100px));
+          max-width: 360px;
           padding: 10px 14px;
-          max-width: calc(100% - 200px);
         }
 
         .caption-text {
@@ -3378,7 +3390,9 @@
         }
 
         .caption-bar {
-          right: 125px;
+          /* Smaller screens - narrower caption */
+          width: min(300px, calc(100% - 80px));
+          max-width: 300px;
         }
       }
 
@@ -3426,12 +3440,11 @@
         /* These never hide - Kelly is always the focus */
       }
       
-      /* In Zen mode, center the caption more */
+      /* In Zen mode, caption stays centered but can be wider */
       body.zen-mode .caption-bar {
-        left: 16px;
-        right: 165px;
-        max-width: calc(100% - 200px);
-        transition: left 0.4s ease, right 0.4s ease, max-width 0.4s ease;
+        width: min(600px, calc(100% - 64px));
+        max-width: 600px;
+        transition: width 0.4s ease, max-width 0.4s ease;
       }
       
       /* Phase nav gets subtle in Zen mode */
@@ -3447,8 +3460,8 @@
       /* Mobile adjustments for Zen mode */
       @media (max-width: 768px) {
         body.zen-mode .caption-bar {
-          left: 12px;
-          right: 125px;
+          width: min(420px, calc(100% - 40px));
+          max-width: 420px;
         }
       }
     </style>
