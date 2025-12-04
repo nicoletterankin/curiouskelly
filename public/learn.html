@@ -2386,6 +2386,251 @@
         .day-nav { display: none; }
       }
 
+      /* ═══════════════════════════════════════════════════════════════════
+         CALENDAR OVERLAY - Kelly-first design (transparent background)
+         ═══════════════════════════════════════════════════════════════════ */
+      .calendar-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.75); /* More transparent - Kelly visible */
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        z-index: 700;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s, visibility 0.3s;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 20px;
+      }
+      .calendar-overlay.open { opacity: 1; visibility: visible; }
+      
+      .calendar-panel {
+        background: rgba(20, 20, 22, 0.95);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 24px;
+        width: 100%;
+        max-width: 420px;
+        max-height: 85vh;
+        overflow: hidden;
+        display: flex;
+        flex-direction: column;
+        animation: calendarSlideIn 0.3s ease-out;
+      }
+      
+      @keyframes calendarSlideIn {
+        from { opacity: 0; transform: scale(0.95) translateY(10px); }
+        to { opacity: 1; transform: scale(1) translateY(0); }
+      }
+      
+      .calendar-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 16px 20px;
+        border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      }
+      
+      .calendar-title {
+        font-family: 'Instrument Serif', Georgia, serif;
+        font-size: 1.25rem;
+        font-weight: 400;
+        color: white;
+      }
+      
+      .calendar-close {
+        width: 32px;
+        height: 32px;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        border-radius: 50%;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+      }
+      
+      .calendar-close:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.1);
+      }
+      
+      .calendar-nav {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        padding: 12px 20px;
+        gap: 8px;
+      }
+      
+      .calendar-month-nav {
+        width: 36px;
+        height: 36px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+      }
+      
+      .calendar-month-nav:hover {
+        background: rgba(255, 255, 255, 0.15);
+      }
+      
+      .calendar-month-label {
+        font-size: 1rem;
+        font-weight: 600;
+        color: white;
+      }
+      
+      .calendar-weekdays {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+        padding: 0 16px 8px;
+      }
+      
+      .calendar-weekday {
+        text-align: center;
+        font-size: 10px;
+        color: rgba(255, 255, 255, 0.4);
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+        padding: 4px;
+      }
+      
+      .calendar-days {
+        display: grid;
+        grid-template-columns: repeat(7, 1fr);
+        gap: 4px;
+        padding: 0 16px 16px;
+        max-height: 50vh;
+        overflow-y: auto;
+      }
+      
+      .calendar-day {
+        aspect-ratio: 1;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid transparent;
+        border-radius: 10px;
+        cursor: pointer;
+        transition: all 0.15s;
+        padding: 2px;
+        min-height: 44px;
+      }
+      
+      .calendar-day:hover {
+        background: rgba(59, 130, 246, 0.2);
+        border-color: rgba(59, 130, 246, 0.5);
+      }
+      
+      .calendar-day.today {
+        background: linear-gradient(135deg, rgba(245, 158, 11, 0.3) 0%, rgba(245, 158, 11, 0.1) 100%);
+        border: 2px solid #f59e0b;
+        box-shadow: 0 0 12px rgba(245, 158, 11, 0.3);
+      }
+      
+      .calendar-day.completed {
+        background: linear-gradient(135deg, rgba(16, 185, 129, 0.3) 0%, rgba(16, 185, 129, 0.1) 100%);
+        border-color: rgba(16, 185, 129, 0.5);
+      }
+      
+      .calendar-day.completed::after {
+        content: '✓';
+        position: absolute;
+        top: 2px;
+        right: 4px;
+        font-size: 8px;
+        color: #10b981;
+      }
+      
+      .calendar-day.empty {
+        background: transparent;
+        cursor: default;
+        border: none;
+      }
+      
+      .calendar-day.empty:hover {
+        background: transparent;
+        border: none;
+      }
+      
+      .calendar-day-num {
+        font-size: 13px;
+        font-weight: 600;
+        color: white;
+        line-height: 1;
+      }
+      
+      .calendar-day-topic {
+        font-size: 7px;
+        color: rgba(255, 255, 255, 0.5);
+        text-align: center;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+        max-width: 90%;
+        line-height: 1.2;
+        margin-top: 2px;
+      }
+      
+      .calendar-footer {
+        padding: 12px 20px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        justify-content: center;
+      }
+      
+      .calendar-go-today {
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        border: none;
+        border-radius: 20px;
+        padding: 8px 20px;
+        color: white;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      
+      .calendar-go-today:hover {
+        transform: scale(1.05);
+        box-shadow: 0 4px 12px rgba(59, 130, 246, 0.4);
+      }
+      
+      @media (max-width: 480px) {
+        .calendar-panel {
+          max-width: 100%;
+          max-height: 90vh;
+          border-radius: 20px 20px 0 0;
+          margin-top: auto;
+        }
+        
+        .calendar-day {
+          min-height: 38px;
+        }
+        
+        .calendar-day-num {
+          font-size: 12px;
+        }
+        
+        .calendar-day-topic {
+          display: none; /* Hide topics on mobile for space */
+        }
+      }
+      
       /* Search overlay */
       .search-overlay {
         position: fixed;
@@ -3142,80 +3387,9 @@
          Two viewing experiences - Focus on Kelly or see everything
          ═══════════════════════════════════════════════════════════════════ */
       
-      /* ZEN TOGGLE BUTTON - Top right corner, always visible */
-      .zen-toggle {
-        position: fixed;
-        top: calc(var(--safe-top) + 12px);
-        right: 12px;
-        width: 42px;
-        height: 42px;
-        border-radius: 50%;
-        background: rgba(0, 0, 0, 0.4);
-        backdrop-filter: blur(12px);
-        -webkit-backdrop-filter: blur(12px);
-        border: 1px solid rgba(255, 255, 255, 0.1);
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        cursor: pointer;
-        z-index: 150;
-        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-        color: rgba(255, 255, 255, 0.8);
-      }
-      
-      .zen-toggle:hover {
-        background: rgba(0, 0, 0, 0.6);
-        border-color: rgba(255, 255, 255, 0.2);
-        color: white;
-        transform: scale(1.08);
-      }
-      
-      .zen-toggle svg {
-        width: 22px;
-        height: 22px;
-        transition: transform 0.3s ease;
-      }
-      
-      .zen-toggle .icon-reveal,
-      .zen-toggle .icon-zen {
-        position: absolute;
-        transition: opacity 0.3s ease, transform 0.3s ease;
-      }
-      
-      /* Default: Reveal mode (showing everything) */
-      .zen-toggle .icon-zen { opacity: 1; transform: scale(1); }
-      .zen-toggle .icon-reveal { opacity: 0; transform: scale(0.8); }
-      
-      /* When in Zen mode, show reveal icon */
-      body.zen-mode .zen-toggle .icon-zen { opacity: 0; transform: scale(0.8); }
-      body.zen-mode .zen-toggle .icon-reveal { opacity: 1; transform: scale(1); }
-      
-      /* Tooltip on hover */
-      .zen-toggle::after {
-        content: 'Focus Mode';
-        position: absolute;
-        right: 52px;
-        top: 50%;
-        transform: translateY(-50%);
-        background: rgba(0, 0, 0, 0.9);
-        color: white;
-        padding: 6px 12px;
-        border-radius: 8px;
-        font-size: 12px;
-        font-weight: 500;
-        white-space: nowrap;
-        opacity: 0;
-        pointer-events: none;
-        transition: opacity 0.2s ease;
-      }
-      
-      body.zen-mode .zen-toggle::after {
-        content: 'Show All';
-      }
-      
-      .zen-toggle:hover::after {
-        opacity: 1;
-      }
+      /* ═══════════════════════════════════════════════════════════════════
+         ZEN MODE - Focus on Kelly (accessed via Mode: 2D/3D/Zen)
+         ═══════════════════════════════════════════════════════════════════ */
       
       /* Elements that HIDE in Zen mode */
       .left-rail,
@@ -3248,9 +3422,8 @@
       .caption-bar,
       .right-rail,
       .phase-nav-vertical,
-      .talk-to-kelly-btn,
-      .zen-toggle {
-        /* These never hide */
+      .talk-to-kelly-btn {
+        /* These never hide - Kelly is always the focus */
       }
       
       /* In Zen mode, center the caption more */
@@ -3271,24 +3444,8 @@
         opacity: 1;
       }
       
-      /* Mobile adjustments for Zen toggle */
+      /* Mobile adjustments for Zen mode */
       @media (max-width: 768px) {
-        .zen-toggle {
-          top: calc(var(--safe-top) + 8px);
-          right: 8px;
-          width: 38px;
-          height: 38px;
-        }
-        
-        .zen-toggle svg {
-          width: 20px;
-          height: 20px;
-        }
-        
-        .zen-toggle::after {
-          display: none; /* No tooltip on mobile */
-        }
-        
         body.zen-mode .caption-bar {
           left: 12px;
           right: 125px;
@@ -3333,21 +3490,6 @@
       </div>
 
       <!-- TOP BAR - V2 Minimal -->
-      <!-- ZEN MODE TOGGLE - Always visible, top-right -->
-      <button class="zen-toggle" id="zen-toggle" aria-label="Toggle focus mode" title="Focus Mode">
-        <!-- Zen icon (hide UI) - shown in Reveal mode -->
-        <svg class="icon-zen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="10"></circle>
-          <path d="M12 16v-4"></path>
-          <path d="M12 8h.01"></path>
-        </svg>
-        <!-- Reveal icon (show UI) - shown in Zen mode -->
-        <svg class="icon-reveal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-          <circle cx="12" cy="12" r="3"></circle>
-        </svg>
-      </button>
-      
       <!-- Social Learning indicator - centered at very top (Trust & Safety compliant) -->
       <div class="live-badge-v2" id="live-badge-v2" title="Tap to learn about simulated social content" onclick="chatOverlay?.showTooltip?.()">
         <span class="live-dot" style="background: #f59e0b;"></span>
@@ -3429,14 +3571,14 @@
         
         <!-- Home button moved to top-header with Kelly face icon -->
         
-        <a href="/calendar.html" class="rail-btn" aria-label="Calendar">
+        <button class="rail-btn" id="btn-calendar" aria-label="Calendar">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
             <line x1="16" y1="2" x2="16" y2="6"></line>
             <line x1="8" y1="2" x2="8" y2="6"></line>
             <line x1="3" y1="10" x2="21" y2="10"></line>
           </svg>
-        </a>
+        </button>
         
         <button class="rail-btn" id="btn-age" aria-label="Age">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -3554,7 +3696,7 @@
         </div>
       </div>
 
-      <!-- MODE: Horizontal Expand -->
+      <!-- MODE: Horizontal Expand (2D / 3D / Zen) -->
       <div class="expand-container" id="expand-mode" style="top: 370px;">
         <button class="expand-trigger">📺</button>
         <div class="expand-panel">
@@ -3563,6 +3705,9 @@
           </button>
           <button class="expand-option" data-mode="3D">
             <span class="flag">🎮</span><span class="label">3D</span>
+          </button>
+          <button class="expand-option" data-mode="Zen">
+            <span class="flag">🧘</span><span class="label">Zen</span>
           </button>
         </div>
       </div>
@@ -3771,7 +3916,7 @@
           <span class="nav-icon"><img src="/images/brand/kelly-mark-circle-64.png" alt="" width="22" height="22" style="border-radius:50%;"></span>
           <span class="nav-label">Home</span>
         </a>
-        <a href="/calendar.html" class="nav-item">
+        <button class="nav-item" id="bottom-nav-calendar">
           <span class="nav-icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
@@ -3781,7 +3926,7 @@
             </svg>
           </span>
           <span class="nav-label">Calendar</span>
-        </a>
+        </button>
         <a href="/learn.html" class="nav-item active">
           <span class="nav-icon">
             <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
@@ -6015,6 +6160,18 @@
           const container2D = document.getElementById('kelly-2d-container');
           const container3D = document.getElementById('kelly-3d-container');
           
+          // Handle Zen mode (hides UI, focuses on Kelly)
+          if (mode === 'Zen') {
+            document.body.classList.add('zen-mode');
+            if (badge) badge.textContent = '🧘';
+            localStorage.setItem('kelly-zen-mode', 'true');
+            console.log('[Mode] 🧘 Zen mode activated');
+          } else {
+            // Exit Zen mode if switching to 2D or 3D
+            document.body.classList.remove('zen-mode');
+            localStorage.setItem('kelly-zen-mode', 'false');
+          }
+          
           if (mode === '3D') {
             // Show loading state
             if (badge) badge.textContent = '⏳';
@@ -6042,11 +6199,12 @@
             } finally {
               if (modeBtn) modeBtn.classList.remove('loading');
             }
-          } else {
+          } else if (mode === '2D') {
             if (container2D) container2D.style.display = 'block';
             if (container3D) container3D.style.display = 'none';
             if (badge) badge.textContent = '2D';
           }
+          // For Zen mode, keep current 2D/3D view but hide UI
           
           setTimeout(() => this.closeAll(), 250);
           console.log(`[SettingsUI] Mode: ${mode}`);
@@ -6744,37 +6902,16 @@
         console.log('[Learn] ✅ Talk to Kelly enhanced input wired up');
         
         // ═══════════════════════════════════════════════════════════════
-        // ZEN MODE TOGGLE - Focus on Kelly or see everything
+        // ZEN MODE - Now controlled via Mode selector (2D/3D/Zen)
+        // Restore preference on load
         // ═══════════════════════════════════════════════════════════════
-        const zenToggle = document.getElementById('zen-toggle');
-        
-        if (zenToggle) {
-          // Restore preference
-          const savedZenMode = localStorage.getItem('kelly-zen-mode') === 'true';
-          if (savedZenMode) {
-            document.body.classList.add('zen-mode');
-          }
-          
-          zenToggle.addEventListener('click', () => {
-            document.body.classList.toggle('zen-mode');
-            const isZen = document.body.classList.contains('zen-mode');
-            localStorage.setItem('kelly-zen-mode', isZen);
-            
-            // Announce mode change
-            const announcement = isZen ? 'Focus mode: UI hidden' : 'All controls visible';
-            console.log(`[Zen] ${isZen ? '🧘' : '👁️'} ${announcement}`);
-            
-            // Optional: Kelly acknowledges mode change
-            if (chatOverlay && chatOverlay.addKellyMessage && !isZen) {
-              // Only when revealing, show a subtle Kelly message
-              setTimeout(() => {
-                chatOverlay.addKellyMessage("All controls are back!");
-              }, 300);
-            }
-          });
-          
-          console.log('[Learn] ✅ Zen mode toggle ready');
+        const savedZenMode = localStorage.getItem('kelly-zen-mode') === 'true';
+        if (savedZenMode) {
+          document.body.classList.add('zen-mode');
+          const badge = document.getElementById('badge-mode');
+          if (badge) badge.textContent = '🧘';
         }
+        console.log('[Learn] ✅ Zen mode state restored');
         
         // Legacy chat wiring (hidden, for compatibility)
         const chatInput = document.getElementById('chat-input');
@@ -6924,6 +7061,40 @@
         return result;
       };
     </script>
+
+    <!-- CALENDAR OVERLAY - Kelly-first design (transparent, she's visible behind) -->
+    <div class="calendar-overlay" id="calendar-overlay">
+      <div class="calendar-panel">
+        <div class="calendar-header">
+          <h2 class="calendar-title">📅 365 Days of Wonder</h2>
+          <button class="calendar-close" id="calendar-close">✕</button>
+        </div>
+        
+        <div class="calendar-nav">
+          <button class="calendar-month-nav" id="calendar-prev-month">←</button>
+          <span class="calendar-month-label" id="calendar-month-label">January 2025</span>
+          <button class="calendar-month-nav" id="calendar-next-month">→</button>
+        </div>
+        
+        <div class="calendar-weekdays">
+          <span class="calendar-weekday">Sun</span>
+          <span class="calendar-weekday">Mon</span>
+          <span class="calendar-weekday">Tue</span>
+          <span class="calendar-weekday">Wed</span>
+          <span class="calendar-weekday">Thu</span>
+          <span class="calendar-weekday">Fri</span>
+          <span class="calendar-weekday">Sat</span>
+        </div>
+        
+        <div class="calendar-days" id="calendar-days">
+          <!-- Days will be rendered by JavaScript -->
+        </div>
+        
+        <div class="calendar-footer">
+          <button class="calendar-go-today" id="calendar-go-today">Go to Today</button>
+        </div>
+      </div>
+    </div>
 
     <!-- SEARCH OVERLAY -->
     <div class="search-overlay" id="search-overlay">
@@ -7415,6 +7586,183 @@
 
       // Update bottom date on initial load
       updateBottomDate(getCurrentDayFromURL());
+
+      // ═══════════════════════════════════════════════════════════════════
+      // CALENDAR OVERLAY - Kelly-first design (transparent, she's visible)
+      // ═══════════════════════════════════════════════════════════════════
+      const CalendarOverlay = {
+        isOpen: false,
+        currentMonth: new Date().getMonth(), // 0-11
+        currentYear: new Date().getFullYear(),
+        lessons: [],
+        
+        init() {
+          this.bind();
+          this.loadLessons();
+        },
+        
+        bind() {
+          // Both calendar buttons open the overlay
+          document.getElementById('btn-calendar')?.addEventListener('click', () => this.open());
+          document.getElementById('bottom-nav-calendar')?.addEventListener('click', () => this.open());
+          
+          // Close handlers
+          document.getElementById('calendar-close')?.addEventListener('click', () => this.close());
+          document.getElementById('calendar-overlay')?.addEventListener('click', e => {
+            if (e.target.id === 'calendar-overlay') this.close();
+          });
+          
+          // Month navigation
+          document.getElementById('calendar-prev-month')?.addEventListener('click', () => this.prevMonth());
+          document.getElementById('calendar-next-month')?.addEventListener('click', () => this.nextMonth());
+          
+          // Go to today
+          document.getElementById('calendar-go-today')?.addEventListener('click', () => {
+            this.close();
+            // Navigate to today's lesson
+            const today = getDayOfYear();
+            const url = new URL(window.location);
+            url.searchParams.set('day', today);
+            window.history.pushState({}, '', url);
+            if (typeof goToLesson === 'function') goToLesson(today);
+            else if (typeof loadLesson === 'function') loadLesson(today);
+            else location.reload();
+          });
+          
+          // Escape to close
+          document.addEventListener('keydown', e => {
+            if (e.key === 'Escape' && this.isOpen) this.close();
+          });
+        },
+        
+        async loadLessons() {
+          try {
+            const { data, error } = await supabase
+              .from('core_lessons')
+              .select('day_number, topic, emoji')
+              .order('day_number');
+            if (data) this.lessons = data;
+          } catch (e) {
+            console.warn('[Calendar] Could not load lessons');
+          }
+        },
+        
+        open() {
+          this.isOpen = true;
+          // Set to current month based on today's date
+          const today = new Date();
+          this.currentMonth = today.getMonth();
+          this.currentYear = today.getFullYear();
+          this.render();
+          document.getElementById('calendar-overlay')?.classList.add('open');
+        },
+        
+        close() {
+          this.isOpen = false;
+          document.getElementById('calendar-overlay')?.classList.remove('open');
+        },
+        
+        prevMonth() {
+          this.currentMonth--;
+          if (this.currentMonth < 0) {
+            this.currentMonth = 11;
+            this.currentYear--;
+          }
+          this.render();
+        },
+        
+        nextMonth() {
+          this.currentMonth++;
+          if (this.currentMonth > 11) {
+            this.currentMonth = 0;
+            this.currentYear++;
+          }
+          this.render();
+        },
+        
+        render() {
+          const months = ['January', 'February', 'March', 'April', 'May', 'June',
+                          'July', 'August', 'September', 'October', 'November', 'December'];
+          
+          // Update month label
+          const label = document.getElementById('calendar-month-label');
+          if (label) label.textContent = `${months[this.currentMonth]} ${this.currentYear}`;
+          
+          // Calculate days
+          const firstDay = new Date(this.currentYear, this.currentMonth, 1);
+          const lastDay = new Date(this.currentYear, this.currentMonth + 1, 0);
+          const startDayOfWeek = firstDay.getDay(); // 0 = Sunday
+          const daysInMonth = lastDay.getDate();
+          
+          // Get today for highlighting
+          const today = new Date();
+          const todayDay = today.getDate();
+          const todayMonth = today.getMonth();
+          const todayYear = today.getFullYear();
+          const todayDayOfYear = getDayOfYear();
+          
+          // Build calendar grid
+          const container = document.getElementById('calendar-days');
+          if (!container) return;
+          container.innerHTML = '';
+          
+          // Empty cells for days before first day of month
+          for (let i = 0; i < startDayOfWeek; i++) {
+            const empty = document.createElement('div');
+            empty.className = 'calendar-day empty';
+            container.appendChild(empty);
+          }
+          
+          // Days of month
+          for (let day = 1; day <= daysInMonth; day++) {
+            // Calculate day of year for this date
+            const date = new Date(this.currentYear, this.currentMonth, day);
+            const dayOfYear = Math.floor((date - new Date(this.currentYear, 0, 0)) / 86400000);
+            
+            // Find lesson for this day
+            const lesson = this.lessons.find(l => l.day_number === dayOfYear);
+            
+            const cell = document.createElement('div');
+            cell.className = 'calendar-day';
+            
+            // Highlight today
+            if (day === todayDay && this.currentMonth === todayMonth && this.currentYear === todayYear) {
+              cell.classList.add('today');
+            }
+            
+            // Check if completed (stored in localStorage)
+            const completedDays = JSON.parse(localStorage.getItem('completedDays') || '[]');
+            if (completedDays.includes(dayOfYear)) {
+              cell.classList.add('completed');
+            }
+            
+            cell.innerHTML = `
+              <span class="calendar-day-num">${day}</span>
+              ${lesson ? `<span class="calendar-day-topic">${lesson.topic?.slice(0, 12) || ''}</span>` : ''}
+            `;
+            
+            // Click to go to that day's lesson
+            cell.addEventListener('click', () => {
+              this.close();
+              const url = new URL(window.location);
+              url.searchParams.set('day', dayOfYear);
+              window.history.pushState({}, '', url);
+              if (typeof goToLesson === 'function') goToLesson(dayOfYear);
+              else if (typeof loadLesson === 'function') loadLesson(dayOfYear);
+              else location.reload();
+            });
+            
+            container.appendChild(cell);
+          }
+        }
+      };
+      
+      // Initialize calendar
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => CalendarOverlay.init());
+      } else {
+        CalendarOverlay.init();
+      }
 
       // ═══════════════════════════════════════════════════════════════════
       // LEARNER COMMONS
