@@ -81,6 +81,9 @@
     
     <!-- Kelly Conversational AI (Voice Chat) -->
     <script src="/js/kelly-conversation.js"></script>
+    
+    <!-- Kelly Visual Learning System (Immersive Backgrounds, Props, Choreography) -->
+    <script src="/js/kelly-visual-system.js"></script>
 
     <style>
       /* ═══════════════════════════════════════════════════════════════════
@@ -3563,31 +3566,43 @@
       let unityInstance = null;
       let currentMode = '2D';
 
+      // Global visual system instance
+      let kellyVisualSystem = null;
+
       function initKellyAvatar() {
         const container2D = document.getElementById('kelly-2d-container');
         const container3D = document.getElementById('kelly-3d-container');
+        const kellyFrame = document.getElementById('kelly-frame');
 
         if (!container2D || !container3D) {
           console.error('[Learn] Kelly avatar containers not found');
           return;
         }
 
-        // Initialize 2D avatar controller
-        kellyAvatar = new KellyAvatarController(container2D, {
-          defaultMode: '2D',
-          autoSavePreference: true,
-          onModeChange: (mode) => {
-            console.log(`[Learn] Kelly mode changed to: ${mode}`);
-          },
-          onError: (type, error) => {
-            console.warn(`[Learn] Avatar error (${type}):`, error);
+        // Initialize 2D avatar controller (using Kelly2DAvatar - the active module)
+        kellyAvatar = new Kelly2DAvatar(container2D);
+        console.log('[Learn] Kelly 2D avatar initialized');
+
+        // ═══════════════════════════════════════════════════════════════════
+        // INITIALIZE KELLY VISUAL SYSTEM
+        // This enables immersive backgrounds, props, and visual choreography
+        // ═══════════════════════════════════════════════════════════════════
+        if (window.KellyVisualSystem && kellyFrame) {
+          try {
+            kellyVisualSystem = new KellyVisualSystem(kellyFrame, {
+              enableChoreography: true,
+              enableAudioSync: true
+            });
+            console.log('[Learn] ✅ Kelly Visual System initialized');
+          } catch (e) {
+            console.warn('[Learn] Visual system init failed, using fallback:', e.message);
           }
-        });
+        }
 
         // Unity 3D loads on-demand when user clicks 3D mode
         // loadUnity3D(); // Disabled - now loads on demand via setMode('3D')
 
-        console.log('[Learn] ✅ Kelly Avatar initialized (2D active, 3D available on demand)');
+        console.log('[Learn] ✅ Kelly Avatar initialized (2D active, Visual System ready)');
       }
 
       async function loadUnity3D() {
@@ -3774,6 +3789,16 @@
           state.isLoading = false;
           state.startTime = Date.now(); // Track lesson start time
           document.getElementById('day-display').textContent = dayNumberToDate(dayNumber);
+          
+          // ═══════════════════════════════════════════════════════════════════
+          // LOAD VISUAL ASSETS FOR THIS LESSON (backgrounds, props, Kelly poses)
+          // ═══════════════════════════════════════════════════════════════════
+          if (kellyVisualSystem) {
+            kellyVisualSystem.loadLesson(dayNumber).catch(e => 
+              console.warn('[Learn] Visual assets not available for day', dayNumber, e.message)
+            );
+          }
+          
           updateUI();
           renderPhase(state.lesson.phases[0]);
           console.log('[Learn] ⚡ Instant load from cache!');
@@ -3909,6 +3934,16 @@
           state.lesson = createPlaceholderLesson(dayNumber);
           state.isLoading = false;
           clearTimeout(loadingTimeout);
+          
+          // ═══════════════════════════════════════════════════════════════════
+          // LOAD VISUAL ASSETS FOR THIS LESSON (backgrounds, props, Kelly poses)
+          // ═══════════════════════════════════════════════════════════════════
+          if (kellyVisualSystem) {
+            kellyVisualSystem.loadLesson(state.dayNumber).catch(e => 
+              console.warn('[Learn] Visual assets not available for day', state.dayNumber, e.message)
+            );
+          }
+          
           updateUI();
           renderPhase(state.lesson.phases[0]);
         }
@@ -4308,6 +4343,23 @@
         updateUI();
 
         // ═══════════════════════════════════════════════════════════════
+        // VISUAL SYSTEM: UPDATE SCENE FOR THIS PHASE
+        // This sets background, Kelly pose, props based on phase type
+        // ═══════════════════════════════════════════════════════════════
+        if (kellyVisualSystem) {
+          const phaseMapping = {
+            welcome: 'welcome',
+            hook: 'hook',
+            question: `q${state.currentPhase - 1}`, // q1, q2, q3
+            wisdom: 'wisdom'
+          };
+          const visualPhase = phaseMapping[phase.type] || 'welcome';
+          kellyVisualSystem.setPhase(visualPhase, state.lesson).catch(e => 
+            console.warn('[Visual] Phase transition error:', e.message)
+          );
+        }
+
+        // ═══════════════════════════════════════════════════════════════
         // KELLY EXPRESSION MAPPING (based on phase type)
         // ═══════════════════════════════════════════════════════════════
         // Use new Kelly Production Assets if available
@@ -4508,6 +4560,14 @@
         });
 
         state.choicesMade[`Q${state.currentPhase - 1}`] = choice.letter;
+        
+        // ═══════════════════════════════════════════════════════════════════
+        // VISUAL SYSTEM: Show feedback visual (Kelly reaction)
+        // ═══════════════════════════════════════════════════════════════════
+        if (kellyVisualSystem) {
+          // All choices are valid learning moments - show positive feedback
+          kellyVisualSystem.showCorrectFeedback();
+        }
         
         // Kelly celebrates the choice
         if (window.kellyAssets) {
