@@ -21,11 +21,21 @@
 // ═══════════════════════════════════════════════════════════════════════════
 
 const VISUAL_CONFIG = {
-  // Asset paths
-  LESSON_ASSETS_BASE: '/kelly/lessons',
+  // Asset paths - NEW: Phase-based structure
+  PHASE_ASSETS_BASE: '/kelly/phases',  // New phase visuals
+  LESSON_ASSETS_BASE: '/kelly/lessons', // Legacy
   POSES_BASE: '/kelly/poses',
   
-  // Asset types per lesson
+  // Phase asset names (in each day folder)
+  PHASE_FILES: {
+    hook: 'hook.png',
+    q1: 'q1.png',
+    q2: 'q2.png', 
+    q3: 'q3.png',
+    wisdom: 'wisdom.png'
+  },
+  
+  // Legacy asset types per lesson
   ASSET_TYPES: {
     BACKGROUND: 'bg',
     HERO: 'hero',           // Kelly full-body in environment
@@ -34,17 +44,17 @@ const VISUAL_CONFIG = {
     GUIDE_POINT: 'guide-point'  // Kelly pointing/explaining
   },
   
-  // Phase-to-visual mapping
+  // Phase-to-visual mapping (updated for new system)
   PHASE_VISUALS: {
-    welcome: { kelly: 'hero', showProp: false, overlay: 'welcome' },
-    hook: { kelly: 'guide-point', showProp: true, overlay: 'hook' },
-    q1: { kelly: 'prop', showProp: true, overlay: 'question' },
-    q2: { kelly: 'prop', showProp: true, overlay: 'question' },
-    q3: { kelly: 'prop', showProp: true, overlay: 'question' },
-    feedback_correct: { kelly: 'reaction', showProp: false, overlay: 'success' },
-    feedback_incorrect: { kelly: 'reaction', showProp: false, overlay: 'encourage' },
-    wisdom: { kelly: 'hero', showProp: true, overlay: 'wisdom' },
-    complete: { kelly: 'hero', showProp: false, overlay: 'celebration' }
+    welcome: { phaseFile: 'hook', showProp: false, overlay: 'welcome' },
+    hook: { phaseFile: 'hook', showProp: false, overlay: 'hook' },
+    q1: { phaseFile: 'q1', showProp: false, overlay: 'question' },
+    q2: { phaseFile: 'q2', showProp: false, overlay: 'question' },
+    q3: { phaseFile: 'q3', showProp: false, overlay: 'question' },
+    feedback_correct: { phaseFile: null, showProp: false, overlay: 'success' },
+    feedback_incorrect: { phaseFile: null, showProp: false, overlay: 'encourage' },
+    wisdom: { phaseFile: 'wisdom', showProp: false, overlay: 'wisdom' },
+    complete: { phaseFile: 'wisdom', showProp: false, overlay: 'celebration' }
   },
   
   // Transition timings (ms)
@@ -87,26 +97,27 @@ class AssetPreloader {
   }
   
   /**
-   * Preload all assets for a lesson
+   * Preload all assets for a lesson (NEW: Phase-based structure)
    * @param {number} dayNumber - The lesson day (1-365)
-   * @returns {Promise<Object>} Map of asset types to loaded image elements
+   * @returns {Promise<Object>} Map of phase names to loaded image elements
    */
   async preloadLesson(dayNumber) {
     const paddedDay = String(dayNumber).padStart(3, '0');
-    const basePath = `${VISUAL_CONFIG.LESSON_ASSETS_BASE}/${paddedDay}`;
+    const basePath = `${VISUAL_CONFIG.PHASE_ASSETS_BASE}/${paddedDay}`;
     
     const assetPromises = {};
     
-    for (const [key, type] of Object.entries(VISUAL_CONFIG.ASSET_TYPES)) {
-      const path = `${basePath}/lesson-${dayNumber}-${type}.png`;
-      assetPromises[type] = this.loadImage(path);
+    // Load phase-based assets (hook, q1, q2, q3, wisdom)
+    for (const [phaseName, fileName] of Object.entries(VISUAL_CONFIG.PHASE_FILES)) {
+      const path = `${basePath}/${fileName}`;
+      assetPromises[phaseName] = this.loadImage(path);
     }
     
     const results = await Promise.allSettled(Object.values(assetPromises));
     const assets = {};
     
-    Object.keys(assetPromises).forEach((type, index) => {
-      assets[type] = results[index].status === 'fulfilled' ? results[index].value : null;
+    Object.keys(assetPromises).forEach((phaseName, index) => {
+      assets[phaseName] = results[index].status === 'fulfilled' ? results[index].value : null;
     });
     
     console.log(`[VisualSystem] Preloaded lesson ${dayNumber}:`, 
@@ -427,7 +438,7 @@ class VisualSceneManager {
   }
   
   /**
-   * Transition to a new phase with appropriate visuals
+   * Transition to a new phase with appropriate visuals (NEW: Phase-based)
    * @param {string} phase - The phase name
    * @param {Object} options - Additional options
    */
@@ -437,13 +448,12 @@ class VisualSceneManager {
     
     console.log(`[VisualSystem] Setting phase: ${phase}`, phaseConfig);
     
-    // Update background
-    await this.setBackground();
+    // Update Kelly/scene image based on phase
+    if (phaseConfig.phaseFile) {
+      await this.setPhaseImage(phaseConfig.phaseFile);
+    }
     
-    // Update Kelly image
-    await this.setKellyImage(phaseConfig.kelly);
-    
-    // Handle props
+    // Handle props (currently disabled - Kelly+context in one image)
     if (phaseConfig.showProp) {
       this.showProp();
     } else {
@@ -457,6 +467,37 @@ class VisualSceneManager {
     document.dispatchEvent(new CustomEvent('visual-phase-change', {
       detail: { phase, dayNumber: this.currentDay, config: phaseConfig }
     }));
+  }
+  
+  /**
+   * Set the phase image (Kelly in context)
+   * @param {string} phaseName - Phase name (hook, q1, q2, q3, wisdom)
+   */
+  async setPhaseImage(phaseName) {
+    const asset = this.assets?.[phaseName];
+    
+    // Start transition
+    this.kellyImg.classList.add('transitioning');
+    
+    await new Promise(resolve => setTimeout(resolve, VISUAL_CONFIG.TRANSITIONS.KELLY_CROSSFADE / 2));
+    
+    if (asset) {
+      this.kellyImg.src = asset.src;
+      // Clear background since phase image includes environment
+      this.layers.background.style.backgroundImage = 'none';
+      this.layers.background.style.background = 'transparent';
+    } else {
+      // Use fallback pose
+      const fallback = VISUAL_CONFIG.FALLBACK_POSES.hero || 'kelly_welcome.png';
+      this.kellyImg.src = `${VISUAL_CONFIG.POSES_BASE}/${fallback}`;
+      // Show gradient background as fallback
+      const category = this.getLessonCategory(this.currentDay);
+      this.layers.background.style.background = 
+        VISUAL_CONFIG.CATEGORY_GRADIENTS[category] || VISUAL_CONFIG.CATEGORY_GRADIENTS.default;
+    }
+    
+    // End transition
+    this.kellyImg.classList.remove('transitioning');
   }
   
   /**
