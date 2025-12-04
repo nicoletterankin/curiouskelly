@@ -24,108 +24,123 @@
  */
 
 // ═══════════════════════════════════════════════════════════════════
-// COMMENT BANKS - Organized by psychological trigger
+// COMMENT BANKS v4 - Humble, Growth-Mindset, No Hyperbole
 // ═══════════════════════════════════════════════════════════════════
+// Philosophy: "The social experience is simulated. The learning is real."
+// NO: "Mind blown", "Best ever", "I'm addicted"
+// YES: "I had to replay that", "Not sure I follow", "Good takeaway"
 
 const COMMENT_BANKS = {
-  // 💡 BREAKTHROUGH MOMENTS - "I finally understand!"
+  // 💡 BREAKTHROUGH - Genuine understanding (not hyperbolic)
   breakthrough: [
-    { user: "Maria", flag: "🇧🇷", text: "OMG this finally makes sense 🤯", verified: false },
-    { user: "James", flag: "🇬🇧", text: "Wait... I've been thinking about this wrong my whole life", verified: false },
-    { user: "Yuki", flag: "🇯🇵", text: "なるほど! I finally get it ✨", verified: false },
-    { user: "Ahmed", flag: "🇪🇬", text: "This just clicked for me 💡", verified: false },
-    { user: "Sofia", flag: "🇲🇽", text: "My brain just leveled up", verified: false },
-    { user: "Priya", flag: "🇮🇳", text: "I wish I learned this years ago!", verified: false },
-    { user: "Hans", flag: "🇩🇪", text: "Mind = completely blown 🤯", verified: false },
-    { user: "Nina", flag: "🇳🇴", text: "This is the explanation I needed", verified: false },
-    { user: "Chen Wei", flag: "🇨🇳", text: "终于明白了! Finally!", verified: false },
-    { user: "Isabella", flag: "🇮🇹", text: "OHHHH so THAT'S why!", verified: false },
+    { user: "Maria", flag: "🇧🇷", text: "That makes sense now", verified: false },
+    { user: "James", flag: "🇬🇧", text: "I see the connection", verified: false },
+    { user: "Yuki", flag: "🇯🇵", text: "I get it now", verified: false },
+    { user: "Ahmed", flag: "🇪🇬", text: "This clicked for me", verified: false },
+    { user: "Sofia", flag: "🇲🇽", text: "I understand the pattern", verified: false },
+    { user: "Priya", flag: "🇮🇳", text: "Good explanation", verified: false },
+    { user: "Hans", flag: "🇩🇪", text: "Now I see why", verified: false },
+    { user: "Nina", flag: "🇳🇴", text: "That clarifies things", verified: false },
+    { user: "Chen Wei", flag: "🇨🇳", text: "This helps", verified: false },
+    { user: "Isabella", flag: "🇮🇹", text: "Makes more sense now", verified: false },
   ],
 
-  // 🤔 ENGAGEMENT HOOKS - Questions that show active learning
+  // 🤔 ENGAGEMENT - Thoughtful questions (normalizes asking)
   engagement: [
-    { user: "Emma", flag: "🇺🇸", text: "Wait so does that mean...? 🤔", verified: false },
+    { user: "Emma", flag: "🇺🇸", text: "Wait, can you explain that again?", verified: false },
     { user: "Lucas", flag: "🇫🇷", text: "But what about when...?", verified: false },
-    { user: "Kofi", flag: "🇬🇭", text: "Can someone explain the second part?", verified: false },
-    { user: "Aisha", flag: "🇰🇪", text: "I never thought of it that way!", verified: false },
-    { user: "Diego", flag: "🇨🇱", text: "This connects to what we learned yesterday!", verified: false },
-    { user: "Mei", flag: "🇹🇼", text: "Real question: why don't they teach this in school?", verified: false },
-    { user: "Omar", flag: "🇦🇪", text: "Hold on, let me think about this... 🧠", verified: false },
-    { user: "Zara", flag: "🇿🇦", text: "So the key insight is...?", verified: false },
+    { user: "Kofi", flag: "🇬🇭", text: "I'm not sure I follow", verified: false },
+    { user: "Aisha", flag: "🇰🇪", text: "I never thought of it that way", verified: false },
+    { user: "Diego", flag: "🇨🇱", text: "This connects to yesterday's lesson", verified: false },
+    { user: "Mei", flag: "🇹🇼", text: "Is that always true?", verified: false },
+    { user: "Omar", flag: "🇦🇪", text: "Let me think about this", verified: false },
+    { user: "Zara", flag: "🇿🇦", text: "Interesting approach", verified: false },
   ],
 
-  // ❤️ KELLY APPRECIATION - Why they love learning with Kelly
+  // 👍 APPRECIATION - Humble, genuine (no superlatives)
   kelly_love: [
-    { user: "Sarah", flag: "🇨🇦", text: "Kelly's voice is so calming 💙", verified: false },
-    { user: "Jin", flag: "🇰🇷", text: "Best AI teacher EVER", verified: false },
-    { user: "Anya", flag: "🇷🇺", text: "I'm literally addicted to learning now", verified: false },
-    { user: "Carlos", flag: "🇦🇷", text: "Kelly > my college professors 💯", verified: false },
-    { user: "Lena", flag: "🇸🇪", text: "365 days of this? Yes please! 🙌", verified: false },
-    { user: "Raj", flag: "🇮🇳", text: "Kelly makes everything interesting", verified: false },
-    { user: "Fatima", flag: "🇲🇦", text: "I look forward to this every day now", verified: false },
-    { user: "Tomoko", flag: "🇯🇵", text: "Kelly-sensei! 🌸", verified: false },
-    { user: "Sven", flag: "🇩🇰", text: "This is the future of education", verified: false },
-    { user: "Ana", flag: "🇵🇹", text: "Kelly's explanations hit different ✨", verified: false },
+    { user: "Sarah", flag: "🇨🇦", text: "Good lesson today", verified: false },
+    { user: "Jin", flag: "🇰🇷", text: "Clear explanation", verified: false },
+    { user: "Anya", flag: "🇷🇺", text: "This is helpful", verified: false },
+    { user: "Carlos", flag: "🇦🇷", text: "I appreciate this format", verified: false },
+    { user: "Lena", flag: "🇸🇪", text: "Thanks for the lesson", verified: false },
+    { user: "Raj", flag: "🇮🇳", text: "Easy to follow", verified: false },
+    { user: "Fatima", flag: "🇲🇦", text: "Good pace", verified: false },
+    { user: "Tomoko", flag: "🇯🇵", text: "Nice teaching style", verified: false },
+    { user: "Sven", flag: "🇩🇰", text: "Well structured", verified: false },
+    { user: "Ana", flag: "🇵🇹", text: "Learned something new", verified: false },
   ],
 
-  // 👨‍👩‍👧 SOCIAL CONNECTION - Learning together
+  // 👨‍👩‍👧 SOCIAL - Learning together (authentic)
   social: [
-    { user: "Michael", flag: "🇺🇸", text: "Watching with my daughter 👨‍👧", verified: true },
-    { user: "Lisa", flag: "🇦🇺", text: "Our whole family does this together!", verified: false },
-    { user: "Kenji", flag: "🇯🇵", text: "Morning ritual with coffee ☕", verified: false },
-    { user: "Maria", flag: "🇪🇸", text: "My kids are hooked on this", verified: false },
-    { user: "David", flag: "🇮🇱", text: "Study group checking in! 👋", verified: false },
-    { user: "Olga", flag: "🇺🇦", text: "Hello from Kyiv! 💙💛", verified: false },
-    { user: "Adebayo", flag: "🇳🇬", text: "Lagos in the building! 🏙️", verified: false },
-    { user: "Camila", flag: "🇧🇷", text: "Brazil loves Kelly! 💚💛", verified: false },
-    { user: "Pierre", flag: "🇫🇷", text: "Bonjour from Paris! 🗼", verified: false },
-    { user: "Ling", flag: "🇸🇬", text: "Singapore checking in!", verified: false },
+    { user: "Michael", flag: "🇺🇸", text: "Watching with my daughter", verified: true },
+    { user: "Lisa", flag: "🇦🇺", text: "Family learning time", verified: false },
+    { user: "Kenji", flag: "🇯🇵", text: "Morning routine ☕", verified: false },
+    { user: "Maria", flag: "🇪🇸", text: "Here with my kids", verified: false },
+    { user: "David", flag: "🇮🇱", text: "Study group here 👋", verified: false },
+    { user: "Olga", flag: "🇺🇦", text: "Hello from Kyiv", verified: false },
+    { user: "Adebayo", flag: "🇳🇬", text: "Lagos checking in", verified: false },
+    { user: "Camila", flag: "🇧🇷", text: "Good morning from Brazil", verified: false },
+    { user: "Pierre", flag: "🇫🇷", text: "Bonjour", verified: false },
+    { user: "Ling", flag: "🇸🇬", text: "Singapore here", verified: false },
   ],
 
-  // 🔥 REACTIONS - Quick emotional responses (TikTok style)
+  // 💬 REACTIONS - Simple, authentic
   reactions: [
-    { user: "User", flag: "🇺🇸", text: "🔥🔥🔥", verified: false },
-    { user: "User", flag: "🇬🇧", text: "👏👏👏", verified: false },
-    { user: "User", flag: "🇯🇵", text: "❤️", verified: false },
-    { user: "User", flag: "🇧🇷", text: "💯", verified: false },
-    { user: "User", flag: "🇮🇳", text: "🙏", verified: false },
-    { user: "User", flag: "🇩🇪", text: "💡💡💡", verified: false },
-    { user: "User", flag: "🇫🇷", text: "🤯", verified: false },
-    { user: "User", flag: "🇪🇸", text: "✨", verified: false },
-    { user: "User", flag: "🇲🇽", text: "🎯", verified: false },
-    { user: "User", flag: "🇨🇦", text: "💪", verified: false },
+    { user: "User", flag: "🇺🇸", text: "👍", verified: false },
+    { user: "User", flag: "🇬🇧", text: "Interesting", verified: false },
+    { user: "User", flag: "🇯🇵", text: "📝", verified: false },
+    { user: "User", flag: "🇧🇷", text: "True", verified: false },
+    { user: "User", flag: "🇮🇳", text: "Good point", verified: false },
+    { user: "User", flag: "🇩🇪", text: "💡", verified: false },
+    { user: "User", flag: "🇫🇷", text: "Hmm", verified: false },
+    { user: "User", flag: "🇪🇸", text: "I see", verified: false },
+    { user: "User", flag: "🇲🇽", text: "Noted", verified: false },
+    { user: "User", flag: "🇨🇦", text: "Makes sense", verified: false },
   ],
 
-  // 📝 CHOICE PHASE - Comments during question phases
+  // 📝 CHOICE PHASE - Honest uncertainty (normalizes not knowing)
   choice_phase: [
-    { user: "Alex", flag: "🇺🇸", text: "I'm going with A!", verified: false },
-    { user: "Sophie", flag: "🇫🇷", text: "B for sure 🤔", verified: false },
-    { user: "Hiroshi", flag: "🇯🇵", text: "This one's tricky...", verified: false },
-    { user: "Eva", flag: "🇩🇪", text: "Wait let me think about this", verified: false },
-    { user: "Marco", flag: "🇮🇹", text: "I changed my answer 3 times 😅", verified: false },
-    { user: "Aaliya", flag: "🇵🇰", text: "Going with my gut on this one", verified: false },
-    { user: "Tom", flag: "🇬🇧", text: "I said A but now I'm not sure", verified: false },
-    { user: "Maya", flag: "🇮🇳", text: "Both seem right to me? 🤷‍♀️", verified: false },
+    { user: "Alex", flag: "🇺🇸", text: "I think A", verified: false },
+    { user: "Sophie", flag: "🇫🇷", text: "Going with B", verified: false },
+    { user: "Hiroshi", flag: "🇯🇵", text: "This one's tricky", verified: false },
+    { user: "Eva", flag: "🇩🇪", text: "Not sure about this", verified: false },
+    { user: "Marco", flag: "🇮🇹", text: "Changed my answer", verified: false },
+    { user: "Aaliya", flag: "🇵🇰", text: "Going with my gut", verified: false },
+    { user: "Tom", flag: "🇬🇧", text: "I'm unsure", verified: false },
+    { user: "Maya", flag: "🇮🇳", text: "Both seem possible", verified: false },
   ],
 
-  // 🎓 WISDOM PHASE - Comments during conclusion/wisdom
+  // 🎓 WISDOM PHASE - Thoughtful, not hyperbolic
   wisdom_phase: [
-    { user: "Rebecca", flag: "🇺🇸", text: "This is so deep 🌊", verified: false },
-    { user: "Takeshi", flag: "🇯🇵", text: "Words to live by 🙏", verified: false },
-    { user: "Elena", flag: "🇷🇺", text: "Screenshotting this", verified: false },
-    { user: "Paulo", flag: "🇧🇷", text: "Wisdom dropped 💎", verified: false },
-    { user: "Kim", flag: "🇰🇷", text: "I'm putting this in my journal", verified: false },
-    { user: "Fatou", flag: "🇸🇳", text: "This lesson changed my perspective", verified: false },
-    { user: "Henrik", flag: "🇳🇴", text: "Beautiful way to end", verified: false },
-    { user: "Nadia", flag: "🇲🇦", text: "Sharing this with everyone 📲", verified: false },
+    { user: "Rebecca", flag: "🇺🇸", text: "Good takeaway", verified: false },
+    { user: "Takeshi", flag: "🇯🇵", text: "I'll remember that", verified: false },
+    { user: "Elena", flag: "🇷🇺", text: "Worth thinking about", verified: false },
+    { user: "Paulo", flag: "🇧🇷", text: "Helpful insight", verified: false },
+    { user: "Kim", flag: "🇰🇷", text: "Adding to my notes", verified: false },
+    { user: "Fatou", flag: "🇸🇳", text: "Makes me think", verified: false },
+    { user: "Henrik", flag: "🇳🇴", text: "Good ending", verified: false },
+    { user: "Nadia", flag: "🇲🇦", text: "I'll share this", verified: false },
   ],
 
-  // 📚 TOPIC-SPECIFIC TEMPLATES (filled in dynamically)
+  // 🤔 STRUGGLE - Normalize confusion (IMPORTANT for growth mindset)
+  struggle: [
+    { user: "Emma", flag: "🇺🇸", text: "I had to replay that", verified: false },
+    { user: "Lucas", flag: "🇫🇷", text: "Still processing", verified: false },
+    { user: "Priya", flag: "🇮🇳", text: "This is new to me", verified: false },
+    { user: "Hans", flag: "🇩🇪", text: "I don't fully get it yet", verified: false },
+    { user: "Yuki", flag: "🇯🇵", text: "Confused but curious", verified: false },
+    { user: "Ahmed", flag: "🇪🇬", text: "Need to think about this", verified: false },
+    { user: "Sofia", flag: "🇲🇽", text: "Can someone explain?", verified: false },
+    { user: "Jin", flag: "🇰🇷", text: "Third time watching", verified: false },
+  ],
+
+  // 📚 TOPIC-SPECIFIC TEMPLATES (humble versions)
   topic_specific: [
-    { user: "Student", flag: "🌍", text: "I never knew {topic} was so fascinating!", verified: false },
-    { user: "Learner", flag: "🌍", text: "Can we get more lessons on {topic}?", verified: false },
-    { user: "Curious", flag: "🌍", text: "{topic} just became my new obsession", verified: false },
-    { user: "Mind", flag: "🌍", text: "The {topic} episode is elite 🔥", verified: false },
+    { user: "Student", flag: "🌍", text: "Interesting topic today", verified: false },
+    { user: "Learner", flag: "🌍", text: "Learning about {topic}", verified: false },
+    { user: "Curious", flag: "🌍", text: "{topic} is interesting", verified: false },
+    { user: "Mind", flag: "🌍", text: "Good lesson on {topic}", verified: false },
   ],
 };
 
