@@ -3120,6 +3120,163 @@
           right: 125px;
         }
       }
+
+      /* ═══════════════════════════════════════════════════════════════════
+         ZEN MODE / REVEAL MODE
+         Two viewing experiences - Focus on Kelly or see everything
+         ═══════════════════════════════════════════════════════════════════ */
+      
+      /* ZEN TOGGLE BUTTON - Top right corner, always visible */
+      .zen-toggle {
+        position: fixed;
+        top: calc(var(--safe-top) + 12px);
+        right: 12px;
+        width: 42px;
+        height: 42px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        z-index: 150;
+        transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        color: rgba(255, 255, 255, 0.8);
+      }
+      
+      .zen-toggle:hover {
+        background: rgba(0, 0, 0, 0.6);
+        border-color: rgba(255, 255, 255, 0.2);
+        color: white;
+        transform: scale(1.08);
+      }
+      
+      .zen-toggle svg {
+        width: 22px;
+        height: 22px;
+        transition: transform 0.3s ease;
+      }
+      
+      .zen-toggle .icon-reveal,
+      .zen-toggle .icon-zen {
+        position: absolute;
+        transition: opacity 0.3s ease, transform 0.3s ease;
+      }
+      
+      /* Default: Reveal mode (showing everything) */
+      .zen-toggle .icon-zen { opacity: 1; transform: scale(1); }
+      .zen-toggle .icon-reveal { opacity: 0; transform: scale(0.8); }
+      
+      /* When in Zen mode, show reveal icon */
+      body.zen-mode .zen-toggle .icon-zen { opacity: 0; transform: scale(0.8); }
+      body.zen-mode .zen-toggle .icon-reveal { opacity: 1; transform: scale(1); }
+      
+      /* Tooltip on hover */
+      .zen-toggle::after {
+        content: 'Focus Mode';
+        position: absolute;
+        right: 52px;
+        top: 50%;
+        transform: translateY(-50%);
+        background: rgba(0, 0, 0, 0.9);
+        color: white;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 12px;
+        font-weight: 500;
+        white-space: nowrap;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.2s ease;
+      }
+      
+      body.zen-mode .zen-toggle::after {
+        content: 'Show All';
+      }
+      
+      .zen-toggle:hover::after {
+        opacity: 1;
+      }
+      
+      /* Elements that HIDE in Zen mode */
+      .left-rail,
+      .top-header,
+      .live-badge-v2,
+      .live-comments,
+      .day-nav,
+      .comments-float {
+        transition: opacity 0.4s ease, transform 0.4s ease, visibility 0.4s ease;
+      }
+      
+      body.zen-mode .left-rail,
+      body.zen-mode .top-header,
+      body.zen-mode .live-badge-v2,
+      body.zen-mode .live-comments,
+      body.zen-mode .day-nav,
+      body.zen-mode .comments-float {
+        opacity: 0;
+        pointer-events: none;
+        visibility: hidden;
+        transform: translateX(-20px);
+      }
+      
+      body.zen-mode .day-nav {
+        transform: translateY(-20px);
+      }
+      
+      /* Elements that ALWAYS stay visible */
+      .kelly-frame,
+      .caption-bar,
+      .right-rail,
+      .phase-nav-vertical,
+      .talk-to-kelly-btn,
+      .zen-toggle {
+        /* These never hide */
+      }
+      
+      /* In Zen mode, center the caption more */
+      body.zen-mode .caption-bar {
+        left: 16px;
+        right: 165px;
+        transition: left 0.4s ease, right 0.4s ease;
+      }
+      
+      /* Phase nav gets subtle in Zen mode */
+      body.zen-mode .phase-nav-vertical {
+        opacity: 0.6;
+        transition: opacity 0.4s ease;
+      }
+      
+      body.zen-mode .phase-nav-vertical:hover {
+        opacity: 1;
+      }
+      
+      /* Mobile adjustments for Zen toggle */
+      @media (max-width: 768px) {
+        .zen-toggle {
+          top: calc(var(--safe-top) + 8px);
+          right: 8px;
+          width: 38px;
+          height: 38px;
+        }
+        
+        .zen-toggle svg {
+          width: 20px;
+          height: 20px;
+        }
+        
+        .zen-toggle::after {
+          display: none; /* No tooltip on mobile */
+        }
+        
+        body.zen-mode .caption-bar {
+          left: 12px;
+          right: 125px;
+        }
+      }
     </style>
     <!-- Affiliate Tracking -->
     <script src="/js/affiliate-tracking.js"></script>
@@ -3159,6 +3316,21 @@
       </div>
 
       <!-- TOP BAR - V2 Minimal -->
+      <!-- ZEN MODE TOGGLE - Always visible, top-right -->
+      <button class="zen-toggle" id="zen-toggle" aria-label="Toggle focus mode" title="Focus Mode">
+        <!-- Zen icon (hide UI) - shown in Reveal mode -->
+        <svg class="icon-zen" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M12 16v-4"></path>
+          <path d="M12 8h.01"></path>
+        </svg>
+        <!-- Reveal icon (show UI) - shown in Zen mode -->
+        <svg class="icon-reveal" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+          <circle cx="12" cy="12" r="3"></circle>
+        </svg>
+      </button>
+      
       <!-- Social Learning indicator - centered at very top (Trust & Safety compliant) -->
       <div class="live-badge-v2" id="live-badge-v2" title="Tap to learn about simulated social content" onclick="chatOverlay?.showTooltip?.()">
         <span class="live-dot" style="background: #f59e0b;"></span>
@@ -6553,6 +6725,39 @@
         }
         
         console.log('[Learn] ✅ Talk to Kelly enhanced input wired up');
+        
+        // ═══════════════════════════════════════════════════════════════
+        // ZEN MODE TOGGLE - Focus on Kelly or see everything
+        // ═══════════════════════════════════════════════════════════════
+        const zenToggle = document.getElementById('zen-toggle');
+        
+        if (zenToggle) {
+          // Restore preference
+          const savedZenMode = localStorage.getItem('kelly-zen-mode') === 'true';
+          if (savedZenMode) {
+            document.body.classList.add('zen-mode');
+          }
+          
+          zenToggle.addEventListener('click', () => {
+            document.body.classList.toggle('zen-mode');
+            const isZen = document.body.classList.contains('zen-mode');
+            localStorage.setItem('kelly-zen-mode', isZen);
+            
+            // Announce mode change
+            const announcement = isZen ? 'Focus mode: UI hidden' : 'All controls visible';
+            console.log(`[Zen] ${isZen ? '🧘' : '👁️'} ${announcement}`);
+            
+            // Optional: Kelly acknowledges mode change
+            if (chatOverlay && chatOverlay.addKellyMessage && !isZen) {
+              // Only when revealing, show a subtle Kelly message
+              setTimeout(() => {
+                chatOverlay.addKellyMessage("All controls are back!");
+              }, 300);
+            }
+          });
+          
+          console.log('[Learn] ✅ Zen mode toggle ready');
+        }
         
         // Legacy chat wiring (hidden, for compatibility)
         const chatInput = document.getElementById('chat-input');
