@@ -484,3 +484,4 @@ COMMENT ON TABLE commons_user_contributions IS 'User contribution statistics and
 COMMENT ON TABLE commons_activity_log IS 'Activity log for transparency';
 
 
+

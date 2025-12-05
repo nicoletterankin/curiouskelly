@@ -302,3 +302,4 @@ SELECT
         WHERE routine_name = 'get_kelly_video_url'
     ) as exists;
 
+

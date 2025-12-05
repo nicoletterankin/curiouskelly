@@ -153,3 +153,4 @@ curious-kellly/
 4. **Build batch pre-rendering system** (this week)
 5. **Integrate into lesson player** (next week)
 
+

@@ -277,3 +277,4 @@ Kelly isn't just an app. **Kelly is a teacher the world can see, hear, and trust
 *Contact: hello@curiouskelly.com*
 
 
+

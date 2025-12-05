@@ -153,3 +153,4 @@ CREATE TRIGGER on_lesson_completed
 -- SELECT * FROM public.group_members LIMIT 1;
 -- SELECT * FROM public.daily_lesson_stats LIMIT 1;
 
+

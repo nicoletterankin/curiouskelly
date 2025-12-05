@@ -3,1169 +3,271 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>365 Days of Wonder — Curious Kelly</title>
-    
-    <!-- Favicons -->
-    <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png">
-    <link rel="apple-touch-icon" href="/images/brand/apple-touch-icon.png">
-    
-    <!-- Brand CSS -->
-    <link rel="stylesheet" href="/css/brand-colors.css">
-    
-    <!-- Config -->
-    <script src="/config.js"></script>
-    
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Bricolage+Grotesque:wght@400;500;600;700&family=Instrument+Serif:ital@0;1&display=swap" rel="stylesheet">
-    
+    <title>365-Day Learning Calendar - Curious Kelly</title>
+    <link rel="stylesheet" href="calendar-page.css">
     <style>
-        :root {
-            --bg-void: #000000;
-            --bg-deep: #050506;
-            --bg-surface: #0a0a0b;
-            --bg-elevated: #111113;
-            --bg-card: #18181b;
-            --text-primary: #fafafa;
-            --text-secondary: #a1a1aa;
-            --text-muted: #71717a;
-            --accent-kelly: #3b82f6;
-            --accent-gold: #f59e0b;
-            --accent-emerald: #10b981;
-            --border-subtle: #27272a;
-            --border-visible: #3f3f46;
-            --glow-kelly: rgba(59, 130, 246, 0.15);
-            --glow-gold: rgba(245, 158, 11, 0.15);
+        .server-warning {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            background: #fef3c7;
+            border-bottom: 2px solid #f59e0b;
+            padding: 12px 20px;
+            z-index: 10000;
+            font-family: system-ui, -apple-system, sans-serif;
+            font-size: 14px;
+            display: none;
         }
-
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        
-        body {
-            font-family: 'Bricolage Grotesque', -apple-system, sans-serif;
-            background: var(--bg-void);
-            color: var(--text-primary);
-            min-height: 100vh;
-            padding-bottom: 80px;
+        .server-warning.show {
+            display: block;
         }
-
-        /* Header */
-        .header {
-            padding: 20px 24px;
-            background: var(--bg-surface);
-            border-bottom: 1px solid var(--border-subtle);
+        .server-warning-content {
+            max-width: 1200px;
+            margin: 0 auto;
             display: flex;
             align-items: center;
             justify-content: space-between;
-            position: sticky;
-            top: 0;
-            z-index: 100;
-            backdrop-filter: blur(12px);
+            gap: 20px;
         }
-
-        .header-left {
-            display: flex;
-            align-items: center;
-            gap: 16px;
-        }
-
-        .header h1 {
-            font-family: 'Instrument Serif', Georgia, serif;
-            font-size: 1.5rem;
-            font-weight: 400;
-        }
-
-        .header h1 .emoji {
-            margin-right: 8px;
-        }
-
-        /* View Toggles */
-        .view-toggles {
-            display: flex;
-            gap: 8px;
-        }
-
-        .view-btn {
-            padding: 8px 16px;
-            background: var(--bg-elevated);
-            border: 1px solid var(--border-subtle);
-            border-radius: 8px;
-            color: var(--text-secondary);
-            font-size: 0.85rem;
-            cursor: pointer;
-            transition: all 0.2s;
-        }
-
-        .view-btn:hover { 
-            background: var(--bg-card);
-            color: var(--text-primary);
-        }
-
-        .view-btn.active {
-            background: var(--accent-kelly);
-            border-color: var(--accent-kelly);
-            color: white;
-        }
-
-        /* Stats Row */
-        .stats-row {
-            display: flex;
-            gap: 24px;
-            padding: 16px 24px;
-            background: var(--bg-deep);
-            border-bottom: 1px solid var(--border-subtle);
-            justify-content: center;
-            flex-wrap: wrap;
-        }
-
-        .stat-item {
-            display: flex;
-            align-items: center;
-            gap: 8px;
-        }
-
-        .stat-icon {
-            font-size: 1.25rem;
-        }
-
-        .stat-value {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--accent-kelly);
-        }
-
-        .stat-label {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        /* Main Container */
-        .main-container {
-            max-width: 1400px;
-            margin: 0 auto;
-            padding: 24px;
-        }
-
-        /* Month Section */
-        .month-section {
-            margin-bottom: 48px;
-        }
-
-        .month-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 16px;
-            padding-bottom: 12px;
-            border-bottom: 1px solid var(--border-subtle);
-        }
-
-        .month-icon {
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--glow-kelly);
-            border-radius: 12px;
-            font-size: 1.5rem;
-        }
-
-        .month-info h2 {
-            font-family: 'Instrument Serif', Georgia, serif;
-            font-size: 1.5rem;
-            font-weight: 400;
-        }
-
-        .month-meta {
-            font-size: 0.85rem;
-            color: var(--text-muted);
-        }
-
-        /* Calendar Grid View */
-        .calendar-grid {
-            display: grid;
-            grid-template-columns: repeat(7, 1fr);
-            gap: 8px;
-        }
-
-        .weekday-header {
-            text-align: center;
-            font-size: 0.75rem;
-            color: var(--text-muted);
-            padding: 8px 0;
-            text-transform: uppercase;
-            letter-spacing: 0.1em;
-        }
-
-        .day-cell {
-            aspect-ratio: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: var(--bg-elevated);
-            border: 1px solid var(--border-subtle);
-            border-radius: 12px;
-            cursor: pointer;
-            transition: all 0.2s;
-            position: relative;
-            overflow: hidden;
-        }
-
-        .day-cell:hover {
-            border-color: var(--accent-kelly);
-            transform: scale(1.05);
-            z-index: 10;
-        }
-
-        .day-cell.today {
-            border: 2px solid var(--accent-gold);
-            box-shadow: 0 0 16px var(--glow-gold);
-        }
-
-        .day-cell.completed {
-            background: linear-gradient(135deg, var(--glow-kelly) 0%, var(--bg-elevated) 100%);
-            border-color: var(--accent-kelly);
-        }
-
-        .day-cell.completed::after {
-            content: '✓';
-            position: absolute;
-            top: 4px;
-            right: 6px;
-            font-size: 10px;
-            color: var(--accent-emerald);
-        }
-
-        .day-number {
-            font-size: 1rem;
-            font-weight: 600;
-        }
-
-        .day-emoji {
-            font-size: 1.25rem;
-            margin-bottom: 2px;
-        }
-
-        .day-topic {
-            font-size: 0.6rem;
-            color: var(--text-muted);
-            text-align: center;
-            line-height: 1.2;
-            max-width: 90%;
-            overflow: hidden;
-            text-overflow: ellipsis;
-            white-space: nowrap;
-        }
-
-        /* Card View */
-        .lessons-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
-            gap: 16px;
-        }
-
-        .lesson-card {
-            background: var(--bg-elevated);
-            border: 1px solid var(--border-subtle);
-            border-radius: 16px;
-            padding: 20px;
-            cursor: pointer;
-            transition: all 0.3s;
-        }
-
-        .lesson-card:hover {
-            border-color: var(--accent-kelly);
-            transform: translateY(-4px);
-            box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
-        }
-
-        .lesson-card.completed {
-            background: linear-gradient(135deg, var(--glow-kelly) 0%, var(--bg-elevated) 100%);
-        }
-
-        .lesson-card.today {
-            border: 2px solid var(--accent-gold);
-        }
-
-        .card-header {
-            display: flex;
-            align-items: flex-start;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-
-        .card-emoji {
-            width: 48px;
-            height: 48px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--bg-card);
-            border-radius: 12px;
-            font-size: 1.5rem;
-            flex-shrink: 0;
-        }
-
-        .card-info {
+        .server-warning-text {
             flex: 1;
-            min-width: 0;
         }
-
-        .card-day {
-            font-size: 0.75rem;
-            color: var(--accent-kelly);
-            font-weight: 600;
-            margin-bottom: 4px;
+        .server-warning strong {
+            color: #92400e;
         }
-
-        .card-topic {
-            font-size: 1.1rem;
-            font-weight: 600;
-            line-height: 1.3;
+        .server-warning-code {
+            background: #fff;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 12px;
+            margin: 4px 0;
         }
-
-        .card-truth {
-            font-size: 0.85rem;
-            color: var(--text-secondary);
-            line-height: 1.5;
-            margin-bottom: 12px;
-            display: -webkit-box;
-            -webkit-line-clamp: 2;
-            -webkit-box-orient: vertical;
-            overflow: hidden;
-        }
-
-        .card-stats {
-            display: flex;
-            gap: 16px;
-            padding-top: 12px;
-            border-top: 1px solid var(--border-subtle);
-        }
-
-        .card-stat {
-            font-size: 0.75rem;
-            color: var(--text-muted);
-        }
-
-        .card-stat strong {
-            color: var(--text-primary);
-        }
-
-        /* Lesson Preview Popup */
-        .lesson-popup {
-            position: fixed;
-            background: var(--bg-elevated);
-            border: 1px solid var(--border-visible);
-            border-radius: 16px;
-            padding: 20px;
-            width: 320px;
-            max-width: calc(100vw - 48px);
-            z-index: 1000;
-            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
-            opacity: 0;
-            visibility: hidden;
-            transition: all 0.2s;
-            pointer-events: none;
-        }
-
-        .lesson-popup.show {
-            opacity: 1;
-            visibility: visible;
-            pointer-events: all;
-        }
-
-        .popup-header {
-            display: flex;
-            align-items: center;
-            gap: 12px;
-            margin-bottom: 12px;
-        }
-
-        .popup-emoji {
-            width: 44px;
-            height: 44px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            background: var(--bg-card);
-            border-radius: 10px;
-            font-size: 1.5rem;
-        }
-
-        .popup-day {
-            font-size: 0.75rem;
-            color: var(--accent-kelly);
-            font-weight: 600;
-        }
-
-        .popup-topic {
-            font-size: 1.1rem;
-            font-weight: 600;
-        }
-
-        .popup-truth {
-            font-size: 0.9rem;
-            color: var(--text-secondary);
-            line-height: 1.5;
-            margin-bottom: 16px;
-        }
-
-        .popup-stats {
-            display: grid;
-            grid-template-columns: repeat(2, 1fr);
-            gap: 12px;
-            margin-bottom: 16px;
-            padding: 12px;
-            background: var(--bg-card);
-            border-radius: 10px;
-        }
-
-        .popup-stat {
-            text-align: center;
-        }
-
-        .popup-stat-value {
-            font-size: 1.25rem;
-            font-weight: 700;
-            color: var(--accent-kelly);
-        }
-
-        .popup-stat-label {
-            font-size: 0.65rem;
-            color: var(--text-muted);
-            text-transform: uppercase;
-            letter-spacing: 0.05em;
-        }
-
-        .popup-actions {
-            display: flex;
-            gap: 8px;
-        }
-
-        .popup-btn {
-            flex: 1;
-            padding: 10px 16px;
-            border-radius: 8px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            cursor: pointer;
-            transition: all 0.2s;
-            text-decoration: none;
-            text-align: center;
-        }
-
-        .popup-btn-primary {
-            background: var(--accent-kelly);
+        .server-warning-close {
+            background: #f59e0b;
             color: white;
             border: none;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
         }
-
-        .popup-btn-primary:hover {
-            background: #2563eb;
-        }
-
-        .popup-btn-secondary {
-            background: var(--bg-surface);
-            color: var(--text-secondary);
-            border: 1px solid var(--border-subtle);
-        }
-
-        .popup-btn-secondary:hover {
-            background: var(--bg-card);
-            color: var(--text-primary);
-        }
-
-        /* Completed Badge */
-        .popup-completed {
-            display: inline-flex;
-            align-items: center;
-            gap: 6px;
-            padding: 4px 10px;
-            background: var(--glow-kelly);
-            border-radius: 6px;
-            font-size: 0.75rem;
-            color: var(--accent-emerald);
-            margin-bottom: 12px;
-        }
-
-        /* Bottom Navigation */
-        .bottom-nav {
-            position: fixed;
-            bottom: 0;
-            left: 0;
-            right: 0;
-            height: 70px;
-            background: var(--bg-surface);
-            border-top: 1px solid var(--border-subtle);
-            display: flex;
-            justify-content: space-around;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .nav-item {
-            flex: 1;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            gap: 4px;
-            text-decoration: none;
-            color: var(--text-muted);
-            transition: all 0.2s;
-            padding: 8px;
-        }
-
-        .nav-item:hover, .nav-item.active {
-            color: var(--accent-kelly);
-        }
-
-        .nav-icon { font-size: 24px; }
-        .nav-label { font-size: 11px; font-weight: 500; }
-
-        /* Search Bar */
-        .search-container {
-            padding: 16px 24px;
-            background: var(--bg-deep);
-            border-bottom: 1px solid var(--border-subtle);
-        }
-
-        .search-box {
-            max-width: 600px;
-            margin: 0 auto;
-            position: relative;
-        }
-
-        .search-box input {
-            width: 100%;
-            padding: 12px 16px 12px 44px;
-            background: var(--bg-elevated);
-            border: 1px solid var(--border-subtle);
-            border-radius: 10px;
-            color: var(--text-primary);
-            font-size: 0.95rem;
-            font-family: inherit;
-            transition: all 0.2s;
-        }
-
-        .search-box input:focus {
-            outline: none;
-            border-color: var(--accent-kelly);
-            box-shadow: 0 0 0 3px var(--glow-kelly);
-        }
-
-        .search-box input::placeholder { color: var(--text-muted); }
-
-        .search-box::before {
-            content: '🔍';
-            position: absolute;
-            left: 14px;
-            top: 50%;
-            transform: translateY(-50%);
-            font-size: 1rem;
-        }
-
-        /* Responsive */
-        @media (max-width: 768px) {
-            .calendar-grid {
-                gap: 4px;
-            }
-            
-            .day-cell {
-                border-radius: 8px;
-            }
-            
-            .day-number {
-                font-size: 0.85rem;
-            }
-            
-            .day-emoji {
-                font-size: 1rem;
-            }
-            
-            .day-topic {
-                display: none;
-            }
-
-            .stats-row {
-                gap: 16px;
-            }
-
-            .stat-item {
-                flex-direction: column;
-                gap: 4px;
-                text-align: center;
-            }
-
-            .lessons-grid {
-                grid-template-columns: 1fr;
-            }
-
-            .lesson-popup {
-                left: 24px !important;
-                right: 24px;
-                width: auto;
-                bottom: 90px !important;
-                top: auto !important;
-            }
+        .server-warning-close:hover {
+            background: #d97706;
         }
     </style>
 </head>
 <body>
-    <!-- Header -->
-    <header class="header">
-        <div class="header-left">
-            <h1><span class="emoji">📅</span> 365 Days of Wonder</h1>
-        </div>
-        <div class="view-toggles">
-            <button class="view-btn active" id="view-calendar">📆 Calendar</button>
-            <button class="view-btn" id="view-cards">📋 Cards</button>
-        </div>
-    </header>
-
-    <!-- Stats Row -->
-    <div class="stats-row">
-        <div class="stat-item">
-            <span class="stat-icon">🔥</span>
-            <span class="stat-value" id="streak-count">0</span>
-            <span class="stat-label">day streak</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-icon">✓</span>
-            <span class="stat-value" id="completed-count">0</span>
-            <span class="stat-label">completed</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-icon">📚</span>
-            <span class="stat-value" id="remaining-count">365</span>
-            <span class="stat-label">to explore</span>
-        </div>
-        <div class="stat-item">
-            <span class="stat-icon">📊</span>
-            <span class="stat-value" id="percent-complete">0%</span>
-            <span class="stat-label">progress</span>
+    <!-- CORS Warning Banner -->
+    <div class="server-warning" id="cors-warning">
+        <div class="server-warning-content">
+            <div class="server-warning-text">
+                <strong>⚠️ CORS Error Detected:</strong> This page needs to run on a web server. 
+                <div class="server-warning-code">
+                    Windows: .\start-server.ps1<br>
+                    Mac/Linux: ./start-server.sh<br>
+                    Then open: http://localhost:8000/calendar-page.html
+                </div>
+            </div>
+            <button class="server-warning-close" onclick="document.getElementById('cors-warning').classList.remove('show')">×</button>
         </div>
     </div>
 
-    <!-- Search -->
-    <div class="search-container">
-        <div class="search-box">
-            <input type="text" id="search-input" placeholder="Search lessons by topic...">
-        </div>
-    </div>
+    <!-- Layout #1: Side Panel Slide-Over -->
+    <div class="app-container">
+        <!-- Panel Toggle Button -->
+        <button class="panel-toggle" id="panel-toggle" aria-label="Toggle panel">
+            <span class="toggle-icon">☰</span>
+        </button>
 
-    <!-- Main Content -->
-    <main class="main-container" id="main-content">
-        <!-- Populated by JS -->
-    </main>
-
-    <!-- Lesson Preview Popup -->
-    <div class="lesson-popup" id="lesson-popup">
-        <div class="popup-header">
-            <div class="popup-emoji" id="popup-emoji">📚</div>
-            <div>
-                <div class="popup-day" id="popup-day">Day 1 • January 1</div>
-                <div class="popup-topic" id="popup-topic">Topic</div>
+        <!-- Side Panel (Slides in from right) -->
+        <div class="side-panel" id="side-panel">
+            <div class="panel-header">
+                <h2>📅 Calendar & Lesson</h2>
+                <div class="streak-counter" id="streak-counter" title="Current Streak">
+                    🔥 <span id="streak-count">0</span>
+                </div>
+                <button class="panel-close" id="panel-close" aria-label="Close panel">×</button>
             </div>
-        </div>
-        <div class="popup-completed" id="popup-completed" style="display: none;">
-            <span>✓</span> Completed
-        </div>
-        <p class="popup-truth" id="popup-truth">Loading...</p>
-        <div class="popup-stats">
-            <div class="popup-stat">
-                <div class="popup-stat-value" id="popup-archetypes">6</div>
-                <div class="popup-stat-label">Perspectives</div>
+
+            <!-- Panel Tabs -->
+            <div class="panel-tabs">
+                <button class="tab-btn active" data-tab="calendar">Calendar</button>
+                <button class="tab-btn" data-tab="lesson">Lesson</button>
+                <button class="tab-btn" data-tab="settings">Settings</button>
             </div>
-            <div class="popup-stat">
-                <div class="popup-stat-value" id="popup-variants">54</div>
-                <div class="popup-stat-label">Variants</div>
-            </div>
-        </div>
-        <div class="popup-actions">
-            <a href="#" class="popup-btn popup-btn-primary" id="popup-start">Start Lesson →</a>
-            <a href="#" class="popup-btn popup-btn-secondary" id="popup-details">Details</a>
-        </div>
-    </div>
 
-    <!-- Bottom Navigation -->
-    <nav class="bottom-nav">
-        <a href="/" class="nav-item">
-            <div class="nav-icon"><img src="/images/brand/kelly-mark-circle-64.png" alt="" width="24" height="24" style="border-radius:50%;"></div>
-            <div class="nav-label">Home</div>
-        </a>
-        <a href="/calendar.html" class="nav-item active">
-            <div class="nav-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-                    <line x1="16" y1="2" x2="16" y2="6"></line>
-                    <line x1="8" y1="2" x2="8" y2="6"></line>
-                    <line x1="3" y1="10" x2="21" y2="10"></line>
-                </svg>
-            </div>
-            <div class="nav-label">Calendar</div>
-        </a>
-        <a href="/learn.html" class="nav-item">
-            <div class="nav-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                    <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
-                </svg>
-            </div>
-            <div class="nav-label">Learn</div>
-        </a>
-        <a href="/me.html" class="nav-item">
-            <div class="nav-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                </svg>
-            </div>
-            <div class="nav-label">Me</div>
-        </a>
-        <a href="/settings.html" class="nav-item">
-            <div class="nav-icon">
-                <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                </svg>
-            </div>
-            <div class="nav-label">Settings</div>
-        </a>
-    </nav>
+            <!-- Tab Content: Calendar -->
+            <div class="tab-content active" id="tab-calendar">
+                <div class="calendar-view-selector">
+                    <button class="view-btn active" data-view="today">Today</button>
+                    <button class="view-btn" data-view="year">Year</button>
+                    <button class="view-btn" data-view="month">Month</button>
+                    <button class="view-btn" data-view="week">Week</button>
+                </div>
 
-    <!-- Supabase -->
-    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-    
-    <script>
-        // Supabase client
-        const supabase = window.supabase.createClient(
-            window.SUPABASE_URL || 'https://tvjalxxsyryjphkforjv.supabase.co',
-            window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI'
-        );
-
-        // State
-        let allLessons = [];
-        let completedDays = new Set();
-        let streakCount = 0;
-        let currentView = 'calendar'; // 'calendar' or 'cards'
-        let lessonAtomCounts = {}; // day_number -> archetype count
-
-        // Constants
-        const MONTHS = [
-            { name: 'January', icon: '❄️', days: 31 },
-            { name: 'February', icon: '💝', days: 28 },
-            { name: 'March', icon: '🌱', days: 31 },
-            { name: 'April', icon: '🌸', days: 30 },
-            { name: 'May', icon: '🌻', days: 31 },
-            { name: 'June', icon: '☀️', days: 30 },
-            { name: 'July', icon: '🌊', days: 31 },
-            { name: 'August', icon: '🌅', days: 31 },
-            { name: 'September', icon: '🍂', days: 30 },
-            { name: 'October', icon: '🎃', days: 31 },
-            { name: 'November', icon: '🦃', days: 30 },
-            { name: 'December', icon: '🎄', days: 31 }
-        ];
-
-        const TOPIC_EMOJIS = {
-            'Leaves': '🍃', 'Water': '💧', 'Clouds': '☁️', 'Light': '💡',
-            'Sound': '🔊', 'Seeds': '🌱', 'Stars': '⭐', 'Energy': '⚡',
-            'Growth': '🌿', 'Colors': '🎨', 'Patterns': '🔷', 'Friendship': '🤝',
-            'Kindness': '💝', 'Listening': '👂', 'Patience': '⏳', 'Gratitude': '🙏',
-            'Courage': '🦁', 'Curiosity': '🔍', 'Balance': '⚖️', 'Rest': '😴',
-            'Memory': '🧠', 'Time': '⏰', 'Change': '🔄', 'Questions': '❓'
-        };
-
-        function getTopicEmoji(topic) {
-            return TOPIC_EMOJIS[topic] || '📚';
-        }
-
-        function getDayOfYear() {
-            const now = new Date();
-            const start = new Date(now.getFullYear(), 0, 0);
-            return Math.floor((now - start) / (1000 * 60 * 60 * 24));
-        }
-
-        function dayToDate(dayNumber) {
-            let cumulative = 0;
-            for (let i = 0; i < MONTHS.length; i++) {
-                if (dayNumber <= cumulative + MONTHS[i].days) {
-                    return `${MONTHS[i].name} ${dayNumber - cumulative}`;
-                }
-                cumulative += MONTHS[i].days;
-            }
-            return 'December 31';
-        }
-
-        function getMonthForDay(dayNumber) {
-            let cumulative = 0;
-            for (let i = 0; i < MONTHS.length; i++) {
-                cumulative += MONTHS[i].days;
-                if (dayNumber <= cumulative) return i;
-            }
-            return 11;
-        }
-
-        // Calculate streak
-        function calculateStreak() {
-            if (completedDays.size === 0) {
-                streakCount = 0;
-                return;
-            }
-
-            const sorted = Array.from(completedDays).sort((a, b) => b - a);
-            const today = getDayOfYear();
-
-            let streak = 0;
-            let checkDay = today;
-
-            while (sorted.includes(checkDay)) {
-                streak++;
-                checkDay--;
-            }
-
-            streakCount = streak;
-        }
-
-        // Update stats display
-        function updateStats() {
-            const completed = completedDays.size;
-            const remaining = 365 - completed;
-            const percent = Math.round((completed / 365) * 100);
-
-            document.getElementById('streak-count').textContent = streakCount;
-            document.getElementById('completed-count').textContent = completed;
-            document.getElementById('remaining-count').textContent = remaining;
-            document.getElementById('percent-complete').textContent = `${percent}%`;
-        }
-
-        // Load lessons from Supabase
-        async function loadLessons() {
-            try {
-                const { data, error } = await supabase
-                    .from('core_lessons')
-                    .select('id, day_number, topic, universal_truth, marketing_headline')
-                    .order('day_number');
-
-                if (error) throw error;
-                allLessons = data || [];
-                
-                // Also load atom counts per lesson
-                const { data: atomCounts } = await supabase
-                    .from('lesson_atoms')
-                    .select('core_lesson_id');
-                
-                if (atomCounts) {
-                    // Count atoms per lesson
-                    const countMap = {};
-                    atomCounts.forEach(atom => {
-                        countMap[atom.core_lesson_id] = (countMap[atom.core_lesson_id] || 0) + 1;
-                    });
-                    
-                    // Map to day numbers
-                    allLessons.forEach(lesson => {
-                        lessonAtomCounts[lesson.day_number] = countMap[lesson.id] || 0;
-                    });
-                }
-
-                return allLessons;
-            } catch (err) {
-                console.error('Error loading lessons:', err);
-                return [];
-            }
-        }
-
-        // Load user progress
-        async function loadProgress() {
-            try {
-                const { data: { user } } = await supabase.auth.getUser();
-                if (user) {
-                    const { data } = await supabase
-                        .from('user_progress')
-                        .select('day_number')
-                        .eq('user_id', user.id);
-
-                    if (data) {
-                        completedDays = new Set(data.map(p => p.day_number));
-                        calculateStreak();
-                    }
-                }
-            } catch (err) {
-                console.error('Error loading progress:', err);
-            }
-            updateStats();
-        }
-
-        // Render calendar view
-        function renderCalendar(lessons = allLessons) {
-            const container = document.getElementById('main-content');
-            const today = getDayOfYear();
-            
-            // Group lessons by month
-            const byMonth = {};
-            lessons.forEach(lesson => {
-                const monthIndex = getMonthForDay(lesson.day_number);
-                if (!byMonth[monthIndex]) byMonth[monthIndex] = [];
-                byMonth[monthIndex].push(lesson);
-            });
-
-            let html = '';
-            
-            Object.keys(byMonth).sort((a, b) => a - b).forEach(monthIndex => {
-                const month = MONTHS[monthIndex];
-                const monthLessons = byMonth[monthIndex];
-                const completedInMonth = monthLessons.filter(l => completedDays.has(l.day_number)).length;
-                
-                // Calculate starting day offset (for proper calendar alignment)
-                let dayOffset = 0;
-                for (let i = 0; i < monthIndex; i++) {
-                    dayOffset += MONTHS[i].days;
-                }
-                const firstDayNumber = dayOffset + 1;
-                const firstDate = new Date(2025, parseInt(monthIndex), 1);
-                const startDayOfWeek = firstDate.getDay(); // 0 = Sunday
-
-                html += `
-                    <div class="month-section">
-                        <div class="month-header">
-                            <div class="month-icon">${month.icon}</div>
-                            <div class="month-info">
-                                <h2>${month.name}</h2>
-                                <div class="month-meta">
-                                    ${monthLessons.length} lessons • ${completedInMonth}/${monthLessons.length} completed
-                                </div>
-                            </div>
-                        </div>
-                        <div class="calendar-grid">
-                            ${['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'].map(d => 
-                                `<div class="weekday-header">${d}</div>`
-                            ).join('')}
-                            ${Array(startDayOfWeek).fill('<div></div>').join('')}
-                            ${monthLessons.map(lesson => {
-                                const isToday = lesson.day_number === today;
-                                const isCompleted = completedDays.has(lesson.day_number);
-                                const dayInMonth = lesson.day_number - dayOffset;
-                                
-                                return `
-                                    <div class="day-cell ${isToday ? 'today' : ''} ${isCompleted ? 'completed' : ''}" 
-                                         data-day="${lesson.day_number}"
-                                         data-topic="${lesson.topic || ''}"
-                                         data-truth="${(lesson.universal_truth || '').replace(/"/g, '&quot;')}"
-                                         data-completed="${isCompleted}">
-                                        <div class="day-emoji">${getTopicEmoji(lesson.topic)}</div>
-                                        <div class="day-number">${dayInMonth}</div>
-                                        <div class="day-topic">${lesson.topic || 'Day ' + lesson.day_number}</div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
+                <!-- Today View -->
+                <div class="calendar-view active" id="view-today">
+                    <div class="today-card" id="today-card">
+                        <!-- Populated by JavaScript -->
                     </div>
-                `;
-            });
+                </div>
 
-            container.innerHTML = html;
-            attachCellListeners();
-        }
-
-        // Render card view
-        function renderCards(lessons = allLessons) {
-            const container = document.getElementById('main-content');
-            const today = getDayOfYear();
-            
-            // Group by month
-            const byMonth = {};
-            lessons.forEach(lesson => {
-                const monthIndex = getMonthForDay(lesson.day_number);
-                if (!byMonth[monthIndex]) byMonth[monthIndex] = [];
-                byMonth[monthIndex].push(lesson);
-            });
-
-            let html = '';
-            
-            Object.keys(byMonth).sort((a, b) => a - b).forEach(monthIndex => {
-                const month = MONTHS[monthIndex];
-                const monthLessons = byMonth[monthIndex];
-                const completedInMonth = monthLessons.filter(l => completedDays.has(l.day_number)).length;
-
-                html += `
-                    <div class="month-section">
-                        <div class="month-header">
-                            <div class="month-icon">${month.icon}</div>
-                            <div class="month-info">
-                                <h2>${month.name}</h2>
-                                <div class="month-meta">
-                                    ${monthLessons.length} lessons • ${completedInMonth}/${monthLessons.length} completed
-                                </div>
-                            </div>
-                        </div>
-                        <div class="lessons-grid">
-                            ${monthLessons.map(lesson => {
-                                const isToday = lesson.day_number === today;
-                                const isCompleted = completedDays.has(lesson.day_number);
-                                const atomCount = lessonAtomCounts[lesson.day_number] || 0;
-                                const archetypeCount = Math.floor(atomCount / 5) || 6; // ~5 phases per archetype
-                                
-                                return `
-                                    <div class="lesson-card ${isToday ? 'today' : ''} ${isCompleted ? 'completed' : ''}"
-                                         data-day="${lesson.day_number}">
-                                        <div class="card-header">
-                                            <div class="card-emoji">${getTopicEmoji(lesson.topic)}</div>
-                                            <div class="card-info">
-                                                <div class="card-day">Day ${lesson.day_number} • ${dayToDate(lesson.day_number)}</div>
-                                                <div class="card-topic">${lesson.topic || 'Lesson'}</div>
-                                            </div>
-                                        </div>
-                                        <p class="card-truth">${lesson.universal_truth || lesson.marketing_headline || 'Discover something new today.'}</p>
-                                        <div class="card-stats">
-                                            <div class="card-stat"><strong>${archetypeCount}</strong> perspectives</div>
-                                            <div class="card-stat"><strong>${archetypeCount * 9}</strong> variants</div>
-                                            ${isCompleted ? '<div class="card-stat" style="color: var(--accent-emerald);">✓ Completed</div>' : ''}
-                                        </div>
-                                    </div>
-                                `;
-                            }).join('')}
-                        </div>
+                <!-- Year View -->
+                <div class="calendar-view" id="view-year">
+                    <div class="year-grid" id="year-grid">
+                        <!-- 12 months will be generated here -->
                     </div>
-                `;
-            });
+                </div>
 
-            container.innerHTML = html;
-            attachCardListeners();
-        }
+                <!-- Month View -->
+                <div class="calendar-view" id="view-month">
+                    <div class="month-header">
+                        <button class="nav-btn" id="prev-month">◀</button>
+                        <h3 id="current-month-name">January 2025</h3>
+                        <button class="nav-btn" id="next-month">▶</button>
+                    </div>
+                    <div class="month-calendar" id="month-calendar">
+                        <!-- Calendar grid will be generated here -->
+                    </div>
+                </div>
 
-        // Attach event listeners to day cells
-        function attachCellListeners() {
-            document.querySelectorAll('.day-cell').forEach(cell => {
-                cell.addEventListener('click', (e) => {
-                    const day = parseInt(cell.dataset.day);
-                    showLessonPopup(day, e);
-                });
-            });
-        }
+                <!-- Week View -->
+                <div class="calendar-view" id="view-week">
+                    <div class="week-header">
+                        <button class="nav-btn" id="prev-week">◀</button>
+                        <h3 id="current-week-range">Week of Jan 1</h3>
+                        <button class="nav-btn" id="next-week">▶</button>
+                    </div>
+                    <div class="week-list" id="week-list">
+                        <!-- Week days will be generated here -->
+                    </div>
+                </div>
+            </div>
 
-        // Attach event listeners to cards
-        function attachCardListeners() {
-            document.querySelectorAll('.lesson-card').forEach(card => {
-                card.addEventListener('click', () => {
-                    const day = parseInt(card.dataset.day);
-                    window.location.href = `/learn.html?day=${day}`;
-                });
-            });
-        }
+            <!-- Tab Content: Lesson -->
+            <div class="tab-content" id="tab-lesson">
+                <div class="lesson-header">
+                    <div class="lesson-title" id="lesson-title">No lesson selected</div>
+                    <div class="lesson-day" id="lesson-day"></div>
+                </div>
 
-        // Show lesson popup
-        function showLessonPopup(dayNumber, event) {
-            const lesson = allLessons.find(l => l.day_number === dayNumber);
-            if (!lesson) return;
+                <!-- Phase Progress -->
+                <div class="phase-progress">
+                    <div class="phase-indicator active" data-phase="welcome">
+                        <span class="phase-number">1</span>
+                        <span class="phase-label">Welcome</span>
+                    </div>
+                    <div class="phase-indicator" data-phase="q1">
+                        <span class="phase-number">2</span>
+                        <span class="phase-label">Q1</span>
+                    </div>
+                    <div class="phase-indicator" data-phase="q2">
+                        <span class="phase-number">3</span>
+                        <span class="phase-label">Q2</span>
+                    </div>
+                    <div class="phase-indicator" data-phase="q3">
+                        <span class="phase-number">4</span>
+                        <span class="phase-label">Q3</span>
+                    </div>
+                    <div class="phase-indicator" data-phase="wisdom">
+                        <span class="phase-number">5</span>
+                        <span class="phase-label">Wisdom</span>
+                    </div>
+                </div>
 
-            const popup = document.getElementById('lesson-popup');
-            const isCompleted = completedDays.has(dayNumber);
-            const atomCount = lessonAtomCounts[dayNumber] || 0;
-            const archetypeCount = Math.floor(atomCount / 5) || 6;
+                <!-- Current Phase Content -->
+                <div class="phase-content" id="phase-content">
+                    <div class="empty-phase">
+                        <p>Select a lesson to begin</p>
+                    </div>
+                </div>
+            </div>
 
-            // Update popup content
-            document.getElementById('popup-emoji').textContent = getTopicEmoji(lesson.topic);
-            document.getElementById('popup-day').textContent = `Day ${dayNumber} • ${dayToDate(dayNumber)}`;
-            document.getElementById('popup-topic').textContent = lesson.topic || 'Lesson';
-            document.getElementById('popup-truth').textContent = lesson.universal_truth || lesson.marketing_headline || 'Discover something new.';
-            document.getElementById('popup-archetypes').textContent = archetypeCount;
-            document.getElementById('popup-variants').textContent = archetypeCount * 9;
-            document.getElementById('popup-completed').style.display = isCompleted ? 'inline-flex' : 'none';
-            document.getElementById('popup-start').href = `/learn.html?day=${dayNumber}`;
-            document.getElementById('popup-details').href = `/lesson-detail.html?day=${dayNumber}`;
+            <!-- Tab Content: Settings -->
+            <div class="tab-content" id="tab-settings">
+                <div class="settings-section">
+                    <h3>Age Selection</h3>
+                    <p class="settings-desc">Choose the age level for lesson content</p>
+                    <select class="settings-select" id="age-selector">
+                        <option value="2-5">2-5 years</option>
+                        <option value="6-12">6-12 years</option>
+                        <option value="13-17">13-17 years</option>
+                        <option value="18-35">18-35 years</option>
+                        <option value="36-60">36-60 years</option>
+                        <option value="61-102">61-102 years</option>
+                    </select>
+                </div>
 
-            // Position popup
-            const rect = event.target.closest('.day-cell').getBoundingClientRect();
-            const popupWidth = 320;
-            const popupHeight = 300;
+                <div class="settings-section">
+                    <h3>Language</h3>
+                    <p class="settings-desc">Choose the language Kelly speaks</p>
+                    <select class="settings-select" id="language-selector">
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                        <option value="fr">Français</option>
+                    </select>
+                </div>
 
-            let left = rect.right + 12;
-            let top = rect.top;
+                <div class="settings-section">
+                    <h3>Current Lesson</h3>
+                    <div class="current-lesson-info" id="current-lesson-info">
+                        <p>No lesson selected</p>
+                    </div>
+                </div>
+            </div>
+        </div>
 
-            // Keep popup on screen
-            if (left + popupWidth > window.innerWidth) {
-                left = rect.left - popupWidth - 12;
-            }
-            if (top + popupHeight > window.innerHeight) {
-                top = window.innerHeight - popupHeight - 100;
-            }
-            if (top < 100) top = 100;
+        <!-- White Room Background with Window Light -->
+        <div class="white-room">
+            <div class="window-light"></div>
+            <div class="window-shadows"></div>
+        </div>
 
-            popup.style.left = `${left}px`;
-            popup.style.top = `${top}px`;
-            popup.classList.add('show');
-
-            // Close popup when clicking outside
-            setTimeout(() => {
-                document.addEventListener('click', closeLessonPopup, { once: true });
-            }, 100);
-        }
-
-        function closeLessonPopup(e) {
-            const popup = document.getElementById('lesson-popup');
-            if (!popup.contains(e.target) && !e.target.closest('.day-cell')) {
-                popup.classList.remove('show');
-            }
-        }
-
-        // Search functionality
-        function searchLessons(query) {
-            const q = query.toLowerCase().trim();
-            if (!q) {
-                currentView === 'calendar' ? renderCalendar() : renderCards();
-                return;
-            }
-
-            const filtered = allLessons.filter(lesson =>
-                (lesson.topic && lesson.topic.toLowerCase().includes(q)) ||
-                (lesson.universal_truth && lesson.universal_truth.toLowerCase().includes(q))
-            );
-
-            currentView === 'calendar' ? renderCalendar(filtered) : renderCards(filtered);
-        }
-
-        // View toggle handlers
-        function setupViewToggle() {
-            document.getElementById('view-calendar').addEventListener('click', () => {
-                currentView = 'calendar';
-                document.getElementById('view-calendar').classList.add('active');
-                document.getElementById('view-cards').classList.remove('active');
-                renderCalendar();
-            });
-
-            document.getElementById('view-cards').addEventListener('click', () => {
-                currentView = 'cards';
-                document.getElementById('view-cards').classList.add('active');
-                document.getElementById('view-calendar').classList.remove('active');
-                renderCards();
-            });
-        }
-
-        // Setup search
-        function setupSearch() {
-            const searchInput = document.getElementById('search-input');
-            let timeout;
-            searchInput.addEventListener('input', (e) => {
-                clearTimeout(timeout);
-                timeout = setTimeout(() => searchLessons(e.target.value), 300);
-            });
-        }
-
-        // Initialize
-        async function init() {
-            setupViewToggle();
-            setupSearch();
+        <!-- Center - Kelly (Always Visible, Shifts when panel opens) -->
+        <div class="kelly-area" id="kelly-area">
+            <!-- Zoom Controls -->
+            <div class="zoom-controls">
+                <button class="zoom-btn" id="zoom-in-btn" aria-label="Zoom in">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M10 4V16M4 10H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+                <div class="zoom-indicator" id="zoom-indicator">Head & Shoulders</div>
+                <button class="zoom-btn" id="zoom-out-btn" aria-label="Zoom out">
+                    <svg width="20" height="20" viewBox="0 0 20 20" fill="none">
+                        <path d="M4 10H16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/>
+                    </svg>
+                </button>
+            </div>
             
-            // Load data in parallel
-            await Promise.all([loadLessons(), loadProgress()]);
-            
-            renderCalendar();
-            console.log('✅ Calendar loaded with', allLessons.length, 'lessons');
-        }
+            <!-- Kelly Scene Container -->
+            <div class="kelly-container" id="kelly-container">
+                <div class="kelly-scene" id="kelly-scene">
+                    <div class="kelly-image-wrapper" id="kelly-image-wrapper">
+                        <img src="" alt="Kelly" class="kelly-image" id="kelly-image">
+                    </div>
+                    <!-- Fallback if image not found -->
+                    <div class="kelly-placeholder-content" id="kelly-fallback">
+                        <div class="kelly-label">Kelly</div>
+                        <div class="kelly-status" id="kelly-status">Ready to learn</div>
+                        <div class="kelly-fallback-message">Loading Kelly images...</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
 
-        init();
-    </script>
+    <!-- Bottom Controls -->
+    <div class="bottom-controls">
+        <button class="control-btn" id="prev-phase" disabled>◀ Back</button>
+        <div class="phase-info">
+            <span id="current-phase-name">No lesson active</span>
+        </div>
+        <button class="control-btn" id="next-phase" disabled>Next ▶</button>
+    </div>
+
+    <script src="calendar-page.js"></script>
 </body>
 </html>

@@ -50,3 +50,4 @@ Write-Host "   3. Kelly should now have proper colors!"
 
 Write-Host "`n═══════════════════════════════════════════════════════════" -ForegroundColor Cyan
 
+

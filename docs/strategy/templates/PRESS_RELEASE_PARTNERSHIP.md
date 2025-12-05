@@ -125,3 +125,4 @@ Curious Kelly: hello@curiouskelly.com
 6. Quantify impact whenever possible
 
 
+
