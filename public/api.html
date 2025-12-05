@@ -1,0 +1,840 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="description" content="Curious Kelly API - Build learning experiences with daily lessons. REST API for developers.">
+  <title>API - Curious Kelly</title>
+  
+  <!-- Fonts -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  
+  <style>
+    :root {
+      --bg-color: #0a0a0b;
+      --bg-secondary: #111113;
+      --bg-elevated: #18181b;
+      --bg-code: #0d1117;
+      --text-primary: #fafafa;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --accent-primary: #3b82f6;
+      --accent-hover: #2563eb;
+      --accent-glow: rgba(59, 130, 246, 0.15);
+      --border-color: #27272a;
+      --border-hover: #3f3f46;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --code-string: #a5d6ff;
+      --code-keyword: #ff7b72;
+      --code-comment: #8b949e;
+      --code-number: #79c0ff;
+      --max-width: 1100px;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    html { scroll-behavior: smooth; }
+
+    body {
+      font-family: 'Instrument Sans', -apple-system, sans-serif;
+      background: var(--bg-color);
+      color: var(--text-primary);
+      line-height: 1.7;
+      -webkit-font-smoothing: antialiased;
+    }
+
+    a { color: var(--accent-primary); text-decoration: none; }
+    a:hover { text-decoration: underline; }
+
+    /* Header */
+    .header {
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 1000;
+      background: rgba(10, 10, 11, 0.8);
+      backdrop-filter: blur(20px);
+      border-bottom: 1px solid var(--border-color);
+      height: 64px;
+    }
+
+    .header-inner {
+      max-width: var(--max-width);
+      margin: 0 auto;
+      padding: 0 24px;
+      height: 100%;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 600;
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+
+    .logo img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+    }
+
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 32px;
+    }
+
+    .nav-links a {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+
+    .nav-links a:hover {
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+
+    /* Layout */
+    .page-wrapper {
+      display: flex;
+      min-height: 100vh;
+      padding-top: 64px;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 260px;
+      flex-shrink: 0;
+      border-right: 1px solid var(--border-color);
+      background: var(--bg-secondary);
+      padding: 32px 20px;
+      position: fixed;
+      top: 64px;
+      left: 0;
+      bottom: 0;
+      overflow-y: auto;
+    }
+
+    .sidebar-section {
+      margin-bottom: 28px;
+    }
+
+    .sidebar-title {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+    }
+
+    .sidebar-links {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+
+    .sidebar-links a {
+      display: block;
+      padding: 8px 12px;
+      border-radius: 6px;
+      color: var(--text-secondary);
+      font-size: 0.875rem;
+      font-weight: 500;
+      transition: all 0.15s;
+    }
+
+    .sidebar-links a:hover {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      text-decoration: none;
+    }
+
+    .sidebar-links a.active {
+      background: var(--accent-glow);
+      color: var(--accent-primary);
+    }
+
+    /* Main content */
+    .main-content {
+      flex: 1;
+      margin-left: 260px;
+      padding: 48px 64px;
+      max-width: calc(var(--max-width) + 260px);
+    }
+
+    /* Hero */
+    .api-hero {
+      margin-bottom: 64px;
+      padding-bottom: 48px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .api-hero h1 {
+      font-family: 'Newsreader', Georgia, serif;
+      font-size: 3rem;
+      font-weight: 500;
+      margin-bottom: 16px;
+      letter-spacing: -0.02em;
+    }
+
+    .api-hero p {
+      font-size: 1.2rem;
+      color: var(--text-secondary);
+      max-width: 600px;
+      line-height: 1.6;
+    }
+
+    .api-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: var(--accent-glow);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+      color: var(--accent-primary);
+      margin-top: 20px;
+    }
+
+    /* Sections */
+    section {
+      margin-bottom: 64px;
+    }
+
+    section h2 {
+      font-family: 'Newsreader', Georgia, serif;
+      font-size: 1.8rem;
+      font-weight: 500;
+      margin-bottom: 16px;
+      padding-top: 16px;
+    }
+
+    section h3 {
+      font-size: 1.15rem;
+      font-weight: 600;
+      margin: 32px 0 16px 0;
+      color: var(--text-primary);
+    }
+
+    section p {
+      color: var(--text-secondary);
+      margin-bottom: 16px;
+    }
+
+    /* Method badges */
+    .method {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      font-weight: 600;
+      margin-right: 8px;
+    }
+
+    .method-get { background: rgba(34, 197, 94, 0.15); color: var(--success); }
+    .method-post { background: rgba(59, 130, 246, 0.15); color: var(--accent-primary); }
+    .method-put { background: rgba(245, 158, 11, 0.15); color: var(--warning); }
+    .method-delete { background: rgba(239, 68, 68, 0.15); color: var(--error); }
+
+    /* Endpoint cards */
+    .endpoint-card {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      margin-bottom: 24px;
+      overflow: hidden;
+    }
+
+    .endpoint-header {
+      display: flex;
+      align-items: center;
+      padding: 16px 20px;
+      background: var(--bg-elevated);
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    .endpoint-path {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.95rem;
+      color: var(--text-primary);
+    }
+
+    .endpoint-desc {
+      padding: 20px;
+      color: var(--text-secondary);
+      font-size: 0.95rem;
+    }
+
+    /* Code blocks */
+    pre {
+      background: var(--bg-code);
+      border: 1px solid var(--border-color);
+      border-radius: 8px;
+      padding: 20px;
+      overflow-x: auto;
+      margin: 16px 0;
+    }
+
+    code {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.6;
+    }
+
+    .code-inline {
+      background: var(--bg-elevated);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 0.85em;
+    }
+
+    /* Syntax highlighting */
+    .token-string { color: var(--code-string); }
+    .token-keyword { color: var(--code-keyword); }
+    .token-comment { color: var(--code-comment); }
+    .token-number { color: var(--code-number); }
+    .token-property { color: #d2a8ff; }
+
+    /* Tables */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 16px 0;
+      font-size: 0.9rem;
+    }
+
+    th, td {
+      text-align: left;
+      padding: 12px 16px;
+      border-bottom: 1px solid var(--border-color);
+    }
+
+    th {
+      background: var(--bg-secondary);
+      font-weight: 600;
+      color: var(--text-secondary);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    td {
+      color: var(--text-secondary);
+    }
+
+    td code {
+      color: var(--accent-primary);
+    }
+
+    /* Info boxes */
+    .info-box {
+      background: var(--accent-glow);
+      border: 1px solid rgba(59, 130, 246, 0.3);
+      border-radius: 8px;
+      padding: 16px 20px;
+      margin: 20px 0;
+      display: flex;
+      gap: 12px;
+    }
+
+    .info-box-icon {
+      flex-shrink: 0;
+      font-size: 1.2rem;
+    }
+
+    .info-box p {
+      margin: 0;
+      color: var(--text-primary);
+      font-size: 0.9rem;
+    }
+
+    /* Footer */
+    .api-footer {
+      margin-top: 80px;
+      padding-top: 40px;
+      border-top: 1px solid var(--border-color);
+      text-align: center;
+    }
+
+    .api-footer p {
+      color: var(--text-muted);
+      font-size: 0.85rem;
+    }
+
+    /* Responsive */
+    @media (max-width: 900px) {
+      .sidebar { display: none; }
+      .main-content { margin-left: 0; padding: 32px 24px; }
+      .api-hero h1 { font-size: 2rem; }
+    }
+  </style>
+</head>
+<body>
+  <header class="header">
+    <div class="header-inner">
+      <a href="/" class="logo">
+        <img src="/images/brand/kelly-mark-circle-64.png" alt="">
+        <span>Curious Kelly</span>
+      </a>
+      <nav class="nav-links">
+        <a href="/">Home</a>
+        <a href="/curriculum.html">Curriculum</a>
+        <a href="/enterprise.html">Enterprise</a>
+        <a href="mailto:hello@curiouskelly.com">Contact</a>
+      </nav>
+    </div>
+  </header>
+
+  <div class="page-wrapper">
+    <aside class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-title">Getting Started</div>
+        <div class="sidebar-links">
+          <a href="#overview" class="active">Overview</a>
+          <a href="#authentication">Authentication</a>
+          <a href="#rate-limits">Rate Limits</a>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Core API</div>
+        <div class="sidebar-links">
+          <a href="#lessons">Lessons</a>
+          <a href="#curriculum">Curriculum</a>
+          <a href="#atoms">Lesson Atoms</a>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Commerce</div>
+        <div class="sidebar-links">
+          <a href="#checkout">Checkout</a>
+          <a href="#webhooks">Webhooks</a>
+        </div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-title">Resources</div>
+        <div class="sidebar-links">
+          <a href="#sdks">SDKs</a>
+          <a href="#support">Support</a>
+        </div>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="api-hero" id="overview">
+        <h1>Build with Kelly</h1>
+        <p>
+          Integrate Curious Kelly's 365-day learning curriculum into your apps. 
+          Access daily lessons, personalized content atoms, and user progress tracking.
+        </p>
+        <div class="api-badge">
+          <span>●</span> REST API v1
+        </div>
+      </div>
+
+      <!-- Authentication -->
+      <section id="authentication">
+        <h2>Authentication</h2>
+        <p>
+          The Curious Kelly API uses <a href="https://supabase.com" target="_blank">Supabase</a> for authentication. 
+          All requests require a valid API key passed in the request headers.
+        </p>
+
+        <h3>API Keys</h3>
+        <p>Your API key is available in your account dashboard after subscribing to an enterprise plan.</p>
+
+        <div class="info-box">
+          <div class="info-box-icon">ℹ️</div>
+          <p>
+            <strong>Public vs Private Keys:</strong> Use the public (anon) key for client-side requests. 
+            The private (service) key should only be used server-side.
+          </p>
+        </div>
+
+        <h3>Headers</h3>
+        <pre><code><span class="token-comment">// Required headers for all requests</span>
+<span class="token-property">apikey</span>: <span class="token-string">your-supabase-anon-key</span>
+<span class="token-property">Authorization</span>: <span class="token-string">Bearer your-supabase-anon-key</span>
+<span class="token-property">Content-Type</span>: <span class="token-string">application/json</span></code></pre>
+
+        <h3>Base URL</h3>
+        <pre><code><span class="token-string">https://your-project.supabase.co/rest/v1</span></code></pre>
+      </section>
+
+      <!-- Rate Limits -->
+      <section id="rate-limits">
+        <h2>Rate Limits</h2>
+        <p>
+          To ensure fair usage and system stability, all API endpoints are rate limited.
+        </p>
+
+        <table>
+          <thead>
+            <tr>
+              <th>Plan</th>
+              <th>Requests/min</th>
+              <th>Daily Limit</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Free</td>
+              <td>10</td>
+              <td>1,000</td>
+            </tr>
+            <tr>
+              <td>Scholar ($12/mo)</td>
+              <td>60</td>
+              <td>10,000</td>
+            </tr>
+            <tr>
+              <td>Enterprise</td>
+              <td>300</td>
+              <td>Unlimited</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <p>Rate limit headers are included in all responses:</p>
+        <pre><code><span class="token-property">X-RateLimit-Limit</span>: <span class="token-number">60</span>
+<span class="token-property">X-RateLimit-Remaining</span>: <span class="token-number">58</span>
+<span class="token-property">X-RateLimit-Reset</span>: <span class="token-number">1701792000</span></code></pre>
+      </section>
+
+      <!-- Lessons -->
+      <section id="lessons">
+        <h2>Lessons</h2>
+        <p>
+          Access the complete 365-day curriculum. Each day features a unique topic with 
+          universal truths and personalized content atoms.
+        </p>
+
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="method method-get">GET</span>
+            <span class="endpoint-path">/core_lessons</span>
+          </div>
+          <div class="endpoint-desc">
+            <p>Retrieve all lessons or filter by day number.</p>
+            
+            <h4 style="margin-top: 16px; font-size: 0.85rem; color: var(--text-muted);">Query Parameters</h4>
+            <table>
+              <thead>
+                <tr><th>Parameter</th><th>Type</th><th>Description</th></tr>
+              </thead>
+              <tbody>
+                <tr>
+                  <td><code>day_number</code></td>
+                  <td>integer</td>
+                  <td>Filter by specific day (1-365)</td>
+                </tr>
+                <tr>
+                  <td><code>select</code></td>
+                  <td>string</td>
+                  <td>Fields to return (PostgREST syntax)</td>
+                </tr>
+              </tbody>
+            </table>
+
+            <h4 style="margin-top: 20px; font-size: 0.85rem; color: var(--text-muted);">Example Request</h4>
+            <pre><code><span class="token-keyword">curl</span> <span class="token-string">'https://your-project.supabase.co/rest/v1/core_lessons?day_number=eq.1&select=id,day_number,topic,universal_truth'</span> \
+  -H <span class="token-string">"apikey: YOUR_API_KEY"</span> \
+  -H <span class="token-string">"Authorization: Bearer YOUR_API_KEY"</span></code></pre>
+
+            <h4 style="margin-top: 20px; font-size: 0.85rem; color: var(--text-muted);">Response</h4>
+            <pre><code>[
+  {
+    <span class="token-property">"id"</span>: <span class="token-string">"9f8af9c5-66d6-40a0-a10c-b95a7940d25c"</span>,
+    <span class="token-property">"day_number"</span>: <span class="token-number">1</span>,
+    <span class="token-property">"topic"</span>: <span class="token-string">"Water"</span>,
+    <span class="token-property">"universal_truth"</span>: <span class="token-string">"Water transforms between solid, liquid, and gas..."</span>
+  }
+]</code></pre>
+          </div>
+        </div>
+
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="method method-get">GET</span>
+            <span class="endpoint-path">/core_lessons?day_number=eq.{day}</span>
+          </div>
+          <div class="endpoint-desc">
+            <p>Get a specific day's lesson with full content.</p>
+            <pre><code><span class="token-comment">// JavaScript example</span>
+<span class="token-keyword">const</span> { data, error } = <span class="token-keyword">await</span> supabase
+  .from(<span class="token-string">'core_lessons'</span>)
+  .select(<span class="token-string">'id, day_number, topic, universal_truth, marketing_headline'</span>)
+  .eq(<span class="token-string">'day_number'</span>, <span class="token-number">1</span>)
+  .single();</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- Curriculum -->
+      <section id="curriculum">
+        <h2>Curriculum</h2>
+        <p>
+          Get the full 365-day curriculum structure for navigation and planning.
+        </p>
+
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="method method-get">GET</span>
+            <span class="endpoint-path">/core_lessons?select=day_number,topic&order=day_number</span>
+          </div>
+          <div class="endpoint-desc">
+            <p>Returns all 365 lessons with basic info for building calendars and navigation.</p>
+            <pre><code><span class="token-comment">// Returns array of all 365 days</span>
+[
+  { <span class="token-property">"day_number"</span>: <span class="token-number">1</span>, <span class="token-property">"topic"</span>: <span class="token-string">"Water"</span> },
+  { <span class="token-property">"day_number"</span>: <span class="token-number">2</span>, <span class="token-property">"topic"</span>: <span class="token-string">"Clouds"</span> },
+  { <span class="token-property">"day_number"</span>: <span class="token-number">3</span>, <span class="token-property">"topic"</span>: <span class="token-string">"Light"</span> },
+  <span class="token-comment">// ... 362 more</span>
+]</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- Lesson Atoms -->
+      <section id="atoms">
+        <h2>Lesson Atoms</h2>
+        <p>
+          Lesson atoms are the building blocks of personalized learning. Each lesson has 60 atoms 
+          across different archetypes and phases.
+        </p>
+
+        <div class="info-box">
+          <div class="info-box-icon">🧬</div>
+          <p>
+            <strong>What are atoms?</strong> Each atom contains a script tailored to a specific learner archetype 
+            (The Survivor, The Explorer, etc.) and learning phase (Fact1, Fact2, Fact3).
+          </p>
+        </div>
+
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="method method-get">GET</span>
+            <span class="endpoint-path">/lesson_atoms?core_lesson_id=eq.{lesson_id}</span>
+          </div>
+          <div class="endpoint-desc">
+            <p>Get all atoms for a specific lesson.</p>
+            <pre><code><span class="token-keyword">const</span> { data } = <span class="token-keyword">await</span> supabase
+  .from(<span class="token-string">'lesson_atoms'</span>)
+  .select(<span class="token-string">'archetype, phase, content'</span>)
+  .eq(<span class="token-string">'core_lesson_id'</span>, lessonId);</code></pre>
+
+            <h4 style="margin-top: 20px; font-size: 0.85rem; color: var(--text-muted);">Atom Structure</h4>
+            <pre><code>{
+  <span class="token-property">"archetype"</span>: <span class="token-string">"The Survivor"</span>,
+  <span class="token-property">"phase"</span>: <span class="token-string">"Fact1"</span>,
+  <span class="token-property">"content"</span>: {
+    <span class="token-property">"script"</span>: <span class="token-string">"Water is essential for survival..."</span>,
+    <span class="token-property">"options"</span>: [<span class="token-string">"Tell me more"</span>, <span class="token-string">"Why?"</span>, <span class="token-string">"Next fact"</span>],
+    <span class="token-property">"responses"</span>: { ... }
+  }
+}</code></pre>
+          </div>
+        </div>
+
+        <h3>Archetypes</h3>
+        <table>
+          <thead>
+            <tr><th>Archetype</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr><td>The Survivor</td><td>Practical, survival-focused learning</td></tr>
+            <tr><td>The Explorer</td><td>Discovery and adventure oriented</td></tr>
+            <tr><td>The Builder</td><td>Hands-on, creation focused</td></tr>
+            <tr><td>The Dreamer</td><td>Imaginative and creative</td></tr>
+            <tr><td>The Helper</td><td>Socially conscious, community focused</td></tr>
+          </tbody>
+        </table>
+      </section>
+
+      <!-- Checkout -->
+      <section id="checkout">
+        <h2>Checkout</h2>
+        <p>
+          Create subscription checkout sessions for your users. Powered by Stripe.
+        </p>
+
+        <div class="endpoint-card">
+          <div class="endpoint-header">
+            <span class="method method-post">POST</span>
+            <span class="endpoint-path">/api/create-checkout</span>
+          </div>
+          <div class="endpoint-desc">
+            <p>Create a Stripe checkout session for subscriptions or gift purchases.</p>
+            
+            <h4 style="margin-top: 16px; font-size: 0.85rem; color: var(--text-muted);">Request Body</h4>
+            <pre><code>{
+  <span class="token-property">"plan"</span>: <span class="token-string">"annual"</span>,       <span class="token-comment">// "monthly", "annual", or "gift"</span>
+  <span class="token-property">"email"</span>: <span class="token-string">"user@email.com"</span>,
+  <span class="token-property">"name"</span>: <span class="token-string">"John Doe"</span>        <span class="token-comment">// optional</span>
+}</code></pre>
+
+            <h4 style="margin-top: 20px; font-size: 0.85rem; color: var(--text-muted);">Response</h4>
+            <pre><code>{
+  <span class="token-property">"url"</span>: <span class="token-string">"https://checkout.stripe.com/..."</span>,
+  <span class="token-property">"sessionId"</span>: <span class="token-string">"cs_live_..."</span>
+}</code></pre>
+          </div>
+        </div>
+      </section>
+
+      <!-- Webhooks -->
+      <section id="webhooks">
+        <h2>Webhooks</h2>
+        <p>
+          Receive real-time notifications when events occur. Configure webhooks in your dashboard.
+        </p>
+
+        <h3>Available Events</h3>
+        <table>
+          <thead>
+            <tr><th>Event</th><th>Description</th></tr>
+          </thead>
+          <tbody>
+            <tr><td><code>checkout.completed</code></td><td>User completed a checkout session</td></tr>
+            <tr><td><code>subscription.created</code></td><td>New subscription activated</td></tr>
+            <tr><td><code>subscription.cancelled</code></td><td>Subscription cancelled</td></tr>
+            <tr><td><code>lesson.completed</code></td><td>User completed a lesson</td></tr>
+          </tbody>
+        </table>
+
+        <h3>Webhook Payload</h3>
+        <pre><code>{
+  <span class="token-property">"event"</span>: <span class="token-string">"lesson.completed"</span>,
+  <span class="token-property">"timestamp"</span>: <span class="token-string">"2025-12-05T10:30:00Z"</span>,
+  <span class="token-property">"data"</span>: {
+    <span class="token-property">"user_id"</span>: <span class="token-string">"uuid"</span>,
+    <span class="token-property">"lesson_id"</span>: <span class="token-string">"uuid"</span>,
+    <span class="token-property">"day_number"</span>: <span class="token-number">42</span>
+  }
+}</code></pre>
+      </section>
+
+      <!-- SDKs -->
+      <section id="sdks">
+        <h2>SDKs</h2>
+        <p>
+          Use our official SDKs for faster integration.
+        </p>
+
+        <h3>JavaScript / TypeScript</h3>
+        <pre><code><span class="token-comment">// Install the Supabase client</span>
+<span class="token-keyword">npm install</span> @supabase/supabase-js
+
+<span class="token-comment">// Initialize</span>
+<span class="token-keyword">import</span> { createClient } <span class="token-keyword">from</span> <span class="token-string">'@supabase/supabase-js'</span>
+
+<span class="token-keyword">const</span> supabase = createClient(
+  <span class="token-string">'https://your-project.supabase.co'</span>,
+  <span class="token-string">'your-anon-key'</span>
+)
+
+<span class="token-comment">// Get today's lesson</span>
+<span class="token-keyword">const</span> today = <span class="token-keyword">new</span> Date()
+<span class="token-keyword">const</span> dayOfYear = Math.floor((today - <span class="token-keyword">new</span> Date(today.getFullYear(), <span class="token-number">0</span>, <span class="token-number">0</span>)) / <span class="token-number">86400000</span>)
+
+<span class="token-keyword">const</span> { data: lesson } = <span class="token-keyword">await</span> supabase
+  .from(<span class="token-string">'core_lessons'</span>)
+  .select(<span class="token-string">'*'</span>)
+  .eq(<span class="token-string">'day_number'</span>, dayOfYear)
+  .single()</code></pre>
+
+        <h3>Python</h3>
+        <pre><code><span class="token-comment"># Install the Supabase client</span>
+<span class="token-keyword">pip install</span> supabase
+
+<span class="token-comment"># Initialize</span>
+<span class="token-keyword">from</span> supabase <span class="token-keyword">import</span> create_client
+
+supabase = create_client(
+    <span class="token-string">'https://your-project.supabase.co'</span>,
+    <span class="token-string">'your-anon-key'</span>
+)
+
+<span class="token-comment"># Get today's lesson</span>
+<span class="token-keyword">from</span> datetime <span class="token-keyword">import</span> datetime
+day_of_year = datetime.now().timetuple().tm_yday
+
+lesson = supabase.table(<span class="token-string">'core_lessons'</span>) \
+    .select(<span class="token-string">'*'</span>) \
+    .eq(<span class="token-string">'day_number'</span>, day_of_year) \
+    .single() \
+    .execute()</code></pre>
+      </section>
+
+      <!-- Support -->
+      <section id="support">
+        <h2>Support</h2>
+        <p>
+          Need help with the API? We're here for you.
+        </p>
+
+        <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-top: 24px;">
+          <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px;">
+            <h4 style="margin-bottom: 8px;">📧 Email</h4>
+            <p style="margin: 0;"><a href="mailto:hello@curiouskelly.com">hello@curiouskelly.com</a></p>
+          </div>
+          <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px;">
+            <h4 style="margin-bottom: 8px;">📖 Docs</h4>
+            <p style="margin: 0;"><a href="/help.html">Help Center</a></p>
+          </div>
+          <div style="background: var(--bg-secondary); border: 1px solid var(--border-color); border-radius: 12px; padding: 24px;">
+            <h4 style="margin-bottom: 8px;">🏢 Enterprise</h4>
+            <p style="margin: 0;"><a href="/enterprise.html">Enterprise Plans</a></p>
+          </div>
+        </div>
+      </section>
+
+      <footer class="api-footer">
+        <p>© 2025 Lesson of the Day PBC. All rights reserved.</p>
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    // Highlight active sidebar link on scroll
+    const sections = document.querySelectorAll('section[id]');
+    const navLinks = document.querySelectorAll('.sidebar-links a');
+
+    function updateActiveLink() {
+      const scrollPos = window.scrollY + 100;
+      
+      sections.forEach(section => {
+        const top = section.offsetTop;
+        const height = section.offsetHeight;
+        const id = section.getAttribute('id');
+        
+        if (scrollPos >= top && scrollPos < top + height) {
+          navLinks.forEach(link => {
+            link.classList.remove('active');
+            if (link.getAttribute('href') === '#' + id) {
+              link.classList.add('active');
+            }
+          });
+        }
+      });
+    }
+
+    window.addEventListener('scroll', updateActiveLink);
+    updateActiveLink();
+  </script>
+</body>
+</html>
+
