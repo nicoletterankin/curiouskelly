@@ -697,7 +697,7 @@ class KellyThumbnailGenerator {
 
     onThumbnailClick(dayNumber, settings) {
         const { language, age, tone } = settings;
-        const url = `/app.html?day=${dayNumber}&lang=${language || 'en'}&age=${age || 25}&tone=${tone || 'curious'}`;
+        const url = `/learn.html?day=${dayNumber}&lang=${language || 'en'}&age=${age || 25}&tone=${tone || 'curious'}`;
         window.location.href = url;
     }
 

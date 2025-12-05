@@ -27,7 +27,7 @@ export async function signInWithGoogle() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'google',
     options: {
-      redirectTo: `${window.location.origin}/app.html`,
+      redirectTo: `${window.location.origin}/learn.html`,
       queryParams: {
         access_type: 'offline',
         prompt: 'consent',
@@ -47,7 +47,7 @@ export async function signInWithApple() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'apple',
     options: {
-      redirectTo: `${window.location.origin}/app.html`
+      redirectTo: `${window.location.origin}/learn.html`
     }
   })
   
@@ -63,7 +63,7 @@ export async function signInWithGitHub() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'github',
     options: {
-      redirectTo: `${window.location.origin}/app.html`
+      redirectTo: `${window.location.origin}/learn.html`
     }
   })
   
@@ -79,7 +79,7 @@ export async function signInWithFacebook() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'facebook',
     options: {
-      redirectTo: `${window.location.origin}/app.html`,
+      redirectTo: `${window.location.origin}/learn.html`,
       scopes: 'public_profile,email' 
     }
   })
@@ -97,7 +97,7 @@ export async function signInWithOpenAI() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'oidc', // or specific OpenAI provider key if configured
     options: {
-      redirectTo: `${window.location.origin}/app.html`,
+      redirectTo: `${window.location.origin}/learn.html`,
       scopes: 'openid profile email'
     }
   })
