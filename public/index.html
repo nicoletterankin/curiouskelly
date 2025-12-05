@@ -1850,6 +1850,9 @@
     
     <!-- COPPA Age Gate -->
     <script src="/js/age-gate.js"></script>
+    
+    <!-- Kelly Message System (replaces ugly browser alerts) -->
+    <script src="/js/kelly-messages.js"></script>
 </head>
 <body>
     <!-- ========================================
@@ -2442,7 +2445,12 @@
                 if (provider === 'email') {
                     const email = document.getElementById('email-input').value.trim();
                     if (!email || !isValidEmail(email)) {
-                        alert('Please enter a valid email address');
+                        // Kelly's voice
+                        if (window.KellyMessages) {
+                            KellyMessages.invalidEmail();
+                        } else {
+                            alert('Please enter a valid email address');
+                        }
                         resetButton(btn);
                         return;
                     }
@@ -2459,7 +2467,11 @@
                     btn.classList.remove('loading');
                     btn.innerHTML = '<span>✓ Check your email!</span>';
                     btn.style.background = 'var(--success)';
-                    alert('Check your email for the magic link!');
+                    
+                    // Kelly's voice - not an ugly alert
+                    if (window.KellyMessages) {
+                        KellyMessages.emailSent(email);
+                    }
                     return;
                 }
 
@@ -2474,7 +2486,18 @@
                 if (error) throw error;
             } catch (error) {
                 console.error('Login error:', error);
-                alert(error.message || 'Something went wrong. Please try again.');
+                
+                // Kelly's voice - not an ugly alert
+                if (window.KellyMessages) {
+                    if (error.message?.includes('email') || error.message?.includes('magic link')) {
+                        KellyMessages.emailError();
+                    } else {
+                        KellyMessages.somethingWrong();
+                    }
+                } else {
+                    alert(error.message || 'Something went wrong. Please try again.');
+                }
+                
                 resetButton(btn);
             }
         }
