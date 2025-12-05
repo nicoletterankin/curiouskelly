@@ -2033,31 +2033,43 @@
         display: none !important;
       }
       
-      /* Live comments container - bottom left, floating up */
+      /* ═══════════════════════════════════════════════════════════════
+         LIVE COMMENTS - The Social Learning Heart
+         Bigger, more visible, more engaging - like a live class
+         ═══════════════════════════════════════════════════════════════ */
       .live-comments {
         position: fixed;
         left: 60px;
-        bottom: calc(var(--safe-bottom, 20px) + 80px);
-        width: min(280px, calc(100vw - 120px));
-        max-height: 200px;
+        bottom: calc(var(--safe-bottom, 20px) + 100px);
+        width: min(340px, calc(100vw - 100px)); /* Wider */
+        max-height: 320px; /* Much taller - show more comments */
         display: flex;
         flex-direction: column;
         justify-content: flex-end;
-        gap: 6px;
+        gap: 8px; /* More spacing between comments */
         z-index: 85;
         pointer-events: none;
         overflow: hidden;
+        /* Subtle gradient fade at top for smooth overflow */
+        mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 100%);
+        -webkit-mask-image: linear-gradient(to bottom, transparent 0%, black 15%, black 100%);
       }
       
-      /* Individual comment - minimal, no background */
+      /* Individual comment - TikTok Live style */
       .live-comment {
         display: flex;
-        align-items: baseline;
-        gap: 6px;
-        padding: 4px 0;
-        animation: commentFloat 0.4s ease-out forwards;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 8px 12px;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-radius: 18px;
+        animation: commentFloat 0.35s cubic-bezier(0.4, 0, 0.2, 1) forwards;
         transform-origin: bottom left;
-        opacity: 1; /* Ensure visibility */
+        opacity: 1;
+        max-width: fit-content;
+        pointer-events: auto; /* Allow interaction */
       }
       
       .live-comment.fading {
@@ -2082,12 +2094,19 @@
         }
       }
       
+      /* Avatar/flag */
+      .live-comment .comment-avatar {
+        font-size: 16px;
+        flex-shrink: 0;
+        width: 24px;
+        text-align: center;
+      }
+      
       /* Username - colored */
       .live-comment .comment-user {
-        font-size: 13px;
+        font-size: 14px;
         font-weight: 600;
         color: #60a5fa;
-        text-shadow: 0 1px 3px rgba(0, 0, 0, 0.8);
         white-space: nowrap;
       }
       
@@ -2095,14 +2114,15 @@
       .live-comment .comment-badge {
         font-size: 10px;
         opacity: 0.6;
+        margin-left: 2px;
       }
       
-      /* Message text - white */
+      /* Message text - white, larger */
       .live-comment .comment-text {
-        font-size: 13px;
+        font-size: 14px;
         color: #fff;
-        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.9), 0 2px 8px rgba(0, 0, 0, 0.5);
-        line-height: 1.3;
+        line-height: 1.4;
+        word-wrap: break-word;
       }
       
       /* Kelly's comments - special styling */
@@ -2124,9 +2144,25 @@
       @media (max-width: 768px) {
         .live-comments {
           left: 12px;
-          bottom: calc(var(--safe-bottom, 20px) + 100px);
-          width: calc(100vw - 80px);
-          max-height: 180px;
+          bottom: calc(var(--safe-bottom, 20px) + 110px);
+          width: calc(100vw - 24px);
+          max-height: 260px; /* Still tall on mobile */
+        }
+        
+        .live-comment {
+          padding: 6px 10px;
+          border-radius: 14px;
+        }
+        
+        .live-comment .comment-user,
+        .live-comment .comment-text {
+          font-size: 13px;
+        }
+      }
+      
+      @media (max-width: 375px) {
+        .live-comments {
+          max-height: 220px;
         }
       }
       
@@ -3396,74 +3432,6 @@
         }
       }
 
-      /* ═══════════════════════════════════════════════════════════════════
-         ZEN MODE / REVEAL MODE
-         Two viewing experiences - Focus on Kelly or see everything
-         ═══════════════════════════════════════════════════════════════════ */
-      
-      /* ═══════════════════════════════════════════════════════════════════
-         ZEN MODE - Focus on Kelly (accessed via Mode: 2D/3D/Zen)
-         ═══════════════════════════════════════════════════════════════════ */
-      
-      /* Elements that HIDE in Zen mode */
-      .left-rail,
-      .top-header,
-      .live-badge-v2,
-      .live-comments,
-      .day-nav,
-      .comments-float {
-        transition: opacity 0.4s ease, transform 0.4s ease, visibility 0.4s ease;
-      }
-      
-      body.zen-mode .left-rail,
-      body.zen-mode .top-header,
-      body.zen-mode .live-badge-v2,
-      body.zen-mode .live-comments,
-      body.zen-mode .day-nav,
-      body.zen-mode .comments-float {
-        opacity: 0;
-        pointer-events: none;
-        visibility: hidden;
-        transform: translateX(-20px);
-      }
-      
-      body.zen-mode .day-nav {
-        transform: translateY(-20px);
-      }
-      
-      /* Elements that ALWAYS stay visible */
-      .kelly-frame,
-      .caption-bar,
-      .right-rail,
-      .phase-nav-vertical,
-      .talk-to-kelly-btn {
-        /* These never hide - Kelly is always the focus */
-      }
-      
-      /* In Zen mode, caption stays centered but can be wider */
-      body.zen-mode .caption-bar {
-        width: min(600px, calc(100% - 64px));
-        max-width: 600px;
-        transition: width 0.4s ease, max-width 0.4s ease;
-      }
-      
-      /* Phase nav gets subtle in Zen mode */
-      body.zen-mode .phase-nav-vertical {
-        opacity: 0.6;
-        transition: opacity 0.4s ease;
-      }
-      
-      body.zen-mode .phase-nav-vertical:hover {
-        opacity: 1;
-      }
-      
-      /* Mobile adjustments for Zen mode */
-      @media (max-width: 768px) {
-        body.zen-mode .caption-bar {
-          width: min(420px, calc(100% - 40px));
-          max-width: 420px;
-        }
-      }
     </style>
     <!-- Affiliate Tracking -->
     <script src="/js/affiliate-tracking.js"></script>
@@ -3709,7 +3677,7 @@
         </div>
       </div>
 
-      <!-- MODE: Horizontal Expand (2D / 3D / Zen) -->
+      <!-- MODE: Horizontal Expand (2D / 3D) -->
       <div class="expand-container" id="expand-mode" style="top: 370px;">
         <button class="expand-trigger">📺</button>
         <div class="expand-panel">
@@ -3718,9 +3686,6 @@
           </button>
           <button class="expand-option" data-mode="3D">
             <span class="flag">🎮</span><span class="label">3D</span>
-          </button>
-          <button class="expand-option" data-mode="Zen">
-            <span class="flag">🧘</span><span class="label">Zen</span>
           </button>
         </div>
       </div>
@@ -6173,18 +6138,6 @@
           const container2D = document.getElementById('kelly-2d-container');
           const container3D = document.getElementById('kelly-3d-container');
           
-          // Handle Zen mode (hides UI, focuses on Kelly)
-          if (mode === 'Zen') {
-            document.body.classList.add('zen-mode');
-            if (badge) badge.textContent = '🧘';
-            localStorage.setItem('kelly-zen-mode', 'true');
-            console.log('[Mode] 🧘 Zen mode activated');
-          } else {
-            // Exit Zen mode if switching to 2D or 3D
-            document.body.classList.remove('zen-mode');
-            localStorage.setItem('kelly-zen-mode', 'false');
-          }
-          
           if (mode === '3D') {
             // Show loading state
             if (badge) badge.textContent = '⏳';
@@ -6217,7 +6170,6 @@
             if (container3D) container3D.style.display = 'none';
             if (badge) badge.textContent = '2D';
           }
-          // For Zen mode, keep current 2D/3D view but hide UI
           
           setTimeout(() => this.closeAll(), 250);
           console.log(`[SettingsUI] Mode: ${mode}`);
@@ -6913,18 +6865,6 @@
         }
         
         console.log('[Learn] ✅ Talk to Kelly enhanced input wired up');
-        
-        // ═══════════════════════════════════════════════════════════════
-        // ZEN MODE - Now controlled via Mode selector (2D/3D/Zen)
-        // Restore preference on load
-        // ═══════════════════════════════════════════════════════════════
-        const savedZenMode = localStorage.getItem('kelly-zen-mode') === 'true';
-        if (savedZenMode) {
-          document.body.classList.add('zen-mode');
-          const badge = document.getElementById('badge-mode');
-          if (badge) badge.textContent = '🧘';
-        }
-        console.log('[Learn] ✅ Zen mode state restored');
         
         // Legacy chat wiring (hidden, for compatibility)
         const chatInput = document.getElementById('chat-input');
