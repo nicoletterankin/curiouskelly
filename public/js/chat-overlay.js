@@ -196,9 +196,9 @@ class ChatOverlay {
     this.dbComments = new Map(); // Cache: phase -> comments[]
     this.useDatabase = options.useDatabase !== false; // Default true
     
-    // Comment timing
-    this.minInterval = options.minInterval || 1500;
-    this.maxInterval = options.maxInterval || 4000;
+    // Comment timing - More frequent for lively feel
+    this.minInterval = options.minInterval || 800;  // Was 1500
+    this.maxInterval = options.maxInterval || 2500; // Was 4000
     
     // Phase-aware comment distribution
     this.phaseWeights = {
@@ -893,15 +893,15 @@ class ChatOverlay {
     
     container.appendChild(el);
     
-    // Fade out after 5 seconds
+    // Fade out after 8 seconds (longer visible time)
     setTimeout(() => {
       el.classList.add('fading');
       setTimeout(() => el.remove(), 500);
-    }, 5000);
+    }, 8000);
     
-    // Keep max 6 comments visible
+    // Keep max 10 comments visible (more lively)
     const comments = container.querySelectorAll('.live-comment:not(.fading)');
-    if (comments.length > 6) {
+    if (comments.length > 10) {
       const oldest = comments[0];
       oldest.classList.add('fading');
       setTimeout(() => oldest.remove(), 500);
