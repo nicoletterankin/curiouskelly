@@ -37,107 +37,36 @@ function getRandomFact(): string {
 }
 
 function generateWelcomeEmailHTML(name: string): string {
-  const fact = getRandomFact();
-  
+  // Kelly's Voice: Humble, Curious, Collaborative, Warm, Simple, Rich
   return `
-<!DOCTYPE html>
-<html>
-<head>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-</head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: #0a0a0b; color: #f4f4f5;">
-  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #0a0a0b; padding: 40px 20px;">
-    <tr>
-      <td align="center">
-        <table width="100%" style="max-width: 560px; background-color: #18181b; border-radius: 16px; overflow: hidden;">
-          <tr>
-            <td style="padding: 40px 40px 20px; text-align: center;">
-              <img src="https://curiouskelly.com/images/brand/kelly-mark-circle-64.png" alt="Kelly" width="80" height="80" style="border-radius: 50%; border: 3px solid #3b82f6;">
-              <h1 style="color: #f4f4f5; font-size: 28px; font-weight: 600; margin: 20px 0 0;">Welcome to curiosity, ${name}! 🎉</h1>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 0 40px 30px;">
-              <p style="color: #a1a1aa; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">Hey ${name}!</p>
-              <p style="color: #a1a1aa; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">I'm Kelly, and I'm SO excited you're here.</p>
-              <p style="color: #a1a1aa; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">You just joined thousands of curious minds who've decided that every day is a chance to learn something new. That's pretty amazing.</p>
-              <p style="color: #f4f4f5; font-size: 16px; line-height: 1.6; margin: 0 0 10px; font-weight: 600;">Here's what happens next:</p>
-              <ul style="color: #a1a1aa; font-size: 16px; line-height: 1.8; margin: 0 0 20px; padding-left: 20px;">
-                <li>Every day, I'll have a fresh lesson waiting for you</li>
-                <li>Takes about 5 minutes (perfect with your morning coffee ☕)</li>
-                <li>You'll finish each one knowing something you didn't before</li>
-              </ul>
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td align="center" style="padding: 20px 0;">
-                    <a href="https://curiouskelly.com/learn" style="display: inline-block; background-color: #3b82f6; color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">Start Your First Lesson →</a>
-                  </td>
-                </tr>
-              </table>
-              <p style="color: #a1a1aa; font-size: 16px; line-height: 1.6; margin: 20px 0 0;">Can't wait to learn together!</p>
-              <p style="color: #f4f4f5; font-size: 16px; line-height: 1.6; margin: 20px 0 0;">✨ Stay curious,<br><strong>Kelly</strong></p>
-              <p style="color: #71717a; font-size: 14px; margin: 20px 0 0;">P.S. Hit reply anytime - I read every message!</p>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 0 40px 40px;">
-              <table width="100%" style="background-color: #27272a; border-radius: 12px;">
-                <tr>
-                  <td style="padding: 20px;">
-                    <p style="color: #fbbf24; font-size: 14px; font-weight: 600; margin: 0 0 8px;">💡 Did you know?</p>
-                    <p style="color: #a1a1aa; font-size: 14px; line-height: 1.5; margin: 0;">${fact}</p>
-                  </td>
-                </tr>
-              </table>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 30px 40px; border-top: 1px solid #27272a; text-align: center;">
-              <p style="color: #52525b; font-size: 12px; margin: 0 0 10px;">✨ Curious Kelly | Learn something new every day</p>
-              <p style="color: #52525b; font-size: 12px; margin: 0;">
-                <a href="https://curiouskelly.com" style="color: #52525b;">curiouskelly.com</a> · 
-                <a href="https://curiouskelly.com/help" style="color: #52525b;">Help</a> · 
-                <a href="https://curiouskelly.com/privacy" style="color: #52525b;">Privacy</a>
-              </p>
-              <p style="color: #3f3f46; font-size: 11px; margin: 15px 0 0;">© 2025 Lesson of the Day PBC</p>
-            </td>
-          </tr>
-        </table>
-      </td>
-    </tr>
-  </table>
-</body>
-</html>
+<p style="font-family: Georgia, serif; font-size: 19px; color: #1f2937; line-height: 1.9; max-width: 460px;">
+
+Hi — I'm Kelly.<br><br>
+
+I don't have all the answers. But I love finding them. And I think learning is better together.<br><br>
+
+Every day I find something wonderful and I can't wait to share it. Today's lesson is ready.<br><br>
+
+<a href="https://curiouskelly.com/learn" style="color: #1e3a5f; text-decoration: underline;">Want to come along?</a><br><br>
+
+<span style="color: #6b7280;">— Kelly</span>
+
+</p>
   `.trim();
 }
 
 function generateWelcomeEmailText(name: string): string {
-  const fact = getRandomFact();
+  // Kelly's Voice: Humble, Curious, Collaborative, Warm, Simple, Rich
   return `
-Welcome to curiosity, ${name}! 🎉
+Hi — I'm Kelly.
 
-Hey ${name}!
+I don't have all the answers. But I love finding them. And I think learning is better together.
 
-I'm Kelly, and I'm SO excited you're here.
+Every day I find something wonderful and I can't wait to share it. Today's lesson is ready.
 
-You just joined thousands of curious minds who've decided that every day is a chance to learn something new.
+Want to come along? https://curiouskelly.com/learn
 
-Here's what happens next:
-→ Every day, I'll have a fresh lesson waiting for you
-→ Takes about 5 minutes (perfect with your morning coffee ☕)
-→ You'll finish each one knowing something you didn't before
-
-Start your first lesson: https://curiouskelly.com/learn
-
-Can't wait to learn together!
-
-✨ Stay curious,
-Kelly
-
-P.S. Hit reply anytime - I read every message!
-
----
+— Kelly
 💡 Did you know? ${fact}
 
 ---
