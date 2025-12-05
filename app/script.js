@@ -38,7 +38,14 @@ class UnifiedLessonApp {
       sessionCompleted: false,
       vibeCoords: { x: 100, y: 0 }, // Default: The Scientist (Safe)
       currentArchetype: 'The Scientist',
+      // Age/Language personalization
+      ageHook: null,           // Personalized hook text for current age bucket
+      currentShard: null,      // Matched shard for age/region/tone
+      lessonShards: [],        // All shards for current lesson (cached)
     });
+
+    // Debounce timer for age slider
+    this.ageDebounceTimer = null;
 
     this.archetypeMatrix = [
         { name: 'The Survivor', x: 0, y: 0, traits: 'Practical • Serious' },
@@ -163,13 +170,28 @@ class UnifiedLessonApp {
     this.elements.ageSlider?.addEventListener('input', (event) => {
       const value = Number(event.target.value);
       const bucket = this.getBucketForAge(value);
+      
+      // Update state and UI immediately
       this.stateManager.setState({ age: value, ageBucket: bucket });
       this.updateAgeDisplay(value);
       this.highlightBucket(bucket);
+      
+      // Debounce database fetch (don't hammer DB while sliding)
+      if (this.ageDebounceTimer) {
+        clearTimeout(this.ageDebounceTimer);
+      }
+      
+      this.ageDebounceTimer = setTimeout(async () => {
+        const currentState = this.stateManager.getState();
+        if (currentState.selectedLesson) {
+          console.log(`[App] Age changed to ${value} (bucket: ${bucket}), reloading content...`);
+          await this.reloadPersonalizedContent();
+        }
+      }, 400);  // Wait 400ms after last slider move
     });
 
     this.elements.ageBuckets?.forEach((bucket) => {
-      bucket.addEventListener('click', () => {
+      bucket.addEventListener('click', async () => {
         const bucketId = bucket.dataset.age;
         if (!bucketId) return;
         const [min, max] = this.bucketRanges[bucketId];
@@ -178,12 +200,30 @@ class UnifiedLessonApp {
         this.stateManager.setState({ age: midpoint, ageBucket: bucketId });
         this.updateAgeDisplay(midpoint);
         this.highlightBucket(bucketId);
+        
+        // Reload personalized content for new age bucket
+        const currentState = this.stateManager.getState();
+        if (currentState.selectedLesson) {
+          console.log(`[App] Age bucket changed to ${bucketId}, reloading content...`);
+          await this.reloadPersonalizedContent();
+        }
       });
     });
 
-    this.elements.languageSelector?.addEventListener('change', (event) => {
-      this.stateManager.setState({ language: event.target.value });
-      this.elements.sessionStatus.textContent = `Language set to ${event.target.value.toUpperCase()}`;
+    this.elements.languageSelector?.addEventListener('change', async (event) => {
+      const lang = event.target.value;
+      
+      // Update state
+      this.stateManager.setState({ language: lang });
+      
+      // Re-fetch content for new language
+      const currentState = this.stateManager.getState();
+      if (currentState.selectedLesson) {
+        console.log(`[App] Language changed to ${lang}, reloading content...`);
+        await this.reloadPersonalizedContent();
+      } else {
+        this.elements.sessionStatus.textContent = `Language set to ${lang.toUpperCase()}`;
+      }
     });
 
     this.elements.viewPills?.forEach((pill) => {
@@ -412,9 +452,17 @@ class UnifiedLessonApp {
       this.stateManager.setState({
         lessonData,
         currentPhase: 'welcome',
+        // Clear previous personalization data
+        ageHook: null,
+        currentShard: null,
+        lessonShards: [],
       });
+      
+      // Load personalized content (age hooks + shards)
+      await this.reloadPersonalizedContent();
+      
       await this.establishSession(lessonSummary);
-      this.elements.sessionStatus.textContent = `Synced "${lessonSummary.title}" Atoms`;
+      this.elements.sessionStatus.textContent = `✨ "${lessonSummary.title}" ready`;
     } catch (error) {
       console.error(error);
       this.elements.sessionStatus.textContent = 'Atoms missing for this lesson';
@@ -533,14 +581,58 @@ class UnifiedLessonApp {
            return;
       }
       
-      // Render Script
-      // content field is from DB JSON, script is usually the key
-      const script = atom.script || atom.content || "Kelly is listening...";
+      // Start with default script from atom
+      let script = atom.script || atom.content || "Kelly is listening...";
+      let options = atom.options || [];
+
+      // ═══════════════════════════════════════════════════════════════════
+      // PERSONALIZATION: Override with age hook or shard content
+      // ═══════════════════════════════════════════════════════════════════
+      
+      // For welcome phase, prefer the age-specific hook if available
+      if (phase === 'welcome' && state.ageHook) {
+        script = state.ageHook;
+        console.log('[App] Using age-specific hook for welcome phase');
+      }
+      
+      // Check for shard-specific content (age/region/tone personalization)
+      if (state.currentShard?.script_content) {
+        const shardContent = state.currentShard.script_content;
+        
+        // Try phase-specific content from shard
+        const phaseKey = phase.charAt(0).toUpperCase() + phase.slice(1); // welcome -> Welcome
+        const phaseVariants = [phase, phaseKey, phase.toLowerCase()];
+        
+        for (const key of phaseVariants) {
+          if (shardContent[key]) {
+            const phaseContent = shardContent[key];
+            if (phaseContent.script) {
+              script = phaseContent.script;
+              console.log(`[App] Using shard script for phase: ${key}`);
+            } else if (phaseContent.text) {
+              script = phaseContent.text;
+              console.log(`[App] Using shard text for phase: ${key}`);
+            }
+            // Also check for shard-specific options
+            if (phaseContent.options && Array.isArray(phaseContent.options)) {
+              options = phaseContent.options;
+              console.log(`[App] Using shard options for phase: ${key}`);
+            }
+            break;
+          }
+        }
+        
+        // Fallback: check for a single script field in the shard
+        if (!script && shardContent.script) {
+          script = shardContent.script;
+        }
+      }
+
+      // Render the script
       this.setAudioScript(`Kelly: ${script}`);
       this.elements.questionText.textContent = script;
 
       // Render Options
-      const options = atom.options || [];
       if (options.length > 0) {
           this.renderChoiceButtons(options);
       } else {
@@ -988,6 +1080,179 @@ class UnifiedLessonApp {
     if (typeof text !== 'string') return text;
     const spaced = text.replace(/_/g, ' ');
     return spaced.charAt(0).toUpperCase() + spaced.slice(1);
+  }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AGE/TONE/LANGUAGE PERSONALIZATION METHODS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Map app age bucket format to database format
+   * App uses: '18-35', '36-60', '61-102'
+   * DB uses: '18-29', '30-54', '55+'
+   */
+  mapAgeBucketToDb(appBucket) {
+    const mapping = {
+      '2-5': '2-5',
+      '6-12': '6-12',
+      '13-17': '13-17',
+      '18-35': '18-29',
+      '36-60': '30-54',
+      '61-102': '55+'
+    };
+    return mapping[appBucket] || '18-29';
+  }
+
+  /**
+   * Map archetype to tone for shard matching
+   */
+  archetypeToTone(archetype) {
+    const mapping = {
+      'The Scientist': 'curious',
+      'The Explorer': 'playful',
+      'The Survivor': 'serious',
+      'The Strategist': 'serious',
+      'The MacGyver': 'curious',
+      'The Architect': 'curious',
+      'The Rebel': 'playful',
+      'The Diplomat': 'curious',
+      'The Provider': 'serious',
+      'The Storyteller': 'playful',
+      'The Mystic': 'curious',
+      'The Empath': 'playful'
+    };
+    return mapping[archetype] || 'curious';
+  }
+
+  /**
+   * Find the best matching shard for current settings
+   */
+  getShardForSettings(shards, age, tone, region) {
+    if (!shards || shards.length === 0) return null;
+
+    // Try exact match: age + tone + region
+    let shard = shards.find(s => 
+      s.age === age && 
+      s.tone === tone && 
+      s.region === region
+    );
+
+    // Fallback: age + region (any tone)
+    if (!shard) {
+      shard = shards.find(s => s.age === age && s.region === region);
+    }
+
+    // Fallback: just age
+    if (!shard) {
+      shard = shards.find(s => s.age === age);
+    }
+
+    // Fallback: closest age with same region
+    if (!shard && shards.length > 0) {
+      const regionShards = shards.filter(s => s.region === region);
+      const searchPool = regionShards.length > 0 ? regionShards : shards;
+      
+      shard = searchPool.reduce((closest, current) => {
+        if (!closest) return current;
+        const closestDiff = Math.abs((closest.age || 25) - age);
+        const currentDiff = Math.abs((current.age || 25) - age);
+        return currentDiff < closestDiff ? current : closest;
+      }, null);
+    }
+
+    return shard;
+  }
+
+  /**
+   * Load age-specific hook from database
+   */
+  async loadAgeHook() {
+    const state = this.stateManager.getState();
+    const dayNumber = state.selectedLesson?.day;
+    
+    if (!dayNumber) {
+      console.log('[App] No day number for age hook');
+      return;
+    }
+
+    // Map to database bucket format
+    const dbAgeBucket = this.mapAgeBucketToDb(state.ageBucket);
+    console.log(`[App] Loading age hook for day ${dayNumber}, bucket ${dbAgeBucket}`);
+    
+    const hook = await SupabaseService.getAgeHook(dayNumber, dbAgeBucket);
+    
+    if (hook) {
+      this.stateManager.setState({ ageHook: hook });
+      console.log(`[App] ✅ Age hook loaded: "${hook.substring(0, 50)}..."`);
+    } else {
+      this.stateManager.setState({ ageHook: null });
+      console.log('[App] No age hook found, using default content');
+    }
+  }
+
+  /**
+   * Load lesson shards and find match for current settings
+   */
+  async loadLessonShards() {
+    const state = this.stateManager.getState();
+    
+    if (!state.selectedLesson?.id) {
+      console.log('[App] No lesson selected for shards');
+      return;
+    }
+
+    // Check if we already have shards cached for this lesson
+    let shards = state.lessonShards;
+    if (!shards || shards.length === 0) {
+      shards = await SupabaseService.getLessonShards(state.selectedLesson.id);
+      this.stateManager.setState({ lessonShards: shards });
+    }
+    
+    if (shards.length === 0) {
+      console.log('[App] No shards available for this lesson');
+      this.stateManager.setState({ currentShard: null });
+      return;
+    }
+
+    // Map archetype to tone
+    const tone = this.archetypeToTone(state.currentArchetype);
+    
+    const shard = this.getShardForSettings(
+      shards, 
+      state.age, 
+      tone,
+      state.language
+    );
+
+    if (shard) {
+      this.stateManager.setState({ currentShard: shard });
+      console.log(`[App] ✅ Shard matched: age=${shard.age}, tone=${shard.tone}, region=${shard.region}`);
+    } else {
+      this.stateManager.setState({ currentShard: null });
+      console.log('[App] No matching shard found');
+    }
+  }
+
+  /**
+   * Reload personalized content for current age/language/tone
+   */
+  async reloadPersonalizedContent() {
+    const state = this.stateManager.getState();
+    if (!state.selectedLesson) return;
+
+    this.elements.sessionStatus.textContent = '✨ Personalizing content...';
+    
+    await Promise.all([
+      this.loadAgeHook(),
+      this.loadLessonShards()
+    ]);
+
+    // Re-render with new personalized content
+    this.renderPhase(this.stateManager.getState());
+    
+    const bucket = state.ageBucket;
+    const lang = state.language.toUpperCase();
+    this.elements.sessionStatus.textContent = `✨ Personalized for ages ${bucket} (${lang})`;
   }
 
   getLessonBackendId(lessonSummary) {

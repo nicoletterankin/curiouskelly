@@ -155,6 +155,71 @@ class SupabaseService {
       const day = this.getTodayNumber();
       return this.getCoreLesson(day);
   }
+
+  // ═══════════════════════════════════════════════════════════════════════════
+  // AGE/TONE/LANGUAGE PERSONALIZATION - NEW METHODS
+  // ═══════════════════════════════════════════════════════════════════════════
+
+  /**
+   * Fetch age-specific hook for a lesson day
+   * @param {number} dayNumber - Day of the year (1-365)
+   * @param {string} ageBucket - e.g., "2-5", "6-12", "13-17", "18-29", "30-54", "55+"
+   * @returns {Promise<string|null>}
+   */
+  async getAgeHook(dayNumber, ageBucket) {
+    const { data, error } = await this.client
+      .from('lesson_age_hooks')
+      .select('hook')
+      .eq('day_number', dayNumber)
+      .eq('age_bucket', ageBucket)
+      .single();
+
+    if (error) {
+      // Not an error - just means no hook for this combo
+      console.log(`[Supabase] No age hook for day ${dayNumber}, bucket ${ageBucket}`);
+      return null;
+    }
+    return data?.hook || null;
+  }
+
+  /**
+   * Fetch lesson shards (age/region/tone variants) for a lesson
+   * @param {string} coreLessonId - UUID of the core lesson
+   * @returns {Promise<Array>}
+   */
+  async getLessonShards(coreLessonId) {
+    const { data, error } = await this.client
+      .from('lesson_shards')
+      .select('age, region, tone, birth_year, script_content')
+      .eq('core_lesson_id', coreLessonId);
+
+    if (error) {
+      console.warn(`[Supabase] Error loading shards:`, error);
+      return [];
+    }
+    console.log(`[Supabase] Loaded ${data?.length || 0} shards for lesson`);
+    return data || [];
+  }
+
+  /**
+   * Fetch available archetypes for a lesson (for debugging/fallback)
+   * @param {string} coreLessonId 
+   * @returns {Promise<Array<string>>}
+   */
+  async getAvailableArchetypes(coreLessonId) {
+    const { data, error } = await this.client
+      .from('lesson_atoms')
+      .select('archetype')
+      .eq('core_lesson_id', coreLessonId);
+
+    if (error) {
+      console.error('Error fetching archetypes:', error);
+      return [];
+    }
+    
+    // Return unique archetypes
+    return [...new Set(data.map(d => d.archetype))];
+  }
 }
 
 export default new SupabaseService();
