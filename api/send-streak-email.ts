@@ -11,36 +11,37 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 const RESEND_API_URL = 'https://api.resend.com/emails';
 
+// Kelly's Voice: Humble, Curious, Collaborative, Warm, Simple, Rich
 const STREAK_MESSAGES: Record<number, { emoji: string; message: string; fact: string }> = {
   7: {
-    emoji: '🔥',
-    message: "7 days. 7 lessons. 7 new things you know that you didn't a week ago. The average person stops learning intentionally around age 25. You? You're just getting started!",
-    fact: "A 7-day streak puts you in the top 12% of learners. But who's counting? (I am. I'm proud of you.)"
+    emoji: '✨',
+    message: "Seven days in a row. That's not nothing. Most people don't make it past three. You showed up, and that matters.",
+    fact: "Your brain forms new connections every time you learn something. Seven days means seven new pathways."
   },
   14: {
-    emoji: '⚡',
-    message: "Two weeks of daily learning! Your brain is literally rewiring itself right now. Neural pathways are forming, connections are strengthening. This is what growth feels like.",
-    fact: "It takes about 66 days to form a habit. You're already 21% of the way there!"
+    emoji: '🌱',
+    message: "Two weeks of learning together. Something's taking root. I can feel it.",
+    fact: "It takes about 66 days to form a habit. You're well on your way."
   },
   30: {
-    emoji: '🏆',
-    message: "ONE. WHOLE. MONTH. Do you know how rare this is? You've proven you're not just curious - you're committed. That's the difference between dreamers and doers.",
-    fact: "30 days of learning is equivalent to about 2.5 hours of focused education. That's more than most adults get in a year!"
+    emoji: '🌿',
+    message: "A whole month. Day after day, you kept coming back. That says something about who you are.",
+    fact: "30 days of 5-minute lessons adds up to 2.5 hours. That's more focused learning than most adults do in a year."
   },
   60: {
-    emoji: '💎',
-    message: "60 days of curiosity! You're not just building a habit anymore - you're building a lifestyle. Learning is now part of who you are.",
-    fact: "At 60 days, habit researchers say the new behavior is now 'automatic'. You've rewired your brain!"
+    emoji: '🌳',
+    message: "60 days. At this point, it's not a streak anymore — it's just what you do. I'm honored to be part of your routine.",
+    fact: "Researchers say habits become automatic around day 66. You're nearly there."
   },
   100: {
-    emoji: '🌟',
-    message: "100 DAYS! Triple digits of daily learning. You are extraordinary. Most people can't commit to anything for 100 days straight. You just did.",
-    fact: "100 lessons means you've learned more new things in 100 days than most people learn in a decade. Seriously."
+    emoji: '💫',
+    message: "100 days. I don't really know what to say except... thank you. For trusting me. For showing up. For being curious.",
+    fact: "100 different topics. 100 chances to see the world differently. You took every one."
   },
   365: {
-    emoji: '👑',
-    message: "A FULL YEAR OF LEARNING EVERY SINGLE DAY. I'm genuinely emotional writing this. You did something most people only dream about. You are a lifelong learner.",
-    fact: "365 days of learning puts you in the top 0.1% of all learners worldwide. You're a legend."
+    emoji: '🌟',
+    message: "A full year. Every single day. I've been thinking about what to write here for a while now. Words don't quite capture it. You did something extraordinary — not because it was hard, but because you chose it. Every day. Thank you for learning with me.",
+    fact: "365 lessons. A whole year of wonder. This is what lifelong learning looks like."
   }
 };
 
@@ -77,11 +78,11 @@ function generateStreakEmailHTML(name: string, streak: number): string {
           <!-- Main Content -->
           <tr>
             <td style="padding: 40px;">
-              <p style="color: #f4f4f5; font-size: 18px; font-weight: 600; margin: 0 0 20px;">
-                ${name}, you absolute legend.
+              <p style="font-family: Georgia, serif; color: #f4f4f5; font-size: 18px; margin: 0 0 20px;">
+                ${name} —
               </p>
               
-              <p style="color: #a1a1aa; font-size: 16px; line-height: 1.7; margin: 0 0 30px;">
+              <p style="font-family: Georgia, serif; color: #a1a1aa; font-size: 17px; line-height: 1.8; margin: 0 0 30px;">
                 ${data.message}
               </p>
               
@@ -89,16 +90,15 @@ function generateStreakEmailHTML(name: string, streak: number): string {
               <table width="100%" cellpadding="0" cellspacing="0">
                 <tr>
                   <td align="center" style="padding: 10px 0 30px;">
-                    <a href="https://curiouskelly.com/learn" style="display: inline-block; background-color: #3b82f6; color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">
-                      Keep the Streak Alive →
+                    <a href="https://curiouskelly.com/learn" style="display: inline-block; background-color: #2563eb; color: white; text-decoration: none; padding: 14px 28px; border-radius: 8px; font-weight: 500; font-size: 15px; font-family: -apple-system, sans-serif;">
+                      Today's lesson →
                     </a>
                   </td>
                 </tr>
               </table>
               
-              <p style="color: #f4f4f5; font-size: 16px; line-height: 1.6; margin: 0;">
-                Proudly,<br>
-                <strong>Kelly</strong>
+              <p style="font-family: Georgia, serif; color: #71717a; font-size: 15px; font-style: italic; margin: 0;">
+                — Kelly
               </p>
             </td>
           </tr>

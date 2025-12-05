@@ -25,6 +25,7 @@ const COLORS = {
   border: '#27272a',
 };
 
+// Kelly's Voice: Humble, Curious, Collaborative, Warm, Simple, Rich
 function generateAffiliateWelcomeHTML(name: string, affiliateCode: string, affiliateUrl: string): string {
   return `
 <!DOCTYPE html>
@@ -33,61 +34,56 @@ function generateAffiliateWelcomeHTML(name: string, affiliateCode: string, affil
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: ${COLORS.background}; color: ${COLORS.text};">
+<body style="margin: 0; padding: 0; background-color: ${COLORS.background}; color: ${COLORS.text};">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: ${COLORS.background}; padding: 40px 20px;">
     <tr>
       <td align="center">
-        <table width="100%" style="max-width: 560px; background-color: ${COLORS.cardBg}; border-radius: 16px; overflow: hidden;">
+        <table width="100%" style="max-width: 500px;">
           <tr>
-            <td style="padding: 40px 40px 20px; text-align: center;">
-              <img src="https://curiouskelly.com/images/brand/kelly-mark-circle-64.png" alt="Kelly" width="80" height="80" style="border-radius: 50%; border: 3px solid ${COLORS.accent};">
-              <h1 style="color: ${COLORS.text}; font-size: 28px; font-weight: 600; margin: 20px 0 0;">Welcome to the Kelly Affiliate Family! 🤝</h1>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 0 40px 30px;">
-              <p style="color: ${COLORS.textMuted}; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">Hey ${name}!</p>
-              <p style="color: ${COLORS.textMuted}; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">I'm thrilled to have you as a Curious Kelly partner! Together, we're going to help more people discover the joy of learning something new every day.</p>
-              
-              <!-- Affiliate Code Box -->
-              <table width="100%" style="background-color: ${COLORS.border}; border-radius: 12px; margin: 30px 0;">
-                <tr>
-                  <td style="padding: 24px; text-align: center;">
-                    <p style="color: ${COLORS.textDim}; font-size: 12px; text-transform: uppercase; letter-spacing: 1px; margin: 0 0 12px;">Your Affiliate Code</p>
-                    <p style="color: ${COLORS.gold}; font-size: 32px; font-weight: 700; font-family: monospace; margin: 0 0 16px;">${affiliateCode}</p>
-                    <p style="color: ${COLORS.textMuted}; font-size: 14px; margin: 0;">Your referral link:<br><a href="${affiliateUrl}" style="color: ${COLORS.accent}; word-break: break-all;">${affiliateUrl}</a></p>
-                  </td>
-                </tr>
-              </table>
-              
-              <p style="color: ${COLORS.text}; font-size: 16px; line-height: 1.6; margin: 0 0 10px; font-weight: 600;">Here's what you earn:</p>
-              <ul style="color: ${COLORS.textMuted}; font-size: 16px; line-height: 1.8; margin: 0 0 20px; padding-left: 20px;">
-                <li><strong style="color: ${COLORS.gold};">30% commission</strong> on every subscription</li>
-                <li>Recurring revenue for as long as they stay subscribed</li>
-                <li>Payouts every month via PayPal or bank transfer</li>
-                <li>Real-time dashboard to track your referrals</li>
-              </ul>
-              
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td align="center" style="padding: 20px 0;">
-                    <a href="https://curiouskelly.com/affiliate/dashboard" style="display: inline-block; background-color: ${COLORS.accent}; color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">Access Your Dashboard →</a>
-                  </td>
-                </tr>
-              </table>
-              
-              <p style="color: ${COLORS.text}; font-size: 16px; line-height: 1.6; margin: 20px 0 0;">✨ Let's grow together,<br><strong>Kelly</strong></p>
-              <p style="color: ${COLORS.textDim}; font-size: 14px; margin: 20px 0 0;">Questions? Reply to this email anytime!</p>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 30px 40px; border-top: 1px solid ${COLORS.border}; text-align: center;">
-              <p style="color: #52525b; font-size: 12px; margin: 0 0 10px;">✨ Curious Kelly | Learn something new every day</p>
-              <p style="color: #52525b; font-size: 12px; margin: 0;">
-                <a href="https://curiouskelly.com" style="color: #52525b;">curiouskelly.com</a> · 
-                <a href="https://curiouskelly.com/help" style="color: #52525b;">Help</a>
+            <td style="padding: 40px 20px;">
+              <p style="font-family: Georgia, serif; color: ${COLORS.text}; font-size: 19px; line-height: 1.9; margin: 0 0 24px;">
+                ${name} —
               </p>
-              <p style="color: #3f3f46; font-size: 11px; margin: 15px 0 0;">© 2025 Lesson of the Day PBC</p>
+              
+              <p style="font-family: Georgia, serif; color: ${COLORS.textMuted}; font-size: 17px; line-height: 1.9; margin: 0 0 24px;">
+                Thank you for wanting to share this. It means a lot.
+              </p>
+              
+              <p style="font-family: Georgia, serif; color: ${COLORS.textMuted}; font-size: 17px; line-height: 1.9; margin: 0 0 32px;">
+                Here's your referral link — anyone who signs up through it gives you 30% of what they pay, for as long as they stay:
+              </p>
+              
+              <!-- Link Box -->
+              <table width="100%" style="background-color: ${COLORS.cardBg}; border-radius: 12px; margin: 0 0 32px;">
+                <tr>
+                  <td style="padding: 20px; text-align: center;">
+                    <p style="font-family: monospace; color: ${COLORS.accent}; font-size: 14px; margin: 0; word-break: break-all;">
+                      <a href="${affiliateUrl}" style="color: ${COLORS.accent}; text-decoration: none;">${affiliateUrl}</a>
+                    </p>
+                  </td>
+                </tr>
+              </table>
+              
+              <p style="font-family: Georgia, serif; color: ${COLORS.textMuted}; font-size: 17px; line-height: 1.9; margin: 0 0 32px;">
+                That's it. No complicated dashboard. No targets. Just share when it feels right.
+              </p>
+              
+              <p style="font-family: Georgia, serif; color: ${COLORS.textDim}; font-size: 15px; font-style: italic; margin: 0;">
+                — Kelly
+              </p>
+              
+              <p style="font-family: Georgia, serif; color: ${COLORS.textDim}; font-size: 14px; margin: 32px 0 0;">
+                Questions? Just reply to this email.
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 20px; text-align: center; border-top: 1px solid ${COLORS.border};">
+              <p style="color: #52525b; font-size: 12px; margin: 0;">
+                <a href="https://curiouskelly.com" style="color: #52525b;">curiouskelly.com</a>
+              </p>
             </td>
           </tr>
         </table>
@@ -107,54 +103,41 @@ function generateAffiliatePayoutHTML(name: string, amount: string, referralCount
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
 </head>
-<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif; background-color: ${COLORS.background}; color: ${COLORS.text};">
+<body style="margin: 0; padding: 0; background-color: ${COLORS.background}; color: ${COLORS.text};">
   <table width="100%" cellpadding="0" cellspacing="0" style="background-color: ${COLORS.background}; padding: 40px 20px;">
     <tr>
       <td align="center">
-        <table width="100%" style="max-width: 560px; background-color: ${COLORS.cardBg}; border-radius: 16px; overflow: hidden;">
+        <table width="100%" style="max-width: 500px;">
           <tr>
-            <td style="padding: 40px 40px 20px; text-align: center;">
-              <img src="https://curiouskelly.com/images/brand/kelly-mark-circle-64.png" alt="Kelly" width="80" height="80" style="border-radius: 50%; border: 3px solid ${COLORS.accent};">
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 0 40px 30px; text-align: center;">
-              <p style="font-size: 48px; margin: 0 0 16px;">💰</p>
-              <h1 style="color: ${COLORS.text}; font-size: 28px; font-weight: 600; margin: 0 0 8px;">Payout on the way!</h1>
-              <p style="color: ${COLORS.textMuted}; font-size: 16px; margin: 0 0 30px;">Great work, ${name}!</p>
-              
-              <!-- Payout Details -->
-              <table width="100%" style="background-color: ${COLORS.border}; border-radius: 12px; margin: 0 0 30px;">
-                <tr>
-                  <td style="padding: 24px; text-align: center;">
-                    <p style="color: ${COLORS.gold}; font-size: 48px; font-weight: 700; margin: 0 0 8px;">${amount}</p>
-                    <p style="color: ${COLORS.textMuted}; font-size: 14px; margin: 0;">From ${referralCount} referral${referralCount !== 1 ? 's' : ''} · ${period}</p>
-                  </td>
-                </tr>
-              </table>
-              
-              <p style="color: ${COLORS.textMuted}; font-size: 16px; line-height: 1.6; margin: 0 0 20px;">Your payout is being sent via <strong style="color: ${COLORS.text};">${payoutMethod}</strong> and should arrive within 2-3 business days.</p>
-              
-              <table width="100%" cellpadding="0" cellspacing="0">
-                <tr>
-                  <td align="center" style="padding: 20px 0;">
-                    <a href="https://curiouskelly.com/affiliate/payouts" style="display: inline-block; background-color: ${COLORS.accent}; color: white; text-decoration: none; padding: 14px 32px; border-radius: 8px; font-weight: 600; font-size: 16px;">View Payout Details →</a>
-                  </td>
-                </tr>
-              </table>
-              
-              <p style="color: ${COLORS.textMuted}; font-size: 16px; line-height: 1.6; margin: 30px 0 0;">Thank you for spreading curiosity! 🙏</p>
-              <p style="color: ${COLORS.text}; font-size: 16px; line-height: 1.6; margin: 20px 0 0;">✨ Gratefully,<br><strong>Kelly</strong></p>
-            </td>
-          </tr>
-          <tr>
-            <td style="padding: 30px 40px; border-top: 1px solid ${COLORS.border}; text-align: center;">
-              <p style="color: #52525b; font-size: 12px; margin: 0 0 10px;">✨ Curious Kelly | Learn something new every day</p>
-              <p style="color: #52525b; font-size: 12px; margin: 0;">
-                <a href="https://curiouskelly.com" style="color: #52525b;">curiouskelly.com</a> · 
-                <a href="https://curiouskelly.com/help" style="color: #52525b;">Help</a>
+            <td style="padding: 40px 20px;">
+              <p style="font-family: Georgia, serif; color: ${COLORS.text}; font-size: 19px; line-height: 1.9; margin: 0 0 24px;">
+                ${name} —
               </p>
-              <p style="color: #3f3f46; font-size: 11px; margin: 15px 0 0;">© 2025 Lesson of the Day PBC</p>
+              
+              <p style="font-family: Georgia, serif; color: ${COLORS.textMuted}; font-size: 17px; line-height: 1.9; margin: 0 0 24px;">
+                ${referralCount} ${referralCount === 1 ? 'person' : 'people'} started learning because of you this month.
+              </p>
+              
+              <p style="font-family: Georgia, serif; color: ${COLORS.textMuted}; font-size: 17px; line-height: 1.9; margin: 0 0 32px;">
+                Your share is <strong style="color: ${COLORS.text};">${amount}</strong>, heading to your ${payoutMethod} in the next few days.
+              </p>
+              
+              <p style="font-family: Georgia, serif; color: ${COLORS.textMuted}; font-size: 17px; line-height: 1.9; margin: 0 0 32px;">
+                Thank you for helping more people find their curiosity.
+              </p>
+              
+              <p style="font-family: Georgia, serif; color: ${COLORS.textDim}; font-size: 15px; font-style: italic; margin: 0;">
+                — Kelly
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px 20px; text-align: center; border-top: 1px solid ${COLORS.border};">
+              <p style="color: #52525b; font-size: 12px; margin: 0;">
+                <a href="https://curiouskelly.com" style="color: #52525b;">curiouskelly.com</a>
+              </p>
             </td>
           </tr>
         </table>
