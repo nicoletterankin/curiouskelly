@@ -11,7 +11,8 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
       hasElevenLabsKey: !!process.env.ELEVENLABS_API_KEY,
       hasElevenLabsVoice: !!process.env.ELEVENLABS_VOICE_ID,
       hasSupabaseUrl: !!process.env.PUBLIC_SUPABASE_URL,
-      hasSupabaseKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY
+      hasSupabaseKey: !!process.env.SUPABASE_SERVICE_ROLE_KEY,
+      hasReplicateToken: !!process.env.REPLICATE_API_TOKEN
     }
   });
 }
