@@ -302,10 +302,8 @@ async function generateLipSyncVideo(
   audioBuffer: ArrayBuffer
 ): Promise<VideoResponse> {
   try {
-    // Fetch the source image
-    const baseUrl = process.env.PUBLIC_SITE_URL || process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
-      : 'http://localhost:3000';
+    // Fetch the source image - always use production URL
+    const baseUrl = process.env.PUBLIC_SITE_URL || 'https://curiouskelly.com';
     
     const imageUrl = `${baseUrl}${imagePath}`;
     console.log(`[Omnihuman] Fetching image from: ${imageUrl}`);
