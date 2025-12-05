@@ -1,0 +1,862 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>Affiliate Dashboard - Curious Kelly</title>
+    
+    <style>
+        :root {
+            --bg-color: #0f0f11;
+            --bg-card: #18181b;
+            --text-primary: #f4f4f5;
+            --text-secondary: #a1a1aa;
+            --accent: #2563eb;
+            --accent-hover: #1d4ed8;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --border: #3f3f46;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+        }
+
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        /* Header */
+        .header {
+            background: rgba(15, 15, 17, 0.95);
+            backdrop-filter: blur(10px);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .logo {
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .logo span { color: var(--accent); }
+
+        .header-actions {
+            display: flex;
+            gap: 16px;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-outline {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-outline:hover {
+            background: var(--bg-card);
+        }
+
+        /* Auth Section */
+        .auth-section {
+            max-width: 400px;
+            margin: 100px auto;
+            padding: 40px;
+            background: var(--bg-card);
+            border-radius: 16px;
+            border: 1px solid var(--border);
+            text-align: center;
+        }
+
+        .auth-section h2 {
+            margin-bottom: 8px;
+        }
+
+        .auth-section p {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+            text-align: left;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 1rem;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        /* Dashboard Layout */
+        .dashboard {
+            display: none;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        .dashboard.active {
+            display: block;
+        }
+
+        .dashboard-header {
+            margin-bottom: 32px;
+        }
+
+        .dashboard-header h1 {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .dashboard-header p {
+            color: var(--text-secondary);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 600;
+        }
+
+        .stat-value.success { color: var(--success); }
+        .stat-value.warning { color: var(--warning); }
+
+        .stat-change {
+            font-size: 0.8rem;
+            margin-top: 8px;
+        }
+
+        .stat-change.positive { color: var(--success); }
+        .stat-change.negative { color: var(--error); }
+
+        /* Referral Code Box */
+        .referral-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .referral-box h3 {
+            margin-bottom: 16px;
+        }
+
+        .referral-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .referral-input {
+            flex: 1;
+            padding: 12px;
+            background: var(--bg-color);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-family: monospace;
+            font-size: 0.95rem;
+        }
+
+        .copy-btn {
+            padding: 12px 20px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: 500;
+        }
+
+        .copy-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        .referral-note {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Referrals Table */
+        .table-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            margin-bottom: 32px;
+        }
+
+        .table-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .table-header h3 {
+            font-size: 1.1rem;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 16px 24px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+            font-weight: 500;
+        }
+
+        td {
+            font-size: 0.95rem;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .status-badge.confirmed {
+            background: rgba(16, 185, 129, 0.1);
+            color: var(--success);
+        }
+
+        .status-badge.pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .status-badge.paid {
+            background: rgba(37, 99, 235, 0.1);
+            color: var(--accent);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state h4 {
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        /* Tier Progress */
+        .tier-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .tier-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .current-tier {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .tier-badge {
+            background: var(--accent);
+            color: white;
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+        }
+
+        .tier-badge.founding {
+            background: linear-gradient(135deg, #f59e0b, #ef4444);
+        }
+
+        .tier-progress {
+            background: var(--bg-color);
+            border-radius: 8px;
+            height: 8px;
+            overflow: hidden;
+        }
+
+        .tier-progress-bar {
+            height: 100%;
+            background: var(--accent);
+            transition: width 0.3s;
+        }
+
+        .tier-progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        /* Resources Section */
+        .resources-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+        }
+
+        .resource-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .resource-card h4 {
+            margin-bottom: 8px;
+        }
+
+        .resource-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        /* Loading State */
+        .loading {
+            text-align: center;
+            padding: 60px;
+            color: var(--text-secondary);
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .stats-grid {
+                grid-template-columns: 1fr 1fr;
+            }
+
+            .referral-row {
+                flex-direction: column;
+            }
+
+            .table-header {
+                flex-direction: column;
+                gap: 12px;
+                align-items: flex-start;
+            }
+
+            th, td {
+                padding: 12px 16px;
+            }
+        }
+    </style>
+    
+    <!-- Affiliate Tracking -->
+    <script src="/js/affiliate-tracking.js"></script>
+</head>
+<body>
+
+    <header class="header">
+        <a href="/" class="logo">
+            <img src="/images/brand/kelly-mark-circle-64.png" alt="" style="width:28px;height:28px;border-radius:50%;margin-right:8px;" onerror="this.style.display='none'" />
+            Curious Kelly
+        </a>
+        <div class="header-actions">
+            <span id="user-email" style="color: var(--text-secondary); font-size: 0.9rem;"></span>
+            <button class="btn btn-outline" onclick="logout()">Sign Out</button>
+        </div>
+    </header>
+
+    <!-- Auth Section (shown when not logged in) -->
+    <div id="auth-section" class="auth-section">
+        <h2>Affiliate Dashboard</h2>
+        <p>Enter your email to view your affiliate stats.</p>
+        
+        <form id="login-form">
+            <div class="form-group">
+                <label class="form-label">Email Address</label>
+                <input type="email" class="form-input" id="login-email" required placeholder="your@email.com">
+            </div>
+            <button type="submit" class="btn btn-primary" style="width: 100%; margin-top: 16px;">View My Stats</button>
+        </form>
+        
+        <p style="margin-top: 24px; font-size: 0.85rem;">
+            Not an affiliate yet? <a href="/careers.html">Sign up instantly →</a>
+        </p>
+    </div>
+
+    <!-- Dashboard (shown when logged in and approved affiliate) -->
+    <div id="dashboard" class="dashboard">
+        <div class="dashboard-header">
+            <h1>Welcome back, <span id="affiliate-name">Affiliate</span>! 👋</h1>
+            <p>Here's how your referrals are performing.</p>
+        </div>
+
+        <!-- Stats Grid -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Referrals</div>
+                <div class="stat-value" id="total-referrals">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Active Subscribers</div>
+                <div class="stat-value" id="active-referrals">0</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Commission Rate</div>
+                <div class="stat-value success" id="commission-rate">20%</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Lifetime Earnings</div>
+                <div class="stat-value success" id="lifetime-earnings">$0.00</div>
+            </div>
+        </div>
+
+        <!-- Tier Progress -->
+        <div class="tier-section">
+            <div class="tier-header">
+                <div class="current-tier">
+                    <span>Current Tier:</span>
+                    <span class="tier-badge" id="tier-badge">Scholar</span>
+                    <span class="tier-badge founding" id="founding-badge" style="display: none;">Founding 100</span>
+                </div>
+                <span id="next-tier-info" style="color: var(--text-secondary); font-size: 0.9rem;">25 more for Fellow (25%)</span>
+            </div>
+            <div class="tier-progress">
+                <div class="tier-progress-bar" id="tier-progress-bar" style="width: 0%;"></div>
+            </div>
+            <div class="tier-progress-label">
+                <span id="tier-current">0 referrals</span>
+                <span id="tier-next">100 for Fellow</span>
+            </div>
+        </div>
+
+        <!-- Referral Links -->
+        <div class="referral-box">
+            <h3>Your Referral Links</h3>
+            <div class="referral-row">
+                <input type="text" class="referral-input" id="referral-link" readonly>
+                <button class="copy-btn" onclick="copyToClipboard('referral-link')">Copy Link</button>
+            </div>
+            <div class="referral-row">
+                <input type="text" class="referral-input" id="promo-code" readonly>
+                <button class="copy-btn" onclick="copyToClipboard('promo-code')">Copy Code</button>
+            </div>
+            <p class="referral-note">Share your link on social media, blogs, or email. Your code can be used at checkout for your audience's discount.</p>
+        </div>
+
+        <!-- Recent Referrals Table -->
+        <div class="table-section">
+            <div class="table-header">
+                <h3>Recent Referrals</h3>
+                <button class="btn btn-outline" onclick="exportReferrals()">Export CSV</button>
+            </div>
+            <div class="table-wrapper">
+                <table>
+                    <thead>
+                        <tr>
+                            <th>Date</th>
+                            <th>Plan</th>
+                            <th>Value</th>
+                            <th>Commission</th>
+                            <th>Status</th>
+                        </tr>
+                    </thead>
+                    <tbody id="referrals-table">
+                        <!-- Populated by JS -->
+                    </tbody>
+                </table>
+                <div class="empty-state" id="empty-referrals" style="display: none;">
+                    <h4>No referrals yet</h4>
+                    <p>Share your referral link to start earning commissions!</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Resources -->
+        <h3 style="margin-bottom: 20px;">Marketing Resources</h3>
+        <div class="resources-grid">
+            <div class="resource-card">
+                <h4>📸 Brand Assets</h4>
+                <p>Download logos, screenshots, and Kelly images for your content.</p>
+                <a href="/affiliate-assets.html" class="btn btn-outline" style="width: 100%;">Download Kit</a>
+            </div>
+            <div class="resource-card">
+                <h4>📝 Content Templates</h4>
+                <p>Ready-to-use social posts, email templates, and video scripts.</p>
+                <a href="/affiliate-assets.html#copy" class="btn btn-outline" style="width: 100%;">View Templates</a>
+            </div>
+            <div class="resource-card">
+                <h4>📊 Performance Tips</h4>
+                <p>Best practices from top-performing affiliates.</p>
+                <a href="/affiliate-assets.html#tips" class="btn btn-outline" style="width: 100%;">Read Guide</a>
+            </div>
+        </div>
+        
+        <!-- Payout Section -->
+        <div style="background: var(--bg-card); border: 1px solid var(--border); border-radius: 12px; padding: 24px; margin-top: 32px;">
+            <h3 style="margin-bottom: 16px;">💰 Payouts</h3>
+            <p style="color: var(--text-secondary); margin-bottom: 16px;">
+                Commissions are paid monthly via PayPal. To receive payouts, make sure your PayPal email matches your affiliate email.
+            </p>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+                <a href="mailto:hello@curiouskelly.com?subject=Payout Request" class="btn btn-outline">Request Payout</a>
+                <a href="mailto:hello@curiouskelly.com?subject=Update PayPal Email" class="btn btn-outline">Update PayPal Email</a>
+            </div>
+        </div>
+    </div>
+
+    <!-- Not Approved State -->
+    <div id="not-approved" class="auth-section" style="display: none;">
+        <h2>Application Pending</h2>
+        <p>Your affiliate application is still being reviewed. We'll email you within 2-3 business days.</p>
+        <a href="/" class="btn btn-outline" style="margin-top: 16px;">Back to Home</a>
+    </div>
+
+    <!-- Loading State -->
+    <div id="loading" class="loading" style="display: none;">
+        <div class="spinner"></div>
+        <p>Loading your dashboard...</p>
+    </div>
+
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcnp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE5NjI3NTcsImV4cCI6MjA0NzUzODc1N30.KLMlC14ckEp-XoL8RX5liw_cMdGs8lR';
+        
+        let affiliateData = null;
+        let currentEmail = null;
+
+        // Check for stored email on load
+        function init() {
+            const storedEmail = localStorage.getItem('affiliate_email');
+            if (storedEmail) {
+                document.getElementById('login-email').value = storedEmail;
+                loadDashboardByEmail(storedEmail);
+            }
+        }
+
+        // Email lookup form
+        document.getElementById('login-form').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const email = document.getElementById('login-email').value.trim().toLowerCase();
+            await loadDashboardByEmail(email);
+        });
+
+        // Logout (clear stored email)
+        function logout() {
+            localStorage.removeItem('affiliate_email');
+            currentEmail = null;
+            affiliateData = null;
+            showAuthSection();
+        }
+
+        // Load Dashboard by Email
+        async function loadDashboardByEmail(email) {
+            showLoading();
+            currentEmail = email;
+            
+            try {
+                // Look up affiliate by email
+                const response = await fetch(
+                    `${SUPABASE_URL}/rest/v1/affiliates?email=eq.${encodeURIComponent(email)}&select=*`,
+                    {
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                        }
+                    }
+                );
+                
+                const affiliates = await response.json();
+                
+                if (!affiliates || affiliates.length === 0) {
+                    showNotFound();
+                    return;
+                }
+                
+                const affiliate = affiliates[0];
+                
+                if (affiliate.status !== 'active') {
+                    showNotApproved();
+                    return;
+                }
+                
+                affiliateData = affiliate;
+                
+                // Store email for quick access
+                localStorage.setItem('affiliate_email', email);
+                
+                // Get referrals
+                const referralsResponse = await fetch(
+                    `${SUPABASE_URL}/rest/v1/referrals?affiliate_id=eq.${affiliate.id}&select=*&order=created_at.desc&limit=20`,
+                    {
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                        }
+                    }
+                );
+                
+                const referrals = await referralsResponse.json() || [];
+                
+                // Update UI
+                updateDashboard(affiliate, referrals);
+                showDashboard();
+                
+            } catch (error) {
+                console.error('Error loading dashboard:', error);
+                alert('Error loading dashboard. Please try again.');
+                showAuthSection();
+            }
+        }
+
+        // Update Dashboard UI
+        function updateDashboard(affiliate, referrals) {
+            // User info
+            document.getElementById('user-email').textContent = currentEmail || affiliate.email;
+            document.getElementById('affiliate-name').textContent = affiliate.name || 'Affiliate';
+            
+            // Stats
+            document.getElementById('total-referrals').textContent = affiliate.total_referrals || 0;
+            document.getElementById('active-referrals').textContent = affiliate.active_referrals || 0;
+            document.getElementById('commission-rate').textContent = affiliate.commission_rate + '%';
+            document.getElementById('lifetime-earnings').textContent = formatCurrency(affiliate.lifetime_earnings || 0);
+            
+            // Tier
+            const tier = affiliate.tier || 'scholar';
+            document.getElementById('tier-badge').textContent = tier.charAt(0).toUpperCase() + tier.slice(1);
+            
+            if (affiliate.is_founding_100) {
+                document.getElementById('founding-badge').style.display = 'inline-block';
+            }
+            
+            // Tier progress
+            const referralCount = affiliate.active_referrals || 0;
+            let progress = 0;
+            let nextTier = '';
+            let nextThreshold = 100;
+            
+            if (referralCount < 100) {
+                progress = (referralCount / 100) * 100;
+                nextTier = 'Fellow (25%)';
+                nextThreshold = 100;
+            } else if (referralCount < 500) {
+                progress = ((referralCount - 100) / 400) * 100;
+                nextTier = 'Ambassador (30%)';
+                nextThreshold = 500;
+            } else {
+                progress = 100;
+                nextTier = 'Max tier reached!';
+            }
+            
+            document.getElementById('tier-progress-bar').style.width = progress + '%';
+            document.getElementById('tier-current').textContent = referralCount + ' referrals';
+            document.getElementById('tier-next').textContent = nextThreshold + ' for ' + nextTier.split(' ')[0];
+            document.getElementById('next-tier-info').textContent = 
+                referralCount >= 500 ? 'Max tier!' : (nextThreshold - referralCount) + ' more for ' + nextTier;
+            
+            // Referral links
+            const code = affiliate.referral_code;
+            document.getElementById('referral-link').value = 'https://curiouskelly.com/?ref=' + code;
+            document.getElementById('promo-code').value = code;
+            
+            // Referrals table
+            const tbody = document.getElementById('referrals-table');
+            const emptyState = document.getElementById('empty-referrals');
+            
+            if (referrals.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+            } else {
+                emptyState.style.display = 'none';
+                tbody.innerHTML = referrals.map(r => `
+                    <tr>
+                        <td>${formatDate(r.created_at)}</td>
+                        <td>Annual</td>
+                        <td>${formatCurrency(r.subscription_value || 99.99)}</td>
+                        <td>${formatCurrency(r.commission_earned || 0)}</td>
+                        <td><span class="status-badge ${r.status}">${r.status}</span></td>
+                    </tr>
+                `).join('');
+            }
+        }
+
+        // Helper Functions
+        function formatCurrency(amount) {
+            return '$' + parseFloat(amount).toFixed(2);
+        }
+
+        function formatDate(dateStr) {
+            return new Date(dateStr).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+
+        function copyToClipboard(inputId) {
+            const input = document.getElementById(inputId);
+            input.select();
+            document.execCommand('copy');
+            
+            // Visual feedback
+            const btn = input.nextElementSibling;
+            const originalText = btn.textContent;
+            btn.textContent = 'Copied!';
+            setTimeout(() => btn.textContent = originalText, 2000);
+        }
+
+        function exportReferrals() {
+            alert('Export feature coming soon!');
+        }
+
+        // View States
+        function showAuthSection() {
+            document.getElementById('auth-section').style.display = 'block';
+            document.getElementById('dashboard').classList.remove('active');
+            document.getElementById('not-approved').style.display = 'none';
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showDashboard() {
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('dashboard').classList.add('active');
+            document.getElementById('not-approved').style.display = 'none';
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showNotApproved() {
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('dashboard').classList.remove('active');
+            document.getElementById('not-approved').style.display = 'block';
+            document.getElementById('loading').style.display = 'none';
+        }
+
+        function showLoading() {
+            document.getElementById('auth-section').style.display = 'none';
+            document.getElementById('dashboard').classList.remove('active');
+            document.getElementById('not-approved').style.display = 'none';
+            document.getElementById('loading').style.display = 'block';
+        }
+
+        function showNotFound() {
+            document.getElementById('loading').style.display = 'none';
+            document.getElementById('auth-section').style.display = 'block';
+            alert('No affiliate account found for this email.\n\nSign up at curiouskelly.com/careers.html to become an affiliate!');
+        }
+
+        // Initialize on load - no Supabase JS needed, using REST API directly
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+
+</body>
+</html>
+

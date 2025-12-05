@@ -1,0 +1,481 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelly Avatar Demo - 5-Phase Hot or Not</title>
+    <link rel="stylesheet" href="css/styles.css">
+    <link rel="stylesheet" href="css/ui-kit.css">
+    <link rel="stylesheet" href="css/kelly-avatar-animations.css">
+    <style>
+        body {
+            background: linear-gradient(135deg, #1a1a1d 0%, #2d2d30 100%);
+            color: #ffffff;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            margin: 0;
+            padding: 0;
+            overflow-x: hidden;
+        }
+
+        .demo-container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+
+        .demo-header {
+            text-align: center;
+            margin-bottom: 40px;
+        }
+
+        .demo-header h1 {
+            font-size: 3rem;
+            margin: 0 0 10px 0;
+            background: linear-gradient(135deg, #d97757 0%, #4a90e2 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .demo-header p {
+            font-size: 1.2rem;
+            color: #888;
+            margin: 0;
+        }
+
+        .demo-layout {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 30px;
+            align-items: start;
+        }
+
+        /* Kelly Avatar Container */
+        .kelly-container {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 20px;
+            overflow: hidden;
+            aspect-ratio: 16 / 9;
+            position: relative;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Controls Panel */
+        .controls-panel {
+            background: rgba(0, 0, 0, 0.5);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.3);
+        }
+
+        .control-section {
+            margin-bottom: 30px;
+        }
+
+        .control-section h3 {
+            font-size: 1.2rem;
+            margin: 0 0 15px 0;
+            color: #d97757;
+        }
+
+        .button-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .demo-btn {
+            padding: 12px 20px;
+            border: none;
+            border-radius: 10px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            background: rgba(217, 119, 87, 0.2);
+            color: #d97757;
+            border: 2px solid #d97757;
+        }
+
+        .demo-btn:hover {
+            background: #d97757;
+            color: #ffffff;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(217, 119, 87, 0.3);
+        }
+
+        .demo-btn:active {
+            transform: translateY(0);
+        }
+
+        .demo-btn.active {
+            background: #d97757;
+            color: #ffffff;
+        }
+
+        .demo-btn.secondary {
+            background: rgba(74, 144, 226, 0.2);
+            color: #4a90e2;
+            border-color: #4a90e2;
+        }
+
+        .demo-btn.secondary:hover {
+            background: #4a90e2;
+            color: #ffffff;
+        }
+
+        .demo-btn.full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* Hot or Not Buttons */
+        .hot-not-container {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+
+        .hot-btn, .not-btn {
+            flex: 1;
+            padding: 20px;
+            font-size: 1.5rem;
+            font-weight: 700;
+            border-radius: 15px;
+            border: none;
+            cursor: pointer;
+            transition: all 0.3s cubic-bezier(0.68, -0.55, 0.265, 1.55);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .hot-btn {
+            background: linear-gradient(135deg, #ff6b6b 0%, #ff8787 100%);
+            color: white;
+            box-shadow: 0 10px 30px rgba(255, 107, 107, 0.3);
+        }
+
+        .hot-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(255, 107, 107, 0.5);
+        }
+
+        .not-btn {
+            background: linear-gradient(135deg, #4ecdc4 0%, #44a3a3 100%);
+            color: white;
+            box-shadow: 0 10px 30px rgba(78, 205, 196, 0.3);
+        }
+
+        .not-btn:hover {
+            transform: scale(1.05);
+            box-shadow: 0 15px 40px rgba(78, 205, 196, 0.5);
+        }
+
+        /* Age Slider */
+        .age-slider-container {
+            margin-top: 15px;
+        }
+
+        .age-slider-container input[type="range"] {
+            width: 100%;
+            height: 8px;
+            border-radius: 5px;
+            background: rgba(255, 255, 255, 0.1);
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .age-slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            appearance: none;
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            background: #d97757;
+            cursor: pointer;
+            box-shadow: 0 2px 8px rgba(217, 119, 87, 0.5);
+        }
+
+        .age-display {
+            text-align: center;
+            font-size: 2rem;
+            font-weight: 700;
+            margin-top: 10px;
+            color: #d97757;
+        }
+
+        /* State Display */
+        .state-display {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+
+        .state-display div {
+            margin: 5px 0;
+        }
+
+        .state-display strong {
+            color: #4a90e2;
+        }
+
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .demo-layout {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .demo-header h1 {
+                font-size: 2rem;
+            }
+
+            .hot-btn, .not-btn {
+                font-size: 1.2rem;
+                padding: 15px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="demo-container">
+        
+        <!-- Header -->
+        <div class="demo-header">
+            <h1>✨ Kelly Avatar System Demo</h1>
+            <p>5-Phase Hot-or-Not Learning Experience</p>
+        </div>
+
+        <!-- Main Layout -->
+        <div class="demo-layout">
+            
+            <!-- Kelly Avatar -->
+            <div class="kelly-container" id="kelly-container">
+                <!-- Kelly Avatar System will be injected here -->
+            </div>
+
+            <!-- Controls -->
+            <div class="controls-panel">
+                
+                <!-- Phase Controls -->
+                <div class="control-section">
+                    <h3>📍 Lesson Phases</h3>
+                    <div class="button-grid">
+                        <button class="demo-btn active" data-phase="welcome">Welcome</button>
+                        <button class="demo-btn" data-phase="q1">Question 1</button>
+                        <button class="demo-btn" data-phase="q2">Question 2</button>
+                        <button class="demo-btn" data-phase="q3">Question 3</button>
+                        <button class="demo-btn full-width" data-phase="wisdom">💎 Wisdom</button>
+                    </div>
+                </div>
+
+                <!-- Hot or Not -->
+                <div class="control-section">
+                    <h3>🔥 Hot or Not?</h3>
+                    <p style="font-size: 0.9rem; color: #888; margin-top: 0;">Click after selecting a question phase</p>
+                    <div class="hot-not-container">
+                        <button class="hot-btn" id="choice-a">🔥 Hot</button>
+                        <button class="not-btn" id="choice-b">❄️ Not</button>
+                    </div>
+                </div>
+
+                <!-- Pose Controls -->
+                <div class="control-section">
+                    <h3>😊 Kelly's Pose</h3>
+                    <div class="button-grid">
+                        <button class="demo-btn secondary" data-pose="curious">Curious</button>
+                        <button class="demo-btn secondary" data-pose="explaining">Explaining</button>
+                        <button class="demo-btn secondary" data-pose="celebrating">Celebrating</button>
+                        <button class="demo-btn secondary" data-pose="listening">Listening</button>
+                        <button class="demo-btn secondary full-width" data-pose="wisdom">Wisdom</button>
+                    </div>
+                </div>
+
+                <!-- Age Controls -->
+                <div class="control-section">
+                    <h3>👶🏻➡️👵🏻 Kelly's Age</h3>
+                    <div class="button-grid">
+                        <button class="demo-btn secondary" data-age="3">Age 3</button>
+                        <button class="demo-btn secondary" data-age="9">Age 9</button>
+                        <button class="demo-btn secondary" data-age="15">Age 15</button>
+                        <button class="demo-btn secondary" data-age="27">Age 27</button>
+                        <button class="demo-btn secondary" data-age="48">Age 48</button>
+                        <button class="demo-btn secondary" data-age="82">Age 82</button>
+                    </div>
+                    <div class="age-slider-container">
+                        <input type="range" id="age-slider" min="2" max="102" value="27" step="1">
+                        <div class="age-display" id="age-display">Age: 27</div>
+                    </div>
+                </div>
+
+                <!-- Effects -->
+                <div class="control-section">
+                    <h3>✨ Effects</h3>
+                    <div class="button-grid">
+                        <button class="demo-btn secondary" id="btn-speaking">🗣️ Speaking</button>
+                        <button class="demo-btn secondary" id="btn-pop">💥 Pop!</button>
+                    </div>
+                </div>
+
+                <!-- State Display -->
+                <div class="control-section">
+                    <h3>📊 Current State</h3>
+                    <div class="state-display" id="state-display">
+                        <div>Phase: <strong id="state-phase">welcome</strong></div>
+                        <div>Pose: <strong id="state-pose">curious</strong></div>
+                        <div>Age: <strong id="state-age">27</strong></div>
+                        <div>Speaking: <strong id="state-speaking">false</strong></div>
+                    </div>
+                </div>
+
+            </div>
+
+        </div>
+
+    </div>
+
+    <!-- Kelly Avatar System -->
+    <script type="module">
+        import { KellyAvatarSystem } from './js/kelly-avatar-system.js';
+
+        // Initialize Kelly Avatar
+        const container = document.getElementById('kelly-container');
+        const kelly = new KellyAvatarSystem(container);
+
+        // State display elements
+        const stateDisplay = {
+            phase: document.getElementById('state-phase'),
+            pose: document.getElementById('state-pose'),
+            age: document.getElementById('state-age'),
+            speaking: document.getElementById('state-speaking')
+        };
+
+        // Update state display
+        function updateStateDisplay() {
+            stateDisplay.phase.textContent = kelly.currentPhase;
+            stateDisplay.pose.textContent = kelly.currentPose;
+            stateDisplay.age.textContent = kelly.currentAge;
+            stateDisplay.speaking.textContent = kelly.isSpeaking;
+        }
+
+        // Phase buttons
+        document.querySelectorAll('[data-phase]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const phase = btn.getAttribute('data-phase');
+                kelly.setPhase(phase);
+                
+                // Update active state
+                document.querySelectorAll('[data-phase]').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                
+                updateStateDisplay();
+            });
+        });
+
+        // Hot or Not buttons
+        document.getElementById('choice-a').addEventListener('click', () => {
+            const currentPhase = kelly.currentPhase;
+            if (currentPhase.startsWith('q')) {
+                kelly.setPhase(currentPhase, 'a'); // Triggers reaction_a
+                updateStateDisplay();
+            }
+        });
+
+        document.getElementById('choice-b').addEventListener('click', () => {
+            const currentPhase = kelly.currentPhase;
+            if (currentPhase.startsWith('q')) {
+                kelly.setPhase(currentPhase, 'b'); // Triggers reaction_b
+                updateStateDisplay();
+            }
+        });
+
+        // Pose buttons
+        document.querySelectorAll('[data-pose]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const pose = btn.getAttribute('data-pose');
+                kelly.setPose(pose);
+                updateStateDisplay();
+            });
+        });
+
+        // Age buttons
+        document.querySelectorAll('[data-age]').forEach(btn => {
+            btn.addEventListener('click', () => {
+                const age = parseInt(btn.getAttribute('data-age'));
+                kelly.setAge(age);
+                document.getElementById('age-slider').value = age;
+                document.getElementById('age-display').textContent = `Age: ${age}`;
+                updateStateDisplay();
+            });
+        });
+
+        // Age slider
+        const ageSlider = document.getElementById('age-slider');
+        const ageDisplay = document.getElementById('age-display');
+        
+        ageSlider.addEventListener('input', (e) => {
+            const age = parseInt(e.target.value);
+            ageDisplay.textContent = `Age: ${age}`;
+        });
+
+        ageSlider.addEventListener('change', (e) => {
+            const age = parseInt(e.target.value);
+            // Find closest valid age
+            const validAges = [3, 9, 15, 27, 48, 82];
+            const closestAge = validAges.reduce((prev, curr) => 
+                Math.abs(curr - age) < Math.abs(prev - age) ? curr : prev
+            );
+            kelly.setAge(closestAge);
+            ageSlider.value = closestAge;
+            ageDisplay.textContent = `Age: ${closestAge}`;
+            updateStateDisplay();
+        });
+
+        // Effects buttons
+        document.getElementById('btn-speaking').addEventListener('click', () => {
+            kelly.setSpeaking(!kelly.isSpeaking);
+            updateStateDisplay();
+        });
+
+        document.getElementById('btn-pop').addEventListener('click', () => {
+            kelly.pop();
+        });
+
+        // Listen for Kelly events
+        document.addEventListener('kelly-phase-changed', (e) => {
+            console.log('Phase changed:', e.detail);
+            updateStateDisplay();
+        });
+
+        document.addEventListener('kelly-pose-changed', (e) => {
+            console.log('Pose changed:', e.detail);
+            updateStateDisplay();
+        });
+
+        document.addEventListener('kelly-age-changed', (e) => {
+            console.log('Age changed:', e.detail);
+            updateStateDisplay();
+        });
+
+        // Initial state
+        updateStateDisplay();
+        console.log('Kelly Avatar Demo ready! 🎉');
+    </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+

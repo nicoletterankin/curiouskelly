@@ -1,0 +1,557 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>✨ Curious Kelly - Learn Something Wonderful</title>
+    <meta name="description" content="5-minute daily lessons with Kelly. Every day. For ages 2 to 102.">
+    
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Fraunces:opsz,wght@9..144,300;9..144,400;9..144,500;9..144,600&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            /* Kelly Blue - Primary Brand Color */
+            --kelly-blue: #2563eb;
+            --kelly-blue-light: #3b82f6;
+            --kelly-blue-dark: #1d4ed8;
+            --kelly-blue-glow: rgba(37, 99, 235, 0.15);
+            
+            /* Dark Theme */
+            --bg: #0f0f13;
+            --surface: #1c1c24;
+            --card: #252530;
+            --card-hover: #2a2a36;
+            
+            /* Text */
+            --text: #f4f4f5;
+            --text-dim: #a1a1aa;
+            --text-muted: #71717a;
+            
+            /* Accent */
+            --live-red: #ef4444;
+            --success: #22c55e;
+            --gold: #f59e0b;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Animations */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+        
+        @keyframes glow {
+            0%, 100% { box-shadow: 0 0 40px var(--kelly-blue-glow); }
+            50% { box-shadow: 0 0 80px var(--kelly-blue-glow); }
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-10px); }
+        }
+        
+        @keyframes countdown-tick {
+            0% { transform: scale(1.1); }
+            100% { transform: scale(1); }
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        /* Header */
+        header {
+            padding: 20px 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .logo {
+            font-family: 'Fraunces', serif;
+            font-size: 1.5rem;
+            font-weight: 400;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text);
+            text-decoration: none;
+        }
+        
+        .logo span {
+            color: var(--kelly-blue);
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 24px;
+        }
+        
+        .nav-links a {
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: color 0.2s;
+        }
+        
+        .nav-links a:hover {
+            color: var(--text);
+        }
+        
+        /* Main Content */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 40px 20px;
+            text-align: center;
+        }
+        
+        .greeting {
+            font-size: 1rem;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+            animation: fadeIn 0.6s ease-out;
+        }
+        
+        .main-title {
+            font-family: 'Fraunces', serif;
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 400;
+            margin-bottom: 16px;
+            animation: fadeIn 0.6s ease-out 0.1s both;
+        }
+        
+        .main-title em {
+            color: var(--kelly-blue);
+            font-style: normal;
+        }
+        
+        /* Kelly Card - The Main CTA */
+        .kelly-card {
+            background: linear-gradient(135deg, var(--card) 0%, var(--surface) 100%);
+            border: 1px solid rgba(37, 99, 235, 0.2);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 600px;
+            width: 100%;
+            margin: 40px 0;
+            animation: glow 4s ease-in-out infinite, fadeIn 0.6s ease-out 0.2s both;
+            cursor: pointer;
+            transition: transform 0.3s, border-color 0.3s;
+        }
+        
+        .kelly-card:hover {
+            transform: scale(1.02);
+            border-color: rgba(37, 99, 235, 0.4);
+        }
+        
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            background: var(--live-red);
+            padding: 6px 14px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            margin-bottom: 24px;
+        }
+        
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: white;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        
+        .kelly-avatar-container {
+            width: 180px;
+            height: 180px;
+            margin: 0 auto 24px;
+            border-radius: 50%;
+            background: radial-gradient(ellipse at center, #1e3a5f 0%, var(--surface) 70%);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            animation: float 3s ease-in-out infinite;
+            position: relative;
+            border: 2px solid rgba(37, 99, 235, 0.3);
+        }
+        
+        .kelly-avatar-container::before {
+            content: '✨';
+            font-size: 64px;
+        }
+        
+        .viewer-badge {
+            position: absolute;
+            bottom: -10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--card);
+            border: 1px solid rgba(255,255,255,0.1);
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            white-space: nowrap;
+        }
+        
+        .viewer-badge strong {
+            color: var(--kelly-blue);
+        }
+        
+        .topic-label {
+            font-size: 0.8rem;
+            color: var(--kelly-blue);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 8px;
+        }
+        
+        .topic-name {
+            font-family: 'Fraunces', serif;
+            font-size: 2rem;
+            font-weight: 400;
+            margin-bottom: 16px;
+        }
+        
+        .topic-hook {
+            color: var(--text-dim);
+            font-size: 1rem;
+            line-height: 1.5;
+            margin-bottom: 24px;
+        }
+        
+        .join-button {
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: var(--kelly-blue);
+            color: white;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 1.1rem;
+            font-weight: 600;
+            border: none;
+            cursor: pointer;
+            transition: transform 0.2s, background 0.2s;
+        }
+        
+        .join-button:hover {
+            transform: scale(1.05);
+            background: var(--kelly-blue-light);
+        }
+        
+        /* Countdown */
+        .countdown-section {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .countdown-label {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-bottom: 8px;
+        }
+        
+        .countdown-timer {
+            font-family: 'Fraunces', serif;
+            font-size: 2.5rem;
+            font-weight: 500;
+            color: var(--kelly-blue);
+        }
+        
+        .countdown-timer.tick {
+            animation: countdown-tick 0.3s ease-out;
+        }
+        
+        /* Stats Row */
+        .stats-row {
+            display: flex;
+            justify-content: center;
+            gap: 48px;
+            margin-top: 40px;
+            animation: fadeIn 0.6s ease-out 0.3s both;
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-family: 'Fraunces', serif;
+            font-size: 2rem;
+            font-weight: 500;
+            color: var(--kelly-blue);
+        }
+        
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+        
+        /* Tagline */
+        .tagline {
+            margin-top: 48px;
+            font-size: 1.1rem;
+            color: var(--text-dim);
+            animation: fadeIn 0.6s ease-out 0.4s both;
+        }
+        
+        .tagline em {
+            color: var(--text);
+            font-style: normal;
+        }
+        
+        /* Footer */
+        footer {
+            padding: 24px;
+            text-align: center;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+        }
+        
+        footer a {
+            color: var(--kelly-blue);
+            text-decoration: none;
+        }
+        
+        /* Mobile adjustments */
+        @media (max-width: 600px) {
+            .kelly-card {
+                padding: 24px;
+            }
+            
+            .kelly-avatar-container {
+                width: 140px;
+                height: 140px;
+            }
+            
+            .kelly-avatar-container::before {
+                font-size: 48px;
+            }
+            
+            .topic-name {
+                font-size: 1.5rem;
+            }
+            
+            .stats-row {
+                gap: 24px;
+            }
+            
+            .stat-value {
+                font-size: 1.5rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <a href="kelly.html" class="logo">✨ <span>Curious</span> Kelly</a>
+        <nav class="nav-links">
+            <a href="curriculum.html">All Topics</a>
+            <a href="perspectives.html">Explore</a>
+            <a href="#" id="about-link">About</a>
+        </nav>
+    </header>
+    
+    <main>
+        <p class="greeting" id="greeting">Good morning!</p>
+        <h1 class="main-title">Today we're learning about <em id="topic-preview">something wonderful</em></h1>
+        
+        <div class="kelly-card" onclick="joinClass()">
+            <div class="live-indicator">
+                <span class="live-dot"></span>
+                LIVE NOW
+            </div>
+            
+            <div class="kelly-avatar-container">
+                <div class="viewer-badge">
+                    👥 <strong id="viewer-count">1,247,832</strong> watching
+                </div>
+            </div>
+            
+            <div class="topic-label">Day <span id="day-number">1</span> of 366</div>
+            <h2 class="topic-name" id="topic-name">Loading...</h2>
+            <p class="topic-hook" id="topic-hook">"Something wonderful awaits..."</p>
+            
+            <button class="join-button">
+                Start Learning →
+            </button>
+            
+            <div class="countdown-section">
+                <p class="countdown-label">Next class starts in</p>
+                <div class="countdown-timer" id="countdown">--:--</div>
+            </div>
+        </div>
+        
+        <div class="stats-row">
+            <div class="stat">
+                <div class="stat-value">147</div>
+                <div class="stat-label">Countries</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">366</div>
+                <div class="stat-label">Topics</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">5 min</div>
+                <div class="stat-label">Per class</div>
+            </div>
+        </div>
+        
+        <p class="tagline">Learn something wonderful. <em>Every day. Together.</em></p>
+    </main>
+    
+    <footer>
+        Made with ✨ by <a href="mailto:hello@curiouskelly.com">Curious Kelly</a>
+    </footer>
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <script>
+        const SUPABASE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI';
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        let viewerCount = 1247832;
+        
+        // Set greeting based on time
+        function setGreeting() {
+            const hour = new Date().getHours();
+            let greeting;
+            if (hour < 12) greeting = "Good morning!";
+            else if (hour < 17) greeting = "Good afternoon!";
+            else greeting = "Good evening!";
+            document.getElementById('greeting').textContent = greeting;
+        }
+        
+        // Get day of year
+        function getDayOfYear() {
+            const now = new Date();
+            const start = new Date(now.getFullYear(), 0, 0);
+            const diff = now - start;
+            const oneDay = 1000 * 60 * 60 * 24;
+            return Math.floor(diff / oneDay);
+        }
+        
+        // Load today's lesson
+        async function loadTodaysLesson() {
+            const dayOfYear = getDayOfYear();
+            
+            const { data: lesson, error } = await supabase
+                .from('core_lessons')
+                .select('day_number, topic, universal_truth')
+                .eq('day_number', dayOfYear)
+                .single();
+            
+            if (lesson) {
+                document.getElementById('day-number').textContent = lesson.day_number;
+                document.getElementById('topic-name').textContent = lesson.topic;
+                document.getElementById('topic-preview').textContent = lesson.topic;
+                
+                // Try to get age-specific hook
+                const { data: hookData } = await supabase
+                    .from('lesson_age_hooks')
+                    .select('hook')
+                    .eq('day_number', dayOfYear)
+                    .eq('age_bucket', '18-35')
+                    .single();
+                
+                if (hookData) {
+                    document.getElementById('topic-hook').textContent = `"${hookData.hook}"`;
+                } else if (lesson.universal_truth) {
+                    document.getElementById('topic-hook').textContent = `"${lesson.universal_truth}"`;
+                }
+            } else {
+                // Fallback to day 1 if error
+                const { data: day1 } = await supabase
+                    .from('core_lessons')
+                    .select('day_number, topic, universal_truth')
+                    .eq('day_number', 1)
+                    .single();
+                
+                if (day1) {
+                    document.getElementById('day-number').textContent = day1.day_number;
+                    document.getElementById('topic-name').textContent = day1.topic;
+                    document.getElementById('topic-preview').textContent = day1.topic;
+                    if (day1.universal_truth) {
+                        document.getElementById('topic-hook').textContent = `"${day1.universal_truth}"`;
+                    }
+                }
+            }
+        }
+        
+        // Update countdown (next 10-minute mark)
+        function updateCountdown() {
+            const now = new Date();
+            const minutes = now.getMinutes();
+            const seconds = now.getSeconds();
+            
+            const nextClass = Math.ceil((minutes + 1) / 10) * 10;
+            let minutesLeft = nextClass - minutes - 1;
+            let secondsLeft = 60 - seconds;
+            
+            if (secondsLeft === 60) {
+                secondsLeft = 0;
+                minutesLeft += 1;
+            }
+            
+            if (minutesLeft >= 10) minutesLeft = minutesLeft - 10;
+            
+            const countdownEl = document.getElementById('countdown');
+            const newValue = `${minutesLeft}:${secondsLeft.toString().padStart(2, '0')}`;
+            
+            if (countdownEl.textContent !== newValue) {
+                countdownEl.textContent = newValue;
+                countdownEl.classList.add('tick');
+                setTimeout(() => countdownEl.classList.remove('tick'), 300);
+            }
+        }
+        
+        // Simulate viewer count
+        function updateViewerCount() {
+            viewerCount += Math.floor(Math.random() * 50) - 15;
+            document.getElementById('viewer-count').textContent = viewerCount.toLocaleString();
+        }
+        
+        // Join class - go to the learn page
+        function joinClass() {
+            window.location.href = 'learn.html';
+        }
+        
+        // Initialize
+        async function init() {
+            setGreeting();
+            await loadTodaysLesson();
+            updateCountdown();
+            
+            // Update every second
+            setInterval(updateCountdown, 1000);
+            setInterval(updateViewerCount, 3000);
+        }
+        
+        init();
+    </script>
+</body>
+</html>

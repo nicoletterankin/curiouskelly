@@ -1,0 +1,525 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kelly 2D Avatar - 5-Phase Hot or Not</title>
+  <link rel="stylesheet" href="/lesson-player/css/kelly-2d-avatar.css">
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #000;
+      color: #fff;
+      overflow: hidden;
+    }
+
+    .app-container {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      height: 100vh;
+    }
+
+    /* Kelly Avatar Section */
+    .kelly-section {
+      position: relative;
+      background: #1a1a1a;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    #kelly-avatar-container {
+      width: 100%;
+      height: 100%;
+    }
+
+    /* Lesson Control Panel */
+    .lesson-panel {
+      background: #0a0a0a;
+      border-left: 1px solid #333;
+      padding: 32px;
+      display: flex;
+      flex-direction: column;
+      overflow-y: auto;
+    }
+
+    .lesson-header {
+      margin-bottom: 32px;
+    }
+
+    .lesson-header h1 {
+      font-size: 1.5rem;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+
+    .lesson-header p {
+      font-size: 0.875rem;
+      color: #888;
+    }
+
+    /* Phase Content */
+    .phase-content {
+      flex: 1;
+      display: none;
+    }
+
+    .phase-content.active {
+      display: block;
+    }
+
+    .phase-title {
+      font-size: 1.25rem;
+      font-weight: 600;
+      margin-bottom: 16px;
+      color: #fff;
+    }
+
+    .phase-question {
+      font-size: 1.125rem;
+      line-height: 1.6;
+      margin-bottom: 24px;
+      color: #ddd;
+    }
+
+    /* Hot or Not Buttons */
+    .hot-or-not-buttons {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+
+    .choice-button {
+      padding: 16px 24px;
+      border: 2px solid #333;
+      background: #1a1a1a;
+      color: #fff;
+      font-size: 1rem;
+      font-weight: 600;
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .choice-button:hover {
+      background: #2a2a2a;
+      border-color: #555;
+      transform: translateY(-2px);
+    }
+
+    .choice-button.hot {
+      border-color: #4a90e2;
+      color: #4a90e2;
+    }
+
+    .choice-button.hot:hover {
+      background: rgba(74, 144, 226, 0.1);
+      border-color: #4a90e2;
+    }
+
+    .choice-button.not {
+      border-color: #d97757;
+      color: #d97757;
+    }
+
+    .choice-button.not:hover {
+      background: rgba(217, 119, 87, 0.1);
+      border-color: #d97757;
+    }
+
+    /* Teaching Moment */
+    .teaching-moment {
+      display: none;
+      background: #1a1a1a;
+      border-left: 4px solid #4a90e2;
+      padding: 20px;
+      border-radius: 8px;
+      margin-bottom: 24px;
+    }
+
+    .teaching-moment.visible {
+      display: block;
+      animation: slideIn 0.3s ease-out;
+    }
+
+    .teaching-moment.celebrating {
+      border-left-color: #d97757;
+    }
+
+    @keyframes slideIn {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+
+    .teaching-moment h3 {
+      font-size: 1rem;
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #4a90e2;
+    }
+
+    .teaching-moment.celebrating h3 {
+      color: #d97757;
+    }
+
+    .teaching-moment p {
+      font-size: 0.9rem;
+      line-height: 1.6;
+      color: #ccc;
+    }
+
+    /* Next Button */
+    .next-button {
+      padding: 14px 28px;
+      background: #4a90e2;
+      color: #fff;
+      border: none;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: none;
+    }
+
+    .next-button.visible {
+      display: block;
+    }
+
+    .next-button:hover {
+      background: #3a7bc8;
+      transform: translateY(-2px);
+    }
+
+    /* Wisdom Phase */
+    .wisdom-content {
+      text-align: center;
+    }
+
+    .wisdom-quote {
+      font-size: 1.5rem;
+      font-weight: 300;
+      font-style: italic;
+      line-height: 1.8;
+      color: #fff;
+      margin: 40px 0;
+      position: relative;
+    }
+
+    .wisdom-quote::before {
+      content: '"';
+      font-size: 4rem;
+      color: #4a90e2;
+      opacity: 0.3;
+      position: absolute;
+      top: -20px;
+      left: -10px;
+    }
+
+    .restart-button {
+      padding: 14px 28px;
+      background: transparent;
+      color: #4a90e2;
+      border: 2px solid #4a90e2;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-top: 20px;
+    }
+
+    .restart-button:hover {
+      background: rgba(74, 144, 226, 0.1);
+    }
+
+    /* Debug Panel */
+    .debug-panel {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      background: rgba(0, 0, 0, 0.9);
+      padding: 16px;
+      border-radius: 8px;
+      font-family: 'Courier New', monospace;
+      font-size: 0.75rem;
+      z-index: 1000;
+      min-width: 200px;
+    }
+
+    .debug-panel h4 {
+      margin-bottom: 8px;
+      color: #4a90e2;
+    }
+
+    .debug-panel div {
+      margin: 4px 0;
+      color: #ccc;
+    }
+
+    @media (max-width: 1024px) {
+      .app-container {
+        grid-template-columns: 1fr;
+        grid-template-rows: 1fr auto;
+      }
+
+      .lesson-panel {
+        max-height: 50vh;
+        border-left: none;
+        border-top: 1px solid #333;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- Debug Panel -->
+  <div class="debug-panel" id="debug-panel">
+    <h4>Kelly 2D Debug</h4>
+    <div>Phase: <span id="debug-phase">welcome</span></div>
+    <div>Expression: <span id="debug-expression">welcome</span></div>
+    <div>Transitioning: <span id="debug-transitioning">false</span></div>
+  </div>
+
+  <!-- Main App -->
+  <div class="app-container">
+    <!-- Kelly Avatar -->
+    <div class="kelly-section">
+      <div id="kelly-avatar-container"></div>
+    </div>
+
+    <!-- Lesson Control Panel -->
+    <div class="lesson-panel">
+      <div class="lesson-header">
+        <h1>Today's Lesson</h1>
+        <p>Hot or Not: Interactive Learning with Kelly</p>
+      </div>
+
+      <!-- Welcome Phase -->
+      <div class="phase-content active" data-phase="welcome">
+        <div class="phase-title">Welcome!</div>
+        <div class="phase-question">
+          Hi! I'm Kelly, and I'm so excited to explore today's topic with you. 
+          We're going to learn about <strong>The Solar System</strong> together.
+          <br><br>
+          Ready to start?
+        </div>
+        <button class="next-button visible" onclick="startLesson()">
+          Let's Go! 🚀
+        </button>
+      </div>
+
+      <!-- Question 1 -->
+      <div class="phase-content" data-phase="q1">
+        <div class="phase-title">Question 1</div>
+        <div class="phase-question">
+          The Sun is the closest star to Earth.
+        </div>
+        <div class="hot-or-not-buttons">
+          <button class="choice-button hot" onclick="makeChoice(1, 'a')">
+            🔥 Hot (True)
+          </button>
+          <button class="choice-button not" onclick="makeChoice(1, 'b')">
+            ❄️ Not (False)
+          </button>
+        </div>
+        <div class="teaching-moment" id="teaching-1">
+          <h3>Kelly's Teaching Moment</h3>
+          <p id="teaching-text-1"></p>
+        </div>
+        <button class="next-button" id="next-1" onclick="nextQuestion(2)">
+          Next Question →
+        </button>
+      </div>
+
+      <!-- Question 2 -->
+      <div class="phase-content" data-phase="q2">
+        <div class="phase-title">Question 2</div>
+        <div class="phase-question">
+          Jupiter is the largest planet in our solar system.
+        </div>
+        <div class="hot-or-not-buttons">
+          <button class="choice-button hot" onclick="makeChoice(2, 'a')">
+            🔥 Hot (True)
+          </button>
+          <button class="choice-button not" onclick="makeChoice(2, 'b')">
+            ❄️ Not (False)
+          </button>
+        </div>
+        <div class="teaching-moment" id="teaching-2">
+          <h3>Kelly's Teaching Moment</h3>
+          <p id="teaching-text-2"></p>
+        </div>
+        <button class="next-button" id="next-2" onclick="nextQuestion(3)">
+          Next Question →
+        </button>
+      </div>
+
+      <!-- Question 3 -->
+      <div class="phase-content" data-phase="q3">
+        <div class="phase-title">Question 3</div>
+        <div class="phase-question">
+          All planets in the solar system have moons.
+        </div>
+        <div class="hot-or-not-buttons">
+          <button class="choice-button hot" onclick="makeChoice(3, 'a')">
+            🔥 Hot (True)
+          </button>
+          <button class="choice-button not" onclick="makeChoice(3, 'b')">
+            ❄️ Not (False)
+          </button>
+        </div>
+        <div class="teaching-moment" id="teaching-3">
+          <h3>Kelly's Teaching Moment</h3>
+          <p id="teaching-text-3"></p>
+        </div>
+        <button class="next-button" id="next-3" onclick="showWisdom()">
+          Wisdom Time ✨
+        </button>
+      </div>
+
+      <!-- Wisdom Phase -->
+      <div class="phase-content wisdom-content" data-phase="wisdom">
+        <div class="phase-title">Wisdom</div>
+        <div class="wisdom-quote">
+          The universe is full of magical things patiently waiting for our wits to grow sharper.
+        </div>
+        <p style="color: #888; font-size: 0.875rem;">— Eden Phillpotts</p>
+        <button class="restart-button" onclick="restartLesson()">
+          🔄 Try Another Lesson
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Kelly 2D Avatar System -->
+  <script type="module">
+    import { Kelly2DAvatar } from '/lesson-player/js/kelly-2d-avatar.js';
+
+    // Initialize Kelly
+    const kellyContainer = document.getElementById('kelly-avatar-container');
+    window.kelly = new Kelly2DAvatar(kellyContainer);
+
+    // Listen to Kelly events
+    document.addEventListener('kelly-phase-changed', (e) => {
+      const { phase, expression } = e.detail;
+      document.getElementById('debug-phase').textContent = phase;
+      document.getElementById('debug-expression').textContent = expression;
+      console.log('[Demo] Kelly phase changed:', phase, expression);
+    });
+
+    // Lesson data
+    window.lessonData = {
+      1: {
+        hot: "Exactly right! The Sun is indeed the closest star to Earth, about 93 million miles away. That's why it appears so much brighter than other stars!",
+        not: "Actually, the Sun IS the closest star to Earth! It's about 93 million miles away, which is why we see it as so bright and warm during the day."
+      },
+      2: {
+        hot: "Perfect! Jupiter is absolutely massive—so big that 1,300 Earths could fit inside it! It's truly the king of planets.",
+        not: "Actually, Jupiter IS the largest planet! It's so big that 1,300 Earths could fit inside it. Amazing, right?"
+      },
+      3: {
+        hot: "Not quite! Mercury and Venus actually don't have any moons. But many other planets have lots—Saturn has over 80!",
+        not: "Exactly! Mercury and Venus don't have any moons at all. But don't worry, Saturn makes up for it with over 80 moons!"
+      }
+    };
+
+    console.log('[Demo] Kelly 2D system loaded');
+  </script>
+
+  <!-- Lesson Flow Logic -->
+  <script>
+    function startLesson() {
+      showPhase('q1');
+      kelly.showQuestion(1);
+    }
+
+    function makeChoice(questionNum, choice) {
+      // Show Kelly's reaction
+      kelly.showReaction(questionNum, choice);
+
+      // Show teaching moment
+      const teachingDiv = document.getElementById(`teaching-${questionNum}`);
+      const teachingText = document.getElementById(`teaching-text-${questionNum}`);
+      
+      if (choice === 'a') {
+        teachingText.textContent = lessonData[questionNum].hot;
+        teachingDiv.classList.remove('celebrating');
+      } else {
+        teachingText.textContent = lessonData[questionNum].not;
+        teachingDiv.classList.add('celebrating');
+      }
+      
+      teachingDiv.classList.add('visible');
+
+      // Show next button
+      const nextBtn = document.getElementById(`next-${questionNum}`);
+      nextBtn.classList.add('visible');
+
+      // Disable choice buttons
+      const buttons = document.querySelectorAll(`[data-phase="q${questionNum}"] .choice-button`);
+      buttons.forEach(btn => btn.disabled = true);
+    }
+
+    function nextQuestion(questionNum) {
+      showPhase(`q${questionNum}`);
+      kelly.showQuestion(questionNum);
+    }
+
+    function showWisdom() {
+      showPhase('wisdom');
+      kelly.showWisdom();
+    }
+
+    function restartLesson() {
+      // Reset all phases
+      document.querySelectorAll('.teaching-moment').forEach(el => {
+        el.classList.remove('visible');
+      });
+      document.querySelectorAll('.next-button').forEach(el => {
+        el.classList.remove('visible');
+      });
+      document.querySelectorAll('.choice-button').forEach(el => {
+        el.disabled = false;
+      });
+
+      // Back to welcome
+      showPhase('welcome');
+      kelly.showWelcome();
+    }
+
+    function showPhase(phase) {
+      document.querySelectorAll('.phase-content').forEach(el => {
+        el.classList.remove('active');
+      });
+      document.querySelector(`[data-phase="${phase}"]`).classList.add('active');
+    }
+  </script>
+</body>
+</html>
+
+
+
+
+
+
+
+
+
+
+
+
+
+

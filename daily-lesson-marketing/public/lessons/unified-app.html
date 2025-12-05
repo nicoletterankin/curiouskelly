@@ -1,0 +1,155 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curious Kelly - The Daily Lesson</title>
+    <link rel="stylesheet" href="unified-app.css">
+    <!-- Preload Kelly for instant presence -->
+    <link rel="preload" as="image" href="../lesson-player/4.jpeg">
+    <link rel="preload" as="image" href="../lesson-player/0.png">
+</head>
+<body>
+    <!-- 
+      ARCHITECTURE NOTE:
+      This is the "App Shell". It loads once.
+      Kelly is the persistent layer (z-index: 1).
+      UI is the interaction layer (z-index: 10+).
+    -->
+
+    <!-- ==========================================
+       LAYER 1: THE WHITE ROOM (PERSISTENT KELLY)
+       ========================================== -->
+    <div class="kelly-viewport" id="kelly-viewport">
+        <!-- Dynamic lighting layer -->
+        <div class="environment-light"></div>
+        
+        <!-- The 3D/2D Hybrid Kelly -->
+        <!-- We use the "Zoom 3" (Mid-shot) as the default conversational state -->
+        <div class="kelly-stage">
+            <img src="../lesson-player/3.png" alt="Kelly" class="kelly-actor" id="kelly-actor">
+        </div>
+    </div>
+
+    <!-- ==========================================
+       LAYER 2: THE PRODUCT INTERFACE (CLAUDE-LIKE)
+       ========================================== -->
+    <div class="app-interface">
+        
+        <!-- 2.1 SIDEBAR (The Journey) -->
+        <div class="sidebar collapsed" id="app-sidebar">
+            <div class="sidebar-header">
+                <div class="brand">
+                    <span class="brand-icon">🌟</span>
+                    <span class="brand-name">Curious Kelly</span>
+                </div>
+                <button class="sidebar-toggle" id="sidebar-toggle">
+                    <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M3 18h18v-2H3v2zm0-5h18v-2H3v2zm0-7v2h18V6H3z"/>
+                    </svg>
+                </button>
+            </div>
+
+            <div class="sidebar-content">
+                <!-- User Profile / Streak -->
+                <div class="user-profile-card">
+                    <div class="avatar-circle">ME</div>
+                    <div class="user-info">
+                        <div class="user-name">My Journey</div>
+                        <div class="streak-badge">🔥 0 Day Streak</div>
+                    </div>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-label">Today</div>
+                    <div class="nav-item active">
+                        <span class="nav-icon">📅</span>
+                        <span class="nav-text">Today's Lesson</span>
+                        <span class="nav-status">●</span>
+                    </div>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-label">Recent Lessons</div>
+                    <!-- Populated by JS if needed, or static for prototype -->
+                    <div class="nav-item">
+                        <span class="nav-icon">✓</span>
+                        <span class="nav-text">Day 44: Gravity</span>
+                    </div>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-label">Explore</div>
+                    <button class="btn-secondary full-width" id="open-calendar-btn">
+                        View Full Calendar
+                    </button>
+                </div>
+            </div>
+            
+            <!-- Sidebar Footer (Marketing Links) -->
+            <div class="sidebar-footer">
+                <a href="#" class="footer-link">Pricing</a>
+                <a href="#" class="footer-link">For Schools</a>
+                <a href="#" class="footer-link">Help & Support</a>
+            </div>
+        </div>
+
+        <!-- 2.2 MAIN STAGE (The Interaction) -->
+        <div class="main-stage">
+            
+            <!-- Top Bar (Mobile Toggle & Context) -->
+            <div class="top-bar">
+                <button class="mobile-menu-btn" id="mobile-menu-btn">☰</button>
+                <div class="context-pill">
+                    <span class="context-age">Age 6-12</span>
+                    <span class="context-sep">•</span>
+                    <span class="context-lang">English</span>
+                </div>
+            </div>
+
+            <!-- The "Center" Interaction (Where "How can I help?" lives) -->
+            <!-- This floats OVER Kelly -->
+            <div class="interaction-container" id="interaction-container">
+                
+                <!-- State 1: Greeting (The "Product is the Homepage" state) -->
+                <div class="interaction-state active" id="state-greeting">
+                    <h1 class="greeting-title">Good morning!</h1>
+                    <p class="greeting-subtitle">Loading today's lesson...</p>
+                    
+                    <div class="action-card">
+                        <div class="action-input-mock">
+                            <button class="btn-primary-large" id="start-lesson-btn">
+                                <span class="btn-icon">▶</span>
+                                Start Daily Lesson
+                            </button>
+                            <div class="secondary-actions">
+                                <button class="btn-text">Explore Topic First</button>
+                            </div>
+                        </div>
+                        <p class="pricing-micro-copy">Free daily lesson • No credit card required</p>
+                    </div>
+                </div>
+
+                <!-- State 2: Active Lesson (The Player) -->
+                <div class="interaction-state" id="state-lesson">
+                    <!-- Dynamic content injected here by JS -->
+                </div>
+
+                <!-- State 3: Calendar Overlay (Full View) -->
+                <div class="calendar-overlay" id="calendar-overlay">
+                    <div class="overlay-header">
+                        <h2>Your 365 Day Journey</h2>
+                        <button class="close-overlay-btn">Close</button>
+                    </div>
+                    <div class="calendar-grid-mock">
+                        <!-- JS populates this -->
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+
+    <script src="unified-app.js"></script>
+</body>
+</html>

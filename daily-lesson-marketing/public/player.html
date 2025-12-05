@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
+    />
+    <title>Curious Kelly OS</title>
+    <link rel="stylesheet" href="curious-kellly/lesson-player-v2/css/styles.css" />
+    <link rel="stylesheet" href="curious-kellly/lesson-player-v2/css/ui-kit.css" />
+    <!-- Preload critical assets -->
+    <link rel="preload" href="lessons/images/kelly-directors-chair-curious.png" as="image" />
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+      /* Fix pathing for root-level player.html */
+      .kelly-unity-container,
+      .kelly-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center;
+      }
+
+      /* TRUE NO UI overrides */
+      #sidebar-nav {
+        display: none !important;
+      } /* Hide the rail */
+
+      #os-trigger {
+        position: absolute;
+        top: 30px;
+        right: 30px;
+        width: 50px;
+        height: 50px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
+        color: white;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        cursor: pointer;
+        z-index: 1000;
+        transition: all 0.3s ease;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.2);
+      }
+      #os-trigger:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.1);
+      }
+
+      /* Hide Lesson UI by default too - clear the screen */
+      .lesson-context-panel,
+      .controls-panel,
+      .interaction-zone {
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.5s ease;
+      }
+
+      /* When we are 'active' (drawer open or interacting), show UI */
+      body.ui-active .lesson-context-panel,
+      body.ui-active .controls-panel,
+      body.ui-active .interaction-zone {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      /* Drawer tweaks for the "Bam" effect */
+      .glass-drawer {
+        width: 400px; /* Slightly wider for full context */
+        background: rgba(15, 15, 17, 0.85); /* Darker for contrast */
+      }
+    </style>
+  </head>
+  <body>
+    <!-- Root Desktop Container (Locked 16:9) -->
+    <div id="app-layer-desktop">
+      <!-- LAYER 0: Background (Unity / Video) -->
+      <div id="layer-background">
+        <div class="kelly-unity-container" id="kelly-unity-container">
+          <iframe
+            id="kelly-unity-iframe"
+            class="kelly-unity-iframe"
+            src="unity/kelly-v1/index.html"
+            title="Kelly Unity Avatar"
+            allow="autoplay *; microphone; fullscreen; xr-spatial-tracking"
+            loading="lazy"
+            referrerpolicy="strict-origin-when-cross-origin"
+          ></iframe>
+          <div class="kelly-unity-status" id="kelly-unity-status">
+            <span class="status-indicator" id="unity-status-indicator">•</span>
+            <span class="status-text" id="unity-status-text">Loading Kelly...</span>
+          </div>
+        </div>
+        <img
+          id="kelly-image"
+          class="kelly-image"
+          src="lessons/images/kelly-directors-chair-curious.png"
+          alt="Kelly teaching"
+        />
+      </div>
+
+      <!-- TRIGGER: The Single Entry Point -->
+      <button id="os-trigger" title="Open Kelly OS">☰</button>
+
+      <!-- LAYER 2: OS Interface (Hidden by default via CSS) -->
+      <div id="layer-os-interface">
+        <!-- MODE: DASHBOARD (Default View) -->
+        <div id="mode-dashboard" class="os-mode-panel active">
+          <!-- Dashboard content will be moved to drawer/overlay in this new model -->
+        </div>
+
+        <!-- MODE: LESSON -->
+        <div id="mode-lesson" class="os-mode-panel">
+          <!-- Lesson UI Components -->
+          <div class="controls-panel">
+            <div class="age-selector-floating glass-panel-light">
+              <label for="age-slider" class="age-label-floating">Age</label>
+              <div class="age-display-floating"><span id="age-value">25</span></div>
+              <input
+                type="range"
+                id="age-slider"
+                min="2"
+                max="102"
+                value="25"
+                class="age-slider-floating"
+              />
+            </div>
+          </div>
+
+          <aside class="lesson-context-panel glass-panel-medium">
+            <div class="lesson-meta-header"><div class="meta-label">Current Lesson</div></div>
+            <h2 id="lesson-title" class="lesson-title">Loading...</h2>
+            <p id="topic-description" class="lesson-description">...</p>
+          </aside>
+
+          <div class="interaction-zone">
+            <div id="question-card" class="question-card glass-panel-medium">
+              <button id="play-pause" class="play-button glass-panel-light">
+                <span class="play-icon">▶</span>
+              </button>
+              <div id="question-text" class="question-text">Ready?</div>
+            </div>
+            <div id="choice-cards-container" class="choice-cards-container"></div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LAYER 3: Modal Stack (Overlays) -->
+      <div id="layer-modal-stack">
+        <!-- MAIN DRAWER: The "Bam" Interface -->
+        <div id="menu-drawer" class="glass-drawer">
+          <div class="drawer-header">
+            <h3>Kelly OS</h3>
+            <button class="btn-close-drawer">×</button>
+          </div>
+
+          <div class="drawer-content-scroll" style="overflow-y: auto; flex: 1">
+            <!-- 1. Dashboard / Status Section -->
+            <div class="nav-section">
+              <div
+                class="dashboard-card glass-panel-light"
+                style="margin-bottom: 20px; padding: 20px"
+              >
+                <span class="meta-label">Today's Focus</span>
+                <h4 id="drawer-lesson-title" style="margin: 5px 0; font-size: 1.1rem">
+                  The Sun: Our Star
+                </h4>
+                <div
+                  style="
+                    display: flex;
+                    justify-content: space-between;
+                    align-items: center;
+                    margin-top: 10px;
+                  "
+                >
+                  <span class="date-pill" id="drawer-date" style="font-size: 0.8rem; opacity: 0.7"
+                    >Dec 25</span
+                  >
+                  <button
+                    class="btn-primary-glass"
+                    id="btn-drawer-start"
+                    style="padding: 6px 12px; font-size: 0.8rem"
+                  >
+                    Start
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- 2. Navigation Links -->
+            <nav class="drawer-nav">
+              <button class="drawer-item active" data-target="mode-lesson">
+                <span class="icon">📚</span> Classroom
+              </button>
+              <button class="drawer-item" data-action="open-syllabus">
+                <span class="icon">📅</span> Syllabus
+              </button>
+              <button class="drawer-item" data-action="open-tuition">
+                <span class="icon">🎓</span> Tuition & Gifts
+              </button>
+              <button class="drawer-item" data-action="open-careers">
+                <span class="icon">💼</span> Careers
+              </button>
+              <button class="drawer-item" data-action="open-newsroom">
+                <span class="icon">📰</span> Newsroom
+              </button>
+            </nav>
+
+            <div class="drawer-divider"></div>
+
+            <!-- 3. System -->
+            <nav class="drawer-nav">
+              <button class="drawer-item" data-action="open-settings">Settings</button>
+              <button class="drawer-item text-danger" data-action="logout">Log Out</button>
+            </nav>
+          </div>
+        </div>
+
+        <!-- Content Reader Modal -->
+        <div id="modal-reader" class="os-modal glass-panel-heavy">
+          <div class="modal-header">
+            <h2 id="reader-title">Title</h2>
+            <button class="btn-close-modal">Close</button>
+          </div>
+          <div class="modal-content-scroll" id="reader-content"></div>
+        </div>
+
+        <!-- Tuition Modal -->
+        <div id="modal-tuition" class="os-modal glass-panel-heavy">
+          <div class="modal-header">
+            <h2>Tuition & Enrollment</h2>
+            <button class="btn-close-modal">Close</button>
+          </div>
+          <div class="modal-content-scroll">
+            <div class="pricing-grid">
+              <div class="pricing-card glass-panel-light">
+                <h3>Scholar</h3>
+                <div class="price">$199<span>/yr</span></div>
+                <button class="btn-primary-glass btn-checkout" data-plan="personal">
+                  Subscribe
+                </button>
+              </div>
+              <div class="pricing-card glass-panel-light featured">
+                <h3>Fellowship (Gift)</h3>
+                <div class="price">$199<span>/one-time</span></div>
+                <button class="btn-primary-glass btn-checkout" data-plan="gift">Gift Now</button>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <audio id="kelly-audio" preload="auto"></audio>
+
+    <script type="module" src="/curious-kellly/lesson-player-v2/js/app.js"></script>
+  </body>
+</html>

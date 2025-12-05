@@ -1,0 +1,685 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Curious Kelly - Lesson Player Test</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+
+        .player-container {
+            background: white;
+            border-radius: 24px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            max-width: 900px;
+            width: 100%;
+            overflow: hidden;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 30px;
+            text-align: center;
+        }
+
+        .header h1 {
+            font-size: 32px;
+            margin-bottom: 10px;
+            font-weight: 700;
+        }
+
+        .header p {
+            font-size: 16px;
+            opacity: 0.9;
+        }
+
+        .controls-section {
+            padding: 30px;
+            background: #f8f9fa;
+            border-bottom: 2px solid #e9ecef;
+        }
+
+        .control-group {
+            margin-bottom: 20px;
+        }
+
+        .control-group label {
+            display: block;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: #495057;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .control-group select, .control-group button {
+            width: 100%;
+            padding: 12px;
+            border: 2px solid #dee2e6;
+            border-radius: 12px;
+            font-size: 16px;
+            background: white;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .control-group select:hover, .control-group button:hover {
+            border-color: #667eea;
+        }
+
+        .control-group select:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .controls-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+        }
+
+        .content-section {
+            padding: 40px;
+        }
+
+        .kelly-avatar {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .kelly-avatar img {
+            max-width: 400px;
+            width: 100%;
+            height: auto;
+            border-radius: 16px;
+            box-shadow: 0 10px 30px rgba(0, 0, 0, 0.1);
+            transition: all 0.5s ease;
+        }
+
+        .phase-indicator {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .phase-badge {
+            display: inline-block;
+            padding: 12px 24px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            border-radius: 24px;
+            font-weight: 600;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .lesson-info {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .lesson-title {
+            font-size: 24px;
+            font-weight: 700;
+            color: #2d3748;
+            margin-bottom: 10px;
+        }
+
+        .lesson-description {
+            font-size: 16px;
+            color: #718096;
+            line-height: 1.6;
+        }
+
+        .transcript {
+            background: #f8f9fa;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 30px;
+            min-height: 100px;
+        }
+
+        .transcript-label {
+            font-weight: 600;
+            color: #495057;
+            margin-bottom: 10px;
+            font-size: 14px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .transcript-text {
+            font-size: 18px;
+            line-height: 1.8;
+            color: #2d3748;
+        }
+
+        .audio-controls {
+            background: #2d3748;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #4a5568;
+            border-radius: 3px;
+            margin-bottom: 15px;
+            overflow: hidden;
+            cursor: pointer;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            width: 0%;
+            transition: width 0.1s linear;
+        }
+
+        .time-display {
+            display: flex;
+            justify-content: space-between;
+            color: #a0aec0;
+            font-size: 14px;
+            margin-bottom: 15px;
+        }
+
+        .playback-controls {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 12px;
+            font-size: 16px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.4);
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 20px rgba(102, 126, 234, 0.6);
+        }
+
+        .btn-secondary {
+            background: #4a5568;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #2d3748;
+        }
+
+        .btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+
+        .phase-navigation {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            margin-top: 20px;
+        }
+
+        .status-message {
+            text-align: center;
+            padding: 15px;
+            background: #e6fffa;
+            color: #234e52;
+            border-radius: 12px;
+            margin-top: 20px;
+            font-weight: 500;
+        }
+
+        .error-message {
+            background: #fff5f5;
+            color: #c53030;
+        }
+
+        @keyframes fadeIn {
+            from {
+                opacity: 0;
+                transform: translateY(10px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .fade-in {
+            animation: fadeIn 0.5s ease;
+        }
+
+        .lesson-progress {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 30px;
+        }
+
+        .progress-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #e2e8f0;
+            transition: all 0.3s ease;
+        }
+
+        .progress-dot.active {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            transform: scale(1.3);
+        }
+
+        .progress-dot.completed {
+            background: #48bb78;
+        }
+    </style>
+</head>
+<body>
+    <div class="player-container">
+        <div class="header">
+            <h1>🎓 Curious Kelly Lesson Player</h1>
+            <p>Experience the magic of daily learning</p>
+        </div>
+
+        <div class="controls-section">
+            <div class="controls-grid">
+                <div class="control-group">
+                    <label>📚 Select Lesson</label>
+                    <select id="lessonSelect">
+                        <option value="">Choose a lesson...</option>
+                        <option value="applied-mathematics-math-in-the-real-world">Applied Mathematics</option>
+                        <option value="creative-writing">Creative Writing</option>
+                        <option value="dance-expression">Dance Expression</option>
+                        <option value="genetic-engineering-editing-the-code-of-life">Genetic Engineering</option>
+                        <option value="molecular-biology">Molecular Biology</option>
+                        <option value="negotiation-skills">Negotiation Skills</option>
+                        <option value="nutrition-science">Nutrition Science</option>
+                        <option value="poetry">Poetry</option>
+                        <option value="the-sun">The Sun</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>👥 Age Group</label>
+                    <select id="ageVariantSelect">
+                        <option value="2-5">Ages 2-5 (Preschool)</option>
+                        <option value="6-12">Ages 6-12 (Elementary)</option>
+                        <option value="13-17">Ages 13-17 (Teen)</option>
+                        <option value="18-35">Ages 18-35 (Young Adult)</option>
+                        <option value="36-60">Ages 36-60 (Adult)</option>
+                        <option value="61-102">Ages 61+ (Senior)</option>
+                    </select>
+                </div>
+
+                <div class="control-group">
+                    <label>🌍 Language</label>
+                    <select id="languageSelect">
+                        <option value="en">English</option>
+                        <option value="es">Español</option>
+                        <option value="fr">Français</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <div class="content-section">
+            <div class="lesson-progress" id="lessonProgress">
+                <div class="progress-dot" data-phase="welcome"></div>
+                <div class="progress-dot" data-phase="mainContent"></div>
+                <div class="progress-dot" data-phase="wisdomMoment"></div>
+            </div>
+
+            <div class="phase-indicator">
+                <span class="phase-badge" id="phaseBadge">Select a lesson to begin</span>
+            </div>
+
+            <div class="kelly-avatar">
+                <img id="kellyImage" src="images/kelly-directors-chair-curious.png" alt="Curious Kelly" onerror="this.style.display='none'">
+            </div>
+
+            <div class="lesson-info" id="lessonInfo" style="display: none;">
+                <h2 class="lesson-title" id="lessonTitle"></h2>
+                <p class="lesson-description" id="lessonDescription"></p>
+            </div>
+
+            <div class="transcript" id="transcriptSection" style="display: none;">
+                <div class="transcript-label">Current Phase</div>
+                <p class="transcript-text" id="transcriptText">Audio will appear here...</p>
+            </div>
+
+            <div class="audio-controls" id="audioControls" style="display: none;">
+                <div class="progress-bar" id="progressBar">
+                    <div class="progress-fill" id="progressFill"></div>
+                </div>
+                <div class="time-display">
+                    <span id="currentTime">0:00</span>
+                    <span id="duration">0:00</span>
+                </div>
+                <div class="playback-controls">
+                    <button class="btn btn-secondary" id="prevPhaseBtn" disabled>⏮️ Previous Phase</button>
+                    <button class="btn btn-primary" id="playPauseBtn">▶️ Play</button>
+                    <button class="btn btn-secondary" id="nextPhaseBtn">Next Phase ⏭️</button>
+                </div>
+            </div>
+
+            <div id="statusMessage"></div>
+        </div>
+    </div>
+
+    <audio id="audioPlayer" preload="metadata"></audio>
+
+    <script>
+        // State management
+        const state = {
+            currentLesson: null,
+            currentAgeVariant: '2-5',
+            currentLanguage: 'en',
+            currentPhase: 'welcome',
+            phases: ['welcome', 'mainContent', 'wisdomMoment'],
+            isPlaying: false,
+            lessonData: null,
+            metadata: null
+        };
+
+        // Kelly avatar images by phase
+        const kellyImages = {
+            welcome: 'images/kelly-directors-chair-curious.png',
+            mainContent: 'images/kelly-directors-chair-explaining.png',
+            wisdomMoment: 'images/kelly-directors-chair-wisdom.png',
+            celebrating: 'images/kelly-directors-chair-celebrating.png'
+        };
+
+        // Phase display names
+        const phaseNames = {
+            welcome: '👋 Welcome',
+            mainContent: '📖 Main Content',
+            wisdomMoment: '✨ Wisdom Moment'
+        };
+
+        // DOM elements
+        const lessonSelect = document.getElementById('lessonSelect');
+        const ageVariantSelect = document.getElementById('ageVariantSelect');
+        const languageSelect = document.getElementById('languageSelect');
+        const audioPlayer = document.getElementById('audioPlayer');
+        const playPauseBtn = document.getElementById('playPauseBtn');
+        const prevPhaseBtn = document.getElementById('prevPhaseBtn');
+        const nextPhaseBtn = document.getElementById('nextPhaseBtn');
+        const phaseBadge = document.getElementById('phaseBadge');
+        const kellyImage = document.getElementById('kellyImage');
+        const lessonTitle = document.getElementById('lessonTitle');
+        const lessonDescription = document.getElementById('lessonDescription');
+        const transcriptText = document.getElementById('transcriptText');
+        const progressBar = document.getElementById('progressBar');
+        const progressFill = document.getElementById('progressFill');
+        const currentTimeEl = document.getElementById('currentTime');
+        const durationEl = document.getElementById('duration');
+        const audioControls = document.getElementById('audioControls');
+        const transcriptSection = document.getElementById('transcriptSection');
+        const lessonInfo = document.getElementById('lessonInfo');
+        const statusMessage = document.getElementById('statusMessage');
+        const lessonProgress = document.getElementById('lessonProgress');
+
+        // Event listeners
+        lessonSelect.addEventListener('change', handleLessonChange);
+        ageVariantSelect.addEventListener('change', handleAgeVariantChange);
+        languageSelect.addEventListener('change', handleLanguageChange);
+        playPauseBtn.addEventListener('click', togglePlayPause);
+        prevPhaseBtn.addEventListener('click', previousPhase);
+        nextPhaseBtn.addEventListener('click', nextPhase);
+        progressBar.addEventListener('click', seekAudio);
+
+        audioPlayer.addEventListener('timeupdate', updateProgress);
+        audioPlayer.addEventListener('ended', handleAudioEnded);
+        audioPlayer.addEventListener('loadedmetadata', handleAudioLoaded);
+        audioPlayer.addEventListener('error', handleAudioError);
+
+        // Load lesson data
+        async function handleLessonChange() {
+            const lessonId = lessonSelect.value;
+            if (!lessonId) return;
+
+            state.currentLesson = lessonId;
+            state.currentPhase = 'welcome';
+            showStatus('Loading lesson...', false);
+
+            try {
+                // Load DNA file
+                const dnaResponse = await fetch(`${lessonId}-dna.json`);
+                if (!dnaResponse.ok) throw new Error('DNA file not found');
+                state.lessonData = await dnaResponse.json();
+
+                // Load metadata
+                const metadataResponse = await fetch(`audio/${lessonId}/metadata.json`);
+                if (!metadataResponse.ok) throw new Error('Metadata not found');
+                state.metadata = await metadataResponse.json();
+
+                updateUI();
+                loadCurrentAudio();
+                showStatus('Lesson loaded! Press play to begin.', false);
+            } catch (error) {
+                showStatus(`Error loading lesson: ${error.message}`, true);
+                console.error('Load error:', error);
+            }
+        }
+
+        function handleAgeVariantChange() {
+            state.currentAgeVariant = ageVariantSelect.value;
+            state.currentPhase = 'welcome';
+            if (state.currentLesson) {
+                updateUI();
+                loadCurrentAudio();
+            }
+        }
+
+        function handleLanguageChange() {
+            state.currentLanguage = languageSelect.value;
+            if (state.currentLesson) {
+                updateUI();
+                loadCurrentAudio();
+            }
+        }
+
+        function updateUI() {
+            if (!state.lessonData) return;
+
+            const variant = state.lessonData.ageVariants[state.currentAgeVariant];
+            const language = variant.language[state.currentLanguage];
+
+            // Update lesson info
+            lessonTitle.textContent = language.title || variant.title;
+            lessonDescription.textContent = state.lessonData.description;
+            lessonInfo.style.display = 'block';
+
+            // Update phase badge
+            phaseBadge.textContent = phaseNames[state.currentPhase];
+            phaseBadge.classList.add('fade-in');
+
+            // Update Kelly's avatar
+            kellyImage.src = kellyImages[state.currentPhase];
+            kellyImage.style.display = 'block';
+
+            // Update transcript
+            const phaseContent = language[state.currentPhase] || 'Content loading...';
+            transcriptText.textContent = phaseContent;
+            transcriptSection.style.display = 'block';
+
+            // Update progress dots
+            updateProgressDots();
+
+            // Update phase navigation buttons
+            const phaseIndex = state.phases.indexOf(state.currentPhase);
+            prevPhaseBtn.disabled = phaseIndex === 0;
+            nextPhaseBtn.disabled = phaseIndex === state.phases.length - 1;
+
+            // Show audio controls
+            audioControls.style.display = 'block';
+        }
+
+        function updateProgressDots() {
+            const phaseIndex = state.phases.indexOf(state.currentPhase);
+            const dots = lessonProgress.querySelectorAll('.progress-dot');
+            
+            dots.forEach((dot, index) => {
+                dot.classList.remove('active', 'completed');
+                if (index < phaseIndex) {
+                    dot.classList.add('completed');
+                } else if (index === phaseIndex) {
+                    dot.classList.add('active');
+                }
+            });
+        }
+
+        function loadCurrentAudio() {
+            if (!state.metadata) return;
+
+            const audioFile = state.metadata.audio_files[state.currentAgeVariant]
+                ?.[state.currentLanguage]
+                ?.[state.currentPhase]
+                ?.file;
+
+            if (!audioFile) {
+                showStatus('Audio file not found for this combination', true);
+                return;
+            }
+
+            const audioPath = `audio/${state.currentLesson}/${audioFile}`;
+            audioPlayer.src = audioPath;
+            audioPlayer.load();
+            state.isPlaying = false;
+            playPauseBtn.innerHTML = '▶️ Play';
+        }
+
+        function togglePlayPause() {
+            if (state.isPlaying) {
+                audioPlayer.pause();
+                state.isPlaying = false;
+                playPauseBtn.innerHTML = '▶️ Play';
+            } else {
+                audioPlayer.play();
+                state.isPlaying = true;
+                playPauseBtn.innerHTML = '⏸️ Pause';
+            }
+        }
+
+        function previousPhase() {
+            const currentIndex = state.phases.indexOf(state.currentPhase);
+            if (currentIndex > 0) {
+                state.currentPhase = state.phases[currentIndex - 1];
+                updateUI();
+                loadCurrentAudio();
+            }
+        }
+
+        function nextPhase() {
+            const currentIndex = state.phases.indexOf(state.currentPhase);
+            if (currentIndex < state.phases.length - 1) {
+                state.currentPhase = state.phases[currentIndex + 1];
+                updateUI();
+                loadCurrentAudio();
+            } else {
+                // Lesson complete!
+                kellyImage.src = kellyImages.celebrating;
+                showStatus('🎉 Lesson complete! Great learning today!', false);
+            }
+        }
+
+        function handleAudioEnded() {
+            state.isPlaying = false;
+            playPauseBtn.innerHTML = '▶️ Play';
+            
+            // Auto-advance to next phase
+            const currentIndex = state.phases.indexOf(state.currentPhase);
+            if (currentIndex < state.phases.length - 1) {
+                setTimeout(() => nextPhase(), 1000);
+            } else {
+                kellyImage.src = kellyImages.celebrating;
+                showStatus('🎉 Lesson complete! You did great today!', false);
+            }
+        }
+
+        function updateProgress() {
+            if (audioPlayer.duration) {
+                const percent = (audioPlayer.currentTime / audioPlayer.duration) * 100;
+                progressFill.style.width = percent + '%';
+                currentTimeEl.textContent = formatTime(audioPlayer.currentTime);
+            }
+        }
+
+        function handleAudioLoaded() {
+            durationEl.textContent = formatTime(audioPlayer.duration);
+        }
+
+        function handleAudioError(e) {
+            showStatus('Error loading audio file. Please check the file exists.', true);
+            console.error('Audio error:', e);
+        }
+
+        function seekAudio(e) {
+            const rect = progressBar.getBoundingClientRect();
+            const pos = (e.clientX - rect.left) / rect.width;
+            audioPlayer.currentTime = pos * audioPlayer.duration;
+        }
+
+        function formatTime(seconds) {
+            if (!seconds || isNaN(seconds)) return '0:00';
+            const mins = Math.floor(seconds / 60);
+            const secs = Math.floor(seconds % 60);
+            return `${mins}:${secs.toString().padStart(2, '0')}`;
+        }
+
+        function showStatus(message, isError) {
+            statusMessage.textContent = message;
+            statusMessage.className = 'status-message fade-in' + (isError ? ' error-message' : '');
+            setTimeout(() => {
+                statusMessage.textContent = '';
+                statusMessage.className = '';
+            }, 5000);
+        }
+
+        // Initialize
+        console.log('Curious Kelly Lesson Player initialized');
+        console.log('Select a lesson to begin your learning journey!');
+    </script>
+</body>
+</html>
+
+
+
+
+
