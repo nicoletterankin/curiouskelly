@@ -1,61 +1,88 @@
 ---
 import '../styles/unified-design-system.scss';
-// Production fix: Google SVG inline to avoid COEP blocking
+// Curious Kelly - Minimal Landing Page
+// Unified Aquarium: Layer 1 (Landing) + Layer 2 (Kelly OS)
 ---
 
 <!doctype html>
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
-    <meta
-      name="viewport"
-      content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"
-    />
-    <meta
-      name="description"
-      content="Curious Kelly - The operating system for your potential. Your personal AI teacher for a whole year."
-    />
-    <title>Curious Kelly</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <meta name="description" content="Learn something wonderful every day with Kelly, your AI teacher. Five minutes a day, one topic, adapted for all ages." />
+    <title>Curious Kelly — Learn something wonderful every day</title>
 
-    <!-- Fonts -->
+    <!-- Fonts: Instrument Sans + Newsreader -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link
-      href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&family=Times+New+Roman&display=swap"
-      rel="stylesheet"
-    />
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,400&display=swap" rel="stylesheet" />
 
-    <!-- OS Styles (Preloaded) -->
+    <!-- OS Styles (Preloaded for seamless transition) -->
     <link rel="stylesheet" href="/lesson-player/css/styles.css" />
     <link rel="stylesheet" href="/lesson-player/css/ui-kit.css" />
 
-    <!-- Supabase (Global for OS) -->
+    <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
     <style>
-      /* 
-         * UNIFIED ARCHITECTURE:
-         * 1. Login Layer (Z-Index 1000) - The "Marketing" State
-         * 2. OS Layer (Z-Index 0) - The "App" State (Preloaded)
-         */
-
+      /* ============================================
+         CURIOUS KELLY DESIGN SYSTEM
+         Black/White/Blue — Humble, Simple, Delightful
+         ============================================ */
+      
       :root {
-        --bg-color: #0a0a0b;
-        --bg-secondary: #111113;
-        --bg-elevated: #18181b;
-        --text-primary: #fafafa;
-        --text-secondary: #a1a1aa;
-        --text-muted: #71717a;
-        --accent-primary: #3b82f6;
-        --accent-hover: #2563eb;
-        --accent-glow: rgba(59, 130, 246, 0.15);
-        --input-bg: #18181b;
-        --border-color: #27272a;
-        --border-hover: #3f3f46;
+        /* Core palette */
+        --black: #09090b;
+        --black-soft: #18181b;
+        --black-muted: #27272a;
+        
+        --white: #fafafa;
+        --white-soft: #f4f4f5;
+        --white-muted: #e4e4e7;
+        
+        /* Blue accent */
+        --blue: #3b82f6;
+        --blue-soft: #60a5fa;
+        --blue-dim: rgba(59, 130, 246, 0.1);
+        --blue-glow: rgba(59, 130, 246, 0.06);
+        
+        /* Alerts only */
+        --alert-orange: #f97316;
+        --alert-yellow: #eab308;
         --success: #22c55e;
         --error: #ef4444;
+        
+        /* Text hierarchy */
+        --text-1: #fafafa;
+        --text-2: #a1a1aa;
+        --text-3: #71717a;
+        --text-4: #52525b;
+        
+        /* Borders */
+        --border: rgba(255, 255, 255, 0.08);
+        --border-hover: rgba(255, 255, 255, 0.15);
+        
+        /* Typography */
+        --font-sans: 'Instrument Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+        --font-serif: 'Newsreader', Georgia, serif;
+        
+        /* Spacing */
+        --space-xs: 4px;
+        --space-sm: 8px;
+        --space-md: 16px;
+        --space-lg: 24px;
+        --space-xl: 40px;
+        --space-2xl: 64px;
+        --space-3xl: 96px;
+        --space-4xl: 128px;
+        
+        /* Layout */
         --max-width: 1200px;
-        --header-height: 72px;
+        --header-height: 64px;
+        
+        /* Transitions */
+        --ease: cubic-bezier(0.16, 1, 0.3, 1);
+        --duration: 0.3s;
       }
 
       * {
@@ -64,1259 +91,696 @@ import '../styles/unified-design-system.scss';
         box-sizing: border-box;
       }
 
+      html {
+        font-size: 16px;
+        -webkit-font-smoothing: antialiased;
+        scroll-behavior: smooth;
+      }
+
       body {
-        font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-        background-color: var(--bg-color);
-        color: var(--text-primary);
-        min-height: 100vh;
+        font-family: var(--font-sans);
+        background: var(--black);
+        color: var(--text-1);
         line-height: 1.6;
         overflow-x: hidden;
       }
 
-      html {
-        scroll-behavior: smooth;
+      a {
+        color: inherit;
+        text-decoration: none;
       }
 
-      /* --- LOGIN LAYER STYLES --- */
-      #login-layer {
+      /* ============================================
+         LAYER 1: LANDING (z-index 1000)
+         ============================================ */
+      
+      #landing-layer {
         position: fixed;
-        top: 0;
-        left: 0;
-        right: 0;
-        bottom: 0;
+        inset: 0;
         z-index: 1000;
-        background-color: var(--bg-color);
+        background: var(--black);
         overflow-y: auto;
         overflow-x: hidden;
-        transition:
-          opacity 0.8s ease-in-out,
-          transform 0.8s ease-in-out;
+        transition: opacity 0.6s var(--ease), transform 0.6s var(--ease);
       }
 
-      #login-layer.hidden {
+      #landing-layer.hidden {
         opacity: 0;
         pointer-events: none;
-        transform: scale(1.05);
+        transform: scale(1.02);
       }
 
-      .container {
-        display: flex;
-        width: 100%;
-        min-height: 100vh;
-      }
-
-      .left-panel {
-        flex: 1;
-        padding: 80px;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        max-width: 640px;
-        border-right: 1px solid rgba(255, 255, 255, 0.05);
-        z-index: 2;
-      }
-
-      .right-panel {
-        flex: 1;
-        background-color: var(--bg-color);
-        position: relative;
-        display: flex;
-        justify-content: center;
-        align-items: center;
-        overflow: hidden;
-      }
-
-      .right-panel::before {
-        content: '';
-        position: absolute;
-        inset: 0;
-        background: radial-gradient(circle at center, #202023 0%, #0f0f11 70%);
-        z-index: 1;
-      }
-
-      .logo {
-        font-weight: 600;
-        font-size: 1.2rem;
-        margin-bottom: auto;
-        display: flex;
-        align-items: center;
-        gap: 10px;
-      }
-
-      h1 {
-        font-family: 'Times New Roman', serif;
-        font-size: 5rem;
-        font-weight: 400;
-        line-height: 1;
-        margin-bottom: 24px;
-        letter-spacing: -2px;
-        background: linear-gradient(to bottom right, #fff, #ccc);
-        background-clip: text;
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-      }
-
-      .subtitle {
-        font-size: 1.2rem;
-        color: var(--text-secondary);
-        margin-bottom: 48px;
-        font-weight: 300;
-      }
-
-      .login-container {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        width: 100%;
-        max-width: 400px;
-      }
-
-      .btn {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        gap: 12px;
-        padding: 14px 20px;
-        border-radius: 12px;
-        text-decoration: none;
-        font-size: 1rem;
-        transition: all 0.2s ease;
-        cursor: pointer;
-        border: 1px solid var(--border-color);
-      }
-
-      .btn:hover {
-        transform: translateY(-1px);
-      }
-      .btn:active {
-        transform: scale(0.98);
-      }
-
-      .btn-primary {
-        background-color: #f4f4f5;
-        color: #18181b;
-        border: none;
-        font-weight: 600;
-      }
-
-      .btn-outline {
-        background-color: transparent;
-        color: var(--text-primary);
-      }
-
-      .divider {
-        display: flex;
-        align-items: center;
-        color: var(--text-secondary);
-        font-size: 0.8rem;
-        margin: 10px 0;
-        text-transform: uppercase;
-        letter-spacing: 1px;
-      }
-      .divider::before,
-      .divider::after {
-        content: '';
-        flex: 1;
-        border-bottom: 1px solid var(--border-color);
-      }
-      .divider span {
-        padding: 0 10px;
-      }
-
-      .hero-image {
-        max-width: 85%;
-        max-height: 85%;
-        object-fit: contain;
-        z-index: 2;
-        animation: float 8s ease-in-out infinite;
-        filter: drop-shadow(0 20px 50px rgba(0, 0, 0, 0.5));
-      }
-
-      @keyframes float {
-        0% {
-          transform: translateY(0px);
-        }
-        50% {
-          transform: translateY(-30px);
-        }
-        100% {
-          transform: translateY(0px);
-        }
-      }
-
-      .scribble {
-        position: absolute;
-        pointer-events: none;
-        opacity: 0.4;
-        z-index: 3;
-      }
-
-      /* Spinner */
-      .spinner {
-        border: 2px solid rgba(255, 255, 255, 0.1);
-        border-left-color: #fff;
-        border-radius: 50%;
-        width: 16px;
-        height: 16px;
-        animation: spin 1s linear infinite;
-        display: none;
-      }
-      @keyframes spin {
-        0% {
-          transform: rotate(0deg);
-        }
-        100% {
-          transform: rotate(360deg);
-        }
-      }
-      .btn.loading .spinner {
-        display: block;
-      }
-      .btn.loading span,
-      .btn.loading img {
-        display: none;
-      }
-
-      /* --- OS LAYER TWEAKS --- */
-      /* Ensure Unity sits behind but accessible */
-      #app-layer-desktop {
-        position: absolute;
-        inset: 0;
-        z-index: 1;
-        opacity: 0; /* Hidden initially */
-        transition: opacity 1s ease-in-out;
-      }
-
-      #app-layer-desktop.active {
-        opacity: 1;
-        pointer-events: auto;
-      }
-
-      /* Mobile Response for Login */
-      @media (max-width: 900px) {
-        .container {
-          flex-direction: column;
-        }
-        .right-panel {
-          height: 30vh;
-          order: -1;
-        }
-        .left-panel {
-          padding: 40px;
-          border-right: none;
-        }
-        h1 {
-          font-size: 3.5rem;
-        }
-      }
-
-      /* ========================================
-         UNIFIED MARKETING SECTIONS
-         ======================================== */
+      /* ============================================
+         HEADER
+         ============================================ */
       
-      /* Fonts for marketing */
-      @import url('https://fonts.googleapis.com/css2?family=Fraunces:ital,opsz,wght@0,9..144,300;0,9..144,400;0,9..144,500;0,9..144,600;1,9..144,400&family=Inter:wght@400;500;600;700&display=swap');
-
-      /* Header */
-      header {
+      .header {
         position: fixed;
         top: 0;
         left: 0;
         right: 0;
+        z-index: 100;
         height: var(--header-height);
-        background: rgba(10, 10, 11, 0.95);
+        background: rgba(9, 9, 11, 0.8);
         backdrop-filter: blur(12px);
-        border-bottom: 1px solid var(--border-color);
-        z-index: 999;
+        -webkit-backdrop-filter: blur(12px);
+        border-bottom: 1px solid var(--border);
+      }
+
+      .header-inner {
+        max-width: var(--max-width);
+        margin: 0 auto;
+        padding: 0 var(--space-lg);
+        height: 100%;
         display: flex;
         align-items: center;
         justify-content: space-between;
-        padding: 0 48px;
       }
 
-      .logo-header {
+      .logo {
         display: flex;
         align-items: center;
-        gap: 12px;
+        gap: var(--space-sm);
         font-weight: 600;
-        font-size: 1.1rem;
-        text-decoration: none;
-        color: var(--text-primary);
-        letter-spacing: -0.02em;
+        font-size: 1rem;
+        letter-spacing: -0.01em;
       }
 
-      .logo-icon {
-        width: 40px;
-        height: 40px;
-        border-radius: 50%;
+      .logo-mark {
+        width: 32px;
+        height: 32px;
+        border-radius: 8px;
+        background: var(--blue-dim);
+        border: 1px solid rgba(59, 130, 246, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 16px;
+      }
+
+      .nav {
+        display: flex;
+        align-items: center;
+        gap: var(--space-xl);
       }
 
       .nav-links {
         display: flex;
-        align-items: center;
-        gap: 32px;
+        gap: var(--space-lg);
       }
 
       .nav-link {
-        color: var(--text-secondary);
-        text-decoration: none;
-        font-size: 0.9rem;
+        color: var(--text-3);
+        font-size: 0.875rem;
         font-weight: 500;
-        transition: color 0.2s;
+        transition: color var(--duration) var(--ease);
       }
 
       .nav-link:hover {
-        color: var(--text-primary);
+        color: var(--text-1);
       }
 
-      /* Sections */
-      section {
-        padding: 100px 48px;
+      .nav-actions {
+        display: flex;
+        align-items: center;
+        gap: var(--space-md);
+      }
+
+      /* Buttons */
+      .btn {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        gap: var(--space-sm);
+        padding: 10px 20px;
+        font-family: var(--font-sans);
+        font-size: 0.875rem;
+        font-weight: 500;
+        border-radius: 8px;
+        cursor: pointer;
+        transition: all var(--duration) var(--ease);
+        border: none;
+      }
+
+      .btn-ghost {
+        background: transparent;
+        color: var(--text-2);
+      }
+
+      .btn-ghost:hover {
+        color: var(--text-1);
+        background: var(--black-soft);
+      }
+
+      .btn-outline {
+        background: transparent;
+        color: var(--text-1);
+        border: 1px solid var(--border);
+      }
+
+      .btn-outline:hover {
+        border-color: var(--border-hover);
+        background: var(--black-soft);
+      }
+
+      .btn-primary {
+        background: var(--white);
+        color: var(--black);
+        font-weight: 600;
+      }
+
+      .btn-primary:hover {
+        background: var(--white-soft);
+        transform: translateY(-1px);
+      }
+
+      .btn-blue {
+        background: var(--blue);
+        color: white;
+        font-weight: 600;
+      }
+
+      .btn-blue:hover {
+        background: var(--blue-soft);
+        transform: translateY(-1px);
+      }
+
+      .btn.loading {
+        pointer-events: none;
+        opacity: 0.7;
+      }
+
+      .spinner {
+        width: 16px;
+        height: 16px;
+        border: 2px solid transparent;
+        border-top-color: currentColor;
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+        display: none;
+      }
+
+      .btn.loading .spinner {
+        display: block;
+      }
+
+      .btn.loading .btn-text {
+        opacity: 0;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      /* ============================================
+         HERO
+         ============================================ */
+      
+      .hero {
+        min-height: 100vh;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        padding: var(--space-4xl) var(--space-lg);
+        text-align: center;
+        position: relative;
+      }
+
+      .hero::before {
+        content: '';
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -60%);
+        width: 600px;
+        height: 600px;
+        background: radial-gradient(circle, var(--blue-glow) 0%, transparent 70%);
+        pointer-events: none;
+      }
+
+      .kelly-container {
+        position: relative;
+        margin-bottom: var(--space-xl);
+        z-index: 1;
+      }
+
+      .kelly-avatar {
+        width: 140px;
+        height: 140px;
+        border-radius: 50%;
+        background: linear-gradient(145deg, var(--black-soft), var(--black));
+        border: 1px solid var(--border);
+        box-shadow: 0 0 80px var(--blue-glow);
+        overflow: hidden;
+        transition: transform 0.5s var(--ease), box-shadow 0.5s var(--ease);
+      }
+
+      .kelly-avatar:hover {
+        transform: scale(1.05);
+        box-shadow: 0 0 100px rgba(59, 130, 246, 0.1);
+      }
+
+      .kelly-avatar img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 30%;
+      }
+
+      .kelly-status {
+        position: absolute;
+        bottom: -6px;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        gap: 3px;
+        padding: 6px 12px;
+        background: var(--black-soft);
+        border-radius: 20px;
+        border: 1px solid var(--border);
+      }
+
+      .status-dot {
+        width: 4px;
+        height: 4px;
+        border-radius: 50%;
+        background: var(--blue);
+        animation: pulse 1.4s ease-in-out infinite;
+      }
+
+      .status-dot:nth-child(2) { animation-delay: 0.2s; }
+      .status-dot:nth-child(3) { animation-delay: 0.4s; }
+
+      @keyframes pulse {
+        0%, 100% { opacity: 0.3; transform: scale(1); }
+        50% { opacity: 1; transform: scale(1.3); }
+      }
+
+      .hero-greeting {
+        font-family: var(--font-serif);
+        font-size: 1.125rem;
+        font-style: italic;
+        color: var(--text-3);
+        margin-bottom: var(--space-md);
+      }
+
+      .hero-title {
+        font-size: clamp(2.5rem, 6vw, 4rem);
+        font-weight: 600;
+        letter-spacing: -0.03em;
+        line-height: 1.1;
+        margin-bottom: var(--space-lg);
+        max-width: 700px;
+      }
+
+      .hero-subtitle {
+        font-size: 1.25rem;
+        color: var(--text-2);
+        max-width: 500px;
+        margin-bottom: var(--space-2xl);
+      }
+
+      .hero-cta {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-md);
+      }
+
+      .hero-cta .btn-primary {
+        padding: 14px 32px;
+        font-size: 1rem;
+        border-radius: 12px;
+        position: relative;
+      }
+
+      .hero-hint {
+        font-size: 0.8125rem;
+        color: var(--text-4);
+      }
+
+      .scroll-hint {
+        position: absolute;
+        bottom: var(--space-xl);
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--space-sm);
+        color: var(--text-4);
+        font-size: 0.75rem;
+        animation: float 2s ease-in-out infinite;
+      }
+
+      @keyframes float {
+        0%, 100% { transform: translateX(-50%) translateY(0); }
+        50% { transform: translateX(-50%) translateY(8px); }
+      }
+
+      /* Fade-in animations */
+      @keyframes fadeIn {
+        from { opacity: 0; transform: translateY(20px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      .fade-in { animation: fadeIn 0.8s var(--ease) forwards; }
+      .fade-in-1 { animation-delay: 0.1s; }
+      .fade-in-2 { animation-delay: 0.2s; }
+      .fade-in-3 { animation-delay: 0.3s; }
+      .fade-in-4 { animation-delay: 0.4s; }
+      .fade-in-5 { animation-delay: 0.5s; }
+
+      /* ============================================
+         SECTIONS
+         ============================================ */
+      
+      .section {
+        padding: var(--space-4xl) var(--space-lg);
         max-width: var(--max-width);
         margin: 0 auto;
       }
 
       .section-header {
         text-align: center;
-        margin-bottom: 60px;
+        margin-bottom: var(--space-3xl);
       }
 
       .section-label {
         display: inline-block;
-        padding: 6px 16px;
-        background: rgba(59, 130, 246, 0.1);
-        border: 1px solid rgba(59, 130, 246, 0.3);
+        padding: 6px 14px;
+        background: var(--blue-dim);
+        border: 1px solid rgba(59, 130, 246, 0.2);
         border-radius: 100px;
-        font-size: 0.85rem;
-        color: var(--accent-primary);
-        margin-bottom: 16px;
+        font-size: 0.8125rem;
         font-weight: 600;
+        color: var(--blue-soft);
+        margin-bottom: var(--space-md);
+        letter-spacing: 0.02em;
       }
 
-      h2 {
-        font-family: 'Fraunces', Georgia, serif;
-        font-size: 3rem;
-        font-weight: 400;
-        letter-spacing: -0.03em;
-        margin-bottom: 16px;
+      .section-title {
+        font-size: clamp(2rem, 4vw, 3rem);
+        font-weight: 600;
+        letter-spacing: -0.02em;
+        margin-bottom: var(--space-md);
       }
 
-      .section-header p {
-        font-size: 1.15rem;
-        color: var(--text-secondary);
+      .section-subtitle {
+        font-size: 1.125rem;
+        color: var(--text-2);
         max-width: 600px;
         margin: 0 auto;
       }
 
-      /* TODAY'S LESSON */
-      .today-lesson {
-        background: var(--bg-secondary);
-        border-top: 1px solid var(--border-color);
-        border-bottom: 1px solid var(--border-color);
+      /* How it works */
+      .how-it-works {
+        background: var(--black-soft);
+        border-top: 1px solid var(--border);
+        border-bottom: 1px solid var(--border);
       }
 
-      .lesson-card {
-        background: var(--bg-elevated);
-        border: 1px solid var(--border-color);
-        border-radius: 20px;
-        padding: 40px;
+      .steps {
         display: grid;
-        grid-template-columns: 1fr 1fr;
-        gap: 40px;
-        align-items: center;
-        cursor: pointer;
-        transition: transform 0.2s, border-color 0.2s;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--space-xl);
       }
 
-      .lesson-card:hover {
-        transform: translateY(-4px);
-        border-color: var(--accent-primary);
+      .step {
+        text-align: center;
+        padding: var(--space-xl);
       }
 
-      .lesson-thumbnail {
-        width: 100%;
-        aspect-ratio: 16/9;
-        background: linear-gradient(135deg, #1e3a8a, #3b82f6);
-        border-radius: 16px;
+      .step-number {
+        width: 48px;
+        height: 48px;
+        border-radius: 50%;
+        background: var(--blue-dim);
+        border: 1px solid rgba(59, 130, 246, 0.2);
         display: flex;
         align-items: center;
         justify-content: center;
-        position: relative;
+        font-size: 1.25rem;
+        font-weight: 600;
+        color: var(--blue-soft);
+        margin: 0 auto var(--space-lg);
+      }
+
+      .step-title {
+        font-size: 1.25rem;
+        font-weight: 600;
+        margin-bottom: var(--space-sm);
+      }
+
+      .step-desc {
+        color: var(--text-2);
+        font-size: 0.9375rem;
+      }
+
+      /* Today's lesson preview */
+      .today-preview {
+        background: var(--black);
+      }
+
+      .lesson-card {
+        background: var(--black-soft);
+        border: 1px solid var(--border);
+        border-radius: 20px;
+        padding: var(--space-2xl);
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: var(--space-2xl);
+        align-items: center;
+        transition: border-color var(--duration) var(--ease);
+      }
+
+      .lesson-card:hover {
+        border-color: var(--border-hover);
+      }
+
+      .lesson-visual {
+        aspect-ratio: 16/9;
+        background: linear-gradient(135deg, var(--blue-dim), var(--black));
+        border-radius: 12px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        border: 1px solid var(--border);
         overflow: hidden;
       }
 
-      .lesson-thumbnail-text {
-        font-family: 'Fraunces', serif;
+      .lesson-visual img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+
+      .lesson-badge {
+        display: inline-block;
+        padding: 4px 10px;
+        background: var(--blue-dim);
+        border-radius: 100px;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: var(--blue-soft);
+        margin-bottom: var(--space-md);
+      }
+
+      .lesson-title {
+        font-family: var(--font-serif);
         font-size: 2rem;
         font-weight: 500;
-        color: white;
-        text-align: center;
-        padding: 20px;
-        z-index: 2;
-      }
-
-      .lesson-day-badge {
-        position: absolute;
-        top: 16px;
-        left: 16px;
-        background: rgba(0, 0, 0, 0.6);
-        backdrop-filter: blur(10px);
-        padding: 8px 16px;
-        border-radius: 100px;
-        font-size: 0.85rem;
-        font-weight: 600;
-        z-index: 3;
-      }
-
-      .lesson-info h3 {
-        font-family: 'Fraunces', serif;
-        font-size: 2rem;
-        margin-bottom: 16px;
+        margin-bottom: var(--space-md);
+        letter-spacing: -0.01em;
       }
 
       .lesson-hook {
-        font-size: 1.15rem;
-        color: var(--text-secondary);
-        margin-bottom: 24px;
+        font-size: 1.125rem;
+        color: var(--text-2);
         font-style: italic;
+        margin-bottom: var(--space-lg);
       }
 
       .lesson-meta {
         display: flex;
-        gap: 20px;
-        margin-bottom: 24px;
-        flex-wrap: wrap;
+        gap: var(--space-lg);
+        margin-bottom: var(--space-xl);
+        font-size: 0.875rem;
+        color: var(--text-3);
       }
 
-      .meta-item {
-        font-size: 0.9rem;
-        color: var(--text-muted);
+      /* Features */
+      .features {
+        background: var(--black-soft);
+        border-top: 1px solid var(--border);
       }
 
-      /* CURRICULUM */
-      .curriculum {
-        background: var(--bg-color);
-      }
-
-      .age-selector {
-        display: flex;
-        justify-content: center;
-        gap: 12px;
-        margin-bottom: 40px;
-        flex-wrap: wrap;
-      }
-
-      .age-btn {
-        padding: 12px 24px;
-        background: var(--bg-elevated);
-        border: 1px solid var(--border-color);
-        border-radius: 10px;
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-
-      .age-btn:hover {
-        border-color: var(--accent-primary);
-        color: var(--text-primary);
-      }
-
-      .age-btn.active {
-        background: var(--accent-hover);
-        border-color: var(--accent-hover);
-        color: white;
-      }
-
-      .month-grid {
+      .features-grid {
         display: grid;
-        gap: 24px;
+        grid-template-columns: repeat(2, 1fr);
+        gap: var(--space-lg);
       }
 
-      .loading-skeleton {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
-        gap: 24px;
-      }
-
-      .skeleton-card {
-        height: 200px;
-        background: linear-gradient(90deg, #18181b 0%, #27272a 50%, #18181b 100%);
-        background-size: 200% 100%;
-        animation: shimmer 1.5s infinite;
+      .feature {
+        padding: var(--space-xl);
+        background: var(--black);
+        border: 1px solid var(--border);
         border-radius: 16px;
+        transition: border-color var(--duration) var(--ease);
       }
 
-      @keyframes shimmer {
-        0% { background-position: 200% 0; }
-        100% { background-position: -200% 0; }
+      .feature:hover {
+        border-color: var(--border-hover);
       }
 
-      .month-card {
-        background: var(--bg-elevated);
-        border: 1px solid var(--border-color);
-        border-radius: 16px;
-        overflow: hidden;
-        transition: all 0.3s;
+      .feature-icon {
+        font-size: 2rem;
+        margin-bottom: var(--space-md);
       }
 
-      .month-header {
-        padding: 24px;
-        background: var(--bg-secondary);
-        border-bottom: 1px solid var(--border-color);
-        cursor: pointer;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        user-select: none;
-        transition: background 0.2s;
-      }
-
-      .month-header:hover {
-        background: var(--bg-elevated);
-      }
-
-      .month-header h3 {
-        font-family: 'Fraunces', serif;
-        font-size: 1.5rem;
-        font-weight: 500;
-      }
-
-      .month-count {
-        font-size: 0.9rem;
-        color: var(--text-muted);
-      }
-
-      .month-lessons {
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.3s ease;
-      }
-
-      .month-card.open .month-lessons {
-        max-height: 2000px;
-      }
-
-      .lesson-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
-        gap: 16px;
-        padding: 24px;
-      }
-
-      .lesson-item {
-        background: var(--bg-color);
-        border: 1px solid var(--border-color);
-        border-radius: 12px;
-        padding: 16px;
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-
-      .lesson-item:hover {
-        border-color: var(--accent-primary);
-        transform: translateY(-2px);
-      }
-
-      .lesson-item-day {
-        font-size: 0.75rem;
-        color: var(--text-muted);
-        text-transform: uppercase;
-        letter-spacing: 0.1em;
-        margin-bottom: 8px;
-      }
-
-      .lesson-item-title {
-        font-size: 1rem;
-        font-weight: 500;
-        margin-bottom: 8px;
-      }
-
-      .lesson-item-thumbnail {
-        width: 100%;
-        aspect-ratio: 16/9;
-        background: linear-gradient(135deg, #1e3a8a, #3b82f6);
-        border-radius: 8px;
-        margin-top: 12px;
-      }
-
-      /* PERSPECTIVES */
-      .perspectives {
-        background: var(--bg-secondary);
-        border-top: 1px solid var(--border-color);
-      }
-
-      .time-machine {
-        background: var(--bg-elevated);
-        border: 1px solid var(--border-color);
-        border-radius: 20px;
-        padding: 40px;
-        margin-bottom: 40px;
-      }
-
-      .year-display {
-        text-align: center;
-        margin-bottom: 32px;
-      }
-
-      .year-big {
-        font-family: 'Fraunces', serif;
-        font-size: 5rem;
-        font-weight: 300;
-        background: linear-gradient(135deg, var(--accent-primary), #8b5cf6);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
-        line-height: 1;
-      }
-
-      .year-context {
-        font-size: 1.1rem;
-        color: var(--text-secondary);
-        margin-top: 8px;
-      }
-
-      .year-context span {
-        color: var(--accent-primary);
+      .feature-title {
+        font-size: 1.125rem;
         font-weight: 600;
+        margin-bottom: var(--space-sm);
       }
 
-      .year-slider {
-        width: 100%;
-        height: 8px;
-        background: var(--bg-color);
-        border-radius: 4px;
-        outline: none;
-        -webkit-appearance: none;
-        margin: 20px 0;
+      .feature-desc {
+        color: var(--text-2);
+        font-size: 0.9375rem;
       }
 
-      .year-slider::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 28px;
-        height: 28px;
-        background: var(--accent-hover);
-        border-radius: 50%;
-        cursor: pointer;
-        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.4);
+      /* Pricing */
+      .pricing-teaser {
+        background: var(--black);
+        border-bottom: 1px solid var(--border);
       }
 
-      .year-slider::-moz-range-thumb {
-        width: 28px;
-        height: 28px;
-        background: var(--accent-hover);
-        border-radius: 50%;
-        cursor: pointer;
-        border: none;
-      }
-
-      .slider-labels {
-        display: flex;
-        justify-content: space-between;
-        font-size: 0.85rem;
-        color: var(--text-muted);
-        margin-top: 12px;
-      }
-
-      .generation-picks {
-        display: flex;
-        justify-content: center;
-        gap: 12px;
-        flex-wrap: wrap;
-        margin-top: 24px;
-      }
-
-      .gen-btn {
-        padding: 10px 20px;
-        background: var(--bg-color);
-        border: 1px solid var(--border-color);
-        border-radius: 10px;
-        color: var(--text-secondary);
-        font-size: 0.85rem;
-        cursor: pointer;
-        transition: all 0.2s;
-      }
-
-      .gen-btn:hover {
-        border-color: var(--accent-primary);
-        color: var(--text-primary);
-      }
-
-      .perspective-cards {
+      .pricing-cards {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
-        gap: 24px;
-      }
-
-      .perspective-card {
-        background: var(--bg-elevated);
-        border: 1px solid var(--border-color);
-        border-radius: 16px;
-        padding: 28px;
-        transition: all 0.3s;
-      }
-
-      .perspective-card:hover {
-        transform: translateY(-4px);
-        border-color: var(--accent-primary);
-      }
-
-      .perspective-card.current {
-        border-color: var(--accent-hover);
-        background: linear-gradient(180deg, rgba(37, 99, 235, 0.1) 0%, var(--bg-elevated) 100%);
-      }
-
-      .perspective-card h4 {
-        font-family: 'Fraunces', serif;
-        font-size: 1.75rem;
-        margin-bottom: 8px;
-      }
-
-      .perspective-age {
-        font-size: 0.9rem;
-        color: var(--text-muted);
-        margin-bottom: 20px;
-      }
-
-      .perspective-hook {
-        font-size: 1.15rem;
-        line-height: 1.6;
-        margin-bottom: 16px;
-        padding: 16px;
-        background: var(--bg-color);
-        border-radius: 12px;
-        border-left: 3px solid var(--accent-primary);
-        font-style: italic;
-      }
-
-      .perspective-context {
-        font-size: 0.9rem;
-        color: var(--text-secondary);
-        line-height: 1.6;
-      }
-
-      /* PRICING */
-      .pricing {
-        background: var(--bg-color);
-      }
-
-      .pricing-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 24px;
-        margin-bottom: 60px;
+        grid-template-columns: repeat(3, 1fr);
+        gap: var(--space-lg);
       }
 
       .price-card {
-        background: var(--bg-elevated);
-        border: 1px solid var(--border-color);
-        border-radius: 20px;
-        padding: 40px;
-        position: relative;
-        transition: all 0.3s;
+        padding: var(--space-xl);
+        background: var(--black-soft);
+        border: 1px solid var(--border);
+        border-radius: 16px;
+        text-align: center;
+        transition: all var(--duration) var(--ease);
       }
 
       .price-card:hover {
+        border-color: var(--border-hover);
         transform: translateY(-4px);
-        border-color: var(--accent-primary);
-        box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
       }
 
       .price-card.featured {
-        border-color: var(--accent-hover);
-        background: linear-gradient(180deg, rgba(37, 99, 235, 0.1) 0%, var(--bg-elevated) 100%);
-      }
-
-      .price-card.featured::before {
-        content: '';
-        position: absolute;
-        top: -1px;
-        left: -1px;
-        right: -1px;
-        height: 4px;
-        background: linear-gradient(90deg, var(--accent-primary), #8b5cf6);
-        border-radius: 20px 20px 0 0;
-      }
-
-      .price-badge {
-        position: absolute;
-        top: -12px;
-        left: 50%;
-        transform: translateX(-50%);
-        padding: 6px 16px;
-        background: linear-gradient(135deg, var(--accent-hover), #8b5cf6);
-        color: white;
-        font-size: 0.75rem;
-        font-weight: 700;
-        text-transform: uppercase;
-        letter-spacing: 0.05em;
-        border-radius: 100px;
+        border-color: var(--blue);
+        background: linear-gradient(180deg, rgba(59, 130, 246, 0.05) 0%, var(--black-soft) 100%);
       }
 
       .price-name {
-        font-size: 1.25rem;
+        font-size: 1rem;
         font-weight: 600;
-        margin-bottom: 8px;
+        margin-bottom: var(--space-sm);
       }
 
       .price-amount {
-        font-family: 'Fraunces', serif;
-        font-size: 3.5rem;
-        font-weight: 500;
-        letter-spacing: -0.03em;
-        line-height: 1;
-        margin-bottom: 8px;
+        font-size: 2.5rem;
+        font-weight: 600;
+        margin-bottom: var(--space-xs);
       }
 
       .price-amount span {
         font-size: 1rem;
-        color: var(--text-muted);
-        margin-left: 4px;
+        color: var(--text-3);
+        font-weight: 400;
       }
 
       .price-desc {
-        color: var(--text-secondary);
-        margin-bottom: 24px;
+        color: var(--text-3);
+        font-size: 0.875rem;
+        margin-bottom: var(--space-lg);
       }
 
-      .price-features {
-        list-style: none;
-        margin-bottom: 32px;
-      }
-
-      .price-features li {
-        padding: 10px 0;
-        color: var(--text-secondary);
-        font-size: 0.95rem;
-        display: flex;
-        gap: 12px;
-      }
-
-      .price-features li::before {
-        content: "✓";
-        color: var(--success);
-        font-weight: 700;
-        flex-shrink: 0;
-      }
-
-      /* GIFTS */
-      .gifts {
-        background: var(--bg-secondary);
-        border-top: 1px solid var(--border-color);
-      }
-
-      .collapsible-header {
-        cursor: pointer;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        padding: 24px 0;
-        border-bottom: 1px solid var(--border-color);
-        user-select: none;
-        transition: background 0.2s;
-      }
-
-      .collapsible-header:hover {
-        background: rgba(255,255,255,0.02);
-      }
-
-      .collapsible-header h3 {
-        font-family: 'Fraunces', serif;
-        font-size: 1.5rem;
-        font-weight: 500;
-      }
-
-      .collapse-icon {
-        font-size: 1.5rem;
-        transition: transform 0.3s;
-      }
-
-      .collapsible.open .collapse-icon {
-        transform: rotate(180deg);
-      }
-
-      .collapsible-content {
-        max-height: 0;
-        overflow: hidden;
-        transition: max-height 0.3s ease;
-      }
-
-      .collapsible.open .collapsible-content {
-        max-height: 2000px;
-      }
-
-      .gift-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-        gap: 20px;
-        padding: 40px 0;
-      }
-
-      .gift-card {
-        background: var(--bg-elevated);
-        border: 1px solid var(--border-color);
-        border-radius: 16px;
-        padding: 28px 24px;
+      /* Final CTA */
+      .final-cta {
+        background: var(--black);
         text-align: center;
-        transition: all 0.2s;
-        cursor: pointer;
+        padding: var(--space-4xl) var(--space-lg);
       }
 
-      .gift-card:hover {
-        border-color: var(--accent-primary);
-        transform: translateY(-2px);
+      .final-cta .section-title {
+        margin-bottom: var(--space-xl);
       }
 
-      .gift-icon {
-        font-size: 2.5rem;
-        margin-bottom: 16px;
+      /* ============================================
+         FOOTER
+         ============================================ */
+      
+      .footer {
+        background: var(--black);
+        border-top: 1px solid var(--border);
+        padding: var(--space-3xl) var(--space-lg) var(--space-xl);
       }
 
-      .gift-card h4 {
-        font-size: 1rem;
-        font-weight: 600;
-        margin-bottom: 8px;
-      }
-
-      .gift-price {
-        font-family: 'Fraunces', serif;
-        font-size: 1.75rem;
-        font-weight: 500;
-        margin-bottom: 4px;
-      }
-
-      .gift-value {
-        color: var(--text-muted);
-        font-size: 0.8rem;
-      }
-
-      /* CAREERS */
-      .careers {
-        background: var(--bg-color);
-      }
-
-      .earnings-calculator {
-        background: var(--bg-elevated);
-        border: 1px solid var(--border-color);
-        border-radius: 20px;
-        padding: 40px;
-        margin-bottom: 40px;
-      }
-
-      .earnings-calculator h3 {
-        font-family: 'Fraunces', serif;
-        font-size: 1.5rem;
-        margin-bottom: 24px;
-        text-align: center;
-      }
-
-      .calc-slider-group {
-        margin-bottom: 32px;
-      }
-
-      .calc-slider-group label {
-        display: block;
-        font-size: 0.9rem;
-        color: var(--text-secondary);
-        margin-bottom: 12px;
-      }
-
-      .calc-slider-group input[type="range"] {
-        width: 100%;
-        height: 8px;
-        background: var(--bg-color);
-        border-radius: 4px;
-        outline: none;
-        -webkit-appearance: none;
-      }
-
-      .calc-slider-group input[type="range"]::-webkit-slider-thumb {
-        -webkit-appearance: none;
-        width: 24px;
-        height: 24px;
-        background: var(--accent-hover);
-        border-radius: 50%;
-        cursor: pointer;
-      }
-
-      .calc-value {
-        text-align: center;
-        font-size: 1.5rem;
-        font-weight: 600;
-        margin-top: 12px;
-      }
-
-      .calc-results {
-        display: flex;
-        flex-direction: column;
-        gap: 16px;
-        padding-top: 24px;
-        border-top: 1px solid var(--border-color);
-      }
-
-      .calc-row {
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-        font-size: 1rem;
-      }
-
-      .calc-row span {
-        color: var(--text-secondary);
-      }
-
-      .calc-row strong {
-        font-size: 1.25rem;
-        color: var(--success);
-      }
-
-      .tier-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-        gap: 24px;
-        margin-bottom: 40px;
-      }
-
-      .tier-card {
-        background: var(--bg-elevated);
-        border: 1px solid var(--border-color);
-        border-radius: 16px;
-        padding: 32px;
-        position: relative;
-        transition: all 0.3s;
-      }
-
-      .tier-card:hover {
-        transform: translateY(-4px);
-        border-color: var(--accent-primary);
-      }
-
-      .tier-card.featured {
-        border-color: var(--accent-hover);
-        background: linear-gradient(180deg, rgba(37, 99, 235, 0.1) 0%, var(--bg-elevated) 100%);
-      }
-
-      .tier-badge {
-        position: absolute;
-        top: -12px;
-        left: 50%;
-        transform: translateX(-50%);
-        background: var(--accent-hover);
-        color: white;
-        padding: 4px 12px;
-        border-radius: 12px;
-        font-size: 0.75rem;
-        font-weight: 600;
-        text-transform: uppercase;
-      }
-
-      .tier-card h4 {
-        font-size: 1.25rem;
-        margin-bottom: 12px;
-      }
-
-      .tier-rate {
-        font-family: 'Fraunces', serif;
-        font-size: 2.5rem;
-        font-weight: 300;
-        color: var(--accent-primary);
-        margin-bottom: 8px;
-      }
-
-      .tier-card p {
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-        margin-bottom: 20px;
-      }
-
-      .tier-card ul {
-        list-style: none;
-      }
-
-      .tier-card ul li {
-        padding: 8px 0;
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-        display: flex;
-        gap: 8px;
-      }
-
-      .tier-card ul li::before {
-        content: "✓";
-        color: var(--success);
-        font-weight: 700;
-      }
-
-      .cta-box {
-        background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(37, 99, 235, 0.05));
-        border: 1px solid var(--accent-hover);
-        border-radius: 20px;
-        padding: 48px;
-        text-align: center;
-      }
-
-      .cta-box h3 {
-        font-family: 'Fraunces', serif;
-        font-size: 2rem;
-        margin-bottom: 12px;
-      }
-
-      .cta-box p {
-        color: var(--text-secondary);
-        margin-bottom: 24px;
-      }
-
-      /* ENTERPRISE */
-      .enterprise {
-        background: var(--bg-secondary);
-        border-top: 1px solid var(--border-color);
-      }
-
-      .enterprise-content {
-        padding: 40px 0;
-      }
-
-      .enterprise-features {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 24px;
-        margin-bottom: 40px;
-      }
-
-      .enterprise-feature {
-        background: var(--bg-elevated);
-        border: 1px solid var(--border-color);
-        border-radius: 12px;
-        padding: 24px;
-      }
-
-      .enterprise-feature h4 {
-        font-size: 1.1rem;
-        margin-bottom: 8px;
-      }
-
-      .enterprise-feature p {
-        color: var(--text-secondary);
-        font-size: 0.9rem;
-      }
-
-      /* ABOUT */
-      .about {
-        background: var(--bg-color);
-      }
-
-      .about-content {
-        max-width: 800px;
+      .footer-inner {
+        max-width: var(--max-width);
         margin: 0 auto;
-        text-align: center;
-      }
-
-      .about-content p {
-        font-size: 1.15rem;
-        color: var(--text-secondary);
-        line-height: 1.8;
-        margin-bottom: 24px;
-      }
-
-      .kelly-avatar-large {
-        width: 200px;
-        height: 200px;
-        border-radius: 50%;
-        margin: 0 auto 32px;
-        border: 4px solid var(--accent-hover);
-      }
-
-      .mission-grid {
-        display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-        gap: 32px;
-        margin-top: 60px;
-      }
-
-      .mission-item {
-        text-align: center;
-      }
-
-      .mission-icon {
-        font-size: 3rem;
-        margin-bottom: 16px;
-      }
-
-      .mission-item h4 {
-        font-size: 1.25rem;
-        margin-bottom: 12px;
-      }
-
-      .mission-item p {
-        color: var(--text-secondary);
-        font-size: 0.95rem;
-      }
-
-      /* NEWSROOM */
-      .newsroom {
-        background: var(--bg-secondary);
-        border-top: 1px solid var(--border-color);
-      }
-
-      .newsroom-content {
-        padding: 40px 0;
-      }
-
-      .press-releases {
-        display: grid;
-        gap: 20px;
-        margin-bottom: 40px;
-      }
-
-      .press-item {
-        background: var(--bg-elevated);
-        border: 1px solid var(--border-color);
-        border-radius: 12px;
-        padding: 24px;
-        display: flex;
-        justify-content: space-between;
-        align-items: center;
-      }
-
-      .press-item h4 {
-        font-size: 1.1rem;
-        margin-bottom: 4px;
-      }
-
-      .press-date {
-        font-size: 0.85rem;
-        color: var(--text-muted);
-      }
-
-      .press-link {
-        color: var(--accent-primary);
-        text-decoration: none;
-        font-weight: 600;
-      }
-
-      .press-link:hover {
-        text-decoration: underline;
-      }
-
-      /* FOOTER */
-      .site-footer {
-        background: #000;
-        padding: 80px 48px 32px;
-        border-top: 1px solid var(--border-color);
       }
 
       .footer-grid {
         display: grid;
-        grid-template-columns: repeat(4, 1fr);
-        gap: 48px;
-        max-width: var(--max-width);
-        margin: 0 auto 60px;
+        grid-template-columns: 2fr repeat(4, 1fr);
+        gap: var(--space-2xl);
+        margin-bottom: var(--space-3xl);
+      }
+
+      .footer-brand {
+        max-width: 280px;
+      }
+
+      .footer-brand .logo {
+        margin-bottom: var(--space-md);
+      }
+
+      .footer-brand p {
+        color: var(--text-3);
+        font-size: 0.875rem;
+        margin-bottom: var(--space-lg);
+      }
+
+      .footer-social {
+        display: flex;
+        gap: var(--space-md);
+      }
+
+      .social-link {
+        width: 36px;
+        height: 36px;
+        border-radius: 8px;
+        background: var(--black-soft);
+        border: 1px solid var(--border);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--text-3);
+        font-size: 0.875rem;
+        transition: all var(--duration) var(--ease);
+      }
+
+      .social-link:hover {
+        border-color: var(--border-hover);
+        color: var(--text-1);
       }
 
       .footer-col h4 {
-        color: var(--text-primary);
-        font-size: 0.85rem;
-        margin-bottom: 20px;
+        font-size: 0.8125rem;
         font-weight: 600;
+        color: var(--text-1);
+        margin-bottom: var(--space-lg);
         letter-spacing: 0.02em;
       }
 
@@ -1324,692 +788,417 @@ import '../styles/unified-design-system.scss';
         list-style: none;
         display: flex;
         flex-direction: column;
-        gap: 12px;
+        gap: var(--space-sm);
       }
 
       .footer-links a {
-        color: var(--text-muted);
-        text-decoration: none;
-        font-size: 0.85rem;
-        transition: color 0.2s;
+        color: var(--text-3);
+        font-size: 0.875rem;
+        transition: color var(--duration) var(--ease);
       }
 
       .footer-links a:hover {
-        color: var(--text-primary);
-      }
-
-      .app-badges {
-        display: flex;
-        flex-direction: column;
-        gap: 10px;
-      }
-
-      .app-badge {
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        background: #000;
-        border: 1px solid var(--border-color);
-        border-radius: 8px;
-        padding: 10px 14px;
-        color: var(--text-primary);
-        text-decoration: none;
-        width: 160px;
-        transition: all 0.2s;
-      }
-
-      .app-badge:hover {
-        border-color: var(--text-secondary);
-        background: var(--bg-secondary);
-      }
-
-      .app-badge svg {
-        height: 20px;
-        width: auto;
-        margin-right: 10px;
-        fill: currentColor;
-      }
-
-      .app-badge span {
-        font-size: 0.7rem;
-        text-align: left;
-        line-height: 1.2;
-        color: var(--text-secondary);
-      }
-
-      .app-badge b {
-        display: block;
-        font-size: 0.85rem;
-        color: var(--text-primary);
+        color: var(--text-1);
       }
 
       .footer-bottom {
-        border-top: 1px solid var(--border-color);
-        padding-top: 24px;
+        padding-top: var(--space-xl);
+        border-top: 1px solid var(--border);
         display: flex;
         justify-content: space-between;
-        font-size: 0.75rem;
-        color: var(--text-muted);
-        max-width: var(--max-width);
-        margin: 0 auto;
+        align-items: center;
+        font-size: 0.8125rem;
+        color: var(--text-4);
       }
 
-      /* RESPONSIVE */
+      .footer-legal {
+        display: flex;
+        gap: var(--space-lg);
+      }
+
+      .footer-legal a {
+        color: var(--text-4);
+        transition: color var(--duration) var(--ease);
+      }
+
+      .footer-legal a:hover {
+        color: var(--text-2);
+      }
+
+      /* ============================================
+         RESPONSIVE
+         ============================================ */
+      
       @media (max-width: 1024px) {
-        header {
-          padding: 0 24px;
-        }
-
-        .nav-links {
-          display: none;
-        }
-
-        section {
-          padding: 60px 24px;
-        }
-
-        .footer-grid {
-          grid-template-columns: 1fr 1fr;
-          gap: 32px;
+        .steps {
+          grid-template-columns: 1fr;
+          gap: var(--space-lg);
         }
 
         .lesson-card {
           grid-template-columns: 1fr;
         }
+
+        .features-grid {
+          grid-template-columns: 1fr;
+        }
+
+        .pricing-cards {
+          grid-template-columns: 1fr;
+        }
+
+        .footer-grid {
+          grid-template-columns: repeat(2, 1fr);
+        }
       }
 
       @media (max-width: 768px) {
-        h1 {
-          font-size: 3rem;
+        .nav-links {
+          display: none;
         }
 
-        h2 {
-          font-size: 2rem;
+        .hero {
+          padding: var(--space-3xl) var(--space-md);
         }
 
-        .year-big {
-          font-size: 3.5rem;
+        .kelly-avatar {
+          width: 120px;
+          height: 120px;
+        }
+
+        .section {
+          padding: var(--space-3xl) var(--space-md);
+        }
+
+        .footer-grid {
+          grid-template-columns: 1fr;
+          gap: var(--space-xl);
+        }
+
+        .footer-brand {
+          max-width: 100%;
         }
 
         .footer-bottom {
           flex-direction: column;
-          gap: 8px;
+          gap: var(--space-md);
           text-align: center;
         }
       }
 
-      .hidden {
-        display: none;
+      /* ============================================
+         LAYER 2: KELLY OS (z-index 1)
+         ============================================ */
+      
+      #app-layer-desktop {
+        position: fixed;
+        inset: 0;
+        z-index: 1;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.6s var(--ease);
+      }
+
+      #app-layer-desktop.active {
+        opacity: 1;
+        pointer-events: auto;
       }
     </style>
   </head>
+
   <body>
-    <!-- ==================================================================
-         LAYER 1: LOGIN / LANDING (The "Site")
-         ================================================================== -->
-    <div id="login-layer">
-      <div class="container">
-        <div class="left-panel">
-          <div class="logo">
-            <span style="color: var(--accent-orange); font-size: 1.5rem;">✨</span> Curious Kelly
-          </div>
+    <!-- ============================================
+         LAYER 1: LANDING PAGE
+         ============================================ -->
+    <div id="landing-layer">
+      <!-- Header -->
+      <header class="header">
+        <div class="header-inner">
+          <a href="/" class="logo">
+            <span class="logo-mark">✨</span>
+            <span>Curious Kelly</span>
+          </a>
 
-          <div class="main-content" style="margin-top: auto; margin-bottom: auto;">
-            <h1>Curious?<br />Always.</h1>
-            <p class="subtitle">The operating system for your potential.</p>
-
-            <div class="login-container">
-              <!-- Primary: Google (most users) -->
-              <button class="btn btn-outline" onclick="handleLogin(this, 'google')" id="btn-google">
-                <img
-                  src="data:image/svg+xml;base64,PHN2ZyB4bWxucz0iaHR0cDovL3d3dy53My5vcmcvMjAwMC9zdmciIHZpZXdCb3g9IjAgMCA0OCA0OCI+PHBhdGggZmlsbD0iI0ZGQzEwNyIgZD0iTTQzLjYxMSwyMC4wODNINDUyVjIwSDI0djhoMTEuMzAzYy0xLjY0OSw0LjY1Ny02LjA4LDgtMTEuMzAzLDhjLTYuNjI3LDAtMTItNS4zNzMtMTItMTJjMC02LjYyNyw1LjM3My0xMiwxMi0xMmMzLjA1OSwwLDUuODQyLDEuMTU0LDcuOTYxLDMuMDM5bDUuNjU3LTUuNjU3QzM0LjA0Niw2LjA1MywyOS4yNjgsNCwyNCw0QzEyLjk1NSw0LDQsMTIuOTU1LDQsMjRjMCwxMS4wNDUsOC45NTUsMjAsMjAsMjBjMTEuMDQ1LDAsMjAtOC45NTUsMjAtMjBDNDQsMjIuNjU5LDQzLjg2MiwyMS4zNTAsNDMuNjExLDIwLjA4M3oiLz48cGF0aCBmaWxsPSIjRkYzRDAwIiBkPSJNNi4zMDYsMTQuNjkxbDYuNTcxLDQuODE5QzE0LjY1NSwxNS4xMDgsMTguOTYxLDEyLDI0LDEyYzMuMDU5LDAsNS44NDIsMS4xNTQsNy45NjEsMy4wMzlsNS42NTctNS42NTdDMzQuMDQ2LDYuMDUzLDI5LjI2OCw0LDI0LDRDMTYuMzE4LDQsOS42NTYsOC4zMzcsNi4zMDYsMTQuNjkxeiIvPjxwYXRoIGZpbGw9IiM0Q0FGNTAiIGQ9Ik0yNCw0NGM1LjE2NiwwLDkuODYtMS45NzcsMTMuNDA5LTUuMTkybC02LjE5LTUuMjM4QzI5LjIxMSwzNS4wOTEsMjYuNzE1LDM2LDI0LDM2Yy01LjIwMiwwLTkuNjE5LTMuMzE3LTExLjI4My03Ljk0NmwtNi41MjIsNS4wMjVDOS41MDUsMzkuNTU2LDE2LjIyNyw0NCwyNCw0NHoiLz48cGF0aCBmaWxsPSIjMTk3NkQyIiBkPSJNNDMuNjExLDIwLjA4M0g0MlYyMEgyNHY4aDExLjMwM2MtMC43OTIsMi4yMzctMi4yMzEsNC4xNjYtNC4wODcsNS41NzFjMC4wMDEtMC4wMDEsMC4wMDItMC4wMDEsMC4wMDMtMC4wMDJsNi4xOSw1LjIzOEMzNi45NzEsMzkuMjA1LDQ0LDM0LDQ0LDI0QzQ0LDIyLjY1OSw0My44NjIsMjEuMzUwLDQzLjYxMSwyMC4wODN6Ii8+PC9zdmc+"
-                  width="20"
-                  alt="G"
-                />
-                <span>Continue with Google</span>
-                <div class="spinner"></div>
-              </button>
-
-              <!-- Apple Sign In (for iOS users) -->
-              <button
-                class="btn btn-outline"
-                onclick="handleLogin(this, 'apple')"
-                id="btn-apple"
-                style="background: #000; border-color: #333;"
-              >
-                <svg width="20" height="20" viewBox="0 0 24 24" fill="white">
-                  <path
-                    d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.8 1.18-.24 2.31-.93 3.57-.84 1.51.12 2.65.72 3.4 1.8-3.12 1.87-2.38 5.98.48 7.13-.57 1.5-1.31 2.99-2.54 4.09l.01-.01zM12.03 7.25c-.15-2.23 1.66-4.07 3.74-4.25.29 2.58-2.34 4.5-3.74 4.25z"
-                  ></path>
-                </svg>
-                <span>Continue with Apple</span>
-                <div class="spinner"></div>
-              </button>
-
-              <div class="divider"><span>OR</span></div>
-
-              <!-- Guest mode - instant, no friction -->
-              <button class="btn btn-primary" onclick="handleLogin(this, 'guest')" id="btn-guest">
-                <span>✨ Start Learning Now</span>
-                <div class="spinner"></div>
-              </button>
-              <p
-                style="text-align: center; font-size: 0.75rem; color: var(--text-secondary); margin-top: 8px;"
-              >
-                No account needed. Upgrade anytime.
-              </p>
-
-              <p
-                style="margin-top: 24px; font-size: 0.7rem; color: var(--text-secondary); text-align: center;"
-              >
-                By continuing, you agree to our <a
-                  href="/privacy.html"
-                  style="color:inherit; text-decoration: underline;">Privacy Policy</a
-                >
-                and <a href="/terms.html" style="color:inherit; text-decoration: underline;"
-                  >Terms of Service</a
-                >.
-              </p>
+          <nav class="nav">
+            <div class="nav-links">
+              <a href="#how-it-works" class="nav-link">How it works</a>
+              <a href="#today" class="nav-link">Today's lesson</a>
+              <a href="#pricing" class="nav-link">Pricing</a>
+              <a href="#about" class="nav-link">About</a>
             </div>
+
+            <div class="nav-actions">
+              <button class="btn btn-ghost" onclick="handleSignIn()">Sign in</button>
+              <button class="btn btn-primary" onclick="handleStart(this)">
+                <span class="btn-text">Start learning</span>
+                <span class="spinner"></span>
+              </button>
+            </div>
+          </nav>
+        </div>
+      </header>
+
+      <!-- Hero -->
+      <section class="hero">
+        <div class="kelly-container fade-in fade-in-1">
+          <div class="kelly-avatar" id="kelly">
+            <img 
+              src="/images/expressions/curious-main.jpeg" 
+              alt="Kelly"
+              onerror="this.parentElement.innerHTML='<span style=\"font-size:64px;display:flex;align-items:center;justify-content:center;height:100%\">👩‍🏫</span>'"
+            />
+          </div>
+          <div class="kelly-status">
+            <span class="status-dot"></span>
+            <span class="status-dot"></span>
+            <span class="status-dot"></span>
           </div>
         </div>
 
-        <div class="right-panel">
-          <picture>
-            <source
-              type="image/webp"
-              srcset="
-                /assets/kelly/production/hero/kelly-hero-mobile.webp 640w,
-                /assets/kelly/production/hero/kelly-hero-tablet.webp 1280w,
-                /assets/kelly/production/hero/kelly-hero-desktop.webp 1920w,
-                /assets/kelly/production/hero/kelly-hero-4k.webp 3840w
-              "
-              sizes="(max-width: 900px) 100vw, 50vw"
-            />
-            <source
-              type="image/jpeg"
-              srcset="
-                /assets/kelly/production/hero/kelly-hero-mobile.jpg 640w,
-                /assets/kelly/production/hero/kelly-hero-tablet.jpg 1280w,
-                /assets/kelly/production/hero/kelly-hero-desktop.jpg 1920w,
-                /assets/kelly/production/hero/kelly-hero-4k.jpg 3840w
-              "
-              sizes="(max-width: 900px) 100vw, 50vw"
-            />
-            <img
-              src="/assets/kelly/production/hero/kelly-hero-desktop.jpg"
-              alt="Kelly - Your AI learning companion"
-              class="hero-image"
-              loading="eager"
-              fetchpriority="high"
-              width="1920"
-              height="1080"
-            />
-          </picture>
+        <p class="hero-greeting fade-in fade-in-2">Hi, I'm Kelly</p>
+        <h1 class="hero-title fade-in fade-in-3">Learn something wonderful every day</h1>
+        <p class="hero-subtitle fade-in fade-in-4">
+          Five minutes a day. One topic. Adapted to your age and curiosity.
+        </p>
 
-          <!-- Claude-like Scribbles -->
-          <svg
-            class="scribble"
-            style="top: 20%; left: 10%; width: 100px; height: 100px;"
-            viewBox="0 0 100 100"
-          >
-            <path d="M10,50 Q30,10 50,50 T90,50" fill="none" stroke="#84cc16" stroke-width="3"
-            ></path>
-          </svg>
-          <svg
-            class="scribble"
-            style="bottom: 30%; right: 20%; width: 60px; height: 60px;"
-            viewBox="0 0 100 100"
-          >
-            <circle
-              cx="50"
-              cy="50"
-              r="40"
-              fill="none"
-              stroke="#f472b6"
-              stroke-width="2"
-              stroke-dasharray="10,5"></circle>
-          </svg>
-          <svg
-            class="scribble"
-            style="top: 50%; right: 10%; width: 40px; height: 40px;"
-            viewBox="0 0 100 100"
-          >
-            <text x="10" y="60" fill="#60a5fa" font-family="monospace" font-size="40"
-              >&lt;/&gt;</text
-            >
-          </svg>
+        <div class="hero-cta fade-in fade-in-5">
+          <button class="btn btn-primary" onclick="handleStart(this)">
+            <span class="btn-text">Start today's lesson</span>
+            <span class="spinner"></span>
+          </button>
+          <p class="hero-hint">No account needed · Free forever</p>
         </div>
-      </div>
 
-      <!-- ==================================================================
-           UNIFIED MARKETING SECTIONS (Scrollable below auth)
-           ================================================================== -->
-      
-      <!-- TODAY'S LESSON -->
-      <section class="today-lesson">
+        <div class="scroll-hint">
+          <span>Scroll to learn more</span>
+          <span>↓</span>
+        </div>
+      </section>
+
+      <!-- How it works -->
+      <section class="section how-it-works" id="how-it-works">
         <div class="section-header">
-          <span class="section-label">Today's Topic</span>
-          <h2 id="today-topic">How Money Works</h2>
-          <p id="today-hook">"Every dollar tells a story"</p>
+          <span class="section-label">How it works</span>
+          <h2 class="section-title">Learning made simple</h2>
+          <p class="section-subtitle">
+            Same topic, same day, for everyone on Earth. Kelly adapts her teaching to match your age.
+          </p>
+        </div>
+
+        <div class="steps">
+          <div class="step">
+            <div class="step-number">1</div>
+            <h3 class="step-title">One topic daily</h3>
+            <p class="step-desc">
+              Every day, Kelly teaches one fascinating topic. From how money works to why leaves change color.
+            </p>
+          </div>
+          <div class="step">
+            <div class="step-number">2</div>
+            <h3 class="step-title">Adapted for you</h3>
+            <p class="step-desc">
+              Whether you're 5 or 75, Kelly explains concepts at your level. Same idea, different depth.
+            </p>
+          </div>
+          <div class="step">
+            <div class="step-number">3</div>
+            <h3 class="step-title">Five minutes</h3>
+            <p class="step-desc">
+              Quick enough to fit your morning coffee. Deep enough to make you think all day.
+            </p>
+          </div>
+        </div>
+      </section>
+
+      <!-- Today's lesson preview -->
+      <section class="section today-preview" id="today">
+        <div class="section-header">
+          <span class="section-label">Today's topic</span>
+          <h2 class="section-title">What's everyone learning?</h2>
         </div>
 
         <div class="lesson-card">
-          <div class="lesson-thumbnail">
-            <span class="lesson-day-badge" id="today-day-badge">Day 334</span>
-            <div class="lesson-thumbnail-text" id="today-thumbnail-text">How Money Works</div>
+          <div class="lesson-visual">
+            <img 
+              src="/assets/kelly/production/thumbnails/january/lesson-1.webp" 
+              alt="Today's lesson" 
+              onerror="this.style.display='none'"
+            />
           </div>
-          <div class="lesson-info">
+          <div class="lesson-content">
+            <span class="lesson-badge" id="today-day-badge">Day 339 of 366</span>
+            <h3 class="lesson-title" id="today-topic">How the sun powers all life</h3>
+            <p class="lesson-hook" id="today-hook">"Every breath you take exists because of a star"</p>
             <div class="lesson-meta">
-              <span class="meta-item">📅 Day <span id="today-day">334</span> of 366</span>
-              <span class="meta-item">⏱️ 5 minutes</span>
-              <span class="meta-item">👥 <span id="today-learners">1.2M</span> learned today</span>
+              <span>⏱️ 5 minutes</span>
+              <span>🌍 Global classroom</span>
             </div>
-            <button class="btn btn-primary" onclick="handleLogin(this, 'guest')">
-              Join Live Class
-            </button>
-            <button class="btn btn-outline" onclick="handleLogin(this, 'guest')">
-              Watch On Demand
+            <button class="btn btn-blue" onclick="handleStart(this)">
+              <span class="btn-text">Join today's lesson →</span>
+              <span class="spinner"></span>
             </button>
           </div>
         </div>
       </section>
 
-      <!-- CURRICULUM -->
-      <section class="curriculum" id="curriculum">
+      <!-- Features -->
+      <section class="section features" id="about">
         <div class="section-header">
-          <span class="section-label">365 Days of Wonder</span>
-          <h2>The Complete Curriculum</h2>
-          <p>One topic per day, personalized for your age. From "How Leaves Feed the World" to "What Leaders Actually Do."</p>
+          <span class="section-label">Why Kelly</span>
+          <h2 class="section-title">Built for curious minds</h2>
         </div>
 
-        <div class="age-selector">
-          <button class="age-btn active" onclick="selectAge(this, '2-5')">Ages 2-5</button>
-          <button class="age-btn" onclick="selectAge(this, '6-12')">Ages 6-12</button>
-          <button class="age-btn" onclick="selectAge(this, '13-17')">Ages 13-17</button>
-          <button class="age-btn" onclick="selectAge(this, '18-29')">Ages 18-29</button>
-          <button class="age-btn" onclick="selectAge(this, '30-54')">Ages 30-54</button>
-          <button class="age-btn" onclick="selectAge(this, '55+')">Ages 55+</button>
-        </div>
-
-        <div class="month-grid" id="month-grid">
-          <!-- Populated by JavaScript -->
+        <div class="features-grid">
+          <div class="feature">
+            <div class="feature-icon">🌍</div>
+            <h3 class="feature-title">Global classroom</h3>
+            <p class="feature-desc">
+              Everyone learns the same topic on the same day. Discuss with family across generations.
+            </p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">🎯</div>
+            <h3 class="feature-title">Age-adaptive</h3>
+            <p class="feature-desc">
+              Kelly automatically adjusts complexity. A 7-year-old and 70-year-old get the same core idea, different explanations.
+            </p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">📚</div>
+            <h3 class="feature-title">365 topics</h3>
+            <p class="feature-desc">
+              A full year of wonder. From science to history, money to emotions, leadership to nature.
+            </p>
+          </div>
+          <div class="feature">
+            <div class="feature-icon">💭</div>
+            <h3 class="feature-title">Critical thinking</h3>
+            <p class="feature-desc">
+              Not just facts. Kelly asks questions that make you think deeper about how the world works.
+            </p>
+          </div>
         </div>
       </section>
 
-      <!-- PERSPECTIVES -->
-      <section class="perspectives" id="perspectives">
+      <!-- Pricing -->
+      <section class="section pricing-teaser" id="pricing">
         <div class="section-header">
-          <span class="section-label">Perspective Explorer</span>
-          <h2>The Same Topic, Through Different Eyes</h2>
-          <p>See how Kelly adapts the same lesson based on your generation. Drag the slider to explore.</p>
+          <span class="section-label">Simple pricing</span>
+          <h2 class="section-title">Start free, upgrade when ready</h2>
+          <p class="section-subtitle">
+            Today's lesson is always free. Unlock the full curriculum anytime.
+          </p>
         </div>
 
-        <div class="time-machine">
-          <div class="year-display">
-            <div class="year-big" id="perspective-year">1990</div>
-            <div class="year-context">You'd be <span id="perspective-age">35</span> years old today</div>
-          </div>
-
-          <input type="range" min="1945" max="2020" value="1990" id="year-slider" class="year-slider">
-          <div class="slider-labels">
-            <span>1945</span>
-            <span>1980</span>
-            <span>2020</span>
-          </div>
-
-          <div class="generation-picks">
-            <button class="gen-btn" onclick="setYear(1955)">Silent Gen</button>
-            <button class="gen-btn" onclick="setYear(1960)">Boomer</button>
-            <button class="gen-btn" onclick="setYear(1975)">Gen X</button>
-            <button class="gen-btn" onclick="setYear(1990)">Millennial</button>
-            <button class="gen-btn" onclick="setYear(2002)">Gen Z</button>
-            <button class="gen-btn" onclick="setYear(2015)">Gen Alpha</button>
-          </div>
-        </div>
-
-        <div class="perspective-cards" id="perspective-cards">
-          <!-- Populated by JavaScript -->
-        </div>
-      </section>
-
-      <!-- PRICING -->
-      <section class="pricing" id="pricing">
-        <div class="section-header">
-          <span class="section-label">Simple, Transparent Pricing</span>
-          <h2>Start Free. Upgrade When Ready.</h2>
-          <p>One subscription unlocks daily lessons for your whole family. All ages, all topics, all languages.</p>
-        </div>
-
-        <div class="pricing-grid">
-          <!-- Free -->
+        <div class="pricing-cards">
           <div class="price-card">
             <div class="price-name">Free</div>
             <div class="price-amount">$0</div>
-            <div class="price-desc">Today's lesson, forever free</div>
-            <ul class="price-features">
-              <li>Today's daily lesson</li>
-              <li>Basic personalization</li>
-              <li>Community access</li>
-            </ul>
-            <button class="btn btn-outline" onclick="handleLogin(this, 'guest')">Start Learning</button>
+            <p class="price-desc">Today's lesson, forever</p>
+            <button class="btn btn-outline" onclick="handleStart(this)">
+              <span class="btn-text">Get started</span>
+              <span class="spinner"></span>
+            </button>
           </div>
-
-          <!-- Monthly -->
-          <div class="price-card">
-            <div class="price-name">Monthly</div>
-            <div class="price-amount">$9.99<span>/mo</span></div>
-            <div class="price-desc">All 366 lessons, anytime</div>
-            <ul class="price-features">
-              <li>Access every lesson</li>
-              <li>Learn at your pace</li>
-              <li>Full personalization</li>
-              <li>Progress tracking</li>
-              <li>Cancel anytime</li>
-            </ul>
-            <button class="btn btn-primary" onclick="handleCheckout('monthly')">Subscribe</button>
-          </div>
-
-          <!-- Annual (Featured) -->
           <div class="price-card featured">
-            <div class="price-badge">Best Value</div>
             <div class="price-name">Annual</div>
             <div class="price-amount">$99<span>/year</span></div>
-            <div class="price-desc">Save $20 (17% off)</div>
-            <ul class="price-features">
-              <li>Everything in Monthly</li>
-              <li>2 months free</li>
-              <li>Priority support</li>
-              <li>Early feature access</li>
-            </ul>
-            <button class="btn btn-primary" onclick="handleCheckout('annual')">Subscribe</button>
+            <p class="price-desc">All 366 lessons, any time</p>
+            <button class="btn btn-blue" onclick="handleCheckout('annual')">Subscribe</button>
           </div>
-
-          <!-- Lifetime -->
           <div class="price-card">
             <div class="price-name">Lifetime</div>
-            <div class="price-amount">$299<span>one-time</span></div>
-            <div class="price-desc">Forever access</div>
-            <ul class="price-features">
-              <li>All features, forever</li>
-              <li>All future content</li>
-              <li>Founding member badge</li>
-              <li>VIP support</li>
-            </ul>
-            <button class="btn btn-outline" onclick="handleCheckout('lifetime')">Get Lifetime</button>
+            <div class="price-amount">$299</div>
+            <p class="price-desc">Forever access, all updates</p>
+            <button class="btn btn-outline" onclick="handleCheckout('lifetime')">Get lifetime</button>
           </div>
         </div>
       </section>
 
-      <!-- GIFTS (Collapsible) -->
-      <section class="gifts collapsible" id="gifts">
-        <div class="collapsible-header" onclick="toggleCollapsible(this)">
-          <h3>🎁 Give the Gift of Learning</h3>
-          <span class="collapse-icon">▼</span>
-        </div>
-        <div class="collapsible-content">
-          <p style="text-align: center; color: var(--text-secondary); margin: 24px 0;">Share the joy of daily discovery with someone you love.</p>
-          <div class="gift-grid">
-            <div class="gift-card" onclick="handleGift('3-month')">
-              <div class="gift-icon">🌱</div>
-              <h4>3 Months</h4>
-              <div class="gift-price">$34.99</div>
-              <div class="gift-value">90 daily lessons</div>
-            </div>
-            <div class="gift-card" onclick="handleGift('6-month')">
-              <div class="gift-icon">🌿</div>
-              <h4>6 Months</h4>
-              <div class="gift-price">$59.99</div>
-              <div class="gift-value">180 daily lessons</div>
-            </div>
-            <div class="gift-card" onclick="handleGift('12-month')">
-              <div class="gift-icon">🌳</div>
-              <h4>12 Months</h4>
-              <div class="gift-price">$99.99</div>
-              <div class="gift-value">365 daily lessons</div>
-            </div>
-            <div class="gift-card" onclick="handleGift('lifetime')">
-              <div class="gift-icon">💎</div>
-              <h4>Lifetime</h4>
-              <div class="gift-price">$299.99</div>
-              <div class="gift-value">Unlimited learning</div>
-            </div>
-          </div>
-        </div>
+      <!-- Final CTA -->
+      <section class="final-cta">
+        <h2 class="section-title">Ready to learn something wonderful?</h2>
+        <button class="btn btn-primary" onclick="handleStart(this)" style="padding: 16px 40px; font-size: 1.125rem; border-radius: 14px;">
+          <span class="btn-text">Start today's lesson</span>
+          <span class="spinner"></span>
+        </button>
+        <p class="hero-hint" style="margin-top: var(--space-md);">Free · No account needed · 5 minutes</p>
       </section>
 
-      <!-- CAREERS -->
-      <section class="careers" id="careers">
-        <div class="section-header">
-          <span class="section-label">Affiliate Program</span>
-          <h2>Build Your Career Teaching the World</h2>
-          <p>Earn 20-30% recurring commissions helping families discover daily learning.</p>
-        </div>
-
-        <div class="earnings-calculator">
-          <h3>Your Earnings Potential</h3>
-          <div class="calc-slider-group">
-            <label>Number of Active Referrals</label>
-            <input type="range" min="0" max="2000" value="100" step="10" id="referrals-slider">
-            <div class="calc-value"><span id="referrals-value">100</span> learners</div>
-          </div>
-          <div class="calc-results">
-            <div class="calc-row">
-              <span>Current Tier:</span>
-              <strong id="calc-tier" style="color: var(--text-primary);">Scholar (20%)</strong>
-            </div>
-            <div class="calc-row">
-              <span>Monthly Income:</span>
-              <strong id="calc-monthly">$332</strong>
-            </div>
-            <div class="calc-row">
-              <span>Annual Income:</span>
-              <strong id="calc-annual">$3,984</strong>
-            </div>
-          </div>
-        </div>
-
-        <div class="tier-grid">
-          <div class="tier-card">
-            <h4>Scholar</h4>
-            <div class="tier-rate">20%</div>
-            <p>0-99 active referrals</p>
-            <ul>
-              <li>$40/year per subscriber</li>
-              <li>Monthly payouts (min $50)</li>
-              <li>Marketing asset library</li>
-            </ul>
-          </div>
-          <div class="tier-card featured">
-            <div class="tier-badge">Most Popular</div>
-            <h4>Fellow</h4>
-            <div class="tier-rate">25%</div>
-            <p>100-499 active referrals</p>
-            <ul>
-              <li>$50/year per subscriber</li>
-              <li>Bi-weekly payouts</li>
-              <li>Dedicated affiliate manager</li>
-            </ul>
-          </div>
-          <div class="tier-card">
-            <h4>Ambassador</h4>
-            <div class="tier-rate">30%</div>
-            <p>500+ active referrals</p>
-            <ul>
-              <li>$60/year per subscriber</li>
-              <li>Weekly payouts</li>
-              <li>Co-marketing opportunities</li>
-            </ul>
-          </div>
-        </div>
-
-        <div class="cta-box">
-          <h3>Ready to Join?</h3>
-          <p>First 100 affiliates lock in 30% commission forever.</p>
-          <button class="btn btn-primary" onclick="window.location.href='/careers.html'">Apply Now</button>
-        </div>
-      </section>
-
-      <!-- ENTERPRISE (Collapsible) -->
-      <section class="enterprise collapsible" id="enterprise">
-        <div class="collapsible-header" onclick="toggleCollapsible(this)">
-          <h3>🏢 Enterprise & Schools</h3>
-          <span class="collapse-icon">▼</span>
-        </div>
-        <div class="collapsible-content enterprise-content">
-          <p style="text-align: center; color: var(--text-secondary); margin-bottom: 40px;">Custom solutions for schools, libraries, and organizations.</p>
-          <div class="enterprise-features">
-            <div class="enterprise-feature">
-              <h4>Volume Licensing</h4>
-              <p>Discounted rates for 50+ seats</p>
-            </div>
-            <div class="enterprise-feature">
-              <h4>Admin Dashboard</h4>
-              <p>Manage users and track progress</p>
-            </div>
-            <div class="enterprise-feature">
-              <h4>Custom Content</h4>
-              <p>Align lessons to your curriculum</p>
-            </div>
-            <div class="enterprise-feature">
-              <h4>Dedicated Support</h4>
-              <p>Priority help when you need it</p>
-            </div>
-          </div>
-          <div style="text-align: center; margin-top: 40px;">
-            <button class="btn btn-primary" onclick="window.location.href='/enterprise.html'">Request Demo</button>
-          </div>
-        </div>
-      </section>
-
-      <!-- ABOUT KELLY -->
-      <section class="about" id="about">
-        <div class="section-header">
-          <span class="section-label">Meet Kelly</span>
-          <h2>Your Favorite Teacher Ever</h2>
-        </div>
-
-        <div class="about-content">
-          <img src="/images/expressions/curious-main.jpeg" alt="Kelly" class="kelly-avatar-large" onerror="this.src='/images/brand/kelly-mark-circle-64.png'" />
-          
-          <p>Kelly is the world's first AI teacher designed to foster lifelong learning, critical thinking, and wonder. She's not just software—she's a companion on your learning journey.</p>
-          
-          <p>Every day, Kelly teaches millions of learners around the world the same topic, creating a shared global experience. From ages 2 to 102, she adapts her teaching style to meet you exactly where you are.</p>
-          
-          <p>Built by educators, powered by AI, and loved by curious minds everywhere.</p>
-        </div>
-
-        <div class="mission-grid">
-          <div class="mission-item">
-            <div class="mission-icon">🌍</div>
-            <h4>Global Classroom</h4>
-            <p>Creating a daily shared experience where everyone learns together</p>
-          </div>
-          <div class="mission-item">
-            <div class="mission-icon">🎯</div>
-            <h4>Personalized Learning</h4>
-            <p>Adapting to your age, interests, and learning style</p>
-          </div>
-          <div class="mission-item">
-            <div class="mission-icon">💡</div>
-            <h4>Lifelong Curiosity</h4>
-            <p>Building habits that last a lifetime</p>
-          </div>
-        </div>
-      </section>
-
-      <!-- NEWSROOM (Collapsible) -->
-      <section class="newsroom collapsible" id="newsroom">
-        <div class="collapsible-header" onclick="toggleCollapsible(this)">
-          <h3>📰 Newsroom</h3>
-          <span class="collapse-icon">▼</span>
-        </div>
-        <div class="collapsible-content newsroom-content">
-          <div class="press-releases">
-            <div class="press-item">
-              <div>
-                <h4>Curious Kelly Launches Global Learning Platform</h4>
-                <div class="press-date">December 17, 2025</div>
-              </div>
-              <a href="/newsroom.html" class="press-link">Read More →</a>
-            </div>
-            <div class="press-item">
-              <div>
-                <h4>1 Million Learners Join Kelly's Classroom</h4>
-                <div class="press-date">Coming Soon</div>
-              </div>
-              <a href="/newsroom.html" class="press-link">Read More →</a>
-            </div>
-          </div>
-          <div style="text-align: center; margin-top: 40px;">
-            <p style="color: var(--text-secondary); margin-bottom: 16px;">For press inquiries:</p>
-            <a href="mailto:hello@curiouskelly.com" style="color: var(--accent-primary); font-weight: 600; text-decoration: none;">hello@curiouskelly.com</a>
-          </div>
-        </div>
-      </section>
-
-      <!-- FOOTER -->
-      <footer class="site-footer">
-        <div class="footer-grid">
-          <div class="footer-col">
-            <h4>Explore</h4>
-            <ul class="footer-links">
-              <li><a href="#pricing">Pricing</a></li>
-              <li><a href="#curriculum">Curriculum</a></li>
-              <li><a href="#gifts">Gifts</a></li>
-              <li><a href="#enterprise">Enterprise</a></li>
-            </ul>
-          </div>
-          <div class="footer-col">
-            <h4>About</h4>
-            <ul class="footer-links">
-              <li><a href="#about">About Curious Kelly</a></li>
-              <li><a href="#careers">Careers</a></li>
-              <li><a href="#newsroom">Newsroom</a></li>
-              <li><a href="/privacy.html">Privacy</a></li>
-              <li><a href="/terms.html">Terms</a></li>
-            </ul>
-          </div>
-          <div class="footer-col">
-            <h4>Social</h4>
-            <ul class="footer-links">
-              <li><a href="https://twitter.com/curiouskelly" target="_blank" rel="noopener">Twitter</a></li>
-              <li><a href="https://instagram.com/curiouskelly" target="_blank" rel="noopener">Instagram</a></li>
-              <li><a href="https://youtube.com/@curiouskelly" target="_blank" rel="noopener">YouTube</a></li>
-              <li><a href="https://linkedin.com/company/curiouskelly" target="_blank" rel="noopener">LinkedIn</a></li>
-            </ul>
-          </div>
-          <div class="footer-col">
-            <h4>Download</h4>
-            <div class="app-badges">
-              <a href="#" class="app-badge" title="Coming Soon">
-                <svg viewBox="0 0 24 24">
-                  <path d="M17.05 20.28c-.98.95-2.05.8-3.08.35-1.09-.46-2.09-.48-3.24 0-1.44.62-2.2.44-3.06-.35C2.79 15.25 3.51 7.59 9.05 7.31c1.35.07 2.29.74 3.08.74 1.18 0 2.21-.93 3.69-.93.95 0 1.95.43 2.55.89-1.93 1.16-1.6 4.34.64 5.75-.43 1.06-.95 2.12-1.96 4.52zm-2.3-14.4c.77-1.29 1.87-2.16 3.26-2.31.37 1.6-1.27 3.47-3.26 2.31z"/>
-                </svg>
-                <span>Download on the<br /><b>App Store</b></span>
+      <!-- Footer -->
+      <footer class="footer">
+        <div class="footer-inner">
+          <div class="footer-grid">
+            <div class="footer-brand">
+              <a href="/" class="logo">
+                <span class="logo-mark">✨</span>
+                <span>Curious Kelly</span>
               </a>
-              <a href="#" class="app-badge" title="Coming Soon">
-                <svg viewBox="0 0 24 24">
-                  <path d="M3 20.5v-17c0-.83.67-1.5 1.5-1.5s1.5.67 1.5 1.5v17c0 .83-.67 1.5-1.5 1.5S3 21.33 3 20.5zM16.5 12L6 3.5V20.5l10.5-8.5zm-6.77 1.52l4.95-3.5a.35.35 0 000-.04l-4.95-3.5v7.04z"/>
-                </svg>
-                <span>GET IT ON<br /><b>Google Play</b></span>
-              </a>
+              <p>Your AI teacher for life. Learn something wonderful every day.</p>
+              <div class="footer-social">
+                <a href="https://twitter.com/curiouskelly" class="social-link" title="Twitter" target="_blank" rel="noopener">𝕏</a>
+                <a href="https://instagram.com/curiouskelly" class="social-link" title="Instagram" target="_blank" rel="noopener">◎</a>
+                <a href="https://youtube.com/@curiouskelly" class="social-link" title="YouTube" target="_blank" rel="noopener">▶</a>
+                <a href="https://linkedin.com/company/curiouskelly" class="social-link" title="LinkedIn" target="_blank" rel="noopener">in</a>
+              </div>
+            </div>
+
+            <div class="footer-col">
+              <h4>Product</h4>
+              <ul class="footer-links">
+                <li><a href="#how-it-works">How it works</a></li>
+                <li><a href="/curriculum.html">Curriculum</a></li>
+                <li><a href="#pricing">Pricing</a></li>
+                <li><a href="/gifts.html">Gift cards</a></li>
+              </ul>
+            </div>
+
+            <div class="footer-col">
+              <h4>Company</h4>
+              <ul class="footer-links">
+                <li><a href="/about.html">About</a></li>
+                <li><a href="/careers.html">Careers</a></li>
+                <li><a href="/newsroom.html">Newsroom</a></li>
+                <li><a href="mailto:hello@curiouskelly.com">Contact</a></li>
+              </ul>
+            </div>
+
+            <div class="footer-col">
+              <h4>Resources</h4>
+              <ul class="footer-links">
+                <li><a href="/enterprise.html">For Schools</a></li>
+                <li><a href="/affiliates.html">Affiliates</a></li>
+                <li><a href="/help.html">Help Center</a></li>
+                <li><a href="/api.html">API</a></li>
+              </ul>
+            </div>
+
+            <div class="footer-col">
+              <h4>Download</h4>
+              <ul class="footer-links">
+                <li><a href="#">iOS App</a></li>
+                <li><a href="#">Android App</a></li>
+                <li><a href="/learn.html">Web App</a></li>
+              </ul>
             </div>
           </div>
-        </div>
-        <div class="footer-bottom">
-          <div>© 2025 Lesson of the Day PBC. All rights reserved.</div>
-          <div>Made with curiosity for curious minds</div>
+
+          <div class="footer-bottom">
+            <span>© 2025 Lesson of the Day PBC. All rights reserved.</span>
+            <div class="footer-legal">
+              <a href="/privacy.html">Privacy</a>
+              <a href="/terms.html">Terms</a>
+              <a href="/accessibility.html">Accessibility</a>
+            </div>
+          </div>
         </div>
       </footer>
     </div>
 
-    <!-- ==================================================================
-         LAYER 2: THE OS (The "App")
-         This is the DOM structure required by app.js
-         ================================================================== -->
+    <!-- ============================================
+         LAYER 2: KELLY OS (Hidden, Preloaded)
+         ============================================ -->
     <div id="app-layer-desktop">
-      <!-- LAYER 0: Background (Unity / Video) -->
       <div id="layer-background">
         <div class="kelly-unity-container" id="kelly-unity-container">
           <iframe
@@ -2017,15 +1206,10 @@ import '../styles/unified-design-system.scss';
             class="kelly-unity-iframe"
             src="/unity/kelly-v1/index.html"
             title="Kelly Unity Avatar"
-            allow="autoplay *; microphone; fullscreen; xr-spatial-tracking"
-            loading="eager"
-            referrerpolicy="strict-origin-when-cross-origin"></iframe>
-          <div class="kelly-unity-status" id="kelly-unity-status">
-            <span class="status-indicator" id="unity-status-indicator">•</span>
-            <span class="status-text" id="unity-status-text">Loading Kelly...</span>
-          </div>
+            allow="autoplay; microphone; fullscreen"
+            loading="lazy"
+          ></iframe>
         </div>
-        <!-- Fallback Image matches the hero image for seamless transition -->
         <img
           id="kelly-image"
           class="kelly-image"
@@ -2034,40 +1218,26 @@ import '../styles/unified-design-system.scss';
         />
       </div>
 
-      <!-- TRIGGER: The Single Entry Point -->
-      <button id="os-trigger" title="Open Kelly OS">☰</button>
+      <button id="os-trigger" title="Menu">☰</button>
 
-      <!-- LAYER 2: OS Interface -->
       <div id="layer-os-interface">
         <div id="mode-dashboard" class="os-mode-panel active"></div>
-
         <div id="mode-lesson" class="os-mode-panel">
           <div class="controls-panel">
             <div class="age-selector-floating glass-panel-light">
               <label for="age-slider" class="age-label-floating">Age</label>
               <div class="age-display-floating"><span id="age-value">25</span></div>
-              <input
-                type="range"
-                id="age-slider"
-                min="2"
-                max="102"
-                value="25"
-                class="age-slider-floating"
-              />
+              <input type="range" id="age-slider" min="2" max="102" value="25" class="age-slider-floating" />
             </div>
           </div>
-
           <aside class="lesson-context-panel glass-panel-medium">
             <div class="lesson-meta-header"><div class="meta-label">Current Lesson</div></div>
             <h2 id="lesson-title" class="lesson-title">Loading...</h2>
             <p id="topic-description" class="lesson-description">...</p>
           </aside>
-
           <div class="interaction-zone">
             <div id="question-card" class="question-card glass-panel-medium">
-              <button id="play-pause" class="play-button glass-panel-light"
-                ><span class="play-icon">▶</span></button
-              >
+              <button id="play-pause" class="play-button glass-panel-light"><span class="play-icon">▶</span></button>
               <div id="question-text" class="question-text">Ready?</div>
             </div>
             <div id="choice-cards-container" class="choice-cards-container"></div>
@@ -2075,62 +1245,50 @@ import '../styles/unified-design-system.scss';
         </div>
       </div>
 
-      <!-- LAYER 3: Modal Stack (Overlays) -->
       <div id="layer-modal-stack">
         <div id="menu-drawer" class="glass-drawer">
           <div class="drawer-header">
-            <h3>Kelly OS</h3>
+            <h3>Kelly</h3>
             <button class="btn-close-drawer">×</button>
           </div>
-          <div class="drawer-content-scroll" style="overflow-y: auto; flex: 1;">
-            <div class="nav-section">
-              <div
-                class="dashboard-card glass-panel-light"
-                style="margin-bottom: 20px; padding: 20px;"
-              >
-                <span class="meta-label">Today's Focus</span>
-                <h4 id="drawer-lesson-title" style="margin: 5px 0; font-size: 1.1rem;">
-                  The Sun: Our Star
-                </h4>
-                <div
-                  style="display: flex; justify-content: space-between; align-items: center; margin-top: 10px;"
-                >
-                  <span class="date-pill" id="drawer-date" style="font-size: 0.8rem; opacity: 0.7;"
-                    >Dec 25</span
-                  >
-                  <button
-                    class="btn-primary-glass"
-                    id="btn-drawer-start"
-                    style="padding: 6px 12px; font-size: 0.8rem;">Start</button
-                  >
-                </div>
-              </div>
-            </div>
+          <div class="drawer-content-scroll">
             <nav class="drawer-nav">
-              <button class="drawer-item active" data-target="mode-lesson"
-                ><span class="icon">📚</span> Classroom</button
-              >
-              <button class="drawer-item" data-action="open-syllabus"
-                ><span class="icon">📅</span> Syllabus</button
-              >
-              <button class="drawer-item" data-action="open-tuition"
-                ><span class="icon">🎓</span> Tuition & Gifts</button
-              >
-              <button class="drawer-item" data-action="open-careers"
-                ><span class="icon">💼</span> Careers</button
-              >
-              <button class="drawer-item" data-action="open-newsroom"
-                ><span class="icon">📰</span> Newsroom</button
-              >
+              <button class="drawer-item active" data-target="mode-lesson">
+                <span class="icon">📚</span> Today's Lesson
+              </button>
+              <button class="drawer-item" data-action="open-syllabus">
+                <span class="icon">📅</span> Curriculum
+              </button>
+              <button class="drawer-item" data-action="open-tuition">
+                <span class="icon">✨</span> Upgrade
+              </button>
             </nav>
             <div class="drawer-divider"></div>
             <nav class="drawer-nav">
               <button class="drawer-item" data-action="open-settings">Settings</button>
-              <!-- Reload page to logout/reset -->
-              <button class="drawer-item text-danger" onclick="window.location.reload()"
-                >Log Out</button
-              >
+              <button class="drawer-item text-danger" onclick="window.location.reload()">Log Out</button>
             </nav>
+          </div>
+        </div>
+
+        <div id="modal-tuition" class="os-modal glass-panel-heavy">
+          <div class="modal-header">
+            <h2>Upgrade</h2>
+            <button class="btn-close-modal">Close</button>
+          </div>
+          <div class="modal-content-scroll">
+            <div class="pricing-grid">
+              <div class="pricing-card glass-panel-light">
+                <h3>Monthly</h3>
+                <div class="price">$9.99<span>/month</span></div>
+                <button class="btn-primary-glass btn-checkout" data-plan="monthly">Subscribe</button>
+              </div>
+              <div class="pricing-card glass-panel-light featured">
+                <h3>Annual</h3>
+                <div class="price">$99<span>/year</span></div>
+                <button class="btn-primary-glass btn-checkout" data-plan="annual">Subscribe</button>
+              </div>
+            </div>
           </div>
         </div>
 
@@ -2141,90 +1299,28 @@ import '../styles/unified-design-system.scss';
           </div>
           <div class="modal-content-scroll" id="reader-content"></div>
         </div>
-
-        <div id="modal-tuition" class="os-modal glass-panel-heavy">
-          <div class="modal-header">
-            <h2>Tuition & Enrollment</h2>
-            <button class="btn-close-modal">Close</button>
-          </div>
-          <div class="modal-content-scroll">
-            <p style="text-align: center; margin-bottom: 1.5rem; opacity: 0.8; font-size: 0.9rem;">
-              Start with a 7-day free trial. Cancel anytime.
-            </p>
-            <div class="pricing-grid">
-              <div class="pricing-card glass-panel-light">
-                <h3>Monthly</h3>
-                <div class="price">$4.99<span>/month</span></div>
-                <ul
-                  style="margin: 1rem 0; font-size: 0.85rem; opacity: 0.9; list-style: none; padding: 0;"
-                >
-                  <li>✓ 7 days free trial</li>
-                  <li>✓ Daily lessons for all ages</li>
-                  <li>✓ Whole family access</li>
-                </ul>
-                <button class="btn-primary-glass btn-checkout" data-plan="monthly"
-                  >Start Free Trial</button
-                >
-              </div>
-              <div class="pricing-card glass-panel-light featured">
-                <span
-                  style="position: absolute; top: -10px; right: 10px; background: #d97757; color: white; padding: 2px 8px; border-radius: 4px; font-size: 0.7rem;"
-                  >BEST VALUE</span
-                >
-                <h3>Annual</h3>
-                <div class="price">$49.99<span>/year</span></div>
-                <ul
-                  style="margin: 1rem 0; font-size: 0.85rem; opacity: 0.9; list-style: none; padding: 0;"
-                >
-                  <li>✓ 7 days free trial</li>
-                  <li>✓ Save $10 vs monthly</li>
-                  <li>✓ 2 months free</li>
-                </ul>
-                <button class="btn-primary-glass btn-checkout" data-plan="annual"
-                  >Start Free Trial</button
-                >
-              </div>
-              <div class="pricing-card glass-panel-light">
-                <h3>Gift a Year</h3>
-                <div class="price">$49.99<span>/one-time</span></div>
-                <ul
-                  style="margin: 1rem 0; font-size: 0.85rem; opacity: 0.9; list-style: none; padding: 0;"
-                >
-                  <li>✓ Full year of lessons</li>
-                  <li>✓ Send to any email</li>
-                  <li>✓ Perfect for families</li>
-                </ul>
-                <button class="btn-primary-glass btn-checkout" data-plan="gift">Gift Now</button>
-              </div>
-            </div>
-          </div>
-        </div>
       </div>
     </div>
 
-    <!-- Audio Element -->
     <audio id="kelly-audio" preload="auto"></audio>
 
-    <!-- Main App Logic (Module) -->
+    <!-- App JS -->
     <script type="module" src="/lesson-player/js/app.js"></script>
 
-    <!-- Production Auth System -->
-    <script
-      is:inline
-      define:vars={{
-        supabaseUrl:
-          import.meta.env.PUBLIC_SUPABASE_URL || 'https://tvjalxxsyryjphkforjv.supabase.co',
-        supabaseKey: import.meta.env.PUBLIC_SUPABASE_ANON_KEY || '',
-      }}
-    >
+    <!-- Landing + Auth Logic -->
+    <script is:inline define:vars={{
+      supabaseUrl: import.meta.env.PUBLIC_SUPABASE_URL || 'https://tvjalxxsyryjphkforjv.supabase.co',
+      supabaseKey: import.meta.env.PUBLIC_SUPABASE_ANON_KEY || '',
+    }}>
       // ============================================
-      // CURIOUS KELLY - PRODUCTION AUTH
-      // Zero friction, instant learning
+      // CURIOUS KELLY - AUTH & TRANSITIONS
       // ============================================
 
-      // Initialize Supabase (uses CDN loaded above)
       let supabase = null;
+      let currentUser = null;
+      let isProcessing = false;
 
+      // Initialize Supabase
       if (window.supabase && supabaseUrl && supabaseKey) {
         supabase = window.supabase.createClient(supabaseUrl, supabaseKey, {
           auth: {
@@ -2236,584 +1332,239 @@ import '../styles/unified-design-system.scss';
           },
         });
         console.log('✅ Supabase initialized');
-      } else {
-        console.warn(
-          '⚠️ Supabase not configured - auth will not work. Set PUBLIC_SUPABASE_URL and PUBLIC_SUPABASE_ANON_KEY'
-        );
       }
 
       // ============================================
-      // STATE
-      // ============================================
-
-      let currentUser = null;
-      let isProcessing = false;
-
-      // ============================================
-      // CHECK SESSION ON LOAD
+      // SESSION CHECK
       // ============================================
 
       async function checkSession() {
+        if (!supabase) return null;
+
         try {
-          // Check for OAuth callback (hash contains access_token)
           const hash = window.location.hash;
           if (hash && (hash.includes('access_token') || hash.includes('error'))) {
-            console.log('Processing OAuth callback...');
-
-            // Parse error if present
             if (hash.includes('error')) {
               const params = new URLSearchParams(hash.substring(1));
               const error = params.get('error_description') || params.get('error');
-              console.error('OAuth error:', error);
-              showAuthError(error);
-              // Clean up URL
+              showToast(error || 'Login failed', 'error');
               history.replaceState(null, '', window.location.pathname);
               return null;
             }
-
-            // Let Supabase process the tokens
-            // Wait a moment for Supabase to handle the callback
             await new Promise(resolve => setTimeout(resolve, 100));
           }
 
-          const {
-            data: { session },
-            error,
-          } = await supabase.auth.getSession();
-
-          if (error) {
-            console.error('Session check error:', error);
-            return null;
-          }
-
+          const { data: { session }, error } = await supabase.auth.getSession();
+          
           if (session?.user) {
             currentUser = session.user;
-            console.log('✅ User authenticated:', session.user.email);
-
-            // Clean up URL hash if present (removes tokens from URL bar)
             if (window.location.hash) {
               history.replaceState(null, '', window.location.pathname);
             }
-
-            // Auto-transition to OS for authenticated users
             transitionToOS(session.user);
             return session.user;
           }
-
-          return null;
         } catch (err) {
           console.error('Session check failed:', err);
-          return null;
         }
+        return null;
       }
-
-      // Show auth error to user
-      function showAuthError(message) {
-        const toast = document.createElement('div');
-        toast.style.cssText = `
-                position: fixed;
-                top: 20px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: #ef4444;
-                color: white;
-                padding: 16px 24px;
-                border-radius: 8px;
-                font-size: 14px;
-                z-index: 9999;
-                max-width: 400px;
-                text-align: center;
-            `;
-        toast.textContent = message || 'Login failed. Please try again.';
-        document.body.appendChild(toast);
-        setTimeout(() => toast.remove(), 5000);
-      }
-
-      // ============================================
-      // AUTH STATE LISTENER
-      // ============================================
-
-      supabase.auth.onAuthStateChange((event, session) => {
-        console.log('Auth event:', event);
-
-        if (event === 'SIGNED_IN' && session?.user) {
-          currentUser = session.user;
-          transitionToOS(session.user);
-        } else if (event === 'SIGNED_OUT') {
-          currentUser = null;
-          // Could show login layer again here
-        }
-      });
 
       // ============================================
       // TRANSITION TO OS
       // ============================================
 
       function transitionToOS(user) {
-        const loginLayer = document.getElementById('login-layer');
-        const osLayer = document.getElementById('app-layer-desktop');
+        const landing = document.getElementById('landing-layer');
+        const os = document.getElementById('app-layer-desktop');
 
-        // Update any user display elements
-        if (user?.email) {
-          const userDisplays = document.querySelectorAll('[data-user-email]');
-          userDisplays.forEach(el => (el.textContent = user.email));
-        }
+        currentUser = user;
+        landing.classList.add('hidden');
+        os.classList.add('active');
 
-        // Fade out Login
-        loginLayer.classList.add('hidden');
-
-        // Fade in OS
-        osLayer.classList.add('active');
-
-        // Trigger OS Mode Switch
-        if (window.os) {
-          console.log('Transitioning to Lesson Mode...');
-          window.os.switchMode('lesson');
-
-          // Store user in OS state
-          if (window.os.state) {
-            window.os.state.user = user;
-          }
-        } else {
-          console.warn('KellyOS not initialized yet - will initialize on ready');
-        }
-
-        // Cleanup Login Layer from DOM after fade
         setTimeout(() => {
-          loginLayer.style.display = 'none';
-        }, 800);
+          landing.style.display = 'none';
+        }, 600);
+
+        if (window.os) {
+          window.os.switchMode('lesson');
+          if (window.os.state) window.os.state.user = user;
+        }
       }
 
       // ============================================
-      // HANDLE LOGIN (Called by buttons)
+      // AUTH HANDLERS
       // ============================================
 
-      // Make handleLogin global so onclick can find it
-      window.handleLogin = async function handleLogin(btn, provider) {
+      window.handleStart = function(btn) {
         if (isProcessing) return;
         isProcessing = true;
+        
+        if (btn) btn.classList.add('loading');
 
-        btn.classList.add('loading');
+        // Guest mode - instant access
+        localStorage.setItem('curious-kelly-guest', 'true');
+        localStorage.setItem('curious-kelly-guest-started', new Date().toISOString());
 
-        try {
-          if (provider === 'google') {
-            // Real Google OAuth
-            const { data, error } = await supabase.auth.signInWithOAuth({
-              provider: 'google',
-              options: {
-                redirectTo: window.location.origin + '/',
-                queryParams: {
-                  access_type: 'offline',
-                  prompt: 'consent',
-                },
-              },
-            });
+        const guestUser = {
+          id: 'guest-' + Date.now(),
+          email: null,
+          isGuest: true,
+          user_metadata: { full_name: 'Explorer' }
+        };
 
-            if (error) {
-              console.error('Google OAuth error:', error);
-              showError(btn, error.message);
-            }
-            // If successful, browser will redirect to Google
-          } else if (provider === 'apple') {
-            // Real Apple OAuth
-            const { data, error } = await supabase.auth.signInWithOAuth({
-              provider: 'apple',
-              options: {
-                redirectTo: window.location.origin + '/',
-              },
-            });
-
-            if (error) {
-              console.error('Apple OAuth error:', error);
-              showError(btn, error.message);
-            }
-          } else if (provider === 'guest') {
-            // Guest mode - instant access, no auth required
-            console.log('Entering guest mode...');
-
-            // Store guest state
-            localStorage.setItem('curious-kelly-guest', 'true');
-            localStorage.setItem('curious-kelly-guest-started', new Date().toISOString());
-
-            // Create a pseudo-user for guest mode
-            const guestUser = {
-              id: 'guest-' + Date.now(),
-              email: null,
-              isGuest: true,
-              user_metadata: { full_name: 'Explorer' },
-            };
-
-            currentUser = guestUser;
-
-            // Transition with slight delay for UX
-            setTimeout(() => {
-              transitionToOS(guestUser);
-            }, 400);
-          }
-        } catch (err) {
-          console.error('Login error:', err);
-          showError(btn, 'Something went wrong. Please try again.');
-        } finally {
+        setTimeout(() => {
+          transitionToOS(guestUser);
           isProcessing = false;
-          // Don't remove loading state for OAuth - browser will redirect
-          if (provider === 'guest') {
-            btn.classList.remove('loading');
+        }, 400);
+      };
+
+      window.handleSignIn = async function() {
+        if (!supabase) {
+          showToast('Sign in not configured. Use "Start learning" to begin!', 'info');
+          return;
+        }
+
+        await supabase.auth.signInWithOAuth({
+          provider: 'google',
+          options: {
+            redirectTo: window.location.origin + '/',
+            queryParams: { access_type: 'offline', prompt: 'consent' }
           }
+        });
+      };
+
+      window.handleCheckout = async function(plan) {
+        try {
+          const response = await fetch('/api/create-checkout', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ plan, email: currentUser?.email || '' })
+          });
+          const data = await response.json();
+          if (data.url) window.location.href = data.url;
+        } catch (err) {
+          showToast('Checkout failed. Please try again.', 'error');
         }
       };
 
       // ============================================
-      // ERROR DISPLAY
+      // TOAST NOTIFICATIONS
       // ============================================
 
-      function showError(btn, message) {
-        btn.classList.remove('loading');
-
-        // Create error toast
+      function showToast(message, type = 'info') {
         const toast = document.createElement('div');
-        toast.className = 'error-toast';
-        toast.textContent = message;
+        const colors = {
+          info: 'var(--blue)',
+          error: 'var(--error)',
+          success: 'var(--success)'
+        };
         toast.style.cssText = `
-                position: fixed;
-                bottom: 20px;
-                left: 50%;
-                transform: translateX(-50%);
-                background: #ef4444;
-                color: white;
-                padding: 12px 24px;
-                border-radius: 8px;
-                font-size: 14px;
-                z-index: 9999;
-                animation: slideUp 0.3s ease;
-            `;
-
+          position: fixed;
+          top: 20px;
+          left: 50%;
+          transform: translateX(-50%);
+          background: ${colors[type]};
+          color: white;
+          padding: 12px 24px;
+          border-radius: 8px;
+          font-size: 14px;
+          z-index: 9999;
+          animation: fadeIn 0.3s ease;
+        `;
+        toast.textContent = message;
         document.body.appendChild(toast);
-
-        setTimeout(() => {
-          toast.remove();
-        }, 4000);
+        setTimeout(() => toast.remove(), 4000);
       }
 
       // ============================================
-      // INITIALIZE ON LOAD
+      // LOAD TODAY'S LESSON
       // ============================================
 
-      document.addEventListener('DOMContentLoaded', () => {
-        // Check for existing session
-        checkSession();
+      async function loadTodaysLesson() {
+        try {
+          const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
+          
+          if (supabase) {
+            const { data } = await supabase
+              .from('core_lessons')
+              .select('day_number, topic, marketing_headline')
+              .eq('day_number', dayOfYear)
+              .single();
 
-        // Add slide up animation
-        const style = document.createElement('style');
-        style.textContent = `
-                @keyframes slideUp {
-                    from { transform: translate(-50%, 20px); opacity: 0; }
-                    to { transform: translate(-50%, 0); opacity: 1; }
-                }
-            `;
-        document.head.appendChild(style);
-      });
+            if (data) {
+              document.getElementById('today-topic').textContent = data.topic;
+              document.getElementById('today-day-badge').textContent = `Day ${data.day_number} of 366`;
+              if (data.marketing_headline) {
+                document.getElementById('today-hook').textContent = `"${data.marketing_headline}"`;
+              }
+            }
+          }
+        } catch (e) {
+          console.log('Using default lesson data');
+        }
+      }
 
       // ============================================
-      // EXPORT FOR OTHER SCRIPTS
+      // PARALLAX EFFECT
+      // ============================================
+
+      function setupParallax() {
+        const kelly = document.getElementById('kelly');
+        const hero = document.querySelector('.hero');
+
+        if (kelly && hero) {
+          hero.addEventListener('mousemove', (e) => {
+            const rect = kelly.getBoundingClientRect();
+            const centerX = rect.left + rect.width / 2;
+            const centerY = rect.top + rect.height / 2;
+            const deltaX = (e.clientX - centerX) / 50;
+            const deltaY = (e.clientY - centerY) / 50;
+            kelly.style.transform = `translate(${deltaX}px, ${deltaY}px)`;
+          });
+
+          hero.addEventListener('mouseleave', () => {
+            kelly.style.transform = 'translate(0, 0)';
+          });
+        }
+      }
+
+      // ============================================
+      // AUTH STATE LISTENER
+      // ============================================
+
+      if (supabase) {
+        supabase.auth.onAuthStateChange((event, session) => {
+          if (event === 'SIGNED_IN' && session?.user) {
+            transitionToOS(session.user);
+          }
+        });
+      }
+
+      // ============================================
+      // EXPORT FOR OS
       // ============================================
 
       window.CuriousKellyAuth = {
         supabase,
         getUser: () => currentUser,
         signOut: async () => {
-          await supabase.auth.signOut();
+          if (supabase) await supabase.auth.signOut();
           localStorage.removeItem('curious-kelly-guest');
           window.location.reload();
         },
-        isGuest: () => currentUser?.isGuest || false,
+        isGuest: () => currentUser?.isGuest || localStorage.getItem('curious-kelly-guest') === 'true',
         isAuthenticated: () => !!currentUser && !currentUser.isGuest,
       };
 
       // ============================================
-      // MARKETING SECTION FUNCTIONS
+      // INITIALIZE
       // ============================================
 
-      // Load today's lesson
-      async function loadTodaysLesson() {
-        try {
-          const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
-          const { data, error } = await supabase
-            .from('core_lessons')
-            .select('day_number, topic')
-            .eq('day_number', dayOfYear)
-            .single();
-
-          if (error) throw error;
-
-          if (data) {
-            document.getElementById('today-topic').textContent = data.topic;
-            document.getElementById('today-thumbnail-text').textContent = data.topic;
-            document.getElementById('today-day').textContent = data.day_number;
-            document.getElementById('today-day-badge').textContent = `Day ${data.day_number}`;
-          }
-        } catch (error) {
-          console.error('Error loading today\\'s lesson:', error);
-        }
-      }
-
-      // Generate lesson thumbnail gradient
-      function generateLessonThumbnail(topic) {
-        const categories = {
-          science: ['#1e3a8a', '#3b82f6'],
-          history: ['#7c2d12', '#ea580c'],
-          art: ['#701a75', '#c026d3'],
-          math: ['#065f46', '#10b981'],
-          nature: ['#14532d', '#22c55e'],
-          tech: ['#1e40af', '#60a5fa'],
-          culture: ['#7c2d12', '#f97316']
-        };
-
-        const lowerTopic = topic.toLowerCase();
-        let gradient = categories.science;
-
-        if (lowerTopic.includes('art') || lowerTopic.includes('music')) gradient = categories.art;
-        else if (lowerTopic.includes('history') || lowerTopic.includes('war')) gradient = categories.history;
-        else if (lowerTopic.includes('math') || lowerTopic.includes('number')) gradient = categories.math;
-        else if (lowerTopic.includes('nature') || lowerTopic.includes('plant') || lowerTopic.includes('animal')) gradient = categories.nature;
-        else if (lowerTopic.includes('tech') || lowerTopic.includes('computer')) gradient = categories.tech;
-        else if (lowerTopic.includes('culture') || lowerTopic.includes('language')) gradient = categories.culture;
-
-        return `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`;
-      }
-
-      // Load curriculum
-      async function loadCurriculum() {
-        const grid = document.getElementById('month-grid');
-        if (!grid) return;
-
-        grid.innerHTML = `
-          <div class="loading-skeleton">
-            <div class="skeleton-card"></div>
-            <div class="skeleton-card"></div>
-            <div class="skeleton-card"></div>
-          </div>
-        `;
-
-        try {
-          const { data: lessons, error } = await supabase
-            .from('core_lessons')
-            .select('day_number, topic')
-            .order('day_number');
-
-          if (error) throw error;
-          if (!lessons) return;
-
-          grid.innerHTML = '';
-
-          const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
-          const monthDays = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
-
-          let dayIndex = 0;
-          months.forEach((month, i) => {
-            const monthLessons = lessons.slice(dayIndex, dayIndex + monthDays[i]);
-            dayIndex += monthDays[i];
-
-            const card = document.createElement('div');
-            card.className = 'month-card';
-            card.innerHTML = `
-              <div class="month-header">
-                <h3>${month}</h3>
-                <span class="month-count">${monthLessons.length} lessons</span>
-              </div>
-              <div class="month-lessons">
-                <div class="lesson-grid">
-                  ${monthLessons.map(l => `
-                    <div class="lesson-item" onclick="handleLogin(this, 'guest')">
-                      <div class="lesson-item-day">Day ${l.day_number}</div>
-                      <div class="lesson-item-title">${l.topic}</div>
-                      <div class="lesson-item-thumbnail" style="overflow: hidden; background: #000;">
-                        <img 
-                          src="/assets/kelly/production/thumbnails/january/lesson-${l.day_number}.webp?v=2" 
-                          alt="${l.topic}"
-                          style="width: 100%; height: 100%; object-fit: cover; display: block;"
-                        />
-                      </div>
-                    </div>
-                  `).join('')}
-                </div>
-              </div>
-            `;
-            grid.appendChild(card);
-
-            card.querySelector('.month-header').addEventListener('click', function() {
-              card.classList.toggle('open');
-            });
-          });
-        } catch (error) {
-          console.error('Error loading curriculum:', error);
-          grid.innerHTML = '<p style="text-align: center; color: var(--text-muted);">Unable to load curriculum.</p>';
-        }
-      }
-
-      // Perspective explorer
-      window.setYear = function(year) {
-        const slider = document.getElementById('year-slider');
-        if (slider) {
-          slider.value = year;
-          updatePerspectives();
-        }
-      };
-
-      async function updatePerspectives() {
-        const slider = document.getElementById('year-slider');
-        if (!slider) return;
-
-        const year = parseInt(slider.value);
-        const age = 2025 - year;
-        const dayOfYear = Math.floor((new Date() - new Date(new Date().getFullYear(), 0, 0)) / 86400000);
-
-        const yearEl = document.getElementById('perspective-year');
-        const ageEl = document.getElementById('perspective-age');
-        if (yearEl) yearEl.textContent = year;
-        if (ageEl) ageEl.textContent = age;
-
-        const cards = [
-          { year: year - 30, label: "30 years older" },
-          { year: year, label: "Your perspective", current: true },
-          { year: Math.min(year + 20, 2020), label: "20 years younger" }
-        ];
-
-        const container = document.getElementById('perspective-cards');
-        if (!container) return;
-
-        const hooks = await Promise.all(cards.map(async c => {
-          const cardAge = 2025 - c.year;
-          return await getHookForAge(cardAge, dayOfYear);
-        }));
-
-        container.innerHTML = cards.map((c, i) => {
-          const cardAge = 2025 - c.year;
-          const hook = hooks[i];
-          return `
-            <div class="perspective-card ${c.current ? 'current' : ''}">
-              <h4>${c.year}</h4>
-              <div class="perspective-age">${cardAge} years old today ${c.current ? '(You)' : ''}</div>
-              <div class="perspective-hook">"${hook.text}"</div>
-              <div class="perspective-context">${hook.context}</div>
-            </div>
-          `;
-        }).join('');
-      }
-
-      async function getHookForAge(age, dayNumber = 1) {
-        let ageBucket;
-        if (age <= 5) ageBucket = '2-5';
-        else if (age <= 12) ageBucket = '6-12';
-        else if (age <= 17) ageBucket = '13-17';
-        else if (age <= 29) ageBucket = '18-29';
-        else if (age <= 54) ageBucket = '30-54';
-        else ageBucket = '55+';
-
-        try {
-          const { data, error } = await supabase
-            .from('lesson_age_hooks')
-            .select('hook')
-            .eq('day_number', dayNumber)
-            .eq('age_bucket', ageBucket)
-            .single();
-
-          if (data && !error) {
-            return {
-              text: data.hook,
-              context: `Personalized for ages ${ageBucket}`
-            };
-          }
-        } catch (error) {
-          console.error('Error loading hook:', error);
-        }
-
-        // Fallback hooks
-        if (age >= 70) return { text: "Wisdom comes from experience.", context: "You've seen it all." };
-        if (age >= 55) return { text: "You've watched the world transform.", context: "Experience gives context." };
-        if (age >= 40) return { text: "Old enough to remember, young enough to adapt.", context: "You bridge generations." };
-        if (age >= 25) return { text: "You're building your life.", context: "Peak learning years." };
-        if (age >= 15) return { text: "School teaches facts. We'll teach why they matter.", context: "You're figuring things out." };
-        return { text: "You're just starting your learning journey.", context: "Everything is new!" };
-      }
-
-      // Earnings calculator
-      function updateCalculator() {
-        const slider = document.getElementById('referrals-slider');
-        if (!slider) return;
-
-        const referrals = parseInt(slider.value);
-        let commission, tierName;
-
-        if (referrals < 100) {
-          commission = 0.20;
-          tierName = 'Scholar (20%)';
-        } else if (referrals < 500) {
-          commission = 0.25;
-          tierName = 'Fellow (25%)';
-        } else {
-          commission = 0.30;
-          tierName = 'Ambassador (30%)';
-        }
-
-        const annualPerSub = 199 * commission;
-        const monthlyPerSub = annualPerSub / 12;
-        const monthly = Math.round(referrals * monthlyPerSub);
-        const annual = Math.round(referrals * annualPerSub);
-
-        const valueEl = document.getElementById('referrals-value');
-        const tierEl = document.getElementById('calc-tier');
-        const monthlyEl = document.getElementById('calc-monthly');
-        const annualEl = document.getElementById('calc-annual');
-
-        if (valueEl) valueEl.textContent = referrals;
-        if (tierEl) tierEl.textContent = tierName;
-        if (monthlyEl) monthlyEl.textContent = '$' + monthly.toLocaleString();
-        if (annualEl) annualEl.textContent = '$' + annual.toLocaleString();
-      }
-
-      // Collapsible sections
-      window.toggleCollapsible = function(header) {
-        header.parentElement.classList.toggle('open');
-      };
-
-      // Age selector
-      window.selectAge = function(btn, age) {
-        document.querySelectorAll('.age-btn').forEach(b => b.classList.remove('active'));
-        btn.classList.add('active');
-      };
-
-      // Checkout
-      window.handleCheckout = function(plan) {
-        sessionStorage.setItem('selectedPlan', plan);
-        window.location.href = '/pricing.html';
-      };
-
-      // Gift
-      window.handleGift = function(duration) {
-        sessionStorage.setItem('giftDuration', duration);
-        window.location.href = '/gifts.html?duration=' + duration;
-      };
-
-      // Initialize marketing sections
       document.addEventListener('DOMContentLoaded', () => {
-        // Only load if we're in login layer (not in OS)
-        if (document.getElementById('login-layer') && !document.getElementById('login-layer').classList.contains('hidden')) {
-          loadTodaysLesson();
-          loadCurriculum();
-          updatePerspectives();
-          updateCalculator();
-
-          // Add event listeners
-          const yearSlider = document.getElementById('year-slider');
-          if (yearSlider) {
-            yearSlider.addEventListener('input', updatePerspectives);
-          }
-
-          const referralsSlider = document.getElementById('referrals-slider');
-          if (referralsSlider) {
-            referralsSlider.addEventListener('input', updateCalculator);
-          }
-        }
+        checkSession();
+        loadTodaysLesson();
+        setupParallax();
       });
     </script>
   </body>
