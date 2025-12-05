@@ -241,44 +241,58 @@ const KellyMessages = (function() {
   // ============================================
 
   const messages = {
-    // Email sent successfully
+    // Email sent successfully - CELEBRATORY BUT HUMBLE
     emailSent: (email) => show({
-      icon: '📬',
-      title: 'Check your email',
-      message: `I sent a link to <strong>${email}</strong>.<br><br>Click it and we'll start learning together.`,
-      buttonText: 'Got it',
+      icon: '✨',
+      title: 'On its way',
+      message: `I sent a magic link to <strong>${email}</strong>.<br><br>
+        Click it and we'll start learning together.<br><br>
+        <span style="color: #71717a; font-size: 14px;">Not there? Check your spam folder — sometimes I end up there by mistake.</span>`,
+      buttonText: 'Okay, checking now',
       buttonPrimary: true
     }),
 
-    // Email error
+    // Email error - ULTRA THOUGHTFUL
     emailError: () => show({
-      icon: '😔',
-      title: 'That didn\'t work',
-      message: `I couldn't send the email right now. Mind trying again in a moment?<br><br>Or try signing in with Google — it's faster.`,
-      buttonText: 'I\'ll try again'
+      icon: '💭',
+      title: 'Let\'s try another way',
+      message: `Email is being tricky right now — it happens sometimes.<br><br>
+        <strong style="color: #f4f4f5;">Good news:</strong> Google sign-in is instant and just as secure. One click and you're learning.`,
+      buttonText: 'Sign in with Google instead',
+      buttonPrimary: true,
+      onClose: () => {
+        // Find and click the Google button
+        const googleBtn = document.querySelector('[data-provider="google"]') || 
+                         document.querySelector('button:has(img[alt*="Google"])') ||
+                         Array.from(document.querySelectorAll('button')).find(b => b.textContent.includes('Google'));
+        if (googleBtn) googleBtn.click();
+      }
     }),
 
-    // Invalid email
+    // Invalid email - GENTLE REDIRECT
     invalidEmail: () => show({
-      icon: '🤔',
-      title: 'Hmm, that doesn\'t look right',
-      message: `Could you double-check your email address? I want to make sure I can reach you.`,
-      buttonText: 'Let me fix that'
+      icon: '✉️',
+      title: 'Quick check',
+      message: `That email doesn't look quite right — maybe a typo?<br><br>
+        <span style="color: #71717a; font-size: 14px;">Common fixes: check for spaces, make sure there's an @ and a .com (or similar)</span>`,
+      buttonText: 'I\'ll fix it'
     }),
 
-    // Generic error
+    // Generic error - HUMBLE AND HELPFUL
     somethingWrong: () => show({
       icon: '💭',
-      title: 'Something went sideways',
-      message: `Technology can be tricky sometimes. Want to try again?`,
-      buttonText: 'Try again'
+      title: 'Hmm, that didn\'t work',
+      message: `Something went wrong on my end — not your fault at all.<br><br>
+        <strong style="color: #f4f4f5;">Try this:</strong> Refresh the page and try again. If it keeps happening, Google sign-in usually works better.`,
+      buttonText: 'Okay, I\'ll try again'
     }),
 
-    // Age gate - too young
+    // Age gate - too young - WARM AND ENCOURAGING
     tooYoung: () => show({
       icon: '🌱',
-      title: 'Come back when you\'re a bit older',
-      message: `Curious Kelly is designed for learners 13 and up. But don't worry — curiosity doesn't have an age limit. Keep asking questions.`,
+      title: 'I\'d love to teach you!',
+      message: `Right now, I'm set up for learners 13 and up. But here's a secret: curiosity doesn't have an age limit.<br><br>
+        Ask a parent to email <a href="mailto:hello@curiouskelly.com" style="color: #3b82f6;">hello@curiouskelly.com</a> — I'll help them set things up for you. ✨`,
       buttonText: 'Okay',
       signature: false
     }),

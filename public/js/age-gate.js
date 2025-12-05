@@ -99,17 +99,18 @@
                 <img src="/images/brand/kelly-mark-circle-64.png" alt="Kelly" 
                      style="width: 64px; height: 64px; border-radius: 50%; margin-bottom: 16px;"
                      onerror="this.style.display='none'">
-                <h2 style="font-family: 'Fraunces', serif; font-size: 1.5rem; color: #fafafa; margin: 0 0 8px 0;">
-                    Before we begin...
+                <h2 style="font-family: Georgia, serif; font-size: 1.5rem; color: #fafafa; margin: 0 0 8px 0;">
+                    One quick thing
                 </h2>
-                <p style="color: #a1a1aa; font-size: 0.95rem; margin: 0;">
-                    Please confirm your age to continue.
+                <p style="font-family: Georgia, serif; color: #a1a1aa; font-size: 0.95rem; margin: 0; line-height: 1.6;">
+                    I'm designed for learners 13 and up.<br>
+                    Mind confirming your age so we can get started?
                 </p>
             </div>
 
             <div style="margin-bottom: 24px;">
-                <label style="color: #a1a1aa; font-size: 0.85rem; display: block; margin-bottom: 8px; text-align: left;">
-                    What is your age?
+                <label style="font-family: Georgia, serif; color: #a1a1aa; font-size: 0.85rem; display: block; margin-bottom: 8px; text-align: left;">
+                    Your age
                 </label>
                 <select id="age-gate-select" style="
                     width: 100%;
@@ -210,15 +211,16 @@
             const value = this.value;
             
             if (value === 'under13') {
-                // Under 13 - show parent message
+                // Under 13 - warm redirect to parent
                 continueBtn.disabled = true;
                 continueBtn.style.opacity = '0.5';
                 message.style.display = 'block';
-                message.style.color = '#f59e0b';
+                message.style.color = '#a1a1aa';
+                message.style.fontFamily = 'Georgia, serif';
                 message.innerHTML = `
-                    <strong>Parent or Guardian Required</strong><br>
-                    Curious Kelly requires users under 13 to have a parent or guardian create an account on their behalf. 
-                    Please ask a parent to visit <a href="mailto:hello@curiouskelly.com" style="color: #3b82f6;">hello@curiouskelly.com</a> for family account options.
+                    <span style="color: #f59e0b;">I'd love to teach you!</span><br><br>
+                    Right now, I need a parent or guardian to help set things up. 
+                    Ask them to email <a href="mailto:hello@curiouskelly.com" style="color: #3b82f6;">hello@curiouskelly.com</a> — I'll help them create a family account for you. ✨
                 `;
             } else if (value) {
                 // 13+ - enable continue
