@@ -1,0 +1,227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelly LoRA Calibration - Scale Comparison</title>
+    <style>
+        :root { --bg: #0a0a0f; --card: #12121a; --accent: #10b981; --gold: #f59e0b; }
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { font-family: 'SF Pro Display', system-ui, sans-serif; background: var(--bg); color: #e5e5e5; min-height: 100vh; }
+        
+        header {
+            background: linear-gradient(180deg, rgba(16,185,129,0.1) 0%, transparent 100%);
+            padding: 3rem 2rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        h1 { font-size: 2rem; color: var(--accent); margin-bottom: 0.5rem; }
+        .subtitle { color: #666; }
+        
+        .info-bar {
+            background: rgba(245,158,11,0.1);
+            border: 1px solid rgba(245,158,11,0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin: 2rem auto;
+            max-width: 800px;
+        }
+        .info-bar h3 { color: var(--gold); margin-bottom: 0.5rem; }
+        .info-bar p { color: #999; font-size: 0.9rem; }
+        
+        main { padding: 2rem; max-width: 1600px; margin: 0 auto; }
+        
+        .comparison-grid {
+            display: grid;
+            grid-template-columns: repeat(5, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        
+        @media (max-width: 1200px) {
+            .comparison-grid { grid-template-columns: repeat(3, 1fr); }
+        }
+        @media (max-width: 768px) {
+            .comparison-grid { grid-template-columns: repeat(2, 1fr); }
+        }
+        
+        .scale-card {
+            background: var(--card);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+        .scale-card:hover {
+            transform: scale(1.02);
+            border-color: var(--accent);
+        }
+        .scale-card.selected {
+            border-color: var(--gold);
+            box-shadow: 0 0 20px rgba(245,158,11,0.3);
+        }
+        
+        .scale-card img {
+            width: 100%;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+        }
+        
+        .card-header {
+            padding: 1rem;
+            background: rgba(0,0,0,0.3);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .scale-value {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .scale-label {
+            font-size: 0.75rem;
+            color: #666;
+            text-transform: uppercase;
+        }
+        
+        .card-body { padding: 1rem; }
+        .card-body p { font-size: 0.85rem; color: #888; margin-bottom: 0.5rem; }
+        
+        .rating-section {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+        .rating-section h2 { color: var(--gold); margin-bottom: 1rem; }
+        .rating-criteria {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+        .criteria {
+            background: rgba(0,0,0,0.3);
+            padding: 1rem;
+            border-radius: 8px;
+        }
+        .criteria h4 { color: var(--accent); margin-bottom: 0.5rem; }
+        .criteria p { font-size: 0.8rem; color: #666; }
+        
+        .recommendation {
+            background: linear-gradient(135deg, rgba(16,185,129,0.1), rgba(245,158,11,0.1));
+            border: 1px solid rgba(16,185,129,0.3);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-top: 2rem;
+            text-align: center;
+        }
+        .recommendation h2 { color: var(--accent); margin-bottom: 1rem; }
+        .recommendation .value { font-size: 3rem; font-weight: 700; color: var(--gold); }
+        .recommendation .note { color: #888; margin-top: 1rem; font-size: 0.9rem; }
+        
+        footer {
+            text-align: center;
+            padding: 2rem;
+            color: #444;
+            border-top: 1px solid rgba(255,255,255,0.05);
+            margin-top: 2rem;
+        }
+        footer a { color: var(--accent); text-decoration: none; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🔬 Kelly LoRA Scale Calibration</h1>
+        <p class="subtitle">Finding the optimal balance between character consistency and quality</p>
+    </header>
+    
+    <main>
+        <div class="info-bar">
+            <h3>📋 How to Review</h3>
+            <p>Compare each image against Kelly's canonical appearance: brown wavy hair, brown eyes, powder blue sweater. Higher LoRA scale = stronger character match, but may reduce flexibility.</p>
+        </div>
+        
+        <div class="comparison-grid" id="comparison"></div>
+        
+        <div class="rating-section">
+            <h2>Rating Criteria</h2>
+            <div class="rating-criteria">
+                <div class="criteria">
+                    <h4>👤 Face Match</h4>
+                    <p>Does it look like Kelly? Same facial structure, eye shape, nose?</p>
+                </div>
+                <div class="criteria">
+                    <h4>💇 Hair Match</h4>
+                    <p>Long, wavy, brown hair? Correct style and color?</p>
+                </div>
+                <div class="criteria">
+                    <h4>👔 Sweater Color</h4>
+                    <p>Powder blue sweater? Not pink, not beige, not teal?</p>
+                </div>
+                <div class="criteria">
+                    <h4>🎭 Expression</h4>
+                    <p>Does the expression match the template (explain = engaged)?</p>
+                </div>
+                <div class="criteria">
+                    <h4>🖼️ Image Quality</h4>
+                    <p>Sharp details? No artifacts? Professional look?</p>
+                </div>
+                <div class="criteria">
+                    <h4>🎨 Overall Appeal</h4>
+                    <p>Would you want to learn from this person?</p>
+                </div>
+            </div>
+        </div>
+        
+        <div class="recommendation">
+            <h2>Current Recommendation</h2>
+            <div class="value">0.85</div>
+            <p class="note">Based on initial testing. Click images above to compare and suggest changes.</p>
+        </div>
+    </main>
+    
+    <footer>
+        <p>✨ Kelly Production Factory • <a href="/lipsync/factory.html">Factory</a> • <a href="/lipsync/">Lipsync Lab</a></p>
+    </footer>
+    
+    <script>
+        const SUPABASE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates';
+        
+        const scales = [
+            { scale: 0.75, label: 'Lower', description: 'Less LoRA influence - more variation, less character lock' },
+            { scale: 0.80, label: 'Moderate-Low', description: 'Balanced toward flexibility' },
+            { scale: 0.85, label: 'Balanced', description: 'Current production setting - good character lock' },
+            { scale: 0.90, label: 'Moderate-High', description: 'Strong character lock - may reduce flexibility' },
+            { scale: 0.95, label: 'High', description: 'Maximum character lock - may over-constrain' },
+        ];
+        
+        function renderCard(s) {
+            const scaleStr = String(s.scale).replace('.', '');
+            const isSelected = s.scale === 0.85;
+            return `
+                <div class="scale-card ${isSelected ? 'selected' : ''}" onclick="selectScale(${s.scale})">
+                    <img src="${SUPABASE_URL}/calibration/lora/lora_0${scaleStr}_explain.png" alt="Scale ${s.scale}">
+                    <div class="card-header">
+                        <span class="scale-value">${s.scale}</span>
+                        <span class="scale-label">${s.label}</span>
+                    </div>
+                    <div class="card-body">
+                        <p>${s.description}</p>
+                    </div>
+                </div>
+            `;
+        }
+        
+        function selectScale(scale) {
+            document.querySelectorAll('.scale-card').forEach(card => card.classList.remove('selected'));
+            event.currentTarget.classList.add('selected');
+            document.querySelector('.recommendation .value').textContent = scale.toFixed(2);
+        }
+        
+        document.getElementById('comparison').innerHTML = scales.map(renderCard).join('');
+    </script>
+</body>
+</html>
+
