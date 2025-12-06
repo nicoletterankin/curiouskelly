@@ -14,7 +14,7 @@
  */
 
 const SUPABASE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co';
-const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2ZvcmciLCJyb2xlIjoiYW5vbiIsImlhdCI6MTcyOTU0NzE2NywiZXhwIjoyMDQ1MTIzMTY3fQ.z-8XCGB0VgW2V3zC-Jb2WeNX6NklPIQRrYhujO-l86I';
+const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI';
 
 // Day 1 "Starting Fresh" lesson structure
 const DAY_1_STRUCTURE = {
