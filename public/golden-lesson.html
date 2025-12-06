@@ -291,12 +291,39 @@
             color: var(--accent);
         }
         
+        /* Quality Notice */
+        .quality-notice {
+            background: linear-gradient(90deg, #f59e0b20, #ef444420);
+            border-bottom: 1px solid rgba(245,158,11,0.3);
+            padding: 0.5rem 1rem;
+            font-size: 0.8rem;
+            color: #f59e0b;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+        }
+        .quality-notice button {
+            background: none;
+            border: none;
+            color: #f59e0b;
+            font-size: 1.2rem;
+            cursor: pointer;
+            padding: 0 0.5rem;
+        }
+        
         /* Fonts */
         @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
     </style>
 </head>
 <body>
     <div class="golden-container">
+        <!-- Quality Notice -->
+        <div class="quality-notice" id="quality-notice">
+            ⚠️ <strong>Preview Quality</strong> — Videos are 256px lipsync. Production will use 4K upscaling.
+            <button onclick="document.getElementById('quality-notice').style.display='none'">×</button>
+        </div>
+        
         <!-- Header -->
         <header class="golden-header">
             <div class="lesson-title">
@@ -380,17 +407,66 @@
         // Initialize Golden Lesson
         let goldenLesson;
         
-        // Sample captions for each phase (will be fetched from real content)
-        const PHASE_CAPTIONS = {
-            hook: "Every single day, you wake up with a chance to start over. Fresh starts are not just for January 1st...",
-            q1: "Scientists at Wharton Business School discovered something fascinating: people are 62% more likely to pursue goals right after a temporal landmark—like a birthday, Monday, or new month.",
-            q2: "Here is the secret superpower of fresh starts: they create psychological distance from your past self...",
-            q3: "The most successful fresh starts combine three ingredients: a meaningful date, a specific goal, and a support system...",
-            wisdom: "Here is the beautiful truth about fresh starts: you do not need to wait for them. Every sunrise, every breath, is an invitation to begin again..."
+        // Lesson content - will be fetched from database
+        let lessonContent = {};
+        
+        const PHASE_DB_MAP = {
+            hook: 'Hook',
+            q1: 'Fact1',
+            q2: 'Fact2',
+            q3: 'Fact3',
+            wisdom: 'Wisdom'
         };
+        
+        async function fetchLessonContent(archetype) {
+            const SUPABASE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co';
+            const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI';
+            
+            try {
+                const response = await fetch(
+                    `${SUPABASE_URL}/rest/v1/lesson_atoms?` +
+                    `archetype=eq.${encodeURIComponent(archetype)}&` +
+                    `select=phase,content,core_lessons!inner(day_number)&` +
+                    `core_lessons.day_number=eq.1`,
+                    {
+                        headers: {
+                            'apikey': SUPABASE_KEY,
+                            'Authorization': `Bearer ${SUPABASE_KEY}`
+                        }
+                    }
+                );
+                
+                const data = await response.json();
+                
+                // Map to our phase keys
+                const content = {};
+                data.forEach(item => {
+                    const phaseKey = Object.entries(PHASE_DB_MAP).find(([k, v]) => v === item.phase)?.[0];
+                    if (phaseKey && item.content?.script) {
+                        content[phaseKey] = item.content.script;
+                    }
+                });
+                
+                lessonContent = content;
+                console.log('[GoldenLesson] Loaded content for:', archetype, Object.keys(content).length, 'phases');
+                return content;
+                
+            } catch (error) {
+                console.error('[GoldenLesson] Failed to fetch content:', error);
+                return null;
+            }
+        }
+        
+        function getCaption(phase) {
+            return lessonContent[phase] || 'Loading...';
+        }
         
         // Initialize
         async function init() {
+            // Fetch initial content
+            await fetchLessonContent('The Explorer');
+            updateUI();
+            
             goldenLesson = new GoldenLessonController();
             await goldenLesson.init('kelly-container', 'The Explorer');
             
@@ -438,7 +514,7 @@
             });
         }
         
-        function selectArchetype(arch) {
+        async function selectArchetype(arch) {
             goldenLesson.setArchetype(arch);
             document.getElementById('current-archetype').textContent = arch;
             
@@ -447,6 +523,10 @@
                 opt.classList.toggle('selected', opt.dataset.archetype === arch);
             });
             document.getElementById('archetype-dropdown').classList.remove('open');
+            
+            // Fetch new content for this archetype
+            await fetchLessonContent(arch);
+            updateUI();
             
             // Restart current phase with new archetype
             goldenLesson.playCurrentPhase();
@@ -512,7 +592,7 @@
             // Update caption
             const phase = progress.phase;
             document.getElementById('caption-phase').textContent = progress.phaseName.toUpperCase();
-            document.getElementById('caption-text').textContent = PHASE_CAPTIONS[phase] || '';
+            document.getElementById('caption-text').textContent = getCaption(phase);
             
             // Update nav buttons
             document.getElementById('btn-prev').disabled = progress.current <= 1;
