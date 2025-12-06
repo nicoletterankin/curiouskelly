@@ -1,0 +1,229 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelly Real Lessons</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0d1117;
+            --card: #161b22;
+            --accent: #10b981;
+            --gold: #f59e0b;
+        }
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: #e6edf3;
+            min-height: 100vh;
+            padding: 2rem;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 3rem;
+        }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(135deg, var(--accent), var(--gold));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle { color: #8b949e; font-size: 1.1rem; }
+        
+        .stats {
+            display: flex;
+            gap: 2rem;
+            justify-content: center;
+            margin-bottom: 3rem;
+        }
+        .stat {
+            background: var(--card);
+            padding: 1.5rem 2rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        .stat-label { color: #8b949e; font-size: 0.9rem; }
+        
+        .lesson-day {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-bottom: 2rem;
+        }
+        .day-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+        }
+        .day-title {
+            font-size: 1.5rem;
+            color: var(--gold);
+        }
+        .day-topic { color: #8b949e; }
+        
+        .videos-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        .video-card {
+            background: rgba(0,0,0,0.3);
+            border-radius: 12px;
+            overflow: hidden;
+        }
+        .video-card video {
+            width: 100%;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+            background: #000;
+        }
+        .video-info {
+            padding: 1rem;
+        }
+        .video-phase {
+            font-weight: 600;
+            color: var(--accent);
+            text-transform: uppercase;
+            font-size: 0.8rem;
+            margin-bottom: 0.25rem;
+        }
+        .video-archetype {
+            color: #8b949e;
+            font-size: 0.9rem;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 4rem;
+            color: #8b949e;
+        }
+        
+        footer {
+            text-align: center;
+            margin-top: 3rem;
+            padding: 2rem;
+            color: #6e7681;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>🎓 Real Kelly Lessons</h1>
+        <p class="subtitle">Actual lesson content from the Curious Kelly curriculum</p>
+    </header>
+    
+    <div class="stats" id="stats">
+        <div class="stat">
+            <div class="stat-value" id="video-count">-</div>
+            <div class="stat-label">VIDEOS GENERATED</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="audio-count">-</div>
+            <div class="stat-label">AUDIO FILES</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="days-count">-</div>
+            <div class="stat-label">DAYS PROCESSED</div>
+        </div>
+    </div>
+    
+    <div id="lessons" class="loading">Loading real lesson videos...</div>
+    
+    <footer>
+        ✨ Kelly Production Factory • Real Educational Content
+    </footer>
+    
+    <script>
+        const SUPABASE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2ZvcmciLCJyb2xlIjoiYW5vbiIsImlhdCI6MTcyOTU0NzE2NywiZXhwIjoyMDQ1MTIzMTY3fQ.z-8XCGB0VgW2V3zC-Jb2WeNX6NklPIQRrYhujO-l86I';
+        
+        async function loadVideos() {
+            const response = await fetch(
+                `${SUPABASE_URL}/rest/v1/kelly_video_assets?asset_type=eq.video&order=day_number.asc,phase.asc`,
+                { headers: { 'apikey': SUPABASE_KEY } }
+            );
+            const videos = await response.json();
+            
+            const audioResponse = await fetch(
+                `${SUPABASE_URL}/rest/v1/kelly_video_assets?asset_type=eq.audio&select=id`,
+                { headers: { 'apikey': SUPABASE_KEY } }
+            );
+            const audio = await audioResponse.json();
+            
+            // Update stats
+            document.getElementById('video-count').textContent = videos.length;
+            document.getElementById('audio-count').textContent = audio.length;
+            
+            // Group by day
+            const byDay = {};
+            videos.forEach(v => {
+                if (!byDay[v.day_number]) byDay[v.day_number] = [];
+                byDay[v.day_number].push(v);
+            });
+            
+            document.getElementById('days-count').textContent = Object.keys(byDay).length;
+            
+            const container = document.getElementById('lessons');
+            
+            if (videos.length === 0) {
+                container.innerHTML = '<div class="loading">No videos generated yet. Run the production pipeline!</div>';
+                return;
+            }
+            
+            container.innerHTML = '';
+            container.classList.remove('loading');
+            
+            // Day topics
+            const topics = {
+                1: 'Starting Fresh',
+                2: 'Memory & Learning',
+                3: 'Pattern Recognition',
+                4: 'Creative Thinking',
+                5: 'Problem Solving'
+            };
+            
+            for (const [day, dayVideos] of Object.entries(byDay)) {
+                const dayHtml = `
+                    <div class="lesson-day">
+                        <div class="day-header">
+                            <div>
+                                <div class="day-title">Day ${day}</div>
+                                <div class="day-topic">${topics[day] || 'Lesson'}</div>
+                            </div>
+                            <div style="color: var(--accent)">${dayVideos.length} videos</div>
+                        </div>
+                        <div class="videos-grid">
+                            ${dayVideos.map(v => `
+                                <div class="video-card">
+                                    <video controls poster="${v.public_url}?poster=true">
+                                        <source src="${v.public_url}" type="video/mp4">
+                                    </video>
+                                    <div class="video-info">
+                                        <div class="video-phase">${v.phase}</div>
+                                        <div class="video-archetype">${v.age_bucket || 'Standard'}</div>
+                                    </div>
+                                </div>
+                            `).join('')}
+                        </div>
+                    </div>
+                `;
+                container.innerHTML += dayHtml;
+            }
+        }
+        
+        loadVideos();
+    </script>
+</body>
+</html>
+

@@ -1461,6 +1461,50 @@
           if (content.script) console.log(`[Learn]   script: ${content.script.substring(0, 50)}...`);
           if (content.options) console.log(`[Learn]   options: ${content.options.length} choices`);
 
+          // ═══════════════════════════════════════════════════════════════
+          // PARSE OPTIONS: Support both OLD and NEW (enhanced) formats
+          // OLD: options: ["text", "text"], responses: {"Option A": "..."}
+          // NEW: options: [{letter, text, response, quality, responseEmotion, ...}]
+          // ═══════════════════════════════════════════════════════════════
+          let parsedChoices = null;
+          if (content.options && Array.isArray(content.options)) {
+            parsedChoices = content.options.map((opt, i) => {
+              const letter = String.fromCharCode(65 + i); // A, B, C
+              
+              // NEW FORMAT: options are objects with all metadata
+              if (typeof opt === 'object' && opt.text) {
+                return {
+                  letter: opt.letter || letter,
+                  text: opt.text,
+                  response: opt.response || content.responses?.[`Option ${letter}`] || '',
+                  quality: opt.quality || 'good',           // best|good|redirect
+                  hintCue: opt.hintCue || null,             // gaze-left, gaze-right, etc.
+                  responseEmotion: opt.responseEmotion || 'encouraging',
+                  responsePose: opt.responsePose || 'explaining'
+                };
+              }
+              
+              // OLD FORMAT: options are strings
+              let text = opt;
+              if (typeof opt === 'string' && opt.match(/^[A-C]:\s*/)) {
+                text = opt.replace(/^[A-C]:\s*/, '');
+              }
+              
+              // Get response from legacy responses object
+              const response = content.responses?.[`Option ${letter}`] || content.responses?.[letter] || '';
+              
+              return { 
+                letter, 
+                text, 
+                response,
+                quality: 'good',
+                hintCue: null,
+                responseEmotion: 'encouraging',
+                responsePose: 'explaining'
+              };
+            });
+          }
+
           return {
             order: index + 1,
             type: phaseType,
@@ -1472,28 +1516,13 @@
                   : atom.phase.toUpperCase(),
             text: content.script || content.text || 'Content loading...',
             hint: content.prompt || null,
-            // Parse options - format is ["A: text", "B: text", "C: text"]
-            // with responses as {"A": "response", "B": "response", "C": "response"}
-            choices:
-              content.options && Array.isArray(content.options)
-                ? content.options.map((opt, i) => {
-                    // Option format: "A: Does it illuminate..." or just "Does it illuminate..."
-                    const letter = String.fromCharCode(65 + i); // A, B, C
-                    let text = opt;
-                    
-                    // Strip "A: " prefix if present
-                    if (typeof opt === 'string' && opt.match(/^[A-C]:\s*/)) {
-                      text = opt.replace(/^[A-C]:\s*/, '');
-                    } else if (typeof opt === 'object' && opt.text) {
-                      text = opt.text;
-                    }
-                    
-                    // Get response from responses object
-                    const response = content.responses?.[letter] || '';
-                    
-                    return { letter, text, response };
-                  })
-                : null
+            choices: parsedChoices,
+            // NEW: Enhanced interaction metadata
+            optionIntro: content.optionIntro || null,      // "What draws you in most?"
+            kellyPose: content.kellyPose || null,          // Initial Kelly pose for phase
+            kellyEmotion: content.kellyEmotion || null,    // Initial Kelly emotion
+            optionPose: content.optionPose || 'thinking',  // Kelly pose when showing options
+            hintSystem: content.hintSystem || null         // Hint timing/type config
           };
         });
 
@@ -1986,18 +2015,60 @@
         if (container) container.innerHTML = '';
 
         if (choices && phase.type === 'question') {
-          // Kelly goes to thinking state for questions
+          // ═══════════════════════════════════════════════════════════════
+          // ENHANCED: Use phase.optionPose or default to thinking
+          // ═══════════════════════════════════════════════════════════════
+          const optionPose = phase.optionPose || 'thinking';
           if (window.kellyAssets) {
-            window.kellyAssets.setState('thinking');
+            window.kellyAssets.setState(optionPose);
+          }
+          
+          // ═══════════════════════════════════════════════════════════════
+          // ENHANCED: Speak optionIntro if available ("What draws you in?")
+          // ═══════════════════════════════════════════════════════════════
+          if (phase.optionIntro && kellyAudio) {
+            console.log(`[Learn] Kelly asks: "${phase.optionIntro}"`);
+            // Option intro will be spoken after main script via audio queue
+            // For now, log it - full implementation would queue this audio
+          }
+          
+          // ═══════════════════════════════════════════════════════════════
+          // ENHANCED: Setup hint system for subtle guidance
+          // ═══════════════════════════════════════════════════════════════
+          if (phase.hintSystem && phase.hintSystem.enabled) {
+            const bestOption = phase.hintSystem.bestOption;
+            const hintDelay = phase.hintSystem.delayMs || 3000;
+            
+            setTimeout(() => {
+              // Subtle hint: Kelly glances toward best option
+              const bestChoice = choices.find(c => c.letter === bestOption);
+              if (bestChoice && bestChoice.hintCue && window.kellyAssets) {
+                console.log(`[Learn] 💡 Subtle hint toward option ${bestOption}`);
+                // Map hint cues to Kelly states (future: add gaze variations)
+                const hintMap = {
+                  'gaze-left': 'pointing-left',
+                  'gaze-right': 'pointing-right',
+                  'glance-left': 'pointing-left',
+                  'glance-right': 'pointing-right'
+                };
+                const hintState = hintMap[bestChoice.hintCue];
+                if (hintState) {
+                  window.kellyAssets.setState(hintState);
+                  // Return to thinking after brief hint
+                  setTimeout(() => window.kellyAssets.setState('thinking'), 800);
+                }
+              }
+            }, hintDelay);
           }
           
           // V2: Use Options System (Right Rail)
           const formattedChoices = choices.map((choice, index) => ({
             letter: choice.letter || String.fromCharCode(65 + index),
             text: choice.text,
-            correct: choice.correct || false
+            correct: choice.quality === 'best',  // ENHANCED: Use quality flag
+            quality: choice.quality || 'good'    // ENHANCED: Pass quality through
           }));
-          // Pass both formatted and raw choices (raw has response text)
+          // Pass both formatted and raw choices (raw has response text + emotions)
           OptionsSystem.setOptions(formattedChoices, choices);
           
           // Legacy: Also populate hidden choices container
@@ -2132,12 +2203,40 @@
           kellyVisualSystem.showCorrectFeedback();
         }
         
-        // Kelly celebrates the choice
+        // ═══════════════════════════════════════════════════════════════
+        // ENHANCED: Use responseEmotion and responsePose for Kelly's reaction
+        // ═══════════════════════════════════════════════════════════════
+        const responseEmotion = choice.responseEmotion || 'encouraging';
+        const responsePose = choice.responsePose || 'explaining';
+        const quality = choice.quality || 'good';
+        
+        // Map emotion to Kelly state
+        const emotionToPose = {
+          'celebrating': 'celebrating',
+          'excited': 'hello',
+          'encouraging': 'encouraging',
+          'thoughtful': 'thinking',
+          'redirecting': 'encouraging',
+          'playful': 'hello'
+        };
+        
+        const kellyState = emotionToPose[responseEmotion] || responsePose;
+        
+        // Kelly reacts based on response quality
         if (window.kellyAssets) {
-          window.kellyAssets.setState('hello'); // Approving expression
+          if (quality === 'best') {
+            window.kellyAssets.setState('celebrating');
+            console.log('[Learn] 🎉 Best choice! Kelly celebrates');
+          } else if (quality === 'redirect') {
+            window.kellyAssets.setState('encouraging');
+            console.log('[Learn] 💭 Redirect choice. Kelly gently guides');
+          } else {
+            window.kellyAssets.setState(kellyState);
+            console.log(`[Learn] ✓ Good choice. Kelly: ${kellyState}`);
+          }
         }
 
-        // Kelly listens to student's choice
+        // Kelly listens briefly before responding
         if (kellyAvatar && typeof kellyAvatar.setExpression === 'function') {
           kellyAvatar.setExpression('listening');
         }
@@ -2155,13 +2254,17 @@
           const hintEl = document.getElementById('speech-hint');
           if (hintEl) hintEl.style.display = 'none';
 
-          // Kelly transitions from listening to explaining
+          // Kelly transitions to response emotion/pose
           setTimeout(() => {
             if (kellyAvatar && typeof kellyAvatar.setExpression === 'function') {
-              kellyAvatar.setExpression('explaining');
+              kellyAvatar.setExpression(responseEmotion);
             }
             if (kellyAvatar && typeof kellyAvatar.setSpeaking === 'function') {
               kellyAvatar.setSpeaking(true, choice.response);
+            }
+            // Update Kelly assets with final response pose
+            if (window.kellyAssets) {
+              window.kellyAssets.setState(kellyState);
             }
           }, 800);
 
