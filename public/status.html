@@ -1,0 +1,222 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>System Status - Curious Kelly</title>
+  <link rel="icon" href="/favicon.ico">
+  <meta http-equiv="refresh" content="60">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #0a0a0a;
+      color: #fafafa;
+      min-height: 100vh;
+      padding: 40px 20px;
+    }
+    .container {
+      max-width: 640px;
+      margin: 0 auto;
+    }
+    header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+    .logo {
+      font-size: 24px;
+      margin-bottom: 8px;
+    }
+    h1 {
+      font-size: 32px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .subtitle {
+      color: #a1a1aa;
+      font-size: 14px;
+    }
+    .status-banner {
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+      margin-bottom: 32px;
+      font-size: 18px;
+      font-weight: 500;
+    }
+    .status-operational {
+      background: #052e16;
+      color: #4ade80;
+      border: 1px solid #166534;
+    }
+    .status-degraded {
+      background: #422006;
+      color: #fbbf24;
+      border: 1px solid #a16207;
+    }
+    .status-down {
+      background: #450a0a;
+      color: #f87171;
+      border: 1px solid #991b1b;
+    }
+    .services {
+      background: #18181b;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .service {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px 20px;
+      border-bottom: 1px solid #27272a;
+    }
+    .service:last-child {
+      border-bottom: none;
+    }
+    .service-name {
+      font-weight: 500;
+    }
+    .service-status {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+    }
+    .dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+    }
+    .dot-green { background: #4ade80; }
+    .dot-yellow { background: #fbbf24; }
+    .dot-red { background: #f87171; }
+    .dot-gray { background: #71717a; animation: pulse 2s infinite; }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; }
+      50% { opacity: 0.5; }
+    }
+    .timestamp {
+      text-align: center;
+      margin-top: 24px;
+      font-size: 12px;
+      color: #71717a;
+    }
+    .footer {
+      text-align: center;
+      margin-top: 48px;
+      font-size: 14px;
+      color: #71717a;
+    }
+    .footer a {
+      color: #71717a;
+      text-decoration: none;
+    }
+    .footer a:hover {
+      color: #fafafa;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">✨</div>
+      <h1>Curious Kelly Status</h1>
+      <p class="subtitle">Real-time system status</p>
+    </header>
+    
+    <div id="status-banner" class="status-banner status-operational">
+      <span id="overall-status">Checking systems...</span>
+    </div>
+    
+    <div class="services">
+      <div class="service">
+        <span class="service-name">Website</span>
+        <span class="service-status" id="web-status">
+          <span class="dot dot-gray"></span>
+          <span>Checking...</span>
+        </span>
+      </div>
+      <div class="service">
+        <span class="service-name">Database</span>
+        <span class="service-status" id="db-status">
+          <span class="dot dot-gray"></span>
+          <span>Checking...</span>
+        </span>
+      </div>
+      <div class="service">
+        <span class="service-name">Email Service</span>
+        <span class="service-status" id="email-status">
+          <span class="dot dot-gray"></span>
+          <span>Checking...</span>
+        </span>
+      </div>
+      <div class="service">
+        <span class="service-name">API</span>
+        <span class="service-status" id="api-status">
+          <span class="dot dot-gray"></span>
+          <span>Checking...</span>
+        </span>
+      </div>
+    </div>
+    
+    <p class="timestamp" id="last-check">Last checked: --</p>
+    
+    <footer class="footer">
+      <a href="/">← Back to Curious Kelly</a>
+      <span style="margin: 0 8px;">·</span>
+      <a href="mailto:hello@curiouskelly.com">Report an issue</a>
+    </footer>
+  </div>
+  
+  <script>
+    async function checkStatus() {
+      const banner = document.getElementById('status-banner');
+      const overall = document.getElementById('overall-status');
+      
+      try {
+        const response = await fetch('/api/health');
+        const data = await response.json();
+        
+        // Update individual services
+        updateService('db-status', data.checks?.database?.status === 'ok');
+        updateService('email-status', data.checks?.email?.status === 'ok');
+        updateService('api-status', response.ok);
+        updateService('web-status', true);
+        
+        // Update overall banner
+        if (data.status === 'healthy') {
+          banner.className = 'status-banner status-operational';
+          overall.textContent = '✓ All Systems Operational';
+        } else {
+          banner.className = 'status-banner status-degraded';
+          overall.textContent = '⚠ Partial System Degradation';
+        }
+      } catch (error) {
+        banner.className = 'status-banner status-down';
+        overall.textContent = '✕ System Issues Detected';
+        updateService('api-status', false);
+        updateService('db-status', false);
+        updateService('web-status', true); // If page loaded, web is up
+      }
+      
+      document.getElementById('last-check').textContent = 
+        `Last checked: ${new Date().toLocaleTimeString()}`;
+    }
+    
+    function updateService(id, isOk) {
+      const el = document.getElementById(id);
+      const dot = el.querySelector('.dot');
+      const text = el.querySelector('span:last-child');
+      
+      dot.className = `dot ${isOk ? 'dot-green' : 'dot-red'}`;
+      text.textContent = isOk ? 'Operational' : 'Issues';
+    }
+    
+    // Check immediately and every 30 seconds
+    checkStatus();
+    setInterval(checkStatus, 30000);
+  </script>
+</body>
+</html>
+
