@@ -1,505 +1,56 @@
-<!DOCTYPE html>
+﻿<!DOCTYPE html>
 <html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Kelly Lipsync Lab - Curious Kelly</title>
-    <meta name="description" content="Real-time lipsync technology for Kelly's AI lessons. Watch Kelly come alive with natural speech animation.">
-    <link rel="icon" href="/favicon.ico">
-    
     <style>
-        @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
-        
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        
-        :root {
-            --kelly-gold: #f39c12;
-            --kelly-coral: #e74c3c;
-            --kelly-teal: #64ffda;
-            --dark-bg: #0f0c29;
-            --darker-bg: #070512;
-        }
-        
-        body {
-            font-family: 'Space Grotesk', sans-serif;
-            background: linear-gradient(135deg, var(--dark-bg) 0%, #302b63 50%, #24243e 100%);
-            min-height: 100vh;
-            color: #fff;
-        }
-        
-        /* Hero Section */
-        .hero {
-            min-height: 60vh;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            text-align: center;
-            padding: 4rem 2rem;
-            position: relative;
-            overflow: hidden;
-        }
-        
-        .hero::before {
-            content: '';
-            position: absolute;
-            top: -50%;
-            left: -50%;
-            width: 200%;
-            height: 200%;
-            background: radial-gradient(circle at 30% 40%, rgba(243, 156, 18, 0.1) 0%, transparent 50%),
-                        radial-gradient(circle at 70% 60%, rgba(100, 255, 218, 0.08) 0%, transparent 50%);
-            animation: pulse 15s infinite;
-        }
-        
-        @keyframes pulse {
-            0%, 100% { transform: scale(1); opacity: 0.5; }
-            50% { transform: scale(1.1); opacity: 0.8; }
-        }
-        
-        .hero-content {
-            position: relative;
-            z-index: 1;
-            max-width: 800px;
-        }
-        
-        .badge {
-            display: inline-block;
-            padding: 0.5rem 1rem;
-            background: rgba(100, 255, 218, 0.15);
-            border: 1px solid rgba(100, 255, 218, 0.3);
-            border-radius: 50px;
-            font-size: 0.85rem;
-            color: var(--kelly-teal);
-            margin-bottom: 1.5rem;
-            letter-spacing: 0.05em;
-        }
-        
-        h1 {
-            font-size: clamp(2.5rem, 8vw, 5rem);
-            font-weight: 700;
-            line-height: 1.1;
-            margin-bottom: 1.5rem;
-            background: linear-gradient(135deg, #fff 0%, var(--kelly-gold) 50%, var(--kelly-coral) 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-        }
-        
-        .subtitle {
-            font-size: 1.3rem;
-            color: #a8b2d1;
-            margin-bottom: 2.5rem;
-            max-width: 600px;
-        }
-        
-        /* Video Showcase */
-        .showcase {
-            padding: 4rem 2rem;
-            max-width: 1400px;
-            margin: 0 auto;
-        }
-        
-        .section-title {
-            font-size: 1.5rem;
-            color: var(--kelly-teal);
-            margin-bottom: 1rem;
-            display: flex;
-            align-items: center;
-            gap: 0.5rem;
-        }
-        
-        .section-desc {
-            color: #8892b0;
-            margin-bottom: 2rem;
-            max-width: 600px;
-        }
-        
-        .video-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
-            gap: 2rem;
-        }
-        
-        .video-card {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 20px;
-            overflow: hidden;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-            transition: all 0.3s ease;
-        }
-        
-        .video-card:hover {
-            transform: translateY(-8px);
-            border-color: rgba(100, 255, 218, 0.3);
-            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.3);
-        }
-        
-        .video-card video {
-            width: 100%;
-            aspect-ratio: 1;
-            object-fit: cover;
-            background: var(--darker-bg);
-        }
-        
-        .video-card-body {
-            padding: 1.25rem;
-        }
-        
-        .video-card-title {
-            font-weight: 600;
-            font-size: 1.1rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .video-card-meta {
-            font-size: 0.85rem;
-            color: #8892b0;
-            display: flex;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-        
-        .tag {
-            padding: 0.25rem 0.75rem;
-            background: rgba(100, 255, 218, 0.1);
-            border-radius: 50px;
-            font-size: 0.75rem;
-            color: var(--kelly-teal);
-        }
-        
-        /* Tech Section */
-        .tech-section {
-            padding: 4rem 2rem;
-            background: rgba(0, 0, 0, 0.2);
-        }
-        
-        .tech-grid {
-            max-width: 1200px;
-            margin: 0 auto;
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
-            gap: 2rem;
-        }
-        
-        .tech-card {
-            background: rgba(255, 255, 255, 0.03);
-            border-radius: 16px;
-            padding: 2rem;
-            border: 1px solid rgba(255, 255, 255, 0.08);
-        }
-        
-        .tech-icon {
-            font-size: 2.5rem;
-            margin-bottom: 1rem;
-        }
-        
-        .tech-title {
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 0.75rem;
-            color: #fff;
-        }
-        
-        .tech-desc {
-            font-size: 0.9rem;
-            color: #8892b0;
-            line-height: 1.6;
-        }
-        
-        /* Pipeline Visualization */
-        .pipeline {
-            padding: 4rem 2rem;
-            max-width: 1200px;
-            margin: 0 auto;
-        }
-        
-        .pipeline-flow {
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            flex-wrap: wrap;
-            gap: 1rem;
-            margin-top: 2rem;
-        }
-        
-        .pipeline-step {
-            background: rgba(255, 255, 255, 0.05);
-            border: 1px solid rgba(255, 255, 255, 0.1);
-            border-radius: 12px;
-            padding: 1.5rem;
-            text-align: center;
-            min-width: 140px;
-        }
-        
-        .pipeline-step-icon {
-            font-size: 2rem;
-            margin-bottom: 0.5rem;
-        }
-        
-        .pipeline-step-name {
-            font-weight: 600;
-            margin-bottom: 0.25rem;
-        }
-        
-        .pipeline-step-tool {
-            font-size: 0.75rem;
-            color: var(--kelly-teal);
-        }
-        
-        .pipeline-arrow {
-            font-size: 1.5rem;
-            color: var(--kelly-gold);
-        }
-        
-        /* Status */
-        .status-bar {
-            background: rgba(46, 204, 113, 0.15);
-            border: 1px solid rgba(46, 204, 113, 0.3);
-            border-radius: 12px;
-            padding: 1.5rem 2rem;
-            margin: 2rem auto;
-            max-width: 800px;
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            flex-wrap: wrap;
-        }
-        
-        .status-indicator {
-            width: 12px;
-            height: 12px;
-            background: #2ecc71;
-            border-radius: 50%;
-            animation: blink 2s infinite;
-        }
-        
-        @keyframes blink {
-            0%, 100% { opacity: 1; }
-            50% { opacity: 0.5; }
-        }
-        
-        .status-text {
-            flex: 1;
-            color: #2ecc71;
-            font-weight: 500;
-        }
-        
-        /* Footer */
-        footer {
-            padding: 3rem 2rem;
-            text-align: center;
-            color: #8892b0;
-            border-top: 1px solid rgba(255, 255, 255, 0.05);
-        }
-        
-        footer a {
-            color: var(--kelly-teal);
-            text-decoration: none;
-        }
-        
-        /* Loading State */
-        .loading-placeholder {
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            aspect-ratio: 1;
-            background: linear-gradient(135deg, rgba(255,255,255,0.05), rgba(255,255,255,0.02));
-            border-radius: 16px;
-            color: #8892b0;
-        }
-        
-        .spinner {
-            width: 40px;
-            height: 40px;
-            border: 3px solid rgba(255,255,255,0.1);
-            border-top-color: var(--kelly-teal);
-            border-radius: 50%;
-            animation: spin 1s linear infinite;
-            margin-bottom: 1rem;
-        }
-        
-        @keyframes spin {
-            to { transform: rotate(360deg); }
-        }
-        
-        @media (max-width: 768px) {
-            .pipeline-flow { flex-direction: column; }
-            .pipeline-arrow { transform: rotate(90deg); }
-        }
+        body { font-family: system-ui, sans-serif; background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); min-height: 100vh; color: #fff; padding: 2rem; }
+        h1 { font-size: 2.5rem; margin-bottom: 1rem; background: linear-gradient(135deg, #fff, #f39c12); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
+        .badge { display: inline-block; padding: 0.5rem 1rem; background: rgba(46, 204, 113, 0.2); border: 1px solid #2ecc71; border-radius: 50px; color: #2ecc71; margin-bottom: 1rem; }
+        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
+        .card { background: rgba(255,255,255,0.05); border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
+        .card video { width: 100%; aspect-ratio: 1; object-fit: cover; background: #000; }
+        .card-body { padding: 1rem; }
+        .card-title { font-weight: 600; margin-bottom: 0.5rem; }
+        .meta { font-size: 0.8rem; color: #8892b0; display: flex; gap: 0.5rem; flex-wrap: wrap; }
+        .tag { padding: 0.2rem 0.5rem; background: rgba(100,255,218,0.15); border-radius: 4px; font-size: 0.7rem; color: #64ffda; }
+        .controls { margin: 1rem 0; }
+        button { padding: 0.5rem 1rem; margin-right: 0.5rem; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; cursor: pointer; }
     </style>
 </head>
 <body>
-    <section class="hero">
-        <div class="hero-content">
-            <span class="badge">✨ LIPSYNC LAB</span>
-            <h1>Kelly Comes Alive</h1>
-            <p class="subtitle">
-                Cutting-edge lipsync technology that transforms static images into natural, 
-                expressive speech. Watch Kelly talk in real-time with perfect synchronization.
-            </p>
-        </div>
-    </section>
-    
-    <div class="status-bar">
-        <div class="status-indicator"></div>
-        <div class="status-text" id="statusText">🔬 Calibration suite running... Videos loading as they complete.</div>
+    <span class="badge"> 11 Tests Complete</span>
+    <h1>Kelly Lipsync Lab</h1>
+    <p style="color:#a8b2d1;margin-bottom:1rem;">Compare SadTalker vs Wav2Lip quality - click any video to play</p>
+    <div class="controls">
+        <button onclick="document.querySelectorAll('video').forEach(v=>v.play())"> Play All</button>
+        <button onclick="document.querySelectorAll('video').forEach(v=>v.pause())"> Pause All</button>
     </div>
-    
-    <section class="showcase">
-        <h2 class="section-title">🎬 Latest Calibration Results</h2>
-        <p class="section-desc">
-            Side-by-side comparisons of different lipsync models, settings, and configurations.
-            Watch each video and compare quality, accuracy, and naturalness.
-        </p>
-        
-        <div class="video-grid" id="videoGrid">
-            <!-- Videos loaded dynamically -->
-            <div class="video-card">
-                <div class="loading-placeholder">
-                    <div class="spinner"></div>
-                    <span>Loading results...</span>
-                </div>
-                <div class="video-card-body">
-                    <div class="video-card-title">Generating videos...</div>
-                    <div class="video-card-meta">
-                        <span class="tag">In Progress</span>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-    
-    <section class="pipeline">
-        <h2 class="section-title">⚡ The Pipeline</h2>
-        <p class="section-desc">From static image to talking video in under 2 minutes.</p>
-        
-        <div class="pipeline-flow">
-            <div class="pipeline-step">
-                <div class="pipeline-step-icon">📸</div>
-                <div class="pipeline-step-name">Kelly Image</div>
-                <div class="pipeline-step-tool">Lesson Assets</div>
-            </div>
-            <div class="pipeline-arrow">→</div>
-            <div class="pipeline-step">
-                <div class="pipeline-step-icon">📝</div>
-                <div class="pipeline-step-name">Script</div>
-                <div class="pipeline-step-tool">Lesson Content</div>
-            </div>
-            <div class="pipeline-arrow">→</div>
-            <div class="pipeline-step">
-                <div class="pipeline-step-icon">🎙️</div>
-                <div class="pipeline-step-name">Voice</div>
-                <div class="pipeline-step-tool">ElevenLabs</div>
-            </div>
-            <div class="pipeline-arrow">→</div>
-            <div class="pipeline-step">
-                <div class="pipeline-step-icon">👄</div>
-                <div class="pipeline-step-name">Lipsync</div>
-                <div class="pipeline-step-tool">SadTalker / LivePortrait</div>
-            </div>
-            <div class="pipeline-arrow">→</div>
-            <div class="pipeline-step">
-                <div class="pipeline-step-icon">✨</div>
-                <div class="pipeline-step-name">Upscale</div>
-                <div class="pipeline-step-tool">Real-ESRGAN 4K</div>
-            </div>
-        </div>
-    </section>
-    
-    <section class="tech-section">
-        <div class="tech-grid">
-            <div class="tech-card">
-                <div class="tech-icon">🎭</div>
-                <div class="tech-title">SadTalker</div>
-                <div class="tech-desc">
-                    State-of-the-art talking head synthesis. Generates realistic facial expressions 
-                    and mouth movements from audio. Fast and reliable.
-                </div>
-            </div>
-            <div class="tech-card">
-                <div class="tech-icon">🎨</div>
-                <div class="tech-title">LivePortrait</div>
-                <div class="tech-desc">
-                    Advanced portrait animation with superior quality. Preserves fine details 
-                    and natural skin textures. Best for close-ups.
-                </div>
-            </div>
-            <div class="tech-card">
-                <div class="tech-icon">🔊</div>
-                <div class="tech-title">ElevenLabs</div>
-                <div class="tech-desc">
-                    Kelly's trained voice with natural intonation. Custom voice clone 
-                    for authentic, warm delivery every time.
-                </div>
-            </div>
-            <div class="tech-card">
-                <div class="tech-icon">⬆️</div>
-                <div class="tech-title">Real-ESRGAN</div>
-                <div class="tech-desc">
-                    4K upscaling with face enhancement. Transforms standard video 
-                    into film-quality output with zero artifacts.
-                </div>
-            </div>
-        </div>
-    </section>
-    
-    <footer>
-        <p>✨ Curious Kelly • Lipsync Lab • <a href="/">Back to Home</a></p>
-        <p style="margin-top: 0.5rem; font-size: 0.85rem;">
-            Powered by ElevenLabs, Replicate, and a whole lot of curiosity.
-        </p>
-    </footer>
-    
+    <div class="grid" id="grid"></div>
     <script>
-        // Load results from JSON
-        async function loadResults() {
-            try {
-                const response = await fetch('/lipsync/results.json');
-                if (!response.ok) throw new Error('Results not ready');
-                
-                const results = await response.json();
-                const successful = results.filter(r => r.status === 'success');
-                
-                if (successful.length === 0) {
-                    document.getElementById('statusText').textContent = 
-                        '⏳ No completed videos yet. Check back soon...';
-                    return;
-                }
-                
-                document.getElementById('statusText').textContent = 
-                    `✅ ${successful.length} of ${results.length} tests complete. Calibration in progress...`;
-                
-                const grid = document.getElementById('videoGrid');
-                grid.innerHTML = successful.map(r => `
-                    <div class="video-card">
-                        <video controls loop muted playsinline>
-                            <source src="/lipsync/${r.localFilename}" type="video/mp4">
-                        </video>
-                        <div class="video-card-body">
-                            <div class="video-card-title">${r.name}</div>
-                            <div class="video-card-meta">
-                                <span class="tag">${r.model}</span>
-                                <span>Day ${r.day}</span>
-                                <span>${r.phase}</span>
-                                <span>${r.duration}s</span>
-                            </div>
-                        </div>
-                    </div>
-                `).join('');
-                
-            } catch (e) {
-                console.log('Results not ready:', e);
-                setTimeout(loadResults, 10000); // Retry in 10s
-            }
-        }
-        
-        // Initial load
-        loadResults();
-        
-        // Refresh every 30 seconds
-        setInterval(loadResults, 30000);
+        const videos = [
+            { name: "sadtalker_baseline", model: "sadtalker", day: 1, phase: "hook", time: "155.9s", url: "https://replicate.delivery/yhqm/DmRN6pZbwQI3F5er1XuHMcsvf6iP8lYDjc9cr1VKvjsnzWwVA/out.mp4" },
+            { name: "wav2lip_baseline", model: "wav2lip", day: 1, phase: "hook", time: "3.9s", url: "https://replicate.delivery/yhqm/rzdX4kaV40IsLZ4cXGdxfb8ewsOj864RU0xIwplIFXrszWwVA/result_voice.mp4" },
+            { name: "sadtalker_exp_0.8", model: "sadtalker", day: 1, phase: "hook", time: "28.9s", url: "https://replicate.delivery/yhqm/nn9uqq4euWTTEKp8Ep8eutovvElm75YDErt9kuxtKowI0WwVA/out.mp4" },
+            { name: "sadtalker_exp_1.2", model: "sadtalker", day: 1, phase: "hook", time: "22.4s", url: "https://replicate.delivery/yhqm/Oj9bGfvfdeXzUotZ1EjxyLTOkpjn9iNbq3uNgZMEYbO8otgrA/out.mp4" },
+            { name: "sadtalker_exp_1.5", model: "sadtalker", day: 1, phase: "hook", time: "22.3s", url: "https://replicate.delivery/yhqm/xeeVkGJWy1gVHUtgb5rS9fUMSEn7DfIZLVPSfPQPyWaqm2CuC/out.mp4" },
+            { name: "sadtalker_q1", model: "sadtalker", day: 1, phase: "q1", time: "22.3s", url: "https://replicate.delivery/yhqm/QFtgJzMx8LZWH1LtlbnjOM7yP6e3zAROaQnlRr43nfKL1WwVA/out.mp4" },
+            { name: "sadtalker_wisdom", model: "sadtalker", day: 1, phase: "wisdom", time: "22.4s", url: "https://replicate.delivery/yhqm/vgFdMk1nr3pIFV0LI1Ufhb4k1lgHueiEYWooJ43hERMi1WwVA/out.mp4" },
+            { name: "sadtalker_day5", model: "sadtalker", day: 5, phase: "hook", time: "22.4s", url: "https://replicate.delivery/yhqm/2F8mpseAPUyJWi7XWs6SXLlyNa5NoWDXQtj50VeX3SewrtgrA/out.mp4" },
+            { name: "sadtalker_day10", model: "sadtalker", day: 10, phase: "hook", time: "22.4s", url: "https://replicate.delivery/yhqm/McBDmfeNFBhxVUQMrEY4K8COBMDP1U0KWeeRnaqIIU88YbBXB/out.mp4" },
+            { name: "sadtalker_long_text", model: "sadtalker", day: 1, phase: "hook", time: "91.3s", url: "https://replicate.delivery/yhqm/N0XoT9J1BS58J1wxECvgEIferBV7h4OI75HnKjyH8BRo3WwVA/out.mp4", note: " long text" },
+            { name: "sadtalker_no_enhance", model: "sadtalker", day: 1, phase: "hook", time: "22.4s", url: "https://replicate.delivery/yhqm/yonOFvvf1RyuDa8j3lWFBejduy6f28CfbdOgKc1hUby9f2CuC/out.mp4", note: "no GFPGAN" },
+        ];
+        document.getElementById('grid').innerHTML = videos.map(v => `
+            <div class="card"><video controls loop muted playsinline><source src="${v.url}" type="video/mp4"></video>
+            <div class="card-body"><div class="card-title">${v.name}</div>
+            <div class="meta"><span class="tag">${v.model}</span><span>Day ${v.day}</span><span>${v.phase}</span><span>${v.time}</span>${v.note ? `<span>${v.note}</span>` : ''}</div></div></div>
+        `).join('');
     </script>
+    <footer style="text-align:center;margin-top:3rem;color:#8892b0;padding-top:2rem;border-top:1px solid rgba(255,255,255,0.1);">
+        <p> Curious Kelly  <a href="/" style="color:#64ffda;">Back to Home</a></p>
+    </footer>
 </body>
 </html>
-
