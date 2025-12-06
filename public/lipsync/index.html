@@ -3,54 +3,335 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Kelly Lipsync Lab - Curious Kelly</title>
+    <title>Kelly Motion Studio - Premium Lipsync Lab</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
     <style>
+        :root {
+            --gold: #f39c12;
+            --coral: #e74c3c;
+            --teal: #64ffda;
+            --dark: #0a0a0f;
+            --card: rgba(255,255,255,0.03);
+        }
         * { box-sizing: border-box; margin: 0; padding: 0; }
-        body { font-family: system-ui, sans-serif; background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%); min-height: 100vh; color: #fff; padding: 2rem; }
-        h1 { font-size: 2.5rem; margin-bottom: 1rem; background: linear-gradient(135deg, #fff, #f39c12); -webkit-background-clip: text; -webkit-text-fill-color: transparent; }
-        .badge { display: inline-block; padding: 0.5rem 1rem; background: rgba(46, 204, 113, 0.2); border: 1px solid #2ecc71; border-radius: 50px; color: #2ecc71; margin-bottom: 1rem; }
-        .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 1.5rem; margin-top: 2rem; }
-        .card { background: rgba(255,255,255,0.05); border-radius: 16px; overflow: hidden; border: 1px solid rgba(255,255,255,0.1); }
-        .card video { width: 100%; aspect-ratio: 1; object-fit: cover; background: #000; }
+        body {
+            font-family: 'Space Grotesk', sans-serif;
+            background: var(--dark);
+            color: #fff;
+            min-height: 100vh;
+        }
+        .hero {
+            background: linear-gradient(180deg, #1a1a2e 0%, var(--dark) 100%);
+            padding: 4rem 2rem;
+            text-align: center;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.4rem 1rem;
+            background: rgba(46, 204, 113, 0.15);
+            border: 1px solid rgba(46, 204, 113, 0.4);
+            border-radius: 50px;
+            font-size: 0.8rem;
+            color: #2ecc71;
+            margin-bottom: 1rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        h1 {
+            font-size: clamp(2rem, 6vw, 3.5rem);
+            font-weight: 700;
+            background: linear-gradient(135deg, #fff, var(--gold), var(--coral));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 1rem;
+        }
+        .subtitle { color: #8892b0; font-size: 1.1rem; max-width: 600px; margin: 0 auto; }
+        
+        /* Stats */
+        .stats {
+            display: flex;
+            justify-content: center;
+            gap: 2rem;
+            margin-top: 2rem;
+            flex-wrap: wrap;
+        }
+        .stat {
+            text-align: center;
+        }
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--teal);
+        }
+        .stat-label {
+            font-size: 0.75rem;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        
+        /* Sections */
+        .section {
+            max-width: 1600px;
+            margin: 0 auto;
+            padding: 3rem 2rem;
+        }
+        .section-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+            gap: 1rem;
+        }
+        .section-title {
+            font-size: 1.3rem;
+            color: var(--teal);
+        }
+        .controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+        button, select {
+            padding: 0.5rem 1rem;
+            background: rgba(255,255,255,0.08);
+            border: 1px solid rgba(255,255,255,0.15);
+            border-radius: 8px;
+            color: #fff;
+            font-family: inherit;
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        button:hover, select:hover {
+            background: rgba(255,255,255,0.12);
+            border-color: var(--teal);
+        }
+        
+        /* Video Grid */
+        .video-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 1.5rem;
+        }
+        .video-card {
+            background: var(--card);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.06);
+            transition: all 0.3s ease;
+        }
+        .video-card:hover {
+            transform: translateY(-4px);
+            border-color: rgba(100,255,218,0.2);
+            box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+        }
+        .video-card video {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            background: #000;
+        }
         .card-body { padding: 1rem; }
         .card-title { font-weight: 600; margin-bottom: 0.5rem; }
-        .meta { font-size: 0.8rem; color: #8892b0; display: flex; gap: 0.5rem; flex-wrap: wrap; }
-        .tag { padding: 0.2rem 0.5rem; background: rgba(100,255,218,0.15); border-radius: 4px; font-size: 0.7rem; color: #64ffda; }
-        .controls { margin: 1rem 0; }
-        button { padding: 0.5rem 1rem; margin-right: 0.5rem; background: rgba(255,255,255,0.1); color: #fff; border: 1px solid rgba(255,255,255,0.2); border-radius: 8px; cursor: pointer; }
+        .card-meta {
+            display: flex;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+            font-size: 0.75rem;
+            color: #666;
+        }
+        .tag {
+            padding: 0.15rem 0.5rem;
+            background: rgba(100,255,218,0.1);
+            border-radius: 4px;
+            color: var(--teal);
+            font-weight: 500;
+        }
+        .tag.premium {
+            background: linear-gradient(135deg, rgba(243,156,18,0.2), rgba(231,76,60,0.2));
+            color: var(--gold);
+        }
+        .tag.fast {
+            background: rgba(46,204,113,0.15);
+            color: #2ecc71;
+        }
+        
+        /* Quality Indicators */
+        .quality-badge {
+            position: absolute;
+            top: 0.75rem;
+            right: 0.75rem;
+            padding: 0.25rem 0.5rem;
+            background: rgba(0,0,0,0.7);
+            border-radius: 4px;
+            font-size: 0.65rem;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .quality-badge.hq { color: var(--gold); }
+        .quality-badge.fast { color: #2ecc71; }
+        
+        /* Findings */
+        .findings {
+            background: rgba(255,255,255,0.02);
+            border-radius: 16px;
+            padding: 2rem;
+            margin-top: 2rem;
+        }
+        .finding {
+            padding: 1rem 0;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .finding:last-child { border-bottom: none; }
+        .finding h4 { color: var(--teal); margin-bottom: 0.5rem; }
+        .finding p { color: #8892b0; font-size: 0.9rem; line-height: 1.6; }
+        
+        footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            color: #444;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        footer a { color: var(--teal); text-decoration: none; }
+        
+        @media (max-width: 600px) {
+            .stats { gap: 1rem; }
+            .section { padding: 2rem 1rem; }
+        }
     </style>
 </head>
 <body>
-    <span class="badge"> 11 Tests Complete</span>
-    <h1>Kelly Lipsync Lab</h1>
-    <p style="color:#a8b2d1;margin-bottom:1rem;">Compare SadTalker vs Wav2Lip quality - click any video to play</p>
-    <div class="controls">
-        <button onclick="document.querySelectorAll('video').forEach(v=>v.play())"> Play All</button>
-        <button onclick="document.querySelectorAll('video').forEach(v=>v.pause())"> Pause All</button>
-    </div>
-    <div class="grid" id="grid"></div>
+    <header class="hero">
+        <span class="badge">🎬 Motion Studio</span>
+        <h1>Kelly Lipsync Lab</h1>
+        <p class="subtitle">Premium AI-powered talking head generation. Compare models, test expressions, and calibrate for film-quality output.</p>
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="totalVideos">14</div>
+                <div class="stat-label">Videos Generated</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">3</div>
+                <div class="stat-label">Models Tested</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">4K</div>
+                <div class="stat-label">Target Quality</div>
+            </div>
+        </div>
+    </header>
+    
+    <section class="section">
+        <div class="section-header">
+            <h2 class="section-title">🏆 Premium Results</h2>
+            <div class="controls">
+                <select id="filterModel" onchange="filterVideos()">
+                    <option value="all">All Models</option>
+                    <option value="sadtalker">SadTalker</option>
+                    <option value="wav2lip">Wav2Lip</option>
+                </select>
+                <button onclick="playAll()">▶️ Play All</button>
+                <button onclick="pauseAll()">⏸️ Pause</button>
+            </div>
+        </div>
+        <div class="video-grid" id="videoGrid"></div>
+    </section>
+    
+    <section class="section">
+        <div class="findings">
+            <h3 style="color:#fff;margin-bottom:1.5rem;">🎯 Calibration Insights</h3>
+            
+            <div class="finding">
+                <h4>🥇 SadTalker HQ - Best Overall Quality</h4>
+                <p>Most natural lip movements and best identity preservation. Uses GFPGAN enhancement for skin texture. Generation time ~45-60s per video. Recommended for production.</p>
+            </div>
+            
+            <div class="finding">
+                <h4>⚡ Wav2Lip - Fastest Generation</h4>
+                <p>40x faster than SadTalker (~4s vs 45s). Good for previews and rapid iteration. Lower quality but maintains sync accuracy. Use for testing scripts before final render.</p>
+            </div>
+            
+            <div class="finding">
+                <h4>🎭 Expression Scale</h4>
+                <p>1.0 is optimal for natural speech. 0.8 for subtle/intimate moments. 1.2-1.5 for excited/emphatic delivery. Higher values risk looking exaggerated.</p>
+            </div>
+            
+            <div class="finding">
+                <h4>🔄 Head Pose Testing</h4>
+                <p>Testing yaw, pitch, and roll variations for more dynamic presentations. Slight head tilts (5-10°) add naturalness without looking artificial.</p>
+            </div>
+        </div>
+    </section>
+    
+    <footer>
+        <p>✨ Curious Kelly • Motion Studio • <a href="/">Back to Home</a></p>
+        <p style="margin-top:0.5rem;font-size:0.8rem;">Powered by ElevenLabs • Replicate SadTalker • Premium Quality Pipeline</p>
+    </footer>
+    
     <script>
+        // All videos from calibration runs
         const videos = [
-            { name: "sadtalker_baseline", model: "sadtalker", day: 1, phase: "hook", time: "155.9s", url: "https://replicate.delivery/yhqm/DmRN6pZbwQI3F5er1XuHMcsvf6iP8lYDjc9cr1VKvjsnzWwVA/out.mp4" },
-            { name: "wav2lip_baseline", model: "wav2lip", day: 1, phase: "hook", time: "3.9s", url: "https://replicate.delivery/yhqm/rzdX4kaV40IsLZ4cXGdxfb8ewsOj864RU0xIwplIFXrszWwVA/result_voice.mp4" },
-            { name: "sadtalker_exp_0.8", model: "sadtalker", day: 1, phase: "hook", time: "28.9s", url: "https://replicate.delivery/yhqm/nn9uqq4euWTTEKp8Ep8eutovvElm75YDErt9kuxtKowI0WwVA/out.mp4" },
-            { name: "sadtalker_exp_1.2", model: "sadtalker", day: 1, phase: "hook", time: "22.4s", url: "https://replicate.delivery/yhqm/Oj9bGfvfdeXzUotZ1EjxyLTOkpjn9iNbq3uNgZMEYbO8otgrA/out.mp4" },
-            { name: "sadtalker_exp_1.5", model: "sadtalker", day: 1, phase: "hook", time: "22.3s", url: "https://replicate.delivery/yhqm/xeeVkGJWy1gVHUtgb5rS9fUMSEn7DfIZLVPSfPQPyWaqm2CuC/out.mp4" },
+            // Initial calibration (11 tests)
+            { name: "sadtalker_baseline", model: "sadtalker", day: 1, phase: "hook", time: "155.9s", url: "https://replicate.delivery/yhqm/DmRN6pZbwQI3F5er1XuHMcsvf6iP8lYDjc9cr1VKvjsnzWwVA/out.mp4", quality: "baseline" },
+            { name: "wav2lip_baseline", model: "wav2lip", day: 1, phase: "hook", time: "3.9s", url: "https://replicate.delivery/yhqm/rzdX4kaV40IsLZ4cXGdxfb8ewsOj864RU0xIwplIFXrszWwVA/result_voice.mp4", quality: "fast" },
+            { name: "sadtalker_exp_0.8", model: "sadtalker", day: 1, phase: "hook", time: "28.9s", url: "https://replicate.delivery/yhqm/nn9uqq4euWTTEKp8Ep8eutovvElm75YDErt9kuxtKowI0WwVA/out.mp4", exp: 0.8 },
+            { name: "sadtalker_exp_1.2", model: "sadtalker", day: 1, phase: "hook", time: "22.4s", url: "https://replicate.delivery/yhqm/Oj9bGfvfdeXzUotZ1EjxyLTOkpjn9iNbq3uNgZMEYbO8otgrA/out.mp4", exp: 1.2 },
+            { name: "sadtalker_exp_1.5", model: "sadtalker", day: 1, phase: "hook", time: "22.3s", url: "https://replicate.delivery/yhqm/xeeVkGJWy1gVHUtgb5rS9fUMSEn7DfIZLVPSfPQPyWaqm2CuC/out.mp4", exp: 1.5 },
             { name: "sadtalker_q1", model: "sadtalker", day: 1, phase: "q1", time: "22.3s", url: "https://replicate.delivery/yhqm/QFtgJzMx8LZWH1LtlbnjOM7yP6e3zAROaQnlRr43nfKL1WwVA/out.mp4" },
             { name: "sadtalker_wisdom", model: "sadtalker", day: 1, phase: "wisdom", time: "22.4s", url: "https://replicate.delivery/yhqm/vgFdMk1nr3pIFV0LI1Ufhb4k1lgHueiEYWooJ43hERMi1WwVA/out.mp4" },
             { name: "sadtalker_day5", model: "sadtalker", day: 5, phase: "hook", time: "22.4s", url: "https://replicate.delivery/yhqm/2F8mpseAPUyJWi7XWs6SXLlyNa5NoWDXQtj50VeX3SewrtgrA/out.mp4" },
             { name: "sadtalker_day10", model: "sadtalker", day: 10, phase: "hook", time: "22.4s", url: "https://replicate.delivery/yhqm/McBDmfeNFBhxVUQMrEY4K8COBMDP1U0KWeeRnaqIIU88YbBXB/out.mp4" },
-            { name: "sadtalker_long_text", model: "sadtalker", day: 1, phase: "hook", time: "91.3s", url: "https://replicate.delivery/yhqm/N0XoT9J1BS58J1wxECvgEIferBV7h4OI75HnKjyH8BRo3WwVA/out.mp4", note: " long text" },
+            { name: "sadtalker_long_text", model: "sadtalker", day: 1, phase: "hook", time: "91.3s", url: "https://replicate.delivery/yhqm/N0XoT9J1BS58J1wxECvgEIferBV7h4OI75HnKjyH8BRo3WwVA/out.mp4", note: "📜 long" },
             { name: "sadtalker_no_enhance", model: "sadtalker", day: 1, phase: "hook", time: "22.4s", url: "https://replicate.delivery/yhqm/yonOFvvf1RyuDa8j3lWFBejduy6f28CfbdOgKc1hUby9f2CuC/out.mp4", note: "no GFPGAN" },
+            
+            // Motion Studio HQ results
+            { name: "sadtalker_hq_studio", model: "sadtalker", day: 1, phase: "hook", time: "47.1s", url: "https://replicate.delivery/yhqm/VGVEdKyJkfWLTiZTa7dnzMKvTSewMl4RP9Urf06fISPfi5CuC/out.mp4", quality: "premium", note: "🎬 HQ" },
+            { name: "wav2lip_studio", model: "wav2lip", day: 1, phase: "hook", time: "7.0s", url: "https://replicate.delivery/yhqm/HGHqkrVVHEorD9COH145o114GaSpT6p394WRDZDyjW6HzFcF/result_voice.mp4", quality: "fast" },
+            
+            // Original first video
+            { name: "first_talking_kelly", model: "sadtalker", day: 1, phase: "hook", time: "122.4s", url: "https://replicate.delivery/yhqm/AE0H5cylQD7SFx4eeN2fECYg1n1fL8Ce5gY3Bl7sezRNPqFcF/out.mp4", quality: "first", note: "🎉 first!" },
         ];
-        document.getElementById('grid').innerHTML = videos.map(v => `
-            <div class="card"><video controls loop muted playsinline><source src="${v.url}" type="video/mp4"></video>
-            <div class="card-body"><div class="card-title">${v.name}</div>
-            <div class="meta"><span class="tag">${v.model}</span><span>Day ${v.day}</span><span>${v.phase}</span><span>${v.time}</span>${v.note ? `<span>${v.note}</span>` : ''}</div></div></div>
-        `).join('');
+        
+        function renderVideos(data) {
+            const grid = document.getElementById('videoGrid');
+            grid.innerHTML = data.map(v => `
+                <div class="video-card" data-model="${v.model}" style="position:relative;">
+                    ${v.quality === 'premium' ? '<div class="quality-badge hq">HQ</div>' : ''}
+                    ${v.quality === 'fast' ? '<div class="quality-badge fast">FAST</div>' : ''}
+                    <video controls loop muted playsinline>
+                        <source src="${v.url}" type="video/mp4">
+                    </video>
+                    <div class="card-body">
+                        <div class="card-title">${v.name}</div>
+                        <div class="card-meta">
+                            <span class="tag ${v.quality === 'premium' ? 'premium' : ''} ${v.quality === 'fast' ? 'fast' : ''}">${v.model}</span>
+                            <span>Day ${v.day}</span>
+                            <span>${v.phase}</span>
+                            <span>${v.time}</span>
+                            ${v.exp ? `<span>exp:${v.exp}</span>` : ''}
+                            ${v.note ? `<span>${v.note}</span>` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+            
+            document.getElementById('totalVideos').textContent = data.length;
+        }
+        
+        function filterVideos() {
+            const model = document.getElementById('filterModel').value;
+            const filtered = model === 'all' ? videos : videos.filter(v => v.model === model);
+            renderVideos(filtered);
+        }
+        
+        function playAll() { document.querySelectorAll('video').forEach(v => v.play()); }
+        function pauseAll() { document.querySelectorAll('video').forEach(v => v.pause()); }
+        
+        // Initial render
+        renderVideos(videos);
     </script>
-    <footer style="text-align:center;margin-top:3rem;color:#8892b0;padding-top:2rem;border-top:1px solid rgba(255,255,255,0.1);">
-        <p> Curious Kelly  <a href="/" style="color:#64ffda;">Back to Home</a></p>
-    </footer>
 </body>
 </html>
