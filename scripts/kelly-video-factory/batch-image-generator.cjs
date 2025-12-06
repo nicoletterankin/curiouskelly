@@ -97,10 +97,12 @@ function buildPrompt(template) {
   if (!t) throw new Error(`Unknown template: ${template}`);
   
   return t.prompt
-    .replace('{triggerWord}', config.lora.triggerWord)
-    .replace('{hair}', config.character.hair)
-    .replace('{eyes}', config.character.eyes)
-    .replace('{outfit}', config.character.outfit);
+    .replace(/\{triggerWord\}/g, config.lora.triggerWord)
+    .replace(/\{hair\}/g, config.character.hair)
+    .replace(/\{eyes\}/g, config.character.eyes)
+    .replace(/\{outfit\}/g, config.character.outfit)
+    .replace(/\{identity\}/g, config.character.identity || '')
+    .replace(/\{style\}/g, config.character.style || '');
 }
 
 async function downloadFile(url, filepath) {
@@ -177,6 +179,8 @@ async function generateBatchImages(options = {}) {
       
       try {
         const prompt = buildPrompt(template);
+        console.log(`\n    📝 Prompt: ${prompt.substring(0, 80)}...`);
+        
         const output = await api.generate({
           prompt,
           negative_prompt: config.character.negativePrompt,
@@ -186,8 +190,8 @@ async function generateBatchImages(options = {}) {
           megapixels: '1',
           output_format: 'png',
           output_quality: 100,
-          num_inference_steps: 28,
-          guidance: 3.5,
+          num_inference_steps: 35,  // Increased from 28 for higher quality
+          guidance: 4.0,  // Slightly increased for better prompt adherence
         });
         
         const imageUrl = Array.isArray(output) ? output[0] : output;

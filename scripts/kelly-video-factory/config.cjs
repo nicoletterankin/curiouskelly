@@ -15,11 +15,17 @@ module.exports = {
   
   // Character specification (from production factory)
   character: {
-    hair: 'long wavy brown hair',
-    eyes: 'brown eyes',
-    outfit: 'powder blue sweater',
+    hair: 'long wavy chestnut brown hair with subtle highlights',
+    eyes: 'warm brown eyes with visible catchlights',
+    outfit: 'soft powder blue crewneck sweater',
+    skinTone: 'natural warm skin tone',
+    age: 'early 30s',
+    // Core identity traits for consistency
+    identity: 'friendly approachable teacher, intelligent warmth, genuine smile lines, natural beauty',
+    // Style keywords for cinematic quality
+    style: 'cinematic lighting, shallow depth of field, 85mm lens, professional color grading, soft diffused lighting',
     // Negative prompts to avoid common issues
-    negativePrompt: 'pink sweater, red sweater, beige sweater, teal sweater, deformed, blurry, bad anatomy',
+    negativePrompt: 'pink sweater, red sweater, beige sweater, teal sweater, green sweater, yellow sweater, deformed, blurry, bad anatomy, extra fingers, mutated hands, poorly drawn face, mutation, disfigured, worst quality, low quality, jpeg artifacts, ugly, duplicate, morbid, out of frame, cropped, watermark, signature, text',
   },
   
   // Quality tiers
@@ -134,43 +140,97 @@ module.exports = {
     maxAttempts: 200, // 10 minutes max
   },
   
-  // Template prompts
+  // Template prompts - ENHANCED for production quality
+  // Each prompt uses: {triggerWord}, {hair}, {eyes}, {outfit}, {style}
   templates: {
-    welcome: {
-      prompt: '{triggerWord}, woman with {hair} and {eyes}, wearing {outfit}, standing on sunlit forest path, arms open in welcoming gesture, warm genuine smile, full body shot, professional photography, 4K',
-      environment: 'forest',
-      emotion: 'warm',
-      action: 'arms_open',
-    },
-    explain: {
-      prompt: '{triggerWord}, woman with {hair} and {eyes}, wearing {outfit}, sitting in directors chair in studio with dark background, natural hand gestures while explaining, engaged expression, professional lighting, 4K',
-      environment: 'studio',
-      emotion: 'engaged',
-      action: 'gesturing',
-    },
-    heartfelt: {
-      prompt: '{triggerWord}, woman with {hair} and {eyes}, wearing {outfit}, hand on heart, sincere warm emotional expression, soft golden lighting, close up portrait, 4K',
-      environment: 'warm_light',
-      emotion: 'sincere',
-      action: 'hand_on_heart',
-    },
-    curious: {
-      prompt: '{triggerWord}, woman with {hair} and {eyes}, wearing {outfit}, tilting head thoughtfully with curious expression, examining something in hands, soft natural lighting, 4K',
-      environment: 'natural',
-      emotion: 'curious',
-      action: 'examining',
-    },
+    // HOOK phase - Grab attention, create wonder
     excited: {
-      prompt: '{triggerWord}, woman with {hair} and {eyes}, wearing {outfit}, eyes wide with excitement, big joyful smile, hands raised in excitement, bright cheerful lighting, 4K',
-      environment: 'bright',
-      emotion: 'excited',
-      action: 'hands_up',
+      prompt: '{triggerWord}, {identity}, woman with {hair} and {eyes}, wearing {outfit}, medium close-up shot, eyes sparkling with genuine excitement and wonder, natural joyful expression with teeth showing, hands gesturing expressively mid-explanation, warm modern classroom environment with soft bokeh background, golden hour window light mixing with ambient lighting, {style}, capturing a moment of pure discovery and enthusiasm',
+      environment: 'classroom',
+      emotion: 'wonder',
+      action: 'expressive_gesture',
+      cameraAngle: 'eye_level',
+      framing: 'medium_closeup',
     },
+    
+    // Q1 phase - Curiosity, inviting exploration
+    curious: {
+      prompt: '{triggerWord}, {identity}, woman with {hair} and {eyes}, wearing {outfit}, head slightly tilted with one eyebrow raised in genuine curiosity, warm inviting smile, one hand gesturing as if asking a question, cozy study room with warm wood tones and soft lamplight, books subtly visible in background, {style}, intimate teacher-student moment feel',
+      environment: 'study',
+      emotion: 'curious_inviting',
+      action: 'questioning_gesture',
+      cameraAngle: 'slight_high',
+      framing: 'medium',
+    },
+    
+    // Q2 phase - Teaching, explaining with passion
+    explain: {
+      prompt: '{triggerWord}, {identity}, woman with {hair} and {eyes}, wearing {outfit}, animated expression while explaining something fascinating, hands positioned as if holding an invisible concept, leaning slightly forward with engaged posture, professional studio setting with soft rim lighting and dark teal gradient background, {style}, the energy of someone who loves sharing knowledge',
+      environment: 'studio',
+      emotion: 'engaged_passionate',
+      action: 'concept_gesture',
+      cameraAngle: 'eye_level',
+      framing: 'medium_wide',
+    },
+    
+    // Q3 phase - Deeper thinking, reflection
     thoughtful: {
-      prompt: '{triggerWord}, woman with {hair} and {eyes}, wearing {outfit}, hand to chin, looking up thoughtfully, contemplative expression, soft library lighting, 4K',
+      prompt: '{triggerWord}, {identity}, woman with {hair} and {eyes}, wearing {outfit}, contemplative expression with a soft knowing smile, chin resting gently on hand, gazing slightly off-camera as if pondering something profound, warm library setting with leather-bound books and soft golden afternoon light streaming through windows, {style}, wisdom and reflection',
       environment: 'library',
-      emotion: 'thoughtful',
-      action: 'thinking',
+      emotion: 'contemplative',
+      action: 'thinking_pose',
+      cameraAngle: 'three_quarter',
+      framing: 'close_up',
+    },
+    
+    // WISDOM phase - Heartfelt connection, emotional landing
+    heartfelt: {
+      prompt: '{triggerWord}, {identity}, woman with {hair} and {eyes}, wearing {outfit}, close-up portrait, hand placed gently over heart, eyes filled with genuine warmth and sincerity looking directly at camera, soft empathetic smile, warm cozy environment with soft diffused golden backlighting creating a gentle glow, {style}, intimate moment of genuine human connection and care',
+      environment: 'warm_intimate',
+      emotion: 'sincere_caring',
+      action: 'heart_touch',
+      cameraAngle: 'eye_level_intimate',
+      framing: 'close_up_portrait',
+    },
+    
+    // WELCOME - Opening, greeting (for special intros)
+    welcome: {
+      prompt: '{triggerWord}, {identity}, woman with {hair} and {eyes}, wearing {outfit}, full body shot, arms open in welcoming gesture, genuine warm smile, standing in beautiful sunlit nature setting with soft morning light, trees with golden leaves in background, {style}, the feeling of being warmly invited into something wonderful',
+      environment: 'nature',
+      emotion: 'welcoming',
+      action: 'open_arms',
+      cameraAngle: 'slight_low',
+      framing: 'full_body',
+    },
+    
+    // CELEBRATING - Success moment (for correct answers)
+    celebrating: {
+      prompt: '{triggerWord}, {identity}, woman with {hair} and {eyes}, wearing {outfit}, genuinely proud and delighted expression, subtle clapping or thumbs up gesture, eyes crinkled with authentic happiness, warm celebratory lighting with subtle confetti-like bokeh in background, {style}, the joy of watching someone succeed',
+      environment: 'celebration',
+      emotion: 'proud_delighted',
+      action: 'celebration',
+      cameraAngle: 'eye_level',
+      framing: 'medium',
+    },
+    
+    // ENCOURAGING - Supportive (for redirecting wrong answers)
+    encouraging: {
+      prompt: '{triggerWord}, {identity}, woman with {hair} and {eyes}, wearing {outfit}, gentle encouraging expression with a reassuring smile, head tilted with empathy, one hand raised in a supportive gesture, soft warm lighting with calming blue-green tones in background, {style}, the patience and kindness of a supportive mentor',
+      environment: 'supportive',
+      emotion: 'encouraging',
+      action: 'supportive_gesture',
+      cameraAngle: 'eye_level',
+      framing: 'medium_closeup',
+    },
+    
+    // LISTENING - Attentive (waiting for user response)
+    listening: {
+      prompt: '{triggerWord}, {identity}, woman with {hair} and {eyes}, wearing {outfit}, attentive listening expression with head slightly tilted, warm patient smile, hands clasped comfortably, soft natural lighting with neutral calming background, {style}, fully present and genuinely interested in what you have to say',
+      environment: 'neutral',
+      emotion: 'attentive',
+      action: 'listening',
+      cameraAngle: 'eye_level',
+      framing: 'medium',
     },
   },
 };

@@ -119,8 +119,11 @@ async function main() {
                 }
             });
             
+            // Handle both array and string output from Replicate API
+            const videoUrl = Array.isArray(output) ? output[0] : output;
+            
             // Download animation
-            const response = await fetch(output);
+            const response = await fetch(videoUrl);
             const buffer = Buffer.from(await response.arrayBuffer());
             fs.writeFileSync(animPath, buffer);
             
@@ -136,10 +139,20 @@ async function main() {
             
             const publicUrl = `${process.env.SUPABASE_URL || process.env.PUBLIC_SUPABASE_URL}/storage/v1/object/public/kelly-templates/production/animations/${animFile}`;
             
+            // Map phase to template
+            const PHASE_TO_TEMPLATE = {
+                'hook': 'excited',
+                'q1': 'curious',
+                'q2': 'explain',
+                'q3': 'thoughtful',
+                'wisdom': 'heartfelt'
+            };
+            
             // Register in DB
             await supabase.from('kelly_video_assets').upsert({
                 day_number: item.dayNum,
                 phase: item.phase,
+                template: PHASE_TO_TEMPLATE[item.phase] || 'neutral',
                 asset_type: 'animation',
                 storage_path: `production/animations/${animFile}`,
                 public_url: publicUrl,

@@ -1,11 +1,12 @@
 #!/usr/bin/env node
 /**
- * Kelly Video Factory - Quality Gate
+ * Kelly Video Factory - Quality Gate v2
  * 
  * Automated quality checks for generated Kelly images:
  * 1. Face consistency (compared to reference)
- * 2. Sweater color verification (blue, not pink)
+ * 2. Sweater color verification (blue, not pink) - WITH PIXEL ANALYSIS
  * 3. Image quality metrics
+ * 4. Hands check (basic deformation detection)
  * 
  * Run: node quality-gate.cjs <image-or-directory>
  */
@@ -19,19 +20,23 @@ const { createClient } = require('@supabase/supabase-js');
 // Reference Kelly image URL (canonical)
 const KELLY_REFERENCE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/reference/kelly_primary_face.jpeg';
 
-// Color thresholds for blue sweater detection
-const BLUE_SWEATER_HSV = {
-  hMin: 180,  // Blue hue start
+// Color thresholds for blue sweater detection (HSL values)
+// Powder blue typically: H=195-210, S=40-60%, L=65-80%
+const BLUE_SWEATER_HSL = {
+  hMin: 180,  // Blue hue start (degrees)
   hMax: 220,  // Blue hue end
-  sMin: 20,   // Saturation minimum
-  vMin: 40,   // Value minimum
+  sMin: 15,   // Saturation minimum (percentage)
+  sMax: 80,   // Saturation maximum
+  lMin: 50,   // Lightness minimum
+  lMax: 85,   // Lightness maximum (powder blue is light)
 };
 
-const PINK_SWEATER_HSV = {
-  hMin: 330,  // Pink/red hue start
-  hMax: 360,  // Pink/red hue end (wraps)
-  hMin2: 0,   // Pink/red hue start (wrapped)
-  hMax2: 30,  // Pink/red hue end
+// Problem color ranges to reject
+const REJECT_COLORS = {
+  pink: { hMin: 320, hMax: 360 },  // Pink/red
+  pink2: { hMin: 0, hMax: 20 },    // Pink wraps around
+  green: { hMin: 80, hMax: 160 },  // Green sweaters
+  orange: { hMin: 20, hMax: 50 },  // Orange/tan
 };
 
 class QualityGate {
