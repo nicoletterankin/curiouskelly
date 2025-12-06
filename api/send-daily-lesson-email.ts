@@ -140,15 +140,10 @@ function generateDailyLessonHTML(
           <tr>
             <td style="padding: 30px 40px; border-top: 1px solid ${COLORS.border}; text-align: center;">
               <p style="color: #52525b; font-size: 12px; margin: 0 0 10px;">
-                ✨ Curious Kelly | Learn something new every day
+                Day ${dayNumber} of 365 · <a href="https://curiouskelly.com" style="color: #52525b;">curiouskelly.com</a>
               </p>
-              <p style="color: #52525b; font-size: 12px; margin: 0;">
-                <a href="https://curiouskelly.com" style="color: #52525b;">curiouskelly.com</a> · 
-                <a href="https://curiouskelly.com/help" style="color: #52525b;">Help</a> · 
-                <a href="https://curiouskelly.com/privacy" style="color: #52525b;">Privacy</a>
-              </p>
-              <p style="color: #3f3f46; font-size: 11px; margin: 15px 0 0;">
-                © 2025 Lesson of the Day PBC
+              <p style="color: #3f3f46; font-size: 11px; margin: 10px 0 0;">
+                <a href="https://curiouskelly.com/api/unsubscribe?token=UNSUBSCRIBE_TOKEN" style="color: #3f3f46;">Unsubscribe</a>
               </p>
             </td>
           </tr>

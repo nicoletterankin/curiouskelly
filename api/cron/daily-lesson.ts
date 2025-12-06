@@ -4,41 +4,24 @@
  * Runs every day at 12pm UTC (7am EST / 4am PST)
  * Sends daily lesson emails to all subscribed users.
  * 
- * Triggered by Vercel Cron or external cron service.
+ * Triggered by Vercel Cron.
  * 
  * Environment Variables:
- * - RESEND_API_KEY: Your Resend API key
- * - CRON_SECRET: Secret to verify cron requests (optional but recommended)
- * - SUPABASE_URL: Your Supabase project URL
- * - SUPABASE_SERVICE_ROLE_KEY: Supabase service role key for fetching users
+ * - RESEND_API_KEY: Resend API key
+ * - CRON_SECRET: Secret to verify cron requests
+ * - PUBLIC_SUPABASE_URL / NEXT_PUBLIC_SUPABASE_URL: Supabase URL
+ * - SUPABASE_SERVICE_ROLE_KEY: Supabase service role key
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { createClient } from '@supabase/supabase-js';
 
-const RESEND_API_URL = 'https://api.resend.com/emails';
 const RESEND_BATCH_URL = 'https://api.resend.com/emails/batch';
+const BATCH_SIZE = 100; // Resend batch limit
 
-// Sample lessons - in production, fetch from your database
-const DAILY_LESSONS = [
-  { day: 1, title: "How Money Works", emoji: "💰", category: "Economics" },
-  { day: 2, title: "Why the Sky is Blue", emoji: "🌤️", category: "Science" },
-  { day: 3, title: "The Secret Life of Trees", emoji: "🌳", category: "Nature" },
-  { day: 4, title: "How Your Phone Knows Where You Are", emoji: "📱", category: "Technology" },
-  { day: 5, title: "Why We Dream", emoji: "💭", category: "Psychology" },
-  // Add more lessons...
-];
-
-const FUN_FACTS = [
-  "The average person stops actively learning around age 25. You just changed that!",
-  "You create 700 new neural connections every time you learn something new.",
-  "Children ask ~300 questions per day. Adults? About 20. Let's change that!",
-  "Reading 20 minutes a day exposes you to 1.8 million words per year.",
-];
-
-function getRandomFact(): string {
-  return FUN_FACTS[Math.floor(Math.random() * FUN_FACTS.length)];
-}
-
+/**
+ * Get the day of year (1-365)
+ */
 function getDayOfYear(): number {
   const now = new Date();
   const start = new Date(now.getFullYear(), 0, 0);
@@ -47,27 +30,109 @@ function getDayOfYear(): number {
   return Math.floor(diff / oneDay);
 }
 
-function generateDailyLessonHTML(name: string, lesson: typeof DAILY_LESSONS[0], lessonUrl: string): string {
+/**
+ * Generate daily lesson email HTML - Kelly's Voice
+ */
+function generateDailyLessonHTML(
+  name: string,
+  lessonTitle: string,
+  lessonEmoji: string,
+  dayNumber: number,
+  lessonUrl: string,
+  unsubscribeUrl: string
+): string {
   // Kelly's Voice: Humble, Curious, Collaborative, Warm, Simple, Rich
   return `
-<p style="font-family: Georgia, serif; font-size: 19px; color: #1f2937; line-height: 1.9; max-width: 460px;">
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+</head>
+<body style="margin: 0; padding: 0; background-color: #fafafa;">
+  <table width="100%" cellpadding="0" cellspacing="0" style="background-color: #fafafa; padding: 40px 20px;">
+    <tr>
+      <td align="center">
+        <table width="100%" style="max-width: 480px;">
+          <tr>
+            <td style="padding: 32px 24px;">
+              <p style="font-family: Georgia, serif; font-size: 19px; color: #1f2937; line-height: 1.9; margin: 0 0 24px;">
+                Good morning${name !== 'friend' ? ', ' + name : ''}.
+              </p>
+              
+              <p style="font-family: Georgia, serif; font-size: 17px; color: #4b5563; line-height: 1.9; margin: 0 0 24px;">
+                I found something wonderful today:
+              </p>
+              
+              <p style="font-family: Georgia, serif; font-size: 21px; color: #1f2937; line-height: 1.7; margin: 0 0 24px;">
+                <strong>${lessonEmoji} ${lessonTitle}</strong>
+              </p>
+              
+              <p style="font-family: Georgia, serif; font-size: 17px; color: #4b5563; line-height: 1.9; margin: 0 0 32px;">
+                Five minutes. I think you'll love it.
+              </p>
+              
+              <p style="margin: 0 0 32px;">
+                <a href="${lessonUrl}" style="display: inline-block; background: #2563eb; color: white; padding: 14px 28px; border-radius: 8px; text-decoration: none; font-family: -apple-system, sans-serif; font-size: 15px; font-weight: 500;">
+                  Let's learn together →
+                </a>
+              </p>
+              
+              <p style="font-family: Georgia, serif; font-size: 15px; color: #6b7280; font-style: italic; margin: 0;">
+                — Kelly
+              </p>
+            </td>
+          </tr>
+          
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px; text-align: center; border-top: 1px solid #e5e7eb;">
+              <p style="font-family: -apple-system, sans-serif; font-size: 12px; color: #9ca3af; margin: 0 0 8px;">
+                Day ${dayNumber} of 365 · <a href="https://curiouskelly.com" style="color: #9ca3af;">curiouskelly.com</a>
+              </p>
+              <p style="font-family: -apple-system, sans-serif; font-size: 11px; color: #9ca3af; margin: 0;">
+                <a href="${unsubscribeUrl}" style="color: #9ca3af;">Unsubscribe from daily emails</a>
+              </p>
+            </td>
+          </tr>
+        </table>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
+  `.trim();
+}
 
-Good morning.<br><br>
+function generateDailyLessonText(
+  name: string,
+  lessonTitle: string,
+  lessonEmoji: string,
+  dayNumber: number,
+  lessonUrl: string,
+  unsubscribeUrl: string
+): string {
+  return `
+Good morning${name !== 'friend' ? ', ' + name : ''}.
 
-I found something wonderful today: <strong>${lesson.title}</strong><br><br>
+I found something wonderful today:
 
-Five minutes. I think you'll love it.<br><br>
+${lessonEmoji} ${lessonTitle}
 
-<a href="${lessonUrl}" style="color: #1e3a5f; text-decoration: underline;">Let's learn together.</a><br><br>
+Five minutes. I think you'll love it.
 
-<span style="color: #6b7280;">— Kelly</span>
+${lessonUrl}
 
-</p>
+— Kelly
+
+---
+Day ${dayNumber} of 365 · curiouskelly.com
+Unsubscribe: ${unsubscribeUrl}
   `.trim();
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Verify cron secret if configured
+  // Verify cron secret
   const cronSecret = process.env.CRON_SECRET;
   const authHeader = req.headers.authorization;
   
@@ -75,81 +140,155 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(401).json({ error: 'Unauthorized' });
   }
 
+  // Check environment variables
   const resendApiKey = process.env.RESEND_API_KEY;
+  const supabaseUrl = process.env.PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
   if (!resendApiKey) {
     return res.status(500).json({ error: 'RESEND_API_KEY not configured' });
   }
 
+  if (!supabaseUrl || !supabaseServiceKey) {
+    return res.status(500).json({ error: 'Supabase not configured' });
+  }
+
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
   try {
-    // Get today's lesson
     const dayOfYear = getDayOfYear();
-    const lessonIndex = (dayOfYear - 1) % DAILY_LESSONS.length;
-    const lesson = DAILY_LESSONS[lessonIndex];
-    const lessonUrl = `https://curiouskelly.com/day/${lesson.day}`;
-
-    // In production: Fetch subscribed users from Supabase
-    // For now, this is a manual trigger endpoint
-    // You would add: const users = await fetchSubscribedUsers();
     
-    // Example: Send to a test list (replace with actual user fetch)
-    const testUsers = [
-      // Add test emails here or fetch from database
-      // { email: 'user@example.com', name: 'User' }
-    ];
+    // Fetch today's lesson from database
+    const { data: lesson, error: lessonError } = await supabase
+      .from('lessons')
+      .select('id, title, emoji, category, day_number')
+      .eq('day_number', dayOfYear)
+      .single();
 
-    if (testUsers.length === 0) {
-      return res.status(200).json({ 
-        message: 'No users to send to. Add users to the list or connect Supabase.',
-        lesson: lesson,
-        dayOfYear: dayOfYear
+    if (lessonError || !lesson) {
+      console.error('Could not fetch lesson for day', dayOfYear, lessonError);
+      return res.status(500).json({ 
+        error: 'Could not fetch today\'s lesson',
+        dayOfYear,
+        details: lessonError?.message
       });
     }
 
-    // Batch send (up to 100 at a time)
-    const batches = [];
-    for (let i = 0; i < testUsers.length; i += 100) {
-      batches.push(testUsers.slice(i, i + 100));
+    const lessonUrl = `https://curiouskelly.com/day/${lesson.day_number}`;
+
+    // Fetch all users who want daily emails
+    const { data: users, error: usersError } = await supabase
+      .from('users')
+      .select('id, email, display_name, name, unsubscribe_token')
+      .eq('email_daily_lesson', true)
+      .is('email_unsubscribed_at', null)
+      .not('email', 'is', null);
+
+    if (usersError) {
+      console.error('Could not fetch users', usersError);
+      return res.status(500).json({ 
+        error: 'Could not fetch subscribed users',
+        details: usersError.message
+      });
     }
 
+    if (!users || users.length === 0) {
+      return res.status(200).json({
+        success: true,
+        message: 'No subscribed users to send to',
+        lesson: {
+          day: lesson.day_number,
+          title: lesson.title,
+          emoji: lesson.emoji
+        }
+      });
+    }
+
+    console.log(`Daily lesson cron: Sending to ${users.length} users`);
+
+    // Send in batches
     let totalSent = 0;
-    for (const batch of batches) {
-      const emails = batch.map((user: { email: string; name?: string }) => ({
-        from: 'Kelly <hello@curiouskelly.com>',
-        to: user.email,
-        subject: `${lesson.emoji} Today's lesson: ${lesson.title}`,
-        html: generateDailyLessonHTML(user.name || 'friend', lesson, lessonUrl),
-        reply_to: 'hello@curiouskelly.com',
-      }));
+    let totalFailed = 0;
+    const errors: string[] = [];
 
-      const response = await fetch(RESEND_BATCH_URL, {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${resendApiKey}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify(emails),
+    for (let i = 0; i < users.length; i += BATCH_SIZE) {
+      const batch = users.slice(i, i + BATCH_SIZE);
+      
+      const emails = batch.map(user => {
+        const displayName = user.display_name || user.name || 'friend';
+        const unsubscribeUrl = `https://curiouskelly.com/api/unsubscribe?token=${user.unsubscribe_token}`;
+        
+        return {
+          from: 'Kelly <hello@curiouskelly.com>',
+          to: user.email,
+          subject: `${lesson.emoji} ${lesson.title}`,
+          html: generateDailyLessonHTML(
+            displayName,
+            lesson.title,
+            lesson.emoji,
+            lesson.day_number,
+            lessonUrl,
+            unsubscribeUrl
+          ),
+          text: generateDailyLessonText(
+            displayName,
+            lesson.title,
+            lesson.emoji,
+            lesson.day_number,
+            lessonUrl,
+            unsubscribeUrl
+          ),
+          reply_to: 'hello@curiouskelly.com',
+        };
       });
 
-      if (response.ok) {
-        totalSent += batch.length;
+      try {
+        const response = await fetch(RESEND_BATCH_URL, {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${resendApiKey}`,
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify(emails),
+        });
+
+        if (response.ok) {
+          totalSent += batch.length;
+        } else {
+          const errorData = await response.json();
+          totalFailed += batch.length;
+          errors.push(`Batch ${Math.floor(i / BATCH_SIZE) + 1}: ${errorData.message || 'Unknown error'}`);
+        }
+      } catch (batchError) {
+        totalFailed += batch.length;
+        errors.push(`Batch ${Math.floor(i / BATCH_SIZE) + 1}: ${batchError instanceof Error ? batchError.message : 'Network error'}`);
       }
     }
 
-    console.log(`Daily lesson cron: Sent ${totalSent} emails for Day ${lesson.day}: ${lesson.title}`);
+    console.log(`Daily lesson cron complete: ${totalSent} sent, ${totalFailed} failed`);
 
-    return res.status(200).json({ 
+    return res.status(200).json({
       success: true,
-      message: `Sent ${totalSent} daily lesson emails`,
-      lesson: lesson,
-      dayOfYear: dayOfYear
+      message: `Daily lesson emails sent`,
+      stats: {
+        totalUsers: users.length,
+        sent: totalSent,
+        failed: totalFailed,
+      },
+      lesson: {
+        day: lesson.day_number,
+        title: lesson.title,
+        emoji: lesson.emoji,
+        category: lesson.category
+      },
+      errors: errors.length > 0 ? errors : undefined
     });
 
   } catch (error) {
     console.error('Daily lesson cron error:', error);
-    return res.status(500).json({ 
-      error: 'Failed to send daily emails',
+    return res.status(500).json({
+      error: 'Failed to process daily emails',
       details: error instanceof Error ? error.message : 'Unknown error'
     });
   }
 }
-
