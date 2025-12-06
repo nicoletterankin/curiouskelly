@@ -173,6 +173,20 @@
         }
         .quality-badge.hq { color: var(--gold); }
         .quality-badge.fast { color: #2ecc71; }
+        .quality-badge.breakthrough { 
+            color: #fff; 
+            background: linear-gradient(135deg, #e74c3c, #f39c12);
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.7; }
+        }
+        .tag.breakthrough {
+            background: linear-gradient(135deg, rgba(231,76,60,0.2), rgba(243,156,18,0.2));
+            color: var(--coral);
+            font-weight: 700;
+        }
         
         /* Findings */
         .findings {
@@ -210,11 +224,11 @@
         <p class="subtitle">Premium AI-powered talking head generation. Compare models, test expressions, and calibrate for film-quality output.</p>
         <div class="stats">
             <div class="stat">
-                <div class="stat-value" id="totalVideos">31</div>
+                <div class="stat-value" id="totalVideos">32</div>
                 <div class="stat-label">Videos Generated</div>
             </div>
             <div class="stat">
-                <div class="stat-value">5</div>
+                <div class="stat-value">6</div>
                 <div class="stat-label">Test Categories</div>
             </div>
             <div class="stat">
@@ -230,6 +244,7 @@
             <div class="controls">
                 <select id="filterModel" onchange="filterVideos()">
                     <option value="all">All Models</option>
+                    <option value="v2v">🎬 Video-to-Video (NEW!)</option>
                     <option value="fullbody">🌟 Full Body</option>
                     <option value="headpose">🎭 Head Pose</option>
                     <option value="expression">😀 Expression</option>
@@ -246,6 +261,11 @@
     <section class="section">
         <div class="findings">
             <h3 style="color:#fff;margin-bottom:1.5rem;">🎯 Calibration Insights</h3>
+            
+            <div class="finding" style="background: linear-gradient(135deg, rgba(231,76,60,0.1), rgba(243,156,18,0.1)); border-radius:8px; padding:1.5rem; margin-bottom:1rem;">
+                <h4>🎬 VIDEO-TO-VIDEO - BREAKTHROUGH!</h4>
+                <p><strong>We can now take an EXISTING video of Kelly and replace the audio!</strong> Body movements, arm positions, and environment are all preserved - only the speech changes. This unlocks full puppet control: create template videos of Kelly doing actions, then voice-over with any script.</p>
+            </div>
             
             <div class="finding">
                 <h4>🥇 SadTalker HQ - Best Overall Quality</h4>
@@ -277,8 +297,12 @@
     <script>
         // All videos from calibration runs
         const videos = [
+            // 🎬 VIDEO-TO-VIDEO BREAKTHROUGH - This is the magic!
+            // Takes an EXISTING video and replaces the audio/lipsync while PRESERVING body movement
+            { name: "v2v_butterfly_fact", model: "v2v", day: 1, phase: "hook", time: "19.4s", url: "https://replicate.delivery/yhqm/WPdkkvfzeknbl0T6mh6sCbfqXb0hjLb6ZKEkMeJKfULTSeFcF/result_voice.mp4", quality: "breakthrough", note: "🦋 NEW AUDIO" },
+            
             // FULL BODY CHARACTER ANIMATIONS - Kelly's creator perspective!
-            { name: "kelly_fullbody_hook", model: "fullbody", day: 1, phase: "hook", time: "19.3s", url: "https://replicate.delivery/yhqm/MebBdrcgayy0byEbv70Qq3gCQiBvkMFkfGEz7pDQfMXpJvgrA/result_voice.mp4", quality: "premium", note: "🌟 open arms" },
+            { name: "kelly_fullbody_hook", model: "fullbody", day: 1, phase: "hook", time: "19.3s", url: "https://replicate.delivery/yhqm/MebBdrcgayy0byEbv70Qq3gCQiBvkMFkfGEz7pDQfMXpJvgrA/result_voice.mp4", quality: "premium", note: "🌟 open arms ORIGINAL" },
             { name: "kelly_fullbody_q1", model: "fullbody", day: 1, phase: "q1", time: "7.6s", url: "https://replicate.delivery/yhqm/EQF2UbdPJP6SA9yKnCWJVYQWsqKMrntkQg2pteHtREi3yL4KA/result_voice.mp4", quality: "premium", note: "🍃 holding leaf" },
             { name: "kelly_fullbody_wisdom", model: "fullbody", day: 1, phase: "wisdom", time: "7.3s", url: "https://replicate.delivery/yhqm/kiXrs2ZlQ8oWP5WofKTesDBWEeO71jQYrh7fTmbugeL2r8CuC/result_voice.mp4", quality: "premium", note: "💖 hand on heart" },
             { name: "kelly_fullbody_hq", model: "fullbody", day: 1, phase: "hook", time: "242.5s", url: "https://replicate.delivery/yhqm/OIueQU3eG3saAEA28ATi2AfYGW2RzjkLneiWnZnDds9aPeCuC/out.mp4", note: "🎬 SadTalker HQ" },
@@ -323,6 +347,7 @@
             const grid = document.getElementById('videoGrid');
             grid.innerHTML = data.map(v => `
                 <div class="video-card" data-model="${v.model}" style="position:relative;">
+                    ${v.quality === 'breakthrough' ? '<div class="quality-badge breakthrough">V2V</div>' : ''}
                     ${v.quality === 'premium' ? '<div class="quality-badge hq">HQ</div>' : ''}
                     ${v.quality === 'fast' ? '<div class="quality-badge fast">FAST</div>' : ''}
                     <video controls loop muted playsinline>
@@ -331,7 +356,7 @@
                     <div class="card-body">
                         <div class="card-title">${v.name}</div>
                         <div class="card-meta">
-                            <span class="tag ${v.quality === 'premium' ? 'premium' : ''} ${v.quality === 'fast' ? 'fast' : ''}">${v.model}</span>
+                            <span class="tag ${v.quality === 'breakthrough' ? 'breakthrough' : ''} ${v.quality === 'premium' ? 'premium' : ''} ${v.quality === 'fast' ? 'fast' : ''}">${v.model}</span>
                             <span>Day ${v.day}</span>
                             <span>${v.phase}</span>
                             <span>${v.time}</span>
