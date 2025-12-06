@@ -1,4 +1,27 @@
 <!doctype html>
+<!--
+  ╔═══════════════════════════════════════════════════════════════════════════╗
+  ║ 🟢 PRODUCTION LESSON PLAYER                                               ║
+  ║                                                                           ║
+  ║  This is THE main lesson player used on curiouskelly.com/learn.html       ║
+  ║  All user-facing lesson features should be implemented here.              ║
+  ║                                                                           ║
+  ║  Key sections:                                                            ║
+  ║  - Lines ~3741-3752: TONE_TO_ARCHETYPE mapping                            ║
+  ║  - Lines ~3754-3920: Age/Language personalization functions               ║
+  ║  - Lines ~3886-4290: loadLesson() and buildLessonFromAtoms()              ║
+  ║  - Lines ~4540-4800: renderPhase() with personalization                   ║
+  ║  - Lines ~5070-5140: selectVariant() handlers                             ║
+  ║                                                                           ║
+  ║  Database tables used:                                                    ║
+  ║  - core_lessons: Main lesson metadata                                     ║
+  ║  - lesson_atoms: Content by archetype/phase                               ║
+  ║  - lesson_shards: Age/region/tone personalization                         ║
+  ║  - lesson_age_hooks: Age-specific intro hooks                             ║
+  ║                                                                           ║
+  ║  See: docs/LESSON_PLAYER_ARCHITECTURE.md for full details                 ║
+  ╚═══════════════════════════════════════════════════════════════════════════╝
+-->
 <html lang="en">
   <head>
     <meta charset="UTF-8" />
@@ -3752,6 +3775,171 @@
       };
 
       // ═══════════════════════════════════════════════════════════════════
+      // AGE/LANGUAGE PERSONALIZATION - Loads age hooks + lesson shards
+      // ═══════════════════════════════════════════════════════════════════
+      
+      // Personalization state
+      let personalization = {
+        ageHook: null,        // Age-specific intro hook
+        currentShard: null,   // Matched shard for age/region/tone
+        lessonShards: []      // All shards for current lesson (cached)
+      };
+
+      // Map app age bucket format to database format
+      function mapAgeBucketToDb(appBucket) {
+        const mapping = {
+          '2-5': '2-5',
+          '6-12': '6-12',
+          '13-17': '13-17',
+          '18-35': '18-29',
+          '36-60': '30-54',
+          '61+': '55+'
+        };
+        return mapping[appBucket] || '18-29';
+      }
+
+      // Get day number from current lesson or state
+      function getCurrentDayNumber() {
+        return state.dayNumber || getDayOfYear();
+      }
+
+      // Load age-specific hook from database
+      async function loadAgeHook() {
+        const dayNumber = getCurrentDayNumber();
+        const dbAgeBucket = mapAgeBucketToDb(state.variants.age);
+        
+        console.log(`[Learn] Loading age hook for day ${dayNumber}, bucket ${dbAgeBucket}`);
+        
+        try {
+          const { data, error } = await supabase
+            .from('lesson_age_hooks')
+            .select('hook')
+            .eq('day_number', dayNumber)
+            .eq('age_bucket', dbAgeBucket)
+            .single();
+
+          if (data && !error) {
+            personalization.ageHook = data.hook;
+            console.log(`[Learn] ✅ Age hook loaded: "${data.hook.substring(0, 50)}..."`);
+            return data.hook;
+          } else {
+            console.log(`[Learn] No age hook found for day ${dayNumber}, bucket ${dbAgeBucket}`);
+            personalization.ageHook = null;
+            return null;
+          }
+        } catch (e) {
+          console.warn('[Learn] Age hook fetch error:', e);
+          personalization.ageHook = null;
+          return null;
+        }
+      }
+
+      // Load lesson shards for current lesson
+      async function loadLessonShards(coreLessonId) {
+        if (!coreLessonId) {
+          console.log('[Learn] No lesson ID for shards');
+          return [];
+        }
+
+        try {
+          const { data, error } = await supabase
+            .from('lesson_shards')
+            .select('age, region, tone, script_content')
+            .eq('core_lesson_id', coreLessonId);
+
+          if (error) {
+            console.warn('[Learn] Shards fetch error:', error);
+            personalization.lessonShards = [];
+            return [];
+          }
+
+          personalization.lessonShards = data || [];
+          console.log(`[Learn] ✅ Loaded ${data?.length || 0} shards for lesson`);
+          
+          // Find matching shard
+          findMatchingShard();
+          
+          return personalization.lessonShards;
+        } catch (e) {
+          console.warn('[Learn] Shards fetch error:', e);
+          personalization.lessonShards = [];
+          return [];
+        }
+      }
+
+      // Find best matching shard for current settings
+      function findMatchingShard() {
+        const shards = personalization.lessonShards;
+        if (!shards || shards.length === 0) {
+          personalization.currentShard = null;
+          return null;
+        }
+
+        const age = parseInt(state.variants.age?.split('-')[0]) || 18;
+        const tone = state.variants.tone || 'curious';
+        const region = state.variants.language || 'en';
+
+        // Try exact match: age + tone + region
+        let shard = shards.find(s => 
+          s.age === age && 
+          s.tone === tone && 
+          s.region === region
+        );
+
+        // Fallback: age + region
+        if (!shard) {
+          shard = shards.find(s => s.age === age && s.region === region);
+        }
+
+        // Fallback: just age
+        if (!shard) {
+          shard = shards.find(s => s.age === age);
+        }
+
+        // Fallback: closest age
+        if (!shard && shards.length > 0) {
+          shard = shards.reduce((closest, current) => {
+            if (!closest) return current;
+            const closestDiff = Math.abs((closest.age || 25) - age);
+            const currentDiff = Math.abs((current.age || 25) - age);
+            return currentDiff < closestDiff ? current : closest;
+          }, null);
+        }
+
+        if (shard) {
+          personalization.currentShard = shard;
+          console.log(`[Learn] ✅ Shard matched: age=${shard.age}, tone=${shard.tone}, region=${shard.region}`);
+        } else {
+          personalization.currentShard = null;
+          console.log('[Learn] No matching shard found');
+        }
+
+        return shard;
+      }
+
+      // Master function to reload personalized content
+      async function reloadPersonalizedContent() {
+        console.log('[Learn] Reloading personalized content...');
+        showToast('✨ Personalizing content...');
+        
+        // Load age hook and shards in parallel
+        const currentLessonId = state.lesson?.id || null;
+        await Promise.all([
+          loadAgeHook(),
+          currentLessonId ? loadLessonShards(currentLessonId) : Promise.resolve()
+        ]);
+        
+        // Re-render current phase with personalized content
+        if (state.lesson && state.lesson.phases && state.lesson.phases[state.currentPhase - 1]) {
+          renderPhase(state.lesson.phases[state.currentPhase - 1]);
+        }
+        
+        const ageLabel = state.variants.age || '18-35';
+        const langLabel = (state.variants.language || 'en').toUpperCase();
+        showToast(`✨ Personalized for ages ${ageLabel} (${langLabel})`);
+      }
+
+      // ═══════════════════════════════════════════════════════════════════
       // UTILITY FUNCTIONS
       // ═══════════════════════════════════════════════════════════════════
       function getDayOfYear() {
@@ -4087,6 +4275,7 @@
 
         // Build complete lesson object
         state.lesson = {
+          id: coreLesson.id,  // Store ID for personalization queries
           dayNumber: state.dayNumber,
           topic: coreLesson.topic,
           topicEmoji: getTopicEmoji(coreLesson.topic),
@@ -4106,6 +4295,21 @@
           clearTimeout(loadingTimeout);
           loadingTimeout = null;
         }
+
+        // ═══════════════════════════════════════════════════════════════════
+        // LOAD PERSONALIZED CONTENT (age hooks + lesson shards)
+        // ═══════════════════════════════════════════════════════════════════
+        console.log('[Learn] 🎨 Loading personalized content...');
+        Promise.all([
+          loadAgeHook(),
+          loadLessonShards(coreLesson.id)
+        ]).then(() => {
+          console.log('[Learn] ✅ Personalization loaded');
+          // Re-render with personalized content if available
+          if (state.lesson && state.lesson.phases[0]) {
+            renderPhase(state.lesson.phases[0]);
+          }
+        }).catch(e => console.warn('[Learn] Personalization load warning:', e.message));
 
         // ═══════════════════════════════════════════════════════════════════
         // LOAD VISUAL ASSETS FOR THIS LESSON (backgrounds, props, Kelly poses)
@@ -4211,7 +4415,7 @@
       }
 
       // ═══════════════════════════════════════════════════════════════════
-      // VARIANT TEXT EXTRACTION (with null safety)
+      // VARIANT TEXT EXTRACTION (with null safety + personalization)
       // ═══════════════════════════════════════════════════════════════════
       function getVariantText(phase) {
         // Null safety: phase might be undefined
@@ -4219,7 +4423,46 @@
 
         const { age, language } = state.variants;
 
-        // If text is an object (variant structure)
+        // ═══════════════════════════════════════════════════════════════
+        // PERSONALIZATION: Check for age hook (welcome/hook phases only)
+        // ═══════════════════════════════════════════════════════════════
+        if ((phase.type === 'welcome' || phase.type === 'hook') && personalization.ageHook) {
+          console.log('[Learn] Using age-specific hook for welcome phase');
+          return personalization.ageHook;
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // PERSONALIZATION: Check for shard content (age/region/tone match)
+        // ═══════════════════════════════════════════════════════════════
+        if (personalization.currentShard?.script_content) {
+          const shardContent = personalization.currentShard.script_content;
+          
+          // Try phase-specific content from shard
+          const phaseKey = phase.name || phase.type;
+          const phaseVariants = [phaseKey, phaseKey?.toLowerCase(), phase.type];
+          
+          for (const key of phaseVariants) {
+            if (key && shardContent[key]) {
+              const content = shardContent[key];
+              if (content.script) {
+                console.log(`[Learn] Using shard script for phase: ${key}`);
+                return content.script;
+              } else if (content.text) {
+                console.log(`[Learn] Using shard text for phase: ${key}`);
+                return content.text;
+              }
+            }
+          }
+          
+          // Fallback: check for a single script field in the shard
+          if (shardContent.script) {
+            return shardContent.script;
+          }
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // STANDARD: If text is an object (variant structure)
+        // ═══════════════════════════════════════════════════════════════
         if (typeof phase.text === 'object' && phase.text !== null) {
           const ageText = phase.text[age];
           if (ageText && typeof ageText === 'object') {
@@ -5017,7 +5260,25 @@
         if (type === 'tone') {
           closePopover();
           showToast('Reloading lesson with new tone...');
-          await loadLesson(state.dayNumber); // Wait for lesson to load
+          await loadLesson(state.dayNumber);
+          return;
+        }
+
+        // For age changes, reload personalized content (age hooks + shards)
+        if (type === 'age') {
+          closePopover();
+          console.log(`[Learn] Age changed to ${value}, reloading personalized content...`);
+          await reloadPersonalizedContent();
+          return;
+        }
+
+        // For language changes, reload personalized content (shards have region field)
+        if (type === 'language') {
+          closePopover();
+          console.log(`[Learn] Language changed to ${value}, reloading personalized content...`);
+          // Also find new matching shard
+          findMatchingShard();
+          await reloadPersonalizedContent();
           return;
         }
 

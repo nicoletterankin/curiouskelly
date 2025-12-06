@@ -1,0 +1,62 @@
+name: Nightly Slop Audit
+
+on:
+  schedule:
+    - cron: '0 6 * * *'  # 6 AM UTC daily
+  workflow_dispatch:  # Manual trigger
+
+jobs:
+  audit:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+          
+      - name: Install dependencies
+        run: npm ci
+        
+      - name: Run Slop Detection
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_KEY: ${{ secrets.SUPABASE_SERVICE_KEY }}
+        run: npx ts-node scripts/slop-detector.ts
+        
+      - name: Check for Critical Issues
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          CRITICAL=$(curl -s "${SUPABASE_URL}/rest/v1/content_validation_results?severity=eq.critical&resolved_at=is.null&select=id" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" \
+            -H "Authorization: Bearer ${SUPABASE_ANON_KEY}" | jq length)
+          
+          echo "🔴 Critical issues found: $CRITICAL"
+          
+          if [ "$CRITICAL" -gt 0 ]; then
+            echo "::warning::$CRITICAL critical content quality issues detected!"
+          fi
+          
+      - name: Generate Report Summary
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_ANON_KEY: ${{ secrets.SUPABASE_ANON_KEY }}
+        run: |
+          echo "## 📊 Slop Audit Report" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          
+          TOTAL=$(curl -s "${SUPABASE_URL}/rest/v1/content_validation_results?resolved_at=is.null&select=id" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" | jq length)
+          CRITICAL=$(curl -s "${SUPABASE_URL}/rest/v1/content_validation_results?severity=eq.critical&resolved_at=is.null&select=id" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" | jq length)
+          WARNING=$(curl -s "${SUPABASE_URL}/rest/v1/content_validation_results?severity=eq.warning&resolved_at=is.null&select=id" \
+            -H "apikey: ${SUPABASE_ANON_KEY}" | jq length)
+          
+          echo "| Severity | Count |" >> $GITHUB_STEP_SUMMARY
+          echo "|----------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| 🔴 Critical | $CRITICAL |" >> $GITHUB_STEP_SUMMARY
+          echo "| 🟡 Warning | $WARNING |" >> $GITHUB_STEP_SUMMARY
+          echo "| 📝 Total | $TOTAL |" >> $GITHUB_STEP_SUMMARY
+

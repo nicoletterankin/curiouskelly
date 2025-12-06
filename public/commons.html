@@ -999,6 +999,7 @@
                 <!-- Tabs -->
                 <div class="tab-bar">
                     <button class="tab-btn active" data-tab="proposals">Proposals</button>
+                    <button class="tab-btn" data-tab="quality">Content Quality</button>
                     <button class="tab-btn" data-tab="knowledge">Knowledge Base</button>
                     <button class="tab-btn" data-tab="discussions">Discussions</button>
                 </div>
@@ -1020,6 +1021,64 @@
                         <div class="skeleton skeleton-card"></div>
                         <div class="skeleton skeleton-card"></div>
                         <div class="skeleton skeleton-card"></div>
+                    </div>
+                </div>
+
+                <!-- Content Quality Tab - Powered by Picky Nicky's Zero Trust System -->
+                <div id="quality-tab" class="tab-content" style="display: none;">
+                    <div class="quality-header" style="margin-bottom: 24px;">
+                        <h2 style="font-size: 1.25rem; margin-bottom: 8px;">🔒 Zero Trust Audit System</h2>
+                        <p style="color: var(--text-secondary); font-size: 0.9rem;">
+                            Picky Nicky audits ALL 365 lessons for quality issues. Every headline, every truth, every resource—verified.
+                            <strong>No hidden fixes. No secret changes.</strong> Full transparency.
+                        </p>
+                        <a href="lesson-commons.html" style="display: inline-flex; align-items: center; gap: 6px; margin-top: 12px; color: var(--accent-primary); font-size: 0.9rem; text-decoration: none;">
+                            🏛️ View Full 365-Day Audit Map →
+                        </a>
+                    </div>
+                    
+                    <!-- Stats Grid -->
+                    <div class="quality-stats" style="display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 24px;">
+                        <div class="stat-card" style="background: rgba(239, 68, 68, 0.1); border: 1px solid rgba(239, 68, 68, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
+                            <div id="critical-count" style="font-size: 2rem; font-weight: 700; color: #ef4444;">-</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">Critical Issues</div>
+                        </div>
+                        <div class="stat-card" style="background: rgba(245, 158, 11, 0.1); border: 1px solid rgba(245, 158, 11, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
+                            <div id="warning-count" style="font-size: 2rem; font-weight: 700; color: #f59e0b;">-</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">Warnings</div>
+                        </div>
+                        <div class="stat-card" style="background: rgba(59, 130, 246, 0.1); border: 1px solid rgba(59, 130, 246, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
+                            <div id="info-count" style="font-size: 2rem; font-weight: 700; color: #3b82f6;">-</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">Info</div>
+                        </div>
+                        <div class="stat-card" style="background: rgba(34, 197, 94, 0.1); border: 1px solid rgba(34, 197, 94, 0.3); border-radius: 12px; padding: 16px; text-align: center;">
+                            <div id="resolved-count" style="font-size: 2rem; font-weight: 700; color: #22c55e;">-</div>
+                            <div style="font-size: 0.85rem; color: var(--text-secondary);">Resolved (7d)</div>
+                        </div>
+                    </div>
+                    
+                    <!-- Issue Types Summary -->
+                    <div class="issue-types" style="background: var(--bg-elevated); border: 1px solid var(--border-color); border-radius: 12px; padding: 20px; margin-bottom: 24px;">
+                        <h3 style="font-size: 1rem; margin-bottom: 16px;">Issues by Type</h3>
+                        <div id="issue-types-list" style="display: flex; flex-wrap: wrap; gap: 8px;">
+                            <span style="padding: 6px 12px; background: var(--bg-secondary); border-radius: 20px; font-size: 0.85rem;">Loading...</span>
+                        </div>
+                    </div>
+                    
+                    <!-- Recent Issues List -->
+                    <div class="issues-list">
+                        <h3 style="font-size: 1rem; margin-bottom: 16px;">Recent Issues (Top 20)</h3>
+                        <div id="quality-issues-list" style="display: flex; flex-direction: column; gap: 12px;">
+                            <div class="skeleton skeleton-card"></div>
+                            <div class="skeleton skeleton-card"></div>
+                            <div class="skeleton skeleton-card"></div>
+                        </div>
+                    </div>
+                    
+                    <!-- Last Audit Time -->
+                    <div style="margin-top: 24px; padding-top: 16px; border-top: 1px solid var(--border-color); font-size: 0.85rem; color: var(--text-muted); display: flex; justify-content: space-between;">
+                        <span>Last audit: <span id="last-audit-time">Loading...</span></span>
+                        <span>🔒 Powered by Picky Nicky's Zero Trust System</span>
                     </div>
                 </div>
 
@@ -1191,6 +1250,9 @@
             const { data: { session } } = await supabase.auth.getSession();
             currentUser = session?.user || null;
             updateAuthButton();
+            
+            // Load content quality data
+            loadQualityData();
 
             // Load data in parallel
             await Promise.all([
@@ -1277,6 +1339,121 @@
                 document.getElementById('modal-lesson-select').innerHTML = '<option value="">Select a lesson...</option>' + options;
             } catch (error) {
                 console.error('Error loading lessons:', error);
+            }
+        }
+
+        // ========================================
+        // CONTENT QUALITY DATA - UNIFIED WITH LESSON_AUDITS
+        // Single source of truth: lesson_audits table (Picky Nicky's Zero Trust System)
+        // ========================================
+        async function loadQualityData() {
+            try {
+                // Load from lesson_audits - the unified audit table
+                const { data: audits, error } = await supabase
+                    .from('lesson_audits')
+                    .select('*')
+                    .order('audited_at', { ascending: false })
+                    .limit(100);
+
+                if (error) {
+                    console.log('Lesson audits table error:', error);
+                    return;
+                }
+
+                // Map status to severity for display
+                const getSeverity = (status) => {
+                    if (status === 'fail') return 'critical';
+                    if (status === 'warning' || status === 'needs_review') return 'warning';
+                    if (status === 'fixed') return 'fixed';
+                    return 'info';
+                };
+
+                // Calculate stats
+                const unfixed = audits.filter(a => !a.fixed_at && a.status !== 'pass');
+                const critical = unfixed.filter(a => a.status === 'fail').length;
+                const warning = unfixed.filter(a => a.status === 'warning' || a.status === 'needs_review').length;
+                const info = unfixed.filter(a => a.status !== 'fail' && a.status !== 'warning' && a.status !== 'pass').length;
+                const fixed = audits.filter(a => a.status === 'fixed' || a.fixed_at).length;
+
+                // Update stat cards
+                document.getElementById('critical-count').textContent = critical;
+                document.getElementById('warning-count').textContent = warning;
+                document.getElementById('info-count').textContent = info;
+                document.getElementById('resolved-count').textContent = fixed;
+
+                // Group by audit type
+                const byType = {};
+                for (const audit of unfixed) {
+                    byType[audit.audit_type] = (byType[audit.audit_type] || 0) + 1;
+                }
+
+                // Render audit types
+                const typesHtml = Object.entries(byType)
+                    .sort((a, b) => b[1] - a[1])
+                    .map(([type, count]) => {
+                        const color = type.includes('headline') ? '#ef4444' : 
+                                      type.includes('truth') ? '#f59e0b' : 
+                                      type.includes('video') ? '#a855f7' :
+                                      type.includes('book') ? '#3b82f6' : '#22c55e';
+                        return `<span style="padding: 6px 12px; background: ${color}20; color: ${color}; border: 1px solid ${color}40; border-radius: 20px; font-size: 0.85rem; font-weight: 500;">
+                            ${type.replace(/_/g, ' ')}: ${count}
+                        </span>`;
+                    })
+                    .join('');
+                document.getElementById('issue-types-list').innerHTML = typesHtml || '<span style="color: var(--text-muted);">No issues found! 🎉</span>';
+
+                // Render audit list (show recent activity including fixes)
+                const recentAudits = audits.slice(0, 20);
+                const auditsHtml = recentAudits.map(audit => {
+                    const severity = getSeverity(audit.status);
+                    const severityColor = severity === 'critical' ? '#ef4444' : 
+                                          severity === 'warning' ? '#f59e0b' : 
+                                          severity === 'fixed' ? '#22c55e' : '#3b82f6';
+                    const severityBg = severity === 'critical' ? 'rgba(239, 68, 68, 0.1)' : 
+                                       severity === 'warning' ? 'rgba(245, 158, 11, 0.1)' : 
+                                       severity === 'fixed' ? 'rgba(34, 197, 94, 0.1)' : 'rgba(59, 130, 246, 0.1)';
+                    const severityIcon = severity === 'critical' ? '🔴' : 
+                                         severity === 'warning' ? '🟡' : 
+                                         severity === 'fixed' ? '✅' : '🔵';
+                    
+                    const displayValue = audit.fixed_value || audit.original_value || '';
+                    const statusBadge = audit.status === 'fixed' ? 
+                        `<span style="background: #22c55e20; color: #22c55e; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">FIXED</span>` : 
+                        `<span style="background: ${severityColor}20; color: ${severityColor}; padding: 2px 8px; border-radius: 4px; font-size: 0.75rem; font-weight: 600;">${audit.status.toUpperCase()}</span>`;
+                    
+                    return `
+                        <div style="background: ${severityBg}; border: 1px solid ${severityColor}40; border-radius: 12px; padding: 16px;">
+                            <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 8px;">
+                                <div style="display: flex; align-items: center; gap: 8px;">
+                                    <span>${severityIcon}</span>
+                                    <span style="font-weight: 600;">Day ${audit.day_number}</span>
+                                    <span style="color: var(--text-secondary); font-size: 0.85rem;">${audit.audit_type.replace(/_/g, ' ')}</span>
+                                    ${statusBadge}
+                                </div>
+                                <span style="font-size: 0.75rem; color: var(--text-muted);">${new Date(audit.audited_at).toLocaleDateString()}</span>
+                            </div>
+                            <div style="font-size: 0.9rem; color: var(--text-secondary); margin-bottom: 8px;">
+                                <strong>${audit.field_name || 'Field'}:</strong> ${displayValue.substring(0, 80)}${displayValue.length > 80 ? '...' : ''}
+                            </div>
+                            ${audit.fix_rationale ? `<div style="font-size: 0.8rem; color: #22c55e;">✨ ${audit.fix_rationale.substring(0, 60)}...</div>` : ''}
+                            ${audit.expected_pattern && !audit.fix_rationale ? `<div style="font-size: 0.8rem; color: var(--text-muted);">Expected: ${audit.expected_pattern.substring(0, 60)}...</div>` : ''}
+                        </div>
+                    `;
+                }).join('');
+                
+                document.getElementById('quality-issues-list').innerHTML = auditsHtml || '<div style="color: var(--text-muted); text-align: center; padding: 40px;">No audit records found. Run Picky Nicky\'s audit! 🎉</div>';
+
+                // Update last audit time
+                if (audits.length > 0) {
+                    const lastAudit = new Date(audits[0].audited_at);
+                    document.getElementById('last-audit-time').textContent = lastAudit.toLocaleString();
+                } else {
+                    document.getElementById('last-audit-time').textContent = 'No audits run yet';
+                }
+
+            } catch (error) {
+                console.error('Error loading quality data:', error);
+                document.getElementById('quality-issues-list').innerHTML = '<div style="color: var(--text-muted); text-align: center; padding: 40px;">Unable to load quality data. Try again later.</div>';
             }
         }
 

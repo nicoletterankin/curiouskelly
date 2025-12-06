@@ -1,0 +1,468 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelly Lipsync Calibration - 2025-12-06T05-08-29</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: 'SF Pro Display', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 2rem;
+        }
+        .container { max-width: 1400px; margin: 0 auto; }
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, #f39c12, #e74c3c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        .subtitle { color: #8892b0; margin-bottom: 2rem; }
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-bottom: 2rem;
+        }
+        .stat {
+            background: rgba(255,255,255,0.05);
+            padding: 1.5rem;
+            border-radius: 12px;
+            text-align: center;
+        }
+        .stat-value { font-size: 2rem; font-weight: bold; color: #64ffda; }
+        .stat-label { font-size: 0.85rem; color: #8892b0; margin-top: 0.5rem; }
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 1.5rem;
+        }
+        .card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            overflow: hidden;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        .card.failed { opacity: 0.5; }
+        .card video {
+            width: 100%;
+            aspect-ratio: 1;
+            object-fit: cover;
+            background: #000;
+        }
+        .card-body { padding: 1rem; }
+        .card-title {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+            color: #64ffda;
+        }
+        .card-meta {
+            font-size: 0.8rem;
+            color: #8892b0;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 0.25rem;
+        }
+        .badge {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+        .badge-success { background: rgba(46, 204, 113, 0.2); color: #2ecc71; }
+        .badge-failed { background: rgba(231, 76, 60, 0.2); color: #e74c3c; }
+        .controls {
+            margin-bottom: 2rem;
+            display: flex;
+            gap: 1rem;
+            flex-wrap: wrap;
+        }
+        select, button {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+            font-size: 1rem;
+            cursor: pointer;
+        }
+        .explanation {
+            background: rgba(100, 255, 218, 0.1);
+            border: 1px solid rgba(100, 255, 218, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+        .explanation h3 { color: #64ffda; margin-bottom: 1rem; }
+        .explanation p { color: #ccd6f6; line-height: 1.6; margin-bottom: 0.5rem; }
+        @media (max-width: 768px) {
+            .stats { grid-template-columns: repeat(2, 1fr); }
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🔬 Kelly Lipsync Calibration</h1>
+        <p class="subtitle">Comparing models, settings, and images for optimal quality • 2025-12-06T05-08-29</p>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value">12</div>
+                <div class="stat-label">Total Tests</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">11</div>
+                <div class="stat-label">Successful</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">3</div>
+                <div class="stat-label">Models Tested</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">7.3m</div>
+                <div class="stat-label">Total Time</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <select id="filterModel" onchange="filterResults()">
+                <option value="all">All Models</option>
+                <option value="sadtalker">SadTalker (cjwbw)</option><option value="sadtalker_v2">SadTalker v2 (Lucataco)</option><option value="wav2lip">Wav2Lip</option>
+            </select>
+            <select id="filterStatus" onchange="filterResults()">
+                <option value="all">All Status</option>
+                <option value="success">Success Only</option>
+                <option value="failed">Failed Only</option>
+            </select>
+            <button onclick="playAll()">▶️ Play All</button>
+            <button onclick="pauseAll()">⏸️ Pause All</button>
+        </div>
+        
+        <div class="grid" id="resultsGrid">
+            
+                <div class="card success" data-model="sadtalker" data-status="success">
+                    
+                        <video controls loop muted>
+                            <source src="sadtalker_baseline_1764997864908.mp4" type="video/mp4">
+                        </video>
+                    
+                    <div class="card-body">
+                        <div class="card-title">sadtalker_baseline</div>
+                        <span class="badge badge-success">
+                            success
+                        </span>
+                        <div class="card-meta">
+                            <div>Model: sadtalker</div>
+                            <div>Day: 1</div>
+                            <div>Phase: hook</div>
+                            <div>Text: short</div>
+                            <div>Enhancer: gfpgan</div>
+                            <div>Exp: 1</div>
+                            <div>Time: 155.9s</div>
+                            
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="card failed" data-model="sadtalker_v2" data-status="failed">
+                    
+                        <div style="aspect-ratio:1;display:flex;align-items:center;justify-content:center;background:#1a1a2e;">
+                            <span style="color:#e74c3c;">❌ Failed</span>
+                        </div>
+                    
+                    <div class="card-body">
+                        <div class="card-title">sadtalker_v2_baseline</div>
+                        <span class="badge badge-failed">
+                            failed
+                        </span>
+                        <div class="card-meta">
+                            <div>Model: sadtalker_v2</div>
+                            <div>Day: 1</div>
+                            <div>Phase: hook</div>
+                            <div>Text: short</div>
+                            <div>Enhancer: gfpgan</div>
+                            <div>Exp: 1</div>
+                            <div>Time: 0.4s</div>
+                            <div style="grid-column:span 2;color:#e74c3c;">Error: Replicate create error: 422 - {"type":"Buffer","data":[123,34,116,105,116,108,101,34,58,34,73,110,118,97,108,105,100,32,118,101,114,115,105,111,110,32,111,114,32,110,111,116,32,112,101,114,109,105,116,116,101,100,34,44,34,100,101,116,97,105,108,34,58,34,84,104,101,32,115,112,101,99,105,102,105,101,100,32,118,101,114,115,105,111,110,32,100,111,101,115,32,110,111,116,32,101,120,105,115,116,32,40,111,114,32,112,101,114,104,97,112,115,32,121,111,117,32,100,111,110,39,116,32,104,97,118,101,32,112,101,114,109,105,115,115,105,111,110,32,116,111,32,117,115,101,32,105,116,63,41,34,44,34,115,116,97,116,117,115,34,58,52,50,50,125,10]}</div>
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="card success" data-model="wav2lip" data-status="success">
+                    
+                        <video controls loop muted>
+                            <source src="wav2lip_baseline_1764997869209.mp4" type="video/mp4">
+                        </video>
+                    
+                    <div class="card-body">
+                        <div class="card-title">wav2lip_baseline</div>
+                        <span class="badge badge-success">
+                            success
+                        </span>
+                        <div class="card-meta">
+                            <div>Model: wav2lip</div>
+                            <div>Day: 1</div>
+                            <div>Phase: hook</div>
+                            <div>Text: short</div>
+                            <div>Enhancer: none</div>
+                            <div>Exp: N/A</div>
+                            <div>Time: 3.9s</div>
+                            
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="card success" data-model="sadtalker" data-status="success">
+                    
+                        <video controls loop muted>
+                            <source src="sadtalker_exp_0.8_1764997898089.mp4" type="video/mp4">
+                        </video>
+                    
+                    <div class="card-body">
+                        <div class="card-title">sadtalker_exp_0.8</div>
+                        <span class="badge badge-success">
+                            success
+                        </span>
+                        <div class="card-meta">
+                            <div>Model: sadtalker</div>
+                            <div>Day: 1</div>
+                            <div>Phase: hook</div>
+                            <div>Text: short</div>
+                            <div>Enhancer: gfpgan</div>
+                            <div>Exp: 0.8</div>
+                            <div>Time: 28.9s</div>
+                            
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="card success" data-model="sadtalker" data-status="success">
+                    
+                        <video controls loop muted>
+                            <source src="sadtalker_exp_1.2_1764997920482.mp4" type="video/mp4">
+                        </video>
+                    
+                    <div class="card-body">
+                        <div class="card-title">sadtalker_exp_1.2</div>
+                        <span class="badge badge-success">
+                            success
+                        </span>
+                        <div class="card-meta">
+                            <div>Model: sadtalker</div>
+                            <div>Day: 1</div>
+                            <div>Phase: hook</div>
+                            <div>Text: short</div>
+                            <div>Enhancer: gfpgan</div>
+                            <div>Exp: 1.2</div>
+                            <div>Time: 22.4s</div>
+                            
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="card success" data-model="sadtalker" data-status="success">
+                    
+                        <video controls loop muted>
+                            <source src="sadtalker_exp_1.5_1764997942732.mp4" type="video/mp4">
+                        </video>
+                    
+                    <div class="card-body">
+                        <div class="card-title">sadtalker_exp_1.5</div>
+                        <span class="badge badge-success">
+                            success
+                        </span>
+                        <div class="card-meta">
+                            <div>Model: sadtalker</div>
+                            <div>Day: 1</div>
+                            <div>Phase: hook</div>
+                            <div>Text: short</div>
+                            <div>Enhancer: gfpgan</div>
+                            <div>Exp: 1.5</div>
+                            <div>Time: 22.3s</div>
+                            
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="card success" data-model="sadtalker" data-status="success">
+                    
+                        <video controls loop muted>
+                            <source src="sadtalker_q1_1764997965069.mp4" type="video/mp4">
+                        </video>
+                    
+                    <div class="card-body">
+                        <div class="card-title">sadtalker_q1</div>
+                        <span class="badge badge-success">
+                            success
+                        </span>
+                        <div class="card-meta">
+                            <div>Model: sadtalker</div>
+                            <div>Day: 1</div>
+                            <div>Phase: q1</div>
+                            <div>Text: short</div>
+                            <div>Enhancer: gfpgan</div>
+                            <div>Exp: 1</div>
+                            <div>Time: 22.3s</div>
+                            
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="card success" data-model="sadtalker" data-status="success">
+                    
+                        <video controls loop muted>
+                            <source src="sadtalker_wisdom_1764997987442.mp4" type="video/mp4">
+                        </video>
+                    
+                    <div class="card-body">
+                        <div class="card-title">sadtalker_wisdom</div>
+                        <span class="badge badge-success">
+                            success
+                        </span>
+                        <div class="card-meta">
+                            <div>Model: sadtalker</div>
+                            <div>Day: 1</div>
+                            <div>Phase: wisdom</div>
+                            <div>Text: short</div>
+                            <div>Enhancer: gfpgan</div>
+                            <div>Exp: 1</div>
+                            <div>Time: 22.4s</div>
+                            
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="card success" data-model="sadtalker" data-status="success">
+                    
+                        <video controls loop muted>
+                            <source src="sadtalker_day5_1764998009802.mp4" type="video/mp4">
+                        </video>
+                    
+                    <div class="card-body">
+                        <div class="card-title">sadtalker_day5</div>
+                        <span class="badge badge-success">
+                            success
+                        </span>
+                        <div class="card-meta">
+                            <div>Model: sadtalker</div>
+                            <div>Day: 5</div>
+                            <div>Phase: hook</div>
+                            <div>Text: short</div>
+                            <div>Enhancer: gfpgan</div>
+                            <div>Exp: 1</div>
+                            <div>Time: 22.4s</div>
+                            
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="card success" data-model="sadtalker" data-status="success">
+                    
+                        <video controls loop muted>
+                            <source src="sadtalker_day10_1764998032226.mp4" type="video/mp4">
+                        </video>
+                    
+                    <div class="card-body">
+                        <div class="card-title">sadtalker_day10</div>
+                        <span class="badge badge-success">
+                            success
+                        </span>
+                        <div class="card-meta">
+                            <div>Model: sadtalker</div>
+                            <div>Day: 10</div>
+                            <div>Phase: hook</div>
+                            <div>Text: short</div>
+                            <div>Enhancer: gfpgan</div>
+                            <div>Exp: 1</div>
+                            <div>Time: 22.4s</div>
+                            
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="card success" data-model="sadtalker" data-status="success">
+                    
+                        <video controls loop muted>
+                            <source src="sadtalker_long_text_1764998123455.mp4" type="video/mp4">
+                        </video>
+                    
+                    <div class="card-body">
+                        <div class="card-title">sadtalker_long_text</div>
+                        <span class="badge badge-success">
+                            success
+                        </span>
+                        <div class="card-meta">
+                            <div>Model: sadtalker</div>
+                            <div>Day: 1</div>
+                            <div>Phase: hook</div>
+                            <div>Text: long</div>
+                            <div>Enhancer: gfpgan</div>
+                            <div>Exp: 1</div>
+                            <div>Time: 91.3s</div>
+                            
+                        </div>
+                    </div>
+                </div>
+            
+                <div class="card success" data-model="sadtalker" data-status="success">
+                    
+                        <video controls loop muted>
+                            <source src="sadtalker_no_enhance_1764998145911.mp4" type="video/mp4">
+                        </video>
+                    
+                    <div class="card-body">
+                        <div class="card-title">sadtalker_no_enhance</div>
+                        <span class="badge badge-success">
+                            success
+                        </span>
+                        <div class="card-meta">
+                            <div>Model: sadtalker</div>
+                            <div>Day: 1</div>
+                            <div>Phase: hook</div>
+                            <div>Text: short</div>
+                            <div>Enhancer: none</div>
+                            <div>Exp: 1</div>
+                            <div>Time: 22.4s</div>
+                            
+                        </div>
+                    </div>
+                </div>
+            
+        </div>
+        
+        <div class="explanation">
+            <h3>🎯 How to Use This Page</h3>
+            <p><strong>Compare models:</strong> Watch each video and note lip-sync accuracy, naturalness, and quality.</p>
+            <p><strong>Expression scale:</strong> Higher values = more exaggerated mouth movements. 1.0 is default.</p>
+            <p><strong>Enhancer:</strong> GFPGAN improves face quality but may introduce artifacts.</p>
+            <p><strong>Best practices:</strong> Look for smooth transitions, accurate timing, and minimal distortion.</p>
+            <p><strong>Report issues:</strong> Note any test that looks particularly good or bad for calibration.</p>
+        </div>
+    </div>
+    
+    <script>
+        function filterResults() {
+            const model = document.getElementById('filterModel').value;
+            const status = document.getElementById('filterStatus').value;
+            document.querySelectorAll('.card').forEach(card => {
+                const matchModel = model === 'all' || card.dataset.model === model;
+                const matchStatus = status === 'all' || card.dataset.status === status;
+                card.style.display = matchModel && matchStatus ? 'block' : 'none';
+            });
+        }
+        function playAll() {
+            document.querySelectorAll('video').forEach(v => v.play());
+        }
+        function pauseAll() {
+            document.querySelectorAll('video').forEach(v => v.pause());
+        }
+    </script>
+</body>
+</html>

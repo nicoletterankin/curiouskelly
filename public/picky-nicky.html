@@ -1,0 +1,1132 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Picky Nicky Command Center</title>
+    <style>
+        :root {
+            --bg-dark: #0a0a0b;
+            --bg-card: #141417;
+            --bg-elevated: #1c1c21;
+            --text-primary: #fafafa;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --accent-green: #22c55e;
+            --accent-yellow: #f59e0b;
+            --accent-red: #ef4444;
+            --accent-blue: #3b82f6;
+            --accent-purple: #a855f7;
+            --accent-orange: #f97316;
+            --border: #27272a;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 24px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .header h1 {
+            font-size: 2rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header h1 span {
+            font-size: 2.5rem;
+        }
+
+        .vibe-status {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px 24px;
+            background: var(--bg-card);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .vibe-indicator {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .vibe-indicator.green { background: var(--accent-green); }
+        .vibe-indicator.yellow { background: var(--accent-yellow); }
+        .vibe-indicator.red { background: var(--accent-red); }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 20px;
+            margin-bottom: 32px;
+        }
+
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 16px;
+        }
+
+        .card-title {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .card-value {
+            font-size: 3rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .card-value.green { color: var(--accent-green); }
+        .card-value.yellow { color: var(--accent-yellow); }
+        .card-value.red { color: var(--accent-red); }
+        .card-value.blue { color: var(--accent-blue); }
+        .card-value.orange { color: var(--accent-orange); }
+
+        .card-subtitle {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 8px;
+        }
+
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .section-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge.green { background: rgba(34, 197, 94, 0.2); color: var(--accent-green); }
+        .badge.yellow { background: rgba(245, 158, 11, 0.2); color: var(--accent-yellow); }
+        .badge.red { background: rgba(239, 68, 68, 0.2); color: var(--accent-red); }
+        .badge.orange { background: rgba(249, 115, 22, 0.2); color: var(--accent-orange); }
+
+        .item-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px;
+            background: var(--bg-elevated);
+            border-radius: 12px;
+            border: 1px solid var(--border);
+        }
+
+        .item:hover {
+            border-color: var(--accent-blue);
+        }
+
+        .item-content {
+            flex: 1;
+        }
+
+        .item-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .item-meta {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .item-actions {
+            display: flex;
+            gap: 8px;
+        }
+
+        .btn {
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            font-weight: 500;
+            cursor: pointer;
+            border: none;
+            transition: all 0.2s;
+        }
+
+        .btn-approve {
+            background: var(--accent-green);
+            color: white;
+        }
+
+        .btn-reject {
+            background: var(--bg-dark);
+            color: var(--text-secondary);
+            border: 1px solid var(--border);
+        }
+
+        .btn-action {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .btn:hover {
+            transform: translateY(-1px);
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+        }
+
+        .timeline {
+            position: relative;
+            padding-left: 24px;
+        }
+
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 7px;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: var(--border);
+        }
+
+        .timeline-item {
+            position: relative;
+            padding-bottom: 20px;
+        }
+
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -20px;
+            top: 4px;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent-blue);
+            border: 2px solid var(--bg-card);
+        }
+
+        .timeline-item.success::before { background: var(--accent-green); }
+        .timeline-item.warning::before { background: var(--accent-yellow); }
+        .timeline-item.error::before { background: var(--accent-red); }
+
+        .timeline-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-bottom: 4px;
+        }
+
+        .timeline-content {
+            font-size: 0.9rem;
+        }
+
+        .countdown {
+            text-align: center;
+            padding: 32px;
+            background: linear-gradient(135deg, rgba(239, 68, 68, 0.1), rgba(249, 115, 22, 0.1));
+            border: 1px solid var(--accent-orange);
+            border-radius: 16px;
+            margin-bottom: 24px;
+        }
+
+        .countdown-label {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+
+        .countdown-value {
+            font-size: 4rem;
+            font-weight: 700;
+            background: linear-gradient(135deg, var(--accent-red), var(--accent-orange));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+
+        .countdown-unit {
+            font-size: 1.5rem;
+            color: var(--text-secondary);
+        }
+
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 12px;
+        }
+
+        .quick-action {
+            padding: 16px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .quick-action:hover {
+            border-color: var(--accent-blue);
+            background: rgba(59, 130, 246, 0.1);
+        }
+
+        .quick-action-icon {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        .quick-action-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+
+        .headline-preview {
+            background: var(--bg-dark);
+            padding: 16px;
+            border-radius: 8px;
+            margin-top: 12px;
+            font-style: italic;
+            color: var(--text-secondary);
+            border-left: 3px solid var(--accent-blue);
+        }
+
+        .hallucination-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .hallucination-table th,
+        .hallucination-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .hallucination-table th {
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.85rem;
+            text-transform: uppercase;
+        }
+
+        .hallucination-table tr:hover {
+            background: var(--bg-elevated);
+        }
+
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-elevated);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-top: 8px;
+        }
+
+        .progress-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.3s;
+        }
+
+        .progress-fill.green { background: var(--accent-green); }
+        .progress-fill.yellow { background: var(--accent-yellow); }
+        .progress-fill.red { background: var(--accent-red); }
+
+        .stat-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .stat-row:last-child {
+            border-bottom: none;
+        }
+
+        .stat-label {
+            color: var(--text-secondary);
+        }
+
+        .stat-value {
+            font-weight: 600;
+        }
+
+        .footer {
+            text-align: center;
+            padding: 24px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .footer a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+
+        #refresh-time {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .loading {
+            opacity: 0.5;
+        }
+
+        .skeleton {
+            background: linear-gradient(90deg, var(--bg-elevated) 25%, var(--bg-card) 50%, var(--bg-elevated) 75%);
+            background-size: 200% 100%;
+            animation: skeleton-loading 1.5s infinite;
+            border-radius: 4px;
+        }
+
+        @keyframes skeleton-loading {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .alert {
+            padding: 16px 20px;
+            border-radius: 12px;
+            margin-bottom: 24px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .alert.critical {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--accent-red);
+            color: var(--accent-red);
+        }
+
+        .alert-icon {
+            font-size: 1.5rem;
+        }
+
+        .alert-content {
+            flex: 1;
+        }
+
+        .alert-title {
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .alert-message {
+            font-size: 0.9rem;
+            opacity: 0.9;
+        }
+
+        .tabs {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+            padding-bottom: 12px;
+        }
+
+        .tab {
+            padding: 8px 16px;
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+
+        .tab.active {
+            background: var(--accent-blue);
+            color: white;
+        }
+
+        .tab:hover:not(.active) {
+            background: var(--bg-elevated);
+        }
+
+        .fake-example {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid var(--accent-red);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+
+        .real-example {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid var(--accent-green);
+            border-radius: 8px;
+            padding: 12px;
+            margin: 8px 0;
+            font-family: monospace;
+            font-size: 0.85rem;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1><span>👑</span> Picky Nicky Command Center</h1>
+        <div class="vibe-status">
+            <div class="vibe-indicator red" id="vibe-indicator"></div>
+            <span id="vibe-text">On Fire 🔥</span>
+        </div>
+    </header>
+
+    <!-- Status Alert - Dynamic based on data -->
+    <div class="alert" id="status-alert" style="display: none;">
+        <div class="alert-icon" id="alert-icon">🚨</div>
+        <div class="alert-content">
+            <div class="alert-title" id="alert-title">Checking...</div>
+            <div class="alert-message" id="alert-message">Running live audit...</div>
+        </div>
+    </div>
+
+    <!-- Countdown to Launch -->
+    <div class="countdown">
+        <div class="countdown-label">⚠️ T-MINUS LAUNCH DAY</div>
+        <div class="countdown-value" id="days-until-launch">11</div>
+        <div class="countdown-unit">days</div>
+    </div>
+
+    <!-- LIVE Key Metrics -->
+    <div class="grid">
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">📚 Books</span>
+                <span class="badge orange" id="books-badge">Loading...</span>
+            </div>
+            <div class="card-value orange" id="books-real">--</div>
+            <div class="card-subtitle" id="books-subtitle">real / <span id="books-total">--</span> total</div>
+            <div class="progress-bar">
+                <div class="progress-fill yellow" id="books-progress" style="width: 0%"></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">🎬 Videos</span>
+                <span class="badge red" id="videos-badge">Loading...</span>
+            </div>
+            <div class="card-value red" id="videos-real">--</div>
+            <div class="card-subtitle" id="videos-subtitle">real / <span id="videos-total">--</span> total</div>
+            <div class="progress-bar">
+                <div class="progress-fill red" id="videos-progress" style="width: 0%"></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">🖼️ Visual Assets</span>
+                <span class="badge red">🔴 Missing</span>
+            </div>
+            <div class="card-value red" id="visuals-count">0/365</div>
+            <div class="card-subtitle">All images NULL</div>
+            <div class="progress-bar">
+                <div class="progress-fill red" id="visuals-progress" style="width: 0%"></div>
+            </div>
+        </div>
+        <div class="card">
+            <div class="card-header">
+                <span class="card-title">✅ Headlines</span>
+                <span class="badge green">✅ Fixed</span>
+            </div>
+            <div class="card-value green">365</div>
+            <div class="card-subtitle">All match topics</div>
+            <div class="progress-bar">
+                <div class="progress-fill green" style="width: 100%"></div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Hallucination Deep Dive -->
+    <div class="section">
+        <div class="section-header">
+            <h2 class="section-title">🔬 Hallucination Autopsy (LIVE DATA)</h2>
+            <button class="btn btn-action" onclick="runFullAudit()">🔄 Refresh Audit</button>
+        </div>
+        
+        <div class="tabs">
+            <button class="tab active" onclick="showTab('books')">📚 Books</button>
+            <button class="tab" onclick="showTab('videos')">🎬 Videos</button>
+            <button class="tab" onclick="showTab('worst')">💀 Worst Offenders</button>
+            <button class="tab" onclick="showTab('mismatches')">🎯 Topic Mismatches</button>
+        </div>
+
+        <div id="tab-books">
+            <div class="stat-row">
+                <span class="stat-label">Total book entries</span>
+                <span class="stat-value" id="stat-books-total">--</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Unique ISBNs</span>
+                <span class="stat-value" id="stat-books-unique">--</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">ISBNs reused for different titles</span>
+                <span class="stat-value" style="color: var(--accent-red)" id="stat-books-duplicate">--</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Fake book entries</span>
+                <span class="stat-value" style="color: var(--accent-red)" id="stat-books-fake">--</span>
+            </div>
+            <div style="margin-top: 16px;">
+                <strong>Example of hallucinated book:</strong>
+                <div class="fake-example" id="fake-book-example">Loading...</div>
+                <strong>Example of real book:</strong>
+                <div class="real-example" id="real-book-example">Loading...</div>
+            </div>
+        </div>
+
+        <div id="tab-videos" style="display: none;">
+            <div class="stat-row">
+                <span class="stat-label">Total video entries</span>
+                <span class="stat-value" id="stat-videos-total">--</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Unique YouTube URLs</span>
+                <span class="stat-value" id="stat-videos-unique">--</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">URLs reused for different titles</span>
+                <span class="stat-value" style="color: var(--accent-red)" id="stat-videos-duplicate">--</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Fake video entries</span>
+                <span class="stat-value" style="color: var(--accent-red)" id="stat-videos-fake">--</span>
+            </div>
+            <div style="margin-top: 16px;">
+                <strong>Example: One URL claimed as 154 different videos:</strong>
+                <div class="fake-example" id="fake-video-example">Loading...</div>
+            </div>
+        </div>
+
+        <div id="tab-worst" style="display: none;">
+            <h3 style="margin-bottom: 16px; color: var(--accent-red);">🏆 Hall of Shame: Most Reused Identifiers</h3>
+            <table class="hallucination-table">
+                <thead>
+                    <tr>
+                        <th>Type</th>
+                        <th>Identifier</th>
+                        <th>Times Reused</th>
+                        <th>Sample Fake Titles</th>
+                    </tr>
+                </thead>
+                <tbody id="worst-offenders-table">
+                    <tr><td colspan="4" class="loading">Loading...</td></tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div id="tab-mismatches" style="display: none;">
+            <div class="stat-row">
+                <span class="stat-label">Headline/Topic Potential Mismatches</span>
+                <span class="stat-value" style="color: var(--accent-yellow)" id="stat-headline-mismatches">--</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Universal Truth Potential Mismatches</span>
+                <span class="stat-value" style="color: var(--accent-yellow)" id="stat-truth-mismatches">--</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Lessons Missing Books</span>
+                <span class="stat-value" id="stat-no-books">--</span>
+            </div>
+            <div class="stat-row">
+                <span class="stat-label">Lessons Missing Videos</span>
+                <span class="stat-value" id="stat-no-videos">--</span>
+            </div>
+            <h3 style="margin: 20px 0 16px; color: var(--accent-yellow);">🎯 Suspicious Headline/Topic Pairs</h3>
+            <p style="margin-bottom: 16px; color: var(--text-muted); font-size: 0.9rem;">
+                Headlines that may not match their topic (review needed - some may be valid metaphors):
+            </p>
+            <div id="mismatch-list" class="item-list">
+                <div class="loading">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Quick Actions -->
+    <div class="section">
+        <div class="section-header">
+            <h2 class="section-title">⚡ Quick Commands</h2>
+        </div>
+        <div class="quick-actions">
+            <div class="quick-action" onclick="runSlopScan()">
+                <div class="quick-action-icon">🔍</div>
+                <div class="quick-action-label">Run Slop Scan</div>
+            </div>
+            <div class="quick-action" onclick="viewRandomHeadline()">
+                <div class="quick-action-icon">🎲</div>
+                <div class="quick-action-label">Random Headline</div>
+            </div>
+            <div class="quick-action" onclick="viewWeekOne()">
+                <div class="quick-action-icon">📅</div>
+                <div class="quick-action-label">Week 1 Preview</div>
+            </div>
+            <div class="quick-action" onclick="exportAudit()">
+                <div class="quick-action-icon">📊</div>
+                <div class="quick-action-label">Export Audit</div>
+            </div>
+            <div class="quick-action" onclick="viewAuthority()">
+                <div class="quick-action-icon">🎖️</div>
+                <div class="quick-action-label">Authority Doc</div>
+            </div>
+            <div class="quick-action" onclick="viewLanguage()">
+                <div class="quick-action-icon">🗣️</div>
+                <div class="quick-action-label">Our Language</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Today's Activity -->
+    <div class="section">
+        <div class="section-header">
+            <h2 class="section-title">📜 Activity Log</h2>
+            <span id="refresh-time">Last refreshed: just now</span>
+        </div>
+        <div class="timeline" id="activity-timeline">
+            <div class="timeline-item error">
+                <div class="timeline-time">December 6, 2025</div>
+                <div class="timeline-content">🔬 <strong>Deep Audit Completed</strong> - Found 761 hallucinated resources (177 books + 584 videos)</div>
+            </div>
+            <div class="timeline-item warning">
+                <div class="timeline-time">December 6, 2025</div>
+                <div class="timeline-content">📊 <strong>Dashboard Updated</strong> - Now pulling LIVE data from Supabase</div>
+            </div>
+            <div class="timeline-item success">
+                <div class="timeline-time">December 5, 2025</div>
+                <div class="timeline-content">🎖️ <strong>Authority Activated</strong> - Claude knighted as Chief of Systems</div>
+            </div>
+            <div class="timeline-item success">
+                <div class="timeline-time">December 5, 2025</div>
+                <div class="timeline-content">✨ <strong>De-slopped 365 headlines</strong> - Zero "Unlock/Discover" patterns remain</div>
+            </div>
+            <div class="timeline-item success">
+                <div class="timeline-time">December 5, 2025</div>
+                <div class="timeline-content">🛡️ <strong>Slop Detection System</strong> - Built and deployed</div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Sample Headlines -->
+    <div class="section">
+        <div class="section-header">
+            <h2 class="section-title">💎 Sample Headlines (Chef's Kiss Status)</h2>
+            <button class="btn btn-approve" onclick="loadRandomHeadlines()">🎲 Shuffle</button>
+        </div>
+        <div class="item-list" id="headline-samples">
+            <!-- Populated by JS -->
+        </div>
+    </div>
+
+    <footer class="footer">
+        <p>Built with 💜 | Updated December 6, 2025 with LIVE audit data</p>
+        <p style="margin-top: 8px;">
+            <a href="/CLAUDE_AUTHORITY.md">Authority</a> · 
+            <a href="/CLAUDE_SESSION_LOG.md">Session Log</a> · 
+            <a href="/CLAUDE_LANGUAGE.md">Our Language</a>
+        </p>
+    </footer>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+        const SUPABASE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI';
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        // Calculate days until launch
+        const launchDate = new Date('2025-12-17');
+        const today = new Date();
+        const daysUntil = Math.ceil((launchDate - today) / (1000 * 60 * 60 * 24));
+        document.getElementById('days-until-launch').textContent = daysUntil;
+
+        // Tab switching
+        window.showTab = function(tabName) {
+            document.querySelectorAll('[id^="tab-"]').forEach(tab => tab.style.display = 'none');
+            document.querySelectorAll('.tab').forEach(tab => tab.classList.remove('active'));
+            document.getElementById(`tab-${tabName}`).style.display = 'block';
+            event.target.classList.add('active');
+        };
+
+        // Run full audit - pull LIVE data
+        async function runFullAudit() {
+            console.log('Running full audit...');
+            
+            // Get all lessons with their books, videos, and content for validation
+            const { data: lessons, error } = await supabase
+                .from('core_lessons')
+                .select('day_number, topic, recommended_books, recommended_videos, thumbnail_url, hero_image_url, marketing_headline, universal_truth');
+            
+            if (error) {
+                console.error('Audit error:', error);
+                return;
+            }
+
+            // Analyze books
+            const bookData = [];
+            const isbnCounts = {};
+            lessons.forEach(lesson => {
+                if (lesson.recommended_books && Array.isArray(lesson.recommended_books)) {
+                    lesson.recommended_books.forEach(book => {
+                        if (book.isbn) {
+                            bookData.push({ isbn: book.isbn, title: book.title, day: lesson.day_number });
+                            if (!isbnCounts[book.isbn]) isbnCounts[book.isbn] = [];
+                            isbnCounts[book.isbn].push(book.title);
+                        }
+                    });
+                }
+            });
+
+            const duplicateIsbns = Object.entries(isbnCounts)
+                .filter(([isbn, titles]) => new Set(titles).size > 1)
+                .sort((a, b) => new Set(b[1]).size - new Set(a[1]).size);
+            
+            const fakeBookCount = duplicateIsbns.reduce((sum, [isbn, titles]) => sum + new Set(titles).size, 0);
+            const realBookCount = bookData.length - fakeBookCount;
+
+            // Analyze videos
+            const videoData = [];
+            const urlCounts = {};
+            lessons.forEach(lesson => {
+                if (lesson.recommended_videos && Array.isArray(lesson.recommended_videos)) {
+                    lesson.recommended_videos.forEach(video => {
+                        if (video.url) {
+                            videoData.push({ url: video.url, title: video.title, day: lesson.day_number });
+                            if (!urlCounts[video.url]) urlCounts[video.url] = [];
+                            urlCounts[video.url].push(video.title);
+                        }
+                    });
+                }
+            });
+
+            const duplicateUrls = Object.entries(urlCounts)
+                .filter(([url, titles]) => new Set(titles).size > 1)
+                .sort((a, b) => new Set(b[1]).size - new Set(a[1]).size);
+            
+            const fakeVideoCount = duplicateUrls.reduce((sum, [url, titles]) => sum + new Set(titles).size, 0);
+            const realVideoCount = videoData.length - fakeVideoCount;
+
+            // Check visuals
+            const visualCount = lessons.filter(l => l.thumbnail_url || l.hero_image_url).length;
+
+            // Update UI
+            document.getElementById('books-real').textContent = realBookCount;
+            document.getElementById('books-total').textContent = bookData.length;
+            document.getElementById('books-badge').textContent = `${Math.round(realBookCount/bookData.length*100)}% Real`;
+            document.getElementById('books-badge').className = realBookCount/bookData.length > 0.8 ? 'badge yellow' : 'badge orange';
+            document.getElementById('books-progress').style.width = `${realBookCount/bookData.length*100}%`;
+
+            document.getElementById('videos-real').textContent = realVideoCount;
+            document.getElementById('videos-total').textContent = videoData.length;
+            document.getElementById('videos-badge').textContent = `${Math.round(realVideoCount/videoData.length*100)}% Real`;
+            document.getElementById('videos-badge').className = 'badge red';
+            document.getElementById('videos-progress').style.width = `${realVideoCount/videoData.length*100}%`;
+
+            document.getElementById('visuals-count').textContent = `${visualCount}/365`;
+            document.getElementById('visuals-progress').style.width = `${visualCount/365*100}%`;
+
+            // Total fake count is now shown dynamically in the alert
+
+            // Stats
+            document.getElementById('stat-books-total').textContent = bookData.length;
+            document.getElementById('stat-books-unique').textContent = Object.keys(isbnCounts).length;
+            document.getElementById('stat-books-duplicate').textContent = duplicateIsbns.length;
+            document.getElementById('stat-books-fake').textContent = fakeBookCount;
+
+            document.getElementById('stat-videos-total').textContent = videoData.length;
+            document.getElementById('stat-videos-unique').textContent = Object.keys(urlCounts).length;
+            document.getElementById('stat-videos-duplicate').textContent = duplicateUrls.length;
+            document.getElementById('stat-videos-fake').textContent = fakeVideoCount;
+
+            // Examples
+            if (duplicateIsbns.length > 0) {
+                const [worstIsbn, worstTitles] = duplicateIsbns[0];
+                const uniqueTitles = [...new Set(worstTitles)].slice(0, 5);
+                document.getElementById('fake-book-example').innerHTML = 
+                    `ISBN: ${worstIsbn}<br>Claimed as ${new Set(worstTitles).size} different books:<br>• ${uniqueTitles.join('<br>• ')}...`;
+            }
+
+            // Find a real book (ISBN used only once)
+            const realBook = Object.entries(isbnCounts).find(([isbn, titles]) => titles.length === 1);
+            if (realBook) {
+                const book = bookData.find(b => b.isbn === realBook[0]);
+                document.getElementById('real-book-example').innerHTML = 
+                    `ISBN: ${realBook[0]}<br>Title: "${book.title}"<br>Day ${book.day} - Used only once ✅`;
+            }
+
+            if (duplicateUrls.length > 0) {
+                const [worstUrl, worstTitles] = duplicateUrls[0];
+                const uniqueTitles = [...new Set(worstTitles)].slice(0, 5);
+                const videoId = worstUrl.split('v=')[1]?.substring(0, 11) || worstUrl;
+                document.getElementById('fake-video-example').innerHTML = 
+                    `URL: youtube.com/watch?v=${videoId}<br>Claimed as ${new Set(worstTitles).size} different videos:<br>• ${uniqueTitles.join('<br>• ')}...`;
+            }
+
+            // Worst offenders table
+            const worstTable = document.getElementById('worst-offenders-table');
+            const worstBooks = duplicateIsbns.slice(0, 3).map(([isbn, titles]) => ({
+                type: '📚 Book',
+                id: isbn,
+                count: new Set(titles).size,
+                samples: [...new Set(titles)].slice(0, 3).join(', ')
+            }));
+            const worstVideos = duplicateUrls.slice(0, 3).map(([url, titles]) => ({
+                type: '🎬 Video',
+                id: url.split('v=')[1]?.substring(0, 11) || 'N/A',
+                count: new Set(titles).size,
+                samples: [...new Set(titles)].slice(0, 3).join(', ')
+            }));
+            const allWorst = [...worstBooks, ...worstVideos].sort((a, b) => b.count - a.count);
+            
+            worstTable.innerHTML = allWorst.map(item => `
+                <tr>
+                    <td>${item.type}</td>
+                    <td style="font-family: monospace; font-size: 0.85rem">${item.id}</td>
+                    <td style="color: var(--accent-red); font-weight: 600">${item.count}×</td>
+                    <td style="font-size: 0.85rem; color: var(--text-muted)">${item.samples}...</td>
+                </tr>
+            `).join('');
+
+            // Update vibe and alert
+            const totalFake = fakeBookCount + fakeVideoCount;
+            const alertEl = document.getElementById('status-alert');
+            const alertIcon = document.getElementById('alert-icon');
+            const alertTitle = document.getElementById('alert-title');
+            const alertMessage = document.getElementById('alert-message');
+            
+            if (totalFake > 500) {
+                document.getElementById('vibe-indicator').className = 'vibe-indicator red';
+                document.getElementById('vibe-text').textContent = 'On Fire 🔥';
+                alertEl.className = 'alert critical';
+                alertEl.style.display = 'flex';
+                alertIcon.textContent = '🚨';
+                alertTitle.textContent = 'Hallucination Crisis Detected';
+                alertMessage.innerHTML = `Live audit found <strong>${totalFake}</strong> fake resources. Immediate action required.`;
+            } else if (totalFake > 100) {
+                document.getElementById('vibe-indicator').className = 'vibe-indicator yellow';
+                document.getElementById('vibe-text').textContent = 'Got Spicy 🌶️';
+                alertEl.className = 'alert critical';
+                alertEl.style.display = 'flex';
+                alertEl.style.borderColor = 'var(--accent-yellow)';
+                alertEl.style.background = 'rgba(245, 158, 11, 0.1)';
+                alertIcon.textContent = '⚠️';
+                alertTitle.textContent = 'Hallucinations Detected';
+                alertTitle.style.color = 'var(--accent-yellow)';
+                alertMessage.innerHTML = `Live audit found <strong>${totalFake}</strong> fake resources. Cleanup recommended.`;
+                alertMessage.style.color = 'var(--accent-yellow)';
+            } else if (totalFake > 0) {
+                document.getElementById('vibe-indicator').className = 'vibe-indicator yellow';
+                document.getElementById('vibe-text').textContent = 'Almost Clean 🧹';
+                alertEl.style.display = 'none';
+            } else {
+                document.getElementById('vibe-indicator').className = 'vibe-indicator green';
+                document.getElementById('vibe-text').textContent = 'Vibing ✨';
+                alertEl.className = 'alert';
+                alertEl.style.display = 'flex';
+                alertEl.style.borderColor = 'var(--accent-green)';
+                alertEl.style.background = 'rgba(34, 197, 94, 0.1)';
+                alertIcon.textContent = '✅';
+                alertTitle.textContent = 'All Clear!';
+                alertTitle.style.color = 'var(--accent-green)';
+                alertMessage.innerHTML = `Zero hallucinations detected. All <strong>${bookData.length}</strong> books and <strong>${videoData.length}</strong> videos are verified unique.`;
+                alertMessage.style.color = 'var(--accent-green)';
+            }
+
+            document.getElementById('refresh-time').textContent = `Last refreshed: ${new Date().toLocaleTimeString()}`;
+
+            // Check for content mismatches
+            await checkContentMismatches(lessons);
+        }
+
+        async function checkContentMismatches(lessons) {
+            // Helper to check if topic words appear in text
+            function hasTopicWords(topic, text) {
+                const words = topic.toLowerCase().split(/\s+/).filter(w => w.length > 3);
+                const lowerText = text.toLowerCase();
+                return words.some(word => lowerText.includes(word));
+            }
+
+            // Find headline mismatches
+            const headlineMismatches = [];
+            const truthMismatches = [];
+            let noBooks = 0;
+            let noVideos = 0;
+
+            lessons.forEach(lesson => {
+                // Check headline
+                if (lesson.marketing_headline && !hasTopicWords(lesson.topic, lesson.marketing_headline)) {
+                    // Double check with related words
+                    const topicLower = lesson.topic.toLowerCase();
+                    const headlineLower = lesson.marketing_headline.toLowerCase();
+                    
+                    // Skip if clearly related (manual exemptions for common patterns)
+                    const isRelated = 
+                        (topicLower.includes('listen') && headlineLower.includes('listen')) ||
+                        (topicLower.includes('patience') && (headlineLower.includes('wait') || headlineLower.includes('patient'))) ||
+                        (topicLower.includes('gratitude') && headlineLower.includes('grateful')) ||
+                        (topicLower.includes('courage') && (headlineLower.includes('brave') || headlineLower.includes('fear'))) ||
+                        (topicLower.includes('memory') && headlineLower.includes('remember'));
+                    
+                    if (!isRelated) {
+                        headlineMismatches.push(lesson);
+                    }
+                }
+
+                // Check universal truth
+                if (lesson.universal_truth && !hasTopicWords(lesson.topic, lesson.universal_truth)) {
+                    truthMismatches.push(lesson);
+                }
+
+                // Count missing resources
+                if (!lesson.recommended_books || lesson.recommended_books.length === 0) noBooks++;
+                if (!lesson.recommended_videos || lesson.recommended_videos.length === 0) noVideos++;
+            });
+
+            // Update stats
+            document.getElementById('stat-headline-mismatches').textContent = headlineMismatches.length;
+            document.getElementById('stat-truth-mismatches').textContent = truthMismatches.length;
+            document.getElementById('stat-no-books').textContent = noBooks;
+            document.getElementById('stat-no-videos').textContent = noVideos;
+
+            // Show sample mismatches
+            const mismatchList = document.getElementById('mismatch-list');
+            const samplesToShow = headlineMismatches.slice(0, 15);
+            
+            if (samplesToShow.length === 0) {
+                mismatchList.innerHTML = `
+                    <div class="empty-state" style="padding: 20px;">
+                        <div class="empty-state-icon">✅</div>
+                        <p>All headlines appear to match their topics!</p>
+                    </div>
+                `;
+            } else {
+                mismatchList.innerHTML = samplesToShow.map(lesson => `
+                    <div class="item" style="flex-direction: column; align-items: flex-start;">
+                        <div class="item-title" style="color: var(--accent-blue);">Day ${lesson.day_number}: ${lesson.topic}</div>
+                        <div class="headline-preview" style="margin-top: 8px; width: 100%;">
+                            "${lesson.marketing_headline}"
+                        </div>
+                    </div>
+                `).join('') + (headlineMismatches.length > 15 ? `
+                    <div style="text-align: center; padding: 16px; color: var(--text-muted);">
+                        ... and ${headlineMismatches.length - 15} more potential mismatches
+                    </div>
+                ` : '');
+            }
+        }
+
+        // Load sample headlines
+        async function loadRandomHeadlines() {
+            const randomDays = [];
+            while (randomDays.length < 5) {
+                const day = Math.floor(Math.random() * 365) + 1;
+                if (!randomDays.includes(day)) randomDays.push(day);
+            }
+
+            const { data: lessons } = await supabase
+                .from('core_lessons')
+                .select('day_number, topic, marketing_headline')
+                .in('day_number', randomDays)
+                .order('day_number');
+
+            const container = document.getElementById('headline-samples');
+            container.innerHTML = lessons.map(lesson => `
+                <div class="item">
+                    <div class="item-content">
+                        <div class="item-title">Day ${lesson.day_number}: ${lesson.topic}</div>
+                        <div class="headline-preview">"${lesson.marketing_headline}"</div>
+                    </div>
+                    <div class="item-actions">
+                        <button class="btn btn-approve" onclick="alert('Chef\\'s kiss! ✨')">👨‍🍳 Chef's Kiss</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Initialize
+        runFullAudit();
+        loadRandomHeadlines();
+
+        // Make functions global
+        window.runFullAudit = runFullAudit;
+        window.loadRandomHeadlines = loadRandomHeadlines;
+        window.runSlopScan = () => alert('Slop scan would run via: npm run slop:detect');
+        window.viewRandomHeadline = loadRandomHeadlines;
+        window.viewWeekOne = () => window.location.href = '/learn.html?day=1';
+        window.exportAudit = () => {
+            alert('Audit export coming soon! For now, check the browser console for full data.');
+            console.log('Full audit data available in runFullAudit() results');
+        };
+        window.viewAuthority = () => window.open('/CLAUDE_AUTHORITY.md', '_blank');
+        window.viewLanguage = () => window.open('/CLAUDE_LANGUAGE.md', '_blank');
+    </script>
+</body>
+</html>

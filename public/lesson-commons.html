@@ -1,0 +1,687 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Lesson Commons - Zero Trust Audit Trail</title>
+    <style>
+        :root {
+            --bg-dark: #0d1117;
+            --bg-card: #161b22;
+            --bg-elevated: #21262d;
+            --text-primary: #f0f6fc;
+            --text-secondary: #8b949e;
+            --text-muted: #6e7681;
+            --accent-green: #3fb950;
+            --accent-yellow: #d29922;
+            --accent-red: #f85149;
+            --accent-blue: #58a6ff;
+            --accent-purple: #a371f7;
+            --border: #30363d;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Helvetica, Arial, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 32px;
+        }
+
+        header h1 {
+            font-size: 1.75rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .badge {
+            padding: 4px 12px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .badge.green { background: rgba(63, 185, 80, 0.2); color: var(--accent-green); }
+        .badge.yellow { background: rgba(210, 153, 34, 0.2); color: var(--accent-yellow); }
+        .badge.red { background: rgba(248, 81, 73, 0.2); color: var(--accent-red); }
+        .badge.blue { background: rgba(88, 166, 255, 0.2); color: var(--accent-blue); }
+
+        .philosophy {
+            background: linear-gradient(135deg, rgba(163, 113, 247, 0.1), rgba(88, 166, 255, 0.1));
+            border: 1px solid var(--accent-purple);
+            border-radius: 12px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .philosophy h2 {
+            font-size: 1.1rem;
+            color: var(--accent-purple);
+            margin-bottom: 12px;
+        }
+
+        .philosophy p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: 700;
+            line-height: 1;
+        }
+
+        .stat-value.green { color: var(--accent-green); }
+        .stat-value.yellow { color: var(--accent-yellow); }
+        .stat-value.red { color: var(--accent-red); }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-top: 8px;
+        }
+
+        .section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            margin-bottom: 24px;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .section-title {
+            font-size: 1rem;
+            font-weight: 600;
+        }
+
+        .filters {
+            display: flex;
+            gap: 8px;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 6px 14px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 20px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .filter-btn.active {
+            background: var(--accent-blue);
+            border-color: var(--accent-blue);
+            color: white;
+        }
+
+        .lesson-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(100px, 1fr));
+            gap: 8px;
+            padding: 20px;
+        }
+
+        .lesson-cell {
+            aspect-ratio: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.85rem;
+            border: 1px solid transparent;
+        }
+
+        .lesson-cell:hover {
+            transform: scale(1.05);
+            border-color: var(--accent-blue);
+        }
+
+        .lesson-cell.pass {
+            background: rgba(63, 185, 80, 0.2);
+            color: var(--accent-green);
+        }
+
+        .lesson-cell.fail {
+            background: rgba(248, 81, 73, 0.2);
+            color: var(--accent-red);
+        }
+
+        .lesson-cell.warning {
+            background: rgba(210, 153, 34, 0.2);
+            color: var(--accent-yellow);
+        }
+
+        .lesson-cell .day-num {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .lesson-cell .status-icon {
+            font-size: 0.75rem;
+            margin-top: 4px;
+        }
+
+        .audit-list {
+            max-height: 500px;
+            overflow-y: auto;
+        }
+
+        .audit-item {
+            display: flex;
+            align-items: flex-start;
+            padding: 16px 20px;
+            border-bottom: 1px solid var(--border);
+            gap: 16px;
+        }
+
+        .audit-item:last-child {
+            border-bottom: none;
+        }
+
+        .audit-item:hover {
+            background: var(--bg-elevated);
+        }
+
+        .audit-day {
+            font-weight: 700;
+            font-size: 0.9rem;
+            color: var(--accent-blue);
+            min-width: 60px;
+        }
+
+        .audit-content {
+            flex: 1;
+        }
+
+        .audit-type {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            margin-bottom: 4px;
+        }
+
+        .audit-issue {
+            font-size: 0.9rem;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .audit-value {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            background: var(--bg-dark);
+            padding: 8px 12px;
+            border-radius: 6px;
+            font-family: monospace;
+            word-break: break-word;
+        }
+
+        .audit-status {
+            min-width: 80px;
+            text-align: right;
+        }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            max-width: 700px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+
+        .modal-body {
+            padding: 20px;
+        }
+
+        .detail-row {
+            display: flex;
+            padding: 12px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .detail-label {
+            color: var(--text-muted);
+            min-width: 140px;
+            font-size: 0.85rem;
+        }
+
+        .detail-value {
+            color: var(--text-primary);
+            flex: 1;
+        }
+
+        footer {
+            text-align: center;
+            padding: 32px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        footer a {
+            color: var(--accent-blue);
+            text-decoration: none;
+        }
+
+        .search-box {
+            padding: 10px 16px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.9rem;
+            width: 200px;
+        }
+
+        .search-box:focus {
+            outline: none;
+            border-color: var(--accent-blue);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏛️ Lesson Commons</h1>
+            <div style="display: flex; align-items: center; gap: 16px;">
+                <input type="text" class="search-box" placeholder="Search day #..." id="day-search" oninput="filterByDay(this.value)">
+                <span id="last-audit" style="font-size: 0.85rem; color: var(--text-muted);">Loading...</span>
+            </div>
+        </header>
+
+        <div class="philosophy">
+            <h2>🔐 Zero Trust Audit System</h2>
+            <p>
+                Every lesson, every field, every claim—audited and visible to all. 
+                No hidden fixes. No secret changes. The Commons shows exactly what Picky Nicky found, 
+                what was fixed, and what still needs attention. This is our trove of daily delight—we protect it together.
+            </p>
+        </div>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value green" id="stat-passed">--</div>
+                <div class="stat-label">Lessons Passed</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value red" id="stat-headline">--</div>
+                <div class="stat-label">Headline Mismatches</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value red" id="stat-truth">--</div>
+                <div class="stat-label">Truth Mismatches</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value yellow" id="stat-warnings">--</div>
+                <div class="stat-label">Warnings</div>
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">📊 365-Day Audit Map</h2>
+                <span id="map-legend" style="font-size: 0.75rem; color: var(--text-muted);">
+                    🟢 Pass | 🔴 Fail | 🟡 Warning
+                </span>
+            </div>
+            <div class="filters">
+                <button class="filter-btn active" onclick="setFilter('all')">All</button>
+                <button class="filter-btn" onclick="setFilter('pass')">✅ Passed</button>
+                <button class="filter-btn" onclick="setFilter('fail')">❌ Failed</button>
+                <button class="filter-btn" onclick="setFilter('warning')">⚠️ Warnings</button>
+                <button class="filter-btn" onclick="setFilter('headline')">📰 Headlines</button>
+                <button class="filter-btn" onclick="setFilter('truth')">💡 Truths</button>
+            </div>
+            <div class="lesson-grid" id="lesson-grid">
+                <!-- Generated by JS -->
+            </div>
+        </div>
+
+        <div class="section">
+            <div class="section-header">
+                <h2 class="section-title">📋 Detailed Audit Trail</h2>
+                <span class="badge red" id="fail-count">-- issues</span>
+            </div>
+            <div class="audit-list" id="audit-list">
+                <!-- Generated by JS -->
+            </div>
+        </div>
+
+        <footer>
+            <p>Lesson Commons • Built for transparency • <a href="/public/picky-nicky.html">Picky Nicky Dashboard</a></p>
+            <p style="margin-top: 8px;">Every lesson, every audit, fully visible. Trust through verification.</p>
+        </footer>
+    </div>
+
+    <!-- Lesson Detail Modal -->
+    <div class="modal" id="lesson-modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="modal-title">Day X: Topic</h2>
+                <button class="modal-close" onclick="closeModal()">×</button>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <!-- Generated by JS -->
+            </div>
+        </div>
+    </div>
+
+    <script type="module">
+        import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+
+        const SUPABASE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI';
+        const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        let allAudits = [];
+        let allLessons = [];
+        let currentFilter = 'all';
+
+        async function loadData() {
+            // Load audits
+            const { data: audits } = await supabase
+                .from('lesson_audits')
+                .select('*')
+                .order('day_number');
+
+            // Load lessons for details
+            const { data: lessons } = await supabase
+                .from('core_lessons')
+                .select('day_number, topic, marketing_headline, universal_truth')
+                .order('day_number');
+
+            allAudits = audits || [];
+            allLessons = lessons || [];
+
+            updateStats();
+            renderGrid();
+            renderAuditList();
+
+            // Update last audit time
+            if (audits && audits.length > 0) {
+                const lastAudit = new Date(audits[0].audited_at);
+                document.getElementById('last-audit').textContent = `Last audit: ${lastAudit.toLocaleString()}`;
+            }
+        }
+
+        function updateStats() {
+            const passed = allAudits.filter(a => a.audit_type === 'full_audit' && a.status === 'pass').length;
+            const headlines = allAudits.filter(a => a.audit_type === 'headline_topic_match' && a.status === 'fail').length;
+            const truths = allAudits.filter(a => a.audit_type === 'universal_truth_match' && a.status === 'fail').length;
+            const warnings = allAudits.filter(a => a.status === 'warning').length;
+
+            document.getElementById('stat-passed').textContent = passed;
+            document.getElementById('stat-headline').textContent = headlines;
+            document.getElementById('stat-truth').textContent = truths;
+            document.getElementById('stat-warnings').textContent = warnings;
+            document.getElementById('fail-count').textContent = `${headlines + truths} critical issues`;
+        }
+
+        function getLessonStatus(dayNumber) {
+            const dayAudits = allAudits.filter(a => a.day_number === dayNumber);
+            const hasFail = dayAudits.some(a => a.status === 'fail');
+            const hasWarning = dayAudits.some(a => a.status === 'warning');
+            const hasPass = dayAudits.some(a => a.audit_type === 'full_audit' && a.status === 'pass');
+            
+            if (hasFail) return 'fail';
+            if (hasWarning && !hasPass) return 'warning';
+            if (hasPass) return 'pass';
+            return 'warning';
+        }
+
+        // Convert day number to real date - FOUNDATIONAL for trust
+        function dayToDate(dayNumber) {
+            const year = new Date().getFullYear();
+            const date = new Date(year, 0, dayNumber);
+            return {
+                full: date.toLocaleDateString('en-US', { weekday: 'long', month: 'long', day: 'numeric', year: 'numeric' }),
+                short: date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }),
+                fancy: date.toLocaleDateString('en-US', { month: 'long', day: 'numeric' }),
+                tiny: date.toLocaleDateString('en-US', { month: 'narrow', day: 'numeric' }),
+                monthDay: `${date.toLocaleDateString('en-US', { month: 'short' })} ${date.getDate()}`,
+                iso: date.toISOString().split('T')[0]
+            };
+        }
+
+        function renderGrid() {
+            const grid = document.getElementById('lesson-grid');
+            let html = '';
+
+            for (let day = 1; day <= 365; day++) {
+                const status = getLessonStatus(day);
+                const dayAudits = allAudits.filter(a => a.day_number === day);
+                const dateInfo = dayToDate(day);
+                
+                // Apply filter
+                if (currentFilter !== 'all') {
+                    if (currentFilter === 'pass' && status !== 'pass') continue;
+                    if (currentFilter === 'fail' && status !== 'fail') continue;
+                    if (currentFilter === 'warning' && status !== 'warning') continue;
+                    if (currentFilter === 'headline' && !dayAudits.some(a => a.audit_type === 'headline_topic_match' && a.status === 'fail')) continue;
+                    if (currentFilter === 'truth' && !dayAudits.some(a => a.audit_type === 'universal_truth_match' && a.status === 'fail')) continue;
+                }
+
+                const icon = status === 'pass' ? '✓' : status === 'fail' ? '✗' : '!';
+                html += `
+                    <div class="lesson-cell ${status}" onclick="showLessonDetail(${day})" title="${dateInfo.full}">
+                        <span class="day-num">${dateInfo.tiny}</span>
+                        <span class="status-icon">${icon}</span>
+                    </div>
+                `;
+            }
+
+            grid.innerHTML = html || '<div style="padding: 40px; text-align: center; color: var(--text-muted);">No lessons match this filter</div>';
+        }
+
+        function renderAuditList() {
+            const list = document.getElementById('audit-list');
+            const failures = allAudits.filter(a => a.status === 'fail');
+            
+            if (failures.length === 0) {
+                list.innerHTML = '<div style="padding: 40px; text-align: center; color: var(--text-muted);">No failures found! 🎉</div>';
+                return;
+            }
+
+            let html = '';
+            for (const audit of failures.slice(0, 100)) {
+                const lesson = allLessons.find(l => l.day_number === audit.day_number);
+                const dateInfo = dayToDate(audit.day_number);
+                html += `
+                    <div class="audit-item" onclick="showLessonDetail(${audit.day_number})">
+                        <div class="audit-day">${dateInfo.short}</div>
+                        <div class="audit-content">
+                            <div class="audit-type">${audit.audit_type.replace(/_/g, ' ')}</div>
+                            <div class="audit-issue">${audit.actual_issue}</div>
+                            ${audit.original_value ? `<div class="audit-value">"${audit.original_value.substring(0, 150)}${audit.original_value.length > 150 ? '...' : ''}"</div>` : ''}
+                        </div>
+                        <div class="audit-status">
+                            <span class="badge red">FAIL</span>
+                        </div>
+                    </div>
+                `;
+            }
+
+            if (failures.length > 100) {
+                html += `<div style="padding: 20px; text-align: center; color: var(--text-muted);">... and ${failures.length - 100} more</div>`;
+            }
+
+            list.innerHTML = html;
+        }
+
+        window.showLessonDetail = function(dayNumber) {
+            const lesson = allLessons.find(l => l.day_number === dayNumber);
+            const dayAudits = allAudits.filter(a => a.day_number === dayNumber);
+            const dateInfo = dayToDate(dayNumber);
+
+            document.getElementById('modal-title').textContent = `${dateInfo.fancy}: ${lesson?.topic || 'Unknown'}`;
+
+            let html = `
+                <div class="detail-row" style="background: rgba(59, 130, 246, 0.1); margin: -20px -20px 16px; padding: 16px 20px; border-radius: 8px 8px 0 0;">
+                    <span class="detail-label" style="color: var(--accent-blue);">📅 Date</span>
+                    <span class="detail-value" style="color: var(--accent-blue); font-weight: 600;">${dateInfo.full}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Topic</span>
+                    <span class="detail-value">${lesson?.topic || 'N/A'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Headline</span>
+                    <span class="detail-value">${lesson?.marketing_headline || 'N/A'}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Universal Truth</span>
+                    <span class="detail-value">${lesson?.universal_truth || 'N/A'}</span>
+                </div>
+                <h3 style="margin: 20px 0 12px; font-size: 1rem;">🔬 Audit Trail</h3>
+            `;
+
+            for (const audit of dayAudits) {
+                const statusClass = audit.status === 'pass' ? 'green' : audit.status === 'fail' ? 'red' : 'yellow';
+                const auditDate = audit.audited_at ? new Date(audit.audited_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit' }) : '';
+                html += `
+                    <div class="detail-row">
+                        <span class="detail-label">${audit.audit_type.replace(/_/g, ' ')}</span>
+                        <span class="detail-value">
+                            <span class="badge ${statusClass}">${audit.status.toUpperCase()}</span>
+                            ${audit.actual_issue ? `<br><span style="font-size: 0.85rem; color: var(--text-secondary);">${audit.actual_issue}</span>` : ''}
+                            ${auditDate ? `<br><span style="font-size: 0.75rem; color: var(--text-muted);">Checked: ${auditDate}</span>` : ''}
+                        </span>
+                    </div>
+                `;
+            }
+            
+            // Add link to learn this lesson
+            html += `
+                <div style="margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border);">
+                    <a href="/public/learn.html?day=${dayNumber}" style="display: block; text-align: center; padding: 12px; background: var(--accent-blue); color: white; border-radius: 8px; text-decoration: none; font-weight: 600;">
+                        📚 Learn This Lesson
+                    </a>
+                </div>
+            `;
+
+            document.getElementById('modal-body').innerHTML = html;
+            document.getElementById('lesson-modal').classList.add('active');
+        };
+
+        window.closeModal = function() {
+            document.getElementById('lesson-modal').classList.remove('active');
+        };
+
+        window.setFilter = function(filter) {
+            currentFilter = filter;
+            document.querySelectorAll('.filter-btn').forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+            renderGrid();
+        };
+
+        window.filterByDay = function(value) {
+            const day = parseInt(value);
+            if (day >= 1 && day <= 365) {
+                showLessonDetail(day);
+            }
+        };
+
+        // Close modal on outside click
+        document.getElementById('lesson-modal').addEventListener('click', (e) => {
+            if (e.target.id === 'lesson-modal') closeModal();
+        });
+
+        // Initialize
+        loadData();
+    </script>
+</body>
+</html>
+

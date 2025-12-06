@@ -1,0 +1,322 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kelly Lip-Sync Test</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: 'Segoe UI', system-ui, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: #fff;
+      padding: 2rem;
+    }
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 2rem;
+      font-size: 2rem;
+      background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 16px;
+      padding: 2rem;
+      margin-bottom: 2rem;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: #aaa;
+      font-size: 0.85rem;
+    }
+    input, select, textarea {
+      width: 100%;
+      padding: 0.75rem 1rem;
+      background: rgba(0,0,0,0.3);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      color: #fff;
+      font-size: 1rem;
+    }
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+    input:focus, select:focus, textarea:focus {
+      outline: none;
+      border-color: #00d4ff;
+    }
+    button {
+      background: linear-gradient(90deg, #00d4ff, #7b2cbf);
+      color: #fff;
+      border: none;
+      padding: 1rem 2rem;
+      border-radius: 8px;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      width: 100%;
+      transition: transform 0.2s, opacity 0.2s;
+    }
+    button:hover { transform: translateY(-2px); }
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      transform: none;
+    }
+    .status {
+      margin-top: 1.5rem;
+      padding: 1rem;
+      border-radius: 8px;
+      background: rgba(0,0,0,0.3);
+      font-family: monospace;
+      font-size: 0.9rem;
+      white-space: pre-wrap;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+    .status.error { border-left: 4px solid #ff4757; }
+    .status.success { border-left: 4px solid #2ed573; }
+    .status.loading { border-left: 4px solid #ffa502; }
+    .video-result {
+      margin-top: 2rem;
+      text-align: center;
+    }
+    video {
+      max-width: 100%;
+      border-radius: 12px;
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+    .preview-image {
+      max-width: 300px;
+      border-radius: 8px;
+      margin: 1rem auto;
+      display: block;
+    }
+    .env-check {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+      margin-bottom: 1rem;
+    }
+    .env-item {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.85rem;
+    }
+    .env-item.ok { background: rgba(46, 213, 115, 0.2); color: #2ed573; }
+    .env-item.missing { background: rgba(255, 71, 87, 0.2); color: #ff4757; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎬 Kelly 4K Lip-Sync Generator</h1>
+    
+    <div class="card">
+      <h3 style="margin-bottom: 1rem;">Environment Status</h3>
+      <div class="env-check" id="envCheck">
+        <span class="env-item">Loading...</span>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-bottom: 1.5rem;">Generate Lip-Sync Video</h3>
+      
+      <div class="grid">
+        <div>
+          <label>Lesson Day (1-365)</label>
+          <input type="number" id="lessonDay" min="1" max="365" value="1">
+        </div>
+        <div>
+          <label>Image Type</label>
+          <select id="imageType">
+            <option value="hero">Hero (Kelly portrait)</option>
+            <option value="guide-point">Guide Point</option>
+            <option value="reaction">Reaction</option>
+          </select>
+        </div>
+        <div>
+          <label>Model</label>
+          <select id="model">
+            <option value="sadtalker">SadTalker (Fast, Good)</option>
+            <option value="sadtalker_alt">SadTalker Alt</option>
+            <option value="liveportrait">LivePortrait (Best Quality)</option>
+            <option value="wav2lip">Wav2Lip</option>
+          </select>
+        </div>
+        <div>
+          <label>4K Upscale</label>
+          <select id="upscale">
+            <option value="false">No (Faster)</option>
+            <option value="true">Yes (4K Quality)</option>
+          </select>
+        </div>
+      </div>
+
+      <div style="margin-bottom: 1.5rem;">
+        <label>Text for Kelly to speak</label>
+        <textarea id="text" placeholder="Hello! I'm Kelly, and I'm so excited to learn with you today!">Hello! I'm Kelly, your learning companion. Today we're going to explore something truly fascinating together!</textarea>
+      </div>
+
+      <button id="generate" onclick="generateVideo()">🎬 Generate Lip-Sync Video</button>
+
+      <div id="status" class="status" style="display: none;"></div>
+
+      <div id="preview" style="margin-top: 1rem; text-align: center;"></div>
+
+      <div id="videoResult" class="video-result" style="display: none;">
+        <h3 style="margin-bottom: 1rem;">Generated Video</h3>
+        <video id="resultVideo" controls autoplay loop></video>
+        <p style="margin-top: 1rem; color: #aaa;">
+          <a id="downloadLink" href="#" download="kelly-lipsync.mp4" style="color: #00d4ff;">
+            📥 Download Video
+          </a>
+        </p>
+      </div>
+    </div>
+
+    <div class="card">
+      <h3 style="margin-bottom: 1rem;">Quick Presets</h3>
+      <div style="display: flex; gap: 0.5rem; flex-wrap: wrap;">
+        <button style="flex: 1; min-width: 150px;" onclick="setPreset('welcome')">👋 Welcome</button>
+        <button style="flex: 1; min-width: 150px;" onclick="setPreset('question')">❓ Question</button>
+        <button style="flex: 1; min-width: 150px;" onclick="setPreset('celebrate')">🎉 Celebrate</button>
+        <button style="flex: 1; min-width: 150px;" onclick="setPreset('hint')">💡 Hint</button>
+      </div>
+    </div>
+  </div>
+
+  <script>
+    const presets = {
+      welcome: "Hello! I'm Kelly, your learning companion. I'm so excited to learn with you today! Let's discover something amazing together.",
+      question: "Hmm, that's a great question! Let me think about this for a moment. What do you think the answer might be?",
+      celebrate: "Wonderful! You did it! I'm so proud of you! Every step forward is a victory worth celebrating!",
+      hint: "Here's a little hint for you. Pay close attention to the details. Sometimes the answer is hiding in plain sight!",
+    };
+
+    function setPreset(key) {
+      document.getElementById('text').value = presets[key];
+    }
+
+    // Check environment on load
+    async function checkEnv() {
+      try {
+        const res = await fetch('/api/health');
+        const data = await res.json();
+        const env = data.env || {};
+        
+        const items = [
+          { key: 'hasElevenLabsKey', label: 'ElevenLabs' },
+          { key: 'hasReplicateToken', label: 'Replicate' },
+          { key: 'hasSupabaseKey', label: 'Supabase' },
+        ];
+        
+        document.getElementById('envCheck').innerHTML = items.map(item => {
+          const ok = env[item.key];
+          return `<span class="env-item ${ok ? 'ok' : 'missing'}">${ok ? '✅' : '❌'} ${item.label}</span>`;
+        }).join('');
+      } catch (e) {
+        document.getElementById('envCheck').innerHTML = '<span class="env-item missing">❌ Health check failed</span>';
+      }
+    }
+
+    // Preview image when lesson changes
+    function updatePreview() {
+      const lessonDay = document.getElementById('lessonDay').value;
+      const imageType = document.getElementById('imageType').value;
+      const paddedDay = String(lessonDay).padStart(3, '0');
+      const filename = `lesson-${lessonDay}-${imageType}.png`;
+      const url = `/kelly/lessons/${paddedDay}/${filename}`;
+      
+      document.getElementById('preview').innerHTML = `
+        <p style="color: #aaa; margin-bottom: 0.5rem;">Preview:</p>
+        <img src="${url}" class="preview-image" onerror="this.style.display='none'">
+      `;
+    }
+
+    document.getElementById('lessonDay').addEventListener('change', updatePreview);
+    document.getElementById('imageType').addEventListener('change', updatePreview);
+
+    async function generateVideo() {
+      const btn = document.getElementById('generate');
+      const status = document.getElementById('status');
+      const videoResult = document.getElementById('videoResult');
+      
+      btn.disabled = true;
+      btn.textContent = '⏳ Generating...';
+      status.style.display = 'block';
+      status.className = 'status loading';
+      status.textContent = 'Starting pipeline...\n';
+      videoResult.style.display = 'none';
+
+      const payload = {
+        lessonDay: parseInt(document.getElementById('lessonDay').value),
+        imageType: document.getElementById('imageType').value,
+        model: document.getElementById('model').value,
+        upscale: document.getElementById('upscale').value === 'true',
+        text: document.getElementById('text').value,
+      };
+
+      status.textContent += `Lesson: ${payload.lessonDay}\n`;
+      status.textContent += `Model: ${payload.model}\n`;
+      status.textContent += `Upscale: ${payload.upscale}\n`;
+      status.textContent += `Text: ${payload.text.substring(0, 50)}...\n\n`;
+      status.textContent += 'Calling API...\n';
+
+      try {
+        const startTime = Date.now();
+        const res = await fetch('/api/replicate-lipsync', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload),
+        });
+
+        const data = await res.json();
+        const elapsed = ((Date.now() - startTime) / 1000).toFixed(1);
+
+        if (data.success) {
+          status.className = 'status success';
+          status.textContent += `\n✅ SUCCESS in ${elapsed}s!\n`;
+          status.textContent += `Video URL: ${data.videoUrl}\n`;
+          
+          videoResult.style.display = 'block';
+          document.getElementById('resultVideo').src = data.videoUrl;
+          document.getElementById('downloadLink').href = data.videoUrl;
+        } else {
+          status.className = 'status error';
+          status.textContent += `\n❌ ERROR: ${data.error}\n`;
+          if (data.setup) {
+            status.textContent += `\n💡 Setup: ${data.setup}\n`;
+          }
+        }
+      } catch (e) {
+        status.className = 'status error';
+        status.textContent += `\n❌ NETWORK ERROR: ${e.message}\n`;
+      }
+
+      btn.disabled = false;
+      btn.textContent = '🎬 Generate Lip-Sync Video';
+    }
+
+    // Initialize
+    checkEnv();
+    updatePreview();
+  </script>
+</body>
+</html>
+

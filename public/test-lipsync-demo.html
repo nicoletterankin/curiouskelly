@@ -1,0 +1,699 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelly Lipsync Demo - What We Built</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #0f3460 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, #f39c12, #e74c3c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            color: #8892b0;
+            margin-bottom: 2rem;
+            font-size: 1.1rem;
+        }
+        
+        .demo-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .panel {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .panel h2 {
+            font-size: 1.2rem;
+            margin-bottom: 1rem;
+            color: #64ffda;
+        }
+        
+        /* Kelly's Face Visualization */
+        .kelly-face {
+            width: 300px;
+            height: 300px;
+            margin: 0 auto;
+            position: relative;
+            background: radial-gradient(circle at 50% 40%, #ffdbac 0%, #e0ac69 100%);
+            border-radius: 50% 50% 45% 45%;
+        }
+        
+        .eye {
+            position: absolute;
+            width: 40px;
+            height: 25px;
+            background: #fff;
+            border-radius: 50%;
+            top: 100px;
+        }
+        .eye.left { left: 70px; }
+        .eye.right { right: 70px; }
+        
+        .eye::after {
+            content: '';
+            position: absolute;
+            width: 15px;
+            height: 15px;
+            background: #2c3e50;
+            border-radius: 50%;
+            top: 5px;
+            left: 12px;
+        }
+        
+        .mouth {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 20px;
+            background: #c0392b;
+            border-radius: 0 0 30px 30px;
+            transition: all 0.05s ease;
+            overflow: hidden;
+        }
+        
+        .mouth::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 10%;
+            width: 80%;
+            height: 8px;
+            background: #922b21;
+            border-radius: 0 0 20px 20px;
+        }
+        
+        /* Blendshape Visualizer */
+        .blendshape-bars {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .blendshape-row {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .blendshape-label {
+            width: 140px;
+            font-size: 0.75rem;
+            color: #8892b0;
+            text-align: right;
+        }
+        
+        .blendshape-bar {
+            flex: 1;
+            height: 16px;
+            background: rgba(255,255,255,0.1);
+            border-radius: 8px;
+            overflow: hidden;
+        }
+        
+        .blendshape-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #3498db, #2ecc71);
+            border-radius: 8px;
+            transition: width 0.05s ease;
+            width: 0%;
+        }
+        
+        .blendshape-value {
+            width: 40px;
+            font-size: 0.75rem;
+            color: #64ffda;
+            font-family: monospace;
+        }
+        
+        /* Timeline */
+        .timeline-container {
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            padding: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .timeline {
+            height: 60px;
+            background: rgba(255,255,255,0.05);
+            border-radius: 4px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .timeline-playhead {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 2px;
+            background: #e74c3c;
+            left: 0%;
+            transition: left 0.1s linear;
+        }
+        
+        .phoneme-markers {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+        }
+        
+        .phoneme-marker {
+            position: absolute;
+            top: 5px;
+            font-size: 9px;
+            color: #64ffda;
+            transform: translateX(-50%);
+        }
+        
+        /* Controls */
+        .controls {
+            display: flex;
+            gap: 1rem;
+            margin-top: 1rem;
+            flex-wrap: wrap;
+        }
+        
+        button {
+            padding: 0.75rem 1.5rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #f39c12, #e74c3c);
+            color: #fff;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(243, 156, 18, 0.4);
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        select {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+            font-size: 1rem;
+        }
+        
+        /* Stats */
+        .stats {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 1rem;
+            margin-top: 1rem;
+        }
+        
+        .stat {
+            background: rgba(255,255,255,0.05);
+            padding: 1rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: #64ffda;
+        }
+        
+        .stat-label {
+            font-size: 0.75rem;
+            color: #8892b0;
+            margin-top: 0.25rem;
+        }
+        
+        /* Explanation Section */
+        .explanation {
+            background: rgba(100, 255, 218, 0.1);
+            border: 1px solid rgba(100, 255, 218, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .explanation h3 {
+            color: #64ffda;
+            margin-bottom: 1rem;
+        }
+        
+        .explanation p {
+            color: #ccd6f6;
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+        
+        .pipeline-flow {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 1rem;
+            margin: 1.5rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .pipeline-step {
+            background: rgba(255,255,255,0.1);
+            padding: 0.75rem 1.25rem;
+            border-radius: 8px;
+            text-align: center;
+        }
+        
+        .pipeline-step .icon {
+            font-size: 1.5rem;
+            margin-bottom: 0.25rem;
+        }
+        
+        .pipeline-arrow {
+            color: #64ffda;
+            font-size: 1.5rem;
+        }
+        
+        .code-block {
+            background: #0d1117;
+            border-radius: 8px;
+            padding: 1rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+            font-family: 'Monaco', 'Menlo', monospace;
+            font-size: 0.85rem;
+            color: #c9d1d9;
+        }
+        
+        @media (max-width: 900px) {
+            .demo-grid { grid-template-columns: 1fr; }
+            .stats { grid-template-columns: repeat(2, 1fr); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>✨ Kelly Lipsync Pipeline</h1>
+        <p class="subtitle">Pre-computed phoneme-to-blendshape animation for natural speech</p>
+        
+        <div class="demo-grid">
+            <!-- Kelly's Face -->
+            <div class="panel">
+                <h2>🎭 Kelly's Face (Simplified 2D)</h2>
+                <div class="kelly-face">
+                    <div class="eye left"></div>
+                    <div class="eye right"></div>
+                    <div class="mouth" id="kellyMouth"></div>
+                </div>
+                
+                <div class="controls">
+                    <select id="daySelect">
+                        <option value="1">Day 1: Starting Fresh</option>
+                        <option value="2">Day 2: Three Lives of Water</option>
+                        <option value="3">Day 3: Where Clouds Come From</option>
+                        <option value="4">Day 4: How Light Travels</option>
+                        <option value="5">Day 5: How Sound Moves</option>
+                    </select>
+                    <select id="phaseSelect">
+                        <option value="script">Main Script</option>
+                        <option value="response_A">Response A</option>
+                        <option value="response_B">Response B</option>
+                        <option value="response_C">Response C</option>
+                    </select>
+                </div>
+                
+                <div class="controls">
+                    <button class="btn-primary" onclick="loadAndPlay()">▶️ Play with Lipsync</button>
+                    <button class="btn-secondary" onclick="stopPlayback()">⏹️ Stop</button>
+                </div>
+                
+                <audio id="audioPlayer" style="width: 100%; margin-top: 1rem;"></audio>
+            </div>
+            
+            <!-- Blendshape Visualizer -->
+            <div class="panel">
+                <h2>📊 Live Blendshape Values</h2>
+                <div class="blendshape-bars" id="blendshapeBars">
+                    <!-- Populated by JS -->
+                </div>
+                
+                <div class="timeline-container">
+                    <h2 style="font-size: 1rem; margin-bottom: 0.5rem;">🎬 Phoneme Timeline</h2>
+                    <div class="timeline" id="timeline">
+                        <div class="phoneme-markers" id="phonemeMarkers"></div>
+                        <div class="timeline-playhead" id="playhead"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Stats -->
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value" id="statWords">0</div>
+                <div class="stat-label">Words</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="statPhones">0</div>
+                <div class="stat-label">Phonemes</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="statFrames">0</div>
+                <div class="stat-label">Animation Frames</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value" id="statFPS">30</div>
+                <div class="stat-label">FPS</div>
+            </div>
+        </div>
+        
+        <!-- Explanation -->
+        <div class="explanation">
+            <h3>🧠 How It Works</h3>
+            
+            <div class="pipeline-flow">
+                <div class="pipeline-step">
+                    <div class="icon">📝</div>
+                    <div>Lesson Script</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step">
+                    <div class="icon">🎙️</div>
+                    <div>ElevenLabs TTS</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step">
+                    <div class="icon">🔊</div>
+                    <div>Phoneme Alignment</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step">
+                    <div class="icon">👄</div>
+                    <div>Blendshape Timeline</div>
+                </div>
+                <div class="pipeline-arrow">→</div>
+                <div class="pipeline-step">
+                    <div class="icon">💾</div>
+                    <div>Supabase</div>
+                </div>
+            </div>
+            
+            <p><strong>Step 1:</strong> We take Kelly's lesson scripts from the database.</p>
+            <p><strong>Step 2:</strong> ElevenLabs generates audio using Kelly's trained voice.</p>
+            <p><strong>Step 3:</strong> Forced alignment extracts phoneme timing (when each sound happens).</p>
+            <p><strong>Step 4:</strong> Phonemes map to visemes (mouth shapes), which map to ARKit blendshapes.</p>
+            <p><strong>Step 5:</strong> Pre-computed 30 FPS timeline stored in Supabase for instant playback.</p>
+            
+            <div class="code-block">
+// Sample blendshape frame from the timeline:
+{
+  "timestamp": 1.233,
+  "blendshapes": {
+    "jawOpen": 65,
+    "mouthOpen": 60,
+    "mouthStretchLeft": 25,
+    "mouthStretchRight": 25,
+    "mouthSmileLeft": 15,
+    "mouthSmileRight": 15
+  }
+}
+            </div>
+            
+            <p><strong>Result:</strong> When Kelly speaks, her mouth moves naturally in sync with the audio - no runtime processing needed!</p>
+        </div>
+    </div>
+
+    <script>
+        // Blendshapes we're tracking
+        const TRACKED_BLENDSHAPES = [
+            'jawOpen', 'mouthOpen', 'mouthFunnel', 'mouthPucker',
+            'mouthStretchLeft', 'mouthStretchRight', 
+            'mouthSmileLeft', 'mouthSmileRight',
+            'mouthClose', 'mouthPressLeft', 'mouthPressRight'
+        ];
+        
+        // Current state
+        let currentAlignment = null;
+        let animationFrame = null;
+        let currentBlendshapes = {};
+        
+        // Initialize blendshape bars
+        function initBlendshapeBars() {
+            const container = document.getElementById('blendshapeBars');
+            container.innerHTML = TRACKED_BLENDSHAPES.map(name => `
+                <div class="blendshape-row">
+                    <div class="blendshape-label">${name}</div>
+                    <div class="blendshape-bar">
+                        <div class="blendshape-fill" id="bar-${name}"></div>
+                    </div>
+                    <div class="blendshape-value" id="val-${name}">0</div>
+                </div>
+            `).join('');
+        }
+        
+        // Update blendshape visualization
+        function updateBlendshapes(blendshapes) {
+            currentBlendshapes = blendshapes;
+            
+            TRACKED_BLENDSHAPES.forEach(name => {
+                const value = blendshapes[name] || 0;
+                const bar = document.getElementById(`bar-${name}`);
+                const val = document.getElementById(`val-${name}`);
+                if (bar) bar.style.width = `${value}%`;
+                if (val) val.textContent = Math.round(value);
+            });
+            
+            // Update Kelly's mouth
+            updateKellyMouth(blendshapes);
+        }
+        
+        // Simplified mouth animation
+        function updateKellyMouth(bs) {
+            const mouth = document.getElementById('kellyMouth');
+            const jawOpen = (bs.jawOpen || 0) / 100;
+            const mouthOpen = (bs.mouthOpen || 0) / 100;
+            const stretch = ((bs.mouthStretchLeft || 0) + (bs.mouthStretchRight || 0)) / 200;
+            const pucker = (bs.mouthPucker || 0) / 100;
+            const funnel = (bs.mouthFunnel || 0) / 100;
+            
+            // Calculate mouth dimensions
+            const width = 40 + (stretch * 40) - (pucker * 20) + (funnel * 10);
+            const height = 8 + (jawOpen * 35) + (mouthOpen * 20);
+            const borderRadius = pucker > 0.3 ? '50%' : `0 0 ${30 + height}px ${30 + height}px`;
+            
+            mouth.style.width = `${width}px`;
+            mouth.style.height = `${height}px`;
+            mouth.style.borderRadius = borderRadius;
+        }
+        
+        // Load alignment data from Supabase
+        async function loadAlignment(day, phase) {
+            const SUPABASE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co';
+            const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2ZvcnZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI1NTY3MTYsImV4cCI6MjA0ODEzMjcxNn0.VmT9ihlWqsIyQWFT_PrZWnmm8i7tVAZWKsLJNpB4P6c';
+            
+            try {
+                const response = await fetch(
+                    `${SUPABASE_URL}/rest/v1/lipsync_alignments?day_number=eq.${day}&phase=eq.${phase}&age_bucket=eq.6-12&select=*`,
+                    {
+                        headers: {
+                            'apikey': SUPABASE_ANON_KEY,
+                            'Authorization': `Bearer ${SUPABASE_ANON_KEY}`
+                        }
+                    }
+                );
+                
+                const data = await response.json();
+                if (data && data.length > 0) {
+                    return data[0];
+                }
+                throw new Error('No alignment found');
+            } catch (error) {
+                console.error('Error loading alignment:', error);
+                // Return mock data for demo
+                return generateMockAlignment();
+            }
+        }
+        
+        // Generate mock alignment for demo
+        function generateMockAlignment() {
+            const words = ['Hello', 'and', 'welcome', 'to', 'your', 'daily', 'lesson'];
+            const phones = [];
+            const timeline = [];
+            
+            let time = 0;
+            words.forEach(word => {
+                const wordDuration = 0.3 + Math.random() * 0.2;
+                for (let i = 0; i < word.length; i++) {
+                    const phoneDuration = wordDuration / word.length;
+                    phones.push({
+                        phone: word[i].toUpperCase(),
+                        start: time,
+                        end: time + phoneDuration,
+                        viseme: ['A', 'E', 'I', 'O', 'U'].includes(word[i].toUpperCase()) ? word[i].toUpperCase() : 'C'
+                    });
+                    time += phoneDuration;
+                }
+                time += 0.1;
+            });
+            
+            // Generate timeline at 30 FPS
+            const duration = time;
+            for (let t = 0; t <= duration; t += 1/30) {
+                const currentPhone = phones.find(p => t >= p.start && t < p.end);
+                const blendshapes = currentPhone ? getBlendshapesForViseme(currentPhone.viseme) : { jawOpen: 5, mouthOpen: 0 };
+                timeline.push({ timestamp: t, blendshapes });
+            }
+            
+            return {
+                words: words.map((w, i) => ({ word: w, start: i * 0.4, end: (i + 1) * 0.4 })),
+                phones,
+                blendshape_timeline: timeline,
+                duration_seconds: duration
+            };
+        }
+        
+        // Get blendshapes for viseme
+        function getBlendshapesForViseme(viseme) {
+            const visemeMap = {
+                'A': { jawOpen: 80, mouthOpen: 75, mouthStretchLeft: 10, mouthStretchRight: 10 },
+                'E': { jawOpen: 35, mouthOpen: 30, mouthStretchLeft: 35, mouthStretchRight: 35, mouthSmileLeft: 25, mouthSmileRight: 25 },
+                'I': { jawOpen: 15, mouthOpen: 10, mouthStretchLeft: 50, mouthStretchRight: 50, mouthSmileLeft: 30, mouthSmileRight: 30 },
+                'O': { jawOpen: 55, mouthOpen: 50, mouthFunnel: 45, mouthPucker: 20 },
+                'U': { jawOpen: 20, mouthOpen: 15, mouthFunnel: 60, mouthPucker: 70 },
+                'C': { jawOpen: 10, mouthOpen: 5, mouthStretchLeft: 25, mouthStretchRight: 25 },
+                'M': { jawOpen: 0, mouthClose: 100, mouthPressLeft: 40, mouthPressRight: 40 },
+            };
+            return visemeMap[viseme] || { jawOpen: 5, mouthOpen: 0 };
+        }
+        
+        // Render phoneme markers on timeline
+        function renderPhonemeMarkers(phones, duration) {
+            const container = document.getElementById('phonemeMarkers');
+            container.innerHTML = phones.slice(0, 50).map(p => {
+                const left = (p.start / duration) * 100;
+                return `<div class="phoneme-marker" style="left: ${left}%">${p.phone || p.viseme}</div>`;
+            }).join('');
+        }
+        
+        // Play animation synced to audio
+        function playAnimation() {
+            const audio = document.getElementById('audioPlayer');
+            const playhead = document.getElementById('playhead');
+            
+            if (!currentAlignment || !currentAlignment.blendshape_timeline) return;
+            
+            const timeline = currentAlignment.blendshape_timeline;
+            const duration = currentAlignment.duration_seconds || audio.duration;
+            
+            function animate() {
+                if (audio.paused || audio.ended) {
+                    updateBlendshapes({ jawOpen: 5, mouthOpen: 0 });
+                    return;
+                }
+                
+                const currentTime = audio.currentTime;
+                playhead.style.left = `${(currentTime / duration) * 100}%`;
+                
+                // Find current frame
+                const frameIndex = Math.floor(currentTime * 30);
+                if (timeline[frameIndex]) {
+                    updateBlendshapes(timeline[frameIndex].blendshapes);
+                }
+                
+                animationFrame = requestAnimationFrame(animate);
+            }
+            
+            animate();
+        }
+        
+        // Load and play
+        async function loadAndPlay() {
+            const day = document.getElementById('daySelect').value;
+            const phase = document.getElementById('phaseSelect').value;
+            
+            // Load alignment from Supabase
+            currentAlignment = await loadAlignment(day, phase);
+            
+            // Update stats
+            document.getElementById('statWords').textContent = currentAlignment.words?.length || 0;
+            document.getElementById('statPhones').textContent = currentAlignment.phones?.length || 0;
+            document.getElementById('statFrames').textContent = currentAlignment.blendshape_timeline?.length || 0;
+            
+            // Render phoneme markers
+            if (currentAlignment.phones) {
+                renderPhonemeMarkers(currentAlignment.phones, currentAlignment.duration_seconds || 10);
+            }
+            
+            // Try to load audio file
+            const audio = document.getElementById('audioPlayer');
+            audio.src = `../generated-audio/day-${day}/${day}_6-12_en_${phase}.mp3`;
+            audio.controls = true;
+            
+            audio.onplay = playAnimation;
+            audio.onended = () => {
+                updateBlendshapes({ jawOpen: 5, mouthOpen: 0 });
+                document.getElementById('playhead').style.left = '0%';
+            };
+            
+            try {
+                await audio.play();
+            } catch (e) {
+                console.log('Audio autoplay blocked, click play button');
+            }
+        }
+        
+        // Stop playback
+        function stopPlayback() {
+            const audio = document.getElementById('audioPlayer');
+            audio.pause();
+            audio.currentTime = 0;
+            if (animationFrame) {
+                cancelAnimationFrame(animationFrame);
+            }
+            updateBlendshapes({ jawOpen: 5, mouthOpen: 0 });
+            document.getElementById('playhead').style.left = '0%';
+        }
+        
+        // Initialize
+        initBlendshapeBars();
+        updateBlendshapes({ jawOpen: 5, mouthOpen: 0 });
+    </script>
+</body>
+</html>
+

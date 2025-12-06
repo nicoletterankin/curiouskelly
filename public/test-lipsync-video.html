@@ -1,0 +1,451 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Kelly Lipsync Video Calibration</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: 'SF Pro Display', -apple-system, sans-serif;
+            background: linear-gradient(135deg, #0f0c29 0%, #302b63 50%, #24243e 100%);
+            min-height: 100vh;
+            color: #fff;
+            padding: 2rem;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        h1 {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            background: linear-gradient(90deg, #f39c12, #e74c3c);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .subtitle {
+            color: #8892b0;
+            margin-bottom: 2rem;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+        
+        .panel {
+            background: rgba(255,255,255,0.05);
+            border-radius: 16px;
+            padding: 1.5rem;
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .panel h2 {
+            font-size: 1.1rem;
+            margin-bottom: 1rem;
+            color: #64ffda;
+        }
+        
+        .image-preview {
+            width: 100%;
+            aspect-ratio: 1;
+            background: #1a1a2e;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        
+        .image-preview img {
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
+        }
+        
+        .video-preview {
+            width: 100%;
+            aspect-ratio: 1;
+            background: #1a1a2e;
+            border-radius: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            margin-bottom: 1rem;
+        }
+        
+        .video-preview video {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        
+        .form-group {
+            margin-bottom: 1rem;
+        }
+        
+        label {
+            display: block;
+            font-size: 0.85rem;
+            color: #8892b0;
+            margin-bottom: 0.5rem;
+        }
+        
+        select, input, textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+            font-size: 1rem;
+        }
+        
+        textarea {
+            min-height: 100px;
+            resize: vertical;
+        }
+        
+        .row {
+            display: flex;
+            gap: 1rem;
+        }
+        
+        .row > * {
+            flex: 1;
+        }
+        
+        button {
+            width: 100%;
+            padding: 1rem;
+            border: none;
+            border-radius: 8px;
+            font-size: 1.1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-weight: 600;
+        }
+        
+        .btn-generate {
+            background: linear-gradient(135deg, #f39c12, #e74c3c);
+            color: #fff;
+            margin-top: 1rem;
+        }
+        
+        .btn-generate:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 20px rgba(243, 156, 18, 0.4);
+        }
+        
+        .btn-generate:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .status {
+            margin-top: 1rem;
+            padding: 1rem;
+            border-radius: 8px;
+            font-size: 0.9rem;
+        }
+        
+        .status.info {
+            background: rgba(52, 152, 219, 0.2);
+            border: 1px solid rgba(52, 152, 219, 0.5);
+            color: #5dade2;
+        }
+        
+        .status.success {
+            background: rgba(46, 204, 113, 0.2);
+            border: 1px solid rgba(46, 204, 113, 0.5);
+            color: #58d68d;
+        }
+        
+        .status.error {
+            background: rgba(231, 76, 60, 0.2);
+            border: 1px solid rgba(231, 76, 60, 0.5);
+            color: #ec7063;
+        }
+        
+        .pipeline-steps {
+            display: flex;
+            gap: 0.5rem;
+            margin: 1rem 0;
+            flex-wrap: wrap;
+        }
+        
+        .step {
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            background: rgba(255,255,255,0.1);
+            color: #8892b0;
+        }
+        
+        .step.active {
+            background: rgba(52, 152, 219, 0.3);
+            color: #5dade2;
+            animation: pulse 1s infinite;
+        }
+        
+        .step.done {
+            background: rgba(46, 204, 113, 0.3);
+            color: #58d68d;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.6; }
+        }
+        
+        .cost-estimate {
+            font-size: 0.85rem;
+            color: #8892b0;
+            margin-top: 0.5rem;
+        }
+        
+        .explanation {
+            background: rgba(100, 255, 218, 0.1);
+            border: 1px solid rgba(100, 255, 218, 0.3);
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-top: 2rem;
+        }
+        
+        .explanation h3 {
+            color: #64ffda;
+            margin-bottom: 1rem;
+        }
+        
+        .explanation p {
+            color: #ccd6f6;
+            line-height: 1.6;
+            margin-bottom: 0.5rem;
+        }
+        
+        @media (max-width: 768px) {
+            .grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎬 Kelly Lipsync Video - Calibration</h1>
+        <p class="subtitle">Generate real talking videos from lesson photos + ElevenLabs audio</p>
+        
+        <div class="grid">
+            <!-- Input Panel -->
+            <div class="panel">
+                <h2>📸 Source Image</h2>
+                
+                <div class="image-preview" id="imagePreview">
+                    <img id="previewImg" alt="Kelly will appear here">
+                </div>
+                
+                <div class="row">
+                    <div class="form-group">
+                        <label>Day (1-365)</label>
+                        <input type="number" id="dayNumber" value="1" min="1" max="365">
+                    </div>
+                    <div class="form-group">
+                        <label>Phase</label>
+                        <select id="phase">
+                            <option value="hook">Hook (Intro)</option>
+                            <option value="q1">Question 1</option>
+                            <option value="q2">Question 2</option>
+                            <option value="q3">Question 3</option>
+                            <option value="wisdom">Wisdom (Close)</option>
+                        </select>
+                    </div>
+                </div>
+                
+                <button class="btn-generate" style="background: #3498db;" onclick="loadImage()">
+                    Load Kelly Image
+                </button>
+                
+                <div class="form-group" style="margin-top: 1rem;">
+                    <label>Text for Kelly to speak</label>
+                    <textarea id="speechText" placeholder="Enter the text Kelly should say...">Hello! Today we're going to explore something amazing together. Are you ready to learn?</textarea>
+                </div>
+                
+                <div class="form-group">
+                    <label>Lipsync Model</label>
+                    <select id="model">
+                        <option value="sadtalker">SadTalker (Fast, Good)</option>
+                        <option value="liveportrait">LivePortrait (Better Quality)</option>
+                        <option value="wav2lip">Wav2Lip (Classic)</option>
+                    </select>
+                </div>
+                
+                <div class="form-group">
+                    <label>
+                        <input type="checkbox" id="upscale"> Upscale to 4K (slower, costs more)
+                    </label>
+                </div>
+                
+                <p class="cost-estimate">
+                    💰 Estimated cost: ~$0.05-0.15 per video (ElevenLabs + Replicate)
+                </p>
+            </div>
+            
+            <!-- Output Panel -->
+            <div class="panel">
+                <h2>🎥 Generated Video</h2>
+                
+                <div class="video-preview" id="videoPreview">
+                    <video id="resultVideo" controls style="display: none;"></video>
+                    <span id="videoPlaceholder" style="color: #8892b0;">Video will appear here</span>
+                </div>
+                
+                <div class="pipeline-steps" id="pipelineSteps">
+                    <span class="step" data-step="1">1. Load Image</span>
+                    <span class="step" data-step="2">2. Generate Audio</span>
+                    <span class="step" data-step="3">3. Create Lipsync</span>
+                    <span class="step" data-step="4">4. Upscale (opt)</span>
+                </div>
+                
+                <button class="btn-generate" id="generateBtn" onclick="generateVideo()">
+                    🎬 Generate Talking Video
+                </button>
+                
+                <div id="status" class="status info" style="display: none;"></div>
+            </div>
+        </div>
+        
+        <div class="explanation">
+            <h3>🔬 What This Prototype Tests</h3>
+            <p><strong>Goal:</strong> Take a REAL Kelly image from your lesson assets and make her TALK with the ElevenLabs voice.</p>
+            <p><strong>Pipeline:</strong></p>
+            <p>1. Load Kelly image from <code>public/kelly/phases/{day}/{phase}.png</code></p>
+            <p>2. Send text to ElevenLabs → Get MP3 audio (Kelly's voice)</p>
+            <p>3. Send image + audio to Replicate (SadTalker/LivePortrait) → Get MP4 video</p>
+            <p>4. (Optional) Upscale video with Real-ESRGAN</p>
+            <p><strong>This proves:</strong> We can generate lesson videos programmatically from your verified content.</p>
+        </div>
+    </div>
+
+    <script>
+        const API_BASE = '/api';
+        
+        function padDay(day) {
+            return String(day).padStart(3, '0');
+        }
+        
+        function getImageUrl(day, phase) {
+            return `/kelly/phases/${padDay(day)}/${phase}.png`;
+        }
+        
+        function loadImage() {
+            const day = document.getElementById('dayNumber').value;
+            const phase = document.getElementById('phase').value;
+            const imageUrl = getImageUrl(day, phase);
+            
+            const img = document.getElementById('previewImg');
+            img.src = imageUrl;
+            img.onerror = () => {
+                img.src = '';
+                img.alt = `Image not found: ${imageUrl}`;
+                showStatus(`Image not found: ${imageUrl}`, 'error');
+            };
+            img.onload = () => {
+                showStatus(`Loaded: Day ${day} - ${phase}`, 'success');
+                setStep(1, 'done');
+            };
+        }
+        
+        function setStep(stepNum, state) {
+            document.querySelectorAll('.step').forEach(el => {
+                const num = parseInt(el.dataset.step);
+                if (num < stepNum) {
+                    el.className = 'step done';
+                } else if (num === stepNum) {
+                    el.className = `step ${state}`;
+                } else {
+                    el.className = 'step';
+                }
+            });
+        }
+        
+        function showStatus(message, type = 'info') {
+            const status = document.getElementById('status');
+            status.textContent = message;
+            status.className = `status ${type}`;
+            status.style.display = 'block';
+        }
+        
+        async function generateVideo() {
+            const btn = document.getElementById('generateBtn');
+            btn.disabled = true;
+            btn.textContent = '⏳ Generating...';
+            
+            const day = document.getElementById('dayNumber').value;
+            const phase = document.getElementById('phase').value;
+            const text = document.getElementById('speechText').value;
+            const model = document.getElementById('model').value;
+            const upscale = document.getElementById('upscale').checked;
+            
+            try {
+                // Step 2: Generate audio
+                setStep(2, 'active');
+                showStatus('Generating Kelly\'s voice with ElevenLabs...', 'info');
+                
+                // Step 3: Generate lipsync
+                setStep(3, 'active');
+                showStatus(`Creating lipsync video with ${model}...`, 'info');
+                
+                const imageUrl = window.location.origin + getImageUrl(day, phase);
+                
+                const response = await fetch(`${API_BASE}/replicate-lipsync`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        lessonDay: parseInt(day),
+                        phase,
+                        text,
+                        model,
+                        upscale,
+                        imageUrl
+                    })
+                });
+                
+                const result = await response.json();
+                
+                if (!result.success) {
+                    throw new Error(result.error || 'Generation failed');
+                }
+                
+                // Step 4: Done
+                setStep(4, 'done');
+                showStatus(`✅ Video generated in ${result.metadata?.duration || 'N/A'}!`, 'success');
+                
+                // Show video
+                const video = document.getElementById('resultVideo');
+                const placeholder = document.getElementById('videoPlaceholder');
+                
+                video.src = result.videoUrl;
+                video.style.display = 'block';
+                placeholder.style.display = 'none';
+                
+            } catch (error) {
+                showStatus(`❌ Error: ${error.message}`, 'error');
+                console.error(error);
+            } finally {
+                btn.disabled = false;
+                btn.textContent = '🎬 Generate Talking Video';
+            }
+        }
+        
+        // Load initial image
+        loadImage();
+    </script>
+</body>
+</html>
+
