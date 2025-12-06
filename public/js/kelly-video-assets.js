@@ -108,14 +108,14 @@ class KellyVideoManager {
     }
     
     try {
-      // Normalize archetype for query
-      const archetypeQuery = archetype.replace(/\s+/g, '_');
+      // URL encode the archetype for the query
+      const encodedArchetype = encodeURIComponent(archetype);
       
       const response = await fetch(
         `${SUPABASE_URL}/rest/v1/kelly_video_assets?` +
         `day_number=eq.${this.dayNumber}&` +
         `phase=eq.${phase}&` +
-        `age_bucket=eq.${archetype}&` +
+        `age_bucket=eq.${encodedArchetype}&` +
         `asset_type=eq.video&` +
         `select=public_url`,
         {
@@ -151,11 +151,13 @@ class KellyVideoManager {
     }
     
     try {
+      const encodedArchetype = encodeURIComponent(archetype);
+      
       const response = await fetch(
         `${SUPABASE_URL}/rest/v1/kelly_video_assets?` +
         `day_number=eq.${this.dayNumber}&` +
         `phase=eq.${phase}&` +
-        `age_bucket=eq.${archetype}&` +
+        `age_bucket=eq.${encodedArchetype}&` +
         `asset_type=eq.audio&` +
         `select=public_url`,
         {
