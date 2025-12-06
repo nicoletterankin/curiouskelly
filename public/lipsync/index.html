@@ -210,12 +210,12 @@
         <p class="subtitle">Premium AI-powered talking head generation. Compare models, test expressions, and calibrate for film-quality output.</p>
         <div class="stats">
             <div class="stat">
-                <div class="stat-value" id="totalVideos">14</div>
+                <div class="stat-value" id="totalVideos">27</div>
                 <div class="stat-label">Videos Generated</div>
             </div>
             <div class="stat">
-                <div class="stat-value">3</div>
-                <div class="stat-label">Models Tested</div>
+                <div class="stat-value">4</div>
+                <div class="stat-label">Test Categories</div>
             </div>
             <div class="stat">
                 <div class="stat-value">4K</div>
@@ -230,6 +230,8 @@
             <div class="controls">
                 <select id="filterModel" onchange="filterVideos()">
                     <option value="all">All Models</option>
+                    <option value="headpose">🎭 Head Pose</option>
+                    <option value="expression">😀 Expression</option>
                     <option value="sadtalker">SadTalker</option>
                     <option value="wav2lip">Wav2Lip</option>
                 </select>
@@ -274,6 +276,21 @@
     <script>
         // All videos from calibration runs
         const videos = [
+            // HEAD POSE TESTS (13 videos) - NEW!
+            { name: "neutral", model: "headpose", day: 1, phase: "hook", time: "34.7s", url: "https://replicate.delivery/yhqm/Ju49u8ZQ6oKuBVOiel6StkfX3XmqnzCUPw8GkPoXBC3INXwVA/out.mp4", note: "🎭 baseline" },
+            { name: "slight_left", model: "headpose", day: 1, phase: "hook", time: "34.7s", url: "https://replicate.delivery/yhqm/0HsDb54dsgKXPhFuUoex3XuRkCPpX44cGGUR7DbkhWs2mL4KA/out.mp4", note: "yaw:-10°" },
+            { name: "slight_right", model: "headpose", day: 1, phase: "hook", time: "35.0s", url: "https://replicate.delivery/yhqm/wRO5CRnKX6J9PlSbBAd1BzZFoQtAsstjLwsJBbs3GZukzFcF/out.mp4", note: "yaw:+10°" },
+            { name: "nod_down", model: "headpose", day: 1, phase: "hook", time: "34.6s", url: "https://replicate.delivery/yhqm/6K3w34Bw12ITMVxwehkOHrMMCD37HJWne4NWtsDkfnjvdugrA/out.mp4", note: "pitch:+10°" },
+            { name: "tilt_left", model: "headpose", day: 1, phase: "hook", time: "34.7s", url: "https://replicate.delivery/yhqm/zqStILOpMaoxEZPxRVNhc6ILPM0mqxVYrMef8EuLjbGbPXwVA/out.mp4", note: "roll:-10°" },
+            { name: "engaged", model: "headpose", day: 1, phase: "hook", time: "34.9s", url: "https://replicate.delivery/yhqm/1jPvYM9RLZ5fTCc7yloWSHK1bjKVVkgwUBWAbomzSCHAoL4KA/out.mp4", quality: "premium", note: "🏆 natural" },
+            { name: "pose_style_10", model: "headpose", day: 1, phase: "hook", time: "34.7s", url: "https://replicate.delivery/yhqm/JNBjG3fcAjy3US5Osf9KoOPXQTnDHhOxLw6uPgTQ9j6lQXwVA/out.mp4", note: "style:10" },
+            { name: "pose_style_20", model: "headpose", day: 1, phase: "hook", time: "34.8s", url: "https://replicate.delivery/yhqm/XG6EZhq7JaZeXC0hEpwMBeuAXOd7y73Vau7PR2b3YV8KRXwVA/out.mp4", note: "style:20" },
+            { name: "pose_style_30", model: "headpose", day: 1, phase: "hook", time: "34.9s", url: "https://replicate.delivery/yhqm/vhs5GP5UTK4WKpu4uys3ePeBrtF0aw7V6OgAwmrK8y8vRXwVA/out.mp4", note: "style:30" },
+            { name: "subtle_0.6", model: "expression", day: 1, phase: "hook", time: "34.9s", url: "https://replicate.delivery/yhqm/LbCWm8tRxxL7N5BuZqXj4Nm1f46mgCAz1RD9yvyYMnYKpL4KA/out.mp4", exp: 0.6 },
+            { name: "normal_1.0", model: "expression", day: 1, phase: "hook", time: "34.7s", url: "https://replicate.delivery/yhqm/7eYrAGYr3L0hFSt55WdlXhVr7lEhsb5rdbvl4p6e1rX4SXwVA/out.mp4", exp: 1.0 },
+            { name: "expressive_1.3", model: "expression", day: 1, phase: "hook", time: "34.8s", url: "https://replicate.delivery/yhqm/HizGYfmEAVXTGiReoo6meFK8Zuf6bZAQftjHW1SoYcWob6CuC/out.mp4", exp: 1.3 },
+            { name: "dramatic_1.6", model: "expression", day: 1, phase: "hook", time: "34.9s", url: "https://replicate.delivery/yhqm/4LFPeP2Jjfv3YkiosgCZ33t7aVe5nJWFqaf0YCJwfeGrA1FcF/out.mp4", exp: 1.6, note: "⚠️ exaggerated" },
+            
             // Initial calibration (11 tests)
             { name: "sadtalker_baseline", model: "sadtalker", day: 1, phase: "hook", time: "155.9s", url: "https://replicate.delivery/yhqm/DmRN6pZbwQI3F5er1XuHMcsvf6iP8lYDjc9cr1VKvjsnzWwVA/out.mp4", quality: "baseline" },
             { name: "wav2lip_baseline", model: "wav2lip", day: 1, phase: "hook", time: "3.9s", url: "https://replicate.delivery/yhqm/rzdX4kaV40IsLZ4cXGdxfb8ewsOj864RU0xIwplIFXrszWwVA/result_voice.mp4", quality: "fast" },
