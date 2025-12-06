@@ -1,0 +1,541 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <title>Golden Lesson — Day 1: Starting Fresh</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png">
+    <link rel="stylesheet" href="/css/brand-colors.css">
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        :root {
+            --bg: #0a0a0f;
+            --card: #12121a;
+            --accent: #10b981;
+            --gold: #f59e0b;
+            --blue: #3b82f6;
+        }
+        
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg);
+            color: #e6edf3;
+            min-height: 100vh;
+            overflow: hidden;
+        }
+        
+        /* Main Layout */
+        .golden-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            max-width: 100vw;
+        }
+        
+        /* Header */
+        .golden-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem 1.5rem;
+            background: rgba(0,0,0,0.5);
+            backdrop-filter: blur(10px);
+            z-index: 100;
+        }
+        .lesson-title {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        .day-badge {
+            background: var(--gold);
+            color: #000;
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+        .lesson-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        .live-indicator {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            background: rgba(239,68,68,0.2);
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.85rem;
+        }
+        .live-dot {
+            width: 8px;
+            height: 8px;
+            background: #ef4444;
+            border-radius: 50%;
+            animation: pulse 1.5s infinite;
+        }
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.5; transform: scale(1.2); }
+        }
+        
+        /* Kelly Frame */
+        .kelly-frame {
+            flex: 1;
+            position: relative;
+            background: linear-gradient(180deg, #1a1a2e 0%, #0a0a0f 100%);
+            overflow: hidden;
+        }
+        .kelly-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+        }
+        .kelly-container img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            object-position: center 20%;
+            transition: opacity 0.3s ease;
+        }
+        
+        /* Phase Progress Rail */
+        .phase-rail {
+            position: absolute;
+            left: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            display: flex;
+            flex-direction: column;
+            gap: 1rem;
+            z-index: 50;
+        }
+        .phase-item {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+        .phase-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: rgba(255,255,255,0.2);
+            border: 2px solid transparent;
+            transition: all 0.3s ease;
+        }
+        .phase-item.active .phase-dot {
+            background: var(--accent);
+            border-color: var(--accent);
+            box-shadow: 0 0 12px var(--accent);
+        }
+        .phase-item.completed .phase-dot {
+            background: var(--accent);
+        }
+        .phase-label {
+            font-size: 0.75rem;
+            color: rgba(255,255,255,0.5);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+        .phase-item.active .phase-label {
+            color: var(--accent);
+        }
+        
+        /* Caption Bar */
+        .caption-bar {
+            position: absolute;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            max-width: 800px;
+            width: 90%;
+            background: rgba(0,0,0,0.85);
+            backdrop-filter: blur(10px);
+            padding: 1.25rem 1.5rem;
+            border-radius: 12px;
+            z-index: 50;
+        }
+        .caption-text {
+            font-size: 1.1rem;
+            line-height: 1.6;
+            color: #fff;
+            text-align: center;
+        }
+        .caption-phase {
+            text-align: center;
+            font-size: 0.75rem;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 0.5rem;
+        }
+        
+        /* Bottom Controls */
+        .bottom-controls {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 1rem;
+            padding: 1rem;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(10px);
+        }
+        .control-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            padding: 0.75rem 1.5rem;
+            border-radius: 8px;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .control-btn:hover {
+            background: rgba(255,255,255,0.2);
+        }
+        .control-btn.primary {
+            background: var(--accent);
+            color: #000;
+            font-weight: 600;
+        }
+        .control-btn.primary:hover {
+            background: #0d9668;
+        }
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* Archetype Selector */
+        .archetype-selector {
+            position: absolute;
+            right: 1.5rem;
+            top: 50%;
+            transform: translateY(-50%);
+            z-index: 50;
+        }
+        .archetype-btn {
+            background: rgba(0,0,0,0.7);
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.85rem;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        .archetype-dropdown {
+            position: absolute;
+            right: 0;
+            top: 100%;
+            margin-top: 0.5rem;
+            background: var(--card);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 0.5rem;
+            max-height: 300px;
+            overflow-y: auto;
+            display: none;
+            min-width: 180px;
+        }
+        .archetype-dropdown.open { display: block; }
+        .archetype-option {
+            padding: 0.75rem 1rem;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+        }
+        .archetype-option:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        .archetype-option.selected {
+            background: rgba(16,185,129,0.2);
+            color: var(--accent);
+        }
+        
+        /* Progress Bar */
+        .progress-bar {
+            height: 4px;
+            background: rgba(255,255,255,0.1);
+            width: 100%;
+        }
+        .progress-fill {
+            height: 100%;
+            background: var(--accent);
+            transition: width 0.3s ease;
+        }
+        
+        /* Status Badge */
+        .status-badge {
+            position: absolute;
+            top: 1rem;
+            right: 1rem;
+            background: rgba(0,0,0,0.8);
+            padding: 0.5rem 1rem;
+            border-radius: 8px;
+            font-size: 0.8rem;
+            z-index: 60;
+        }
+        .status-badge.playing {
+            color: var(--accent);
+        }
+        
+        /* Fonts */
+        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap');
+    </style>
+</head>
+<body>
+    <div class="golden-container">
+        <!-- Header -->
+        <header class="golden-header">
+            <div class="lesson-title">
+                <span class="day-badge">DAY 1</span>
+                <span class="lesson-name">Starting Fresh</span>
+            </div>
+            <div class="live-indicator">
+                <span class="live-dot"></span>
+                <span>GOLDEN LESSON</span>
+            </div>
+        </header>
+        
+        <!-- Progress Bar -->
+        <div class="progress-bar">
+            <div class="progress-fill" id="progress-fill" style="width: 20%"></div>
+        </div>
+        
+        <!-- Kelly Frame -->
+        <div class="kelly-frame">
+            <div class="kelly-container" id="kelly-container">
+                <img src="/kelly/poses/kelly_welcome.png" alt="Kelly" id="kelly-image">
+            </div>
+            
+            <!-- Phase Rail -->
+            <nav class="phase-rail" id="phase-rail">
+                <div class="phase-item active" data-phase="0">
+                    <div class="phase-dot"></div>
+                    <span class="phase-label">Hook</span>
+                </div>
+                <div class="phase-item" data-phase="1">
+                    <div class="phase-dot"></div>
+                    <span class="phase-label">Fact 1</span>
+                </div>
+                <div class="phase-item" data-phase="2">
+                    <div class="phase-dot"></div>
+                    <span class="phase-label">Fact 2</span>
+                </div>
+                <div class="phase-item" data-phase="3">
+                    <div class="phase-dot"></div>
+                    <span class="phase-label">Fact 3</span>
+                </div>
+                <div class="phase-item" data-phase="4">
+                    <div class="phase-dot"></div>
+                    <span class="phase-label">Wisdom</span>
+                </div>
+            </nav>
+            
+            <!-- Archetype Selector -->
+            <div class="archetype-selector">
+                <button class="archetype-btn" id="archetype-btn">
+                    <span>🎭</span>
+                    <span id="current-archetype">The Explorer</span>
+                    <span>▼</span>
+                </button>
+                <div class="archetype-dropdown" id="archetype-dropdown"></div>
+            </div>
+            
+            <!-- Status Badge -->
+            <div class="status-badge" id="status-badge">Ready</div>
+            
+            <!-- Caption Bar -->
+            <div class="caption-bar">
+                <div class="caption-phase" id="caption-phase">HOOK</div>
+                <div class="caption-text" id="caption-text">
+                    Every single day, you wake up with a chance to start over. Fresh starts are not just for January 1st...
+                </div>
+            </div>
+        </div>
+        
+        <!-- Bottom Controls -->
+        <div class="bottom-controls">
+            <button class="control-btn" id="btn-prev" disabled>← Previous</button>
+            <button class="control-btn primary" id="btn-play">▶ Play Lesson</button>
+            <button class="control-btn" id="btn-next">Next →</button>
+        </div>
+    </div>
+    
+    <!-- Scripts -->
+    <script src="/js/kelly-video-assets.js"></script>
+    <script>
+        // Initialize Golden Lesson
+        let goldenLesson;
+        
+        // Sample captions for each phase (will be fetched from real content)
+        const PHASE_CAPTIONS = {
+            hook: "Every single day, you wake up with a chance to start over. Fresh starts are not just for January 1st...",
+            q1: "Scientists at Wharton Business School discovered something fascinating: people are 62% more likely to pursue goals right after a temporal landmark—like a birthday, Monday, or new month.",
+            q2: "Here is the secret superpower of fresh starts: they create psychological distance from your past self...",
+            q3: "The most successful fresh starts combine three ingredients: a meaningful date, a specific goal, and a support system...",
+            wisdom: "Here is the beautiful truth about fresh starts: you do not need to wait for them. Every sunrise, every breath, is an invitation to begin again..."
+        };
+        
+        // Initialize
+        async function init() {
+            goldenLesson = new GoldenLessonController();
+            await goldenLesson.init('kelly-container', 'The Explorer');
+            
+            // Populate archetype dropdown
+            populateArchetypes();
+            
+            // Set up event listeners
+            setupControls();
+            
+            // Listen for video state changes
+            window.addEventListener('kelly-video-state', (e) => {
+                updateStatus(e.detail.state, e.detail.phase);
+            });
+            
+            console.log('[GoldenLesson] Ready!');
+        }
+        
+        function populateArchetypes() {
+            const dropdown = document.getElementById('archetype-dropdown');
+            dropdown.innerHTML = DAY_1_STRUCTURE.archetypes.map(arch => `
+                <div class="archetype-option ${arch === 'The Explorer' ? 'selected' : ''}" 
+                     data-archetype="${arch}">
+                    ${arch}
+                </div>
+            `).join('');
+            
+            // Click handlers
+            dropdown.querySelectorAll('.archetype-option').forEach(opt => {
+                opt.addEventListener('click', () => {
+                    const arch = opt.dataset.archetype;
+                    selectArchetype(arch);
+                });
+            });
+            
+            // Toggle dropdown
+            document.getElementById('archetype-btn').addEventListener('click', () => {
+                dropdown.classList.toggle('open');
+            });
+            
+            // Close on outside click
+            document.addEventListener('click', (e) => {
+                if (!e.target.closest('.archetype-selector')) {
+                    dropdown.classList.remove('open');
+                }
+            });
+        }
+        
+        function selectArchetype(arch) {
+            goldenLesson.setArchetype(arch);
+            document.getElementById('current-archetype').textContent = arch;
+            
+            // Update dropdown
+            document.querySelectorAll('.archetype-option').forEach(opt => {
+                opt.classList.toggle('selected', opt.dataset.archetype === arch);
+            });
+            document.getElementById('archetype-dropdown').classList.remove('open');
+            
+            // Restart current phase with new archetype
+            goldenLesson.playCurrentPhase();
+        }
+        
+        function setupControls() {
+            const btnPlay = document.getElementById('btn-play');
+            const btnPrev = document.getElementById('btn-prev');
+            const btnNext = document.getElementById('btn-next');
+            
+            btnPlay.addEventListener('click', async () => {
+                if (btnPlay.textContent.includes('Play')) {
+                    await goldenLesson.start();
+                    btnPlay.textContent = '⏸ Pause';
+                } else {
+                    goldenLesson.videoManager.pause();
+                    btnPlay.textContent = '▶ Resume';
+                }
+            });
+            
+            btnPrev.addEventListener('click', () => {
+                goldenLesson.previous();
+                updateUI();
+            });
+            
+            btnNext.addEventListener('click', () => {
+                goldenLesson.next();
+                updateUI();
+            });
+            
+            // Phase rail clicks
+            document.querySelectorAll('.phase-item').forEach(item => {
+                item.addEventListener('click', () => {
+                    const phaseIndex = parseInt(item.dataset.phase);
+                    goldenLesson.goToPhase(phaseIndex);
+                    updateUI();
+                });
+            });
+            
+            // Lesson complete handler
+            goldenLesson.onLessonComplete = () => {
+                document.getElementById('status-badge').textContent = '✅ Complete!';
+                document.getElementById('btn-play').textContent = '🔄 Replay';
+            };
+        }
+        
+        function updateUI() {
+            const progress = goldenLesson.getProgress();
+            
+            // Update progress bar
+            document.getElementById('progress-fill').style.width = `${progress.percent}%`;
+            
+            // Update phase rail
+            document.querySelectorAll('.phase-item').forEach((item, index) => {
+                item.classList.remove('active', 'completed');
+                if (index < progress.current - 1) {
+                    item.classList.add('completed');
+                } else if (index === progress.current - 1) {
+                    item.classList.add('active');
+                }
+            });
+            
+            // Update caption
+            const phase = progress.phase;
+            document.getElementById('caption-phase').textContent = progress.phaseName.toUpperCase();
+            document.getElementById('caption-text').textContent = PHASE_CAPTIONS[phase] || '';
+            
+            // Update nav buttons
+            document.getElementById('btn-prev').disabled = progress.current <= 1;
+            document.getElementById('btn-next').disabled = progress.current >= progress.total;
+        }
+        
+        function updateStatus(state, phase) {
+            const badge = document.getElementById('status-badge');
+            
+            if (state === 'playing') {
+                badge.textContent = '▶ Playing';
+                badge.classList.add('playing');
+            } else if (state === 'ended') {
+                badge.textContent = '✓ ' + PHASE_NAMES[phase];
+                badge.classList.remove('playing');
+            }
+            
+            updateUI();
+        }
+        
+        // Start
+        init();
+    </script>
+</body>
+</html>
+
