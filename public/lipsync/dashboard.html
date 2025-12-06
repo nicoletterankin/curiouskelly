@@ -117,6 +117,44 @@
         .day-num { font-weight: 600; }
         .day-status { font-size: 0.6rem; color: #666; }
         
+        .jobs-list {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 1rem;
+        }
+        .job-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.75rem;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+        }
+        .job-item:last-child { margin-bottom: 0; }
+        .job-info { flex: 1; }
+        .job-type { font-weight: 600; }
+        .job-details { font-size: 0.8rem; color: #666; }
+        .job-status { padding: 0.25rem 0.75rem; border-radius: 20px; font-size: 0.75rem; }
+        .job-status.running { background: rgba(16,185,129,0.2); color: var(--accent); }
+        .job-status.completed { background: rgba(100,100,100,0.2); color: #888; }
+        .job-status.pending { background: rgba(245,158,11,0.2); color: var(--gold); }
+        
+        .lesson-preview {
+            background: var(--card);
+            border-radius: 16px;
+            padding: 1.5rem;
+        }
+        .phase-preview {
+            padding: 1rem;
+            background: rgba(0,0,0,0.3);
+            border-radius: 8px;
+            margin-bottom: 0.75rem;
+        }
+        .phase-preview:last-child { margin-bottom: 0; }
+        .phase-name { color: var(--accent); font-weight: 600; margin-bottom: 0.5rem; }
+        .phase-script { font-size: 0.9rem; color: #ccc; line-height: 1.5; }
+        
         .links {
             display: flex;
             gap: 1rem;
@@ -213,6 +251,16 @@
         <div class="section">
             <div class="section-title">📅 Days (1-30)</div>
             <div class="day-grid" id="days-grid"></div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">📋 Active Jobs</div>
+            <div id="jobs-list" class="jobs-list">Loading jobs...</div>
+        </div>
+        
+        <div class="section">
+            <div class="section-title">📚 Lesson Content (Day 1 Preview)</div>
+            <div id="lesson-preview" class="lesson-preview">Loading...</div>
         </div>
         
         <div class="section">
@@ -321,12 +369,62 @@
             }
         }
         
+        async function loadJobs() {
+            try {
+                const response = await fetch('/api/kelly-jobs');
+                const data = await response.json();
+                
+                const jobsList = document.getElementById('jobs-list');
+                
+                if (!data.jobs || data.jobs.length === 0) {
+                    jobsList.innerHTML = '<div style="text-align: center; color: #666; padding: 1rem;">No jobs yet. Start generating!</div>';
+                    return;
+                }
+                
+                jobsList.innerHTML = data.jobs.slice(0, 5).map(job => `
+                    <div class="job-item">
+                        <div class="job-info">
+                            <div class="job-type">${job.job_type.replace('_', ' ')}</div>
+                            <div class="job-details">Days ${job.day_start}-${job.day_end} • ${job.completed_items || 0}/${job.total_items} • $${(job.actual_cost_usd || 0).toFixed(2)}</div>
+                        </div>
+                        <div class="job-status ${job.status}">${job.status}</div>
+                    </div>
+                `).join('');
+                
+            } catch (error) {
+                document.getElementById('jobs-list').innerHTML = '<div style="color: #666;">Could not load jobs</div>';
+            }
+        }
+        
+        async function loadLessonPreview() {
+            const preview = document.getElementById('lesson-preview');
+            
+            // Show sample content (Day 1)
+            const phases = [
+                { name: 'Hook', script: 'Every single day, you wake up with a chance to start over. Fresh starts are not just for January 1st...' },
+                { name: 'Fact 1', script: 'Scientists at Wharton Business School discovered something fascinating: people are 62% more likely to pursue goals right after a temporal landmark...' },
+                { name: 'Fact 2', script: 'Here is the secret superpower of fresh starts: they create psychological distance from your past self...' },
+                { name: 'Fact 3', script: 'The most successful fresh starts combine three ingredients: a meaningful date, a specific goal, and a support system...' },
+                { name: 'Wisdom', script: 'Here is the beautiful truth about fresh starts: you do not need to wait for them. Every sunrise, every breath, is an invitation to begin again...' }
+            ];
+            
+            preview.innerHTML = phases.map(p => `
+                <div class="phase-preview">
+                    <div class="phase-name">${p.name}</div>
+                    <div class="phase-script">"${p.script}"</div>
+                </div>
+            `).join('');
+        }
+        
         // Load on page load
         loadStats();
         loadDaysGrid();
+        loadJobs();
+        loadLessonPreview();
         
         // Refresh every 30 seconds
         setInterval(loadStats, 30000);
+        setInterval(loadJobs, 10000);
     </script>
 </body>
 </html>
