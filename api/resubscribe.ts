@@ -1,8 +1,7 @@
 /**
  * Resubscribe Endpoint
  * 
- * Re-enables email subscriptions for users who previously unsubscribed.
- * 
+ * Allows users to resubscribe after unsubscribing.
  * GET /api/resubscribe?token=UUID
  */
 
@@ -12,7 +11,7 @@ import { createClient } from '@supabase/supabase-js';
 const supabaseUrl = process.env.PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
-function generateResubscribePage(success: boolean, message: string): string {
+function generatePage(success: boolean, message: string): string {
   return `
 <!DOCTYPE html>
 <html lang="en">
@@ -32,31 +31,11 @@ function generateResubscribePage(success: boolean, message: string): string {
       justify-content: center;
       padding: 20px;
     }
-    .container {
-      max-width: 460px;
-      text-align: center;
-    }
-    .icon {
-      font-size: 48px;
-      margin-bottom: 24px;
-    }
-    h1 {
-      font-size: 24px;
-      color: #1f2937;
-      font-weight: 500;
-      margin-bottom: 16px;
-    }
-    p {
-      font-size: 17px;
-      color: #4b5563;
-      line-height: 1.8;
-      margin-bottom: 24px;
-    }
-    .signature {
-      color: #6b7280;
-      font-style: italic;
-      font-size: 15px;
-    }
+    .container { max-width: 460px; text-align: center; }
+    .icon { font-size: 48px; margin-bottom: 24px; }
+    h1 { font-size: 24px; color: #1f2937; font-weight: 500; margin-bottom: 16px; }
+    p { font-size: 17px; color: #4b5563; line-height: 1.8; margin-bottom: 24px; }
+    .signature { color: #6b7280; font-style: italic; font-size: 15px; }
     a.button {
       display: inline-block;
       background: #2563eb;
@@ -73,12 +52,10 @@ function generateResubscribePage(success: boolean, message: string): string {
 <body>
   <div class="container">
     <div class="icon">${success ? '✨' : '😔'}</div>
-    <h1>${success ? 'Welcome back' : 'Something went wrong'}</h1>
+    <h1>${success ? 'Welcome back!' : 'Something went wrong'}</h1>
     <p>${message}</p>
     ${success ? '<p class="signature">— Kelly</p>' : ''}
-    <a href="${success ? 'https://curiouskelly.com/learn' : 'https://curiouskelly.com/help'}" class="button">
-      ${success ? 'Start Today\'s Lesson' : 'Get Help'}
-    </a>
+    <a href="https://curiouskelly.com" class="button">${success ? 'Start Learning' : 'Go Home'}</a>
   </div>
 </body>
 </html>
@@ -86,29 +63,18 @@ function generateResubscribePage(success: boolean, message: string): string {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  if (req.method !== 'GET') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
   if (!supabaseUrl || !supabaseServiceKey) {
-    return res.status(500).send(generateResubscribePage(
-      false,
-      'Could not update your preferences. Please contact hello@curiouskelly.com'
-    ));
+    return res.status(500).send(generatePage(false, 'Something went wrong. Please try again.'));
   }
 
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
   const token = req.query.token as string;
 
   if (!token) {
-    return res.status(400).send(generateResubscribePage(
-      false,
-      'Invalid link. Please contact hello@curiouskelly.com for help.'
-    ));
+    return res.status(400).send(generatePage(false, 'Invalid link.'));
   }
 
   try {
-    // Find user by token
     const { data: user, error: findError } = await supabase
       .from('users')
       .select('id, email')
@@ -116,42 +82,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .single();
 
     if (findError || !user) {
-      return res.status(404).send(generateResubscribePage(
-        false,
-        'Could not find your account. This link may have expired.'
-      ));
+      return res.status(404).send(generatePage(false, 'We couldn\'t find your account.'));
     }
 
-    // Re-enable emails
     const { error: updateError } = await supabase
       .from('users')
       .update({
         email_daily_lesson: true,
-        email_streak_notifications: true,
         email_unsubscribed_at: null
       })
       .eq('id', user.id);
 
     if (updateError) {
-      return res.status(500).send(generateResubscribePage(
-        false,
-        'Could not update your preferences. Please try again.'
-      ));
+      return res.status(500).send(generatePage(false, 'Something went wrong. Please try again.'));
     }
 
     console.log(`Resubscribed user ${user.email}`);
 
-    return res.status(200).send(generateResubscribePage(
+    return res.status(200).send(generatePage(
       true,
-      'I\'m so glad you\'re back. Tomorrow morning, you\'ll find a new lesson in your inbox. I can\'t wait to learn together again.'
+      'You\'re back on the list! I\'ll see you in your inbox tomorrow morning with your next lesson.'
     ));
 
   } catch (error) {
     console.error('Resubscribe error:', error);
-    return res.status(500).send(generateResubscribePage(
-      false,
-      'Something unexpected happened. Please contact hello@curiouskelly.com'
-    ));
+    return res.status(500).send(generatePage(false, 'Something unexpected happened.'));
   }
 }
-
