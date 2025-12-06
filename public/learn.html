@@ -854,6 +854,247 @@
         choicesMade: {}
       };
 
+      // ═══════════════════════════════════════════════════════════════════════
+      // LEARNER STATE TRACKING
+      // The learner is more important than the lesson.
+      // Kelly notices, adapts, and cares about the person in front of her.
+      // ═══════════════════════════════════════════════════════════════════════
+      const learnerState = {
+        // Timing signals
+        phaseStartTime: null,           // When current phase started
+        phaseTimes: {},                 // How long each phase took (seconds)
+        optionsShownTime: null,         // When options appeared
+        choiceTimings: [],              // How long before each choice (seconds)
+        
+        // Choice patterns
+        choiceQualities: [],            // 'best', 'good', 'redirect' for each choice
+        consecutiveRedirects: 0,        // Track if struggling
+        
+        // Engagement signals
+        totalHesitations: 0,            // Times stuck long enough to see hint
+        rushingDetected: false,         // Choosing < 2s consistently
+        exploringDetected: false,       // Taking time, trying things
+        
+        // Kelly's awareness
+        lastCheckIn: null,              // When Kelly last asked how they're doing
+        needsEncouragement: false,      // Should Kelly offer extra support?
+        seemsConfused: false,           // Should Kelly clarify?
+        
+        // Learner identity (if available)
+        learnerName: null,              // From user profile if logged in
+        
+        // Session context
+        previousChoices: [],            // What they chose before (for callbacks)
+        sharedInsights: []              // Things Kelly mentioned they connected with
+      };
+
+      /**
+       * Update learner state when phase starts
+       */
+      function trackPhaseStart() {
+        learnerState.phaseStartTime = Date.now();
+      }
+
+      /**
+       * Update learner state when phase ends
+       */
+      function trackPhaseEnd(phaseNumber) {
+        if (learnerState.phaseStartTime) {
+          const duration = Math.round((Date.now() - learnerState.phaseStartTime) / 1000);
+          learnerState.phaseTimes[phaseNumber] = duration;
+          console.log(`[LearnerState] Phase ${phaseNumber} took ${duration}s`);
+        }
+      }
+
+      /**
+       * Track when options appear
+       */
+      function trackOptionsShown() {
+        learnerState.optionsShownTime = Date.now();
+      }
+
+      /**
+       * Track choice timing and quality
+       */
+      function trackChoice(choice) {
+        // Time to choose
+        if (learnerState.optionsShownTime) {
+          const responseTime = Math.round((Date.now() - learnerState.optionsShownTime) / 1000);
+          learnerState.choiceTimings.push(responseTime);
+          console.log(`[LearnerState] Choice made in ${responseTime}s`);
+          
+          // Detect rushing (consistently < 2s)
+          const recentTimings = learnerState.choiceTimings.slice(-3);
+          if (recentTimings.length >= 2 && recentTimings.every(t => t < 2)) {
+            learnerState.rushingDetected = true;
+            console.log('[LearnerState] ⚡ Rushing detected');
+          }
+          
+          // Detect thoughtful exploration (consistently > 10s without hints)
+          if (recentTimings.length >= 2 && recentTimings.every(t => t >= 5 && t <= 25)) {
+            learnerState.exploringDetected = true;
+            console.log('[LearnerState] 🔍 Thoughtful exploration detected');
+          }
+        }
+        
+        // Track quality pattern
+        const quality = choice.quality || 'good';
+        learnerState.choiceQualities.push(quality);
+        learnerState.previousChoices.push({
+          text: choice.text,
+          quality: quality,
+          phase: state.currentPhase
+        });
+        
+        // Track consecutive redirects (struggling)
+        if (quality === 'redirect') {
+          learnerState.consecutiveRedirects++;
+          if (learnerState.consecutiveRedirects >= 2) {
+            learnerState.needsEncouragement = true;
+            console.log('[LearnerState] 💙 Learner may need encouragement');
+          }
+        } else {
+          learnerState.consecutiveRedirects = 0;
+          learnerState.needsEncouragement = false;
+        }
+      }
+
+      /**
+       * Track when learner sees a hint (hesitation signal)
+       */
+      function trackHesitation() {
+        learnerState.totalHesitations++;
+        if (learnerState.totalHesitations >= 2) {
+          learnerState.seemsConfused = true;
+          console.log('[LearnerState] 🤔 Learner may be confused');
+        }
+      }
+
+      /**
+       * Get Kelly's awareness of the learner right now
+       */
+      function getLearnerAwareness() {
+        return {
+          isRushing: learnerState.rushingDetected,
+          isExploring: learnerState.exploringDetected,
+          needsEncouragement: learnerState.needsEncouragement,
+          seemsConfused: learnerState.seemsConfused,
+          choiceCount: learnerState.choiceQualities.length,
+          averageResponseTime: learnerState.choiceTimings.length > 0 
+            ? Math.round(learnerState.choiceTimings.reduce((a,b) => a+b, 0) / learnerState.choiceTimings.length)
+            : null,
+          bestChoiceCount: learnerState.choiceQualities.filter(q => q === 'best').length,
+          name: learnerState.learnerName
+        };
+      }
+
+      /**
+       * Kelly check-in: Should she say something supportive?
+       */
+      function shouldKellyCheckIn() {
+        const now = Date.now();
+        const timeSinceLastCheckIn = learnerState.lastCheckIn 
+          ? (now - learnerState.lastCheckIn) / 1000 
+          : Infinity;
+        
+        // Check in if:
+        // 1. Needs encouragement and hasn't checked in for 60s
+        // 2. Seems confused and hasn't checked in for 30s
+        // 3. Is rushing (gently remind to slow down)
+        if (learnerState.needsEncouragement && timeSinceLastCheckIn > 60) {
+          return 'encouragement';
+        }
+        if (learnerState.seemsConfused && timeSinceLastCheckIn > 30) {
+          return 'clarification';
+        }
+        if (learnerState.rushingDetected && timeSinceLastCheckIn > 45) {
+          return 'slow_down';
+        }
+        return null;
+      }
+
+      /**
+       * Get a check-in message based on learner state
+       */
+      function getCheckInMessage(checkInType) {
+        const awareness = getLearnerAwareness();
+        const archetype = TONE_TO_ARCHETYPE[state.variants.tone || 'curious'];
+        
+        const messages = {
+          'The Explorer': {
+            encouragement: "Hey, every explorer hits rough terrain sometimes. You're doing great—keep going!",
+            clarification: "Want me to explain that differently? Sometimes a new trail reveals more.",
+            slow_down: "No rush, Explorer. The best discoveries come from taking your time."
+          },
+          'The Scientist': {
+            encouragement: "Remember: even null results are data. Every choice teaches us something.",
+            clarification: "Let me present that data another way. Sometimes a different visualization helps.",
+            slow_down: "Careful observation yields better results than speed. Take your time with this."
+          },
+          'The Rebel': {
+            encouragement: "Struggling? Good. That means you're actually thinking, not just following.",
+            clarification: "Let me cut through the noise and say it straight. Here's what matters...",
+            slow_down: "Hey, slow down. The system wants you to rush. Don't give it that power."
+          }
+        };
+        
+        const archetypeMessages = messages[archetype] || messages['The Explorer'];
+        let message = archetypeMessages[checkInType] || archetypeMessages.encouragement;
+        
+        // Personalize with name if available
+        if (awareness.name) {
+          message = message.replace(/^Hey,?|^Remember:/, `${awareness.name},`);
+        }
+        
+        return message;
+      }
+
+      /**
+       * Reset learner state for new lesson
+       */
+      function resetLearnerState() {
+        learnerState.phaseStartTime = null;
+        learnerState.phaseTimes = {};
+        learnerState.optionsShownTime = null;
+        learnerState.choiceTimings = [];
+        learnerState.choiceQualities = [];
+        learnerState.consecutiveRedirects = 0;
+        learnerState.totalHesitations = 0;
+        learnerState.rushingDetected = false;
+        learnerState.exploringDetected = false;
+        learnerState.lastCheckIn = null;
+        learnerState.needsEncouragement = false;
+        learnerState.seemsConfused = false;
+        learnerState.previousChoices = [];
+        learnerState.sharedInsights = [];
+        console.log('[LearnerState] Reset for new lesson');
+      }
+
+      /**
+       * Load learner's name from user profile if logged in
+       */
+      async function loadLearnerIdentity() {
+        try {
+          const { data: { user } } = await supabase.auth.getUser();
+          if (user) {
+            const { data: profile } = await supabase
+              .from('users')
+              .select('display_name, full_name')
+              .eq('id', user.id)
+              .single();
+            
+            if (profile) {
+              learnerState.learnerName = profile.display_name || profile.full_name?.split(' ')[0] || null;
+              if (learnerState.learnerName) {
+                console.log(`[LearnerState] 👋 Hello, ${learnerState.learnerName}!`);
+              }
+            }
+          }
+        } catch (e) {
+          // Not logged in or profile not found - that's okay
+        }
+      }
+
       let kellyAvatar = null;
       let kellyAudio = null;
       let loadingTimeout = null; // Track loading timeout
@@ -980,22 +1221,24 @@
       // The Mystic, The Provider, The Architect, The Strategist, The Rebel,
       // The Diplomat, The Storyteller, The MacGyver, The Empath
       // ═══════════════════════════════════════════════════════════════════
+      // ═══════════════════════════════════════════════════════════════════
+      // GOLDEN THREE ARCHETYPES (v1.0 Launch)
+      // Explorer = Wonder & Adventure | Scientist = Evidence & Proof | Rebel = Edge & Challenge
+      // ═══════════════════════════════════════════════════════════════════
       const TONE_TO_ARCHETYPE = {
-        curious: 'The Scientist',    // Analytical, evidence-based, questions everything
-        friendly: 'The Empath',      // Warm, supportive, emotionally connected
+        curious: 'The Scientist',    // Analytical, evidence-based, data-driven
+        friendly: 'The Explorer',    // Warm, inviting discovery, wonder
         playful: 'The Explorer',     // Adventurous, discovery-focused, fun
-        wise: 'The Mystic',          // Deep insights, philosophical perspective
-        coach: 'The Strategist',     // Motivating, goal-oriented, practical steps
-        scholar: 'The Architect'     // Academic, structured, systematic knowledge
+        wise: 'The Rebel',           // Challenges assumptions, deep edge
+        coach: 'The Rebel',          // Motivating through challenge, push limits
+        scholar: 'The Scientist'     // Academic, research-focused, precise
       };
 
-      // Fallback archetypes if primary not found (in priority order)
+      // Fallback archetypes - only use the Golden Three
       const ARCHETYPE_FALLBACKS = {
-        'The Scientist': ['Scientist', 'The Architect', 'The Strategist'],
-        'The Empath': ['The Provider', 'The Diplomat', 'The Storyteller'],
-        'The Explorer': ['Explorer', 'The Rebel', 'The MacGyver'],
-        'The Mystic': ['Mystic', 'The Storyteller', 'The Empath'],
-        'The Strategist': ['The Architect', 'The Survivor', 'Survivor'],
+        'The Scientist': ['The Explorer', 'The Rebel'],
+        'The Explorer': ['The Scientist', 'The Rebel'],
+        'The Rebel': ['The Explorer', 'The Scientist'],
         'The Architect': ['The Scientist', 'Scientist', 'The Strategist']
       };
 
@@ -1010,17 +1253,149 @@
         lessonShards: []      // All shards for current lesson (cached)
       };
 
+      // ═══════════════════════════════════════════════════════════════════
+      // ARCHETYPE DIALOG TEMPLATES - Golden Three system
+      // Loads transitions, chat responses, celebrations, hints, errors
+      // ═══════════════════════════════════════════════════════════════════
+      let dialogTemplates = {
+        loaded: false,
+        archetype: null,
+        templates: {}  // Keyed by dialog_type -> trigger_context
+      };
+
+      /**
+       * Load dialog templates for the current archetype
+       */
+      async function loadDialogTemplates(archetype) {
+        if (dialogTemplates.loaded && dialogTemplates.archetype === archetype) {
+          console.log('[Dialog] Using cached templates for', archetype);
+          return;
+        }
+
+        console.log('[Dialog] Loading templates for', archetype);
+        
+        try {
+          const { data, error } = await supabase
+            .from('archetype_dialog_templates')
+            .select('dialog_type, trigger_context, kelly_script, kelly_pose, kelly_emotion, priority')
+            .eq('archetype', archetype)
+            .eq('is_active', true)
+            .order('priority', { ascending: false });
+
+          if (error) {
+            console.warn('[Dialog] Error loading templates:', error);
+            return;
+          }
+
+          // Organize templates by type and context
+          dialogTemplates.templates = {};
+          for (const t of data) {
+            if (!dialogTemplates.templates[t.dialog_type]) {
+              dialogTemplates.templates[t.dialog_type] = {};
+            }
+            dialogTemplates.templates[t.dialog_type][t.trigger_context] = {
+              script: t.kelly_script,
+              pose: t.kelly_pose,
+              emotion: t.kelly_emotion
+            };
+          }
+
+          dialogTemplates.loaded = true;
+          dialogTemplates.archetype = archetype;
+          console.log('[Dialog] ✅ Loaded', data.length, 'templates for', archetype);
+          
+        } catch (e) {
+          console.warn('[Dialog] Failed to load templates:', e);
+        }
+      }
+
+      /**
+       * Get a dialog template by type and context
+       */
+      function getDialog(dialogType, triggerContext) {
+        const typeTemplates = dialogTemplates.templates[dialogType];
+        if (!typeTemplates) return null;
+        return typeTemplates[triggerContext] || null;
+      }
+
+      /**
+       * Show a transition message between phases
+       */
+      async function showTransition(fromPhase, toPhase) {
+        const contextMap = {
+          'hook_question': 'hook_to_fact1',
+          'question_question': fromPhase === 1 ? 'fact1_to_fact2' : 
+                               fromPhase === 2 ? 'fact2_to_fact3' : 'fact3_to_wisdom'
+        };
+        
+        const context = contextMap[`${state.lesson?.phases?.[fromPhase-1]?.type}_${toPhase}`];
+        const dialog = getDialog('transition', context);
+        
+        if (dialog) {
+          console.log('[Dialog] Showing transition:', context);
+          CaptionSystem.startTypewriter(dialog.script, 3);
+          if (window.kellyAssets) {
+            window.kellyAssets.setState(dialog.pose || 'hello');
+          }
+          // Brief pause for transition
+          await new Promise(resolve => setTimeout(resolve, 1500));
+        }
+      }
+
+      /**
+       * Get archetype-specific celebration message
+       */
+      function getCelebration(context) {
+        const dialog = getDialog('celebration', context);
+        if (dialog) return dialog.script;
+        // Fallbacks
+        const fallbacks = {
+          'correct_answer_best': '🎉 Exactly right!',
+          'correct_answer_good': 'Great thinking!',
+          'lesson_complete': 'Amazing work today!'
+        };
+        return fallbacks[context] || 'Well done!';
+      }
+
+      /**
+       * Get archetype-specific chat response
+       */
+      function getChatResponse(intent) {
+        const dialog = getDialog('chat_response', intent);
+        return dialog?.script || "That's a great question! Let me think about that...";
+      }
+
+      /**
+       * Get archetype-specific hint
+       */
+      function getHint(stuckDuration) {
+        const context = stuckDuration >= 60 ? 'stuck_60s' : 
+                        stuckDuration >= 30 ? 'stuck_30s' : 'stuck_10s';
+        const dialog = getDialog('hint', context);
+        return dialog?.script || "Take your time—there's no wrong answer here.";
+      }
+
+      /**
+       * Get archetype-specific error message
+       */
+      function getErrorMessage(errorType) {
+        const dialog = getDialog('error', errorType);
+        return dialog?.script || "Something went wrong, but we can continue!";
+      }
+
       // Map app age bucket format to database format
+      // DB has: 5-7, 8-12, 13-17, 18-35, 36-60, 61+
+      // UI has: 2-5, 6-12, 13-17, 18-35, 36-60, 61+
       function mapAgeBucketToDb(appBucket) {
         const mapping = {
-          '2-5': '2-5',
-          '6-12': '6-12',
-          '13-17': '13-17',
-          '18-35': '18-29',
-          '36-60': '30-54',
-          '61+': '55+'
+          '2-5': '5-7',     // Close match - DB starts at 5
+          '6-12': '8-12',   // DB is 8-12
+          '13-17': '13-17', // Exact match
+          '18-35': '18-35', // Exact match
+          '36-60': '36-60', // Exact match
+          '61+': '61+'      // Exact match
         };
-        return mapping[appBucket] || '18-29';
+        return mapping[appBucket] || '18-35';
       }
 
       // Get day number from current lesson or state
@@ -1245,6 +1620,12 @@
         state.currentPhase = 1;
         state.choicesMade = {};
         
+        // Reset learner state for new lesson (Learner-First system)
+        resetLearnerState();
+        
+        // Load learner identity if logged in
+        loadLearnerIdentity();
+        
         const tone = state.variants.tone || 'curious';
 
         // ⚡ TRY CACHE FIRST for instant load
@@ -1254,6 +1635,10 @@
           state.isLoading = false;
           state.startTime = Date.now(); // Track lesson start time
           document.getElementById('day-display').textContent = dayNumberToDate(dayNumber);
+          
+          // Load dialog templates for current archetype (Golden Three system)
+          const archetype = TONE_TO_ARCHETYPE[tone];
+          loadDialogTemplates(archetype);
           
           // ═══════════════════════════════════════════════════════════════════
           // LOAD VISUAL ASSETS FOR THIS LESSON (backgrounds, props, Kelly poses)
@@ -1303,6 +1688,9 @@
           console.log(
             `[Learn] Loading Day ${dayNumber} with tone: ${tone} (archetype: ${archetype})`
           );
+
+          // Load dialog templates for this archetype (Golden Three system)
+          loadDialogTemplates(archetype);
 
           // Step 1: Get core lesson metadata
           const { data: coreLesson, error: lessonError } = await supabase
@@ -1576,7 +1964,80 @@
 
         // Update UI and render first phase
         updateUI();
+        
+        // ═══════════════════════════════════════════════════════════════
+        // GOLDEN THREE: Show archetype-specific greeting
+        // ═══════════════════════════════════════════════════════════════
+        const greetingDialog = getDialog('greeting', 'lesson_start');
+        if (greetingDialog) {
+          console.log('[Dialog] Greeting:', greetingDialog.script);
+          // Brief greeting before first phase
+          if (window.kellyAssets) {
+            window.kellyAssets.setState(greetingDialog.pose || 'hello');
+          }
+        }
+        
         renderPhase(state.lesson.phases[0]);
+      }
+
+      // ═══════════════════════════════════════════════════════════════════
+      // HINT TIMER SYSTEM - Show hints when student is stuck
+      // ═══════════════════════════════════════════════════════════════════
+      let hintTimer = null;
+      let hintStartTime = null;
+
+      function startHintTimer() {
+        hintStartTime = Date.now();
+        
+        // Clear any existing timer
+        if (hintTimer) clearTimeout(hintTimer);
+        
+        // Schedule hints at 10s, 30s, 60s
+        scheduleHint(10);
+      }
+
+      function scheduleHint(seconds) {
+        const elapsed = Math.floor((Date.now() - hintStartTime) / 1000);
+        const nextHintIn = (seconds - elapsed) * 1000;
+        
+        if (nextHintIn > 0) {
+          hintTimer = setTimeout(() => {
+            showStuckHint(seconds);
+            // Schedule next hint level
+            if (seconds === 10) scheduleHint(30);
+            else if (seconds === 30) scheduleHint(60);
+          }, nextHintIn);
+        }
+      }
+
+      function showStuckHint(duration) {
+        const hint = getHint(duration);
+        console.log(`[Dialog] Hint (${duration}s):`, hint);
+        
+        // Track hesitation (Learner-First system)
+        trackHesitation();
+        
+        // Show subtle hint (don't interrupt current flow)
+        const hintEl = document.getElementById('speech-hint');
+        if (hintEl) {
+          hintEl.textContent = hint;
+          hintEl.style.display = 'block';
+          hintEl.style.opacity = '0';
+          setTimeout(() => hintEl.style.opacity = '1', 100);
+        }
+        
+        // Update Kelly to encouraging pose
+        if (window.kellyAssets) {
+          window.kellyAssets.setState('encouraging');
+        }
+      }
+
+      function cancelHintTimer() {
+        if (hintTimer) {
+          clearTimeout(hintTimer);
+          hintTimer = null;
+        }
+        hintStartTime = null;
       }
 
       // ═══════════════════════════════════════════════════════════════════
@@ -1876,6 +2337,14 @@
       // PHASE RENDERING (with null safety and error recovery)
       // ═══════════════════════════════════════════════════════════════════
       function renderPhase(phase) {
+        // Track phase end for previous phase (Learner-First system)
+        if (state.currentPhase > 1) {
+          trackPhaseEnd(state.currentPhase - 1);
+        }
+        
+        // Track new phase start
+        trackPhaseStart();
+        
         // Null safety: phase might be undefined
         if (!phase) {
           console.error('[Learn] renderPhase called with null/undefined phase');
@@ -2071,6 +2540,12 @@
           // Pass both formatted and raw choices (raw has response text + emotions)
           OptionsSystem.setOptions(formattedChoices, choices);
           
+          // Start hint timer when options are shown (Golden Three system)
+          startHintTimer();
+          
+          // Track when options appear (Learner-First system)
+          trackOptionsShown();
+          
           // Legacy: Also populate hidden choices container
           choices.forEach((choice, index) => {
             const btn = document.createElement('button');
@@ -2173,6 +2648,16 @@
       function selectChoice(choice, index = 0) {
         console.log(`[V2] Choice selected: ${choice.letter} - "${choice.text?.substring(0, 30)}..."`);
         
+        // Cancel hint timer when choice is made (Golden Three system)
+        cancelHintTimer();
+        
+        // Track choice for learner state (Learner-First system)
+        trackChoice(choice);
+        
+        // Hide any visible hint
+        const hintEl = document.getElementById('speech-hint');
+        if (hintEl) hintEl.style.display = 'none';
+        
         // V2: Mark option card as selected
         const optionCard = document.getElementById(`option-${choice.letter.toLowerCase()}`);
         if (optionCard) {
@@ -2241,15 +2726,39 @@
           kellyAvatar.setExpression('listening');
         }
 
+        // ═══════════════════════════════════════════════════════════════
+        // LEARNER-FIRST: Kelly responds AND checks in if needed
+        // The learner is more important than the lesson.
+        // ═══════════════════════════════════════════════════════════════
+        
+        // Build Kelly's full response: answer + optional check-in
+        let fullResponse = choice.response || '';
+        const checkInType = shouldKellyCheckIn();
+        
+        if (checkInType && quality === 'redirect') {
+          // If they got a redirect AND need support, add check-in
+          const checkInMessage = getCheckInMessage(checkInType);
+          fullResponse = fullResponse + ' ' + checkInMessage;
+          learnerState.lastCheckIn = Date.now();
+          console.log(`[Kelly] Check-in added (${checkInType})`);
+        }
+        
+        // Personalize with learner's name if we have it
+        const awareness = getLearnerAwareness();
+        if (awareness.name && Math.random() < 0.3) { // 30% chance to use name
+          fullResponse = fullResponse.replace(/^(Great|Exactly|Interesting|Hmm)/i, 
+            `${awareness.name}, $1`.trim());
+        }
+        
         // V2: Update caption with response
-        if (choice.response) {
-          CaptionSystem.startTypewriter(choice.response, 4);
+        if (fullResponse) {
+          CaptionSystem.startTypewriter(fullResponse, 4);
         }
 
         // Show Kelly's response
-        if (choice.response) {
+        if (fullResponse) {
           const speechEl = document.getElementById('speech-text');
-          if (speechEl) speechEl.textContent = choice.response;
+          if (speechEl) speechEl.textContent = fullResponse;
           
           const hintEl = document.getElementById('speech-hint');
           if (hintEl) hintEl.style.display = 'none';
@@ -2260,7 +2769,7 @@
               kellyAvatar.setExpression(responseEmotion);
             }
             if (kellyAvatar && typeof kellyAvatar.setSpeaking === 'function') {
-              kellyAvatar.setSpeaking(true, choice.response);
+              kellyAvatar.setSpeaking(true, fullResponse);
             }
             // Update Kelly assets with final response pose
             if (window.kellyAssets) {
@@ -2270,17 +2779,17 @@
 
           if (kellyAudio) {
             kellyAudio
-              .speak(choice.response, { language: state.variants.language })
+              .speak(fullResponse, { language: state.variants.language })
               .then(() => {
                 // Advance after Kelly finishes responding
                 setTimeout(() => advancePhase(), 500);
               })
               .catch(() => {
                 // Fallback timing if audio fails
-                setTimeout(() => advancePhase(), choice.response.split(/\s+/).length * 200 + 1500);
+                setTimeout(() => advancePhase(), fullResponse.split(/\s+/).length * 200 + 1500);
               });
           } else {
-            setTimeout(() => advancePhase(), choice.response.split(/\s+/).length * 200 + 1500);
+            setTimeout(() => advancePhase(), fullResponse.split(/\s+/).length * 200 + 1500);
           }
         } else {
           setTimeout(() => advancePhase(), 1000);
@@ -2306,25 +2815,43 @@
           totalQuestions: Object.keys(state.choicesMade).length || 3
         };
         
+        // ═══════════════════════════════════════════════════════════════
+        // GOLDEN THREE: Archetype-specific celebration message
+        // ═══════════════════════════════════════════════════════════════
+        const celebrationMessage = getCelebration('lesson_complete');
+        console.log('[Dialog] Celebration:', celebrationMessage);
+        
+        // Show celebration caption
+        CaptionSystem.startTypewriter(celebrationMessage, 3);
+        
         // Trigger chat celebration
         if (chatOverlay) {
           chatOverlay.setPhase('complete');
           chatOverlay.triggerCompletion();
         }
         
-        // Kelly celebrates
+        // Kelly celebrates with archetype pose
+        const celebrationDialog = getDialog('celebration', 'lesson_complete');
+        if (window.kellyAssets) {
+          window.kellyAssets.setState(celebrationDialog?.pose || 'celebrating');
+        }
         if (window.KellyPoseManager) {
           KellyPoseManager.celebrate();
+        }
+        
+        // Speak celebration
+        if (kellyAudio) {
+          kellyAudio.speak(celebrationMessage, { language: state.variants.language });
         }
         
         // Save progress
         await saveProgress();
         
-        // Show completion overlay
+        // Show completion overlay after celebration
         if (window.CompletionOverlay) {
           setTimeout(() => {
             CompletionOverlay.show(stats);
-          }, 1500);
+          }, 2500);
         } else {
           showToast('🎉 Lesson complete!');
         }
