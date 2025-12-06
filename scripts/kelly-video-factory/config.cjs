@@ -23,11 +23,12 @@ module.exports = {
   },
   
   // Quality tiers
+  // Note: Flux Dev LoRA only supports megapixels: "1" or "0.25"
   quality: {
     preview: {
       name: 'Preview',
       imageSize: '1:1',
-      imageMegapixels: '0.5',
+      imageMegapixels: '0.25', // Small for speed
       animationModel: 'svd',
       animationFrames: 14,
       lipsyncModel: 'wav2lip',
@@ -37,7 +38,7 @@ module.exports = {
     standard: {
       name: 'Standard',
       imageSize: '16:9',
-      imageMegapixels: '1',
+      imageMegapixels: '1', // Full resolution
       animationModel: 'svd',
       animationFrames: 25,
       lipsyncModel: 'wav2lip',
