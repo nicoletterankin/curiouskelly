@@ -163,18 +163,37 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .from('lessons')
       .select('id, title, emoji, category, day_number')
       .eq('day_number', dayOfYear)
+      .eq('is_published', true)
       .single();
 
     if (lessonError || !lesson) {
-      console.error('Could not fetch lesson for day', dayOfYear, lessonError);
-      return res.status(500).json({ 
-        error: 'Could not fetch today\'s lesson',
-        dayOfYear,
-        details: lessonError?.message
-      });
+      // Try without published filter as fallback
+      const { data: fallbackLesson, error: fallbackError } = await supabase
+        .from('lessons')
+        .select('id, title, emoji, category, day_number')
+        .eq('day_number', dayOfYear)
+        .single();
+      
+      if (fallbackError || !fallbackLesson) {
+        console.error('Could not fetch lesson for day', dayOfYear, lessonError || fallbackError);
+        return res.status(500).json({ 
+          error: 'Could not fetch today\'s lesson',
+          dayOfYear,
+          details: (lessonError || fallbackError)?.message
+        });
+      }
+      
+      // Use fallback lesson
+      Object.assign(lesson || {}, fallbackLesson);
     }
 
-    const lessonUrl = `https://curiouskelly.com/day/${lesson.day_number}`;
+    // Default emoji if not set
+    const lessonEmoji = lesson?.emoji || '📚';
+    const lessonTitle = lesson?.title || `Day ${dayOfYear} Lesson`;
+    const lessonCategory = lesson?.category || 'Learning';
+    const lessonDayNumber = lesson?.day_number || dayOfYear;
+    
+    const lessonUrl = `https://curiouskelly.com/day/${lessonDayNumber}`;
 
     // Fetch all users who want daily emails
     const { data: users, error: usersError } = await supabase
@@ -197,9 +216,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         success: true,
         message: 'No subscribed users to send to',
         lesson: {
-          day: lesson.day_number,
-          title: lesson.title,
-          emoji: lesson.emoji
+          day: lessonDayNumber,
+          title: lessonTitle,
+          emoji: lessonEmoji
         }
       });
     }
@@ -221,20 +240,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         return {
           from: 'Kelly <hello@curiouskelly.com>',
           to: user.email,
-          subject: `${lesson.emoji} ${lesson.title}`,
+          subject: `${lessonEmoji} ${lessonTitle}`,
           html: generateDailyLessonHTML(
             displayName,
-            lesson.title,
-            lesson.emoji,
-            lesson.day_number,
+            lessonTitle,
+            lessonEmoji,
+            lessonDayNumber,
             lessonUrl,
             unsubscribeUrl
           ),
           text: generateDailyLessonText(
             displayName,
-            lesson.title,
-            lesson.emoji,
-            lesson.day_number,
+            lessonTitle,
+            lessonEmoji,
+            lessonDayNumber,
             lessonUrl,
             unsubscribeUrl
           ),
@@ -276,10 +295,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         failed: totalFailed,
       },
       lesson: {
-        day: lesson.day_number,
-        title: lesson.title,
-        emoji: lesson.emoji,
-        category: lesson.category
+        day: lessonDayNumber,
+        title: lessonTitle,
+        emoji: lessonEmoji,
+        category: lessonCategory
       },
       errors: errors.length > 0 ? errors : undefined
     });
