@@ -52,6 +52,13 @@ const KellyVideoPlayer = {
       this.videoContainer = document.createElement('div');
       this.videoContainer.id = this.config.containerId;
       this.videoContainer.className = 'kelly-video-container';
+      this.videoContainer.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;z-index:10;display:none;';
+      
+      // Try to append to kelly-frame if it exists
+      const kellyFrame = document.getElementById('kelly-frame');
+      if (kellyFrame) {
+        kellyFrame.appendChild(this.videoContainer);
+      }
     }
     
     // Add styles
@@ -410,6 +417,120 @@ const KellyVideoPlayer = {
   getLessonVideoUrl(dayNumber, phase = 'welcome') {
     const dayStr = dayNumber.toString().padStart(3, '0');
     return `${this.config.videoBasePath}lesson-${dayStr}-${phase}.mp4`;
+  },
+  
+  // ===========================================================================
+  // GOLDEN LESSON VIDEOS (Day 1 - Premium Quality)
+  // ===========================================================================
+  
+  /**
+   * Supabase storage URL for Kelly templates
+   */
+  supabaseStorageUrl: 'https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates',
+  
+  /**
+   * Map phase names to storage format
+   */
+  phaseMap: {
+    'welcome': 'Hook',
+    'hook': 'Hook',
+    'Hook': 'Hook',
+    'fact1': 'Fact1',
+    'Fact1': 'Fact1',
+    'q1': 'Fact1',
+    'fact2': 'Fact2',
+    'Fact2': 'Fact2',
+    'q2': 'Fact2',
+    'fact3': 'Fact3',
+    'Fact3': 'Fact3',
+    'q3': 'Fact3',
+    'wisdom': 'Wisdom',
+    'Wisdom': 'Wisdom',
+  },
+  
+  /**
+   * Get Golden Lesson video URL (Day 1 with premium Sync Labs lipsync)
+   * @param {string} archetype - User archetype (e.g., 'The Explorer', 'The Rebel', 'The Scientist')
+   * @param {string} phase - Phase name (Hook, Fact1, Fact2, Fact3, Wisdom)
+   * @returns {string} Full Supabase public URL
+   */
+  getGoldenLessonVideoUrl(archetype, phase) {
+    const normalizedPhase = this.phaseMap[phase] || phase;
+    const normalizedArchetype = archetype.replace(/\s+/g, '_');
+    return `${this.supabaseStorageUrl}/production/videos/day_001_${normalizedPhase}_${normalizedArchetype}.mp4`;
+  },
+  
+  /**
+   * Check if Golden Lesson video exists for this archetype/phase
+   * @param {string} archetype 
+   * @param {string} phase 
+   * @returns {Promise<boolean>}
+   */
+  async hasGoldenLessonVideo(archetype, phase) {
+    const url = this.getGoldenLessonVideoUrl(archetype, phase);
+    return await this.checkVideoAvailable(url);
+  },
+  
+  /**
+   * Play Golden Lesson video with automatic fallback
+   * @param {string} archetype - User archetype
+   * @param {string} phase - Phase name  
+   * @param {Object} options - Additional options
+   */
+  async playGoldenLesson(archetype, phase, options = {}) {
+    const videoUrl = this.getGoldenLessonVideoUrl(archetype, phase);
+    
+    console.log(`[KellyVideoPlayer] 🏆 Playing Golden Lesson: ${archetype} - ${phase}`);
+    console.log(`[KellyVideoPlayer] Video URL: ${videoUrl}`);
+    
+    // Ensure container is visible
+    if (this.videoContainer) {
+      this.videoContainer.style.display = 'block';
+    }
+    
+    await this.play({
+      videoUrl,
+      fallbackImage: options.fallbackImage || '/kelly/poses/kelly_welcome.png',
+      fallbackAudio: options.audioUrl,
+      onStart: () => {
+        console.log(`[KellyVideoPlayer] 🎬 Golden Lesson started: ${archetype} - ${phase}`);
+        if (this.videoContainer) {
+          this.videoContainer.style.display = 'block';
+        }
+        options.onStart?.();
+      },
+      onEnd: () => {
+        console.log(`[KellyVideoPlayer] ✅ Golden Lesson ended: ${archetype} - ${phase}`);
+        // Keep video visible - let the lesson player handle hiding
+        options.onEnd?.();
+      },
+      onError: (error) => {
+        console.warn(`[KellyVideoPlayer] ⚠️ Golden Lesson error, using fallback: ${error}`);
+        // Hide video container on error, show static avatar
+        if (this.videoContainer) {
+          this.videoContainer.style.display = 'none';
+        }
+        options.onError?.(error);
+      },
+    });
+  },
+  
+  /**
+   * Get all available Golden Lesson videos
+   * @returns {Object} Map of archetype -> phase -> videoUrl
+   */
+  getGoldenLessonVideoMap() {
+    const archetypes = ['The Explorer', 'The Rebel', 'The Scientist'];
+    const phases = ['Hook', 'Fact1', 'Fact2', 'Fact3', 'Wisdom'];
+    
+    const map = {};
+    for (const archetype of archetypes) {
+      map[archetype] = {};
+      for (const phase of phases) {
+        map[archetype][phase] = this.getGoldenLessonVideoUrl(archetype, phase);
+      }
+    }
+    return map;
   },
   
   /**

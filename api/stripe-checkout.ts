@@ -63,9 +63,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // Get price IDs from environment (support multiple naming conventions)
+  // Founding member prices take precedence during launch period
   const priceIds: Record<string, string | undefined> = {
-    monthly: process.env.STRIPE_PRICE_MONTHLY,
-    annual: process.env.STRIPE_PRICE_ANNUAL,
+    monthly: process.env.STRIPE_PRICE_MONTHLY_FOUNDING || process.env.STRIPE_PRICE_MONTHLY,
+    annual: process.env.STRIPE_PRICE_ANNUAL_FOUNDING || process.env.STRIPE_PRICE_ANNUAL,
     lifetime: process.env.STRIPE_PRICE_LIFETIME || process.env.STRIPE_PRICE_FAMILY,
     family: process.env.STRIPE_PRICE_FAMILY || process.env.STRIPE_PRICE_LIFETIME,
     gift: process.env.STRIPE_PRICE_GIFT

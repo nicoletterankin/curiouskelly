@@ -1,0 +1,1041 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>My Earnings - Curious Kelly</title>
+    
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/brand/apple-touch-icon.png" />
+    
+    <!-- Fonts -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&display=swap" rel="stylesheet" />
+    
+    <!-- Supabase -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    
+    <style>
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-card: #18181b;
+            --bg-elevated: #27272a;
+            --text-primary: #fafafa;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --accent: #3b82f6;
+            --accent-hover: #2563eb;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --border: #27272a;
+            --border-hover: #3f3f46;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        a { color: var(--accent); text-decoration: none; }
+        a:hover { text-decoration: underline; }
+
+        /* Header */
+        .header {
+            position: sticky;
+            top: 0;
+            background: rgba(10, 10, 11, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border);
+            padding: 16px 24px;
+            z-index: 100;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .back-link {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .back-link:hover {
+            color: var(--text-primary);
+            text-decoration: none;
+        }
+
+        .logo {
+            font-weight: 600;
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            color: var(--text-primary);
+        }
+
+        .logo-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+        }
+
+        /* Main Content */
+        .main {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 32px 24px;
+        }
+
+        /* Loading / Auth States */
+        .auth-state, .loading-state {
+            text-align: center;
+            padding: 80px 20px;
+        }
+
+        .auth-state h2 {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+
+        .auth-state p {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 0.95rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--accent);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+            text-decoration: none;
+        }
+
+        .btn-secondary {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+        }
+
+        .btn-secondary:hover {
+            background: var(--bg-elevated);
+            text-decoration: none;
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 3px solid var(--border);
+            border-top-color: var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin: 0 auto 16px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Dashboard Header */
+        .dashboard-header {
+            margin-bottom: 32px;
+        }
+
+        .dashboard-header h1 {
+            font-size: 2rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .dashboard-header p {
+            color: var(--text-secondary);
+        }
+
+        /* Stats Cards */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 20px;
+        }
+
+        .stat-card.highlight {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05));
+            border-color: rgba(34, 197, 94, 0.3);
+        }
+
+        .stat-label {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 1.8rem;
+            font-weight: 700;
+        }
+
+        .stat-value.money { color: var(--success); }
+
+        .stat-change {
+            font-size: 0.8rem;
+            margin-top: 4px;
+            color: var(--text-muted);
+        }
+
+        /* Tier Progress */
+        .tier-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .tier-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 20px;
+        }
+
+        .tier-current {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .tier-emoji {
+            font-size: 3rem;
+        }
+
+        .tier-info h3 {
+            font-size: 1.3rem;
+            margin-bottom: 4px;
+        }
+
+        .tier-rate {
+            color: var(--accent);
+            font-weight: 600;
+        }
+
+        .tier-perks {
+            margin-top: 8px;
+        }
+
+        .tier-perks span {
+            display: inline-block;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 8px;
+            padding: 4px 10px;
+            font-size: 0.75rem;
+            color: var(--accent);
+            margin-right: 8px;
+            margin-bottom: 4px;
+        }
+
+        .tier-progress {
+            margin-top: 16px;
+        }
+
+        .progress-bar-container {
+            height: 10px;
+            background: var(--bg-primary);
+            border-radius: 5px;
+            overflow: hidden;
+        }
+
+        .progress-bar {
+            height: 100%;
+            background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+            border-radius: 5px;
+            transition: width 0.5s ease;
+        }
+
+        .progress-labels {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 8px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Referral Link Box */
+        .referral-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .referral-section h3 {
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .referral-note {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 16px;
+        }
+
+        .referral-row {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 12px;
+        }
+
+        .referral-input {
+            flex: 1;
+            padding: 14px 16px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-family: monospace;
+            font-size: 0.95rem;
+        }
+
+        .copy-btn {
+            padding: 14px 24px;
+            background: var(--accent);
+            color: white;
+            border: none;
+            border-radius: 10px;
+            cursor: pointer;
+            font-weight: 600;
+            transition: background 0.2s;
+        }
+
+        .copy-btn:hover {
+            background: var(--accent-hover);
+        }
+
+        /* Transactions Table */
+        .transactions-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 32px;
+        }
+
+        .section-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .section-header h3 {
+            font-size: 1.1rem;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        th, td {
+            padding: 14px 20px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+
+        th {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            font-weight: 600;
+            background: var(--bg-secondary);
+        }
+
+        td {
+            font-size: 0.9rem;
+        }
+
+        tr:last-child td {
+            border-bottom: none;
+        }
+
+        .status-badge {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+
+        .status-badge.pending {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--warning);
+        }
+
+        .status-badge.approved {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--success);
+        }
+
+        .status-badge.paid {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--accent);
+        }
+
+        .empty-state {
+            text-align: center;
+            padding: 60px 20px;
+            color: var(--text-secondary);
+        }
+
+        .empty-state h4 {
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        /* Payout Section */
+        .payout-section {
+            background: linear-gradient(135deg, rgba(34, 197, 94, 0.1), rgba(16, 185, 129, 0.05));
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+        }
+
+        .payout-section h3 {
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .payout-info {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .payout-amount {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--success);
+        }
+
+        .payout-threshold {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        .payout-form {
+            border-top: 1px solid rgba(34, 197, 94, 0.2);
+            padding-top: 20px;
+        }
+
+        .form-group {
+            margin-bottom: 16px;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .form-select, .form-input {
+            width: 100%;
+            padding: 12px 16px;
+            background: var(--bg-primary);
+            border: 1px solid var(--border);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+        }
+
+        .form-select:focus, .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+        }
+
+        /* Footer */
+        .footer-links {
+            text-align: center;
+            padding: 20px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            margin: 0 12px;
+        }
+
+        /* Responsive */
+        @media (max-width: 640px) {
+            .stats-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .tier-header {
+                flex-direction: column;
+                gap: 16px;
+            }
+
+            .payout-info {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+
+            .referral-row {
+                flex-direction: column;
+            }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header -->
+    <header class="header">
+        <div class="header-left">
+            <a href="/learn.html" class="back-link">← Back to Learn</a>
+        </div>
+        <a href="/" class="logo">
+            <img src="/images/brand/kelly-mark-circle-64.png" alt="" class="logo-icon" onerror="this.style.display='none'" />
+            Curious Kelly
+        </a>
+    </header>
+
+    <main class="main">
+        
+        <!-- Loading State -->
+        <div id="loading-state" class="loading-state">
+            <div class="spinner"></div>
+            <p>Loading your earnings...</p>
+        </div>
+
+        <!-- Not Logged In -->
+        <div id="auth-state" class="auth-state" style="display: none;">
+            <h2>💰 Share & Earn</h2>
+            <p>Sign in to view your earnings and referral stats.</p>
+            <a href="/learn.html#auth" class="btn btn-primary">Sign In</a>
+        </div>
+
+        <!-- Dashboard -->
+        <div id="dashboard" style="display: none;">
+            
+            <!-- Header -->
+            <div class="dashboard-header">
+                <h1>💰 My Earnings</h1>
+                <p>Track your referrals and commissions</p>
+            </div>
+
+            <!-- Stats Grid -->
+            <div class="stats-grid">
+                <div class="stat-card highlight">
+                    <div class="stat-label">Available to Withdraw</div>
+                    <div class="stat-value money" id="available-balance">$0.00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Pending</div>
+                    <div class="stat-value" id="pending-balance">$0.00</div>
+                    <div class="stat-change">Clears in ~7 days</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Lifetime Earnings</div>
+                    <div class="stat-value money" id="lifetime-earnings">$0.00</div>
+                </div>
+                <div class="stat-card">
+                    <div class="stat-label">Total Referrals</div>
+                    <div class="stat-value" id="total-referrals">0</div>
+                </div>
+            </div>
+
+            <!-- Tier Progress -->
+            <div class="tier-section">
+                <div class="tier-header">
+                    <div class="tier-current">
+                        <div class="tier-emoji" id="tier-emoji">🌱</div>
+                        <div class="tier-info">
+                            <h3 id="tier-name">New Learner</h3>
+                            <div class="tier-rate" id="tier-rate">10% commission</div>
+                            <div class="tier-perks" id="tier-perks">
+                                <span>Share & Earn access</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="tier-progress">
+                    <div class="progress-bar-container">
+                        <div class="progress-bar" id="tier-progress-bar" style="width: 0%"></div>
+                    </div>
+                    <div class="progress-labels">
+                        <span id="lessons-completed">0 lessons</span>
+                        <span id="next-tier-target">7 for Active Learner (15%)</span>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Referral Link -->
+            <div class="referral-section">
+                <h3>🔗 Your Referral Link</h3>
+                <p class="referral-note">
+                    When someone uses your link, you're credited <strong>forever</strong> — even if they sign up years later.
+                </p>
+                <div class="referral-row">
+                    <input type="text" class="referral-input" id="referral-link" readonly>
+                    <button class="copy-btn" id="copy-link-btn">Copy Link</button>
+                </div>
+            </div>
+
+            <!-- Payout Section (shown when available >= $50) -->
+            <div class="payout-section" id="payout-section" style="display: none;">
+                <h3>💸 Request Payout</h3>
+                <div class="payout-info">
+                    <div>
+                        <div class="payout-amount" id="payout-amount">$0.00</div>
+                        <div class="payout-threshold">Available for withdrawal</div>
+                    </div>
+                    <button class="btn btn-success" id="request-payout-btn">Request Payout</button>
+                </div>
+                <div class="payout-form" id="payout-form" style="display: none;">
+                    <div class="form-group">
+                        <label class="form-label">Payout Method</label>
+                        <select class="form-select" id="payout-method">
+                            <option value="paypal">PayPal</option>
+                            <option value="stripe">Stripe (Direct Deposit)</option>
+                        </select>
+                    </div>
+                    <div class="form-group" id="paypal-email-group">
+                        <label class="form-label">PayPal Email</label>
+                        <input type="email" class="form-input" id="paypal-email" placeholder="your@email.com">
+                    </div>
+                    <button class="btn btn-primary" id="submit-payout-btn" style="width: 100%;">
+                        Submit Payout Request
+                    </button>
+                </div>
+            </div>
+
+            <!-- Recent Transactions -->
+            <div class="transactions-section">
+                <div class="section-header">
+                    <h3>Recent Transactions</h3>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Date</th>
+                                <th>Type</th>
+                                <th>Amount</th>
+                                <th>Commission</th>
+                                <th>Status</th>
+                            </tr>
+                        </thead>
+                        <tbody id="transactions-table">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                    <div class="empty-state" id="empty-transactions" style="display: none;">
+                        <h4>No transactions yet</h4>
+                        <p>Share your link to start earning!</p>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Referrals List -->
+            <div class="transactions-section">
+                <div class="section-header">
+                    <h3>Your Referrals</h3>
+                </div>
+                <div class="table-wrapper">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Referred</th>
+                                <th>Signed Up</th>
+                                <th>Status</th>
+                                <th>Earnings</th>
+                            </tr>
+                        </thead>
+                        <tbody id="referrals-table">
+                            <!-- Populated by JS -->
+                        </tbody>
+                    </table>
+                    <div class="empty-state" id="empty-referrals" style="display: none;">
+                        <h4>No referrals yet</h4>
+                        <p>Share your link to invite friends!</p>
+                    </div>
+                </div>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <div class="footer-links">
+        <a href="/terms.html">Terms</a>
+        <a href="/privacy.html">Privacy</a>
+        <a href="mailto:hello@curiouskelly.com">Contact</a>
+    </div>
+
+    <script>
+        // Supabase Configuration
+        const SUPABASE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2ZvcnZ2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE5NjI3NTcsImV4cCI6MjA0NzUzODc1N30.KLMlC14ckEp-XoL8RX5liw_cMdGs8lR';
+        
+        const supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        
+        // Tier definitions
+        const TIERS = {
+            'new_learner': { name: 'New Learner', rate: 10, emoji: '🌱', lessons: 0, perks: ['Share & Earn access'] },
+            'active_learner': { name: 'Active Learner', rate: 15, emoji: '📚', lessons: 7, perks: ['Weekly earnings email'] },
+            'committed_learner': { name: 'Committed Learner', rate: 20, emoji: '🎯', lessons: 30, perks: ['Monthly earnings report', 'Priority support'] },
+            'dedicated_learner': { name: 'Dedicated Learner', rate: 25, emoji: '⭐', lessons: 100, perks: ['Dedicated dashboard', 'Custom share links'] },
+            'complete_learner': { name: 'Complete Learner', rate: 30, emoji: '👑', lessons: 365, perks: ['Kelly Companion badge', 'Direct payout'] },
+            'legendary_learner': { name: 'Legendary Learner', rate: 35, emoji: '🏆', lessons: 1000, perks: ['VIP status', 'Founding member perks', 'API access'] }
+        };
+
+        let userData = null;
+        let transactions = [];
+        let referrals = [];
+
+        // Initialize
+        async function init() {
+            const { data: { user } } = await supabase.auth.getUser();
+            
+            if (!user) {
+                showAuthState();
+                return;
+            }
+            
+            await loadUserData(user.id);
+        }
+
+        // Load user data
+        async function loadUserData(userId) {
+            try {
+                // Get user with earnings data
+                const { data: user, error: userError } = await supabase
+                    .from('users')
+                    .select(`
+                        id, email, display_name,
+                        referral_code, commission_tier, commission_rate,
+                        total_referrals, active_referrals,
+                        pending_earnings, available_earnings, lifetime_earnings,
+                        total_lessons_completed, unique_lessons_completed,
+                        payout_method, payout_details
+                    `)
+                    .eq('id', userId)
+                    .single();
+
+                if (userError || !user) {
+                    console.error('Failed to load user:', userError);
+                    showAuthState();
+                    return;
+                }
+
+                userData = user;
+
+                // Load transactions
+                const { data: txns } = await supabase
+                    .from('commission_transactions')
+                    .select('*')
+                    .eq('referrer_id', userId)
+                    .order('created_at', { ascending: false })
+                    .limit(20);
+
+                transactions = txns || [];
+
+                // Load referred users (anonymized)
+                const { data: refs } = await supabase
+                    .from('users')
+                    .select('id, referred_at, subscription_status, total_lessons_completed')
+                    .eq('referred_by_user_id', userId)
+                    .order('referred_at', { ascending: false })
+                    .limit(20);
+
+                referrals = refs || [];
+
+                updateUI();
+                showDashboard();
+
+            } catch (error) {
+                console.error('Error loading data:', error);
+                showAuthState();
+            }
+        }
+
+        // Update UI with data
+        function updateUI() {
+            if (!userData) return;
+
+            // Stats
+            document.getElementById('available-balance').textContent = formatMoney(userData.available_earnings);
+            document.getElementById('pending-balance').textContent = formatMoney(userData.pending_earnings);
+            document.getElementById('lifetime-earnings').textContent = formatMoney(userData.lifetime_earnings);
+            document.getElementById('total-referrals').textContent = userData.total_referrals || 0;
+
+            // Tier
+            const tier = userData.commission_tier || 'new_learner';
+            const tierInfo = TIERS[tier] || TIERS.new_learner;
+            
+            document.getElementById('tier-emoji').textContent = tierInfo.emoji;
+            document.getElementById('tier-name').textContent = tierInfo.name;
+            document.getElementById('tier-rate').textContent = `${Math.round((userData.commission_rate || 0.1) * 100)}% commission`;
+            
+            const perksContainer = document.getElementById('tier-perks');
+            perksContainer.innerHTML = tierInfo.perks.map(p => `<span>${p}</span>`).join('');
+
+            // Progress
+            const lessons = userData.total_lessons_completed || 0;
+            const nextTier = getNextTier(tier, lessons);
+            
+            if (nextTier) {
+                const progress = calculateProgress(lessons, tierInfo.lessons, nextTier.lessons);
+                document.getElementById('tier-progress-bar').style.width = `${progress}%`;
+                document.getElementById('lessons-completed').textContent = `${lessons} lessons`;
+                document.getElementById('next-tier-target').textContent = 
+                    `${nextTier.lessons} for ${nextTier.name} (${nextTier.rate}%)`;
+            } else {
+                document.getElementById('tier-progress-bar').style.width = '100%';
+                document.getElementById('lessons-completed').textContent = `${lessons} lessons`;
+                document.getElementById('next-tier-target').textContent = 'Maximum tier achieved! 🏆';
+            }
+
+            // Referral link
+            const code = userData.referral_code || 'loading';
+            document.getElementById('referral-link').value = `https://curiouskelly.com/?ref=${code}`;
+
+            // Payout section
+            const available = parseFloat(userData.available_earnings) || 0;
+            if (available >= 50) {
+                document.getElementById('payout-section').style.display = 'block';
+                document.getElementById('payout-amount').textContent = formatMoney(available);
+            }
+
+            // Transactions table
+            renderTransactions();
+
+            // Referrals table
+            renderReferrals();
+        }
+
+        function renderTransactions() {
+            const tbody = document.getElementById('transactions-table');
+            const emptyState = document.getElementById('empty-transactions');
+
+            if (transactions.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            tbody.innerHTML = transactions.map(t => `
+                <tr>
+                    <td>${formatDate(t.created_at)}</td>
+                    <td>${formatType(t.transaction_type)}</td>
+                    <td>${formatMoney(t.gross_amount)}</td>
+                    <td class="money">${formatMoney(t.commission_amount)}</td>
+                    <td><span class="status-badge ${t.status}">${t.status}</span></td>
+                </tr>
+            `).join('');
+        }
+
+        function renderReferrals() {
+            const tbody = document.getElementById('referrals-table');
+            const emptyState = document.getElementById('empty-referrals');
+
+            if (referrals.length === 0) {
+                tbody.innerHTML = '';
+                emptyState.style.display = 'block';
+                return;
+            }
+
+            emptyState.style.display = 'none';
+            tbody.innerHTML = referrals.map((r, i) => `
+                <tr>
+                    <td>Learner #${i + 1}</td>
+                    <td>${formatDate(r.referred_at)}</td>
+                    <td><span class="status-badge ${r.subscription_status === 'active' ? 'approved' : 'pending'}">
+                        ${r.subscription_status || 'free'}
+                    </span></td>
+                    <td>${r.subscription_status === 'active' ? '💰' : '—'}</td>
+                </tr>
+            `).join('');
+        }
+
+        // Helper functions
+        function getNextTier(currentTier, lessonsCompleted) {
+            const tierList = Object.entries(TIERS).sort((a, b) => a[1].lessons - b[1].lessons);
+            const currentIndex = tierList.findIndex(([key]) => key === currentTier);
+            
+            for (let i = currentIndex + 1; i < tierList.length; i++) {
+                if (tierList[i][1].lessons > lessonsCompleted) {
+                    return tierList[i][1];
+                }
+            }
+            return null;
+        }
+
+        function calculateProgress(completed, currentLessons, nextLessons) {
+            const range = nextLessons - currentLessons;
+            const progress = completed - currentLessons;
+            return Math.min(100, Math.max(0, (progress / range) * 100));
+        }
+
+        function formatMoney(amount) {
+            return '$' + parseFloat(amount || 0).toFixed(2);
+        }
+
+        function formatDate(dateStr) {
+            return new Date(dateStr).toLocaleDateString('en-US', {
+                month: 'short',
+                day: 'numeric',
+                year: 'numeric'
+            });
+        }
+
+        function formatType(type) {
+            const types = {
+                'initial_subscription': 'New Subscription',
+                'subscription_renewal': 'Renewal',
+                'subscription_upgrade': 'Upgrade',
+                'gift_purchase': 'Gift',
+                'lifetime_purchase': 'Lifetime',
+                'adjustment': 'Adjustment',
+                'refund_clawback': 'Refund'
+            };
+            return types[type] || type;
+        }
+
+        // View states
+        function showLoading() {
+            document.getElementById('loading-state').style.display = 'block';
+            document.getElementById('auth-state').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'none';
+        }
+
+        function showAuthState() {
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('auth-state').style.display = 'block';
+            document.getElementById('dashboard').style.display = 'none';
+        }
+
+        function showDashboard() {
+            document.getElementById('loading-state').style.display = 'none';
+            document.getElementById('auth-state').style.display = 'none';
+            document.getElementById('dashboard').style.display = 'block';
+        }
+
+        // Event handlers
+        document.getElementById('copy-link-btn')?.addEventListener('click', () => {
+            const input = document.getElementById('referral-link');
+            navigator.clipboard.writeText(input.value).then(() => {
+                const btn = document.getElementById('copy-link-btn');
+                btn.textContent = 'Copied!';
+                setTimeout(() => btn.textContent = 'Copy Link', 2000);
+            });
+        });
+
+        document.getElementById('request-payout-btn')?.addEventListener('click', () => {
+            document.getElementById('payout-form').style.display = 'block';
+            document.getElementById('request-payout-btn').style.display = 'none';
+        });
+
+        document.getElementById('submit-payout-btn')?.addEventListener('click', async () => {
+            const method = document.getElementById('payout-method').value;
+            const paypalEmail = document.getElementById('paypal-email').value;
+            
+            if (method === 'paypal' && !paypalEmail) {
+                alert('Please enter your PayPal email');
+                return;
+            }
+
+            try {
+                const { error } = await supabase.from('payouts').insert({
+                    user_id: userData.id,
+                    amount: userData.available_earnings,
+                    method: method,
+                    method_details: method === 'paypal' ? { email: paypalEmail } : {},
+                    status: 'pending'
+                });
+
+                if (error) throw error;
+
+                alert('Payout request submitted! We\'ll process it within 3-5 business days.');
+                window.location.reload();
+
+            } catch (error) {
+                console.error('Payout error:', error);
+                alert('Failed to submit payout request. Please try again.');
+            }
+        });
+
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', init);
+    </script>
+
+</body>
+</html>
+

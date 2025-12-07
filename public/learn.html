@@ -79,11 +79,23 @@
     <!-- Share Hub Overlay -->
     <script src="/js/share-hub.js"></script>
     
+    <!-- Earn to Learn - Share & Earn System -->
+    <script src="/js/earn-to-learn.js"></script>
+    
+    <!-- Lesson Share Prompt (After Completion) -->
+    <script src="/js/lesson-share-prompt.js"></script>
+    
+    <!-- Referral Tracking (Lifetime Attribution) -->
+    <script src="/js/affiliate-tracking.js"></script>
+    
     <!-- Kelly Conversational AI (Voice Chat) -->
     <script src="/js/kelly-conversation.js"></script>
     
     <!-- Kelly Visual Learning System (Immersive Backgrounds, Props, Choreography) -->
     <script src="/js/kelly-visual-system.js?v=2"></script>
+    
+    <!-- Kelly Video Player (Golden Lesson Sync Labs Videos) -->
+    <script src="/js/kelly-video-player.js?v=2"></script>
 
     <style>
       /* ═══════════════════════════════════════════════════════════════════
@@ -183,6 +195,37 @@
         width: 100%;
         height: 100%;
         position: relative;
+      }
+      
+      /* Golden Lesson Video Container */
+      .kelly-video-container {
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 10;
+        background: transparent;
+      }
+      
+      .kelly-video-container video {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center top;
+      }
+      
+      .kelly-video-container .loading-overlay {
+        position: absolute;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.3);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .kelly-video-container.playing .loading-overlay {
+        display: none;
       }
 
       .kelly-avatar-container img {
@@ -3112,6 +3155,11 @@
           </svg>
         </button>
         
+        <button class="rail-btn earn-btn" id="btn-earn" aria-label="Share & Earn" title="Share & Earn">
+          <span style="font-size: 18px;">💰</span>
+          <span class="rail-badge earn-badge" id="badge-earn" style="background: linear-gradient(135deg, #22c55e, #10b981);">$</span>
+        </button>
+        
         <button class="rail-btn" id="btn-sound" aria-label="Sound">
           <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
@@ -4407,6 +4455,72 @@
         updateUI();
 
         // ═══════════════════════════════════════════════════════════════
+        // 🏆 GOLDEN LESSON VIDEO PLAYBACK (Day 1 only)
+        // Play premium Sync Labs lip-synced videos for Day 1
+        // ═══════════════════════════════════════════════════════════════
+        if (state.dayNumber === 1 && window.KellyVideoPlayer) {
+          // Get archetype from state or default to Explorer
+          const archetype = state.archetype || state.lesson?.archetype || 'The Explorer';
+          
+          // Map phase type to Golden Lesson phases
+          let goldenPhase = 'Hook';
+          if (phase.type === 'welcome' || phase.type === 'hook') {
+            goldenPhase = 'Hook';
+          } else if (phase.type === 'question') {
+            const questionPhases = state.lesson?.phases?.filter(p => p.type === 'question') || [];
+            const questionIndex = questionPhases.findIndex(p => p === phase);
+            goldenPhase = `Fact${Math.max(1, questionIndex + 1)}`;
+          } else if (phase.type === 'wisdom' || phase.type === 'complete') {
+            goldenPhase = 'Wisdom';
+          }
+          
+          // Check if video container exists, create if not
+          let videoContainer = document.getElementById('kelly-video-container');
+          const kellyFrame = document.getElementById('kelly-frame');
+          
+          if (!videoContainer && kellyFrame) {
+            videoContainer = document.createElement('div');
+            videoContainer.id = 'kelly-video-container';
+            videoContainer.className = 'kelly-video-container';
+            videoContainer.style.cssText = 'position:absolute;top:0;left:0;width:100%;height:100%;z-index:10;display:none;';
+            kellyFrame.appendChild(videoContainer);
+          }
+          
+          // Try to play Golden Lesson video
+          const videoUrl = KellyVideoPlayer.getGoldenLessonVideoUrl(archetype, goldenPhase);
+          console.log(`[Learn] 🏆 Golden Lesson: ${archetype} - ${goldenPhase}`);
+          console.log(`[Learn] Video URL: ${videoUrl}`);
+          
+          // Show video container, hide static avatar
+          if (videoContainer) {
+            videoContainer.style.display = 'block';
+            const avatar2d = document.getElementById('kelly-2d-container');
+            if (avatar2d) avatar2d.style.display = 'none';
+          }
+          
+          // Play the Golden Lesson video
+          KellyVideoPlayer.playGoldenLesson(archetype, goldenPhase, {
+            fallbackImage: '/kelly/poses/kelly_welcome.png',
+            onStart: () => {
+              console.log(`[Learn] 🎬 Golden Lesson video started: ${goldenPhase}`);
+            },
+            onEnd: () => {
+              console.log(`[Learn] ✅ Golden Lesson video ended: ${goldenPhase}`);
+              // Show avatar again after video
+              if (videoContainer) videoContainer.style.display = 'none';
+              const avatar2d = document.getElementById('kelly-2d-container');
+              if (avatar2d) avatar2d.style.display = 'block';
+            },
+            onError: (error) => {
+              console.warn(`[Learn] ⚠️ Video unavailable, using static avatar: ${error}`);
+              if (videoContainer) videoContainer.style.display = 'none';
+              const avatar2d = document.getElementById('kelly-2d-container');
+              if (avatar2d) avatar2d.style.display = 'block';
+            }
+          });
+        }
+
+        // ═══════════════════════════════════════════════════════════════
         // VISUAL SYSTEM: UPDATE SCENE FOR THIS PHASE
         // This sets background, Kelly pose, props based on phase type
         // ═══════════════════════════════════════════════════════════════
@@ -4751,6 +4865,16 @@
         } else {
           showToast('🎉 Lesson complete!');
         }
+        
+        // Show Share & Earn prompt after completion
+        setTimeout(() => {
+          if (window.LessonSharePrompt) {
+            LessonSharePrompt.show(stats, {
+              topic: state.lesson?.topic || state.lesson?.title,
+              dayNumber: state.dayNumber
+            });
+          }
+        }, 2500); // Delay to let celebration play first
       }
 
       // ═══════════════════════════════════════════════════════════════════
@@ -6167,6 +6291,17 @@
             showToast('Link copied!');
           }
         });
+        
+        // Share & Earn panel
+        bindBtn('btn-earn', () => {
+          if (window.EarnToLearn) {
+            EarnToLearn.open();
+          } else {
+            // Fallback to affiliate dashboard
+            window.location.href = '/affiliate-dashboard.html';
+          }
+        });
+        
         // Search is now handled by LessonSearch module
         
         bindBtn('btn-sound', () => {

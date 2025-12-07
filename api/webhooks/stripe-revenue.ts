@@ -1,0 +1,272 @@
+/**
+ * Stripe Revenue Events Webhook
+ * POST /api/webhooks/stripe-revenue
+ * 
+ * Captures all Stripe events and records them to the revenue_events table
+ * for CFO financial tracking and reporting
+ */
+
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { createClient } from '@supabase/supabase-js';
+import Stripe from 'stripe';
+
+const supabaseUrl = process.env.PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const stripeKey = process.env.STRIPE_SECRET_KEY!;
+const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
+
+// Plan prices in cents for MRR calculation
+const PLAN_PRICES: Record<string, { price_cents: number; mrr_cents: number }> = {
+  'monthly': { price_cents: 499, mrr_cents: 499 },
+  'annual': { price_cents: 4999, mrr_cents: 417 }, // $49.99/12 = ~$4.17/mo
+  'lifetime': { price_cents: 29999, mrr_cents: 0 }, // One-time, no MRR
+  'gift_3mo': { price_cents: 3499, mrr_cents: 0 },
+  'gift_6mo': { price_cents: 5999, mrr_cents: 0 },
+  'gift_12mo': { price_cents: 9900, mrr_cents: 0 },
+};
+
+async function recordRevenueEvent(
+  supabase: ReturnType<typeof createClient>,
+  eventType: string,
+  data: {
+    user_id?: string;
+    stripe_customer_id?: string;
+    stripe_subscription_id?: string;
+    stripe_invoice_id?: string;
+    amount_cents: number;
+    plan_type?: string;
+    mrr_impact_cents?: number;
+    metadata?: Record<string, any>;
+  }
+) {
+  const { error } = await supabase.from('revenue_events').insert({
+    event_type: eventType,
+    user_id: data.user_id,
+    stripe_customer_id: data.stripe_customer_id,
+    stripe_subscription_id: data.stripe_subscription_id,
+    stripe_invoice_id: data.stripe_invoice_id,
+    amount_cents: data.amount_cents,
+    plan_type: data.plan_type,
+    mrr_impact_cents: data.mrr_impact_cents || 0,
+    metadata: data.metadata || {},
+  });
+
+  if (error) {
+    console.error('Failed to record revenue event:', error);
+    throw error;
+  }
+}
+
+export default async function handler(
+  req: VercelRequest,
+  res: VercelResponse
+) {
+  if (req.method !== 'POST') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const stripe = new Stripe(stripeKey, { apiVersion: '2023-10-16' });
+  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+
+  // Verify webhook signature
+  const sig = req.headers['stripe-signature'] as string;
+  let event: Stripe.Event;
+
+  try {
+    const body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
+    event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
+  } catch (err) {
+    console.error('Webhook signature verification failed:', err);
+    return res.status(400).json({ error: 'Invalid signature' });
+  }
+
+  console.log(`Processing Stripe event: ${event.type}`);
+
+  try {
+    switch (event.type) {
+      // ============================================
+      // SUBSCRIPTION EVENTS
+      // ============================================
+      case 'customer.subscription.created': {
+        const subscription = event.data.object as Stripe.Subscription;
+        const planType = subscription.metadata?.plan_type || 'monthly';
+        const planInfo = PLAN_PRICES[planType] || PLAN_PRICES['monthly'];
+
+        await recordRevenueEvent(supabase, 'subscription_created', {
+          stripe_customer_id: subscription.customer as string,
+          stripe_subscription_id: subscription.id,
+          amount_cents: 0, // No charge yet (trial)
+          plan_type: planType,
+          mrr_impact_cents: subscription.status === 'trialing' ? 0 : planInfo.mrr_cents,
+          metadata: {
+            status: subscription.status,
+            trial_end: subscription.trial_end,
+          },
+        });
+
+        // Also record trial start if applicable
+        if (subscription.status === 'trialing') {
+          await recordRevenueEvent(supabase, 'trial_started', {
+            stripe_customer_id: subscription.customer as string,
+            stripe_subscription_id: subscription.id,
+            amount_cents: 0,
+            plan_type: planType,
+            mrr_impact_cents: 0,
+            metadata: { trial_end: subscription.trial_end },
+          });
+        }
+        break;
+      }
+
+      case 'customer.subscription.updated': {
+        const subscription = event.data.object as Stripe.Subscription;
+        const previousAttributes = event.data.previous_attributes as any;
+        
+        // Check if this is a trial conversion
+        if (previousAttributes?.status === 'trialing' && subscription.status === 'active') {
+          const planType = subscription.metadata?.plan_type || 'monthly';
+          const planInfo = PLAN_PRICES[planType] || PLAN_PRICES['monthly'];
+
+          await recordRevenueEvent(supabase, 'trial_converted', {
+            stripe_customer_id: subscription.customer as string,
+            stripe_subscription_id: subscription.id,
+            amount_cents: planInfo.price_cents,
+            plan_type: planType,
+            mrr_impact_cents: planInfo.mrr_cents,
+          });
+        }
+        break;
+      }
+
+      case 'customer.subscription.deleted': {
+        const subscription = event.data.object as Stripe.Subscription;
+        const planType = subscription.metadata?.plan_type || 'monthly';
+        const planInfo = PLAN_PRICES[planType] || PLAN_PRICES['monthly'];
+
+        await recordRevenueEvent(supabase, 'subscription_cancelled', {
+          stripe_customer_id: subscription.customer as string,
+          stripe_subscription_id: subscription.id,
+          amount_cents: 0,
+          plan_type: planType,
+          mrr_impact_cents: -planInfo.mrr_cents, // Negative impact
+          metadata: { cancellation_reason: subscription.cancellation_details?.reason },
+        });
+        break;
+      }
+
+      // ============================================
+      // PAYMENT EVENTS
+      // ============================================
+      case 'invoice.payment_succeeded': {
+        const invoice = event.data.object as Stripe.Invoice;
+        
+        // Skip $0 invoices (trial starts)
+        if (invoice.amount_paid === 0) break;
+
+        const planType = invoice.subscription_details?.metadata?.plan_type || 'monthly';
+
+        await recordRevenueEvent(supabase, 'payment_succeeded', {
+          stripe_customer_id: invoice.customer as string,
+          stripe_subscription_id: invoice.subscription as string,
+          stripe_invoice_id: invoice.id,
+          amount_cents: invoice.amount_paid,
+          plan_type: planType,
+          metadata: {
+            invoice_number: invoice.number,
+            billing_reason: invoice.billing_reason,
+          },
+        });
+
+        // If this is a renewal, also record that
+        if (invoice.billing_reason === 'subscription_cycle') {
+          await recordRevenueEvent(supabase, 'subscription_renewed', {
+            stripe_customer_id: invoice.customer as string,
+            stripe_subscription_id: invoice.subscription as string,
+            amount_cents: invoice.amount_paid,
+            plan_type: planType,
+          });
+        }
+        break;
+      }
+
+      case 'invoice.payment_failed': {
+        const invoice = event.data.object as Stripe.Invoice;
+
+        await recordRevenueEvent(supabase, 'payment_failed', {
+          stripe_customer_id: invoice.customer as string,
+          stripe_subscription_id: invoice.subscription as string,
+          stripe_invoice_id: invoice.id,
+          amount_cents: invoice.amount_due,
+          metadata: {
+            attempt_count: invoice.attempt_count,
+            next_payment_attempt: invoice.next_payment_attempt,
+          },
+        });
+        break;
+      }
+
+      // ============================================
+      // ONE-TIME PAYMENT EVENTS (Gifts, Lifetime)
+      // ============================================
+      case 'checkout.session.completed': {
+        const session = event.data.object as Stripe.Checkout.Session;
+        
+        // Only process one-time payments (gifts, lifetime)
+        if (session.mode === 'payment') {
+          const paymentType = session.metadata?.type || 'gift';
+          
+          if (paymentType === 'gift') {
+            await recordRevenueEvent(supabase, 'gift_purchased', {
+              stripe_customer_id: session.customer as string,
+              amount_cents: session.amount_total || 0,
+              plan_type: `gift_${session.metadata?.duration || '12mo'}`,
+              metadata: {
+                recipient_email: session.metadata?.recipient_email,
+                gifter_name: session.metadata?.gifter_name,
+                gift_message: session.metadata?.gift_message,
+              },
+            });
+          } else if (paymentType === 'lifetime') {
+            await recordRevenueEvent(supabase, 'payment_succeeded', {
+              stripe_customer_id: session.customer as string,
+              amount_cents: session.amount_total || 0,
+              plan_type: 'lifetime',
+              metadata: { type: 'lifetime_purchase' },
+            });
+          }
+        }
+        break;
+      }
+
+      // ============================================
+      // REFUND EVENTS
+      // ============================================
+      case 'charge.refunded': {
+        const charge = event.data.object as Stripe.Charge;
+        
+        await recordRevenueEvent(supabase, 'refund_issued', {
+          stripe_customer_id: charge.customer as string,
+          amount_cents: charge.amount_refunded,
+          metadata: {
+            refund_reason: charge.refunds?.data?.[0]?.reason,
+            original_amount: charge.amount,
+          },
+        });
+        break;
+      }
+
+      default:
+        console.log(`Unhandled event type: ${event.type}`);
+    }
+
+    return res.status(200).json({ received: true, event_type: event.type });
+
+  } catch (error) {
+    console.error('Webhook processing error:', error);
+    return res.status(500).json({
+      error: 'Webhook processing failed',
+      details: error instanceof Error ? error.message : 'Unknown error',
+    });
+  }
+}
+

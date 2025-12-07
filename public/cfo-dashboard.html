@@ -1,0 +1,590 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="robots" content="noindex, nofollow">
+    <title>CFO Dashboard | Curious Kelly</title>
+    <link rel="icon" href="/images/brand/favicon-32.png" type="image/png">
+    <style>
+        :root {
+            --bg-dark: #0a0a0f;
+            --bg-card: #12121a;
+            --bg-elevated: #1a1a24;
+            --text-primary: #f8f8f8;
+            --text-secondary: #a0a0a8;
+            --text-muted: #606068;
+            --accent-green: #22c55e;
+            --accent-red: #ef4444;
+            --accent-yellow: #eab308;
+            --accent-blue: #3b82f6;
+            --accent-purple: #8b5cf6;
+            --border: #2a2a36;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-dark);
+            color: var(--text-primary);
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .dashboard-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 24px;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .dashboard-header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .dashboard-header h1 span {
+            font-size: 1.2rem;
+        }
+        
+        .last-updated {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(240px, 1fr));
+            gap: 16px;
+            margin-bottom: 24px;
+        }
+        
+        .metric-card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+        }
+        
+        .metric-card.highlight {
+            border-color: var(--accent-blue);
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), transparent);
+        }
+        
+        .metric-label {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .metric-value.green { color: var(--accent-green); }
+        .metric-value.red { color: var(--accent-red); }
+        .metric-value.yellow { color: var(--accent-yellow); }
+        
+        .metric-subtext {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            margin-top: 4px;
+        }
+        
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .progress-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .progress-bar-container {
+            margin-bottom: 16px;
+        }
+        
+        .progress-label {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 6px;
+            font-size: 0.85rem;
+        }
+        
+        .progress-label span:first-child { color: var(--text-secondary); }
+        .progress-label span:last-child { color: var(--text-primary); font-weight: 600; }
+        
+        .progress-bar {
+            height: 8px;
+            background: var(--bg-elevated);
+            border-radius: 4px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--accent-blue), var(--accent-purple));
+            border-radius: 4px;
+            transition: width 0.5s ease;
+        }
+        
+        .alerts-section {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+        }
+        
+        .alert-item {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 12px;
+            background: var(--bg-elevated);
+            border-radius: 8px;
+            margin-bottom: 8px;
+        }
+        
+        .alert-item:last-child { margin-bottom: 0; }
+        
+        .alert-icon {
+            width: 32px;
+            height: 32px;
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1rem;
+        }
+        
+        .alert-icon.info { background: rgba(59, 130, 246, 0.2); }
+        .alert-icon.warning { background: rgba(234, 179, 8, 0.2); }
+        .alert-icon.critical { background: rgba(239, 68, 68, 0.2); }
+        
+        .alert-content { flex: 1; }
+        .alert-content strong { display: block; margin-bottom: 2px; }
+        .alert-content span { color: var(--text-secondary); font-size: 0.85rem; }
+        
+        .no-alerts {
+            color: var(--text-muted);
+            text-align: center;
+            padding: 20px;
+        }
+        
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 10px;
+            border-radius: 20px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+        
+        .status-badge.healthy {
+            background: rgba(34, 197, 94, 0.2);
+            color: var(--accent-green);
+        }
+        
+        .status-badge.warning {
+            background: rgba(234, 179, 8, 0.2);
+            color: var(--accent-yellow);
+        }
+        
+        .status-badge.critical {
+            background: rgba(239, 68, 68, 0.2);
+            color: var(--accent-red);
+        }
+        
+        .two-column {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 24px;
+        }
+        
+        .data-table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        
+        .data-table th,
+        .data-table td {
+            padding: 12px;
+            text-align: left;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .data-table th {
+            color: var(--text-secondary);
+            font-weight: 500;
+            font-size: 0.85rem;
+        }
+        
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+        
+        .loading::after {
+            content: '';
+            animation: dots 1.5s infinite;
+        }
+        
+        @keyframes dots {
+            0%, 20% { content: '.'; }
+            40% { content: '..'; }
+            60%, 100% { content: '...'; }
+        }
+        
+        .refresh-btn {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.85rem;
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .refresh-btn:hover {
+            background: var(--border);
+        }
+        
+        .countdown {
+            background: var(--bg-card);
+            border: 2px solid var(--accent-purple);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        
+        .countdown h2 {
+            color: var(--accent-purple);
+            font-size: 1rem;
+            margin-bottom: 12px;
+        }
+        
+        .countdown-value {
+            font-size: 3rem;
+            font-weight: 700;
+            color: var(--text-primary);
+        }
+        
+        .countdown-label {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="dashboard-header">
+        <h1>
+            <span>💰</span>
+            CFO Dashboard
+            <span id="health-status" class="status-badge healthy">● Healthy</span>
+        </h1>
+        <div style="display: flex; align-items: center; gap: 16px;">
+            <span class="last-updated">Last updated: <span id="last-update">Loading...</span></span>
+            <button class="refresh-btn" onclick="loadMetrics()">↻ Refresh</button>
+        </div>
+    </div>
+
+    <div class="countdown">
+        <h2>🚀 LAUNCH COUNTDOWN</h2>
+        <div class="countdown-value" id="countdown-days">10</div>
+        <div class="countdown-label">days until December 17, 2025</div>
+    </div>
+
+    <div class="metrics-grid" id="main-metrics">
+        <div class="loading">Loading financial data</div>
+    </div>
+
+    <div class="progress-section">
+        <h3 class="section-title">🎯 Christmas Targets (Dec 25, 2025)</h3>
+        <div id="progress-bars">
+            <div class="progress-bar-container">
+                <div class="progress-label">
+                    <span>Users</span>
+                    <span id="users-progress">0 / 1,000</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="users-bar" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-label">
+                    <span>Subscribers</span>
+                    <span id="subs-progress">0 / 500</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="subs-bar" style="width: 0%"></div>
+                </div>
+            </div>
+            <div class="progress-bar-container">
+                <div class="progress-label">
+                    <span>MRR</span>
+                    <span id="mrr-progress">$0 / $5,000</span>
+                </div>
+                <div class="progress-bar">
+                    <div class="progress-fill" id="mrr-bar" style="width: 0%"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="alerts-section">
+        <h3 class="section-title">🔔 Financial Alerts</h3>
+        <div id="alerts-container">
+            <div class="no-alerts">No active alerts - looking good! ✅</div>
+        </div>
+    </div>
+
+    <div class="two-column">
+        <div class="progress-section">
+            <h3 class="section-title">📊 Revenue Breakdown</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Plan Type</th>
+                        <th>Subscribers</th>
+                        <th>MRR Contribution</th>
+                    </tr>
+                </thead>
+                <tbody id="revenue-breakdown">
+                    <tr>
+                        <td colspan="3" class="loading">Loading</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+
+        <div class="progress-section">
+            <h3 class="section-title">📈 Key Ratios</h3>
+            <table class="data-table">
+                <thead>
+                    <tr>
+                        <th>Metric</th>
+                        <th>Current</th>
+                        <th>Target</th>
+                    </tr>
+                </thead>
+                <tbody id="key-ratios">
+                    <tr>
+                        <td colspan="3" class="loading">Loading</td>
+                    </tr>
+                </tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        // Calculate countdown
+        function updateCountdown() {
+            const launchDate = new Date('2025-12-17T00:00:00');
+            const now = new Date();
+            const diff = launchDate - now;
+            const days = Math.ceil(diff / (1000 * 60 * 60 * 24));
+            document.getElementById('countdown-days').textContent = Math.max(0, days);
+        }
+        
+        updateCountdown();
+        setInterval(updateCountdown, 60000);
+
+        // Load metrics
+        async function loadMetrics() {
+            try {
+                const response = await fetch('/api/cfo/metrics');
+                const data = await response.json();
+                
+                if (data.error) {
+                    console.error('Error loading metrics:', data.error);
+                    return;
+                }
+                
+                renderMetrics(data);
+                document.getElementById('last-update').textContent = new Date().toLocaleTimeString();
+                
+            } catch (error) {
+                console.error('Failed to load metrics:', error);
+                document.getElementById('main-metrics').innerHTML = `
+                    <div class="metric-card">
+                        <div class="metric-label">Error</div>
+                        <div class="metric-value red">Failed to load</div>
+                        <div class="metric-subtext">Check API connection</div>
+                    </div>
+                `;
+            }
+        }
+        
+        function renderMetrics(data) {
+            // Main metrics
+            document.getElementById('main-metrics').innerHTML = `
+                <div class="metric-card highlight">
+                    <div class="metric-label">💵 Monthly Recurring Revenue</div>
+                    <div class="metric-value green">${data.mrr.current_dollars}</div>
+                    <div class="metric-subtext">ARR: ${data.mrr.arr_dollars}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">👥 Total Users</div>
+                    <div class="metric-value">${data.users.total.toLocaleString()}</div>
+                    <div class="metric-subtext">${data.users.paid_percentage} paid</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">💳 Active Subscribers</div>
+                    <div class="metric-value">${data.users.paid}</div>
+                    <div class="metric-subtext">${data.users.trial} in trial</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">📉 Churn Rate</div>
+                    <div class="metric-value ${parseFloat(data.users.churn_rate) > 5 ? 'yellow' : ''}">${data.users.churn_rate}</div>
+                    <div class="metric-subtext">Target: < 5%</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">💰 Revenue Today</div>
+                    <div class="metric-value">${data.revenue.today_dollars}</div>
+                    <div class="metric-subtext">MTD: ${data.revenue.mtd_dollars}</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">📅 Monthly Subs</div>
+                    <div class="metric-value">${data.mrr.monthly_subscribers}</div>
+                    <div class="metric-subtext">$${(data.mrr.monthly_subscribers * 4.99).toFixed(2)}/mo</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">📆 Annual Subs</div>
+                    <div class="metric-value">${data.mrr.annual_subscribers}</div>
+                    <div class="metric-subtext">$${(data.mrr.annual_subscribers * 49.99).toFixed(2)} booked</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-label">♾️ Lifetime Members</div>
+                    <div class="metric-value">${data.mrr.lifetime_members}</div>
+                    <div class="metric-subtext">One-time revenue</div>
+                </div>
+            `;
+            
+            // Progress bars
+            const usersPercent = Math.min(100, (data.users.total / data.targets.christmas_users) * 100);
+            const subsPercent = Math.min(100, (data.users.paid / data.targets.christmas_subscribers) * 100);
+            const mrrPercent = Math.min(100, (data.mrr.current_cents / data.targets.christmas_mrr_cents) * 100);
+            
+            document.getElementById('users-progress').textContent = 
+                `${data.users.total.toLocaleString()} / ${data.targets.christmas_users.toLocaleString()}`;
+            document.getElementById('users-bar').style.width = `${usersPercent}%`;
+            
+            document.getElementById('subs-progress').textContent = 
+                `${data.users.paid} / ${data.targets.christmas_subscribers}`;
+            document.getElementById('subs-bar').style.width = `${subsPercent}%`;
+            
+            document.getElementById('mrr-progress').textContent = 
+                `${data.mrr.current_dollars} / $${(data.targets.christmas_mrr_cents / 100).toLocaleString()}`;
+            document.getElementById('mrr-bar').style.width = `${mrrPercent}%`;
+            
+            // Health status
+            const statusEl = document.getElementById('health-status');
+            statusEl.className = `status-badge ${data.health.status}`;
+            statusEl.innerHTML = `● ${data.health.status.charAt(0).toUpperCase() + data.health.status.slice(1)}`;
+            
+            // Alerts
+            const alertsContainer = document.getElementById('alerts-container');
+            if (data.health.alerts.length === 0) {
+                alertsContainer.innerHTML = '<div class="no-alerts">No active alerts - looking good! ✅</div>';
+            } else {
+                alertsContainer.innerHTML = data.health.alerts.map(alert => `
+                    <div class="alert-item">
+                        <div class="alert-icon ${alert.severity}">
+                            ${alert.severity === 'critical' ? '🚨' : alert.severity === 'warning' ? '⚠️' : 'ℹ️'}
+                        </div>
+                        <div class="alert-content">
+                            <strong>${alert.type.replace(/_/g, ' ').toUpperCase()}</strong>
+                            <span>${alert.message}</span>
+                        </div>
+                    </div>
+                `).join('');
+            }
+            
+            // Revenue breakdown
+            document.getElementById('revenue-breakdown').innerHTML = `
+                <tr>
+                    <td>Monthly ($4.99)</td>
+                    <td>${data.mrr.monthly_subscribers}</td>
+                    <td>$${((data.mrr.monthly_subscribers * 499) / 100).toFixed(2)}/mo</td>
+                </tr>
+                <tr>
+                    <td>Annual ($49.99)</td>
+                    <td>${data.mrr.annual_subscribers}</td>
+                    <td>$${((data.mrr.annual_subscribers * 417) / 100).toFixed(2)}/mo</td>
+                </tr>
+                <tr>
+                    <td>Lifetime ($299.99)</td>
+                    <td>${data.mrr.lifetime_members}</td>
+                    <td>-</td>
+                </tr>
+                <tr style="font-weight: 600; border-top: 2px solid var(--border);">
+                    <td>Total MRR</td>
+                    <td>${data.users.paid}</td>
+                    <td>${data.mrr.current_dollars}</td>
+                </tr>
+            `;
+            
+            // Key ratios
+            const arpu = data.users.paid > 0 ? (data.mrr.current_cents / data.users.paid / 100).toFixed(2) : '0.00';
+            const conversionRate = data.users.total > 0 ? ((data.users.paid / data.users.total) * 100).toFixed(1) : '0';
+            
+            document.getElementById('key-ratios').innerHTML = `
+                <tr>
+                    <td>ARPU</td>
+                    <td>$${arpu}</td>
+                    <td>$20+</td>
+                </tr>
+                <tr>
+                    <td>Conversion Rate</td>
+                    <td>${conversionRate}%</td>
+                    <td>15-25%</td>
+                </tr>
+                <tr>
+                    <td>Churn Rate</td>
+                    <td>${data.users.churn_rate}</td>
+                    <td>< 5%</td>
+                </tr>
+                <tr>
+                    <td>Annual/Monthly Ratio</td>
+                    <td>${data.mrr.monthly_subscribers > 0 ? (data.mrr.annual_subscribers / data.mrr.monthly_subscribers).toFixed(2) : 'N/A'}</td>
+                    <td>2:1+</td>
+                </tr>
+            `;
+        }
+        
+        // Initial load
+        loadMetrics();
+        
+        // Auto-refresh every 60 seconds
+        setInterval(loadMetrics, 60000);
+    </script>
+</body>
+</html>
+
