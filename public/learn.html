@@ -1731,6 +1731,78 @@
         background: rgba(255, 255, 255, 0.4);
         opacity: 0.5;
       }
+      
+      /* 🌟 GOLDEN: Hint glow for best option */
+      .option-card.hint-glow {
+        animation: hintPulse 2s ease-in-out infinite;
+        box-shadow: 0 0 20px rgba(59, 130, 246, 0.4);
+      }
+      
+      @keyframes hintPulse {
+        0%, 100% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.3); }
+        50% { box-shadow: 0 0 25px rgba(59, 130, 246, 0.6); }
+      }
+      
+      /* 🌟 GOLDEN: Quality indicator badges */
+      .option-card[data-quality="best"]::after {
+        content: '✨';
+        position: absolute;
+        top: -6px;
+        right: -6px;
+        font-size: 14px;
+        filter: drop-shadow(0 1px 2px rgba(0,0,0,0.3));
+        animation: sparkle 1.5s ease-in-out infinite;
+      }
+      
+      .option-card[data-quality="good"] {
+        border-left: 3px solid rgba(34, 197, 94, 0.5);
+      }
+      
+      .option-card[data-quality="redirect"] {
+        border-left: 3px solid rgba(251, 191, 36, 0.5);
+      }
+      
+      @keyframes sparkle {
+        0%, 100% { transform: scale(1) rotate(0deg); opacity: 1; }
+        50% { transform: scale(1.2) rotate(10deg); opacity: 0.8; }
+      }
+      
+      /* 🌟 GOLDEN: Kelly gaze animation during hint */
+      .kelly-gaze-right {
+        animation: gazeRight 0.5s ease-out forwards;
+      }
+      
+      .kelly-gaze-left {
+        animation: gazeLeft 0.5s ease-out forwards;
+      }
+      
+      @keyframes gazeRight {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(3px); }
+      }
+      
+      @keyframes gazeLeft {
+        0% { transform: translateX(0); }
+        100% { transform: translateX(-3px); }
+      }
+      
+      /* 🌟 GOLDEN: Option intro text */
+      #option-intro {
+        position: absolute;
+        right: 8px;
+        top: 28%;
+        width: 150px;
+        text-align: center;
+        color: rgba(255, 255, 255, 0.9);
+        font-size: 11px;
+        font-style: italic;
+        padding: 8px;
+        background: rgba(0, 0, 0, 0.3);
+        border-radius: 10px;
+        backdrop-filter: blur(8px);
+        display: none;
+        z-index: 99;
+      }
 
       .option-letter {
         width: 24px;
@@ -3242,6 +3314,9 @@
         </div>
       </div>
 
+      <!-- 🌟 GOLDEN: Option Intro Text -->
+      <div id="option-intro"></div>
+      
       <!-- RIGHT RAIL - Talk Button + Options -->
       <div class="right-rail" id="right-rail">
         <!-- TALK TO KELLY - Main Interaction -->
@@ -3999,6 +4074,14 @@
         state.currentPhase = 1;
         state.choicesMade = {};
         
+        // 🌟 GOLDEN LESSON: Day 1 auto-enables Advanced mode (3 options)
+        // This showcases the full richness of the Golden Lesson experience
+        if (dayNumber === 1 && state.variants.difficulty < 3) {
+          state.variants.difficulty = 3;
+          localStorage.setItem('kelly_difficulty', '3');
+          console.log('[Learn] 🌟 Golden Lesson detected! Auto-enabled Advanced mode (3 options)');
+        }
+        
         const tone = state.variants.tone || 'curious';
 
         // ⚡ TRY CACHE FIRST for instant load
@@ -4172,7 +4255,33 @@
       // ═══════════════════════════════════════════════════════════════════
       // BUILD LESSON FROM ATOMS
       // ═══════════════════════════════════════════════════════════════════
+      
+      // 🌟 GOLDEN FIX: Phase order map (Supabase orders alphabetically, we need lesson flow)
+      const PHASE_ORDER = {
+        'Hook': 1,
+        'hook': 1,
+        'Fact1': 2,
+        'fact1': 2,
+        'q1': 2,
+        'Fact2': 3,
+        'fact2': 3,
+        'q2': 3,
+        'Fact3': 4,
+        'fact3': 4,
+        'q3': 4,
+        'Wisdom': 5,
+        'wisdom': 5
+      };
+      
       function buildLessonFromAtoms(coreLesson, atoms) {
+        // 🌟 GOLDEN FIX: Sort atoms by lesson flow order, not alphabetically
+        atoms = [...atoms].sort((a, b) => {
+          const orderA = PHASE_ORDER[a.phase] || 99;
+          const orderB = PHASE_ORDER[b.phase] || 99;
+          return orderA - orderB;
+        });
+        console.log('[Learn] 🌟 Phases sorted to lesson flow order:', atoms.map(a => a.phase).join(' → '));
+        
         // Map phase names to types
         // Database actually uses: Hook, Fact1, Fact2, Fact3, Wisdom
         // Phase order: Hook (engaging intro) → Q1 → Q2 → Q3 → Wisdom (complete)
@@ -4226,6 +4335,13 @@
                   : atom.phase.toUpperCase(),
             text: content.script || content.text || 'Content loading...',
             hint: content.prompt || null,
+            
+            // Golden Lesson metadata (Day 1 has this, others may not)
+            kellyPose: content.kellyPose || null,
+            kellyEmotion: content.kellyEmotion || null,
+            optionIntro: content.optionIntro || null,
+            optionPose: content.optionPose || null,
+            hintSystem: content.hintSystem || null,
             // Parse options - format is ["A: text", "B: text", "C: text"]
             // with responses as {"A": "response", "B": "response", "C": "response"}
             choices:
@@ -4242,10 +4358,27 @@
                       text = opt.text;
                     }
                     
-                    // Get response from responses object
-                    const response = content.responses?.[letter] || '';
+                    // Get response - check BOTH formats:
+                    // 1. Golden: response embedded in option object
+                    // 2. Standard: responses object keyed by letter
+                    let response = '';
+                    if (typeof opt === 'object' && opt.response) {
+                      // Golden format: response in option
+                      response = opt.response;
+                    } else if (content.responses) {
+                      // Standard format: lookup in responses object
+                      response = content.responses[letter] || content.responses[`Option ${letter}`] || '';
+                    }
                     
-                    return { letter, text, response };
+                    // Preserve rich option data for Golden lessons
+                    const richData = typeof opt === 'object' ? {
+                      hintCue: opt.hintCue || null,
+                      quality: opt.quality || null,
+                      responsePose: opt.responsePose || null,
+                      responseEmotion: opt.responseEmotion || null
+                    } : {};
+                    
+                    return { letter, text, response, ...richData };
                   })
                 : null
           };
@@ -4626,19 +4759,29 @@
         }
         
         // ═══════════════════════════════════════════════════════════════
-        // KELLY EXPRESSION MAPPING (based on phase type) - FALLBACK
-        // Only used when phase visuals are not available
+        // KELLY EXPRESSION MAPPING - Golden Lesson priority, then fallback
         // ═══════════════════════════════════════════════════════════════
         // Use new Kelly Production Assets if available
         if (window.kellyAssets) {
-          const phaseToState = {
-            welcome: 'hello',
-            hook: 'hello',       // The engaging hook - excited/welcoming
-            question: 'thinking', 
-            wisdom: 'hello',
-            celebrating: 'hello'
-          };
-          const kellyState = phaseToState[phase.type] || 'thinking';
+          // GOLDEN: Use explicit kellyPose/kellyEmotion from atom if available
+          let kellyState = 'thinking';
+          
+          if (phase.kellyPose) {
+            // Golden lessons have explicit pose data
+            kellyState = phase.kellyPose;
+            console.log(`[Learn] 🌟 Golden pose: ${phase.kellyPose}, emotion: ${phase.kellyEmotion || 'default'}`);
+          } else {
+            // Fallback: map phase type to state
+            const phaseToState = {
+              welcome: 'hello',
+              hook: 'hello',       // The engaging hook - excited/welcoming
+              question: 'thinking', 
+              wisdom: 'hello',
+              celebrating: 'hello'
+            };
+            kellyState = phaseToState[phase.type] || 'thinking';
+          }
+          
           window.kellyAssets.setState(kellyState);
           console.log(`[Learn] Kelly state set to: ${kellyState}`);
         }
@@ -4690,19 +4833,38 @@
         if (container) container.innerHTML = '';
 
         if (choices && phase.type === 'question') {
-          // Kelly goes to thinking state for questions
+          // 🌟 GOLDEN: Kelly goes to optionPose state when showing choices
           if (window.kellyAssets) {
-            window.kellyAssets.setState('thinking');
+            // Golden: use optionPose if available, else default to thinking
+            const questionPose = phase.optionPose || 'thinking';
+            window.kellyAssets.setState(questionPose);
+            
+            if (phase.optionPose) {
+              console.log(`[Learn] 🌟 Golden optionPose: ${phase.optionPose}`);
+            }
+          }
+          
+          // 🌟 GOLDEN: Display optionIntro if available
+          if (phase.optionIntro) {
+            const introEl = document.getElementById('option-intro');
+            if (introEl) {
+              introEl.textContent = phase.optionIntro;
+              introEl.style.display = 'block';
+            }
+            console.log(`[Learn] 🌟 Golden optionIntro: "${phase.optionIntro}"`);
           }
           
           // V2: Use Options System (Right Rail)
           const formattedChoices = choices.map((choice, index) => ({
             letter: choice.letter || String.fromCharCode(65 + index),
             text: choice.text,
-            correct: choice.correct || false
+            correct: choice.correct || false,
+            // 🌟 GOLDEN: Pass hint data
+            hintCue: choice.hintCue || null,
+            quality: choice.quality || null
           }));
           // Pass both formatted and raw choices (raw has response text)
-          OptionsSystem.setOptions(formattedChoices, choices);
+          OptionsSystem.setOptions(formattedChoices, choices, phase.hintSystem);
           
           // Legacy: Also populate hidden choices container
           choices.forEach((choice, index) => {
@@ -4836,9 +4998,16 @@
           kellyVisualSystem.showCorrectFeedback();
         }
         
-        // Kelly celebrates the choice
+        // 🌟 GOLDEN: Use response pose/emotion from atom data if available
         if (window.kellyAssets) {
-          window.kellyAssets.setState('hello'); // Approving expression
+          if (choice.responsePose) {
+            // Golden lesson has explicit response pose
+            window.kellyAssets.setState(choice.responsePose);
+            console.log(`[Learn] 🌟 Golden response pose: ${choice.responsePose}, emotion: ${choice.responseEmotion || 'default'}`);
+          } else {
+            // Fallback: generic approving expression
+            window.kellyAssets.setState('hello');
+          }
         }
 
         // Kelly listens to student's choice
@@ -5348,18 +5517,20 @@
           console.log('[V2 Options] ✅ Initialized');
         },
         
-        setOptions(choices, rawChoiceData) {
+        setOptions(choices, rawChoiceData, hintSystem = null) {
           this.options = choices || [];
           this.rawChoices = rawChoiceData || choices || [];
+          this.hintSystem = hintSystem;
+          this.hintTimeout = null;
           
           console.log(`[V2 Options] Setting ${this.options.length} options`);
           
-          // Hide all first
+          // Hide all first and clear hints
           ['a', 'b', 'c'].forEach(letter => {
             const card = document.getElementById(`option-${letter}`);
             if (card) {
               card.style.display = 'none';
-              card.classList.remove('highlighted', 'correct', 'incorrect');
+              card.classList.remove('highlighted', 'correct', 'incorrect', 'hint-glow');
               card.style.pointerEvents = 'auto';
             }
           });
@@ -5375,9 +5546,62 @@
               card.style.display = 'flex';
               card.dataset.correct = choice.correct ? 'true' : 'false';
               card.dataset.index = index;
+              
+              // 🌟 GOLDEN: Set quality attribute for visual styling
+              if (choice.quality) {
+                card.setAttribute('data-quality', choice.quality);
+                console.log(`[V2 Options] 🌟 Card ${choice.letter}: quality="${choice.quality}"`);
+              } else {
+                card.removeAttribute('data-quality');
+              }
+              
+              card.dataset.hintCue = choice.hintCue || '';
               console.log(`[V2 Options] Card ${choice.letter}: "${choice.text?.substring(0, 30)}..."`);
             }
           });
+          
+          // 🌟 GOLDEN: Setup hint system with Kelly gaze animation
+          if (hintSystem?.enabled && hintSystem?.bestOption) {
+            const delay = hintSystem.delayMs || 3000;
+            console.log(`[V2 Options] 🌟 Hint system active: best=${hintSystem.bestOption}, delay=${delay}ms, type=${hintSystem.hintType || 'gaze'}`);
+            
+            this.hintTimeout = setTimeout(() => {
+              const bestLetter = hintSystem.bestOption.toLowerCase();
+              const bestCard = document.getElementById(`option-${bestLetter}`);
+              const bestIndex = bestLetter.charCodeAt(0) - 97;
+              const bestChoice = this.rawChoices[bestIndex];
+              
+              if (bestCard) {
+                // Add hint glow to best option card
+                bestCard.classList.add('hint-glow');
+                console.log(`[V2 Options] 🌟 Hint shown for option ${hintSystem.bestOption}`);
+                
+                // Kelly gaze hint with visual cue
+                if (bestChoice?.hintCue) {
+                  const kellyContainer = document.querySelector('.kelly-avatar-container');
+                  
+                  if (bestChoice.hintCue === 'gaze-right') {
+                    // Kelly looks toward options (right side of screen)
+                    if (window.kellyAssets) {
+                      window.kellyAssets.setState('pointing-right');
+                    }
+                    if (kellyContainer) {
+                      kellyContainer.classList.add('kelly-gaze-right');
+                    }
+                    console.log(`[V2 Options] 🌟 Kelly gazing RIGHT toward best option`);
+                  } else if (bestChoice.hintCue === 'gaze-left') {
+                    if (window.kellyAssets) {
+                      window.kellyAssets.setState('pointing-left');
+                    }
+                    if (kellyContainer) {
+                      kellyContainer.classList.add('kelly-gaze-left');
+                    }
+                    console.log(`[V2 Options] 🌟 Kelly gazing LEFT`);
+                  }
+                }
+              }
+            }, delay);
+          }
         },
         
         selectOption(letter, index) {
@@ -5428,13 +5652,32 @@
         },
         
         resetAll() {
+          // Clear hint timeout
+          if (this.hintTimeout) {
+            clearTimeout(this.hintTimeout);
+            this.hintTimeout = null;
+          }
+          
           ['a', 'b', 'c'].forEach(letter => {
             const card = document.getElementById(`option-${letter}`);
             if (card) {
-              card.classList.remove('highlighted', 'correct', 'incorrect');
+              card.classList.remove('highlighted', 'correct', 'incorrect', 'hint-glow');
+              card.removeAttribute('data-quality');
               card.style.pointerEvents = 'auto';
             }
           });
+          
+          // 🌟 GOLDEN: Clear Kelly gaze animation
+          const kellyContainer = document.querySelector('.kelly-avatar-container');
+          if (kellyContainer) {
+            kellyContainer.classList.remove('kelly-gaze-right', 'kelly-gaze-left');
+          }
+          
+          // Hide option intro
+          const introEl = document.getElementById('option-intro');
+          if (introEl) {
+            introEl.style.display = 'none';
+          }
         }
       };
 
