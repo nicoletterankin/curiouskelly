@@ -12,6 +12,7 @@ const EarnToLearn = {
   overlay: null,
   userData: null,
   supabase: null,
+  eligibility: null, // COPPA/age compliance data
   
   // Commission tier names and rates
   TIERS: {
@@ -173,6 +174,33 @@ const EarnToLearn = {
           <h3>Sign in to Share & Earn</h3>
           <p>Every learner gets a referral link. Create an account to start earning!</p>
           <button class="earn-signin-btn" id="earn-signin-btn">Sign In / Sign Up</button>
+        </div>
+        
+        <!-- Under 13 State (COPPA) -->
+        <div class="earn-under-13" id="earn-under-13" style="display: none;">
+          <div class="not-logged-icon">👶</div>
+          <h3>Ask a Parent to Help!</h3>
+          <p>Kids under 13 need a parent or guardian to set up Share & Earn. It's the law to keep you safe!</p>
+          <p class="earn-parent-note">Your parent can link your account to theirs, and they'll manage any earnings until you're older.</p>
+          <a href="mailto:hello@curiouskelly.com?subject=Family%20Account%20Setup" class="earn-signin-btn" style="text-decoration: none; display: inline-block;">
+            📧 Email Us for Help
+          </a>
+        </div>
+        
+        <!-- Minor State (13-17) -->
+        <div class="earn-minor" id="earn-minor" style="display: none;">
+          <div class="minor-notice">
+            <span class="minor-icon">🔒</span>
+            <div class="minor-text">
+              <strong>Your earnings are being saved!</strong>
+              <p>As you're under 18, your earnings are held until your 18th birthday. 
+              If a parent is linked to your account, they can claim them earlier.</p>
+            </div>
+          </div>
+          <div class="held-earnings-display">
+            <span class="held-label">Held Earnings</span>
+            <span class="held-amount" id="held-earnings-amount">$0.00</span>
+          </div>
         </div>
         
       </div>
@@ -598,6 +626,85 @@ const EarnToLearn = {
         from { opacity: 0; transform: translate(-50%, 20px); }
         to { opacity: 1; transform: translate(-50%, 0); }
       }
+      
+      /* Under 13 State (COPPA) */
+      .earn-under-13 {
+        text-align: center;
+        padding: 40px 20px;
+      }
+      
+      .earn-under-13 h3 {
+        font-size: 1.3rem;
+        margin-bottom: 12px;
+        color: #fff;
+      }
+      
+      .earn-under-13 p {
+        color: #a1a1aa;
+        margin-bottom: 16px;
+        line-height: 1.6;
+      }
+      
+      .earn-parent-note {
+        font-size: 0.85rem;
+        color: #71717a;
+        background: rgba(255, 255, 255, 0.05);
+        padding: 12px 16px;
+        border-radius: 10px;
+        margin: 20px 0;
+      }
+      
+      /* Minor State (13-17) */
+      .earn-minor {
+        margin-bottom: 20px;
+      }
+      
+      .minor-notice {
+        display: flex;
+        gap: 14px;
+        background: linear-gradient(135deg, rgba(251, 191, 36, 0.15), rgba(245, 158, 11, 0.1));
+        border: 1px solid rgba(251, 191, 36, 0.3);
+        border-radius: 14px;
+        padding: 16px;
+        margin-bottom: 16px;
+      }
+      
+      .minor-icon {
+        font-size: 1.5rem;
+      }
+      
+      .minor-text strong {
+        display: block;
+        color: #fbbf24;
+        margin-bottom: 4px;
+      }
+      
+      .minor-text p {
+        color: #a1a1aa;
+        font-size: 0.85rem;
+        margin: 0;
+        line-height: 1.5;
+      }
+      
+      .held-earnings-display {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        background: rgba(251, 191, 36, 0.1);
+        border-radius: 12px;
+        padding: 16px 20px;
+      }
+      
+      .held-label {
+        color: #a1a1aa;
+        font-size: 0.9rem;
+      }
+      
+      .held-amount {
+        font-size: 1.5rem;
+        font-weight: 700;
+        color: #fbbf24;
+      }
     `;
     document.head.appendChild(styles);
   },
@@ -681,12 +788,16 @@ const EarnToLearn = {
     }
     
     try {
+      const { data: { session } } = await this.supabase.auth.getSession();
       const { data: { user } } = await this.supabase.auth.getUser();
       
       if (!user) {
         this.showNotLoggedIn();
         return;
       }
+      
+      // COMPLIANCE: Check eligibility based on age
+      await this.checkEligibility(session?.access_token);
       
       // Get user data with referral info
       const { data: userData, error } = await this.supabase
@@ -704,7 +815,11 @@ const EarnToLearn = {
           available_earnings,
           lifetime_earnings,
           total_lessons_completed,
-          unique_lessons_completed
+          unique_lessons_completed,
+          age,
+          birthday,
+          birth_year,
+          parent_account_id
         `)
         .eq('id', user.id)
         .single();
@@ -716,8 +831,21 @@ const EarnToLearn = {
       }
       
       this.userData = userData;
+      
+      // Show appropriate UI based on eligibility
+      if (this.eligibility && !this.eligibility.canSeeReferralLink) {
+        // Under 13 without parental consent
+        this.showUnder13();
+        return;
+      }
+      
       this.showLoggedIn();
       this.updateUI();
+      
+      // Show minor notice if 13-17
+      if (this.eligibility?.isMinor && this.eligibility?.canSeeReferralLink) {
+        this.showMinorNotice();
+      }
       
       // Load click stats
       await this.loadClickStats();
@@ -725,6 +853,36 @@ const EarnToLearn = {
     } catch (e) {
       console.error('[EarnToLearn] Error loading data:', e);
       this.showNotLoggedIn();
+    }
+  },
+  
+  async checkEligibility(token) {
+    if (!token) return;
+    
+    try {
+      const response = await fetch('/api/referral/eligibility', {
+        headers: {
+          'Authorization': `Bearer ${token}`,
+          'Content-Type': 'application/json'
+        }
+      });
+      
+      if (response.ok) {
+        const data = await response.json();
+        this.eligibility = data.eligibility;
+        console.log('[EarnToLearn] Eligibility:', this.eligibility);
+      }
+    } catch (e) {
+      console.log('[EarnToLearn] Could not check eligibility, assuming adult');
+      // Default to adult behavior if API fails
+      this.eligibility = {
+        canSeeReferralLink: true,
+        canShare: true,
+        canAccumulateEarnings: true,
+        canRequestPayout: true,
+        earningsDestination: 'self',
+        isMinor: false
+      };
     }
   },
   
@@ -751,6 +909,8 @@ const EarnToLearn = {
     document.querySelector('.earn-share-section').style.display = 'none';
     document.querySelector('.earn-footer').style.display = 'none';
     document.getElementById('earn-not-logged-in').style.display = 'block';
+    document.getElementById('earn-under-13').style.display = 'none';
+    document.getElementById('earn-minor').style.display = 'none';
   },
   
   showLoggedIn() {
@@ -761,6 +921,42 @@ const EarnToLearn = {
     document.querySelector('.earn-share-section').style.display = 'block';
     document.querySelector('.earn-footer').style.display = 'flex';
     document.getElementById('earn-not-logged-in').style.display = 'none';
+    document.getElementById('earn-under-13').style.display = 'none';
+  },
+  
+  showUnder13() {
+    // COPPA: Hide everything except the under-13 message
+    document.getElementById('earn-summary').style.display = 'none';
+    document.getElementById('earn-tier').style.display = 'none';
+    document.querySelector('.earn-link-section').style.display = 'none';
+    document.getElementById('quick-stats').style.display = 'none';
+    document.querySelector('.earn-share-section').style.display = 'none';
+    document.querySelector('.earn-footer').style.display = 'none';
+    document.getElementById('earn-not-logged-in').style.display = 'none';
+    document.getElementById('earn-minor').style.display = 'none';
+    document.getElementById('earn-under-13').style.display = 'block';
+    console.log('[EarnToLearn] Showing Under 13 state (COPPA compliance)');
+  },
+  
+  showMinorNotice() {
+    // Show the minor notice (13-17) but still show full functionality
+    const minorNotice = document.getElementById('earn-minor');
+    minorNotice.style.display = 'block';
+    
+    // Update held earnings amount if available
+    if (this.eligibility?.heldEarnings) {
+      document.getElementById('held-earnings-amount').textContent = 
+        this.formatMoney(this.eligibility.heldEarnings);
+    }
+    
+    // Hide payout link for minors
+    const payoutLink = document.getElementById('request-payout-link');
+    if (payoutLink) {
+      payoutLink.style.display = 'none';
+      payoutLink.title = 'Payouts available when you turn 18';
+    }
+    
+    console.log('[EarnToLearn] Showing Minor notice (13-17)');
   },
   
   updateUI() {
@@ -773,10 +969,14 @@ const EarnToLearn = {
     document.getElementById('pending-earnings').textContent = this.formatMoney(data.pending_earnings || 0);
     document.getElementById('lifetime-earnings').textContent = this.formatMoney(data.lifetime_earnings || 0);
     
-    // Show payout link if available >= $50
+    // Show payout link if available >= $50 AND user can request payout (not a minor)
     const payoutLink = document.getElementById('request-payout-link');
-    if ((data.available_earnings || 0) >= 50) {
+    const canPayout = this.eligibility?.canRequestPayout !== false;
+    if ((data.available_earnings || 0) >= 50 && canPayout) {
       payoutLink.style.display = 'inline';
+      payoutLink.href = '/earnings.html#payout';
+    } else if (!canPayout) {
+      payoutLink.style.display = 'none';
     }
     
     // Tier
