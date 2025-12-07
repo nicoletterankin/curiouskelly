@@ -25,21 +25,34 @@
 
 ## 1. CORE PRICING STRUCTURE
 
+> 🔒 **LOCKED PRICING** — See `PRICING_LOCKED.md` for canonical source
+
 ### 1.1 Standard Pricing (Full Price)
 
 | Plan | Price | Billing | Per Day Cost | Stripe Price ID |
 |------|-------|---------|--------------|-----------------|
-| **Annual** | $99.99/year | One-time yearly | $0.27/day | `price_annual_standard` |
-| **Monthly** | $9.99/month | Recurring monthly | $0.33/day | `price_monthly_standard` |
-| **Lifetime** | $299.99 | One-time forever | - | `price_lifetime` |
+| **Annual** | $49.99/year | Recurring yearly | $0.14/day | `STRIPE_PRICE_ANNUAL` |
+| **Monthly** | $7.99/month | Recurring monthly | $0.27/day | `STRIPE_PRICE_MONTHLY` |
+| **Family** | $99.99/year | Recurring yearly | $0.27/day | `STRIPE_PRICE_FAMILY` |
+| **Lifetime** | $199.99 | One-time forever | - | `STRIPE_PRICE_LIFETIME` |
 
-### 1.2 Value Proposition by Plan
+### 1.2 Gift Pricing
+
+| Gift | Price | Duration | Stripe Price ID |
+|------|-------|----------|-----------------|
+| **3 Months** | $24.99 | 3 months | `STRIPE_PRICE_GIFT_3MO` |
+| **6 Months** | $39.99 | 6 months | `STRIPE_PRICE_GIFT_6MO` |
+| **12 Months** | $49.99 | 12 months | `STRIPE_PRICE_GIFT_12MO` |
+| **Lifetime** | $149.99 | Forever | `STRIPE_PRICE_GIFT_LIFETIME` |
+
+### 1.3 Value Proposition by Plan
 
 | Plan | Best For | Savings vs Monthly |
 |------|----------|-------------------|
-| Annual | Committed learners | Save $19.89 (17%) |
+| Annual | Committed learners | Save 48% ($4.17/mo equiv) |
 | Monthly | Try before commit | Flexibility |
-| Lifetime | Super fans, gift givers | Break-even at 3 years |
+| Family | Households | Up to 6 members |
+| Lifetime | Super fans, gift givers | Break-even at 4 years |
 
 ### 1.3 Pricing Philosophy
 

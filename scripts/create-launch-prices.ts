@@ -3,8 +3,12 @@
  * 
  * Run: npx ts-node scripts/create-launch-prices.ts
  * 
- * This script creates the $4.99/month and $49.99/year "Founding Member" prices
- * that match the checkout page pricing.
+ * 🔒 LOCKED PRICING (See PRICING_LOCKED.md):
+ * - Monthly: $7.99/month
+ * - Annual: $49.99/year (DEFAULT)
+ * - Family: $99.99/year
+ * - Lifetime: $199.99 one-time
+ * - Gifts: $24.99 (3mo), $39.99 (6mo), $49.99 (12mo), $149.99 (lifetime)
  */
 
 import Stripe from 'stripe';
@@ -25,8 +29,9 @@ const stripe = new Stripe(stripeKey, {
 
 async function createLaunchPrices() {
   console.log('\n========================================');
-  console.log('💰 CREATING LAUNCH PRICING');
+  console.log('💰 CREATING LOCKED LAUNCH PRICING');
   console.log('========================================\n');
+  console.log('📋 Reference: PRICING_LOCKED.md\n');
 
   try {
     // First, let's find or create the main product
@@ -42,10 +47,10 @@ async function createLaunchPrices() {
     if (!product) {
       console.log('Creating new product...');
       product = await stripe.products.create({
-        name: 'Curious Kelly - Founding Member',
-        description: 'Daily AI-powered lessons for the whole family. Founding member pricing - locked forever.',
+        name: 'Curious Kelly Subscription',
+        description: 'Daily AI-powered lessons for the whole family. 365 days of learning with Kelly.',
         metadata: {
-          type: 'founding_member',
+          type: 'subscription',
           launch_date: '2025-12-17',
         },
       });
@@ -54,63 +59,153 @@ async function createLaunchPrices() {
       console.log(`✅ Using existing product: ${product.id} (${product.name})`);
     }
 
-    // Create Monthly Founding Member Price ($4.99/month)
-    console.log('\nCreating Monthly Founding Member price ($4.99/month)...');
+    // Create Monthly Price ($7.99/month) - LOCKED
+    console.log('\nCreating Monthly price ($7.99/month)...');
     const monthlyPrice = await stripe.prices.create({
       product: product.id,
-      unit_amount: 499, // $4.99 in cents
+      unit_amount: 799, // $7.99 in cents - LOCKED
       currency: 'usd',
       recurring: {
         interval: 'month',
         trial_period_days: 7,
       },
-      nickname: 'Founding Member Monthly',
+      nickname: 'Monthly',
       metadata: {
         plan_type: 'monthly',
-        is_founding_price: 'true',
-        regular_price_cents: '999', // Regular price for reference
+        display_price: '$7.99',
       },
     });
     console.log(`✅ Created monthly price: ${monthlyPrice.id}`);
 
-    // Create Annual Founding Member Price ($49.99/year)
-    console.log('\nCreating Annual Founding Member price ($49.99/year)...');
+    // Create Annual Price ($49.99/year) - LOCKED
+    console.log('\nCreating Annual price ($49.99/year)...');
     const annualPrice = await stripe.prices.create({
       product: product.id,
-      unit_amount: 4999, // $49.99 in cents
+      unit_amount: 4999, // $49.99 in cents - LOCKED
       currency: 'usd',
       recurring: {
         interval: 'year',
         trial_period_days: 7,
       },
-      nickname: 'Founding Member Annual',
+      nickname: 'Annual - Best Value',
       metadata: {
         plan_type: 'annual',
-        is_founding_price: 'true',
-        regular_price_cents: '9900', // Regular price for reference
-        savings: '50%',
+        display_price: '$49.99',
+        monthly_equivalent: '$4.17',
+        savings: '48%',
       },
     });
     console.log(`✅ Created annual price: ${annualPrice.id}`);
+
+    // Create Family Price ($99.99/year) - LOCKED
+    console.log('\nCreating Family price ($99.99/year)...');
+    const familyPrice = await stripe.prices.create({
+      product: product.id,
+      unit_amount: 9999, // $99.99 in cents - LOCKED
+      currency: 'usd',
+      recurring: {
+        interval: 'year',
+        trial_period_days: 7,
+      },
+      nickname: 'Family - Up to 6 members',
+      metadata: {
+        plan_type: 'family',
+        display_price: '$99.99',
+        max_members: '6',
+      },
+    });
+    console.log(`✅ Created family price: ${familyPrice.id}`);
+
+    // Create Lifetime Price ($199.99 one-time) - LOCKED
+    console.log('\nCreating Lifetime price ($199.99 one-time)...');
+    const lifetimePrice = await stripe.prices.create({
+      product: product.id,
+      unit_amount: 19999, // $199.99 in cents - LOCKED
+      currency: 'usd',
+      nickname: 'Lifetime Access',
+      metadata: {
+        plan_type: 'lifetime',
+        display_price: '$199.99',
+      },
+    });
+    console.log(`✅ Created lifetime price: ${lifetimePrice.id}`);
+
+    // Create Gift Prices - LOCKED
+    console.log('\nCreating Gift prices...');
+    
+    const gift3moPrice = await stripe.prices.create({
+      product: product.id,
+      unit_amount: 2499, // $24.99 - LOCKED
+      currency: 'usd',
+      nickname: 'Gift 3 Months',
+      metadata: { plan_type: 'gift_3mo', display_price: '$24.99', duration_months: '3' },
+    });
+    console.log(`✅ Created gift 3mo price: ${gift3moPrice.id}`);
+
+    const gift6moPrice = await stripe.prices.create({
+      product: product.id,
+      unit_amount: 3999, // $39.99 - LOCKED
+      currency: 'usd',
+      nickname: 'Gift 6 Months',
+      metadata: { plan_type: 'gift_6mo', display_price: '$39.99', duration_months: '6' },
+    });
+    console.log(`✅ Created gift 6mo price: ${gift6moPrice.id}`);
+
+    const gift12moPrice = await stripe.prices.create({
+      product: product.id,
+      unit_amount: 4999, // $49.99 - LOCKED
+      currency: 'usd',
+      nickname: 'Gift 12 Months',
+      metadata: { plan_type: 'gift_12mo', display_price: '$49.99', duration_months: '12' },
+    });
+    console.log(`✅ Created gift 12mo price: ${gift12moPrice.id}`);
+
+    const giftLifetimePrice = await stripe.prices.create({
+      product: product.id,
+      unit_amount: 14999, // $149.99 - LOCKED
+      currency: 'usd',
+      nickname: 'Gift Lifetime',
+      metadata: { plan_type: 'gift_lifetime', display_price: '$149.99' },
+    });
+    console.log(`✅ Created gift lifetime price: ${giftLifetimePrice.id}`);
 
     // Summary
     console.log('\n========================================');
     console.log('📋 UPDATE YOUR .ENV FILE');
     console.log('========================================\n');
-    console.log('Add or update these values:\n');
-    console.log(`STRIPE_PRICE_MONTHLY_FOUNDING=${monthlyPrice.id}`);
-    console.log(`STRIPE_PRICE_ANNUAL_FOUNDING=${annualPrice.id}`);
-    console.log('\nOr replace existing prices:');
+    console.log('# Subscription Prices (LOCKED)');
     console.log(`STRIPE_PRICE_MONTHLY=${monthlyPrice.id}`);
     console.log(`STRIPE_PRICE_ANNUAL=${annualPrice.id}`);
+    console.log(`STRIPE_PRICE_FAMILY=${familyPrice.id}`);
+    console.log(`STRIPE_PRICE_LIFETIME=${lifetimePrice.id}`);
+    console.log('\n# Gift Prices (LOCKED)');
+    console.log(`STRIPE_PRICE_GIFT_3MO=${gift3moPrice.id}`);
+    console.log(`STRIPE_PRICE_GIFT_6MO=${gift6moPrice.id}`);
+    console.log(`STRIPE_PRICE_GIFT_12MO=${gift12moPrice.id}`);
+    console.log(`STRIPE_PRICE_GIFT_LIFETIME=${giftLifetimePrice.id}`);
 
     console.log('\n========================================');
-    console.log('✅ LAUNCH PRICES CREATED SUCCESSFULLY');
+    console.log('✅ ALL LOCKED PRICES CREATED');
     console.log('========================================\n');
+    console.log('📋 Pricing Reference: PRICING_LOCKED.md');
+    console.log('');
+    console.log('💰 LOCKED PRICING SUMMARY:');
+    console.log('   Monthly:  $7.99/mo');
+    console.log('   Annual:   $49.99/yr (DEFAULT)');
+    console.log('   Family:   $99.99/yr');
+    console.log('   Lifetime: $199.99');
+    console.log('   Gifts:    $24.99 / $39.99 / $49.99 / $149.99');
+    console.log('');
 
     return {
       monthly: monthlyPrice.id,
       annual: annualPrice.id,
+      family: familyPrice.id,
+      lifetime: lifetimePrice.id,
+      gift_3mo: gift3moPrice.id,
+      gift_6mo: gift6moPrice.id,
+      gift_12mo: gift12moPrice.id,
+      gift_lifetime: giftLifetimePrice.id,
     };
 
   } catch (error) {

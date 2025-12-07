@@ -1,7 +1,18 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 
+/**
+ * Stripe Checkout API Handler
+ * 
+ * 🔒 LOCKED PRICING (See PRICING_LOCKED.md):
+ * - Monthly: $7.99/month
+ * - Annual: $49.99/year (DEFAULT)
+ * - Family: $99.99/year
+ * - Lifetime: $199.99 one-time
+ * - Gifts: $24.99 (3mo), $39.99 (6mo), $49.99 (12mo), $149.99 (lifetime)
+ */
+
 interface CheckoutRequest {
-  planType: 'monthly' | 'annual' | 'lifetime' | 'family' | 'gift';
+  planType: 'monthly' | 'annual' | 'lifetime' | 'family' | 'gift_3mo' | 'gift_6mo' | 'gift_12mo' | 'gift_lifetime';
   customerEmail: string;
   promoCode?: string;
   affiliateCode?: string;
@@ -56,24 +67,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(422).json({ error: 'invalid_email' });
   }
 
-  // Validate plan type
-  const validPlanTypes = ['monthly', 'annual', 'lifetime', 'family', 'gift'];
+  // Validate plan type - LOCKED PRICING
+  const validPlanTypes = ['monthly', 'annual', 'lifetime', 'family', 'gift_3mo', 'gift_6mo', 'gift_12mo', 'gift_lifetime'];
   if (!validPlanTypes.includes(body.planType)) {
     return res.status(422).json({ error: 'invalid_plan_type' });
   }
 
-  // Get price IDs from environment (support multiple naming conventions)
-  // Founding member prices take precedence during launch period
+  // Get price IDs from environment
+  // 🔒 LOCKED PRICING - See PRICING_LOCKED.md
+  // Monthly: $7.99, Annual: $49.99, Family: $99.99, Lifetime: $199.99
+  // Gifts: $24.99 (3mo), $39.99 (6mo), $49.99 (12mo), $149.99 (lifetime)
   const priceIds: Record<string, string | undefined> = {
-    monthly: process.env.STRIPE_PRICE_MONTHLY_FOUNDING || process.env.STRIPE_PRICE_MONTHLY,
-    annual: process.env.STRIPE_PRICE_ANNUAL_FOUNDING || process.env.STRIPE_PRICE_ANNUAL,
-    lifetime: process.env.STRIPE_PRICE_LIFETIME || process.env.STRIPE_PRICE_FAMILY,
-    family: process.env.STRIPE_PRICE_FAMILY || process.env.STRIPE_PRICE_LIFETIME,
-    gift: process.env.STRIPE_PRICE_GIFT
+    monthly: process.env.STRIPE_PRICE_MONTHLY,
+    annual: process.env.STRIPE_PRICE_ANNUAL,
+    lifetime: process.env.STRIPE_PRICE_LIFETIME,
+    family: process.env.STRIPE_PRICE_FAMILY,
+    gift_3mo: process.env.STRIPE_PRICE_GIFT_3MO,
+    gift_6mo: process.env.STRIPE_PRICE_GIFT_6MO,
+    gift_12mo: process.env.STRIPE_PRICE_GIFT_12MO,
+    gift_lifetime: process.env.STRIPE_PRICE_GIFT_LIFETIME,
   };
 
   const siteUrl = process.env.PUBLIC_SITE_URL || 'https://curiouskelly.com';
-  const isGiftPlan = body.planType === 'gift';
+  const isGiftPlan = body.planType.startsWith('gift_');
 
   // Build metadata
   const commonMetadata = {
@@ -89,11 +105,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let sessionConfig: any; // Stripe.Checkout.SessionCreateParams
 
     if (isGiftPlan) {
-      const giftPriceId = priceIds.gift;
+      // Gift plans: gift_3mo, gift_6mo, gift_12mo, gift_lifetime
+      const giftPriceId = priceIds[body.planType];
       if (!giftPriceId) {
         return res.status(503).json({ 
           error: `price_not_configured`,
-          message: `Gift price ID not configured. Add STRIPE_PRICE_GIFT to environment.`
+          message: `Gift price ID not configured. Add STRIPE_PRICE_${body.planType.toUpperCase()} to environment.`
         });
       }
 
@@ -108,7 +125,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         allow_promotion_codes: true,
         metadata: {
           ...commonMetadata,
-          type: 'gift',
+          type: body.planType,
           recipient_email: giftMeta.recipientEmail || '',
           gift_message: giftMeta.message || '',
           gifter_name: giftMeta.gifterName || '',
