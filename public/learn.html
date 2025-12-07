@@ -2918,15 +2918,22 @@
       <div class="kelly-frame" id="kelly-frame">
         <!-- 2D Avatar Container (default, visible) -->
         <div class="kelly-avatar-container" id="kelly-2d-container" style="display: block">
-          <!-- Kelly 2D Avatar - Uses /kelly/poses/ directory -->
-          <!-- Available poses: kelly_welcome, kelly_idle, kelly_hint, kelly_clasp, 
-               kelly_choice_left, kelly_choice_right, kelly_listening -->
+          <!-- Kelly Video Player - Pre-rendered lipsync videos from Supabase -->
+          <video
+            id="kelly-video"
+            playsinline
+            muted
+            style="width: 100%; height: 100%; object-fit: cover; object-position: center 20%; display: none;"
+          ></video>
+          <!-- Kelly 2D Avatar - Fallback when video not available -->
           <img
             src="/kelly/poses/kelly_hint.png?v=20251202"
             alt="Kelly"
             id="kelly-avatar"
             style="width: 100%; height: 100%; object-fit: cover; object-position: center 20%; transition: opacity 0.3s ease;"
           />
+          <!-- Audio element for video sound (separate for volume control) -->
+          <audio id="kelly-audio" preload="auto"></audio>
         </div>
 
         <!-- 3D Unity Container (hidden by default) -->
@@ -3752,6 +3759,118 @@
       };
 
       // ═══════════════════════════════════════════════════════════════════
+      // KELLY VIDEO SYSTEM - Pre-rendered lipsync video playback
+      // ═══════════════════════════════════════════════════════════════════
+      const KellyVideo = {
+        videoEl: null,
+        audioEl: null,
+        imageEl: null,
+        isPlaying: false,
+        userInteracted: false, // Browsers require user interaction for audio
+        
+        init() {
+          this.videoEl = document.getElementById('kelly-video');
+          this.audioEl = document.getElementById('kelly-audio');
+          this.imageEl = document.getElementById('kelly-avatar');
+          
+          // Enable audio on first user interaction
+          document.addEventListener('click', () => {
+            if (!this.userInteracted) {
+              this.userInteracted = true;
+              if (this.videoEl) this.videoEl.muted = false;
+              console.log('[KellyVideo] Audio enabled on user interaction');
+            }
+          }, { once: true });
+          
+          console.log('[KellyVideo] ✅ Initialized');
+        },
+        
+        // Build Supabase URL for video
+        getVideoUrl(dayNumber, phase, archetype) {
+          const paddedDay = String(dayNumber).padStart(3, '0');
+          const archetypeSlug = archetype.replace(/ /g, '_');
+          return `${CONFIG.SUPABASE_URL}/storage/v1/object/public/kelly-templates/production/videos/day_${paddedDay}_${phase}_${archetypeSlug}.mp4`;
+        },
+        
+        // Build Supabase URL for audio (fallback)
+        getAudioUrl(dayNumber, phase, archetype) {
+          const paddedDay = String(dayNumber).padStart(3, '0');
+          const archetypeSlug = archetype.replace(/ /g, '_');
+          return `${CONFIG.SUPABASE_URL}/storage/v1/object/public/kelly-templates/production/audio/day_${paddedDay}_${phase}_${archetypeSlug}.mp3`;
+        },
+        
+        // Play video for a phase
+        async play(dayNumber, phase, archetype) {
+          if (!this.videoEl || !dayNumber || !archetype) return;
+          
+          const videoUrl = this.getVideoUrl(dayNumber, phase, archetype);
+          const audioUrl = this.getAudioUrl(dayNumber, phase, archetype);
+          
+          console.log(`[KellyVideo] Loading: day ${dayNumber}, ${phase}, ${archetype}`);
+          
+          // Try video first
+          try {
+            // Check if video exists (HEAD request)
+            const videoCheck = await fetch(videoUrl, { method: 'HEAD' });
+            
+            if (videoCheck.ok) {
+              // Video exists! Play it
+              this.videoEl.src = videoUrl;
+              this.videoEl.style.display = 'block';
+              this.imageEl.style.display = 'none';
+              this.videoEl.muted = !this.userInteracted; // Muted until user interacts
+              
+              await this.videoEl.play();
+              this.isPlaying = true;
+              console.log(`[KellyVideo] ▶️ Playing video: ${phase}`);
+              
+              // When video ends, show last frame (don't loop)
+              this.videoEl.onended = () => {
+                this.isPlaying = false;
+                console.log(`[KellyVideo] ✅ Video ended: ${phase}`);
+              };
+              return;
+            }
+          } catch (e) {
+            console.warn(`[KellyVideo] Video not available: ${e.message}`);
+          }
+          
+          // Fallback to image + audio
+          this.videoEl.style.display = 'none';
+          this.imageEl.style.display = 'block';
+          
+          // Try to play audio
+          try {
+            const audioCheck = await fetch(audioUrl, { method: 'HEAD' });
+            if (audioCheck.ok && this.audioEl) {
+              this.audioEl.src = audioUrl;
+              if (this.userInteracted) {
+                await this.audioEl.play();
+                console.log(`[KellyVideo] 🔊 Playing audio fallback: ${phase}`);
+              }
+            }
+          } catch (e) {
+            console.warn(`[KellyVideo] Audio not available: ${e.message}`);
+          }
+        },
+        
+        stop() {
+          if (this.videoEl) {
+            this.videoEl.pause();
+            this.videoEl.currentTime = 0;
+          }
+          if (this.audioEl) {
+            this.audioEl.pause();
+            this.audioEl.currentTime = 0;
+          }
+          this.isPlaying = false;
+        }
+      };
+      
+      // Initialize on load
+      document.addEventListener('DOMContentLoaded', () => KellyVideo.init());
+
+      // ═══════════════════════════════════════════════════════════════════
       // UTILITY FUNCTIONS
       // ═══════════════════════════════════════════════════════════════════
       function getDayOfYear() {
@@ -4431,10 +4550,11 @@
         }
 
         // ═══════════════════════════════════════════════════════════════
-        // KELLY PHASE VISUAL (Kelly in educational context)
-        // Load phase-specific image showing Kelly in the lesson environment
+        // KELLY PHASE VIDEO (Pre-rendered lipsync videos from Supabase)
+        // Primary: Play video with baked-in lipsync
+        // Fallback: Static image + separate audio
         // ═══════════════════════════════════════════════════════════════
-        if (kellyAvatar && kellyAvatar.loadPhaseVisual && state.dayNumber) {
+        if (state.dayNumber) {
           // Map phase type to phase file name
           let phaseFile = 'hook';
           if (phase.type === 'question') {
@@ -4444,7 +4564,18 @@
           } else if (phase.type === 'wisdom' || phase.type === 'complete') {
             phaseFile = 'wisdom';
           }
-          kellyAvatar.loadPhaseVisual(state.dayNumber, phaseFile);
+          
+          // Get current archetype from tone preference
+          const tone = state.variants?.tone || 'curious';
+          const archetype = TONE_TO_ARCHETYPE[tone] || 'The Scientist';
+          
+          // Play video (or fallback to image + audio)
+          KellyVideo.play(state.dayNumber, phaseFile, archetype);
+          
+          // Also load 2D avatar as secondary fallback
+          if (kellyAvatar && kellyAvatar.loadPhaseVisual) {
+            kellyAvatar.loadPhaseVisual(state.dayNumber, phaseFile);
+          }
         }
         
         // ═══════════════════════════════════════════════════════════════
