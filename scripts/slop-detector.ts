@@ -15,10 +15,10 @@ import { createClient } from '@supabase/supabase-js';
 
 // Configuration
 const SUPABASE_URL = process.env.SUPABASE_URL || 'https://tvjalxxsyryjphkforjv.supabase.co';
-const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || '';
+const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY || process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_ANON_KEY || '';
 
 if (!SUPABASE_SERVICE_KEY) {
-  console.error('❌ Missing SUPABASE_SERVICE_KEY or SUPABASE_ANON_KEY environment variable');
+  console.error('❌ Missing SUPABASE_SERVICE_ROLE_KEY environment variable');
   process.exit(1);
 }
 
@@ -608,4 +608,5 @@ const reportOnly = args.includes('--report-only');
 runFullAudit(reportOnly).catch(console.error);
 
 export { runFullAudit, detectTopicHeadlineMismatch, detectDuplicateContent };
+
 
