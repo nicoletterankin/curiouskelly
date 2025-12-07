@@ -56,6 +56,51 @@ All phases of the Share & Earn Referral System have been completed:
 - ✅ Phase 7: Testing
 - ✅ Phase 8: Launch Prep
 
+## 🔒 COMPLIANCE LAYER ADDED (December 7, 2025)
+
+Kids Account Compliance for Share & Earn - COPPA/GDPR-K compliant:
+
+### Database Changes
+- ✅ `users_with_age` view - calculates age from birthday/birth_year
+- ✅ `minor_earnings_ledger` - holds earnings for users under 18
+- ✅ `earnings_compliance_log` - audit trail for compliance events
+- ✅ `can_user_earn()` function - checks eligibility by age
+- ✅ `parent_claim_minor_earnings()` - parent claims child's earnings
+- ✅ Family account columns in users table
+
+### APIs Created
+- `GET /api/referral/eligibility` - Returns age-based permissions
+- `POST /api/referral/payout` - Blocks minors from requesting payouts
+- `POST /api/family/link` - Links child account to parent
+- `POST /api/family/claim-earnings` - Parent claims minor's held earnings
+- `GET /api/family/members` - Lists family members for parent
+
+### Frontend Updates
+- Under 13 (no consent): Shows "Ask a Parent to Help!" message
+- Under 13 (with consent): Shows referral UI, earnings go to parent
+- 13-17: Shows full UI with "earnings held" notice, no payout button
+- 18+: Full access including payouts
+
+### Compliance Rules Enforced
+| Age | See Link | Share | Earn | Payout | Destination |
+|-----|----------|-------|------|--------|-------------|
+| <13 no consent | ❌ | ❌ | ❌ | ❌ | N/A |
+| <13 w/consent | ✅ | ✅ | ✅ | ❌ | Parent |
+| 13-17 | ✅ | ✅ | ✅ | ❌ | Held |
+| 18+ | ✅ | ✅ | ✅ | ✅ | Self |
+
+### Edge Cases Handled
+1. Minor earns commission → Goes to minor_earnings_ledger
+2. User turns 18 → Automatic transfer of held earnings
+3. Parent claims earnings → Logged and transferred
+4. Age correction → Triggers compliance review
+5. Payout request by minor → Blocked with message
+
+Documentation: `docs/compliance/KIDS_ACCOUNT_COMPLIANCE.md`
+Tests: `evals/kids-compliance-eval.ts`
+
+---
+
 ## 🚀 DEPLOYED TO PRODUCTION
 
 - **Git pushed:** `main` branch updated
