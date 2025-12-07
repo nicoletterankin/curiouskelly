@@ -2,6 +2,7 @@
 // GameObject: kelly_fbx_v4
 // Script: KellyWebGLBridge.cs
 // Updated with blendshape support for lip-sync integration
+// Enhanced with Intelligent Director integration
 
 class UnityBridge {
   constructor(unityInstance) {
@@ -13,10 +14,18 @@ class UnityBridge {
     this.lastBlendshapeUpdate = 0;
     this.blendshapeUpdateInterval = 33; // ~30fps
     
+    // Expression state
+    this.currentExpression = 'neutral';
+    this.currentPhase = null;
+    
+    // Director integration
+    this.useDirector = true;
+    
     // Listen for Unity ready signal
     window.UnityReady = () => {
       this.ready = true;
       console.log('✅ Unity bridge connected');
+      this.notifyDirectorOfReady();
     };
     
     // Try to detect if Unity is ready
@@ -24,8 +33,20 @@ class UnityBridge {
       if (this.unity && this.unity.SendMessage) {
         this.ready = true;
         console.log('✅ Unity bridge ready');
+        this.notifyDirectorOfReady();
       }
     }, 1000);
+    
+    // Expose globally for other systems
+    window.unityBridge = this;
+  }
+  
+  // Notify director that Unity is ready
+  notifyDirectorOfReady() {
+    if (window.KellyDirector) {
+      window.KellyDirector.unityBridge = this;
+      console.log('✅ Unity bridge connected to Director');
+    }
   }
   
   // Set Kelly's facial expression
@@ -213,6 +234,90 @@ class UnityBridge {
     if (phaseData.text || phaseData.audioUrl) {
       this.startLipSync(phaseData.text || phaseData.audioUrl);
     }
+  }
+}
+
+// ═══════════════════════════════════════════════════════════════════
+  // INTELLIGENT DIRECTOR INTEGRATION
+  // ═══════════════════════════════════════════════════════════════════
+  
+  /**
+   * Intelligently set expression based on text content
+   * Uses the Intelligent Director if available
+   * @param {string} text - Text to analyze for expression
+   */
+  intelligentExpression(text) {
+    if (!this.ready || !this.unity) return;
+    
+    if (window.KellyDirector && this.useDirector) {
+      // Let the Director analyze and decide
+      const analysis = window.KellyDirector.analyzeAndDirect(text);
+      console.log(`🧠 Intelligent expression: ${analysis.dominantExpression} (${(analysis.confidence * 100).toFixed(0)}%)`);
+      return analysis;
+    }
+    
+    // Fallback: simple expression based on punctuation
+    if (text.includes('!')) {
+      this.setExpression('excited');
+    } else if (text.includes('?')) {
+      this.setExpression('curious');
+    } else {
+      this.setExpression('explaining');
+    }
+  }
+  
+  /**
+   * Perform text with intelligent direction
+   * @param {string} text - Text to perform
+   * @param {Object} options - Options for the performance
+   */
+  async perform(text, options = {}) {
+    if (window.KellyPerformance) {
+      return window.KellyPerformance.perform(text, options);
+    }
+    
+    // Fallback: basic expression + lip sync
+    this.intelligentExpression(text);
+    this.startLipSync(text);
+    
+    // Wait for approximate speaking duration
+    const words = text.split(/\s+/).length;
+    const duration = (words / 2.5) * 1000;
+    await new Promise(resolve => setTimeout(resolve, duration));
+    
+    this.stopLipSync();
+  }
+  
+  /**
+   * React to user action with appropriate expression
+   * @param {string} action - Action type (correct, incorrect, timeout, etc.)
+   */
+  reactToUser(action) {
+    if (window.KellyDirector) {
+      window.KellyDirector.reactToUser(action);
+      return;
+    }
+    
+    // Fallback reactions
+    const reactions = {
+      correct: 'celebrating',
+      incorrect: 'encouraging',
+      timeout: 'curious',
+      skip: 'thinking',
+      start: 'excited',
+      complete: 'celebrating',
+    };
+    
+    this.setExpression(reactions[action] || 'neutral');
+  }
+  
+  /**
+   * Enable/disable director integration
+   * @param {boolean} enabled - Whether to use the director
+   */
+  setDirectorEnabled(enabled) {
+    this.useDirector = enabled;
+    console.log(`🎬 Director integration: ${enabled ? 'enabled' : 'disabled'}`);
   }
 }
 
