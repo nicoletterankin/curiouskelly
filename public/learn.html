@@ -2923,8 +2923,12 @@
             id="kelly-video"
             playsinline
             muted
+            preload="none"
             style="width: 100%; height: 100%; object-fit: cover; object-position: center 20%; display: none;"
-          ></video>
+          >
+            <!-- Source set dynamically by KellyVideo.play() -->
+            Your browser does not support the video tag.
+          </video>
           <!-- Kelly 2D Avatar - Fallback when video not available -->
           <img
             src="/kelly/poses/kelly_hint.png?v=20251202"
@@ -2933,7 +2937,7 @@
             style="width: 100%; height: 100%; object-fit: cover; object-position: center 20%; transition: opacity 0.3s ease;"
           />
           <!-- Audio element for video sound (separate for volume control) -->
-          <audio id="kelly-audio" preload="auto"></audio>
+          <audio id="kelly-audio" preload="none">Your browser does not support audio.</audio>
         </div>
 
         <!-- 3D Unity Container (hidden by default) -->
@@ -3769,9 +3773,38 @@
         userInteracted: false, // Browsers require user interaction for audio
         
         init() {
+          const container = document.getElementById('kelly-2d-container');
+          console.log('[KellyVideo] Init - container:', container ? 'FOUND' : 'NULL');
+          
+          // Try to find existing elements
           this.videoEl = document.getElementById('kelly-video');
           this.audioEl = document.getElementById('kelly-audio');
-          this.imageEl = document.getElementById('kelly-avatar');
+          this.imageEl = document.getElementById('kelly-avatar') || (container && container.querySelector('img'));
+          
+          // Create video element dynamically if not found (browser compatibility fallback)
+          if (!this.videoEl && container) {
+            console.log('[KellyVideo] Creating video element dynamically');
+            this.videoEl = document.createElement('video');
+            this.videoEl.id = 'kelly-video';
+            this.videoEl.playsInline = true;
+            this.videoEl.muted = true;
+            this.videoEl.preload = 'auto';
+            this.videoEl.style.cssText = 'width: 100%; height: 100%; object-fit: cover; object-position: center 20%; display: none; position: absolute; top: 0; left: 0;';
+            container.insertBefore(this.videoEl, container.firstChild);
+          }
+          
+          // Create audio element dynamically if not found
+          if (!this.audioEl && container) {
+            console.log('[KellyVideo] Creating audio element dynamically');
+            this.audioEl = document.createElement('audio');
+            this.audioEl.id = 'kelly-audio';
+            this.audioEl.preload = 'auto';
+            container.appendChild(this.audioEl);
+          }
+          
+          console.log('[KellyVideo] Init - videoEl:', this.videoEl ? 'FOUND/CREATED' : 'NULL');
+          console.log('[KellyVideo] Init - audioEl:', this.audioEl ? 'FOUND/CREATED' : 'NULL');
+          console.log('[KellyVideo] Init - imageEl:', this.imageEl ? 'FOUND' : 'NULL');
           
           // Enable audio on first user interaction
           document.addEventListener('click', () => {
