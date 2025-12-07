@@ -456,8 +456,9 @@ const KellyVideoPlayer = {
    */
   getGoldenLessonVideoUrl(archetype, phase) {
     const normalizedPhase = this.phaseMap[phase] || phase;
-    const normalizedArchetype = archetype.replace(/\s+/g, '_');
-    return `${this.supabaseStorageUrl}/production/videos/day_001_${normalizedPhase}_${normalizedArchetype}.mp4`;
+    const normalizedArchetype = archetype.replace(/\s+/g, '_').toLowerCase();
+    // URLs are lowercase: day_001_hook_the_explorer.mp4
+    return `${this.supabaseStorageUrl}/production/videos/day_001_${normalizedPhase.toLowerCase()}_${normalizedArchetype}.mp4`;
   },
   
   /**
