@@ -375,6 +375,53 @@ const localeCode = normaliseLocale(locale) as LocaleCode;
         initRum(window.__CURIOUS_KELLY__.locale);
       }
     </script>
+    <!-- Earn to Learn: Referral Capture (Lifetime Attribution) -->
+    <script type="module" nonce={nonce} is:inline>
+      (function() {
+        // Capture referral code from URL
+        const urlParams = new URLSearchParams(window.location.search);
+        const refCode = urlParams.get('ref');
+        
+        if (refCode) {
+          // Store in localStorage (persists forever on this device)
+          localStorage.setItem('kelly_referrer', refCode);
+          localStorage.setItem('kelly_referrer_timestamp', Date.now().toString());
+          
+          // Also store in cookie for cross-subdomain access (10 years = effectively forever)
+          const maxAge = 31536000 * 10;
+          document.cookie = `kelly_ref=${refCode}; max-age=${maxAge}; path=/; SameSite=Lax`;
+          
+          console.log('[Earn to Learn] Referral captured:', refCode);
+          
+          // Track the click server-side with lifetime attribution
+          const apiUrl = window.location.hostname === 'localhost' 
+            ? 'http://localhost:3000/api' 
+            : 'https://curiouskelly-production.up.railway.app/api';
+          
+          fetch(`${apiUrl}/referral/track`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              referralCode: refCode,
+              sourceUrl: document.referrer || null,
+              landingPage: window.location.pathname,
+              utmSource: urlParams.get('utm_source'),
+              utmMedium: urlParams.get('utm_medium'),
+              utmCampaign: urlParams.get('utm_campaign'),
+              utmContent: urlParams.get('utm_content'),
+              utmTerm: urlParams.get('utm_term')
+            })
+          }).then(res => {
+            if (res.ok) {
+              console.log('[Earn to Learn] Click tracked successfully');
+            }
+          }).catch(err => {
+            // Silent fail - don't break user experience
+            console.warn('[Earn to Learn] Click tracking failed:', err);
+          });
+        }
+      })();
+    </script>
   </body>
 </html>
 

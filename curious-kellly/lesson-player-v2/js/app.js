@@ -31,7 +31,17 @@ class KellyOS {
             currentLesson: null,
             lessonId: null,
             activeModal: null,
-            syllabusData: null // Cache for the full calendar
+            syllabusData: null, // Cache for the full calendar
+            // Earn to Learn state
+            earnings: {
+                referralCode: null,
+                commissionTier: 'new_learner',
+                commissionRate: 0.10,
+                pendingEarnings: 0,
+                availableEarnings: 0,
+                lifetimeEarnings: 0,
+                totalReferrals: 0
+            }
         };
 
         // DOM Cache
@@ -42,7 +52,7 @@ class KellyOS {
             modalLayer: document.getElementById('layer-modal-stack'),
             
             // Nav & Triggers
-            osTrigger: document.getElementById('os-trigger'), // The Single Hamburger
+            osTrigger: document.getElementById('btn-menu-drawer'), // The Single Hamburger
             drawer: document.getElementById('menu-drawer'),
             mobileTabs: document.querySelectorAll('.tab-item'),
             
@@ -98,6 +108,10 @@ class KellyOS {
         
         // Bind Checkout Buttons
         this.bindCheckoutButtons();
+        
+        // Earn to Learn: Capture referral and load earnings
+        this.captureReferral();
+        this.setupShareListeners();
     }
 
     // --- Mode Management ---
@@ -300,21 +314,49 @@ class KellyOS {
     }
 
     openSettingsModal() {
+        const currentArchetype = this.state.currentArchetype || 'The Explorer';
+        const archetypeInfo = this.getArchetypeInfo(currentArchetype);
+        const manualChoice = localStorage.getItem('kelly_archetype');
+        
+        // Build archetype options
+        const archetypeOptions = this.getAllArchetypes().map(arch => {
+            const info = this.getArchetypeInfo(arch);
+            const isSelected = arch === currentArchetype;
+            return `<option value="${arch}" ${isSelected ? 'selected' : ''}>${info.emoji} ${arch.replace('The ', '')} - ${info.desc}</option>`;
+        }).join('');
+        
         const html = `
             <div class="settings-panel" style="display: flex; flex-direction: column; gap: 30px;">
                 
                 <!-- Age / Persona -->
                 <div class="setting-group">
-                    <label style="display: block; margin-bottom: 15px; font-weight: 500; color: #ccc;">Learning Persona</label>
+                    <label style="display: block; margin-bottom: 15px; font-weight: 500; color: #ccc;">Your Age</label>
                     <div class="age-selector-modal" style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 16px;">
                         <div style="display: flex; justify-content: space-between; margin-bottom: 10px;">
-                            <span id="modal-age-label">Knowledgeable Adult</span>
+                            <span id="modal-age-label">${archetypeInfo.emoji} ${currentArchetype}</span>
                             <span id="modal-age-val" style="color: #d97757;">${this.state.age}</span>
                         </div>
                         <input type="range" min="2" max="102" value="${this.state.age}" style="width: 100%;" id="modal-age-slider">
                         <div style="display: flex; justify-content: space-between; font-size: 0.7rem; color: #666; margin-top: 5px;">
                             <span>Toddler</span>
                             <span>Elder</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Learning Style (Archetype) -->
+                <div class="setting-group">
+                    <label style="display: block; margin-bottom: 15px; font-weight: 500; color: #ccc;">Learning Style</label>
+                    <div style="background: rgba(255,255,255,0.05); padding: 20px; border-radius: 16px;">
+                        <p style="font-size: 0.85rem; color: #888; margin-bottom: 12px;">
+                            ${manualChoice ? 'You\'ve chosen your style. Clear to use age-based defaults.' : 'Auto-selected based on your age. Choose manually to override.'}
+                        </p>
+                        <select id="archetype-selector" style="width: 100%; padding: 12px; border-radius: 8px; background: rgba(255,255,255,0.08); border: 1px solid rgba(255,255,255,0.15); color: #fff; font-size: 1rem; cursor: pointer;">
+                            <option value="">🎯 Auto (based on age)</option>
+                            ${archetypeOptions}
+                        </select>
+                        <div id="archetype-preview" style="margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.03); border-radius: 8px; display: ${manualChoice ? 'block' : 'none'};">
+                            <div style="font-size: 0.9rem; color: #ccc;">${archetypeInfo.desc}</div>
                         </div>
                     </div>
                 </div>
@@ -343,20 +385,60 @@ class KellyOS {
             const slider = document.getElementById('modal-age-slider');
             const valDisplay = document.getElementById('modal-age-val');
             const labelDisplay = document.getElementById('modal-age-label');
+            const archetypeSelector = document.getElementById('archetype-selector');
+            const archetypePreview = document.getElementById('archetype-preview');
             
             if (slider) {
                 slider.addEventListener('input', (e) => {
                     const val = parseInt(e.target.value);
                     valDisplay.textContent = val;
                     
-                    // Map age to archetype
-                    let archetype = this.getArchetypeForAge(val);
-                    let label = archetype;
+                    // Only auto-update archetype if no manual selection
+                    if (!localStorage.getItem('kelly_archetype')) {
+                        const archetype = this.getArchetypeForAge(val);
+                        const info = this.getArchetypeInfo(archetype);
+                        labelDisplay.textContent = `${info.emoji} ${archetype}`;
+                        
+                        // Update selector to show the auto-selected value
+                        if (archetypeSelector) {
+                            archetypeSelector.value = '';  // Show "Auto" selected
+                        }
+                    }
                     
-                    labelDisplay.textContent = label;
-                    
-                    // Update State using the new handler
+                    // Update State
                     this.handleAgeChange(val);
+                });
+            }
+            
+            // Archetype manual selector
+            if (archetypeSelector) {
+                archetypeSelector.addEventListener('change', (e) => {
+                    const selected = e.target.value;
+                    
+                    if (selected === '') {
+                        // Clear manual choice, revert to age-based
+                        localStorage.removeItem('kelly_archetype');
+                        const autoArchetype = this.getArchetypeForAge(this.state.age);
+                        const info = this.getArchetypeInfo(autoArchetype);
+                        this.state.currentArchetype = autoArchetype;
+                        labelDisplay.textContent = `${info.emoji} ${autoArchetype}`;
+                        if (archetypePreview) archetypePreview.style.display = 'none';
+                    } else {
+                        // Store manual choice
+                        localStorage.setItem('kelly_archetype', selected);
+                        const info = this.getArchetypeInfo(selected);
+                        this.state.currentArchetype = selected;
+                        labelDisplay.textContent = `${info.emoji} ${selected}`;
+                        if (archetypePreview) {
+                            archetypePreview.innerHTML = `<div style="font-size: 0.9rem; color: #ccc;">${info.desc}</div>`;
+                            archetypePreview.style.display = 'block';
+                        }
+                    }
+                    
+                    // Re-render lesson with new archetype
+                    if (this.state.currentLesson) this.renderLessonState();
+                    
+                    console.log(`[Settings] Archetype changed to: ${this.state.currentArchetype}`);
                 });
             }
 
@@ -376,7 +458,8 @@ class KellyOS {
             });
 
             document.getElementById('btn-reset-progress')?.addEventListener('click', () => {
-                if(confirm('Are you sure? This will reset your streak.')) {
+                if(confirm('Are you sure? This will reset your streak and archetype choice.')) {
+                    localStorage.removeItem('kelly_archetype');
                     alert('Progress reset.');
                     location.reload();
                 }
@@ -391,6 +474,104 @@ class KellyOS {
         if (session) {
             this.state.user = session.user;
             console.log('User logged in:', this.state.user.email);
+            
+            // Check if this is a new user (just signed up) with a referral
+            this.linkReferralIfNeeded(session.user);
+            
+            // Load earnings data after session is confirmed
+            this.loadEarningsData();
+            
+            // Hide attract mode, show dashboard
+            document.getElementById('mode-attract')?.classList.remove('active');
+            this.switchMode('dashboard');
+        } else {
+            // Show placeholder for non-logged in users
+            this.loadEarningsData();
+        }
+        
+        // Listen for auth state changes (e.g., after OAuth redirect)
+        this.supabase.auth.onAuthStateChange((event, session) => {
+            if (event === 'SIGNED_IN' && session) {
+                this.state.user = session.user;
+                console.log('Auth state change: SIGNED_IN', session.user.email);
+                
+                // Link referral on sign in (if they have a stored referrer)
+                this.linkReferralIfNeeded(session.user);
+                this.loadEarningsData();
+                
+                // Update UI
+                document.getElementById('mode-attract')?.classList.remove('active');
+                this.switchMode('dashboard');
+            }
+        });
+    }
+
+    /**
+     * Login with Google OAuth
+     */
+    async loginWithGoogle() {
+        try {
+            const { error } = await this.supabase.auth.signInWithOAuth({
+                provider: 'google',
+                options: {
+                    redirectTo: window.location.origin + window.location.pathname,
+                    queryParams: {
+                        access_type: 'offline',
+                        prompt: 'consent'
+                    }
+                }
+            });
+            
+            if (error) {
+                console.error('Google login error:', error);
+                alert('Login failed. Please try again.');
+            }
+        } catch (error) {
+            console.error('Login error:', error);
+            alert('Login failed. Please try again.');
+        }
+    }
+
+    /**
+     * Link referral code to new user if they signed up with a referral
+     */
+    async linkReferralIfNeeded(user) {
+        // Check if user has a stored referral code
+        const referrerCode = localStorage.getItem('kelly_referrer');
+        if (!referrerCode) return;
+        
+        // Check if user already has a referrer (don't overwrite)
+        const { data: userData, error } = await this.supabase
+            .from('users')
+            .select('referred_by_user_id')
+            .eq('id', user.id)
+            .single();
+        
+        if (error || userData?.referred_by_user_id) {
+            // Either error or user already has referrer - skip
+            return;
+        }
+        
+        // Call the convert API to link the referral
+        try {
+            const response = await fetch(`${API_URL}/referral/convert`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    userId: user.id,
+                    referralCode: referrerCode,
+                    conversionType: 'signup'
+                })
+            });
+            
+            if (response.ok) {
+                console.log('[Earn to Learn] Referral linked successfully!');
+                // Keep the referrer code - it's lifetime attribution
+            } else {
+                console.warn('[Earn to Learn] Failed to link referral');
+            }
+        } catch (error) {
+            console.warn('[Earn to Learn] Error linking referral:', error);
         }
     }
 
@@ -444,7 +625,7 @@ class KellyOS {
                 atomsByArchetype
             };
             this.state.lessonId = lesson.id;
-            this.state.currentArchetype = 'The Explorer'; // Default archetype
+            this.state.currentArchetype = this.getArchetypeForAge(this.state.age); // Smart default (or user's saved choice)
             
             // 5. Update UI with lesson info
             this.populateDrawerData(lesson.topic, lesson.universal_truth);
@@ -458,16 +639,66 @@ class KellyOS {
     }
 
     /**
-     * Map age to archetype
-     * Explorer (curious) = younger/default
-     * Scientist (analytical) = middle ages
-     * Rebel (challenging) = teens/young adults
+     * Map age to archetype (smart defaults)
+     * Uses Primary Three for most ages, extended archetypes for specific profiles
      */
     getArchetypeForAge(age) {
-        if (age <= 12) return 'The Explorer';
-        if (age <= 25) return 'The Rebel';
-        if (age <= 60) return 'The Scientist';
-        return 'The Explorer'; // Elders return to curiosity
+        // Check if user has manually selected an archetype
+        const manualChoice = localStorage.getItem('kelly_archetype');
+        if (manualChoice && this.getAllArchetypes().includes(manualChoice)) {
+            return manualChoice;
+        }
+        
+        // Smart defaults based on age
+        if (age <= 6) return 'The Storyteller';    // Little ones love stories
+        if (age <= 12) return 'The Explorer';      // Kids love adventure
+        if (age <= 18) return 'The Rebel';         // Teens respond to challenge
+        if (age <= 25) return 'The Rebel';         // Young adults same
+        if (age <= 40) return 'The Scientist';     // Adults want evidence
+        if (age <= 55) return 'The Strategist';    // Mid-career wants edge
+        if (age <= 70) return 'The Scientist';     // Experienced want depth
+        return 'The Explorer';                      // Elders return to wonder
+    }
+    
+    /**
+     * Get all available archetypes
+     */
+    getAllArchetypes() {
+        return [
+            'The Explorer',    // Primary Three
+            'The Scientist',
+            'The Rebel',
+            'The Architect',   // Extended Nine
+            'The Diplomat',
+            'The Empath',
+            'The MacGyver',
+            'The Mystic',
+            'The Provider',
+            'The Storyteller',
+            'The Strategist',
+            'The Survivor'
+        ];
+    }
+    
+    /**
+     * Get archetype metadata for UI
+     */
+    getArchetypeInfo(archetype) {
+        const info = {
+            'The Explorer': { emoji: '🧭', desc: 'Wonder & Adventure' },
+            'The Scientist': { emoji: '🔬', desc: 'Evidence & Proof' },
+            'The Rebel': { emoji: '⚡', desc: 'Challenge & Edge' },
+            'The Architect': { emoji: '🏛️', desc: 'Structure & Design' },
+            'The Diplomat': { emoji: '🤝', desc: 'Connection & Harmony' },
+            'The Empath': { emoji: '💗', desc: 'Feeling & Heart' },
+            'The MacGyver': { emoji: '🔧', desc: 'Practical & Hands-On' },
+            'The Mystic': { emoji: '✨', desc: 'Meaning & Wonder' },
+            'The Provider': { emoji: '🛡️', desc: 'Care & Protection' },
+            'The Storyteller': { emoji: '📖', desc: 'Narrative & Memory' },
+            'The Strategist': { emoji: '🎯', desc: 'Planning & Winning' },
+            'The Survivor': { emoji: '🏕️', desc: 'Resilience & Grit' }
+        };
+        return info[archetype] || { emoji: '🧭', desc: 'Learning Style' };
     }
 
     populateDrawerData(title, subtitle) {
@@ -603,13 +834,8 @@ class KellyOS {
             this.state.lessonPhase = phases[currentIndex + 1];
             
             if (this.state.lessonPhase === 'complete') {
-                // Lesson finished
-                if (this.dom.questionText) {
-                    this.dom.questionText.textContent = 'Lesson complete! Great job.';
-                }
-                this.dom.choiceContainer.innerHTML = '';
-                const btn = this.createButton("Finish", () => this.switchMode('dashboard'));
-                this.dom.choiceContainer.appendChild(btn);
+                // Lesson finished - show share prompt (Earn to Learn)
+                this.showLessonCompleteWithShare();
             } else {
                 this.renderPhase();
             }
@@ -625,17 +851,22 @@ class KellyOS {
     }
 
     /**
-     * Handle age change - update archetype and reload content
+     * Handle age change - update archetype (if no manual override) and reload content
      */
     handleAgeChange(newAge) {
         this.state.age = newAge;
-        const newArchetype = this.getArchetypeForAge(newAge);
         
-        if (this.state.currentArchetype !== newArchetype) {
-            this.state.currentArchetype = newArchetype;
-            console.log(`Age ${newAge} → Archetype: ${newArchetype}`);
-            // Re-render with new archetype's content
-            this.renderLessonState();
+        // Only auto-change archetype if user hasn't manually selected one
+        const manualChoice = localStorage.getItem('kelly_archetype');
+        if (!manualChoice) {
+            const newArchetype = this.getArchetypeForAge(newAge);
+            
+            if (this.state.currentArchetype !== newArchetype) {
+                this.state.currentArchetype = newArchetype;
+                console.log(`Age ${newAge} → Auto-Archetype: ${newArchetype}`);
+                // Re-render with new archetype's content
+                this.renderLessonState();
+            }
         }
     }
 
@@ -710,6 +941,8 @@ class KellyOS {
                     this.openContentModal('Newsroom', 'Newsroom', 'Latest updates.');
                 } else if (action === 'open-settings') {
                     this.openSettingsModal();
+                } else if (action === 'open-earnings') {
+                    this.openEarningsDashboard();
                 } else if (action === 'logout') {
                     this.supabase.auth.signOut().then(() => window.location.href = 'index.html');
                 }
@@ -719,6 +952,16 @@ class KellyOS {
         // Modal Close
         document.querySelectorAll('.btn-close-modal').forEach(btn => {
             btn.addEventListener('click', () => this.closeAllModals());
+        });
+        
+        // Auth: Google Login with Referral Attribution
+        document.getElementById('btn-login-google')?.addEventListener('click', () => this.loginWithGoogle());
+        
+        // Auth: Guest mode
+        document.getElementById('btn-enter-guest')?.addEventListener('click', () => {
+            this.switchMode('lesson');
+            // Hide attract mode panel
+            document.getElementById('mode-attract')?.classList.remove('active');
         });
         
         // Start Lesson (Fallback from old dashboard if visible)
@@ -742,6 +985,404 @@ class KellyOS {
                 this.handleAgeChange(newAge);
             });
         }
+    }
+
+    // --- Earn to Learn System ---
+
+    /**
+     * Capture referral code from URL and store for lifetime attribution
+     * Called on page load - ?ref= parameter triggers tracking
+     */
+    captureReferral() {
+        const urlParams = new URLSearchParams(window.location.search);
+        const refCode = urlParams.get('ref');
+        
+        if (refCode) {
+            // Store in localStorage (persists forever on this device)
+            localStorage.setItem('kelly_referrer', refCode);
+            localStorage.setItem('kelly_referrer_timestamp', Date.now().toString());
+            
+            // Also store in cookie for cross-subdomain access
+            const maxAge = 31536000 * 10; // 10 years (effectively forever)
+            document.cookie = `kelly_ref=${refCode}; max-age=${maxAge}; path=/; SameSite=Lax`;
+            
+            // Track the click server-side (lifetime attribution)
+            this.trackReferralClick(refCode);
+            
+            console.log(`[Earn to Learn] Referral captured: ${refCode}`);
+        }
+    }
+
+    /**
+     * Track referral click with the API for lifetime attribution
+     */
+    async trackReferralClick(referralCode) {
+        try {
+            const response = await fetch(`${API_URL}/referral/track`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                    referralCode: referralCode,
+                    sourceUrl: document.referrer,
+                    landingPage: window.location.pathname,
+                    utmSource: new URLSearchParams(window.location.search).get('utm_source'),
+                    utmMedium: new URLSearchParams(window.location.search).get('utm_medium'),
+                    utmCampaign: new URLSearchParams(window.location.search).get('utm_campaign')
+                })
+            });
+            
+            if (response.ok) {
+                const data = await response.json();
+                console.log('[Earn to Learn] Click tracked:', data.clickId);
+            }
+        } catch (error) {
+            // Silent fail - don't break user experience for tracking
+            console.warn('[Earn to Learn] Failed to track click:', error);
+        }
+    }
+
+    /**
+     * Load user's earnings data from Supabase
+     */
+    async loadEarningsData() {
+        if (!this.state.user) {
+            // Not logged in - show placeholder data
+            this.updateEarningsUI({
+                referral_code: 'sign-in-to-earn',
+                commission_tier: 'new_learner',
+                commission_rate: 0.10,
+                pending_earnings: 0,
+                available_earnings: 0,
+                lifetime_earnings: 0,
+                total_referrals: 0
+            });
+            return;
+        }
+        
+        try {
+            const { data: user, error } = await this.supabase
+                .from('users')
+                .select(`
+                    referral_code,
+                    commission_tier,
+                    commission_rate,
+                    pending_earnings,
+                    available_earnings,
+                    lifetime_earnings,
+                    total_referrals,
+                    total_lessons_completed
+                `)
+                .eq('id', this.state.user.id)
+                .single();
+            
+            if (error) {
+                console.error('[Earn to Learn] Failed to load earnings:', error);
+                return;
+            }
+            
+            if (user) {
+                this.state.earnings = {
+                    referralCode: user.referral_code,
+                    commissionTier: user.commission_tier,
+                    commissionRate: user.commission_rate,
+                    pendingEarnings: parseFloat(user.pending_earnings) || 0,
+                    availableEarnings: parseFloat(user.available_earnings) || 0,
+                    lifetimeEarnings: parseFloat(user.lifetime_earnings) || 0,
+                    totalReferrals: user.total_referrals || 0,
+                    lessonsCompleted: user.total_lessons_completed || 0
+                };
+                this.updateEarningsUI(user);
+            }
+        } catch (error) {
+            console.error('[Earn to Learn] Error loading earnings:', error);
+        }
+    }
+
+    /**
+     * Update the earnings UI in the drawer
+     */
+    updateEarningsUI(earnings) {
+        // Update referral link
+        const linkInput = document.getElementById('referral-link');
+        if (linkInput && earnings.referral_code) {
+            linkInput.value = `kelly.me/${earnings.referral_code}`;
+        }
+        
+        // Update earnings display
+        const pendingEl = document.getElementById('pending-earnings');
+        const availableEl = document.getElementById('available-earnings');
+        
+        if (pendingEl) {
+            pendingEl.textContent = `$${(parseFloat(earnings.pending_earnings) || 0).toFixed(2)}`;
+        }
+        if (availableEl) {
+            availableEl.textContent = `$${(parseFloat(earnings.available_earnings) || 0).toFixed(2)}`;
+        }
+        
+        // Update tier badge
+        const tierNames = {
+            'new_learner': 'New Learner',
+            'active_learner': 'Active Learner',
+            'committed_learner': 'Committed Learner',
+            'dedicated_learner': 'Dedicated Learner',
+            'complete_learner': 'Complete Learner',
+            'legendary_learner': 'Legendary Learner'
+        };
+        
+        const tierBadge = document.getElementById('commission-tier-badge');
+        const rateDisplay = document.getElementById('commission-rate');
+        
+        if (tierBadge) {
+            tierBadge.textContent = tierNames[earnings.commission_tier] || 'New Learner';
+        }
+        if (rateDisplay) {
+            const rate = parseFloat(earnings.commission_rate) || 0.10;
+            rateDisplay.textContent = `${(rate * 100).toFixed(0)}% commission`;
+        }
+    }
+
+    /**
+     * Setup share button listeners and copy functionality
+     */
+    setupShareListeners() {
+        // Copy link button
+        const copyBtn = document.getElementById('btn-copy-link');
+        if (copyBtn) {
+            copyBtn.addEventListener('click', () => {
+                const linkInput = document.getElementById('referral-link');
+                if (linkInput) {
+                    // Full URL for sharing
+                    const fullUrl = `https://curiouskelly.com/?ref=${this.state.earnings.referralCode || 'kelly'}`;
+                    navigator.clipboard.writeText(fullUrl).then(() => {
+                        copyBtn.classList.add('copied');
+                        copyBtn.textContent = '✓';
+                        setTimeout(() => {
+                            copyBtn.classList.remove('copied');
+                            copyBtn.textContent = '📋';
+                        }, 2000);
+                    });
+                }
+            });
+        }
+        
+        // Social share buttons
+        const setupShare = (id, urlBuilder) => {
+            const btn = document.getElementById(id);
+            if (btn) {
+                btn.addEventListener('click', () => {
+                    const refCode = this.state.earnings.referralCode || 'kelly';
+                    const shareUrl = `https://curiouskelly.com/?ref=${refCode}`;
+                    const shareText = "I'm learning something new every day with Curious Kelly! Join me:";
+                    window.open(urlBuilder(shareText, shareUrl), '_blank', 'width=600,height=400');
+                });
+            }
+        };
+        
+        setupShare('share-twitter', (text, url) => 
+            `https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(url)}`
+        );
+        
+        setupShare('share-facebook', (text, url) => 
+            `https://www.facebook.com/sharer/sharer.php?u=${encodeURIComponent(url)}`
+        );
+        
+        setupShare('share-whatsapp', (text, url) => 
+            `https://wa.me/?text=${encodeURIComponent(text + ' ' + url)}`
+        );
+        
+        setupShare('share-email', (text, url) => 
+            `mailto:?subject=${encodeURIComponent('Join me on Curious Kelly!')}&body=${encodeURIComponent(text + '\n\n' + url)}`
+        );
+        
+        // View earnings dashboard
+        const viewEarningsBtn = document.getElementById('btn-view-earnings');
+        if (viewEarningsBtn) {
+            viewEarningsBtn.addEventListener('click', (e) => {
+                e.preventDefault();
+                this.openEarningsDashboard();
+            });
+        }
+    }
+
+    /**
+     * Show lesson complete screen with share prompt
+     */
+    showLessonCompleteWithShare() {
+        const lesson = this.state.currentLesson;
+        const refCode = this.state.earnings.referralCode || 'kelly';
+        const shareUrl = `https://curiouskelly.com/?ref=${refCode}&day=${lesson?.dayNumber || 1}`;
+        const commissionRate = (this.state.earnings.commissionRate * 100) || 10;
+        
+        if (this.dom.questionText) {
+            this.dom.questionText.innerHTML = `
+                <div class="lesson-complete-message">
+                    <span class="complete-icon">✨</span>
+                    <h3>Lesson Complete!</h3>
+                    <p>"${lesson?.topic || 'Today\'s Lesson'}"</p>
+                </div>
+            `;
+        }
+        
+        if (this.dom.choiceContainer) {
+            this.dom.choiceContainer.innerHTML = `
+                <div class="share-prompt glass-panel-medium">
+                    <p class="share-prompt-text">Know someone who'd love this lesson?</p>
+                    <div class="share-prompt-buttons">
+                        <button class="share-btn-large" id="share-lesson-twitter">
+                            Share on 𝕏
+                        </button>
+                        <button class="share-btn-large" id="share-lesson-whatsapp">
+                            Share on WhatsApp
+                        </button>
+                    </div>
+                    <p class="share-prompt-earnings">
+                        You'll earn ${commissionRate}% if they subscribe!
+                    </p>
+                </div>
+                <div class="choice-card glass-panel-medium hover-lift" id="btn-finish-lesson">
+                    Continue to Dashboard →
+                </div>
+            `;
+            
+            // Add share listeners
+            document.getElementById('share-lesson-twitter')?.addEventListener('click', () => {
+                const text = `I just learned "${lesson?.topic || 'something amazing'}" with @CuriousKelly! 🎓 Join me:`;
+                window.open(`https://twitter.com/intent/tweet?text=${encodeURIComponent(text)}&url=${encodeURIComponent(shareUrl)}`, '_blank');
+            });
+            
+            document.getElementById('share-lesson-whatsapp')?.addEventListener('click', () => {
+                const text = `I just learned about "${lesson?.topic || 'something amazing'}" with Curious Kelly! You should try it:`;
+                window.open(`https://wa.me/?text=${encodeURIComponent(text + ' ' + shareUrl)}`, '_blank');
+            });
+            
+            document.getElementById('btn-finish-lesson')?.addEventListener('click', () => {
+                this.switchMode('dashboard');
+            });
+        }
+    }
+
+    /**
+     * Open full earnings dashboard modal
+     */
+    openEarningsDashboard() {
+        const earnings = this.state.earnings;
+        const tierNames = {
+            'new_learner': 'New Learner',
+            'active_learner': 'Active Learner',
+            'committed_learner': 'Committed Learner',
+            'dedicated_learner': 'Dedicated Learner',
+            'complete_learner': 'Complete Learner',
+            'legendary_learner': 'Legendary Learner'
+        };
+        
+        // Calculate progress to next tier
+        const tierThresholds = {
+            'new_learner': { next: 'active_learner', lessons: 7 },
+            'active_learner': { next: 'committed_learner', lessons: 30 },
+            'committed_learner': { next: 'dedicated_learner', lessons: 100 },
+            'dedicated_learner': { next: 'complete_learner', lessons: 365 },
+            'complete_learner': { next: 'legendary_learner', lessons: 1000 },
+            'legendary_learner': { next: null, lessons: null }
+        };
+        
+        const currentTier = earnings.commissionTier || 'new_learner';
+        const lessonsCompleted = earnings.lessonsCompleted || 0;
+        const nextTierInfo = tierThresholds[currentTier];
+        let progressPercent = 0;
+        let progressText = 'You\'ve reached the highest tier! 🏆';
+        
+        if (nextTierInfo.next) {
+            const currentMin = currentTier === 'new_learner' ? 0 : tierThresholds[Object.keys(tierThresholds).find(k => tierThresholds[k].next === currentTier)]?.lessons || 0;
+            const range = nextTierInfo.lessons - currentMin;
+            const progress = lessonsCompleted - currentMin;
+            progressPercent = Math.min(100, (progress / range) * 100);
+            const remaining = nextTierInfo.lessons - lessonsCompleted;
+            progressText = `Complete ${remaining} more lesson${remaining !== 1 ? 's' : ''} to unlock ${tierNames[nextTierInfo.next]}!`;
+        }
+        
+        const html = `
+            <div class="earnings-dashboard">
+                <!-- Summary Cards -->
+                <div class="earnings-cards">
+                    <div class="earnings-card">
+                        <span class="card-label">Pending</span>
+                        <span class="card-value">$${earnings.pendingEarnings.toFixed(2)}</span>
+                        <span class="card-note">Clears in 7 days</span>
+                    </div>
+                    <div class="earnings-card">
+                        <span class="card-label">Available</span>
+                        <span class="card-value highlight">$${earnings.availableEarnings.toFixed(2)}</span>
+                        <span class="card-note">Ready to withdraw</span>
+                    </div>
+                    <div class="earnings-card">
+                        <span class="card-label">Lifetime</span>
+                        <span class="card-value">$${earnings.lifetimeEarnings.toFixed(2)}</span>
+                        <span class="card-note">Total earned</span>
+                    </div>
+                </div>
+                
+                <!-- Tier Progress -->
+                <div class="tier-progress-section">
+                    <h3>Your Commission Tier</h3>
+                    <div class="tier-current">
+                        <span class="tier-name">${tierNames[currentTier] || 'New Learner'}</span>
+                        <span class="tier-rate">${((earnings.commissionRate || 0.10) * 100).toFixed(0)}%</span>
+                    </div>
+                    <div class="tier-progress-bar">
+                        <div class="tier-progress-fill" style="width: ${progressPercent}%"></div>
+                    </div>
+                    <p class="tier-next">${progressText}</p>
+                </div>
+                
+                <!-- Referral Stats -->
+                <div class="referral-stats-section">
+                    <h3>Your Network</h3>
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <span class="stat-number">${earnings.totalReferrals || 0}</span>
+                            <span class="stat-desc">Total Referrals</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-number">${lessonsCompleted}</span>
+                            <span class="stat-desc">Lessons Completed</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Your Link -->
+                <div class="referral-stats-section">
+                    <h3>Your Referral Link</h3>
+                    <div class="referral-link-box" style="margin-top: 12px;">
+                        <input type="text" readonly value="https://curiouskelly.com/?ref=${earnings.referralCode || 'kelly'}" class="referral-input" style="font-size: 0.8rem;">
+                        <button class="btn-copy" id="modal-copy-link" title="Copy">📋</button>
+                    </div>
+                </div>
+                
+                <!-- Payout Button -->
+                <div class="payout-section">
+                    <button class="btn-primary-glass btn-payout" ${earnings.availableEarnings < 50 ? 'disabled' : ''}>
+                        ${earnings.availableEarnings >= 50 ? 'Request Payout' : `Request Payout ($50 minimum)`}
+                    </button>
+                </div>
+            </div>
+        `;
+        
+        this.openModal('reader', { title: '💰 Your Earnings', body: html });
+        
+        // Setup copy button in modal
+        setTimeout(() => {
+            document.getElementById('modal-copy-link')?.addEventListener('click', function() {
+                const input = this.previousElementSibling;
+                navigator.clipboard.writeText(input.value).then(() => {
+                    this.textContent = '✓';
+                    this.classList.add('copied');
+                    setTimeout(() => {
+                        this.textContent = '📋';
+                        this.classList.remove('copied');
+                    }, 2000);
+                });
+            });
+        }, 100);
     }
 
     // --- Unity ---

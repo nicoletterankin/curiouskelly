@@ -1,8 +1,17 @@
-# The Golden Three Archetypes
+# The Twelve Archetypes
 
-## Launch Configuration (v1.0)
+## Production Configuration (v1.1)
 
-Curious Kelly uses **3 maximally distinct archetypes** to personalize every lesson:
+> **Updated:** 2025-12-08 by CAO  
+> **Change:** Documented actual 12 archetypes in production database
+
+Curious Kelly uses **12 distinct archetypes** to personalize every lesson. While the original spec called for 3 ("Golden Three"), content was generated for all 12, providing richer personalization options.
+
+---
+
+## The Primary Three (Original "Golden Three")
+
+These have the most content (1,825 atoms each) and are recommended defaults:
 
 | Archetype | Energy | Voice Pattern | Best For |
 |-----------|--------|---------------|----------|
@@ -10,44 +19,84 @@ Curious Kelly uses **3 maximally distinct archetypes** to personalize every less
 | 🔬 **The Scientist** | Evidence & Proof | "Research shows... data confirms... 62%..." | Skeptics who need proof before belief |
 | ⚡ **The Rebel** | Edge & Challenge | "They don't want you to know... the system..." | Disengaged/cynical learners, teens |
 
+---
+
+## The Extended Nine (1,820 atoms each)
+
+| Archetype | Energy | Voice Pattern | Best For |
+|-----------|--------|---------------|----------|
+| 🏛️ **The Architect** | Structure & Design | "The blueprint shows... foundation... framework..." | Systematic thinkers, builders |
+| 🤝 **The Diplomat** | Connection & Harmony | "Let's consider all perspectives... shared understanding..." | Collaborative learners, mediators |
+| 💗 **The Empath** | Feeling & Connection | "Imagine how it feels... the emotional truth..." | Heart-centered learners, caregivers |
+| 🔧 **The MacGyver** | Practical & Resourceful | "Here's how to use this... a tool you can apply..." | Hands-on learners, problem-solvers |
+| ✨ **The Mystic** | Meaning & Wonder | "There's something deeper here... the mystery reveals..." | Spiritual seekers, meaning-makers |
+| 🛡️ **The Provider** | Care & Protection | "This matters because it keeps us safe... nurtures..." | Parents, caregivers, protectors |
+| 📖 **The Storyteller** | Narrative & Memory | "Once upon a time... picture this scene..." | Story-lovers, visual learners |
+| 🎯 **The Strategist** | Planning & Winning | "The smart move is... position yourself to..." | Competitive learners, planners |
+| 🏕️ **The Survivor** | Resilience & Grit | "When things get tough... you'll need to know..." | Pragmatic learners, preppers |
+
+---
+
 ## Tone → Archetype Mapping
 
-Users select a **tone** in settings. This maps to an archetype:
+Users select a **tone** in settings. Recommended mappings:
 
-| Tone Setting | Archetype | Why |
-|--------------|-----------|-----|
-| 🤔 Curious | The Scientist | Analytical minds want data |
-| 😊 Friendly | The Explorer | Warm discovery experience |
-| 🎮 Playful | The Explorer | Adventure and fun |
-| 🦉 Wise | The Rebel | Deep challenges to assumptions |
-| 💪 Coach | The Rebel | Push through resistance |
-| 📚 Scholar | The Scientist | Academic precision |
+| Tone Setting | Primary | Fallback |
+|--------------|---------|----------|
+| 🤔 Curious | The Scientist | The Explorer |
+| 😊 Friendly | The Explorer | The Empath |
+| 🎮 Playful | The Explorer | The Storyteller |
+| 🦉 Wise | The Mystic | The Rebel |
+| 💪 Coach | The Rebel | The Survivor |
+| 📚 Scholar | The Scientist | The Architect |
+| 🎨 Creative | The Storyteller | The Explorer |
+| 🤝 Social | The Diplomat | The Empath |
+| 🔧 Practical | The MacGyver | The Strategist |
+| 🛡️ Protective | The Provider | The Survivor |
+
+---
 
 ## Content Structure
 
-Each lesson has **15 atoms** (3 archetypes × 5 phases):
+Each lesson has **60 atoms** (12 archetypes × 5 phases):
 
 ```
 Day N
-├── The Explorer
-│   ├── Hook      (adventure invitation)
-│   ├── Fact1     (discovery framing)
-│   ├── Fact2     (journey metaphor)
-│   ├── Fact3     (expedition steps)
-│   └── Wisdom    (trail reflection)
-├── The Scientist
-│   ├── Hook      (hypothesis)
-│   ├── Fact1     (research data)
-│   ├── Fact2     (neurological mechanism)
-│   ├── Fact3     (implementation protocol)
-│   └── Wisdom    (evidence summary)
-└── The Rebel
-    ├── Hook      (challenge status quo)
-    ├── Fact1     (expose hidden truth)
-    ├── Fact2     (radical reframe)
-    ├── Fact3     (subversive strategy)
-    └── Wisdom    (liberation call)
+├── The Explorer (5 phases)
+├── The Scientist (5 phases)
+├── The Rebel (5 phases)
+├── The Architect (5 phases)
+├── The Diplomat (5 phases)
+├── The Empath (5 phases)
+├── The MacGyver (5 phases)
+├── The Mystic (5 phases)
+├── The Provider (5 phases)
+├── The Storyteller (5 phases)
+├── The Strategist (5 phases)
+└── The Survivor (5 phases)
+
+Each archetype has:
+├── Hook      (archetype-specific invitation)
+├── Fact1     (first teaching moment)
+├── Fact2     (deeper exploration)
+├── Fact3     (application/synthesis)
+└── Wisdom    (closing reflection)
 ```
+
+**Exception:** Day 1 uses only the Primary Three (15 atoms) for historical reasons.
+
+---
+
+## Database Statistics
+
+| Metric | Count |
+|--------|-------|
+| Total Archetypes | 12 |
+| Primary Three atoms | 5,475 (3 × 1,825) |
+| Extended Nine atoms | 16,380 (9 × 1,820) |
+| **Total atoms** | **~21,855** |
+
+---
 
 ## Enhanced Atom Schema
 
@@ -81,36 +130,71 @@ Every atom includes Kelly's interaction system:
 }
 ```
 
-## Scalability
+---
 
-This template scales to all 365 lessons:
+## Frontend Implementation
 
-| Topic Example | Explorer | Scientist | Rebel |
-|---------------|----------|-----------|-------|
-| How Sound Moves | "Sound is a tireless traveler..." | "Sound waves propagate at 343 m/s..." | "They teach sound wrong in school..." |
-| Where Lakes Come From | "Imagine discovering a hidden lake..." | "Glacial lake formation requires..." | "Forget what geography class said..." |
-| Why Leaves Change Color | "Venture into autumn's mystery..." | "Chlorophyll breakdown reveals..." | "The real reason trees change..." |
+### Recommended Approach
 
-## Why These Three?
+1. **Default to Primary Three** — Explorer, Scientist, Rebel cover most learners
+2. **Expose Extended Nine via settings** — Power users can choose specialized archetypes
+3. **Archetype quiz option** — Help users discover their best-fit archetype
+4. **Fallback gracefully** — If an archetype is missing, use Explorer
 
-1. **Maximum Distinction**: Adventure ≠ Data ≠ Challenge
-2. **Universal Appeal**: Catches curious + skeptical + disengaged
-3. **Scalable Voice**: Any topic fits these three frames
-4. **Teen-Friendly**: Rebel voice engages hardest-to-reach learners
-5. **Evidence-Based**: Scientist grounds everything in research
-6. **Wonder-Preserving**: Explorer maintains the joy of learning
+### API Query Pattern
 
-## Future Expansion
-
-Post-launch, we may add:
-- **The Storyteller** (narrative learners)
-- **The Empath** (emotional connection)
-- **The Mystic** (meaning-seekers)
-
-But for v1.0, the Golden Three provide maximum impact with minimum complexity.
+```javascript
+// Fetch lesson atoms for specific archetype
+const atoms = await supabase
+  .from('lesson_atoms')
+  .select('*')
+  .eq('core_lesson_id', lessonId)
+  .eq('archetype', userArchetype)
+  .order('phase');
+```
 
 ---
 
-*Created: December 2024*
-*Status: PRODUCTION READY*
+## Example: "How Sound Moves" Across Archetypes
 
+| Archetype | Hook Opening |
+|-----------|--------------|
+| Explorer | "Sound is a tireless traveler on an invisible journey..." |
+| Scientist | "Sound waves propagate at 343 m/s through air..." |
+| Rebel | "They teach sound wrong in school—here's the truth..." |
+| Architect | "Sound follows a precise blueprint as it moves..." |
+| Diplomat | "Sound connects us all, carrying our voices to each other..." |
+| Empath | "Have you ever felt sound move through you?..." |
+| MacGyver | "Here's how to use sound as a tool..." |
+| Mystic | "Sound is the universe speaking in vibration..." |
+| Provider | "Understanding sound helps keep your family safe..." |
+| Storyteller | "Imagine if you could see sound's journey..." |
+| Strategist | "Master sound, and you master communication..." |
+| Survivor | "In an emergency, sound can save your life..." |
+
+---
+
+## Why Twelve Works
+
+1. **Comprehensive Coverage** — Catches every learning style
+2. **Age Adaptability** — Some archetypes resonate more at different ages
+3. **Engagement Diversity** — Re-learners can try new archetypes on repeat lessons
+4. **Personalization Depth** — True customization, not just 3 flavors
+5. **Future-Proof** — Content exists; UI can expose gradually
+
+---
+
+## Migration Note
+
+The original "Golden Three" spec called for 3 archetypes. During content generation, all 12 were populated. Rather than delete 9 archetypes of work:
+
+- ✅ Keeping all 12 archetypes
+- ✅ Primary Three remain the default
+- ✅ Extended Nine available for power users
+- ✅ Slop cleaned from all 12 (Dec 2025)
+
+---
+
+*Created: December 2024*  
+*Updated: December 8, 2025*  
+*Status: PRODUCTION READY (12 archetypes)*

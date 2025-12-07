@@ -17,13 +17,172 @@ const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 // Plan prices in cents for MRR calculation
 const PLAN_PRICES: Record<string, { price_cents: number; mrr_cents: number }> = {
-  'monthly': { price_cents: 499, mrr_cents: 499 },
-  'annual': { price_cents: 4999, mrr_cents: 417 }, // $49.99/12 = ~$4.17/mo
+  'monthly': { price_cents: 999, mrr_cents: 999 },
+  'annual': { price_cents: 9999, mrr_cents: 833 }, // $99.99/12 = ~$8.33/mo
   'lifetime': { price_cents: 29999, mrr_cents: 0 }, // One-time, no MRR
   'gift_3mo': { price_cents: 3499, mrr_cents: 0 },
   'gift_6mo': { price_cents: 5999, mrr_cents: 0 },
-  'gift_12mo': { price_cents: 9900, mrr_cents: 0 },
+  'gift_12mo': { price_cents: 9999, mrr_cents: 0 },
 };
+
+/**
+ * Record commission for referrer when a referred user pays
+ * EARN TO LEARN: Commission rates based on referrer's learning progress
+ */
+async function recordCommissionIfReferred(
+  supabase: ReturnType<typeof createClient>,
+  customerEmail: string | null,
+  amountCents: number,
+  transactionType: 'initial_subscription' | 'subscription_renewal' | 'gift_purchase' | 'lifetime_purchase',
+  stripePaymentIntentId?: string,
+  stripeInvoiceId?: string,
+  stripeSubscriptionId?: string
+): Promise<void> {
+  if (!customerEmail || amountCents <= 0) return;
+
+  try {
+    // Find the user by email
+    const { data: user, error: userError } = await supabase
+      .from('users')
+      .select('id, referred_by_user_id')
+      .eq('email', customerEmail.toLowerCase())
+      .single();
+
+    if (userError || !user || !user.referred_by_user_id) {
+      // No referrer - no commission
+      return;
+    }
+
+    // Get the referrer's commission rate
+    const { data: referrer, error: referrerError } = await supabase
+      .from('users')
+      .select('id, commission_rate, pending_earnings, lifetime_earnings, total_referrals')
+      .eq('id', user.referred_by_user_id)
+      .single();
+
+    if (referrerError || !referrer) {
+      console.warn('[Commission] Referrer not found:', user.referred_by_user_id);
+      return;
+    }
+
+    // Calculate commission (convert cents to dollars, apply rate)
+    const grossAmount = amountCents / 100;
+    const commissionRate = parseFloat(referrer.commission_rate) || 0.10;
+    const commissionAmount = grossAmount * commissionRate;
+
+    // Insert commission transaction
+    const { error: transactionError } = await supabase
+      .from('commission_transactions')
+      .insert({
+        referrer_id: referrer.id,
+        referred_user_id: user.id,
+        transaction_type: transactionType,
+        gross_amount: grossAmount,
+        commission_rate: commissionRate,
+        commission_amount: commissionAmount,
+        stripe_payment_intent_id: stripePaymentIntentId || null,
+        stripe_invoice_id: stripeInvoiceId || null,
+        stripe_subscription_id: stripeSubscriptionId || null,
+        status: 'pending', // Will be approved after 7 days
+        currency: 'USD'
+      });
+
+    if (transactionError) {
+      console.error('[Commission] Failed to record transaction:', transactionError);
+      return;
+    }
+
+    // Update referrer's earnings
+    const newPendingEarnings = (parseFloat(referrer.pending_earnings) || 0) + commissionAmount;
+    const newLifetimeEarnings = (parseFloat(referrer.lifetime_earnings) || 0) + commissionAmount;
+
+    const { error: updateError } = await supabase
+      .from('users')
+      .update({
+        pending_earnings: newPendingEarnings,
+        lifetime_earnings: newLifetimeEarnings
+      })
+      .eq('id', referrer.id);
+
+    if (updateError) {
+      console.error('[Commission] Failed to update referrer earnings:', updateError);
+      return;
+    }
+
+    console.log(`[Commission] Recorded: $${commissionAmount.toFixed(2)} for referrer ${referrer.id} (${(commissionRate * 100).toFixed(0)}% of $${grossAmount.toFixed(2)})`);
+
+  } catch (error) {
+    console.error('[Commission] Error recording commission:', error);
+  }
+}
+
+/**
+ * Clawback commission when a refund occurs
+ */
+async function clawbackCommission(
+  supabase: ReturnType<typeof createClient>,
+  stripePaymentIntentId: string,
+  refundAmountCents: number
+): Promise<void> {
+  try {
+    // Find the original commission transaction
+    const { data: transaction, error: findError } = await supabase
+      .from('commission_transactions')
+      .select('*')
+      .eq('stripe_payment_intent_id', stripePaymentIntentId)
+      .single();
+
+    if (findError || !transaction) {
+      // No commission was recorded for this payment
+      return;
+    }
+
+    // Calculate clawback amount (proportional to refund)
+    const refundRatio = (refundAmountCents / 100) / transaction.gross_amount;
+    const clawbackAmount = transaction.commission_amount * refundRatio;
+
+    // Insert clawback transaction
+    await supabase
+      .from('commission_transactions')
+      .insert({
+        referrer_id: transaction.referrer_id,
+        referred_user_id: transaction.referred_user_id,
+        transaction_type: 'refund_clawback',
+        gross_amount: -(refundAmountCents / 100),
+        commission_rate: transaction.commission_rate,
+        commission_amount: -clawbackAmount,
+        stripe_payment_intent_id: stripePaymentIntentId,
+        status: 'approved', // Clawbacks are immediate
+        notes: `Clawback for refund of $${(refundAmountCents / 100).toFixed(2)}`,
+        currency: 'USD'
+      });
+
+    // Update referrer's earnings (reduce)
+    const { data: referrer } = await supabase
+      .from('users')
+      .select('pending_earnings, lifetime_earnings')
+      .eq('id', transaction.referrer_id)
+      .single();
+
+    if (referrer) {
+      const newPending = Math.max(0, (parseFloat(referrer.pending_earnings) || 0) - clawbackAmount);
+      const newLifetime = Math.max(0, (parseFloat(referrer.lifetime_earnings) || 0) - clawbackAmount);
+
+      await supabase
+        .from('users')
+        .update({
+          pending_earnings: newPending,
+          lifetime_earnings: newLifetime
+        })
+        .eq('id', transaction.referrer_id);
+    }
+
+    console.log(`[Commission] Clawback: $${clawbackAmount.toFixed(2)} from referrer ${transaction.referrer_id}`);
+
+  } catch (error) {
+    console.error('[Commission] Error processing clawback:', error);
+  }
+}
 
 async function recordRevenueEvent(
   supabase: ReturnType<typeof createClient>,
@@ -177,8 +336,22 @@ export default async function handler(
           },
         });
 
+        // EARN TO LEARN: Record commission for referrer
+        const isRenewal = invoice.billing_reason === 'subscription_cycle';
+        const transactionType = isRenewal ? 'subscription_renewal' : 'initial_subscription';
+        
+        await recordCommissionIfReferred(
+          supabase,
+          invoice.customer_email,
+          invoice.amount_paid,
+          transactionType,
+          invoice.payment_intent as string || undefined,
+          invoice.id,
+          invoice.subscription as string || undefined
+        );
+
         // If this is a renewal, also record that
-        if (invoice.billing_reason === 'subscription_cycle') {
+        if (isRenewal) {
           await recordRevenueEvent(supabase, 'subscription_renewed', {
             stripe_customer_id: invoice.customer as string,
             stripe_subscription_id: invoice.subscription as string,
@@ -226,6 +399,18 @@ export default async function handler(
                 gift_message: session.metadata?.gift_message,
               },
             });
+
+            // EARN TO LEARN: Commission for gift purchases (credit to recipient's referrer)
+            const recipientEmail = session.metadata?.recipient_email;
+            if (recipientEmail && session.amount_total) {
+              await recordCommissionIfReferred(
+                supabase,
+                recipientEmail,
+                session.amount_total,
+                'gift_purchase',
+                session.payment_intent as string || undefined
+              );
+            }
           } else if (paymentType === 'lifetime') {
             await recordRevenueEvent(supabase, 'payment_succeeded', {
               stripe_customer_id: session.customer as string,
@@ -233,6 +418,17 @@ export default async function handler(
               plan_type: 'lifetime',
               metadata: { type: 'lifetime_purchase' },
             });
+
+            // EARN TO LEARN: Commission for lifetime purchases
+            if (session.customer_email && session.amount_total) {
+              await recordCommissionIfReferred(
+                supabase,
+                session.customer_email,
+                session.amount_total,
+                'lifetime_purchase',
+                session.payment_intent as string || undefined
+              );
+            }
           }
         }
         break;
@@ -252,6 +448,15 @@ export default async function handler(
             original_amount: charge.amount,
           },
         });
+
+        // EARN TO LEARN: Clawback commission on refund
+        if (charge.payment_intent && charge.amount_refunded > 0) {
+          await clawbackCommission(
+            supabase,
+            charge.payment_intent as string,
+            charge.amount_refunded
+          );
+        }
         break;
       }
 

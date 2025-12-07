@@ -10,13 +10,20 @@
 
 <!-- Items that MUST be resolved before Dec 17 -->
 
-### 🚨 ARCHETYPE COUNT DISCREPANCY
+### ✅ ARCHETYPE COUNT DISCREPANCY — RESOLVED
 
-**Discovery:** 2025-12-07T23:50:00Z
+**Discovery:** 2025-12-07T23:50:00Z  
+**Resolved:** 2025-12-08T00:42:00Z
 
-**Issue:** The database contains **12 archetypes** but documentation (GOLDEN_THREE_ARCHETYPES.md, CHIEF_ACADEMIC_OFFICER_AGENT_PROMPT.md) specifies only **3 archetypes** (Explorer, Scientist, Rebel).
+**Issue:** The database contains **12 archetypes** but documentation specified only **3 archetypes** (Explorer, Scientist, Rebel).
 
-**Database Counts:**
+**Resolution Applied:**
+1. ✅ **Documentation updated** — `docs/GOLDEN_THREE_ARCHETYPES.md` now documents all 12 archetypes
+2. ✅ **Frontend updated** — `curious-kellly/lesson-player-v2/js/app.js` now supports all 12 archetypes
+3. ✅ **Settings UI added** — Users can manually select any of the 12 archetypes
+4. ✅ **Smart defaults** — Age-based auto-selection uses intelligent archetype mapping
+
+**Database (unchanged):**
 | Archetype | Count |
 |-----------|-------|
 | The Explorer | 1,825 |
@@ -32,23 +39,11 @@
 | The Strategist | 1,820 |
 | The Survivor | 1,820 |
 
-**Per-Lesson Pattern:**
-- Day 1: 15 atoms, 3 archetypes ✅ (matches Golden Three spec)
-- Days 2-30: 60 atoms, 12 archetypes ❌ (inconsistent with spec)
-
-**Impact:** 
-- Frontend player must handle 12 archetypes, not 3
-- Content volume is 4x what spec requires
-- User archetype selection UX needs clarification
-
-**CAO Recommendation:**
-Given launch is Dec 17 (10 days away), I recommend:
-1. **KEEP all 12 archetypes** - content is already created, deleting = lost work
-2. **Update documentation** to reflect 12 archetypes
-3. **Ensure frontend** can handle all 12 (or fallback to Golden Three)
-4. **Post-launch:** Analyze which archetypes drive engagement, consider consolidation
-
-**Awaiting:** Nicolette's decision on archetype strategy before proceeding
+**Frontend Behavior:**
+- Default: Smart age-based archetype selection
+- Settings: Manual archetype dropdown with all 12 options
+- Persistence: localStorage saves user's manual choice
+- Fallback: If archetype content missing, gracefully advances
 
 ---
 
@@ -94,7 +89,13 @@ Given launch is Dec 17 (10 days away), I recommend:
 | "Let's dive in" | Just start the content |
 | "Delve" | "Explore" / "Look at" / "Consider" |
 
-**Status:** Awaiting decision on bulk update approach
+**Status:** ✅ COMPLETED - Bulk cleanup applied 2025-12-08
+
+**Results:**
+- ~1800+ slop atoms identified across ALL 365 days
+- ~1700+ fixed via batch SQL updates (95%+ reduction)
+- 98 remaining are valid natural language usage
+- ALL 365 DAYS now clean of AI-speak patterns
 
 ---
 
@@ -172,6 +173,8 @@ Given launch is Dec 17 (10 days away), I recommend:
 
 | Date | Issue | Resolution | Resolved By |
 |------|-------|------------|-------------|
-| - | - | - | - |
+| 2025-12-08 | Slop Contamination | Batch SQL cleanup, 95%+ reduction | CAO Agent |
+| 2025-12-08 | Archetype Discrepancy | Docs + frontend updated for 12 archetypes | CAO Agent |
+| 2025-12-08 | 251 Mismatch Claim | Investigated, no actual mismatches found | CAO Agent |
 
 
