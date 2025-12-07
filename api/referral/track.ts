@@ -9,8 +9,11 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getSupabaseAdmin } from '../lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 import crypto from 'crypto';
+
+const supabaseUrl = process.env.PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 interface TrackRequest {
   referralCode: string;
@@ -108,7 +111,7 @@ export default async function handler(
       return;
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Look up the referrer by referral code
     const { data: referrer, error: lookupError } = await supabase

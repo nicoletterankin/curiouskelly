@@ -9,7 +9,10 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getSupabaseAdmin } from '../lib/supabase';
+import { createClient } from '@supabase/supabase-js';
+
+const supabaseUrl = process.env.PUBLIC_SUPABASE_URL!;
+const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 interface ConvertRequest {
   userId: string;           // The new user who signed up
@@ -38,7 +41,7 @@ export default async function handler(
       return;
     }
 
-    const supabase = getSupabaseAdmin();
+    const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
     // Get the referrer
     const { data: referrer, error: referrerError } = await supabase

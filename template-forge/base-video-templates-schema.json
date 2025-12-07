@@ -1,0 +1,468 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "https://curiouskelly.com/schemas/base-video-templates.json",
+  "title": "Kelly Base Video Templates Schema",
+  "description": "Validates production-grade video template specifications for Kelly lesson videos",
+  "type": "object",
+  "required": ["version", "global", "templates"],
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^\\d+\\.\\d+\\.\\d+$",
+      "description": "Semantic version of the template specification"
+    },
+    "generated": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "description": {
+      "type": "string"
+    },
+    "global": {
+      "$ref": "#/definitions/GlobalSettings"
+    },
+    "animation_layers": {
+      "$ref": "#/definitions/AnimationLayers"
+    },
+    "templates": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/Template"
+      },
+      "minItems": 8,
+      "description": "Minimum 8 base templates required for full lesson coverage"
+    },
+    "phase_to_template_mapping": {
+      "type": "object",
+      "additionalProperties": {
+        "type": "array",
+        "items": { "type": "string" }
+      }
+    },
+    "transition_recommendations": {
+      "type": "object"
+    },
+    "validation_checklist": {
+      "type": "object"
+    }
+  },
+  "definitions": {
+    "GlobalSettings": {
+      "type": "object",
+      "required": ["character", "render", "camera", "lighting"],
+      "properties": {
+        "character": {
+          "type": "object",
+          "required": ["name", "sweater_color", "hair_color", "eye_color"],
+          "properties": {
+            "name": { "type": "string", "const": "Kelly" },
+            "age_appearance": { "type": "string" },
+            "build": { "type": "string" },
+            "sweater_color": { 
+              "type": "string", 
+              "pattern": "^#[0-9A-Fa-f]{6}$",
+              "description": "MUST be #B0C4DE (powder blue)"
+            },
+            "hair_color": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+            "hair_highlights": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" },
+            "eye_color": { "type": "string" },
+            "skin_tone": { "type": "string", "pattern": "^#[0-9A-Fa-f]{6}$" }
+          }
+        },
+        "render": {
+          "type": "object",
+          "required": ["resolution", "frame_rate", "codec"],
+          "properties": {
+            "resolution": {
+              "type": "array",
+              "items": { "type": "integer" },
+              "minItems": 2,
+              "maxItems": 2,
+              "description": "[width, height] - minimum 1920x1080"
+            },
+            "frame_rate": { 
+              "type": "integer", 
+              "minimum": 30,
+              "description": "Minimum 30fps, target 60fps"
+            },
+            "codec": { "type": "string" },
+            "bitrate_mbps": { "type": "integer", "minimum": 10 },
+            "color_space": { "type": "string" },
+            "hair_physics": { "type": "boolean" },
+            "cloth_physics": { "type": "boolean" }
+          }
+        },
+        "camera": {
+          "type": "object",
+          "properties": {
+            "focal_length_mm": { "type": "integer" },
+            "aperture": { "type": "string" },
+            "sensor_size": { "type": "string" },
+            "dof_blur": { "type": "string" }
+          }
+        },
+        "lighting": {
+          "type": "object",
+          "properties": {
+            "key_light": { "$ref": "#/definitions/LightSettings" },
+            "fill_light": { "$ref": "#/definitions/LightSettings" },
+            "rim_light": { "$ref": "#/definitions/LightSettings" },
+            "eye_catchlights": { "type": "string" }
+          }
+        }
+      }
+    },
+    "LightSettings": {
+      "type": "object",
+      "properties": {
+        "position": { "type": "string" },
+        "intensity": { "type": "number", "minimum": 0, "maximum": 1 },
+        "color_temp_k": { "type": "integer" },
+        "softness": { "type": "number", "minimum": 0, "maximum": 1 }
+      }
+    },
+    "AnimationLayers": {
+      "type": "object",
+      "properties": {
+        "description": { "type": "string" },
+        "layers": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["name", "priority"],
+            "properties": {
+              "name": { "type": "string" },
+              "priority": { "type": "integer", "minimum": 0 },
+              "description": { "type": "string" },
+              "cycle_sec": { "type": "number" },
+              "amplitude": { "type": "number" },
+              "affects": { 
+                "type": "array",
+                "items": { "type": "string" }
+              },
+              "rate_per_min": {
+                "type": "array",
+                "items": { "type": "integer" },
+                "minItems": 2,
+                "maxItems": 2
+              },
+              "duration_ms": { "type": "integer" },
+              "double_blink_chance": { "type": "number" }
+            }
+          }
+        }
+      }
+    },
+    "Template": {
+      "type": "object",
+      "required": ["id", "name", "internal_name", "category", "purpose", "duration", "camera", "motion_breakdown", "emotional_arc", "prompt_guidance"],
+      "properties": {
+        "id": { 
+          "type": "string",
+          "pattern": "^T\\d{2}$",
+          "description": "Template ID in format T01, T02, etc."
+        },
+        "name": { 
+          "type": "string",
+          "minLength": 3,
+          "maxLength": 50,
+          "description": "Human-readable template name"
+        },
+        "internal_name": {
+          "type": "string",
+          "pattern": "^[a-z_]+$",
+          "description": "Snake_case internal identifier"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["entrance", "teaching", "inquiry", "emotional", "energy", "contemplation", "celebration", "engagement", "support", "closing"],
+          "description": "Template category for organization"
+        },
+        "purpose": {
+          "type": "string",
+          "minLength": 10,
+          "description": "Clear description of when to use this template"
+        },
+        "lesson_phases": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Which lesson phases this template is suitable for"
+        },
+        "duration": {
+          "$ref": "#/definitions/DurationSettings"
+        },
+        "camera": {
+          "$ref": "#/definitions/CameraSettings"
+        },
+        "staging": {
+          "type": "object",
+          "properties": {
+            "kelly_start_position": { "type": "string" },
+            "kelly_end_position": { "type": "string" },
+            "kelly_position": { "type": "string" },
+            "props": { "type": "array", "items": { "type": "string" } },
+            "background": { "type": "string" },
+            "gesture_space": { "type": "string" }
+          }
+        },
+        "motion_breakdown": {
+          "type": "object",
+          "patternProperties": {
+            "^\\d+\\.\\d+-\\d+\\.\\d+$": {
+              "$ref": "#/definitions/MotionSegment"
+            }
+          },
+          "minProperties": 2,
+          "description": "Time-coded motion segments in format '0.0-2.0'"
+        },
+        "emotional_arc": {
+          "$ref": "#/definitions/EmotionalArc"
+        },
+        "signature_elements": {
+          "type": "object",
+          "description": "Key distinguishing characteristics of this template"
+        },
+        "micro_expressions": {
+          "type": "object",
+          "description": "Subtle facial details"
+        },
+        "gesture_library": {
+          "type": "object",
+          "properties": {
+            "available_gestures": {
+              "type": "array",
+              "items": { "type": "string" }
+            },
+            "gesture_spacing_sec": { "type": "number" },
+            "gesture_hold_sec": { "type": "number" }
+          }
+        },
+        "silence_handling": {
+          "type": "object"
+        },
+        "waiting_state": {
+          "type": "object"
+        },
+        "lip_sync_integration": {
+          "$ref": "#/definitions/LipSyncIntegration"
+        },
+        "quality_gates": {
+          "type": "object",
+          "description": "Required quality checks for this template"
+        },
+        "prompt_guidance": {
+          "$ref": "#/definitions/PromptGuidance"
+        }
+      }
+    },
+    "DurationSettings": {
+      "type": "object",
+      "required": ["total_sec", "loop_start_sec", "loop_end_sec"],
+      "properties": {
+        "total_sec": { 
+          "type": "number", 
+          "minimum": 3,
+          "maximum": 30,
+          "description": "Total duration in seconds"
+        },
+        "loop_start_sec": { 
+          "type": "number",
+          "minimum": 0,
+          "description": "Where seamless loop begins"
+        },
+        "loop_end_sec": { 
+          "type": "number",
+          "description": "Where seamless loop ends"
+        },
+        "seamless_loop": { 
+          "type": "boolean",
+          "description": "Whether this template can loop seamlessly"
+        }
+      }
+    },
+    "CameraSettings": {
+      "type": "object",
+      "required": ["shot_type", "framing"],
+      "properties": {
+        "shot_type": {
+          "type": "string",
+          "enum": ["wide", "medium_full", "medium", "medium_close", "close", "extreme_close"],
+          "description": "Standard shot type"
+        },
+        "framing": {
+          "type": "string",
+          "description": "What body parts are visible"
+        },
+        "subject_position": {
+          "type": "string",
+          "description": "Where Kelly is positioned in frame"
+        },
+        "headroom_percent": {
+          "type": "number",
+          "minimum": 5,
+          "maximum": 30,
+          "description": "Space above head as percentage of frame"
+        },
+        "look_room_direction": {
+          "type": "string",
+          "description": "Direction of extra space for where Kelly is looking"
+        },
+        "movement": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string" },
+            "subtle_drift": { "type": "boolean" },
+            "drift_amplitude": { "type": "number" },
+            "push_speed": { "type": "number" },
+            "push_direction": { "type": "string" },
+            "creates": { "type": "string" },
+            "responsive_to": { "type": "string" },
+            "at_end": { "type": "boolean" }
+          }
+        }
+      }
+    },
+    "MotionSegment": {
+      "type": "object",
+      "required": ["action", "description"],
+      "properties": {
+        "action": {
+          "type": "string",
+          "description": "Short name for this motion segment"
+        },
+        "description": {
+          "type": "string",
+          "description": "What happens during this time"
+        },
+        "body": {
+          "type": "object",
+          "description": "Body movement details"
+        },
+        "face": {
+          "type": "object",
+          "description": "Facial expression details"
+        }
+      }
+    },
+    "EmotionalArc": {
+      "type": "object",
+      "required": ["start", "peak", "end"],
+      "properties": {
+        "start": {
+          "type": "object",
+          "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }
+        },
+        "peak": {
+          "type": "object",
+          "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }
+        },
+        "end": {
+          "type": "object",
+          "additionalProperties": { "type": "number", "minimum": 0, "maximum": 1 }
+        }
+      },
+      "description": "Emotional intensity values from 0-1 at start, peak, and end"
+    },
+    "LipSyncIntegration": {
+      "type": "object",
+      "properties": {
+        "speech_start_sec": { "type": "number" },
+        "speech_continuous": { "type": "boolean" },
+        "speech_pattern": { "type": "string" },
+        "gesture_pause_for_emphasis": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "pause_for_gesture_points": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "breath_points_sec": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "pause_for_think": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "pause_for_weight": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "upward_inflection_points": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "natural_pause_points": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "contemplative_hmm": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "voice_soften_points": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "exclamation_points": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "breath_excitement": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "clap_during_pause": { "type": "boolean" },
+        "possible_phrases": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "mostly_silent": { "type": "boolean" },
+        "occasional_sounds": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "responding_after_listen": { "type": "boolean" },
+        "softer_volume_points": {
+          "type": "array",
+          "items": { "type": "number" }
+        },
+        "key_phrases": {
+          "type": "array",
+          "items": { "type": "string" }
+        },
+        "final_beat_silence": { "type": "boolean" },
+        "emphasis_sync_gestures": { "type": "boolean" }
+      }
+    },
+    "PromptGuidance": {
+      "type": "object",
+      "required": ["minimax"],
+      "properties": {
+        "minimax": {
+          "type": "string",
+          "minLength": 100,
+          "description": "Detailed prompt for MiniMax video generation"
+        },
+        "runway": {
+          "type": "string",
+          "description": "Prompt optimized for Runway"
+        },
+        "luma": {
+          "type": "string",
+          "description": "Prompt optimized for Luma"
+        },
+        "pika": {
+          "type": "string",
+          "description": "Prompt optimized for Pika"
+        },
+        "kling": {
+          "type": "string",
+          "description": "Prompt optimized for Kling"
+        }
+      }
+    }
+  }
+}
+
