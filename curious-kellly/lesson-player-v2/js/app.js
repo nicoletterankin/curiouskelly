@@ -911,8 +911,34 @@ class KellyOS {
     // --- Listeners ---
 
     setupEventListeners() {
-        // 1. The Main Trigger (Hamburger)
+        // 1. The Main Trigger (Hamburger) - Desktop sidebar
         this.dom.osTrigger?.addEventListener('click', () => this.toggleDrawer());
+        
+        // 1b. Mobile menu button in tab bar
+        document.getElementById('btn-mobile-menu')?.addEventListener('click', () => this.toggleDrawer());
+        document.getElementById('btn-menu-drawer')?.addEventListener('click', () => this.toggleDrawer());
+        
+        // 1c. Mobile tab bar navigation
+        this.dom.mobileTabs.forEach(tab => {
+            tab.addEventListener('click', (e) => {
+                const target = e.currentTarget.dataset.target;
+                if (!target) return; // Menu button has no target, handled above
+                
+                // Update active tab
+                this.dom.mobileTabs.forEach(t => t.classList.remove('active'));
+                e.currentTarget.classList.add('active');
+                
+                // Switch mode based on target
+                if (target === 'mode-lesson') {
+                    this.switchMode('lesson');
+                } else if (target === 'mode-dashboard') {
+                    this.switchMode('dashboard');
+                } else if (target === 'mode-attract') {
+                    // Could show attract/home mode if needed
+                    this.switchMode('dashboard');
+                }
+            });
+        });
 
         // 2. Drawer Actions
         document.querySelector('.btn-close-drawer')?.addEventListener('click', () => this.toggleDrawer(false));
