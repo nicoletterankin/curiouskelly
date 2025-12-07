@@ -353,14 +353,18 @@ const KellyVideoPlayer = {
    * Show loading state
    */
   showLoading() {
-    this.videoContainer.classList.remove('playing');
+    // Ensure container exists before accessing
+    if (!this.videoContainer) {
+      this.init();
+    }
+    this.videoContainer?.classList.remove('playing');
   },
   
   /**
    * Hide loading state
    */
   hideLoading() {
-    this.videoContainer.classList.add('playing');
+    this.videoContainer?.classList.add('playing');
   },
   
   /**
