@@ -170,10 +170,105 @@ export async function checkAuth() {
 // ============================================
 
 export function onAuthStateChange(callback) {
-  return supabase.auth.onAuthStateChange((event, session) => {
+  return supabase.auth.onAuthStateChange(async (event, session) => {
     console.log('Auth state changed:', event, session)
+    
+    // EARN TO LEARN: Process referral conversion on signup
+    if (event === 'SIGNED_IN' && session?.user) {
+      await processReferralConversion(session.user.id, session.access_token);
+    }
+    
     callback(event, session)
   })
+}
+
+// ============================================
+// REFERRAL CONVERSION (Earn to Learn)
+// ============================================
+
+/**
+ * Process referral conversion when user signs up
+ * Links the referral click to the new user account
+ */
+async function processReferralConversion(userId, accessToken) {
+  try {
+    // Check if there's a stored referral code (from affiliate-tracking.js)
+    let referralCode = null;
+    
+    // Try the global function first
+    if (typeof window.getReferralCode === 'function') {
+      referralCode = window.getReferralCode();
+    }
+    
+    // Fallback to parsing localStorage directly
+    if (!referralCode) {
+      try {
+        const stored = localStorage.getItem('kelly_referral');
+        if (stored) {
+          const data = JSON.parse(stored);
+          referralCode = data.code;
+        }
+      } catch (e) {
+        console.log('[Referral] Could not parse stored referral data');
+      }
+    }
+    
+    if (!referralCode) {
+      console.log('[Referral] No referral code stored');
+      return;
+    }
+    
+    // Check if user is already referred (avoid duplicate processing)
+    const { data: userData } = await supabase
+      .from('users')
+      .select('referred_by_user_id')
+      .eq('id', userId)
+      .single();
+    
+    if (userData?.referred_by_user_id) {
+      console.log('[Referral] User already has referrer, skipping');
+      return;
+    }
+    
+    // Get full tracking data
+    const trackingData = window.getReferralTrackingData?.() || {};
+    
+    console.log('[Referral] Processing conversion for:', referralCode);
+    
+    // Call the convert endpoint
+    const response = await fetch('/api/referral/convert', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${accessToken}`
+      },
+      body: JSON.stringify({
+        userId: userId,
+        referralCode: referralCode,
+        clickId: trackingData.clickId || null,
+        conversionType: 'signup'
+      })
+    });
+    
+    const result = await response.json();
+    
+    if (result.success) {
+      console.log('[Referral] ✅ Conversion successful!', result);
+      
+      // Fire analytics event
+      if (typeof gtag !== 'undefined') {
+        gtag('event', 'referral_signup', {
+          event_category: 'referral',
+          event_label: referralCode
+        });
+      }
+    } else {
+      console.warn('[Referral] Conversion failed:', result.message);
+    }
+    
+  } catch (error) {
+    console.error('[Referral] Error processing conversion:', error);
+  }
 }
 
 // ============================================
