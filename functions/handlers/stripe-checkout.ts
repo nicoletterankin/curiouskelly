@@ -172,7 +172,7 @@ export async function stripeCheckoutHandler(
         ],
         mode: 'payment',
         customer_email: body.customerEmail,
-        success_url: `${siteUrl}/gift-success.html?session_id={CHECKOUT_SESSION_ID}`,
+        success_url: `${siteUrl}/gift-success.html?session_id={CHECKOUT_SESSION_ID}&plan=${body.planType}`,
         cancel_url: `${siteUrl}/payment-cancelled.html`,
         allow_promotion_codes: true,
         metadata: {

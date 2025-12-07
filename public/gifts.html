@@ -153,8 +153,25 @@
             left: 0;
             right: 0;
             bottom: 0;
-            background: radial-gradient(ellipse at 50% 0%, rgba(59, 130, 246, 0.08) 0%, transparent 60%);
+            background: radial-gradient(ellipse at 50% 0%, rgba(34, 197, 94, 0.1) 0%, transparent 60%);
             pointer-events: none;
+        }
+        
+        /* Christmas snowfall */
+        .snowflake {
+            position: fixed;
+            top: -10px;
+            color: rgba(255, 255, 255, 0.6);
+            font-size: 1rem;
+            animation: fall linear infinite;
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        @keyframes fall {
+            to {
+                transform: translateY(100vh) rotate(360deg);
+            }
         }
 
         .holiday-badge {
@@ -523,13 +540,13 @@
     </header>
 
     <section class="hero">
-        <div class="holiday-badge">🎄 Perfect Holiday Gift</div>
+        <div class="holiday-badge">🎄 Christmas Gift Special — Give by Dec 24th!</div>
         <div class="gift-emoji">🎁</div>
-        <h1>Gift a Subscription</h1>
+        <h1>Gift the Joy of Learning</h1>
         <p class="hero-subtitle">
-            Give someone a year of daily lessons. The gift that keeps on giving.
+            Give someone you love 365 days of curiosity. The gift that grows every day.
         </p>
-        <a href="index.html" class="btn btn-accent">Buy a Gift Subscription</a>
+        <a href="#pricing" class="btn btn-accent">Choose a Gift Plan ↓</a>
     </section>
 
     <div class="content">
@@ -548,8 +565,8 @@
         </div>
 
         <!-- Pricing -->
-        <div class="pricing-grid">
-            <div class="price-card">
+        <div class="pricing-grid" id="pricing">
+            <div class="price-card" data-plan="gift_3mo">
                 <h3 class="price-name">Gift 3 Months</h3>
                 <div class="price-amount">$34.99</div>
                 <div class="price-period">one-time payment</div>
@@ -559,10 +576,10 @@
                     <li>Digital gift card</li>
                     <li>Personal message</li>
                 </ul>
-                <a href="https://buy.stripe.com/cNifZhd370ei8wD8ZA9Zm03" class="btn btn-outline" style="width: 100%;" target="_blank">Gift 3 Months</a>
+                <button class="btn btn-outline" style="width: 100%;" onclick="openGiftModal('gift_3mo', '3 Months', '$34.99')">Gift 3 Months</button>
             </div>
 
-            <div class="price-card">
+            <div class="price-card" data-plan="gift_6mo">
                 <h3 class="price-name">Gift 6 Months</h3>
                 <div class="price-amount">$59.99</div>
                 <div class="price-period">one-time payment</div>
@@ -572,11 +589,11 @@
                     <li>Digital gift card</li>
                     <li>Personal message</li>
                 </ul>
-                <a href="https://buy.stripe.com/5kQcN55AF6CG7sz1x89Zm04" class="btn btn-outline" style="width: 100%;" target="_blank">Gift 6 Months</a>
+                <button class="btn btn-outline" style="width: 100%;" onclick="openGiftModal('gift_6mo', '6 Months', '$59.99')">Gift 6 Months</button>
             </div>
 
-            <div class="price-card featured">
-                <div class="price-badge">Best Value</div>
+            <div class="price-card featured" data-plan="gift_12mo">
+                <div class="price-badge">🎄 Best Gift</div>
                 <h3 class="price-name">Gift 12 Months</h3>
                 <div class="price-amount">$99</div>
                 <div class="price-period">one-time payment</div>
@@ -587,10 +604,10 @@
                     <li>Schedule delivery</li>
                     <li>Personal message</li>
                 </ul>
-                <a href="https://buy.stripe.com/eVq7sLd37f9c7szgs29Zm07" class="btn btn-accent" style="width: 100%;" target="_blank">Gift 12 Months</a>
+                <button class="btn btn-accent" style="width: 100%;" onclick="openGiftModal('gift_12mo', '12 Months', '$99')">🎁 Gift 12 Months</button>
             </div>
 
-            <div class="price-card">
+            <div class="price-card" data-plan="lifetime">
                 <h3 class="price-name">Lifetime</h3>
                 <div class="price-amount">$299.99</div>
                 <div class="price-period">forever</div>
@@ -600,7 +617,7 @@
                     <li>Premium gift</li>
                     <li>No recurring fees</li>
                 </ul>
-                <a href="https://buy.stripe.com/eVq9AT5AF2mqeV1a3E9Zm05" class="btn btn-outline" style="width: 100%;" target="_blank">Gift Lifetime</a>
+                <button class="btn btn-outline" style="width: 100%;" onclick="openGiftModal('lifetime', 'Lifetime', '$299.99')">Gift Lifetime</button>
             </div>
         </div>
 
@@ -673,11 +690,11 @@
         </div>
 
         <div class="cta-section">
-            <h2>Send a Gift</h2>
+            <h2>🎄 Make This Christmas Unforgettable</h2>
             <p style="color: var(--text-secondary); margin-bottom: 32px; font-size: 1.1rem;">
-                They'll get an email with instructions to start.
+                Give them 365 days of curiosity, wonder, and growth.
             </p>
-            <a href="index.html" class="btn btn-accent">Give the Gift of Learning</a>
+            <button class="btn btn-accent" onclick="openGiftModal('gift_12mo', '12 Months', '$99')">🎁 Send a Gift Now</button>
         </div>
     </div>
 
@@ -726,5 +743,333 @@
         </div>
     </footer>
 
+    <!-- Gift Modal -->
+    <div class="gift-modal" id="gift-modal">
+        <div class="gift-modal-backdrop" onclick="closeGiftModal()"></div>
+        <div class="gift-modal-content">
+            <button class="modal-close" onclick="closeGiftModal()">✕</button>
+            
+            <div class="modal-header">
+                <div class="modal-icon">🎁</div>
+                <h2>Send Your Gift</h2>
+                <p id="modal-plan-desc">12 Month Subscription — $99</p>
+            </div>
+            
+            <form id="gift-form" onsubmit="submitGift(event)">
+                <div class="form-section">
+                    <h3>👤 Your Information</h3>
+                    <div class="form-group">
+                        <label for="gifter-name">Your Name</label>
+                        <input type="text" id="gifter-name" placeholder="Your name" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gifter-email">Your Email</label>
+                        <input type="email" id="gifter-email" placeholder="you@example.com" required>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3>🎁 Recipient Information</h3>
+                    <div class="form-group">
+                        <label for="recipient-email">Recipient's Email</label>
+                        <input type="email" id="recipient-email" placeholder="friend@example.com" required>
+                    </div>
+                    <div class="form-group">
+                        <label for="gift-message">Personal Message (optional)</label>
+                        <textarea id="gift-message" placeholder="Write a heartfelt message..." rows="3"></textarea>
+                    </div>
+                </div>
+                
+                <div class="form-section">
+                    <h3>📅 Delivery</h3>
+                    <div class="form-group">
+                        <label for="delivery-date">When should we deliver?</label>
+                        <input type="date" id="delivery-date">
+                        <p class="form-hint">Leave blank for immediate delivery</p>
+                    </div>
+                </div>
+                
+                <input type="hidden" id="selected-plan" value="">
+                
+                <button type="submit" class="btn btn-accent" style="width: 100%; margin-top: 24px;" id="submit-btn">
+                    🎁 Complete Gift Purchase
+                </button>
+                
+                <p class="secure-note">🔒 Secure checkout powered by Stripe</p>
+            </form>
+        </div>
+    </div>
+    
+    <style>
+        .gift-modal {
+            position: fixed;
+            inset: 0;
+            z-index: 9999;
+            display: none;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        
+        .gift-modal.active {
+            display: flex;
+        }
+        
+        .gift-modal-backdrop {
+            position: absolute;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.8);
+            backdrop-filter: blur(8px);
+        }
+        
+        .gift-modal-content {
+            position: relative;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 40px;
+            max-width: 500px;
+            width: 100%;
+            max-height: 90vh;
+            overflow-y: auto;
+            animation: modalSlide 0.3s ease-out;
+        }
+        
+        @keyframes modalSlide {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .modal-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 1.5rem;
+            cursor: pointer;
+            transition: color 0.2s;
+        }
+        
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+        
+        .modal-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .modal-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+        
+        .modal-header h2 {
+            font-family: 'Newsreader', Georgia, serif;
+            font-size: 1.75rem;
+            margin-bottom: 8px;
+        }
+        
+        .modal-header p {
+            color: var(--accent-primary);
+            font-weight: 600;
+        }
+        
+        .form-section {
+            margin-bottom: 28px;
+        }
+        
+        .form-section h3 {
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .form-group {
+            margin-bottom: 16px;
+        }
+        
+        .form-group label {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .form-group input,
+        .form-group textarea {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-family: inherit;
+            transition: border-color 0.2s;
+        }
+        
+        .form-group input:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+        
+        .form-group input::placeholder,
+        .form-group textarea::placeholder {
+            color: var(--text-muted);
+        }
+        
+        .form-hint {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+        
+        .secure-note {
+            text-align: center;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 16px;
+        }
+        
+        #submit-btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+        
+        @media (max-width: 600px) {
+            .gift-modal-content {
+                padding: 24px;
+            }
+        }
+    </style>
+    
+    <script>
+        // Christmas snowfall effect
+        function createSnowflakes() {
+            const snowflakes = ['❄', '❅', '❆', '✦'];
+            for (let i = 0; i < 30; i++) {
+                const flake = document.createElement('div');
+                flake.className = 'snowflake';
+                flake.textContent = snowflakes[Math.floor(Math.random() * snowflakes.length)];
+                flake.style.left = Math.random() * 100 + 'vw';
+                flake.style.animationDuration = (Math.random() * 8 + 6) + 's';
+                flake.style.animationDelay = Math.random() * 5 + 's';
+                flake.style.opacity = Math.random() * 0.5 + 0.3;
+                flake.style.fontSize = (Math.random() * 0.8 + 0.6) + 'rem';
+                document.body.appendChild(flake);
+            }
+        }
+        createSnowflakes();
+        
+        let selectedPlan = null;
+        let selectedPlanName = '';
+        let selectedPlanPrice = '';
+        
+        function openGiftModal(plan, planName, price) {
+            selectedPlan = plan;
+            selectedPlanName = planName;
+            selectedPlanPrice = price;
+            
+            document.getElementById('modal-plan-desc').textContent = `${planName} Subscription — ${price}`;
+            document.getElementById('selected-plan').value = plan;
+            document.getElementById('gift-modal').classList.add('active');
+            document.body.style.overflow = 'hidden';
+            
+            // Set default delivery date to today
+            const today = new Date().toISOString().split('T')[0];
+            document.getElementById('delivery-date').min = today;
+        }
+        
+        function closeGiftModal() {
+            document.getElementById('gift-modal').classList.remove('active');
+            document.body.style.overflow = '';
+        }
+        
+        async function submitGift(event) {
+            event.preventDefault();
+            
+            const submitBtn = document.getElementById('submit-btn');
+            submitBtn.disabled = true;
+            submitBtn.textContent = '⏳ Processing...';
+            
+            const gifterName = document.getElementById('gifter-name').value.trim();
+            const gifterEmail = document.getElementById('gifter-email').value.trim();
+            const recipientEmail = document.getElementById('recipient-email').value.trim();
+            const message = document.getElementById('gift-message').value.trim();
+            const deliveryDate = document.getElementById('delivery-date').value;
+            
+            try {
+                const response = await fetch('/api/stripe-checkout', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        planType: selectedPlan,
+                        customerEmail: gifterEmail,
+                        giftData: {
+                            recipientEmail: recipientEmail,
+                            gifterName: gifterName,
+                            message: message,
+                            deliveryDate: deliveryDate || new Date().toISOString()
+                        }
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (data.url) {
+                    window.location.href = data.url;
+                } else if (data.message) {
+                    throw new Error(data.message);
+                }
+            } catch (error) {
+                console.error('Gift checkout error:', error);
+                alert('There was an error processing your gift. Please try again.');
+                submitBtn.disabled = false;
+                submitBtn.textContent = '🎁 Complete Gift Purchase';
+            }
+        }
+        
+        // Auto-select plan from URL parameter
+        document.addEventListener('DOMContentLoaded', () => {
+            const params = new URLSearchParams(window.location.search);
+            const duration = params.get('duration');
+            
+            const durationMap = {
+                '3-month': { plan: 'gift_3mo', name: '3 Months', price: '$34.99' },
+                '6-month': { plan: 'gift_6mo', name: '6 Months', price: '$59.99' },
+                '12-month': { plan: 'gift_12mo', name: '12 Months', price: '$99' },
+                'lifetime': { plan: 'lifetime', name: 'Lifetime', price: '$299.99' }
+            };
+            
+            if (duration && durationMap[duration]) {
+                const { plan, name, price } = durationMap[duration];
+                
+                // Highlight the selected card
+                document.querySelectorAll('.price-card').forEach(card => {
+                    if (card.dataset.plan === plan) {
+                        card.classList.add('featured');
+                        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+                    }
+                });
+                
+                // Auto-open the modal after a short delay
+                setTimeout(() => {
+                    openGiftModal(plan, name, price);
+                }, 800);
+            }
+        });
+        
+        // Close modal on escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') closeGiftModal();
+        });
+    </script>
 </body>
 </html>

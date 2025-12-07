@@ -6,9 +6,9 @@
 
 import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
 
-// Configuration
+// Configuration - Supabase credentials (from public/config.js)
 const SUPABASE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co';
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcnp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE5NjI3NTcsImV4cCI6MjA0NzUzODc1N30.kLMlC14ckEp-XoL8RX5liw_cMdGs8lR';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI';
 // Set to your backend URL (e.g. from Railway) or default for dev
 const API_URL = window.location.hostname === 'localhost' 
     ? 'http://localhost:3000/api' 
@@ -349,25 +349,14 @@ class KellyOS {
                     const val = parseInt(e.target.value);
                     valDisplay.textContent = val;
                     
-                    // Map to bucket
-                    let bucket = '18-35';
-                    let label = 'Knowledgeable Adult';
-                    if (val <= 5) { bucket = '2-5'; label = 'Toddler'; }
-                    else if (val <= 12) { bucket = '6-12'; label = 'Child'; }
-                    else if (val <= 17) { bucket = '13-17'; label = 'Teen'; }
-                    else if (val <= 35) { bucket = '18-35'; label = 'Adult'; }
-                    else if (val <= 60) { bucket = '36-60'; label = 'Experienced'; }
-                    else { bucket = '61-102'; label = 'Elder'; }
-
+                    // Map age to archetype
+                    let archetype = this.getArchetypeForAge(val);
+                    let label = archetype;
+                    
                     labelDisplay.textContent = label;
                     
-                    // Update State
-                    this.state.age = val;
-                    if (this.state.ageBucket !== bucket) {
-                        this.state.ageBucket = bucket;
-                        // Live update lesson if active
-                        if (this.state.currentLesson) this.renderLessonState();
-                    }
+                    // Update State using the new handler
+                    this.handleAgeChange(val);
                 });
             }
 
@@ -405,41 +394,80 @@ class KellyOS {
         }
     }
 
-    async fetchDailyLesson() {
+    /**
+     * Fetch lesson from Supabase by day number
+     * Uses ACTUAL schema: core_lessons + lesson_atoms (phase, archetype, content)
+     */
+    async fetchDailyLesson(dayNumber = 1) {
         try {
-            let lessonFile = 'the-sun-dna.json';
-            let res = await fetch(`lessons/${lessonFile}`);
+            console.log(`Fetching Day ${dayNumber} from Supabase...`);
             
-            // Fallback Logic
-            if (!res.ok) {
-                res = await fetch('lessons/365_day_calendar.json');
-                if (res.ok) {
-                    const calendar = await res.json();
-                    const lessonData = calendar.lessons.find(l => l.dna_file === 'the-sun') || calendar.lessons[0];
-                    if (lessonData) {
-                        this.populateDrawerData(lessonData.title, lessonData.subtitle);
-                        lessonFile = lessonData.dna_file.endsWith('json') ? lessonData.dna_file : `${lessonData.dna_file}.json`;
-                        if (!lessonFile.includes('-dna')) lessonFile = lessonFile.replace('.json', '-dna.json');
-                        this.loadLessonDNA(lessonFile);
-                    }
+            // 1. Get core lesson metadata
+            const { data: lesson, error: lessonError } = await this.supabase
+                .from('core_lessons')
+                .select('*')
+                .eq('day_number', dayNumber)
+                .single();
+
+            if (lessonError) throw lessonError;
+            if (!lesson) throw new Error(`No lesson found for day ${dayNumber}`);
+
+            console.log('Lesson loaded:', lesson.topic);
+
+            // 2. Get atoms for this lesson (grouped by archetype and phase)
+            const { data: atoms, error: atomsError } = await this.supabase
+                .from('lesson_atoms')
+                .select('id, phase, archetype, content')
+                .eq('core_lesson_id', lesson.id);
+
+            if (atomsError) throw atomsError;
+
+            // 3. Organize atoms by archetype for easy lookup
+            // Atom content structure: { script, options[], kellyPose, kellyEmotion, optionIntro, hintSystem }
+            const atomsByArchetype = {};
+            for (const atom of atoms || []) {
+                const arch = atom.archetype;
+                if (!atomsByArchetype[arch]) {
+                    atomsByArchetype[arch] = {};
                 }
-                return;
+                atomsByArchetype[arch][atom.phase] = atom.content;
             }
 
-            if (res.ok) {
-                const dna = await res.json();
-                this.state.currentLesson = dna;
-                this.state.lessonId = 'the-sun';
-                
-                const variant = dna.ageVariants['18-35'] || Object.values(dna.ageVariants)[0];
-                this.populateDrawerData(variant.title, variant.description);
-                this.renderLessonState();
-            }
+            // 4. Store structured lesson data
+            this.state.currentLesson = {
+                id: lesson.id,
+                dayNumber: lesson.day_number,
+                topic: lesson.topic,
+                universalTruth: lesson.universal_truth,
+                marketingHeadline: lesson.marketing_headline,
+                atoms: atoms || [],
+                atomsByArchetype
+            };
+            this.state.lessonId = lesson.id;
+            this.state.currentArchetype = 'The Explorer'; // Default archetype
+            
+            // 5. Update UI with lesson info
+            this.populateDrawerData(lesson.topic, lesson.universal_truth);
+            this.renderLessonState();
 
         } catch (e) {
-            console.error("Failed to fetch daily lesson", e);
-            this.populateDrawerData("The Sun: Our Magnificent Star", "Ready to learn?");
+            console.error("Failed to fetch lesson from Supabase:", e);
+            // Fallback to show error state
+            this.populateDrawerData("Loading...", "Unable to load lesson. Check connection.");
         }
+    }
+
+    /**
+     * Map age to archetype
+     * Explorer (curious) = younger/default
+     * Scientist (analytical) = middle ages
+     * Rebel (challenging) = teens/young adults
+     */
+    getArchetypeForAge(age) {
+        if (age <= 12) return 'The Explorer';
+        if (age <= 25) return 'The Rebel';
+        if (age <= 60) return 'The Scientist';
+        return 'The Explorer'; // Elders return to curiosity
     }
 
     populateDrawerData(title, subtitle) {
@@ -457,74 +485,135 @@ class KellyOS {
         if (this.dom.drawerDate) this.dom.drawerDate.textContent = dateStr;
     }
 
-    async loadLessonDNA(filename) {
-        try {
-            let res = await fetch(`lessons/${filename}`);
-            if (!res.ok && !filename.includes('-dna')) res = await fetch(`lessons/${filename.replace('.json', '-dna.json')}`);
-            if (res.ok) {
-                this.state.currentLesson = await res.json();
-                this.state.lessonId = filename.replace('.json', '').replace('-dna', '');
-                this.renderLessonState();
-            }
-        } catch (e) { console.error(e); }
-    }
-
-    // --- Lesson Logic ---
+    // --- Lesson Logic (Using Supabase Atoms) ---
 
     renderLessonState() {
         if (!this.state.currentLesson) return;
-        const variant = this.state.currentLesson.ageVariants[this.state.ageBucket];
-        if (!variant) return;
-
+        
+        const lesson = this.state.currentLesson;
+        const archetype = this.state.currentArchetype || 'The Explorer';
+        
         const elTitle = document.getElementById('lesson-title');
         const elDesc = document.getElementById('topic-description');
-        if (elTitle) elTitle.textContent = variant.title;
-        if (elDesc) elDesc.textContent = variant.description;
+        if (elTitle) elTitle.textContent = lesson.topic;
+        if (elDesc) elDesc.textContent = lesson.universalTruth;
         
-        this.renderPhase(variant);
+        this.renderPhase();
     }
 
-    renderPhase(variant) {
+    /**
+     * Render current phase using atom content from Supabase
+     * Phases: Hook -> Fact1 -> Fact2 -> Wisdom (or similar)
+     */
+    renderPhase() {
         const phase = this.state.lessonPhase;
-        if (!this.dom.choiceContainer) return;
+        const archetype = this.state.currentArchetype || 'The Explorer';
+        const lesson = this.state.currentLesson;
+        
+        if (!this.dom.choiceContainer || !lesson) return;
         
         this.dom.choiceContainer.innerHTML = '';
-        let mainText = '';
+        
+        // Map internal phases to database phases
+        const phaseMap = {
+            'welcome': null,  // No atom for welcome
+            'Hook': 'Hook',
+            'Fact1': 'Fact1', 
+            'Fact2': 'Fact2',
+            'Wisdom': 'Wisdom'
+        };
         
         if (phase === 'welcome') {
-            mainText = variant.title;
+            // Welcome phase - show intro
+            if (this.dom.questionText) {
+                this.dom.questionText.textContent = `Today: ${lesson.topic}`;
+            }
             const btn = this.createButton("Let's Begin", () => {
-                this.state.lessonPhase = 'teaching';
-                this.reloadContentForAge();
-                this.playAudio();
+                this.state.lessonPhase = 'Hook';
+                this.renderPhase();
             });
             this.dom.choiceContainer.appendChild(btn);
-
-        } else if (phase === 'teaching' || phase === 'practice') {
-            const interaction = this.state.currentLesson.interactions?.find(i => i.step === phase);
-            if (interaction) {
-                const adaptation = interaction.ageAdaptations?.[this.state.ageBucket];
-                mainText = adaptation?.question || interaction.question;
-                adaptation?.choices?.forEach(choice => {
-                    const btn = this.createButton(choice.text, () => {
-                        this.state.lessonPhase = choice.nextStep || 'wisdom';
-                        this.reloadContentForAge();
-                    });
-                    this.dom.choiceContainer.appendChild(btn);
-                });
-            } else {
-                this.state.lessonPhase = 'wisdom';
-                this.reloadContentForAge();
-                return;
+            return;
+        }
+        
+        // Get atom content for current phase/archetype
+        const atomContent = lesson.atomsByArchetype?.[archetype]?.[phase];
+        
+        if (!atomContent) {
+            console.warn(`No atom found for ${archetype}/${phase}, advancing...`);
+            this.advancePhase();
+            return;
+        }
+        
+        // Render the atom content
+        // Structure: { script, options[], kellyPose, kellyEmotion, optionIntro, hintSystem }
+        if (this.dom.questionText) {
+            this.dom.questionText.textContent = atomContent.script || 'Continue...';
+        }
+        
+        // Render options as choice cards
+        if (atomContent.options && atomContent.options.length > 0) {
+            // Show option intro if available
+            if (atomContent.optionIntro) {
+                const intro = document.createElement('div');
+                intro.className = 'option-intro';
+                intro.textContent = atomContent.optionIntro;
+                intro.style.cssText = 'color: #71717a; font-size: 0.9rem; margin-bottom: 12px;';
+                this.dom.choiceContainer.appendChild(intro);
             }
-        } else if (phase === 'wisdom') {
-            mainText = variant.wisdomMoment;
-            const btn = this.createButton("Finish Lesson", () => this.switchMode('dashboard')); // Dashboard essentially clears UI
+            
+            atomContent.options.forEach(opt => {
+                const btn = this.createButton(opt.text, () => {
+                    // Show response in question text
+                    if (this.dom.questionText && opt.response) {
+                        this.dom.questionText.textContent = opt.response;
+                    }
+                    // Advance after a delay
+                    setTimeout(() => this.advancePhase(), 2500);
+                });
+                
+                // Add hint styling if this is the "best" option
+                if (opt.quality === 'best') {
+                    btn.dataset.quality = 'best';
+                }
+                
+                this.dom.choiceContainer.appendChild(btn);
+            });
+        } else {
+            // No options - just a continue button
+            const btn = this.createButton("Continue", () => this.advancePhase());
             this.dom.choiceContainer.appendChild(btn);
         }
-
-        if (this.dom.questionText) this.dom.questionText.textContent = mainText;
-        this.loadAudioForPhase(phase);
+        
+        // Update Kelly pose if Unity is ready
+        if (atomContent.kellyPose) {
+            this.sendToUnity('kelly-pose', { pose: atomContent.kellyPose });
+        }
+    }
+    
+    /**
+     * Advance to next phase in the lesson
+     * Phases match database: Hook → Fact1 → Fact2 → Fact3 → Wisdom
+     */
+    advancePhase() {
+        const phases = ['welcome', 'Hook', 'Fact1', 'Fact2', 'Fact3', 'Wisdom', 'complete'];
+        const currentIndex = phases.indexOf(this.state.lessonPhase);
+        
+        if (currentIndex < phases.length - 1) {
+            this.state.lessonPhase = phases[currentIndex + 1];
+            
+            if (this.state.lessonPhase === 'complete') {
+                // Lesson finished
+                if (this.dom.questionText) {
+                    this.dom.questionText.textContent = 'Lesson complete! Great job.';
+                }
+                this.dom.choiceContainer.innerHTML = '';
+                const btn = this.createButton("Finish", () => this.switchMode('dashboard'));
+                this.dom.choiceContainer.appendChild(btn);
+            } else {
+                this.renderPhase();
+            }
+        }
     }
 
     createButton(text, onClick) {
@@ -535,9 +624,19 @@ class KellyOS {
         return btn;
     }
 
-    reloadContentForAge() {
-        this.renderLessonState();
-        if (this.state.isPlaying) this.playAudio();
+    /**
+     * Handle age change - update archetype and reload content
+     */
+    handleAgeChange(newAge) {
+        this.state.age = newAge;
+        const newArchetype = this.getArchetypeForAge(newAge);
+        
+        if (this.state.currentArchetype !== newArchetype) {
+            this.state.currentArchetype = newArchetype;
+            console.log(`Age ${newAge} → Archetype: ${newArchetype}`);
+            // Re-render with new archetype's content
+            this.renderLessonState();
+        }
     }
 
     // --- Audio ---
@@ -632,6 +731,15 @@ class KellyOS {
                 this.state.isPlaying = false;
                 this.updatePlayButton();
                 this.sendToUnity('kelly-idle', {});
+            });
+        }
+        
+        // Age Slider - connected to archetype system
+        if (this.dom.ageSlider) {
+            this.dom.ageSlider.addEventListener('input', (e) => {
+                const newAge = parseInt(e.target.value);
+                if (this.dom.ageValue) this.dom.ageValue.textContent = newAge;
+                this.handleAgeChange(newAge);
             });
         }
     }
