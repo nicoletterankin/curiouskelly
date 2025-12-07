@@ -116,3 +116,57 @@ The system is ready for deployment. Key files created:
 - `public/js/affiliate-tracking.js` - Client-side tracking (LIFETIME)
 - `public/earnings.html` - Full earnings dashboard
 
+---
+
+## 🔗 FULL WIRING COMPLETE (December 7, 2025)
+
+### End-to-End Flow Working
+
+```
+User visits ?ref=CODE → Track API → DB Click Record
+         ↓
+User signs up → Auth.js processReferralConversion() → Convert API → Link to Referrer
+         ↓
+User pays (Stripe) → Webhook → recordCommissionIfReferred() → Commission Record
+         ↓
+7 days later → Clear Commissions Cron → pending → available
+         ↓
+User requests payout → Payout API (age verified) → Process
+```
+
+### Fixes Applied
+1. **Import fix**: Changed `getSupabaseAdmin` → `createClient` in referral APIs (Vercel module resolution issue)
+2. **Column fix**: Updated `can_user_earn()` function to use `parent_user_id` + `parental_consent_given`
+3. **RLS policy**: Added INSERT policy for `referral_clicks` table
+4. **Cache busting**: Added `?v=2` to affiliate-tracking.js references
+
+### Edge Cases Tested & Verified ✅
+| Test | Result |
+|------|--------|
+| Fresh click tracking | ✅ Click ID returned, recorded in DB |
+| Invalid referral code | ✅ Returns 404 |
+| Missing referral code | ✅ Returns 400 |
+| XSS attempt in code | ✅ Blocked with 400 |
+| Self-referral | ✅ Returns 400 |
+| Already referred user | ✅ Returns 400 |
+| Lookup valid code | ✅ Returns referrer info |
+| Lookup invalid code | ✅ Returns 404 |
+| Adult eligibility | ✅ Full access |
+| Minor (13-17) eligibility | ✅ Can earn, payout blocked |
+| Child (<13) no consent | ✅ All features blocked |
+| Child (<13) WITH consent | ✅ Can earn, goes to parent |
+| Commission clearing | ✅ pending → approved after 7 days |
+
+### Database State
+- 3 referral clicks recorded
+- 1 commission transaction (approved)
+- 3 users with referral codes
+- Kelly: $1.50 available earnings
+
+### Production Verified
+- **Track API**: `POST /api/referral/track` → 200 ✅
+- **Browser Console**: `[Referral] Click tracked: kelly_97d0 -> Click ID: 02d27570-...` ✅
+- **Lookup API**: `GET /api/referral/lookup?code=kelly_97d0` → 200 ✅
+
+**The complete referral → commission → payout system is operational!** 🎉
+
