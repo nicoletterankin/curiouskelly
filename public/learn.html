@@ -3801,7 +3801,15 @@
         
         // Play video for a phase
         async play(dayNumber, phase, archetype) {
-          if (!this.videoEl || !dayNumber || !archetype) return;
+          // Lazy init if needed (handles race condition with DOMContentLoaded)
+          if (!this.videoEl) {
+            this.init();
+          }
+          
+          if (!this.videoEl || !dayNumber || !archetype) {
+            console.warn(`[KellyVideo] Cannot play - missing: video=${!!this.videoEl}, day=${dayNumber}, archetype=${archetype}`);
+            return;
+          }
           
           const videoUrl = this.getVideoUrl(dayNumber, phase, archetype);
           const audioUrl = this.getAudioUrl(dayNumber, phase, archetype);
@@ -3867,8 +3875,12 @@
         }
       };
       
-      // Initialize on load
-      document.addEventListener('DOMContentLoaded', () => KellyVideo.init());
+      // Initialize on load (or immediately if DOM already ready)
+      if (document.readyState === 'loading') {
+        document.addEventListener('DOMContentLoaded', () => KellyVideo.init());
+      } else {
+        KellyVideo.init();
+      }
 
       // ═══════════════════════════════════════════════════════════════════
       // UTILITY FUNCTIONS
