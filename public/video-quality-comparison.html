@@ -1,0 +1,610 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>✨ Kelly Video Quality Comparison — Before & After</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=Inter:wght@400;500;600&family=JetBrains+Mono&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --kelly-blue: #B0C4DE;
+      --bg-dark: #0a0a0f;
+      --bg-card: #12121a;
+      --text-primary: #fff;
+      --text-secondary: #a0a0b0;
+      --accent-orange: #d97757;
+      --success: #4ade80;
+      --warning: #fbbf24;
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'Inter', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    header {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: linear-gradient(135deg, rgba(176, 196, 222, 0.1), transparent);
+      border-bottom: 1px solid rgba(176, 196, 222, 0.1);
+    }
+
+    .logo {
+      font-family: 'Playfair Display', serif;
+      font-size: 3rem;
+      background: linear-gradient(135deg, var(--kelly-blue), #8FA4BE);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      margin-bottom: 1rem;
+    }
+
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 1.2rem;
+    }
+
+    .stats-bar {
+      display: flex;
+      justify-content: center;
+      gap: 4rem;
+      padding: 2rem;
+      background: var(--bg-card);
+      border-radius: 16px;
+      margin: 2rem 0;
+    }
+
+    .stat {
+      text-align: center;
+    }
+
+    .stat-value {
+      font-family: 'Playfair Display', serif;
+      font-size: 2.5rem;
+      font-weight: 700;
+      color: var(--kelly-blue);
+    }
+
+    .stat-label {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+      margin-top: 0.5rem;
+    }
+
+    .comparison-section {
+      margin: 4rem 0;
+    }
+
+    .section-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+
+    .comparison-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+    }
+
+    .comparison-card {
+      background: var(--bg-card);
+      border-radius: 20px;
+      overflow: hidden;
+      border: 2px solid transparent;
+      transition: all 0.3s ease;
+    }
+
+    .comparison-card.before {
+      border-color: rgba(251, 191, 36, 0.3);
+    }
+
+    .comparison-card.after {
+      border-color: rgba(74, 222, 128, 0.3);
+    }
+
+    .card-header {
+      padding: 1rem 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .card-header h3 {
+      font-size: 1.1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 600;
+    }
+
+    .badge.before {
+      background: rgba(251, 191, 36, 0.2);
+      color: var(--warning);
+    }
+
+    .badge.after {
+      background: rgba(74, 222, 128, 0.2);
+      color: var(--success);
+    }
+
+    .video-container {
+      position: relative;
+      aspect-ratio: 16/9;
+      background: #000;
+    }
+
+    .video-container video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .video-container img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .specs-list {
+      padding: 1.5rem;
+    }
+
+    .spec-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+    }
+
+    .spec-row:last-child {
+      border-bottom: none;
+    }
+
+    .spec-label {
+      color: var(--text-secondary);
+    }
+
+    .spec-value {
+      font-family: 'JetBrains Mono', monospace;
+      font-weight: 500;
+    }
+
+    .spec-value.good {
+      color: var(--success);
+    }
+
+    .spec-value.warn {
+      color: var(--warning);
+    }
+
+    .quality-meter {
+      margin-top: 1rem;
+    }
+
+    .meter-label {
+      display: flex;
+      justify-content: space-between;
+      margin-bottom: 0.5rem;
+      font-size: 0.9rem;
+    }
+
+    .meter-bar {
+      height: 8px;
+      background: rgba(255,255,255,0.1);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+
+    .meter-fill {
+      height: 100%;
+      border-radius: 4px;
+      transition: width 0.5s ease;
+    }
+
+    .meter-fill.low {
+      background: linear-gradient(90deg, var(--warning), #f59e0b);
+    }
+
+    .meter-fill.high {
+      background: linear-gradient(90deg, var(--success), #22c55e);
+    }
+
+    .tech-comparison {
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 2rem;
+      margin: 2rem 0;
+    }
+
+    .tech-table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    .tech-table th,
+    .tech-table td {
+      padding: 1rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(255,255,255,0.1);
+    }
+
+    .tech-table th {
+      color: var(--text-secondary);
+      font-weight: 500;
+      font-size: 0.9rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .tech-table tr:last-child td {
+      border-bottom: none;
+    }
+
+    .pipeline-visual {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 1rem;
+      padding: 2rem;
+      background: var(--bg-card);
+      border-radius: 20px;
+      margin: 2rem 0;
+      flex-wrap: wrap;
+    }
+
+    .pipeline-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .pipeline-icon {
+      width: 60px;
+      height: 60px;
+      border-radius: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.5rem;
+      background: rgba(176, 196, 222, 0.1);
+      border: 1px solid rgba(176, 196, 222, 0.2);
+    }
+
+    .pipeline-label {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+
+    .pipeline-arrow {
+      font-size: 1.5rem;
+      color: var(--kelly-blue);
+    }
+
+    .cta-section {
+      text-align: center;
+      padding: 4rem 2rem;
+      background: linear-gradient(135deg, rgba(217, 119, 87, 0.1), transparent);
+      border-radius: 24px;
+      margin: 4rem 0;
+    }
+
+    .cta-title {
+      font-family: 'Playfair Display', serif;
+      font-size: 2rem;
+      margin-bottom: 1rem;
+    }
+
+    .cta-text {
+      color: var(--text-secondary);
+      margin-bottom: 2rem;
+      max-width: 600px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+
+    .cta-button {
+      display: inline-block;
+      padding: 1rem 2rem;
+      background: linear-gradient(135deg, var(--kelly-blue), #8FA4BE);
+      color: var(--bg-dark);
+      text-decoration: none;
+      border-radius: 50px;
+      font-weight: 600;
+      transition: all 0.3s ease;
+    }
+
+    .cta-button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 10px 30px rgba(176, 196, 222, 0.3);
+    }
+
+    footer {
+      text-align: center;
+      padding: 2rem;
+      color: var(--text-secondary);
+      border-top: 1px solid rgba(176, 196, 222, 0.1);
+    }
+
+    @media (max-width: 768px) {
+      .comparison-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .stats-bar {
+        flex-direction: column;
+        gap: 2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h1 class="logo">✨ Curious Kelly</h1>
+    <p class="subtitle">Video Quality Comparison — The Journey to Film-Quality</p>
+  </header>
+
+  <div class="container">
+    <!-- Stats Overview -->
+    <div class="stats-bar">
+      <div class="stat">
+        <div class="stat-value">70%</div>
+        <div class="stat-label">Before (SadTalker)</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" style="color: var(--success);">95%</div>
+        <div class="stat-label">After (Sync Labs)</div>
+      </div>
+      <div class="stat">
+        <div class="stat-value" style="color: var(--accent-orange);">99%</div>
+        <div class="stat-label">Target (iClone)</div>
+      </div>
+    </div>
+
+    <!-- Side-by-Side Comparison -->
+    <section class="comparison-section">
+      <h2 class="section-title">🎬 Side-by-Side Comparison</h2>
+      
+      <div class="comparison-grid">
+        <!-- Before Card -->
+        <div class="comparison-card before">
+          <div class="card-header">
+            <h3>⚠️ Before (SadTalker)</h3>
+            <span class="badge before">70% Accuracy</span>
+          </div>
+          <div class="video-container">
+            <video controls loop muted playsinline poster="https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/production/images/day_001_hook.png">
+              <source src="https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/production/animations/day_001_hook.mp4" type="video/mp4">
+            </video>
+          </div>
+          <div class="specs-list">
+            <div class="spec-row">
+              <span class="spec-label">Lip-Sync Method</span>
+              <span class="spec-value warn">SadTalker</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Accuracy</span>
+              <span class="spec-value warn">~70%</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Face Animation</span>
+              <span class="spec-value warn">Mouth Only</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Expression</span>
+              <span class="spec-value warn">Static</span>
+            </div>
+            <div class="quality-meter">
+              <div class="meter-label">
+                <span>Quality Score</span>
+                <span>70%</span>
+              </div>
+              <div class="meter-bar">
+                <div class="meter-fill low" style="width: 70%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- After Card -->
+        <div class="comparison-card after">
+          <div class="card-header">
+            <h3>✅ After (Sync Labs)</h3>
+            <span class="badge after">95% Accuracy</span>
+          </div>
+          <div class="video-container">
+            <video controls loop muted playsinline>
+              <source src="https://api.sync.so/v2/generations/496e908a-cd6d-4deb-aef6-86d02e80a995/result?token=b3561459-a7ef-4476-95a3-b3f1b440f3d5" type="video/mp4">
+            </video>
+          </div>
+          <div class="specs-list">
+            <div class="spec-row">
+              <span class="spec-label">Lip-Sync Method</span>
+              <span class="spec-value good">Sync Labs</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Accuracy</span>
+              <span class="spec-value good">95%+</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Face Animation</span>
+              <span class="spec-value good">Full Face</span>
+            </div>
+            <div class="spec-row">
+              <span class="spec-label">Expression</span>
+              <span class="spec-value good">Natural</span>
+            </div>
+            <div class="quality-meter">
+              <div class="meter-label">
+                <span>Quality Score</span>
+                <span>95%</span>
+              </div>
+              <div class="meter-bar">
+                <div class="meter-fill high" style="width: 95%;"></div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Pipeline Visualization -->
+    <section class="comparison-section">
+      <h2 class="section-title">⚙️ The SOTA Pipeline</h2>
+      
+      <div class="pipeline-visual">
+        <div class="pipeline-step">
+          <div class="pipeline-icon">📝</div>
+          <div class="pipeline-label">Script</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="pipeline-icon">🎤</div>
+          <div class="pipeline-label">ElevenLabs</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="pipeline-icon">🎨</div>
+          <div class="pipeline-label">Kelly LoRA</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="pipeline-icon">👄</div>
+          <div class="pipeline-label">Wav2Lip</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="pipeline-icon" style="background: rgba(74, 222, 128, 0.2); border-color: var(--success);">✨</div>
+          <div class="pipeline-label" style="color: var(--success); font-weight: 600;">Sync Labs</div>
+        </div>
+        <div class="pipeline-arrow">→</div>
+        <div class="pipeline-step">
+          <div class="pipeline-icon">🎬</div>
+          <div class="pipeline-label">Final Video</div>
+        </div>
+      </div>
+    </section>
+
+    <!-- Technical Comparison Table -->
+    <section class="comparison-section">
+      <h2 class="section-title">📊 Technical Comparison</h2>
+      
+      <div class="tech-comparison">
+        <table class="tech-table">
+          <thead>
+            <tr>
+              <th>Feature</th>
+              <th>SadTalker (Before)</th>
+              <th>Sync Labs (Current)</th>
+              <th>iClone (Target)</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>Lip-Sync Accuracy</td>
+              <td><span class="spec-value warn">~70%</span></td>
+              <td><span class="spec-value good">95%+</span></td>
+              <td><span class="spec-value good">99%</span></td>
+            </tr>
+            <tr>
+              <td>Full Face Animation</td>
+              <td><span class="spec-value warn">❌ No</span></td>
+              <td><span class="spec-value good">✅ Yes</span></td>
+              <td><span class="spec-value good">✅ Yes</span></td>
+            </tr>
+            <tr>
+              <td>Eye Movement</td>
+              <td><span class="spec-value warn">❌ Static</span></td>
+              <td><span class="spec-value good">✅ Natural</span></td>
+              <td><span class="spec-value good">✅ Micro-saccades</span></td>
+            </tr>
+            <tr>
+              <td>Brow Expression</td>
+              <td><span class="spec-value warn">❌ None</span></td>
+              <td><span class="spec-value good">✅ Present</span></td>
+              <td><span class="spec-value good">✅ Full control</span></td>
+            </tr>
+            <tr>
+              <td>Hair Physics</td>
+              <td><span class="spec-value warn">❌ No</span></td>
+              <td><span class="spec-value warn">⚠️ Limited</span></td>
+              <td><span class="spec-value good">✅ Full simulation</span></td>
+            </tr>
+            <tr>
+              <td>Generation Time</td>
+              <td>~2-3 min</td>
+              <td>~2-3 min</td>
+              <td>~15-20 min</td>
+            </tr>
+            <tr>
+              <td>Cost per Video</td>
+              <td>~$0.02</td>
+              <td>~$0.15-0.50</td>
+              <td>$0 (owned)</td>
+            </tr>
+            <tr>
+              <td>User Perception</td>
+              <td><span class="spec-value warn">"JibJab"</span></td>
+              <td><span class="spec-value good">"Professional"</span></td>
+              <td><span class="spec-value good">"Film Quality"</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+    </section>
+
+    <!-- CTA Section -->
+    <section class="cta-section">
+      <h2 class="cta-title">Ready to See Film Quality?</h2>
+      <p class="cta-text">
+        Our CC5/iClone artist is preparing 99% accuracy renders with full hair physics, 
+        micro-expressions, and 4K/60fps output. The best is yet to come.
+      </p>
+      <a href="/artist-portal.html" class="cta-button">View Artist Portal →</a>
+    </section>
+  </div>
+
+  <footer>
+    <p>✨ Curious Kelly — Making the best digital human teacher on the planet</p>
+    <p>Lesson of the Day PBC © 2025</p>
+  </footer>
+
+  <script>
+    // Auto-play videos when in view
+    const videos = document.querySelectorAll('video');
+    const observer = new IntersectionObserver((entries) => {
+      entries.forEach(entry => {
+        if (entry.isIntersecting) {
+          entry.target.play();
+        } else {
+          entry.target.pause();
+        }
+      });
+    }, { threshold: 0.5 });
+
+    videos.forEach(video => observer.observe(video));
+  </script>
+</body>
+</html>
+
