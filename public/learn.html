@@ -558,16 +558,16 @@
 
       /* Speech bubble (Kelly's text) - iOS style card */
       .speech-bubble {
-        background: rgba(30, 30, 35, 0.85);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
+        background: rgba(20, 20, 24, 0.92);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
         border-radius: 20px;
         padding: 18px 20px;
         margin-bottom: 14px;
         max-height: 140px;
         overflow-y: auto;
-        border: 1px solid rgba(255, 255, 255, 0.08);
-        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
         
         /* iOS scroll behavior */
         -webkit-overflow-scrolling: touch;
@@ -606,10 +606,10 @@
         display: flex;
         align-items: center;
         gap: 14px;
-        background: rgba(255, 255, 255, 0.12);
-        backdrop-filter: blur(20px);
-        -webkit-backdrop-filter: blur(20px);
-        border: 1px solid rgba(255, 255, 255, 0.15);
+        background: rgba(255, 255, 255, 0.15);
+        backdrop-filter: blur(24px);
+        -webkit-backdrop-filter: blur(24px);
+        border: 1px solid rgba(255, 255, 255, 0.2);
         border-radius: 16px;
         padding: 16px 18px;
         cursor: pointer;
@@ -617,6 +617,7 @@
         text-align: left;
         position: relative;
         overflow: hidden;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.2);
       }
       
       /* iOS-style touch highlight */
@@ -665,22 +666,25 @@
       }
 
       .choice-letter {
-        width: 28px;
-        height: 28px;
+        width: 30px;
+        height: 30px;
         border-radius: 50%;
-        background: rgba(255, 255, 255, 0.2);
+        background: var(--tiktok-accent);
         display: flex;
         align-items: center;
         justify-content: center;
         font-size: 14px;
         font-weight: 700;
         flex-shrink: 0;
+        color: white;
+        box-shadow: 0 2px 8px rgba(59, 130, 246, 0.3);
       }
 
       .choice-text {
-        font-size: 14px;
+        font-size: 15px;
         color: var(--tiktok-text);
         flex: 1;
+        line-height: 1.4;
       }
 
       /* ═══════════════════════════════════════════════════════════════════
@@ -2838,10 +2842,14 @@
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: 6px;
+        gap: 8px;
         z-index: 150;
-        opacity: 0.7;
-        animation: swipeHintPulse 2s ease-in-out infinite;
+        opacity: 0.9;
+        animation: swipeHintPulse 2.5s ease-in-out infinite;
+        background: rgba(0, 0, 0, 0.4);
+        padding: 10px 16px;
+        border-radius: 20px;
+        backdrop-filter: blur(8px);
       }
 
       .swipe-hint.hidden {
@@ -2849,19 +2857,21 @@
       }
 
       .swipe-hint-arrow {
-        font-size: 20px;
+        font-size: 22px;
         animation: swipeBounce 1.5s ease-in-out infinite;
+        color: var(--tiktok-accent);
       }
 
       .swipe-hint-text {
-        font-size: 12px;
+        font-size: 13px;
         color: var(--tiktok-text);
-        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+        font-weight: 500;
+        letter-spacing: 0.01em;
       }
 
       @keyframes swipeHintPulse {
-        0%, 100% { opacity: 0.7; }
-        50% { opacity: 0.4; }
+        0%, 100% { opacity: 0.9; }
+        50% { opacity: 0.6; }
       }
 
       /* === KELLY ADJUSTMENTS FOR V2 === */
@@ -3635,31 +3645,20 @@
       }
 
       // ═══════════════════════════════════════════════════════════════════
-      // STATE (with defensive initialization)
+      // KELLY LESSON SYSTEM INITIALIZATION
       // ═══════════════════════════════════════════════════════════════════
-      const state = {
-        dayNumber: getTodaysDayNumber(), // Use today's date
-        lesson: null, // Will be populated by loadLesson()
-        currentPhase: 1,
-        isPaused: false,
-        isMuted: false,
-        isLoading: false, // Track loading state to prevent race conditions
-        startTime: null, // Track when lesson started for completion stats
+      
+      // Initialize the Core System
+      const lessonSystem = new KellyLessonSystem();
+      
+      // Alias state for backward compatibility with UI functions
+      const state = lessonSystem.state;
 
-        variants: {
-          age: localStorage.getItem('kelly_age') || '18-35',
-          language: localStorage.getItem('kelly_language') || 'en',
-          tone: localStorage.getItem('kelly_tone') || 'curious',
-          difficulty: parseInt(localStorage.getItem('kelly_difficulty') || '2'),
-          mode: localStorage.getItem('kelly_mode') || '2D'
-        },
-
-        choicesMade: {}
-      };
-
+      // Global references
       let kellyAvatar = null;
       let kellyAudio = null;
-      let loadingTimeout = null; // Track loading timeout
+      let loadingTimeout = null; 
+
 
       // ═══════════════════════════════════════════════════════════════════
       // KELLY AVATAR CONTROLLER INITIALIZATION
@@ -3680,14 +3679,11 @@
           return;
         }
 
-        // Initialize 2D avatar controller (using Kelly2DAvatar - the active module)
+        // Initialize 2D avatar
         kellyAvatar = new Kelly2DAvatar(container2D);
         console.log('[Learn] Kelly 2D avatar initialized');
 
-        // ═══════════════════════════════════════════════════════════════════
-        // INITIALIZE KELLY VISUAL SYSTEM
-        // This enables immersive backgrounds, props, and visual choreography
-        // ═══════════════════════════════════════════════════════════════════
+        // Initialize Visual System
         if (window.KellyVisualSystem && kellyFrame) {
           try {
             kellyVisualSystem = new KellyVisualSystem(kellyFrame, {
@@ -3696,14 +3692,14 @@
             });
             console.log('[Learn] ✅ Kelly Visual System initialized');
           } catch (e) {
-            console.warn('[Learn] Visual system init failed, using fallback:', e.message);
+            console.warn('[Learn] Visual system init failed:', e.message);
           }
         }
 
-        // Unity 3D loads on-demand when user clicks 3D mode
-        // loadUnity3D(); // Disabled - now loads on demand via setMode('3D')
-
-        console.log('[Learn] ✅ Kelly Avatar initialized (2D active, Visual System ready)');
+        // Inject dependencies into Lesson System
+        lessonSystem.injectDependencies(kellyVisualSystem, null, kellyAvatar);
+        
+        console.log('[Learn] ✅ Kelly System Connected');
       }
 
       async function loadUnity3D() {
@@ -3778,34 +3774,10 @@
       const CONFIG = window.CONFIG; // Local alias for convenience
 
       // ═══════════════════════════════════════════════════════════════════
-      // TONE → ARCHETYPE MAPPING
-      // Maps UI tone selection to database archetype names
-      // Database has 12 archetypes - we map to the 3 most relevant
-      // ═══════════════════════════════════════════════════════════════════
-      // ═══════════════════════════════════════════════════════════════════
-      // ARCHETYPE MAPPING - Match what's actually in Supabase lesson_atoms
-      // Database has: The Scientist, The Survivor, The Explorer, etc.
-      // ═══════════════════════════════════════════════════════════════════
-      const TONE_TO_ARCHETYPE = {
-        curious: 'The Scientist', // Analytical, evidence-based
-        playful: 'The Explorer',  // Adventurous, discovery-focused
-        serious: 'The Survivor'   // Practical, real-world application
-      };
-
-      // Fallback archetypes if primary not found
-      const ARCHETYPE_FALLBACKS = {
-        'The Scientist': ['Scientist', 'Sage', 'The Sage'],
-        'The Explorer': ['Explorer', 'Jester', 'The Storyteller'],
-        'The Survivor': ['Survivor', 'Ruler', 'The Strategist']
-      };
-
-      // ═══════════════════════════════════════════════════════════════════
       // UTILITY FUNCTIONS
       // ═══════════════════════════════════════════════════════════════════
       function getDayOfYear() {
-        const now = new Date();
-        const start = new Date(now.getFullYear(), 0, 0);
-        return Math.floor((now - start) / (1000 * 60 * 60 * 24));
+        return lessonSystem.getTodaysDayNumber();
       }
 
       function showToast(message) {
@@ -3829,433 +3801,30 @@
       }
 
       // ═══════════════════════════════════════════════════════════════════
-      // SPEED: Lesson Cache for instant loads
-      // ═══════════════════════════════════════════════════════════════════
-      const LESSON_CACHE_KEY = 'ck_lesson_cache';
-      const LESSON_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
-      
-      // Clear cache if ?clearcache=1 in URL
-      if (new URLSearchParams(window.location.search).get('clearcache')) {
-        console.log('[Learn] 🗑️ Clearing lesson cache...');
-        Object.keys(localStorage).forEach(key => {
-          if (key.startsWith(LESSON_CACHE_KEY)) {
-            localStorage.removeItem(key);
-          }
-        });
-        console.log('[Learn] ✅ Cache cleared');
-      }
-      
-      function getCachedLesson(dayNumber, tone) {
-        try {
-          const cached = localStorage.getItem(`${LESSON_CACHE_KEY}_${dayNumber}_${tone}`);
-          if (cached) {
-            const { lesson, timestamp } = JSON.parse(cached);
-            if (Date.now() - timestamp < LESSON_CACHE_TTL) {
-              console.log(`[Learn] ⚡ Using cached lesson for day ${dayNumber}`);
-              return lesson;
-            }
-          }
-        } catch (e) {}
-        return null;
-      }
-      
-      function cacheLesson(dayNumber, tone, lesson) {
-        try {
-          localStorage.setItem(`${LESSON_CACHE_KEY}_${dayNumber}_${tone}`, 
-            JSON.stringify({ lesson, timestamp: Date.now() }));
-        } catch (e) {}
-      }
-
-      // ═══════════════════════════════════════════════════════════════════
-      // LESSON DATA - LOAD FROM SUPABASE (with loading state & timeout)
+      // LESSON DATA - LOAD FROM SYSTEM
       // ═══════════════════════════════════════════════════════════════════
       async function loadLesson(dayNumber) {
-        // Prevent concurrent loads
-        if (state.isLoading) {
-          console.warn('[Learn] Load already in progress, skipping duplicate request');
-          return;
-        }
-
-        state.isLoading = true;
-        state.dayNumber = dayNumber;
-        state.currentPhase = 1;
-        state.choicesMade = {};
+        // Update UI Loading State
+        const speechText = document.getElementById('speech-text');
+        const choicesContainer = document.getElementById('choices-container');
+        const dayDisplay = document.getElementById('day-display');
         
-        const tone = state.variants.tone || 'curious';
-
-        // ⚡ TRY CACHE FIRST for instant load
-        const cached = getCachedLesson(dayNumber, tone);
-        if (cached) {
-          state.lesson = cached;
-          state.isLoading = false;
-          state.startTime = Date.now(); // Track lesson start time
-          document.getElementById('day-display').textContent = dayNumberToDate(dayNumber);
-          
-          // ═══════════════════════════════════════════════════════════════════
-          // LOAD VISUAL ASSETS FOR THIS LESSON (backgrounds, props, Kelly poses)
-          // ═══════════════════════════════════════════════════════════════════
-          if (kellyVisualSystem) {
-            console.log('[Learn] 🎨 Loading visual assets for day', dayNumber);
-            kellyVisualSystem.loadLesson(dayNumber)
-              .then(() => console.log('[Learn] 🎨 Visual assets loaded for day', dayNumber))
-              .catch(e => console.warn('[Learn] Visual assets not available for day', dayNumber, e.message));
-          }
-          
-          updateUI();
-          renderPhase(state.lesson.phases[0]);
-          console.log('[Learn] ⚡ Instant load from cache!');
-          return;
-        }
-
-        // Clear any existing timeout
-        if (loadingTimeout) {
-          clearTimeout(loadingTimeout);
-        }
-
-        // Update UI immediately - show date instead of day number
-        document.getElementById('day-display').textContent = dayNumberToDate(dayNumber);
-
-        // Show loading state
-        document.getElementById('speech-text').textContent = 'Loading lesson...';
-        document.getElementById('choices-container').innerHTML = '';
-
-        // Set timeout fallback (10 seconds)
-        loadingTimeout = setTimeout(() => {
-          if (state.isLoading) {
-            console.error('[Learn] Loading timeout - using placeholder');
-            state.lesson = createPlaceholderLesson(dayNumber);
-            state.isLoading = false;
-            updateUI();
-            renderPhase(state.lesson.phases[0]);
-            showToast('⚠️ Loading took too long. Using placeholder content.');
-          }
-        }, 10000);
+        if (speechText) speechText.textContent = 'Loading lesson...';
+        if (choicesContainer) choicesContainer.innerHTML = '';
+        if (dayDisplay) dayDisplay.textContent = dayNumberToDate(dayNumber);
 
         try {
-          // Get current tone preference and map to archetype
-          const tone = state.variants.tone || 'curious';
-          const archetype = TONE_TO_ARCHETYPE[tone];
-
-          console.log(
-            `[Learn] Loading Day ${dayNumber} with tone: ${tone} (archetype: ${archetype})`
-          );
-
-          // Step 1: Get core lesson metadata
-          const { data: coreLesson, error: lessonError } = await supabase
-            .from('core_lessons')
-            .select('id, topic, universal_truth, marketing_headline')
-            .eq('day_number', dayNumber)
-            .single();
-
-          if (lessonError || !coreLesson) {
-            console.warn(`[Learn] No core lesson found for day ${dayNumber}:`, lessonError);
-            state.lesson = createPlaceholderLesson(dayNumber);
-            state.isLoading = false;
-            clearTimeout(loadingTimeout);
+            const lesson = await lessonSystem.loadLesson(dayNumber);
             updateUI();
-            renderPhase(state.lesson.phases[0]);
-            return;
-          }
-
-          console.log(`[Learn] ✓ Core lesson loaded: ${coreLesson.topic}`);
-
-          // Step 2: Get lesson atoms for this archetype
-          const { data: atoms, error: atomsError } = await supabase
-            .from('lesson_atoms')
-            .select('phase, content')
-            .eq('core_lesson_id', coreLesson.id)
-            .eq('archetype', archetype)
-            .order('phase');
-
-          if (atomsError || !atoms || atoms.length === 0) {
-            console.warn(`[Learn] No atoms found for archetype "${archetype}":`, atomsError);
-            
-            // Log what archetypes ARE available for this lesson
-            const { data: availableAtoms } = await supabase
-              .from('lesson_atoms')
-              .select('archetype, phase')
-              .eq('core_lesson_id', coreLesson.id);
-            
-            if (availableAtoms && availableAtoms.length > 0) {
-              const archetypes = [...new Set(availableAtoms.map(a => a.archetype))];
-              const phases = [...new Set(availableAtoms.map(a => a.phase))];
-              console.log(`[Learn] Available archetypes: ${archetypes.join(', ')}`);
-              console.log(`[Learn] Available phases: ${phases.join(', ')}`);
+            renderPhase(lesson.phases[0]);
+        } catch (e) {
+            console.error('[Learn] Error loading lesson:', e);
+            showToast('Error loading lesson');
+            // Render placeholder if available in state
+            if (state.lesson && state.lesson.phases) {
+                renderPhase(state.lesson.phases[0]);
             }
-
-            // Try fallback: get ANY atoms for this lesson (ignore archetype)
-            console.log(`[Learn] Trying to load atoms without archetype filter...`);
-            const { data: anyAtoms } = await supabase
-              .from('lesson_atoms')
-              .select('phase, content, archetype')
-              .eq('core_lesson_id', coreLesson.id)
-              .order('phase');
-            
-            if (anyAtoms && anyAtoms.length > 0) {
-              console.log(`[Learn] ✓ Found ${anyAtoms.length} atoms (any archetype)`);
-              // Use the first set we find
-              buildLessonFromAtoms(coreLesson, anyAtoms);
-              return;
-            }
-
-            // Try fallback archetypes for this tone
-            const fallbacks = ARCHETYPE_FALLBACKS[archetype] || [];
-            for (const fallbackArchetype of fallbacks) {
-              const { data: fallbackAtoms } = await supabase
-                .from('lesson_atoms')
-                .select('phase, content, archetype')
-                .eq('core_lesson_id', coreLesson.id)
-                .eq('archetype', fallbackArchetype)
-                .order('phase');
-
-              if (fallbackAtoms && fallbackAtoms.length > 0) {
-                console.log(
-                  `[Learn] ⚠️ Using fallback archetype: ${fallbackArchetype} (${tone} tone)`
-                );
-                buildLessonFromAtoms(coreLesson, fallbackAtoms);
-                return;
-              }
-            }
-
-            // No atoms at all - use placeholder
-            state.lesson = createPlaceholderLesson(dayNumber);
-            state.isLoading = false;
-            clearTimeout(loadingTimeout);
-            updateUI();
-            renderPhase(state.lesson.phases[0]);
-            return;
-          }
-
-          console.log(`[Learn] ✓ Loaded ${atoms.length} atoms for archetype ${archetype}`);
-
-          // Step 3: Build lesson from atoms
-          buildLessonFromAtoms(coreLesson, atoms);
-        } catch (error) {
-          console.error('[Learn] Error loading lesson:', error);
-          showToast('Error loading lesson. Using placeholder.');
-          state.lesson = createPlaceholderLesson(dayNumber);
-          state.isLoading = false;
-          clearTimeout(loadingTimeout);
-          
-          // ═══════════════════════════════════════════════════════════════════
-          // LOAD VISUAL ASSETS FOR THIS LESSON (backgrounds, props, Kelly poses)
-          // ═══════════════════════════════════════════════════════════════════
-          if (kellyVisualSystem) {
-            kellyVisualSystem.loadLesson(state.dayNumber).catch(e => 
-              console.warn('[Learn] Visual assets not available for day', state.dayNumber, e.message)
-            );
-          }
-          
-          updateUI();
-          renderPhase(state.lesson.phases[0]);
         }
-      }
-
-      // ═══════════════════════════════════════════════════════════════════
-      // BUILD LESSON FROM ATOMS
-      // ═══════════════════════════════════════════════════════════════════
-      function buildLessonFromAtoms(coreLesson, atoms) {
-        // Map phase names to types
-        // Database actually uses: Hook, Fact1, Fact2, Fact3, Wisdom
-        // Phase order: Hook (engaging intro) → Q1 → Q2 → Q3 → Wisdom (complete)
-        const phaseTypeMap = {
-          // Hook = The engaging intro (phase 1 after welcome)
-          Hook: 'hook',
-          hook: 'hook',
-          welcome: 'welcome',
-          // Fact phases = Question/interactive phases
-          Fact1: 'question',
-          Fact2: 'question', 
-          Fact3: 'question',
-          fact1: 'question',
-          fact2: 'question',
-          fact3: 'question',
-          // Legacy q1/q2/q3 format
-          q1: 'question',
-          q2: 'question',
-          q3: 'question',
-          // Wisdom = Conclusion phase
-          Wisdom: 'wisdom',
-          wisdom: 'wisdom',
-          // Other possible phases
-          teaching: 'welcome',
-          practice: 'question',
-          reflection: 'wisdom'
-        };
-
-        // Build phases array (with null safety)
-        console.log(`[Learn] Building lesson from ${atoms.length} atoms:`);
-        
-        const phases = atoms.map((atom, index) => {
-          // Null safety: ensure content exists
-          const content = atom.content || {};
-          const phaseType = phaseTypeMap[atom.phase] || 'welcome';
-          
-          // Debug: log what we're getting from each atom
-          console.log(`[Learn] Atom ${index + 1}: phase="${atom.phase}" → type="${phaseType}"`);
-          console.log(`[Learn]   content keys: ${Object.keys(content).join(', ') || 'EMPTY'}`);
-          if (content.script) console.log(`[Learn]   script: ${content.script.substring(0, 50)}...`);
-          if (content.options) console.log(`[Learn]   options: ${content.options.length} choices`);
-
-          return {
-            order: index + 1,
-            type: phaseType,
-            name:
-              atom.phase === 'welcome'
-                ? 'Welcome'
-                : atom.phase === 'wisdom'
-                  ? 'Wisdom'
-                  : atom.phase.toUpperCase(),
-            text: content.script || content.text || 'Content loading...',
-            hint: content.prompt || null,
-            // Parse options - format is ["A: text", "B: text", "C: text"]
-            // with responses as {"A": "response", "B": "response", "C": "response"}
-            choices:
-              content.options && Array.isArray(content.options)
-                ? content.options.map((opt, i) => {
-                    // Option format: "A: Does it illuminate..." or just "Does it illuminate..."
-                    const letter = String.fromCharCode(65 + i); // A, B, C
-                    let text = opt;
-                    
-                    // Strip "A: " prefix if present
-                    if (typeof opt === 'string' && opt.match(/^[A-C]:\s*/)) {
-                      text = opt.replace(/^[A-C]:\s*/, '');
-                    } else if (typeof opt === 'object' && opt.text) {
-                      text = opt.text;
-                    }
-                    
-                    // Get response from responses object
-                    const response = content.responses?.[letter] || '';
-                    
-                    return { letter, text, response };
-                  })
-                : null
-          };
-        });
-
-        // Build complete lesson object
-        state.lesson = {
-          dayNumber: state.dayNumber,
-          topic: coreLesson.topic,
-          topicEmoji: getTopicEmoji(coreLesson.topic),
-          universalTruth: coreLesson.universal_truth,
-          phases: phases
-        };
-
-        console.log(`[Learn] ✅ Lesson built: ${phases.length} phases`);
-        
-        // ⚡ CACHE for instant future loads
-        cacheLesson(state.dayNumber, state.variants.tone || 'curious', state.lesson);
-
-        // Clear loading state and timeout
-        state.isLoading = false;
-        state.startTime = Date.now(); // Track lesson start time
-        if (loadingTimeout) {
-          clearTimeout(loadingTimeout);
-          loadingTimeout = null;
-        }
-
-        // ═══════════════════════════════════════════════════════════════════
-        // LOAD VISUAL ASSETS FOR THIS LESSON (backgrounds, props, Kelly poses)
-        // ═══════════════════════════════════════════════════════════════════
-        if (kellyVisualSystem) {
-          console.log('[Learn] 🎨 Loading visual assets for day', state.dayNumber);
-          kellyVisualSystem.loadLesson(state.dayNumber)
-            .then(() => console.log('[Learn] 🎨 Visual assets loaded for day', state.dayNumber))
-            .catch(e => console.warn('[Learn] Visual assets not available for day', state.dayNumber, e.message));
-        }
-
-        // Update UI and render first phase
-        updateUI();
-        renderPhase(state.lesson.phases[0]);
-      }
-
-      // ═══════════════════════════════════════════════════════════════════
-      // TOPIC EMOJI MAPPING
-      // ═══════════════════════════════════════════════════════════════════
-      function getTopicEmoji(topic) {
-        const emojiMap = {
-          // Nature & Science
-          Leaves: '🍃',
-          Water: '💧',
-          Clouds: '☁️',
-          Light: '💡',
-          Sound: '🔊',
-          Seeds: '🌱',
-          Stars: '⭐',
-          Energy: '⚡',
-          Growth: '🌿',
-          Colors: '🎨',
-          Patterns: '🔷',
-
-          // Life Skills
-          Friendship: '🤝',
-          Kindness: '💝',
-          Listening: '👂',
-          Patience: '⏳',
-          Gratitude: '🙏',
-          Courage: '🦁',
-          Curiosity: '🔍',
-          Balance: '⚖️',
-          Rest: '😴',
-
-          // Cognitive
-          Memory: '🧠',
-          Time: '⏰',
-          Change: '🔄',
-          Questions: '❓',
-          Imagination: '💭',
-          Stories: '📖',
-          Music: '🎵',
-
-          // Citizenship (legacy)
-          Citizenship: '🏛️'
-        };
-
-        return emojiMap[topic] || '📚';
-      }
-
-      // ═══════════════════════════════════════════════════════════════════
-      // PLACEHOLDER LESSON (fallback when no data)
-      // ═══════════════════════════════════════════════════════════════════
-      function createPlaceholderLesson(day) {
-        const topics = [
-          'Curiosity',
-          'Kindness',
-          'Creativity',
-          'Courage',
-          'Patience',
-          'Gratitude',
-          'Honesty',
-          'Empathy',
-          'Perseverance',
-          'Wisdom'
-        ];
-        const topic = topics[(day - 1) % topics.length];
-
-        return {
-          dayNumber: day,
-          topic: topic,
-          topicEmoji: '📚',
-          phases: [
-            {
-              order: 1,
-              type: 'welcome',
-              name: 'Welcome',
-              text: `Welcome! Today's lesson on ${topic} is being prepared. Check back soon!`,
-              hint: null,
-              choices: null
-            },
-            {
-              order: 2,
-              type: 'wisdom',
-              name: 'Wisdom',
-              text: `${topic} is a journey of continuous learning. We're creating something special for you.`,
-              hint: null,
-              choices: null
-            }
-          ]
-        };
       }
 
       // ═══════════════════════════════════════════════════════════════════
@@ -4525,19 +4094,8 @@
         // This sets background, Kelly pose, props based on phase type
         // ═══════════════════════════════════════════════════════════════
         if (kellyVisualSystem) {
-          // Map phase types to visual system phases
-          // For questions, we track Q1/Q2/Q3 based on the question index in the lesson
-          let visualPhase = 'welcome';
-          if (phase.type === 'welcome') visualPhase = 'welcome';
-          else if (phase.type === 'hook') visualPhase = 'hook';
-          else if (phase.type === 'question') {
-            // Find which question number this is (1, 2, or 3)
-            const questionPhases = state.lesson?.phases?.filter(p => p.type === 'question') || [];
-            const questionIndex = questionPhases.findIndex(p => p === phase);
-            visualPhase = `q${Math.max(1, questionIndex + 1)}`; // q1, q2, or q3
-          }
-          else if (phase.type === 'wisdom') visualPhase = 'wisdom';
-          else if (phase.type === 'complete') visualPhase = 'complete';
+          // Use pre-calculated visual phase from Lesson System (e.g. 'q1', 'hook')
+          const visualPhase = phase.visualPhase || phase.type;
           
           kellyVisualSystem.setPhase(visualPhase, state.lesson).catch(e => 
             console.warn('[Visual] Phase transition error:', e.message)
@@ -4549,15 +4107,8 @@
         // Load phase-specific image showing Kelly in the lesson environment
         // ═══════════════════════════════════════════════════════════════
         if (kellyAvatar && kellyAvatar.loadPhaseVisual && state.dayNumber) {
-          // Map phase type to phase file name
-          let phaseFile = 'hook';
-          if (phase.type === 'question') {
-            const questionPhases = state.lesson?.phases?.filter(p => p.type === 'question') || [];
-            const questionIndex = questionPhases.findIndex(p => p === phase);
-            phaseFile = `q${Math.max(1, questionIndex + 1)}`;
-          } else if (phase.type === 'wisdom' || phase.type === 'complete') {
-            phaseFile = 'wisdom';
-          }
+          // Use uniform visual phase mapping
+          const phaseFile = phase.visualPhase || phase.type;
           kellyAvatar.loadPhaseVisual(state.dayNumber, phaseFile);
         }
         
