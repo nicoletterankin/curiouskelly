@@ -162,6 +162,15 @@ class ChatOverlay {
   }
   
   /**
+   * Set the current lesson day
+   */
+  setLessonDay(dayNumber) {
+    this.currentLessonDay = dayNumber;
+    this.options.lessonDay = dayNumber;
+    console.log('[ChatOverlay] Day set to:', dayNumber);
+  }
+  
+  /**
    * Load real comments from Supabase
    */
   async _loadDatabaseComments() {
