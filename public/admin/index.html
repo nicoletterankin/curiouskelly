@@ -1,0 +1,615 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission Control — Curious Kelly</title>
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Instrument+Sans:wght@400;500;600;700&family=Newsreader:ital,wght@0,400;0,500;1,400&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-primary: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-elevated: #18181b;
+            --bg-card: #1c1c1f;
+            --text-primary: #fafafa;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --accent-kelly: #d4a574;
+            --accent-blue: #87ceeb;
+            --accent-primary: #3b82f6;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --error: #ef4444;
+            --border-color: #27272a;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: 'Instrument Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--bg-primary);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+
+        /* Header */
+        header {
+            background: linear-gradient(135deg, var(--accent-kelly) 0%, #c4956a 100%);
+            padding: 32px 24px;
+            text-align: center;
+            position: relative;
+        }
+
+        header::after {
+            content: '';
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-kelly), var(--accent-blue), var(--accent-kelly));
+        }
+
+        .header-sparkle {
+            font-size: 3rem;
+            margin-bottom: 12px;
+        }
+
+        header h1 {
+            font-family: 'Newsreader', Georgia, serif;
+            font-size: 2.2rem;
+            font-weight: 400;
+            color: white;
+            margin-bottom: 4px;
+        }
+
+        header p {
+            color: rgba(255,255,255,0.85);
+            font-size: 1rem;
+        }
+
+        /* Main */
+        main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 32px 24px 60px;
+        }
+
+        /* Welcome */
+        .welcome-card {
+            background: linear-gradient(135deg, rgba(212, 165, 116, 0.15) 0%, rgba(135, 206, 235, 0.1) 100%);
+            border: 1px solid var(--accent-kelly);
+            border-radius: 16px;
+            padding: 24px;
+            margin-bottom: 32px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+
+        .welcome-avatar {
+            width: 64px;
+            height: 64px;
+            border-radius: 50%;
+            background: var(--accent-kelly);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 2rem;
+            flex-shrink: 0;
+        }
+
+        .welcome-text h2 {
+            font-family: 'Newsreader', Georgia, serif;
+            font-size: 1.4rem;
+            margin-bottom: 4px;
+        }
+
+        .welcome-text p {
+            color: var(--text-secondary);
+        }
+
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+            transition: all 0.2s;
+        }
+
+        .stat-card:hover {
+            border-color: var(--accent-kelly);
+            transform: translateY(-2px);
+        }
+
+        .stat-icon {
+            font-size: 2rem;
+            margin-bottom: 8px;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--accent-kelly);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        /* Section Title */
+        .section-title {
+            font-family: 'Newsreader', Georgia, serif;
+            font-size: 1.3rem;
+            margin-bottom: 16px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        /* Portal Grid */
+        .portal-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+
+        .portal-card {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            text-decoration: none;
+            color: var(--text-primary);
+            transition: all 0.25s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .portal-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+            background: var(--card-accent, var(--accent-kelly));
+            transform: scaleX(0);
+            transition: transform 0.25s;
+        }
+
+        .portal-card:hover {
+            border-color: var(--card-accent, var(--accent-kelly));
+            transform: translateY(-4px);
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+        }
+
+        .portal-card:hover::before {
+            transform: scaleX(1);
+        }
+
+        .portal-icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+
+        .portal-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 6px;
+        }
+
+        .portal-desc {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            line-height: 1.5;
+        }
+
+        .portal-badge {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .badge-new {
+            background: rgba(34, 197, 94, 0.15);
+            color: var(--success);
+        }
+
+        .badge-live {
+            background: rgba(59, 130, 246, 0.15);
+            color: var(--accent-primary);
+        }
+
+        .badge-count {
+            background: rgba(245, 158, 11, 0.15);
+            color: var(--warning);
+        }
+
+        /* Quick Actions */
+        .quick-actions {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            margin-bottom: 40px;
+        }
+
+        .action-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: 1px solid var(--border-color);
+            background: var(--bg-elevated);
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+
+        .action-btn:hover {
+            background: var(--bg-card);
+            border-color: var(--accent-kelly);
+            color: var(--text-primary);
+        }
+
+        .action-btn.primary {
+            background: var(--accent-kelly);
+            border-color: var(--accent-kelly);
+            color: #0a0a0b;
+        }
+
+        .action-btn.primary:hover {
+            background: #c4956a;
+        }
+
+        /* System Status */
+        .status-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .status-item {
+            background: var(--bg-elevated);
+            border-radius: 8px;
+            padding: 12px 16px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .status-name {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .status-indicator {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status-dot.ok { background: var(--success); }
+        .status-dot.warning { background: var(--warning); }
+        .status-dot.error { background: var(--error); }
+
+        /* Footer */
+        footer {
+            text-align: center;
+            padding: 32px 24px;
+            border-top: 1px solid var(--border-color);
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+
+        footer a {
+            color: var(--accent-kelly);
+            text-decoration: none;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            header { padding: 24px 16px; }
+            header h1 { font-size: 1.8rem; }
+            main { padding: 24px 16px; }
+            .welcome-card { flex-direction: column; text-align: center; }
+            .portal-grid { grid-template-columns: 1fr; }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="header-sparkle">✨</div>
+        <h1>Mission Control</h1>
+        <p>Curious Kelly Admin Portal</p>
+    </header>
+
+    <main>
+        <div class="welcome-card">
+            <div class="welcome-avatar">👋</div>
+            <div class="welcome-text">
+                <h2>Welcome back, Team!</h2>
+                <p>Everything you need to manage Curious Kelly — no gates, no friction, just get things done.</p>
+            </div>
+        </div>
+
+        <!-- Live Stats -->
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-icon">📚</div>
+                <div class="stat-value" id="stat-lessons">365</div>
+                <div class="stat-label">Lessons</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">👥</div>
+                <div class="stat-value" id="stat-users">-</div>
+                <div class="stat-label">Users</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">📬</div>
+                <div class="stat-value" id="stat-submissions">-</div>
+                <div class="stat-label">Submissions</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-icon">🎬</div>
+                <div class="stat-value" id="stat-videos">-</div>
+                <div class="stat-label">Videos</div>
+            </div>
+        </div>
+
+        <!-- Quick Actions -->
+        <h3 class="section-title">⚡ Quick Actions</h3>
+        <div class="quick-actions">
+            <a href="/learn" class="action-btn primary">🎯 Start Lesson</a>
+            <a href="/admin/submissions.html" class="action-btn">📬 View Submissions</a>
+            <a href="/admin/affiliates.html" class="action-btn">🤝 Affiliates</a>
+            <a href="/kelly-hair-reference-for-arif.html" class="action-btn">🎨 Kelly Specs</a>
+            <a href="/api/health" class="action-btn" target="_blank">🏥 API Health</a>
+            <a href="/curriculum" class="action-btn">📖 Curriculum</a>
+        </div>
+
+        <!-- Content Management -->
+        <h3 class="section-title">📋 Content & Assets</h3>
+        <div class="portal-grid">
+            <a href="/admin/submissions.html" class="portal-card" style="--card-accent: #f59e0b;">
+                <span class="portal-badge badge-count" id="submissions-badge">0 new</span>
+                <div class="portal-icon">📬</div>
+                <div class="portal-title">Submissions</div>
+                <div class="portal-desc">View contact form submissions, uploaded files, and respond to inquiries.</div>
+            </a>
+            
+            <a href="/curriculum" class="portal-card" style="--card-accent: #3b82f6;">
+                <span class="portal-badge badge-live">Live</span>
+                <div class="portal-icon">📚</div>
+                <div class="portal-title">Lesson Library</div>
+                <div class="portal-desc">Browse all 365 lessons, view content, and check lesson status.</div>
+            </a>
+            
+            <a href="/kelly-hair-reference-for-arif.html" class="portal-card" style="--card-accent: #a855f7;">
+                <div class="portal-icon">🎨</div>
+                <div class="portal-title">Kelly Character Specs</div>
+                <div class="portal-desc">Hair, sweater, colors — the canonical visual reference for Kelly.</div>
+            </a>
+            
+            <a href="/admin/affiliates.html" class="portal-card" style="--card-accent: #22c55e;">
+                <div class="portal-icon">🤝</div>
+                <div class="portal-title">Affiliate Program</div>
+                <div class="portal-desc">Manage affiliates, view referrals, and track commissions.</div>
+            </a>
+        </div>
+
+        <!-- Analytics & Business -->
+        <h3 class="section-title">📊 Analytics & Business</h3>
+        <div class="portal-grid">
+            <a href="/pricing" class="portal-card" style="--card-accent: #10b981;">
+                <div class="portal-icon">💰</div>
+                <div class="portal-title">Pricing & Plans</div>
+                <div class="portal-desc">View current pricing, subscription tiers, and payment options.</div>
+            </a>
+            
+            <a href="/commons" class="portal-card" style="--card-accent: #06b6d4;">
+                <div class="portal-icon">🌍</div>
+                <div class="portal-title">Learner Commons</div>
+                <div class="portal-desc">Community insights and collective learning data.</div>
+            </a>
+            
+            <a href="/about" class="portal-card" style="--card-accent: #8b5cf6;">
+                <div class="portal-icon">✨</div>
+                <div class="portal-title">About & Mission</div>
+                <div class="portal-desc">Our story, mission, and the team behind Curious Kelly.</div>
+            </a>
+            
+            <a href="/newsroom" class="portal-card" style="--card-accent: #ec4899;">
+                <div class="portal-icon">📰</div>
+                <div class="portal-title">Newsroom</div>
+                <div class="portal-desc">Press materials, announcements, and media resources.</div>
+            </a>
+        </div>
+
+        <!-- System Status -->
+        <h3 class="section-title">🖥️ System Status</h3>
+        <div class="status-grid">
+            <div class="status-item">
+                <span class="status-name">API</span>
+                <span class="status-indicator">
+                    <span class="status-dot" id="status-api"></span>
+                    <span id="status-api-text">Checking...</span>
+                </span>
+            </div>
+            <div class="status-item">
+                <span class="status-name">Database</span>
+                <span class="status-indicator">
+                    <span class="status-dot" id="status-db"></span>
+                    <span id="status-db-text">Checking...</span>
+                </span>
+            </div>
+            <div class="status-item">
+                <span class="status-name">Email</span>
+                <span class="status-indicator">
+                    <span class="status-dot" id="status-email"></span>
+                    <span id="status-email-text">Checking...</span>
+                </span>
+            </div>
+            <div class="status-item">
+                <span class="status-name">Storage</span>
+                <span class="status-indicator">
+                    <span class="status-dot" id="status-storage"></span>
+                    <span id="status-storage-text">Checking...</span>
+                </span>
+            </div>
+        </div>
+
+        <!-- External Links -->
+        <h3 class="section-title" style="margin-top: 40px;">🔗 External Tools</h3>
+        <div class="quick-actions">
+            <a href="https://supabase.com/dashboard" class="action-btn" target="_blank">🗄️ Supabase</a>
+            <a href="https://vercel.com/dashboard" class="action-btn" target="_blank">▲ Vercel</a>
+            <a href="https://resend.com/emails" class="action-btn" target="_blank">📧 Resend</a>
+            <a href="https://dashboard.stripe.com" class="action-btn" target="_blank">💳 Stripe</a>
+            <a href="https://github.com/nicoletterankin/curiouskelly" class="action-btn" target="_blank">🐙 GitHub</a>
+        </div>
+    </main>
+
+    <footer>
+        <p>✨ Curious Kelly Mission Control</p>
+        <p style="margin-top: 8px;">
+            Built with love for <strong>Nicolette</strong> & <strong>Picky Nicky</strong> 💛
+        </p>
+        <p style="margin-top: 12px; font-size: 0.8rem;">
+            <a href="/">← Back to Site</a> • <a href="mailto:hello@curiouskelly.com">hello@curiouskelly.com</a>
+        </p>
+    </footer>
+
+    <script>
+        // Supabase config
+        const SUPABASE_URL = 'https://trmaeodthlywcjwcayvs.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InRybWFlb2R0aGx5d2Nqd2NheXZzIiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI4MjU1NjAsImV4cCI6MjA0ODQwMTU2MH0.v90GYZ138AGELnxLF2kFLer8JofeOmr6wNqZArJz5Lk';
+
+        // Check API health
+        async function checkHealth() {
+            try {
+                const response = await fetch('/api/health');
+                const data = await response.json();
+                
+                // API status
+                const apiDot = document.getElementById('status-api');
+                const apiText = document.getElementById('status-api-text');
+                apiDot.className = 'status-dot ok';
+                apiText.textContent = 'Healthy';
+                
+                // Database status
+                const dbDot = document.getElementById('status-db');
+                const dbText = document.getElementById('status-db-text');
+                if (data.checks?.database?.status === 'ok') {
+                    dbDot.className = 'status-dot ok';
+                    dbText.textContent = data.checks.database.message || 'Connected';
+                } else {
+                    dbDot.className = 'status-dot error';
+                    dbText.textContent = 'Error';
+                }
+                
+                // Email status
+                const emailDot = document.getElementById('status-email');
+                const emailText = document.getElementById('status-email-text');
+                if (data.checks?.email?.status === 'ok') {
+                    emailDot.className = 'status-dot ok';
+                    emailText.textContent = 'Configured';
+                } else {
+                    emailDot.className = 'status-dot error';
+                    emailText.textContent = 'Error';
+                }
+                
+                // Storage (assume ok if API ok)
+                const storageDot = document.getElementById('status-storage');
+                const storageText = document.getElementById('status-storage-text');
+                storageDot.className = 'status-dot ok';
+                storageText.textContent = 'Active';
+                
+            } catch (error) {
+                console.error('Health check failed:', error);
+                document.getElementById('status-api').className = 'status-dot error';
+                document.getElementById('status-api-text').textContent = 'Error';
+            }
+        }
+
+        // Load stats
+        async function loadStats() {
+            try {
+                // Users count
+                const usersRes = await fetch(`${SUPABASE_URL}/rest/v1/users?select=id`, {
+                    headers: { 'apikey': SUPABASE_ANON_KEY }
+                });
+                if (usersRes.ok) {
+                    const users = await usersRes.json();
+                    document.getElementById('stat-users').textContent = users.length;
+                }
+
+                // Submissions count
+                const subRes = await fetch(`${SUPABASE_URL}/rest/v1/contact_submissions?select=id,status`, {
+                    headers: { 'apikey': SUPABASE_ANON_KEY }
+                });
+                if (subRes.ok) {
+                    const subs = await subRes.json();
+                    document.getElementById('stat-submissions').textContent = subs.length;
+                    const newCount = subs.filter(s => s.status === 'new').length;
+                    if (newCount > 0) {
+                        document.getElementById('submissions-badge').textContent = `${newCount} new`;
+                    }
+                }
+
+                // Videos count
+                const videosRes = await fetch(`${SUPABASE_URL}/rest/v1/kelly_video_assets?select=id`, {
+                    headers: { 'apikey': SUPABASE_ANON_KEY }
+                });
+                if (videosRes.ok) {
+                    const videos = await videosRes.json();
+                    document.getElementById('stat-videos').textContent = videos.length;
+                }
+
+            } catch (error) {
+                console.error('Failed to load stats:', error);
+            }
+        }
+
+        // Initialize
+        checkHealth();
+        loadStats();
+    </script>
+</body>
+</html>
+
