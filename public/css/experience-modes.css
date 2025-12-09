@@ -1,0 +1,541 @@
+/**
+ * ✨ Curious Kelly — Experience Modes
+ * 
+ * Focus Mode: Clean, distraction-free learning
+ * Explorer Mode: All controls visible for power users
+ * 
+ * @version 1.0.0
+ * @date December 2025
+ */
+
+/* ============================================
+   MODE TOGGLE COMPONENT
+   ============================================ */
+
+.mode-toggle {
+  position: fixed;
+  bottom: var(--space-6);
+  right: var(--space-6);
+  z-index: var(--z-fixed);
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-full);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  color: var(--text-secondary);
+  cursor: pointer;
+  transition: all var(--duration-normal) var(--ease-default);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  box-shadow: var(--shadow-lg);
+}
+
+.mode-toggle:hover {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
+  background: var(--bg-surface);
+  transform: translateY(-2px);
+  box-shadow: var(--shadow-xl);
+}
+
+.mode-toggle-icon {
+  width: 20px;
+  height: 20px;
+  transition: transform var(--duration-slow) var(--ease-bounce);
+}
+
+.mode-toggle:hover .mode-toggle-icon {
+  transform: rotate(15deg);
+}
+
+.mode-toggle-label {
+  font-weight: 500;
+  letter-spacing: var(--tracking-wide);
+}
+
+/* Mode indicator dot */
+.mode-toggle::before {
+  content: '';
+  width: 8px;
+  height: 8px;
+  border-radius: var(--radius-full);
+  background: var(--kelly-blue);
+  transition: background var(--duration-normal);
+}
+
+[data-mode="explorer"] .mode-toggle::before {
+  background: var(--purple);
+}
+
+/* ============================================
+   FOCUS MODE — Default Experience
+   ============================================ */
+
+[data-mode="focus"] {
+  /* Hide all explorer controls by default */
+  --controls-opacity: 0;
+  --controls-pointer-events: none;
+  --controls-transform: translateY(10px);
+}
+
+/* Explorer-only elements completely hidden in Focus Mode */
+[data-mode="focus"] .explorer-only,
+[data-mode="focus"] .control-panel,
+[data-mode="focus"] .archetype-selector,
+[data-mode="focus"] .display-mode-toggle,
+[data-mode="focus"] .age-variant-control,
+[data-mode="focus"] .language-control,
+[data-mode="focus"] .tone-control,
+[data-mode="focus"] .difficulty-control,
+[data-mode="focus"] .experience-toggle,
+[data-mode="focus"] .kelly-controls {
+  opacity: 0 !important;
+  pointer-events: none !important;
+  transform: scale(0.95) !important;
+  transition: 
+    opacity var(--duration-normal) var(--ease-out),
+    transform var(--duration-normal) var(--ease-out);
+}
+
+/* Show controls on hover in Focus Mode (discoverability) */
+[data-mode="focus"]:hover .control-panel,
+[data-mode="focus"]:focus-within .control-panel {
+  opacity: 0.3;
+  transform: scale(1);
+}
+
+[data-mode="focus"] .control-panel:hover {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+}
+
+/* Focus Mode: Simplified phase navigation */
+[data-mode="focus"] .phase-rail {
+  transform: scale(0.9);
+  opacity: 0.8;
+}
+
+[data-mode="focus"] .phase-rail:hover {
+  transform: scale(1);
+  opacity: 1;
+}
+
+/* Focus Mode: Clean video area */
+[data-mode="focus"] .kelly-frame {
+  /* Full focus on Kelly */
+}
+
+[data-mode="focus"] .bottom-controls {
+  /* Simplified: just play/pause and progress */
+}
+
+/* Focus Mode: Subtle stats */
+[data-mode="focus"] .stats-row,
+[data-mode="focus"] .viewer-badge {
+  opacity: 0.6;
+  transform: scale(0.95);
+  transition: all var(--duration-normal);
+}
+
+[data-mode="focus"] .stats-row:hover,
+[data-mode="focus"] .viewer-badge:hover {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* ============================================
+   EXPLORER MODE — Full Control
+   ============================================ */
+
+[data-mode="explorer"] {
+  --controls-opacity: 1;
+  --controls-pointer-events: auto;
+  --controls-transform: translateY(0);
+}
+
+/* All controls visible in Explorer Mode */
+[data-mode="explorer"] .explorer-only,
+[data-mode="explorer"] .control-panel,
+[data-mode="explorer"] .archetype-selector,
+[data-mode="explorer"] .display-mode-toggle,
+[data-mode="explorer"] .age-variant-control,
+[data-mode="explorer"] .language-control,
+[data-mode="explorer"] .tone-control,
+[data-mode="explorer"] .difficulty-control,
+[data-mode="explorer"] .experience-toggle,
+[data-mode="explorer"] .kelly-controls {
+  opacity: 1 !important;
+  pointer-events: auto !important;
+  transform: scale(1) !important;
+}
+
+/* Explorer Mode: Enhanced phase rail */
+[data-mode="explorer"] .phase-rail {
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  padding: var(--space-4);
+}
+
+/* Explorer Mode: Stats always visible */
+[data-mode="explorer"] .stats-row,
+[data-mode="explorer"] .viewer-badge {
+  opacity: 1;
+  transform: scale(1);
+}
+
+/* Explorer Mode: Show mode badge */
+[data-mode="explorer"]::after {
+  content: '🔬 Explorer Mode';
+  position: fixed;
+  top: var(--space-4);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--space-2) var(--space-4);
+  background: var(--purple);
+  color: white;
+  font-family: var(--font-body);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: var(--tracking-wide);
+  text-transform: uppercase;
+  border-radius: var(--radius-full);
+  z-index: var(--z-fixed);
+  animation: slideDown var(--duration-slow) var(--ease-bounce);
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateX(-50%) translateY(-20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateX(-50%) translateY(0);
+  }
+}
+
+/* ============================================
+   CONTROL PANEL COMPONENT
+   ============================================ */
+
+.control-panel {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  padding: var(--space-3);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  transition: all var(--duration-normal) var(--ease-default);
+}
+
+.control-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  background: var(--bg-surface);
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--duration-fast) var(--ease-default);
+}
+
+.control-btn:hover {
+  background: var(--bg-hover);
+  color: var(--text-primary);
+  border-color: var(--border-default);
+}
+
+.control-btn.active {
+  background: var(--kelly-blue-glow);
+  color: var(--kelly-blue);
+  border-color: var(--kelly-blue);
+}
+
+.control-btn-icon {
+  font-size: 1.1em;
+}
+
+/* ============================================
+   ARCHETYPE SELECTOR (Explorer Mode)
+   ============================================ */
+
+.archetype-selector {
+  position: absolute;
+  right: var(--space-6);
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: var(--z-dropdown);
+}
+
+.archetype-btn {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-3) var(--space-4);
+  background: rgba(0, 0, 0, 0.7);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  color: var(--text-primary);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+  backdrop-filter: blur(12px);
+}
+
+.archetype-btn:hover {
+  background: rgba(0, 0, 0, 0.9);
+  border-color: var(--border-strong);
+}
+
+.archetype-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + var(--space-2));
+  min-width: 200px;
+  padding: var(--space-2);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-xl);
+  opacity: 0;
+  visibility: hidden;
+  transform: translateY(-10px);
+  transition: all var(--duration-fast) var(--ease-out);
+}
+
+.archetype-dropdown.open {
+  opacity: 1;
+  visibility: visible;
+  transform: translateY(0);
+}
+
+.archetype-option {
+  padding: var(--space-3) var(--space-4);
+  border-radius: var(--radius-lg);
+  color: var(--text-secondary);
+  font-size: var(--text-sm);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.archetype-option:hover {
+  background: var(--bg-surface);
+  color: var(--text-primary);
+}
+
+.archetype-option.selected {
+  background: var(--kelly-blue-glow);
+  color: var(--kelly-blue);
+}
+
+/* ============================================
+   DISPLAY MODE TOGGLE (Explorer Mode)
+   ============================================ */
+
+.display-mode-toggle {
+  display: flex;
+  gap: var(--space-1);
+  padding: var(--space-1);
+  background: var(--bg-deep);
+  border-radius: var(--radius-xl);
+}
+
+.display-mode-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-4);
+  background: transparent;
+  border: none;
+  border-radius: var(--radius-lg);
+  color: var(--text-muted);
+  font-family: var(--font-body);
+  font-size: var(--text-sm);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.display-mode-btn:hover {
+  color: var(--text-secondary);
+  background: var(--bg-surface);
+}
+
+.display-mode-btn.active {
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  box-shadow: var(--shadow-sm);
+}
+
+/* ============================================
+   KEYBOARD SHORTCUTS (Focus Mode reveals)
+   ============================================ */
+
+.keyboard-hint {
+  position: fixed;
+  bottom: var(--space-16);
+  left: 50%;
+  transform: translateX(-50%);
+  padding: var(--space-2) var(--space-4);
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--text-muted);
+  opacity: 0;
+  transition: opacity var(--duration-slow);
+  pointer-events: none;
+}
+
+[data-mode="focus"]:hover .keyboard-hint {
+  opacity: 0.7;
+}
+
+.keyboard-hint kbd {
+  display: inline-block;
+  padding: var(--space-1) var(--space-2);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-sm);
+  font-size: inherit;
+  margin: 0 var(--space-1);
+}
+
+/* ============================================
+   PROGRESS INDICATOR (Both Modes)
+   ============================================ */
+
+.lesson-progress {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 3px;
+  background: var(--bg-surface);
+  z-index: var(--z-sticky);
+}
+
+.lesson-progress-bar {
+  height: 100%;
+  background: linear-gradient(90deg, var(--kelly-blue), var(--purple));
+  transition: width var(--duration-slow) var(--ease-out);
+  box-shadow: 0 0 10px var(--kelly-blue-glow-strong);
+}
+
+/* ============================================
+   PHASE NAVIGATION (Both Modes)
+   ============================================ */
+
+.phase-nav {
+  display: flex;
+  gap: var(--space-2);
+  padding: var(--space-2);
+  background: var(--bg-elevated);
+  border-radius: var(--radius-2xl);
+  backdrop-filter: blur(12px);
+  border: 1px solid var(--border-default);
+}
+
+.phase-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: var(--radius-full);
+  background: var(--bg-surface);
+  border: 2px solid var(--border-default);
+  cursor: pointer;
+  transition: all var(--duration-fast);
+}
+
+.phase-dot:hover {
+  border-color: var(--kelly-blue);
+  transform: scale(1.2);
+}
+
+.phase-dot.active {
+  background: var(--kelly-blue);
+  border-color: var(--kelly-blue);
+  box-shadow: 0 0 12px var(--kelly-blue-glow-strong);
+}
+
+.phase-dot.completed {
+  background: var(--success);
+  border-color: var(--success);
+}
+
+/* ============================================
+   MOBILE ADAPTATIONS
+   ============================================ */
+
+@media (max-width: 768px) {
+  .mode-toggle {
+    bottom: var(--space-4);
+    right: var(--space-4);
+    padding: var(--space-2) var(--space-3);
+  }
+  
+  .mode-toggle-label {
+    display: none;
+  }
+  
+  .control-panel {
+    flex-direction: column;
+    padding: var(--space-2);
+  }
+  
+  .archetype-selector {
+    position: relative;
+    right: auto;
+    top: auto;
+    transform: none;
+  }
+  
+  [data-mode="explorer"]::after {
+    font-size: var(--text-xs);
+    padding: var(--space-1) var(--space-3);
+  }
+}
+
+/* ============================================
+   TRANSITION BETWEEN MODES
+   ============================================ */
+
+/* Smooth transition when switching modes */
+.mode-transition {
+  transition: 
+    opacity var(--duration-slow) var(--ease-default),
+    transform var(--duration-slow) var(--ease-bounce);
+}
+
+/* Flash animation when mode changes */
+@keyframes modeFlash {
+  0% {
+    background: transparent;
+  }
+  50% {
+    background: var(--kelly-blue-glow);
+  }
+  100% {
+    background: transparent;
+  }
+}
+
+.mode-changed {
+  animation: modeFlash var(--duration-slow) var(--ease-out);
+}
+
