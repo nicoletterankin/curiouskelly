@@ -3762,9 +3762,13 @@
       // Database has: The Scientist, The Survivor, The Explorer, etc.
       // ═══════════════════════════════════════════════════════════════════
       const TONE_TO_ARCHETYPE = {
-        curious: 'The Scientist', // Analytical, evidence-based
-        playful: 'The Explorer',  // Adventurous, discovery-focused
-        serious: 'The Survivor'   // Practical, real-world application
+        curious: 'The Scientist',   // ✅ HAS VIDEOS - Analytical, evidence-based
+        playful: 'The Explorer',    // ✅ HAS VIDEOS - Adventurous, discovery-focused
+        serious: 'The Rebel',       // ✅ HAS VIDEOS - Bold, practical (changed from Survivor)
+        friendly: 'The Explorer',   // ✅ HAS VIDEOS - Warm, discovery-focused
+        wise: 'The Scientist',      // ✅ HAS VIDEOS - Deep understanding
+        coach: 'The Rebel',         // ✅ HAS VIDEOS - Motivating, action-oriented
+        scholar: 'The Scientist'    // ✅ HAS VIDEOS - Academic, evidence-based
       };
 
       // Fallback archetypes if primary not found
@@ -5100,7 +5104,17 @@
         return goldenVideoElement;
       }
       
+      // Track currently playing video to prevent double-play
+      let currentPlayingVideoUrl = null;
+      
       function playGoldenVideo(videoUrl, onComplete) {
+        // Guard: Don't restart the same video that's already playing
+        if (currentPlayingVideoUrl === videoUrl) {
+          console.log(`[Golden] ⏭️ Video already playing, skipping duplicate call`);
+          return;
+        }
+        currentPlayingVideoUrl = videoUrl;
+        
         const video = initGoldenVideoPlayer();
         
         // Hide 2D avatar when video plays
@@ -5121,6 +5135,8 @@
         // Handle video events
         video.onended = () => {
           console.log('[Golden] Video ended');
+          // Reset tracking so next phase video can play
+          currentPlayingVideoUrl = null;
           // Fade out video
           video.style.opacity = '0';
           // Show 2D avatar again
@@ -5133,6 +5149,8 @@
         
         video.onerror = (e) => {
           console.error('[Golden] Video error:', e);
+          // Reset tracking so next phase can try
+          currentPlayingVideoUrl = null;
           // Fallback: show avatar and continue
           video.style.opacity = '0';
           if (avatar2D) {
@@ -5185,7 +5203,19 @@
         
         state.currentPhase++;
         if (state.currentPhase <= state.lesson.phases.length) {
-          renderPhase(state.lesson.phases[state.currentPhase - 1]);
+          const phase = state.lesson.phases[state.currentPhase - 1];
+          
+          // ═══════════════════════════════════════════════════════════════════
+          // CRITICAL: Play video on EVERY phase advance
+          // ═══════════════════════════════════════════════════════════════════
+          if (phase && phase.videoUrl) {
+            console.log(`[Golden] 🎬 Phase changed, playing: ${phase.videoUrl}`);
+            playGoldenVideo(phase.videoUrl, () => {
+              console.log('[Golden] ✅ Video finished for phase:', phase.type);
+            });
+          }
+          
+          renderPhase(phase);
         }
       }
 
@@ -6388,9 +6418,24 @@
         OptionsSystem.resetAll();
         OptionsSystem.hideAll();
 
-        // Update state and render
+        // Update state
         state.currentPhase = targetPhase;
-        renderPhase(state.lesson.phases[targetPhase - 1]);
+        
+        // Get the phase object
+        const phase = state.lesson.phases[targetPhase - 1];
+        
+        // ═══════════════════════════════════════════════════════════════════
+        // CRITICAL: Play video on EVERY phase navigation
+        // ═══════════════════════════════════════════════════════════════════
+        if (phase && phase.videoUrl) {
+          console.log(`[Golden] 🎬 Phase changed, playing: ${phase.videoUrl}`);
+          playGoldenVideo(phase.videoUrl, () => {
+            console.log('[Golden] ✅ Video finished for phase:', phase.type);
+          });
+        }
+        
+        // Render phase content (this handles captions, options, etc.)
+        renderPhase(phase);
         
         // Update navigation
         updatePhaseNavV2();
