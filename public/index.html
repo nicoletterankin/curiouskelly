@@ -226,6 +226,99 @@
             filter: brightness(1.05) contrast(1.1);
         }
 
+        /* ========================================
+           HERO KELLY VIDEO
+           ======================================== */
+        .hero-kelly-container {
+            position: relative;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+        }
+
+        .hero-kelly-video {
+            position: absolute;
+            width: auto;
+            height: 85%;
+            max-width: 90%;
+            object-fit: contain;
+            z-index: 3;
+            border-radius: 24px;
+            opacity: 0;
+            transition: opacity 0.6s ease;
+        }
+
+        .hero-kelly-video.loaded {
+            opacity: 1;
+        }
+
+        .hero-kelly-video.loaded + .hero-fallback-img {
+            opacity: 0;
+        }
+
+        .hero-fallback-img {
+            position: absolute;
+            max-width: 500px;
+            max-height: 90vh;
+            width: auto;
+            height: auto;
+            object-fit: contain;
+            z-index: 2;
+            transition: opacity 0.6s ease;
+        }
+
+        /* ========================================
+           SOCIAL PROOF
+           ======================================== */
+        .social-proof {
+            background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-color) 100%);
+            padding: 40px 48px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .trust-signals {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 48px;
+            flex-wrap: wrap;
+            max-width: var(--max-width);
+            margin: 0 auto;
+        }
+
+        .trust-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .trust-icon {
+            font-size: 1.3rem;
+        }
+
+        .trust-text {
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 768px) {
+            .trust-signals {
+                gap: 24px;
+            }
+            .trust-item {
+                font-size: 0.85rem;
+            }
+            .social-proof {
+                padding: 32px 24px;
+            }
+        }
+
         h1 {
             font-family: 'Newsreader', Georgia, serif;
             font-size: 4rem;
@@ -1933,30 +2026,77 @@
         </div>
 
         <div class="hero-right">
-            <img src="/assets/kelly/hero/kelly-hero.jpeg" alt="Kelly - Your AI Teacher" class="hero-image" loading="eager" fetchpriority="high" width="1116" height="2000" onerror="this.src='/images/kelly-homepage-hero.jpeg'" />
+            <!-- Kelly Hero Video with Image Fallback -->
+            <div class="hero-kelly-container">
+                <video 
+                    id="hero-kelly-video"
+                    class="hero-kelly-video"
+                    autoplay 
+                    loop 
+                    muted 
+                    playsinline
+                    poster="/assets/kelly/hero/kelly-hero.jpeg"
+                >
+                    <source src="https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/production/animations/day_001_hook.mp4" type="video/mp4">
+                </video>
+                <img 
+                    src="/assets/kelly/hero/kelly-hero.jpeg" 
+                    alt="Kelly - Your AI Teacher" 
+                    class="hero-image hero-fallback-img" 
+                    loading="eager" 
+                    fetchpriority="high" 
+                    width="1116" 
+                    height="2000" 
+                    onerror="this.src='/images/kelly-homepage-hero.jpeg'" 
+                />
+            </div>
+        </div>
+    </section>
+    
+    <!-- ========================================
+         SOCIAL PROOF - Trust Signals
+         ======================================== -->
+    <section class="social-proof">
+        <div class="trust-signals">
+            <div class="trust-item">
+                <span class="trust-icon">🔒</span>
+                <span class="trust-text">COPPA Compliant</span>
+            </div>
+            <div class="trust-item">
+                <span class="trust-icon">📚</span>
+                <span class="trust-text">365 Lessons</span>
+            </div>
+            <div class="trust-item">
+                <span class="trust-icon">🎓</span>
+                <span class="trust-text">Ages 5-102</span>
+            </div>
+            <div class="trust-item">
+                <span class="trust-icon">✨</span>
+                <span class="trust-text">Personalized for You</span>
+            </div>
         </div>
     </section>
 
     <!-- ========================================
-         TODAY'S LESSON
+         TODAY'S LESSON - Hero Card
          ======================================== -->
     <section class="today-lesson">
         <div class="section-header">
             <span class="section-label">Today's Topic</span>
-            <h2 id="today-topic">Loading today's lesson...</h2>
-            <p id="today-hook">"Curiosity is the spark"</p>
+            <h2 id="today-topic-hero" class="topic-skeleton">Discover something new</h2>
+            <p id="today-hook">"Curiosity is the spark that lights understanding"</p>
         </div>
 
         <!-- QUICK WIN 4: Make lesson card clickable -->
         <a href="/learn.html" class="lesson-card-link" style="text-decoration: none; color: inherit; display: block;">
             <div class="lesson-card">
                 <div class="lesson-thumbnail">
-                    <span class="lesson-day-badge" id="today-day-badge">Loading...</span>
+                    <span class="lesson-day-badge" id="today-day-badge-hero"></span>
                     <div class="lesson-thumbnail-text" id="today-thumbnail-text">Today's Lesson</div>
                 </div>
                 <div class="lesson-info">
                     <div class="lesson-meta">
-                        <span class="meta-item">📅 <span id="today-date-meta">Loading...</span></span>
+                        <span class="meta-item">📅 <span id="today-date-meta"></span></span>
                         <span class="meta-item">⏱️ 5 minutes</span>
                         <span class="meta-item">🆓 Free today</span>
                     </div>
@@ -2011,8 +2151,8 @@
                     <span class="today-icon">🎯</span>
                     <span>TODAY</span>
                 </div>
-                <div class="today-date" id="today-date">December 4, 2025 · Day 339</div>
-                <h3 class="today-topic" id="today-topic">Loading today's lesson...</h3>
+                <div class="today-date" id="today-date"></div>
+                <h3 class="today-topic" id="today-topic">Discover something new</h3>
                 <p class="today-truth" id="today-truth">Every day brings a new opportunity to learn something wonderful.</p>
                 
                 <div class="today-thumbnail" id="today-thumbnail">
@@ -2675,17 +2815,52 @@
             daysEl.innerHTML = html;
         }
 
+        // ========================================
+        // IMMEDIATE DATE/DAY INITIALIZATION (NO LOADING STATE)
+        // ========================================
+        function initImmediateUI() {
+            const todayNum = getTodayDayNumber();
+            const today = new Date();
+            const options = { month: 'long', day: 'numeric', year: 'numeric' };
+            const formattedDate = today.toLocaleDateString('en-US', options);
+            
+            // Update ALL date elements immediately (no "Loading...")
+            const dateEl = document.getElementById('today-date');
+            if (dateEl) dateEl.textContent = `${formattedDate} · Day ${todayNum}`;
+            
+            const dateMeta = document.getElementById('today-date-meta');
+            if (dateMeta) dateMeta.textContent = formattedDate;
+            
+            const dayBadge = document.getElementById('today-day-badge-hero');
+            if (dayBadge) dayBadge.textContent = `Day ${todayNum}`;
+        }
+
+        // Hero video initialization with fallback
+        function initHeroVideo() {
+            const video = document.getElementById('hero-kelly-video');
+            if (!video) return;
+            
+            // On successful load, show video and hide image
+            video.addEventListener('canplay', () => {
+                video.classList.add('loaded');
+                console.log('[Hero] ✅ Kelly video loaded');
+            });
+            
+            // On error, keep showing image fallback
+            video.addEventListener('error', () => {
+                console.log('[Hero] ⚠️ Video failed, showing image fallback');
+                video.style.display = 'none';
+            });
+            
+            // Force play (some browsers need this)
+            video.play().catch(() => {
+                console.log('[Hero] ⚠️ Autoplay blocked, showing image');
+            });
+        }
+
         // Load today's lesson
         async function loadTodaysLesson() {
             const todayNum = getTodayDayNumber();
-            const today = new Date();
-            
-            // Update date display
-            const dateEl = document.getElementById('today-date');
-            if (dateEl) {
-                const options = { month: 'long', day: 'numeric', year: 'numeric' };
-                dateEl.textContent = `${today.toLocaleDateString('en-US', options)} · Day ${todayNum}`;
-            }
             
             try {
                 // First try cache
@@ -2711,33 +2886,45 @@
                 }
             } catch (error) {
                 console.error('Error loading today\'s lesson:', error);
-                // Show fallback
-                const topicEl = document.getElementById('today-topic');
-                if (topicEl) {
-                    topicEl.textContent = 'Discover something new today';
-                }
+                // Fallback already shows "Discover something new" - no action needed
             }
         }
 
         // Display today's lesson in the card
         function displayTodaysLesson(lesson) {
+            // Main calendar card
             const topicEl = document.getElementById('today-topic');
             const truthEl = document.getElementById('today-truth');
             
             if (topicEl && lesson.topic) {
                 topicEl.textContent = lesson.topic;
+                topicEl.classList.remove('topic-skeleton');
             }
             
             if (truthEl && lesson.universal_truth) {
                 truthEl.textContent = lesson.universal_truth;
-            } else if (truthEl) {
-                truthEl.textContent = 'Every day brings a new opportunity to learn something wonderful.';
+            }
+            
+            // Hero section card
+            const heroTopicEl = document.getElementById('today-topic-hero');
+            if (heroTopicEl && lesson.topic) {
+                heroTopicEl.textContent = lesson.topic;
+                heroTopicEl.classList.remove('topic-skeleton');
             }
         }
 
         // Initialize calendar and today's lesson
         async function initDailyLesson() {
+            // IMMEDIATE: Set dates and day numbers right away
+            initImmediateUI();
+            
+            // IMMEDIATE: Try to play hero video
+            initHeroVideo();
+            
+            // Render calendar
             renderMiniCalendar();
+            
+            // Then load lesson content (async)
             await loadTodaysLesson();
         }
 
