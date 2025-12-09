@@ -2983,7 +2983,7 @@
           <span class="phase-label">🪝</span>
           <div class="phase-tooltip" id="tooltip-1">
             <span class="tooltip-title">The Hook</span>
-            <span class="tooltip-text">Loading...</span>
+            <span class="tooltip-text">✨ Preparing...</span>
           </div>
         </button>
         <div class="phase-connector-v"></div>
@@ -2992,7 +2992,7 @@
           <span class="phase-label">Q1</span>
           <div class="phase-tooltip" id="tooltip-2">
             <span class="tooltip-title">Question 1</span>
-            <span class="tooltip-text">Loading...</span>
+            <span class="tooltip-text">✨ Preparing...</span>
           </div>
         </button>
         <div class="phase-connector-v"></div>
@@ -3001,7 +3001,7 @@
           <span class="phase-label">Q2</span>
           <div class="phase-tooltip" id="tooltip-3">
             <span class="tooltip-title">Question 2</span>
-            <span class="tooltip-text">Loading...</span>
+            <span class="tooltip-text">✨ Preparing...</span>
           </div>
         </button>
         <div class="phase-connector-v"></div>
@@ -3010,7 +3010,7 @@
           <span class="phase-label">Q3</span>
           <div class="phase-tooltip" id="tooltip-4">
             <span class="tooltip-title">Question 3</span>
-            <span class="tooltip-text">Loading...</span>
+            <span class="tooltip-text">✨ Preparing...</span>
           </div>
         </button>
         <div class="phase-connector-v"></div>
@@ -3346,7 +3346,7 @@
         <span id="day-display" style="display: none;">December 2, 2025</span>
         <span id="topic-emoji" style="display: none;">🏛️</span>
         <span id="topic-name" style="display: none;">Citizenship</span>
-        <p id="speech-text" style="display: none;">Loading...</p>
+        <p id="speech-text" style="display: none;">✨ Preparing your lesson...</p>
         <p id="speech-hint" style="display: none;"></p>
         <div id="choices-container" style="display: none;"></div>
       </div>
@@ -4099,10 +4099,10 @@
 
           console.log(`[Learn] ✓ Core lesson loaded: ${coreLesson.topic}`);
 
-          // Step 2: Get lesson atoms for this archetype
+          // Step 2: Get lesson atoms for this archetype (including HD video URLs!)
           const { data: atoms, error: atomsError } = await supabase
             .from('lesson_atoms')
-            .select('phase, content')
+            .select('phase, content, hd_video_url, visual_url')
             .eq('core_lesson_id', coreLesson.id)
             .eq('archetype', archetype)
             .order('phase');
@@ -4127,7 +4127,7 @@
             console.log(`[Learn] Trying to load atoms without archetype filter...`);
             const { data: anyAtoms } = await supabase
               .from('lesson_atoms')
-              .select('phase, content, archetype')
+              .select('phase, content, archetype, hd_video_url, visual_url')
               .eq('core_lesson_id', coreLesson.id)
               .order('phase');
             
@@ -4143,7 +4143,7 @@
             for (const fallbackArchetype of fallbacks) {
               const { data: fallbackAtoms } = await supabase
                 .from('lesson_atoms')
-                .select('phase, content, archetype')
+                .select('phase, content, archetype, hd_video_url, visual_url')
                 .eq('core_lesson_id', coreLesson.id)
                 .eq('archetype', fallbackArchetype)
                 .order('phase');
@@ -4248,6 +4248,9 @@
                   : atom.phase.toUpperCase(),
             text: content.script || content.text || 'Content loading...',
             hint: content.prompt || null,
+            // 🎬 HD VIDEO URL - Golden Lesson Pipeline output!
+            videoUrl: atom.hd_video_url || null,
+            visualUrl: atom.visual_url || null,
             // Parse options - format is ["A: text", "B: text", "C: text"]
             // with responses as {"A": "response", "B": "response", "C": "response"}
             choices:
@@ -4565,11 +4568,11 @@
         setBadge('badge-difficulty', state.variants.difficulty);
 
         // Update topic (with null safety)
-        setBadge('topic-name', state.lesson?.topic || 'Loading...');
-        setBadge('topic-emoji', state.lesson?.topicEmoji || '📚');
+        setBadge('topic-name', state.lesson?.topic || 'Preparing...');
+        setBadge('topic-emoji', state.lesson?.topicEmoji || '✨');
         
         // ✨ NEW: Update top header with title and date
-        setBadge('top-title-name', state.lesson?.topic || 'Loading...');
+        setBadge('top-title-name', state.lesson?.topic || 'Preparing...');
         setBadge('top-title-emoji', state.lesson?.topicEmoji || '📚');
         setBadge('top-date', isToday(state.dayNumber) ? 'Today' : dayNumberToDate(state.dayNumber));
         
@@ -4804,9 +4807,34 @@
           OptionsSystem.hideAll();
         }
 
-        // Speak (ElevenLabs only - no browser TTS)
-        // Auto-advance after audio ends (for non-question phases)
-        if (kellyAudio) {
+        // ═══════════════════════════════════════════════════════════════════
+        // GOLDEN LESSON: HD Video Playback (preferred) OR Audio Fallback
+        // ═══════════════════════════════════════════════════════════════════
+        
+        // Check if this phase has an HD video (Golden Lesson pipeline output)
+        if (phase.videoUrl) {
+          console.log(`[Golden] 🎬 Playing HD video: ${phase.videoUrl}`);
+          
+          // Play HD video (replaces both audio AND 2D avatar)
+          playGoldenVideo(phase.videoUrl, () => {
+            console.log('[Golden] ✅ Video finished');
+            
+            // AUTO-ADVANCE for non-question phases
+            if (phase.type !== 'question') {
+              setTimeout(() => {
+                if (phase.type === 'welcome' || phase.type === 'hook') {
+                  advancePhase();
+                } else if (phase.type === 'wisdom') {
+                  handleLessonComplete();
+                }
+              }, 500);
+            }
+          });
+        }
+        // Fallback: Audio only (ElevenLabs + 2D avatar)
+        else if (kellyAudio) {
+          console.log('[Learn] 🔊 Using audio fallback (no HD video)');
+          
           // Kelly speaking animation START
           if (kellyAvatar && typeof kellyAvatar.setSpeaking === 'function') {
             kellyAvatar.setSpeaking(true, text);
@@ -4826,7 +4854,7 @@
               // AUTO-ADVANCE for non-question phases
               if (phase.type !== 'question') {
                 setTimeout(() => {
-                  if (phase.type === 'welcome') {
+                  if (phase.type === 'welcome' || phase.type === 'hook') {
                     advancePhase();
                   } else if (phase.type === 'wisdom') {
                     // Show completion overlay instead of just a toast
@@ -4841,7 +4869,7 @@
               if (phase.type !== 'question') {
                 const duration = text.split(/\s+/).length * 200 + 2000;
                 setTimeout(() => {
-                  if (phase.type === 'welcome') {
+                  if (phase.type === 'welcome' || phase.type === 'hook') {
                     advancePhase();
                   } else if (phase.type === 'wisdom') {
                     handleLessonComplete();
@@ -4854,7 +4882,7 @@
           if (phase.type !== 'question') {
             const duration = text.split(/\s+/).length * 200 + 2000;
             setTimeout(() => {
-              if (phase.type === 'welcome') {
+              if (phase.type === 'welcome' || phase.type === 'hook') {
                 advancePhase();
               } else if (phase.type === 'wisdom') {
                 handleLessonComplete();
@@ -5032,6 +5060,123 @@
         }
       }
 
+      // ═══════════════════════════════════════════════════════════════════
+      // GOLDEN LESSON: HD VIDEO PLAYER
+      // Plays lip-synced HD videos from Supabase Storage
+      // Generated by: scripts/kelly-video-factory/hd-golden-lesson-pipeline.ts
+      // ═══════════════════════════════════════════════════════════════════
+      
+      let goldenVideoElement = null;
+      
+      function initGoldenVideoPlayer() {
+        // Create video element if it doesn't exist
+        if (!goldenVideoElement) {
+          goldenVideoElement = document.createElement('video');
+          goldenVideoElement.id = 'golden-video-player';
+          goldenVideoElement.playsInline = true;
+          goldenVideoElement.muted = state.isMuted;
+          goldenVideoElement.style.cssText = `
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            z-index: 15;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+            pointer-events: none;
+          `;
+          
+          // Insert into Kelly container
+          const kellyContainer = document.querySelector('.kelly-container') || 
+                                 document.getElementById('kelly-visual-wrapper') ||
+                                 document.querySelector('.lesson-container');
+          if (kellyContainer) {
+            kellyContainer.style.position = 'relative';
+            kellyContainer.appendChild(goldenVideoElement);
+          }
+        }
+        return goldenVideoElement;
+      }
+      
+      function playGoldenVideo(videoUrl, onComplete) {
+        const video = initGoldenVideoPlayer();
+        
+        // Hide 2D avatar when video plays
+        const avatar2D = document.getElementById('kelly-avatar-container') ||
+                         document.querySelector('.kelly-2d');
+        if (avatar2D) {
+          avatar2D.style.opacity = '0';
+        }
+        
+        // Set video source and play
+        video.src = videoUrl;
+        video.muted = state.isMuted;
+        video.currentTime = 0;
+        
+        // Show video with fade
+        video.style.opacity = '1';
+        
+        // Handle video events
+        video.onended = () => {
+          console.log('[Golden] Video ended');
+          // Fade out video
+          video.style.opacity = '0';
+          // Show 2D avatar again
+          if (avatar2D) {
+            avatar2D.style.opacity = '1';
+          }
+          // Call completion callback
+          if (onComplete) onComplete();
+        };
+        
+        video.onerror = (e) => {
+          console.error('[Golden] Video error:', e);
+          // Fallback: show avatar and continue
+          video.style.opacity = '0';
+          if (avatar2D) {
+            avatar2D.style.opacity = '1';
+          }
+          if (onComplete) onComplete();
+        };
+        
+        // Play with retry
+        const playPromise = video.play();
+        if (playPromise !== undefined) {
+          playPromise
+            .then(() => console.log('[Golden] 🎬 Video playing'))
+            .catch(err => {
+              console.warn('[Golden] Autoplay blocked, trying muted:', err);
+              // Try muted autoplay (browsers often allow this)
+              video.muted = true;
+              video.play().catch(e => {
+                console.error('[Golden] Muted autoplay also failed:', e);
+                // Fall back to completion
+                if (onComplete) onComplete();
+              });
+            });
+        }
+      }
+      
+      function pauseGoldenVideo() {
+        if (goldenVideoElement && !goldenVideoElement.paused) {
+          goldenVideoElement.pause();
+        }
+      }
+      
+      function resumeGoldenVideo() {
+        if (goldenVideoElement && goldenVideoElement.paused && goldenVideoElement.src) {
+          goldenVideoElement.play().catch(() => {});
+        }
+      }
+      
+      function setGoldenVideoMuted(muted) {
+        if (goldenVideoElement) {
+          goldenVideoElement.muted = muted;
+        }
+      }
+
       function advancePhase() {
         // V2: Reset caption and options before advancing
         CaptionSystem.reset();
@@ -5172,6 +5317,8 @@
         if (kellyAudio) {
           state.isPaused ? kellyAudio.pause() : kellyAudio.resume();
         }
+        // Also pause/resume Golden video player
+        state.isPaused ? pauseGoldenVideo() : resumeGoldenVideo();
       }
 
       function showHeart(x, y) {
@@ -6438,6 +6585,8 @@
             btn.classList.toggle('muted', state.isMuted);
           }
           if (kellyAudio) kellyAudio.setMuted(state.isMuted);
+          // Also mute/unmute Golden video player
+          setGoldenVideoMuted(state.isMuted);
         });
 
         // Old popover handlers removed - now handled by SettingsUI
@@ -6696,7 +6845,7 @@
         
         <div class="commons-lesson-info" id="commons-lesson-info">
           <span class="commons-lesson-badge">Day <span id="commons-day">1</span></span>
-          <span class="commons-lesson-topic" id="commons-topic">Loading...</span>
+          <span class="commons-lesson-topic" id="commons-topic">Today's Lesson</span>
         </div>
         
         <div class="commons-actions">

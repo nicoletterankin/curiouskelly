@@ -1,0 +1,1130 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>✨ Curious Kelly - The Daily Lesson</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>">
+  
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      /* Color System */
+      --c-bg-primary: #0A0A0C;
+      --c-bg-secondary: #141418;
+      --c-bg-tertiary: #1C1C22;
+      --c-bg-card: #1E1E24;
+      
+      --c-text-primary: #F7F7F8;
+      --c-text-secondary: #A0A0A8;
+      --c-text-tertiary: #6B6B74;
+      
+      --c-accent-primary: #4ECDC4;
+      --c-accent-secondary: #45B7AA;
+      --c-accent-gradient: linear-gradient(135deg, #4ECDC4 0%, #44A08D 100%);
+      
+      --c-success: #4CAF50;
+      --c-warning: #FF9800;
+      --c-error: #F44336;
+      
+      --c-kelly-skin: #D4A574;
+      --c-kelly-hair: #6B4423;
+      
+      /* Typography */
+      --font-display: 'DM Serif Display', Georgia, serif;
+      --font-body: 'Inter', -apple-system, system-ui, sans-serif;
+      
+      /* Spacing */
+      --space-xs: 4px;
+      --space-sm: 8px;
+      --space-md: 16px;
+      --space-lg: 24px;
+      --space-xl: 32px;
+      --space-2xl: 48px;
+      
+      /* Border Radius */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 20px;
+      --radius-full: 9999px;
+      
+      /* Transitions */
+      --ease-out: cubic-bezier(0.0, 0.0, 0.2, 1);
+      --ease-in-out: cubic-bezier(0.4, 0, 0.2, 1);
+      --duration-fast: 150ms;
+      --duration-normal: 300ms;
+      --duration-slow: 500ms;
+      
+      /* Shadows */
+      --shadow-sm: 0 1px 3px rgba(0,0,0,0.3);
+      --shadow-md: 0 4px 12px rgba(0,0,0,0.4);
+      --shadow-lg: 0 8px 32px rgba(0,0,0,0.5);
+      --shadow-glow: 0 0 40px rgba(78, 205, 196, 0.3);
+    }
+    
+    html, body {
+      height: 100%;
+      overflow: hidden;
+    }
+    
+    body {
+      font-family: var(--font-body);
+      background: var(--c-bg-primary);
+      color: var(--c-text-primary);
+      line-height: 1.6;
+      -webkit-font-smoothing: antialiased;
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════════════
+       LAYOUT
+    ═══════════════════════════════════════════════════════════════════════════ */
+    
+    .lesson-container {
+      display: grid;
+      grid-template-rows: auto 1fr auto;
+      height: 100vh;
+      height: 100dvh;
+      max-width: 100%;
+      overflow: hidden;
+    }
+    
+    /* Header */
+    .header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-md) var(--space-lg);
+      background: var(--c-bg-secondary);
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+    }
+    
+    .logo-icon {
+      font-size: 1.5rem;
+    }
+    
+    .logo-text {
+      font-family: var(--font-display);
+      font-size: 1.25rem;
+      color: var(--c-text-primary);
+    }
+    
+    .day-badge {
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-md);
+      background: var(--c-bg-tertiary);
+      border-radius: var(--radius-full);
+      font-size: 0.85rem;
+      color: var(--c-text-secondary);
+    }
+    
+    .day-number {
+      font-weight: 700;
+      color: var(--c-accent-primary);
+    }
+    
+    /* Main Content Area */
+    .main-content {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: var(--space-xl);
+      padding: var(--space-xl);
+      overflow: hidden;
+    }
+    
+    @media (max-width: 900px) {
+      .main-content {
+        grid-template-columns: 1fr;
+        padding: var(--space-md);
+      }
+    }
+    
+    /* Lesson Panel */
+    .lesson-panel {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-lg);
+      overflow-y: auto;
+      padding-right: var(--space-md);
+    }
+    
+    .lesson-panel::-webkit-scrollbar {
+      width: 6px;
+    }
+    
+    .lesson-panel::-webkit-scrollbar-thumb {
+      background: var(--c-bg-tertiary);
+      border-radius: var(--radius-full);
+    }
+    
+    /* Topic Card */
+    .topic-card {
+      background: var(--c-bg-card);
+      border-radius: var(--radius-lg);
+      padding: var(--space-xl);
+      border: 1px solid rgba(255,255,255,0.05);
+    }
+    
+    .topic-label {
+      display: inline-block;
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--c-accent-primary);
+      margin-bottom: var(--space-sm);
+    }
+    
+    .topic-title {
+      font-family: var(--font-display);
+      font-size: 2.5rem;
+      line-height: 1.2;
+      margin-bottom: var(--space-md);
+      color: var(--c-text-primary);
+    }
+    
+    .topic-truth {
+      font-size: 1.1rem;
+      color: var(--c-text-secondary);
+      font-style: italic;
+    }
+    
+    /* Phase Cards */
+    .phases-container {
+      display: flex;
+      flex-direction: column;
+      gap: var(--space-md);
+    }
+    
+    .phase-card {
+      background: var(--c-bg-card);
+      border-radius: var(--radius-md);
+      padding: var(--space-lg);
+      border: 1px solid rgba(255,255,255,0.05);
+      cursor: pointer;
+      transition: all var(--duration-normal) var(--ease-out);
+      position: relative;
+      overflow: hidden;
+    }
+    
+    .phase-card::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 0;
+      bottom: 0;
+      width: 4px;
+      background: var(--c-bg-tertiary);
+      transition: background var(--duration-fast);
+    }
+    
+    .phase-card.active {
+      border-color: var(--c-accent-primary);
+      box-shadow: var(--shadow-glow);
+    }
+    
+    .phase-card.active::before {
+      background: var(--c-accent-gradient);
+    }
+    
+    .phase-card.completed::before {
+      background: var(--c-success);
+    }
+    
+    .phase-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: var(--space-sm);
+    }
+    
+    .phase-name {
+      font-weight: 600;
+      font-size: 0.9rem;
+      color: var(--c-text-secondary);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+    
+    .phase-card.active .phase-name {
+      color: var(--c-accent-primary);
+    }
+    
+    .phase-duration {
+      font-size: 0.8rem;
+      color: var(--c-text-tertiary);
+    }
+    
+    .phase-content {
+      font-size: 1rem;
+      color: var(--c-text-primary);
+      line-height: 1.7;
+    }
+    
+    .phase-card:not(.active) .phase-content {
+      color: var(--c-text-secondary);
+    }
+    
+    /* Avatar Panel */
+    .avatar-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: var(--space-lg);
+    }
+    
+    .avatar-container {
+      position: relative;
+      width: 100%;
+      max-width: 380px;
+      aspect-ratio: 4/5;
+      background: linear-gradient(180deg, #1E1E24 0%, #141418 100%);
+      border-radius: var(--radius-lg);
+      overflow: hidden;
+      box-shadow: var(--shadow-lg);
+    }
+    
+    .kelly-svg {
+      width: 100%;
+      height: 100%;
+    }
+    
+    /* Speaking Indicator */
+    .speaking-indicator {
+      position: absolute;
+      bottom: var(--space-md);
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-md);
+      background: rgba(78, 205, 196, 0.15);
+      backdrop-filter: blur(8px);
+      border-radius: var(--radius-full);
+      border: 1px solid rgba(78, 205, 196, 0.3);
+      opacity: 0;
+      transition: opacity var(--duration-normal);
+    }
+    
+    .speaking-indicator.active {
+      opacity: 1;
+    }
+    
+    .speaking-dot {
+      width: 8px;
+      height: 8px;
+      background: var(--c-accent-primary);
+      border-radius: 50%;
+      animation: pulse 1s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: 0.6; }
+    }
+    
+    .speaking-text {
+      font-size: 0.8rem;
+      color: var(--c-accent-primary);
+      font-weight: 500;
+    }
+    
+    /* Age Selector */
+    .age-selector {
+      width: 100%;
+      max-width: 380px;
+      background: var(--c-bg-card);
+      border-radius: var(--radius-md);
+      padding: var(--space-md);
+    }
+    
+    .age-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      color: var(--c-text-tertiary);
+      margin-bottom: var(--space-sm);
+    }
+    
+    .age-slider-container {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+    
+    .age-slider {
+      flex: 1;
+      -webkit-appearance: none;
+      height: 6px;
+      background: var(--c-bg-tertiary);
+      border-radius: var(--radius-full);
+      cursor: pointer;
+    }
+    
+    .age-slider::-webkit-slider-thumb {
+      -webkit-appearance: none;
+      width: 20px;
+      height: 20px;
+      background: var(--c-accent-gradient);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: var(--shadow-md);
+    }
+    
+    .age-value {
+      min-width: 60px;
+      text-align: center;
+      font-weight: 600;
+      color: var(--c-accent-primary);
+    }
+    
+    .persona-badge {
+      margin-top: var(--space-sm);
+      font-size: 0.85rem;
+      color: var(--c-text-secondary);
+    }
+    
+    /* Footer Controls */
+    .footer {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--space-md) var(--space-lg);
+      background: var(--c-bg-secondary);
+      border-top: 1px solid rgba(255,255,255,0.06);
+    }
+    
+    .progress-bar-container {
+      flex: 1;
+      max-width: 300px;
+    }
+    
+    .progress-bar {
+      height: 6px;
+      background: var(--c-bg-tertiary);
+      border-radius: var(--radius-full);
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: var(--c-accent-gradient);
+      border-radius: var(--radius-full);
+      transition: width var(--duration-normal) var(--ease-out);
+    }
+    
+    .progress-text {
+      font-size: 0.8rem;
+      color: var(--c-text-tertiary);
+      margin-top: var(--space-xs);
+    }
+    
+    /* Playback Controls */
+    .playback-controls {
+      display: flex;
+      align-items: center;
+      gap: var(--space-md);
+    }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--space-sm);
+      padding: var(--space-sm) var(--space-lg);
+      border: none;
+      border-radius: var(--radius-full);
+      font-family: var(--font-body);
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all var(--duration-fast) var(--ease-out);
+    }
+    
+    .btn-primary {
+      background: var(--c-accent-gradient);
+      color: #0A0A0C;
+      box-shadow: var(--shadow-md);
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-lg), var(--shadow-glow);
+    }
+    
+    .btn-icon {
+      width: 48px;
+      height: 48px;
+      padding: 0;
+      background: var(--c-bg-tertiary);
+      color: var(--c-text-primary);
+      border-radius: 50%;
+    }
+    
+    .btn-icon:hover {
+      background: var(--c-bg-card);
+      color: var(--c-accent-primary);
+    }
+    
+    .btn-play {
+      width: 64px;
+      height: 64px;
+      font-size: 1.5rem;
+    }
+    
+    /* Navigation Buttons */
+    .nav-buttons {
+      display: flex;
+      gap: var(--space-sm);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════════════
+       ANIMATIONS
+    ═══════════════════════════════════════════════════════════════════════════ */
+    
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    
+    .fade-in {
+      animation: fadeIn var(--duration-normal) var(--ease-out);
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════════════
+       RESPONSIVE
+    ═══════════════════════════════════════════════════════════════════════════ */
+    
+    @media (max-width: 900px) {
+      .avatar-panel {
+        order: -1;
+      }
+      
+      .avatar-container {
+        max-width: 280px;
+      }
+      
+      .topic-title {
+        font-size: 1.8rem;
+      }
+    }
+    
+    /* ═══════════════════════════════════════════════════════════════════════════
+       KELLY SVG AVATAR STYLES
+    ═══════════════════════════════════════════════════════════════════════════ */
+    
+    .kelly-svg .mouth-closed { transition: opacity 0.1s; }
+    .kelly-svg .mouth-open { transition: opacity 0.1s; }
+    
+    .kelly-svg.speaking .mouth-closed { opacity: 0; }
+    .kelly-svg.speaking .mouth-open { opacity: 1; }
+    .kelly-svg:not(.speaking) .mouth-closed { opacity: 1; }
+    .kelly-svg:not(.speaking) .mouth-open { opacity: 0; }
+    
+    @keyframes blink {
+      0%, 95%, 100% { transform: scaleY(1); }
+      97% { transform: scaleY(0.1); }
+    }
+    
+    .kelly-svg .eye-blink {
+      animation: blink 4s infinite;
+      transform-origin: center;
+    }
+    
+    @keyframes breathe {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-1px); }
+    }
+    
+    .kelly-svg .body-group {
+      animation: breathe 4s ease-in-out infinite;
+    }
+    
+    @keyframes subtleMove {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(0.3deg); }
+      75% { transform: rotate(-0.3deg); }
+    }
+    
+    .kelly-svg .head-group {
+      animation: subtleMove 6s ease-in-out infinite;
+      transform-origin: center bottom;
+    }
+    
+    .kelly-svg.speaking .head-group {
+      animation: speakMove 0.5s ease-in-out infinite;
+    }
+    
+    @keyframes speakMove {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(0.5deg); }
+      75% { transform: rotate(-0.5deg); }
+    }
+  </style>
+</head>
+<body>
+  <div class="lesson-container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <span class="logo-icon">✨</span>
+        <span class="logo-text">Curious Kelly</span>
+      </div>
+      <div class="day-badge">
+        Day <span class="day-number" id="dayNumber">1</span> of 365
+      </div>
+    </header>
+    
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- Lesson Panel -->
+      <div class="lesson-panel">
+        <div class="topic-card fade-in">
+          <span class="topic-label">Today's Topic</span>
+          <h1 class="topic-title" id="topicTitle">The Sun</h1>
+          <p class="topic-truth" id="topicTruth">"Our star gives life to everything on Earth"</p>
+        </div>
+        
+        <div class="phases-container" id="phasesContainer">
+          <!-- Phases will be rendered here -->
+        </div>
+      </div>
+      
+      <!-- Avatar Panel -->
+      <aside class="avatar-panel">
+        <div class="avatar-container">
+          <svg class="kelly-svg" id="kellySvg" viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg">
+            <defs>
+              <linearGradient id="skinGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#E8C9A6"/>
+                <stop offset="50%" style="stop-color:#D4A574"/>
+                <stop offset="100%" style="stop-color:#C49564"/>
+              </linearGradient>
+              <linearGradient id="hairGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                <stop offset="0%" style="stop-color:#8B6B4F"/>
+                <stop offset="40%" style="stop-color:#6B4423"/>
+                <stop offset="100%" style="stop-color:#4A2F18"/>
+              </linearGradient>
+              <linearGradient id="lipGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:#D4847F"/>
+                <stop offset="100%" style="stop-color:#A65858"/>
+              </linearGradient>
+              <linearGradient id="irisGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:#6D5344"/>
+                <stop offset="100%" style="stop-color:#3D2B20"/>
+              </linearGradient>
+              <linearGradient id="shirtGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+                <stop offset="0%" style="stop-color:#4ECDC4"/>
+                <stop offset="100%" style="stop-color:#3BA99E"/>
+              </linearGradient>
+              <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+                <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.3"/>
+              </filter>
+            </defs>
+            
+            <!-- Background glow -->
+            <ellipse cx="200" cy="220" rx="150" ry="160" fill="url(#shirtGradient)" opacity="0.08"/>
+            
+            <!-- Body Group -->
+            <g class="body-group">
+              <path d="M170 340 L175 380 L225 380 L230 340 Q200 350 170 340" fill="url(#skinGradient)"/>
+              <ellipse cx="200" cy="450" rx="140" ry="80" fill="url(#shirtGradient)" filter="url(#softShadow)"/>
+              <ellipse cx="200" cy="445" rx="130" ry="70" fill="url(#shirtGradient)"/>
+              <path d="M160 395 Q200 420 240 395 L235 410 Q200 430 165 410 Z" fill="#3BA99E"/>
+            </g>
+            
+            <!-- Head Group -->
+            <g class="head-group">
+              <ellipse cx="200" cy="180" rx="95" ry="105" fill="url(#hairGradient)"/>
+              <ellipse cx="200" cy="200" rx="75" ry="90" fill="url(#skinGradient)" filter="url(#softShadow)"/>
+              <path d="M125 160 Q130 100 200 95 Q270 100 275 160 Q270 130 240 125 Q200 115 160 125 Q130 130 125 160 Z" fill="url(#hairGradient)"/>
+              <path d="M140 120 Q155 90 180 100 Q160 110 145 125" fill="#8B6B4F" opacity="0.6"/>
+              <path d="M220 95 Q240 85 260 100 Q245 95 230 105" fill="#8B6B4F" opacity="0.6"/>
+              <path d="M145 155 Q150 130 175 125 Q160 145 155 160" fill="url(#hairGradient)"/>
+              <path d="M255 155 Q250 130 225 125 Q240 145 245 160" fill="url(#hairGradient)"/>
+              
+              <ellipse cx="125" cy="200" rx="12" ry="18" fill="url(#skinGradient)"/>
+              <ellipse cx="275" cy="200" rx="12" ry="18" fill="url(#skinGradient)"/>
+              
+              <!-- Eyebrows -->
+              <path d="M150 170 Q165 163 180 168" stroke="#5D4037" stroke-width="3" fill="none" stroke-linecap="round"/>
+              <path d="M220 168 Q235 163 250 170" stroke="#5D4037" stroke-width="3" fill="none" stroke-linecap="round"/>
+              
+              <!-- Eyes -->
+              <g class="eyes">
+                <g class="eye-blink" style="transform-origin: 165px 195px;">
+                  <ellipse cx="165" cy="195" rx="18" ry="14" fill="#F8F6F4"/>
+                  <circle cx="165" cy="196" r="10" fill="url(#irisGradient)"/>
+                  <circle cx="165" cy="196" r="5" fill="#1A1A1A"/>
+                  <circle cx="162" cy="192" r="3" fill="white" opacity="0.9"/>
+                  <path d="M148 188 L145 184 M152 186 L150 181 M156 185 L155 180" stroke="#2D2D2D" stroke-width="1.5" stroke-linecap="round"/>
+                  <path d="M174 185 L175 180 M178 186 L180 181 M182 188 L185 184" stroke="#2D2D2D" stroke-width="1.5" stroke-linecap="round"/>
+                  <path d="M147 190 Q165 182 183 190" stroke="#8B6B4F" stroke-width="1.5" fill="none"/>
+                </g>
+                <g class="eye-blink" style="transform-origin: 235px 195px;">
+                  <ellipse cx="235" cy="195" rx="18" ry="14" fill="#F8F6F4"/>
+                  <circle cx="235" cy="196" r="10" fill="url(#irisGradient)"/>
+                  <circle cx="235" cy="196" r="5" fill="#1A1A1A"/>
+                  <circle cx="232" cy="192" r="3" fill="white" opacity="0.9"/>
+                  <path d="M218 188 L215 184 M222 186 L220 181 M226 185 L225 180" stroke="#2D2D2D" stroke-width="1.5" stroke-linecap="round"/>
+                  <path d="M244 185 L245 180 M248 186 L250 181 M252 188 L255 184" stroke="#2D2D2D" stroke-width="1.5" stroke-linecap="round"/>
+                  <path d="M217 190 Q235 182 253 190" stroke="#8B6B4F" stroke-width="1.5" fill="none"/>
+                </g>
+              </g>
+              
+              <!-- Nose -->
+              <path d="M200 210 L200 235 L192 245 Q200 248 208 245 L200 235" fill="none" stroke="#C49564" stroke-width="2" stroke-linecap="round"/>
+              
+              <!-- Blush -->
+              <ellipse cx="145" cy="230" rx="18" ry="10" fill="#E8A0A0" opacity="0.2"/>
+              <ellipse cx="255" cy="230" rx="18" ry="10" fill="#E8A0A0" opacity="0.2"/>
+              
+              <!-- Mouth Group -->
+              <g class="mouth-group" transform="translate(200, 270)">
+                <g class="mouth-closed">
+                  <path d="M-25 0 Q0 12 25 0" fill="none" stroke="url(#lipGradient)" stroke-width="6" stroke-linecap="round"/>
+                </g>
+                <g class="mouth-open" style="opacity: 0;">
+                  <ellipse cx="0" cy="5" rx="22" ry="14" fill="url(#lipGradient)"/>
+                  <ellipse cx="0" cy="6" rx="16" ry="10" fill="#4A2020"/>
+                  <path d="M-12 0 L12 0 L10 6 L-10 6 Z" fill="#FFFEF8"/>
+                  <ellipse cx="0" cy="12" rx="10" ry="5" fill="#D97B7B"/>
+                </g>
+              </g>
+            </g>
+          </svg>
+          
+          <div class="speaking-indicator" id="speakingIndicator">
+            <span class="speaking-dot"></span>
+            <span class="speaking-text">Speaking...</span>
+          </div>
+        </div>
+        
+        <!-- Age Selector -->
+        <div class="age-selector">
+          <div class="age-label">Learner Age</div>
+          <div class="age-slider-container">
+            <input type="range" class="age-slider" id="ageSlider" min="2" max="102" value="25">
+            <span class="age-value" id="ageValue">25</span>
+          </div>
+          <div class="persona-badge" id="personaBadge">👤 Equal Partner</div>
+        </div>
+      </aside>
+    </main>
+    
+    <!-- Footer -->
+    <footer class="footer">
+      <div class="progress-bar-container">
+        <div class="progress-bar">
+          <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+        </div>
+        <div class="progress-text" id="progressText">Phase 1 of 5</div>
+      </div>
+      
+      <div class="playback-controls">
+        <button class="btn btn-icon" id="btnPrev" title="Previous">◀</button>
+        <button class="btn btn-icon btn-play btn-primary" id="btnPlay" title="Play">▶</button>
+        <button class="btn btn-icon" id="btnNext" title="Next">▶</button>
+      </div>
+      
+      <div class="nav-buttons">
+        <button class="btn btn-primary" id="btnComplete">Complete Lesson ✓</button>
+      </div>
+    </footer>
+  </div>
+  
+  <!-- Audio Element (Hidden) -->
+  <audio id="lessonAudio" preload="auto"></audio>
+  
+  <script>
+    /**
+     * ═══════════════════════════════════════════════════════════════════════════
+     * GOLDEN V2 - LESSON PLAYER
+     * ═══════════════════════════════════════════════════════════════════════════
+     */
+    
+    const AGE_BUCKETS = [
+      { range: [2, 5], id: '2-5', name: 'Little Learner', persona: 'Playful Friend' },
+      { range: [6, 12], id: '6-12', name: 'Curious Explorer', persona: 'Cool Big Sister' },
+      { range: [13, 17], id: '13-17', name: 'Teen Scholar', persona: 'Smart Mentor' },
+      { range: [18, 35], id: '18-35', name: 'Adult Learner', persona: 'Equal Partner' },
+      { range: [36, 60], id: '36-60', name: 'Seasoned Mind', persona: 'Respectful Guide' },
+      { range: [61, 102], id: '61-102', name: 'Wisdom Keeper', persona: 'Warm Companion' }
+    ];
+    
+    const PHASES = ['hook', 'q1', 'q2', 'q3', 'wisdom'];
+    const PHASE_LABELS = {
+      hook: '✨ Welcome',
+      q1: '🔍 Fact 1',
+      q2: '💡 Fact 2',
+      q3: '🎯 Fact 3',
+      wisdom: '🌟 Wisdom'
+    };
+    
+    class LessonPlayer {
+      constructor() {
+        this.currentDay = 1;
+        this.currentPhase = 0;
+        this.currentAge = 25;
+        this.lessonData = null;
+        this.lipSyncData = {};
+        this.isSpeaking = false;
+        this.isPlaying = false;
+        
+        this.initElements();
+        this.initEventListeners();
+        this.loadLesson(1);
+      }
+      
+      initElements() {
+        this.els = {
+          dayNumber: document.getElementById('dayNumber'),
+          topicTitle: document.getElementById('topicTitle'),
+          topicTruth: document.getElementById('topicTruth'),
+          phasesContainer: document.getElementById('phasesContainer'),
+          kellySvg: document.getElementById('kellySvg'),
+          speakingIndicator: document.getElementById('speakingIndicator'),
+          ageSlider: document.getElementById('ageSlider'),
+          ageValue: document.getElementById('ageValue'),
+          personaBadge: document.getElementById('personaBadge'),
+          progressFill: document.getElementById('progressFill'),
+          progressText: document.getElementById('progressText'),
+          btnPrev: document.getElementById('btnPrev'),
+          btnPlay: document.getElementById('btnPlay'),
+          btnNext: document.getElementById('btnNext'),
+          btnComplete: document.getElementById('btnComplete'),
+          audio: document.getElementById('lessonAudio')
+        };
+      }
+      
+      initEventListeners() {
+        // Age slider
+        this.els.ageSlider.addEventListener('input', (e) => {
+          this.setAge(parseInt(e.target.value));
+        });
+        
+        // Playback controls
+        this.els.btnPlay.addEventListener('click', () => this.togglePlay());
+        this.els.btnPrev.addEventListener('click', () => this.prevPhase());
+        this.els.btnNext.addEventListener('click', () => this.nextPhase());
+        this.els.btnComplete.addEventListener('click', () => this.completeLesson());
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+          if (e.code === 'Space') {
+            e.preventDefault();
+            this.togglePlay();
+          } else if (e.code === 'ArrowRight') {
+            this.nextPhase();
+          } else if (e.code === 'ArrowLeft') {
+            this.prevPhase();
+          }
+        });
+        
+        // Audio events
+        this.els.audio.addEventListener('ended', () => {
+          this.stopSpeaking();
+          this.nextPhase();
+        });
+      }
+      
+      getAgeBucket(age) {
+        return AGE_BUCKETS.find(b => age >= b.range[0] && age <= b.range[1]) || AGE_BUCKETS[3];
+      }
+      
+      setAge(age) {
+        this.currentAge = age;
+        this.els.ageValue.textContent = age;
+        
+        const bucket = this.getAgeBucket(age);
+        this.els.personaBadge.textContent = `👤 ${bucket.persona}`;
+        
+        // Re-render phases with new age bucket content
+        this.renderPhases();
+      }
+      
+      async loadLesson(day) {
+        this.currentDay = day;
+        this.currentPhase = 0;
+        
+        try {
+          // Try to load from generated content
+          const response = await fetch(`./generated/lessons/day-${String(day).padStart(3, '0')}.json`);
+          if (response.ok) {
+            this.lessonData = await response.json();
+          } else {
+            // Use fallback demo data
+            this.lessonData = this.getDemoLesson();
+          }
+          
+          this.renderLesson();
+          this.loadLipSyncData();
+        } catch (error) {
+          console.log('Using demo lesson data');
+          this.lessonData = this.getDemoLesson();
+          this.renderLesson();
+        }
+      }
+      
+      getDemoLesson() {
+        return {
+          meta: { day: 1, topic: 'The Sun', universalTruth: 'Our star gives life to everything on Earth' },
+          ageVariants: {
+            '2-5': {
+              phases: {
+                hook: "Hi little friend! 🌟 Today we're going to learn about something super cool - The Sun! Are you ready for an adventure?",
+                q1: "Did you know? The Sun is 93 million miles away, yet its light reaches Earth in just 8 minutes! Isn't that amazing?",
+                q2: "Here's something fun! The Sun is so big that one million Earths could fit inside it! Can you imagine that?",
+                q3: "Wow! Every second, the Sun converts 4 million tons of matter into pure energy! You're getting so smart!",
+                wisdom: "Remember, little learner: Our star gives life to everything on Earth. You learned something wonderful today! ⭐"
+              },
+              durations: { hook: 9, q1: 10, q2: 8, q3: 8, wisdom: 7 }
+            },
+            '6-12': {
+              phases: {
+                hook: "Hey there, curious one! 🔍 Ready to explore The Sun? This is going to be cool!",
+                q1: "Check this out: The Sun is 93 million miles away, yet its light reaches Earth in just 8 minutes! Pretty awesome, right?",
+                q2: "Here's where it gets interesting. The Sun is so big that one million Earths could fit inside it! Mind = blown!",
+                q3: "And get this - Every second, the Sun converts 4 million tons of matter into pure energy! Science is wild!",
+                wisdom: "Here's the big idea: Our star gives life to everything on Earth. Now you can explain this to your friends! 🧠"
+              },
+              durations: { hook: 7, q1: 9, q2: 9, q3: 8, wisdom: 9 }
+            },
+            '13-17': {
+              phases: {
+                hook: "Let's talk about The Sun. No fluff, just the real stuff you should know.",
+                q1: "First up: The Sun is 93 million miles away, yet its light reaches Earth in just 8 minutes. This actually matters.",
+                q2: "Here's the interesting part. The Sun is so big that one million Earths could fit inside it.",
+                q3: "One more thing - Every second, the Sun converts 4 million tons of matter into pure energy. That's the kind of knowledge that sticks.",
+                wisdom: "Bottom line: Our star gives life to everything on Earth. Use this. 💡"
+              },
+              durations: { hook: 6, q1: 9, q2: 7, q3: 10, wisdom: 6 }
+            },
+            '18-35': {
+              phases: {
+                hook: "Today we're covering The Sun. Practical knowledge you can actually use.",
+                q1: "Let's start with the basics. The Sun is 93 million miles away, yet its light reaches Earth in just 8 minutes.",
+                q2: "Building on that: The Sun is so big that one million Earths could fit inside it.",
+                q3: "And here's the practical application. Every second, the Sun converts 4 million tons of matter into pure energy.",
+                wisdom: "The takeaway: Our star gives life to everything on Earth. Knowledge that makes a difference."
+              },
+              durations: { hook: 5, q1: 9, q2: 7, q3: 8, wisdom: 6 }
+            },
+            '36-60': {
+              phases: {
+                hook: "Let's explore The Sun together. Efficient, substantive learning.",
+                q1: "The foundation: The Sun is 93 million miles away, yet its light reaches Earth in just 8 minutes.",
+                q2: "Expanding on that: The Sun is so big that one million Earths could fit inside it.",
+                q3: "The deeper insight: Every second, the Sun converts 4 million tons of matter into pure energy.",
+                wisdom: "The essential truth: Our star gives life to everything on Earth. Wisdom worth carrying forward."
+              },
+              durations: { hook: 4, q1: 8, q2: 7, q3: 7, wisdom: 6 }
+            },
+            '61-102': {
+              phases: {
+                hook: "Hello, friend. Today's reflection is on The Sun. Let's take our time with this.",
+                q1: "Consider this: The Sun is 93 million miles away, yet its light reaches Earth in just 8 minutes. Life teaches us in many ways.",
+                q2: "There's more to appreciate. The Sun is so big that one million Earths could fit inside it.",
+                q3: "And isn't it wonderful that every second, the Sun converts 4 million tons of matter into pure energy.",
+                wisdom: "The wisdom here: Our star gives life to everything on Earth. Another thread in life's beautiful tapestry. 🌿"
+              },
+              durations: { hook: 6, q1: 10, q2: 7, q3: 8, wisdom: 8 }
+            }
+          }
+        };
+      }
+      
+      renderLesson() {
+        const { meta } = this.lessonData;
+        
+        this.els.dayNumber.textContent = meta.day;
+        this.els.topicTitle.textContent = meta.topic;
+        this.els.topicTruth.textContent = `"${meta.universalTruth}"`;
+        
+        this.renderPhases();
+        this.updateProgress();
+      }
+      
+      renderPhases() {
+        const bucket = this.getAgeBucket(this.currentAge);
+        const variant = this.lessonData.ageVariants[bucket.id];
+        
+        if (!variant) return;
+        
+        this.els.phasesContainer.innerHTML = PHASES.map((phase, index) => {
+          const isActive = index === this.currentPhase;
+          const isCompleted = index < this.currentPhase;
+          const content = variant.phases[phase];
+          const duration = variant.durations[phase];
+          
+          return `
+            <div class="phase-card ${isActive ? 'active' : ''} ${isCompleted ? 'completed' : ''}" 
+                 data-phase="${index}" onclick="player.goToPhase(${index})">
+              <div class="phase-header">
+                <span class="phase-name">${PHASE_LABELS[phase]}</span>
+                <span class="phase-duration">${duration}s</span>
+              </div>
+              <p class="phase-content">${content}</p>
+            </div>
+          `;
+        }).join('');
+      }
+      
+      async loadLipSyncData() {
+        const bucket = this.getAgeBucket(this.currentAge);
+        const dayPadded = String(this.currentDay).padStart(3, '0');
+        
+        for (const phase of PHASES) {
+          try {
+            const response = await fetch(`./generated/lipsync/day-${dayPadded}/${bucket.id}/${phase}-lipsync.json`);
+            if (response.ok) {
+              this.lipSyncData[phase] = await response.json();
+            }
+          } catch (e) {
+            // Lip sync data not available
+          }
+        }
+      }
+      
+      goToPhase(index) {
+        this.stopSpeaking();
+        this.currentPhase = index;
+        this.renderPhases();
+        this.updateProgress();
+      }
+      
+      prevPhase() {
+        if (this.currentPhase > 0) {
+          this.goToPhase(this.currentPhase - 1);
+        }
+      }
+      
+      nextPhase() {
+        if (this.currentPhase < PHASES.length - 1) {
+          this.goToPhase(this.currentPhase + 1);
+        }
+      }
+      
+      togglePlay() {
+        if (this.isSpeaking) {
+          this.stopSpeaking();
+        } else {
+          this.startSpeaking();
+        }
+      }
+      
+      startSpeaking() {
+        this.isSpeaking = true;
+        this.els.kellySvg.classList.add('speaking');
+        this.els.speakingIndicator.classList.add('active');
+        this.els.btnPlay.textContent = '⏸';
+        
+        // Play lip sync animation
+        const phase = PHASES[this.currentPhase];
+        const lipSync = this.lipSyncData[phase];
+        
+        if (lipSync) {
+          this.playLipSync(lipSync);
+        } else {
+          // Fallback: simple timing-based animation
+          this.playDemoAnimation();
+        }
+      }
+      
+      stopSpeaking() {
+        this.isSpeaking = false;
+        this.els.kellySvg.classList.remove('speaking');
+        this.els.speakingIndicator.classList.remove('active');
+        this.els.btnPlay.textContent = '▶';
+        
+        if (this.animationFrame) {
+          cancelAnimationFrame(this.animationFrame);
+        }
+      }
+      
+      async playLipSync(lipSyncData) {
+        const startTime = performance.now();
+        
+        const animate = () => {
+          if (!this.isSpeaking) return;
+          
+          const elapsed = (performance.now() - startTime) / 1000;
+          const frame = lipSyncData.frames.find(f => f.time >= elapsed) || lipSyncData.frames[lipSyncData.frames.length - 1];
+          
+          if (elapsed >= lipSyncData.duration) {
+            this.stopSpeaking();
+            if (this.currentPhase < PHASES.length - 1) {
+              setTimeout(() => this.nextPhase(), 500);
+            }
+            return;
+          }
+          
+          // Apply viseme (would update mouth shape in more complex implementation)
+          this.animationFrame = requestAnimationFrame(animate);
+        };
+        
+        animate();
+      }
+      
+      playDemoAnimation() {
+        const bucket = this.getAgeBucket(this.currentAge);
+        const variant = this.lessonData.ageVariants[bucket.id];
+        const phase = PHASES[this.currentPhase];
+        const duration = (variant?.durations?.[phase] || 5) * 1000;
+        
+        setTimeout(() => {
+          if (this.isSpeaking) {
+            this.stopSpeaking();
+            if (this.currentPhase < PHASES.length - 1) {
+              setTimeout(() => this.nextPhase(), 500);
+            }
+          }
+        }, duration);
+      }
+      
+      updateProgress() {
+        const progress = ((this.currentPhase + 1) / PHASES.length) * 100;
+        this.els.progressFill.style.width = `${progress}%`;
+        this.els.progressText.textContent = `Phase ${this.currentPhase + 1} of ${PHASES.length}`;
+      }
+      
+      completeLesson() {
+        // Store completion
+        const completions = JSON.parse(localStorage.getItem('kelly_completions') || '[]');
+        if (!completions.includes(this.currentDay)) {
+          completions.push(this.currentDay);
+          localStorage.setItem('kelly_completions', JSON.stringify(completions));
+        }
+        
+        // Show celebration
+        alert(`✨ Congratulations! You completed Day ${this.currentDay}!\n\nToday you learned: ${this.lessonData.meta.topic}\n\n"${this.lessonData.meta.universalTruth}"`);
+        
+        // Load next day
+        if (this.currentDay < 365) {
+          this.loadLesson(this.currentDay + 1);
+        }
+      }
+    }
+    
+    // Initialize
+    const player = new LessonPlayer();
+    window.player = player;
+    
+    console.log('✨ Curious Kelly - Golden V2 Lesson Player initialized');
+    console.log('Keyboard shortcuts: SPACE = play/pause, ← → = navigate phases');
+  </script>
+</body>
+</html>
+

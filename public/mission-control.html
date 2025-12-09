@@ -1,0 +1,934 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kelly OS - Mission Control Panel (All Features Expanded)</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #333;
+      overflow-x: hidden;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       MISSION CONTROL GRID - Everything visible at once
+       ═══════════════════════════════════════════════════════════════ */
+    .mission-control {
+      display: grid;
+      grid-template-columns: 300px 1fr 300px;
+      grid-template-rows: 80px 1fr 200px;
+      gap: 20px;
+      padding: 20px;
+      min-height: 100vh;
+      max-width: 1920px;
+      margin: 0 auto;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       HEADER - Lesson Info + Phase Journey
+       ═══════════════════════════════════════════════════════════════ */
+    .mc-header {
+      grid-column: 1 / -1;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .lesson-info {
+      flex: 1;
+    }
+
+    .lesson-topic {
+      font-size: 24px;
+      font-weight: 700;
+      color: #667eea;
+      margin-bottom: 4px;
+    }
+
+    .lesson-meta {
+      font-size: 14px;
+      color: #666;
+    }
+
+    .phase-journey-horizontal {
+      display: flex;
+      gap: 12px;
+      align-items: center;
+      flex: 2;
+      justify-content: center;
+    }
+
+    .phase-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .phase-circle {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.3);
+    }
+
+    .phase-circle.inactive {
+      background: #e0e0e0;
+      box-shadow: none;
+    }
+
+    .phase-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #666;
+      text-transform: uppercase;
+    }
+
+    .phase-connector {
+      width: 40px;
+      height: 3px;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      border-radius: 2px;
+    }
+
+    .phase-connector.inactive {
+      background: #e0e0e0;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       LEFT PANEL - Engagement + Navigation
+       ═══════════════════════════════════════════════════════════════ */
+    .mc-left {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .panel {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .panel-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 16px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .panel-icon {
+      font-size: 20px;
+    }
+
+    /* Engagement Actions */
+    .engagement-actions {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .action-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .action-item:hover {
+      transform: translateX(4px);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+    }
+
+    .action-item-icon {
+      font-size: 28px;
+      width: 48px;
+      height: 48px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: white;
+      border-radius: 12px;
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .action-item-content {
+      flex: 1;
+    }
+
+    .action-item-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 2px;
+    }
+
+    .action-item-desc {
+      font-size: 11px;
+      color: #666;
+    }
+
+    .action-item-count {
+      font-size: 16px;
+      font-weight: 700;
+      color: #667eea;
+    }
+
+    /* Navigation */
+    .nav-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .nav-card {
+      padding: 16px;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      border-radius: 12px;
+      color: white;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .nav-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(102, 126, 234, 0.4);
+    }
+
+    .nav-card-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .nav-card-label {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       CENTER - KELLY + LESSON CONTENT
+       ═══════════════════════════════════════════════════════════════ */
+    .mc-center {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    .kelly-stage {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      aspect-ratio: 9 / 16;
+      max-height: 600px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .kelly-avatar-display {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 20%;
+      border-radius: 12px;
+    }
+
+    .kelly-stage-overlay {
+      position: absolute;
+      top: 16px;
+      right: 16px;
+      background: rgba(0, 0, 0, 0.6);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .lesson-content-panel {
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 16px;
+      padding: 24px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+      flex: 1;
+    }
+
+    .phase-question {
+      font-size: 20px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 20px;
+      line-height: 1.4;
+    }
+
+    .options-grid {
+      display: grid;
+      gap: 12px;
+    }
+
+    .option-card {
+      padding: 16px 20px;
+      background: linear-gradient(135deg, #f5f7fa, #c3cfe2);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      border: 3px solid transparent;
+    }
+
+    .option-card:hover {
+      transform: translateX(8px);
+      border-color: #667eea;
+      box-shadow: 0 4px 16px rgba(102, 126, 234, 0.3);
+    }
+
+    .option-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #667eea;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+    }
+
+    .option-text {
+      font-size: 15px;
+      color: #333;
+      font-weight: 500;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       RIGHT PANEL - Personalization + Community
+       ═══════════════════════════════════════════════════════════════ */
+    .mc-right {
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+
+    /* Personalization Controls */
+    .personalization-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+
+    .control-card {
+      padding: 16px;
+      background: linear-gradient(135deg, #ffecd2, #fcb69f);
+      border-radius: 12px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .control-card:hover {
+      transform: scale(1.05);
+      box-shadow: 0 8px 20px rgba(252, 182, 159, 0.4);
+    }
+
+    .control-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+
+    .control-label {
+      font-size: 11px;
+      font-weight: 600;
+      color: #333;
+      text-transform: uppercase;
+      margin-bottom: 4px;
+    }
+
+    .control-value {
+      font-size: 16px;
+      font-weight: 700;
+      color: #d35400;
+    }
+
+    /* Community Comments */
+    .comments-stream {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      max-height: 400px;
+      overflow-y: auto;
+    }
+
+    .comment-card {
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.9);
+      border-radius: 12px;
+      border-left: 4px solid #667eea;
+    }
+
+    .comment-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+
+    .comment-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, #667eea, #764ba2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+    }
+
+    .comment-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: #333;
+    }
+
+    .comment-badge {
+      font-size: 10px;
+      padding: 2px 6px;
+      background: #667eea;
+      color: white;
+      border-radius: 4px;
+      font-weight: 600;
+    }
+
+    .comment-text {
+      font-size: 13px;
+      color: #555;
+      line-height: 1.4;
+    }
+
+    /* ═══════════════════════════════════════════════════════════════
+       BOTTOM - Advanced Tools + Settings
+       ═══════════════════════════════════════════════════════════════ */
+    .mc-bottom {
+      grid-column: 1 / -1;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(20px);
+      border-radius: 16px;
+      padding: 20px;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+    }
+
+    .tools-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 16px;
+    }
+
+    .tool-card {
+      padding: 16px;
+      background: linear-gradient(135deg, #a8edea, #fed6e3);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    .tool-card:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 20px rgba(168, 237, 234, 0.4);
+    }
+
+    .tool-icon {
+      font-size: 36px;
+      margin-bottom: 8px;
+    }
+
+    .tool-label {
+      font-size: 14px;
+      font-weight: 600;
+      color: #333;
+      margin-bottom: 4px;
+    }
+
+    .tool-desc {
+      font-size: 11px;
+      color: #666;
+    }
+
+    /* Responsive */
+    @media (max-width: 1400px) {
+      .mission-control {
+        grid-template-columns: 280px 1fr 280px;
+      }
+    }
+
+    @media (max-width: 1200px) {
+      .mission-control {
+        grid-template-columns: 1fr;
+        grid-template-rows: auto;
+      }
+
+      .mc-header {
+        flex-direction: column;
+        gap: 16px;
+      }
+
+      .kelly-stage {
+        max-height: 500px;
+      }
+    }
+
+    /* Header Badge */
+    .header-badge {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 12px;
+      font-size: 14px;
+      font-weight: 700;
+      z-index: 1000;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+    }
+
+    .header-badge-title {
+      font-size: 11px;
+      opacity: 0.7;
+      margin-bottom: 4px;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .header-badge-value {
+      font-size: 18px;
+      color: #4ade80;
+    }
+  </style>
+</head>
+<body>
+  
+  <!-- Header Badge -->
+  <div class="header-badge">
+    <div class="header-badge-title">Mission Control</div>
+    <div class="header-badge-value">All Features Visible</div>
+  </div>
+
+  <!-- Mission Control Grid -->
+  <div class="mission-control">
+    
+    <!-- ═══════════════════════════════════════════════════════════════
+         HEADER - Lesson Info + 5-Phase Journey
+         ═══════════════════════════════════════════════════════════════ -->
+    <div class="mc-header">
+      <div class="lesson-info">
+        <div class="lesson-topic">🤝 Sharing What We Have</div>
+        <div class="lesson-meta">Day 1 • Citizenship • 5 Phases</div>
+      </div>
+      
+      <div class="phase-journey-horizontal">
+        <div class="phase-step">
+          <div class="phase-circle">🎣</div>
+          <div class="phase-label">Hook</div>
+        </div>
+        <div class="phase-connector"></div>
+        <div class="phase-step">
+          <div class="phase-circle inactive">💭</div>
+          <div class="phase-label">Fact 1</div>
+        </div>
+        <div class="phase-connector inactive"></div>
+        <div class="phase-step">
+          <div class="phase-circle inactive">💡</div>
+          <div class="phase-label">Fact 2</div>
+        </div>
+        <div class="phase-connector inactive"></div>
+        <div class="phase-step">
+          <div class="phase-circle inactive">🔗</div>
+          <div class="phase-label">Fact 3</div>
+        </div>
+        <div class="phase-connector inactive"></div>
+        <div class="phase-step">
+          <div class="phase-circle inactive">✨</div>
+          <div class="phase-label">Wisdom</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         LEFT PANEL - Engagement + Navigation
+         ═══════════════════════════════════════════════════════════════ -->
+    <div class="mc-left">
+      
+      <!-- ENGAGEMENT PANEL -->
+      <div class="panel">
+        <div class="panel-title">
+          <span class="panel-icon">💫</span>
+          Engagement
+        </div>
+        <div class="engagement-actions">
+          <div class="action-item">
+            <div class="action-item-icon">💡</div>
+            <div class="action-item-content">
+              <div class="action-item-label">Aha Moment</div>
+              <div class="action-item-desc">I learned something!</div>
+            </div>
+            <div class="action-item-count">2.4K</div>
+          </div>
+          
+          <div class="action-item">
+            <div class="action-item-icon">📌</div>
+            <div class="action-item-content">
+              <div class="action-item-label">Pin to Journal</div>
+              <div class="action-item-desc">Save for later</div>
+            </div>
+            <div class="action-item-count">1.2K</div>
+          </div>
+          
+          <div class="action-item">
+            <div class="action-item-icon">✨</div>
+            <div class="action-item-content">
+              <div class="action-item-label">Share Lesson</div>
+              <div class="action-item-desc">Spread knowledge</div>
+            </div>
+            <div class="action-item-count">Share</div>
+          </div>
+
+          <div class="action-item">
+            <div class="action-item-icon">🎤</div>
+            <div class="action-item-content">
+              <div class="action-item-label">Talk to Kelly</div>
+              <div class="action-item-desc">Voice conversation</div>
+            </div>
+            <div class="action-item-count">Live</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- NAVIGATION PANEL -->
+      <div class="panel">
+        <div class="panel-title">
+          <span class="panel-icon">🧭</span>
+          Navigation
+        </div>
+        <div class="nav-grid">
+          <div class="nav-card">
+            <div class="nav-card-icon">📅</div>
+            <div class="nav-card-label">Calendar</div>
+          </div>
+          <div class="nav-card">
+            <div class="nav-card-icon">🔍</div>
+            <div class="nav-card-label">Search</div>
+          </div>
+          <div class="nav-card">
+            <div class="nav-card-icon">⚙️</div>
+            <div class="nav-card-label">Settings</div>
+          </div>
+          <div class="nav-card">
+            <div class="nav-card-icon">👤</div>
+            <div class="nav-card-label">Profile</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         CENTER - KELLY + LESSON CONTENT
+         ═══════════════════════════════════════════════════════════════ -->
+    <div class="mc-center">
+      
+      <!-- KELLY STAGE -->
+      <div class="kelly-stage">
+        <img 
+          src="/kelly/poses/kelly_hint.png?v=20251202" 
+          alt="Kelly" 
+          class="kelly-avatar-display"
+        />
+        <div class="kelly-stage-overlay">
+          🎬 2D Mode • Kelly Pointing
+        </div>
+      </div>
+
+      <!-- LESSON CONTENT -->
+      <div class="lesson-content-panel">
+        <div class="phase-question">
+          What do you think happens when we share what we have?
+        </div>
+        <div class="options-grid">
+          <div class="option-card">
+            <div class="option-label">Option A</div>
+            <div class="option-text">We have less for ourselves</div>
+          </div>
+          <div class="option-card">
+            <div class="option-label">Option B</div>
+            <div class="option-text">Everyone benefits and feels connected</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         RIGHT PANEL - Personalization + Community
+         ═══════════════════════════════════════════════════════════════ -->
+    <div class="mc-right">
+      
+      <!-- PERSONALIZATION PANEL -->
+      <div class="panel">
+        <div class="panel-title">
+          <span class="panel-icon">🎨</span>
+          Personalization
+        </div>
+        <div class="personalization-grid">
+          <div class="control-card">
+            <div class="control-icon">🌐</div>
+            <div class="control-label">Language</div>
+            <div class="control-value">EN</div>
+          </div>
+          <div class="control-card">
+            <div class="control-icon">🎭</div>
+            <div class="control-label">Tone</div>
+            <div class="control-value">😊</div>
+          </div>
+          <div class="control-card">
+            <div class="control-icon">👤</div>
+            <div class="control-label">Age</div>
+            <div class="control-value">👩</div>
+          </div>
+          <div class="control-card">
+            <div class="control-icon">📺</div>
+            <div class="control-label">Mode</div>
+            <div class="control-value">2D</div>
+          </div>
+          <div class="control-card">
+            <div class="control-icon">🔊</div>
+            <div class="control-label">Sound</div>
+            <div class="control-value">ON</div>
+          </div>
+          <div class="control-card">
+            <div class="control-icon">⚡</div>
+            <div class="control-label">Speed</div>
+            <div class="control-value">1x</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- COMMUNITY PANEL -->
+      <div class="panel" style="flex: 1;">
+        <div class="panel-title">
+          <span class="panel-icon">💬</span>
+          Community
+        </div>
+        <div class="comments-stream">
+          <div class="comment-card">
+            <div class="comment-header">
+              <div class="comment-avatar">👩</div>
+              <div class="comment-name">Sarah</div>
+              <div class="comment-badge">✨</div>
+            </div>
+            <div class="comment-text">This lesson really made me think about generosity differently!</div>
+          </div>
+          <div class="comment-card">
+            <div class="comment-header">
+              <div class="comment-avatar">👨</div>
+              <div class="comment-name">Marcus</div>
+              <div class="comment-badge">✨</div>
+            </div>
+            <div class="comment-text">I love how Kelly explains complex ideas so simply.</div>
+          </div>
+          <div class="comment-card">
+            <div class="comment-header">
+              <div class="comment-avatar">👧</div>
+              <div class="comment-name">Emma</div>
+              <div class="comment-badge">✨</div>
+            </div>
+            <div class="comment-text">Sharing this with my family tonight!</div>
+          </div>
+          <div class="comment-card">
+            <div class="comment-header">
+              <div class="comment-avatar">👦</div>
+              <div class="comment-name">Alex</div>
+              <div class="comment-badge">✨</div>
+            </div>
+            <div class="comment-text">Day 1 complete! Can't wait for tomorrow's lesson.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ═══════════════════════════════════════════════════════════════
+         BOTTOM - Advanced Tools + Settings
+         ═══════════════════════════════════════════════════════════════ -->
+    <div class="mc-bottom">
+      <div class="panel-title" style="margin-bottom: 20px;">
+        <span class="panel-icon">🛠️</span>
+        Advanced Tools & Features (20 Years of Development)
+      </div>
+      <div class="tools-grid">
+        
+        <div class="tool-card">
+          <div class="tool-icon">🎮</div>
+          <div class="tool-label">Unity 3D Kelly</div>
+          <div class="tool-desc">Interactive 3D avatar</div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-icon">🤖</div>
+          <div class="tool-label">Model Viewer</div>
+          <div class="tool-desc">Robot avatar mode</div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-icon">🎨</div>
+          <div class="tool-label">Expression Studio</div>
+          <div class="tool-desc">Kelly's emotions</div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-icon">🎬</div>
+          <div class="tool-label">Video Player</div>
+          <div class="tool-desc">HD lipsync videos</div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-icon">🔊</div>
+          <div class="tool-label">Audio System</div>
+          <div class="tool-desc">ElevenLabs TTS</div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-icon">💰</div>
+          <div class="tool-label">Earn to Learn</div>
+          <div class="tool-desc">Affiliate rewards</div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-icon">📊</div>
+          <div class="tool-label">Analytics</div>
+          <div class="tool-desc">Learning insights</div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-icon">🌍</div>
+          <div class="tool-label">Universal Access</div>
+          <div class="tool-desc">Accessibility tools</div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-icon">🔐</div>
+          <div class="tool-label">Authentication</div>
+          <div class="tool-desc">Supabase Auth</div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-icon">📱</div>
+          <div class="tool-label">Responsive Design</div>
+          <div class="tool-desc">Mobile + Desktop</div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-icon">⌨️</div>
+          <div class="tool-label">Keyboard Nav</div>
+          <div class="tool-desc">Full shortcuts</div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-icon">👆</div>
+          <div class="tool-label">Gesture Controls</div>
+          <div class="tool-desc">Swipe navigation</div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-icon">🎯</div>
+          <div class="tool-label">Phase System</div>
+          <div class="tool-desc">5-phase journey</div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-icon">📚</div>
+          <div class="tool-label">365 Lessons</div>
+          <div class="tool-desc">Full curriculum</div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-icon">🎓</div>
+          <div class="tool-label">Learning Journal</div>
+          <div class="tool-desc">Track progress</div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-icon">🔔</div>
+          <div class="tool-label">Notifications</div>
+          <div class="tool-desc">Daily reminders</div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-icon">🏆</div>
+          <div class="tool-label">Achievements</div>
+          <div class="tool-desc">Streaks & badges</div>
+        </div>
+
+        <div class="tool-card">
+          <div class="tool-icon">🌙</div>
+          <div class="tool-label">Dark Mode</div>
+          <div class="tool-desc">Theme switcher</div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <script>
+    // Interactive demo - click handlers
+    document.querySelectorAll('.action-item, .nav-card, .control-card, .tool-card, .option-card').forEach(el => {
+      el.addEventListener('click', function() {
+        this.style.transform = 'scale(0.95)';
+        setTimeout(() => {
+          this.style.transform = '';
+        }, 150);
+      });
+    });
+
+    // Phase navigation
+    document.querySelectorAll('.phase-step').forEach((step, index) => {
+      step.addEventListener('click', function() {
+        alert(`Phase ${index + 1} selected! In production, this would navigate to that phase.`);
+      });
+    });
+  </script>
+
+</body>
+</html>
+
+
+
+
+

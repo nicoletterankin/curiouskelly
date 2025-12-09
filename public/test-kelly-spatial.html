@@ -1,0 +1,564 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kelly Spatial Intelligence - Test & Visualization</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #f5f7fa;
+      padding: 20px;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    h1 {
+      font-size: 24px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .subtitle {
+      font-size: 14px;
+      color: #666;
+      margin-bottom: 24px;
+    }
+
+    .test-grid {
+      display: grid;
+      grid-template-columns: 1fr 400px;
+      gap: 20px;
+      margin-bottom: 20px;
+    }
+
+    /* Kelly Stage */
+    .kelly-stage {
+      background: white;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+      position: relative;
+    }
+
+    #kelly-frame {
+      position: relative;
+      width: 100%;
+      aspect-ratio: 9 / 16;
+      max-height: 700px;
+      overflow: hidden;
+    }
+
+    #kelly-avatar {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 20%;
+      display: block;
+    }
+
+    /* Test popover */
+    .test-popover {
+      position: absolute;
+      background: rgba(255, 255, 255, 0.95);
+      backdrop-filter: blur(10px);
+      border-radius: 12px;
+      padding: 16px;
+      box-shadow: 0 4px 16px rgba(0,0,0,0.2);
+      min-width: 200px;
+      max-width: 280px;
+      z-index: 1000;
+      opacity: 0;
+      transform: scale(0.9);
+      transition: all 0.3s ease;
+    }
+
+    .test-popover.visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .test-popover-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 8px;
+    }
+
+    .test-popover-text {
+      font-size: 12px;
+      color: #666;
+      line-height: 1.4;
+    }
+
+    .test-popover-zone {
+      font-size: 10px;
+      color: #10B981;
+      margin-top: 8px;
+      font-weight: 600;
+    }
+
+    /* Controls Panel */
+    .controls-panel {
+      background: white;
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .control-section {
+      margin-bottom: 24px;
+    }
+
+    .control-section:last-child {
+      margin-bottom: 0;
+    }
+
+    .control-section-title {
+      font-size: 14px;
+      font-weight: 700;
+      color: #333;
+      margin-bottom: 12px;
+    }
+
+    .pose-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .pose-btn {
+      padding: 12px;
+      background: #f5f7fa;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 12px;
+      font-weight: 600;
+      color: #333;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .pose-btn:hover {
+      background: #e8eef5;
+      border-color: #3B82F6;
+    }
+
+    .pose-btn.active {
+      background: #3B82F6;
+      border-color: #3B82F6;
+      color: white;
+    }
+
+    .position-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 8px;
+    }
+
+    .position-btn {
+      padding: 10px;
+      background: #f5f7fa;
+      border: 2px solid #e0e0e0;
+      border-radius: 8px;
+      font-size: 11px;
+      font-weight: 600;
+      color: #333;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-align: center;
+    }
+
+    .position-btn:hover {
+      background: #e8eef5;
+      border-color: #10B981;
+    }
+
+    .toggle-btn {
+      width: 100%;
+      padding: 12px;
+      background: #3B82F6;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      color: white;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      margin-bottom: 8px;
+    }
+
+    .toggle-btn:hover {
+      background: #2563EB;
+    }
+
+    .toggle-btn.active {
+      background: #10B981;
+    }
+
+    .info-box {
+      background: #f5f7fa;
+      border-radius: 8px;
+      padding: 12px;
+      font-size: 12px;
+      color: #666;
+      line-height: 1.5;
+    }
+
+    .info-box strong {
+      color: #333;
+      font-weight: 600;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+      margin-top: 12px;
+    }
+
+    .stat {
+      background: white;
+      border-radius: 8px;
+      padding: 12px;
+      text-align: center;
+      border: 1px solid #e0e0e0;
+    }
+
+    .stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: #3B82F6;
+      margin-bottom: 4px;
+    }
+
+    .stat-label {
+      font-size: 11px;
+      color: #666;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    /* Legend */
+    .legend {
+      display: flex;
+      gap: 16px;
+      margin-bottom: 20px;
+      padding: 12px;
+      background: white;
+      border-radius: 8px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    }
+
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .legend-box {
+      width: 20px;
+      height: 20px;
+      border-radius: 4px;
+    }
+
+    .legend-box.blocked {
+      background: rgba(239, 68, 68, 0.3);
+      border: 2px solid #EF4444;
+    }
+
+    .legend-box.safe {
+      background: rgba(16, 185, 129, 0.2);
+      border: 2px dashed #10B981;
+    }
+  </style>
+</head>
+<body>
+  
+  <div class="container">
+    <h1>🧠 Kelly Spatial Intelligence System</h1>
+    <p class="subtitle">Test & visualize safe zones for popover positioning</p>
+
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-box blocked"></div>
+        <span>Blocked Zones (Face & Hands)</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-box safe"></div>
+        <span>Safe Zones (Popover Areas)</span>
+      </div>
+    </div>
+
+    <div class="test-grid">
+      
+      <!-- Kelly Stage -->
+      <div class="kelly-stage">
+        <div id="kelly-frame">
+          <img 
+            src="/kelly/poses/kelly_hint.png?v=20251202" 
+            alt="Kelly" 
+            id="kelly-avatar"
+          />
+          
+          <!-- Test Popover -->
+          <div class="test-popover" id="test-popover">
+            <div class="test-popover-title">Test Popover</div>
+            <div class="test-popover-text">
+              This popover should never cover Kelly's face or hands.
+            </div>
+            <div class="test-popover-zone" id="popover-zone-info">
+              Zone: <span id="current-zone">-</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Controls Panel -->
+      <div class="controls-panel">
+        
+        <!-- Pose Selection -->
+        <div class="control-section">
+          <div class="control-section-title">1. Select Kelly's Pose</div>
+          <div class="pose-grid">
+            <button class="pose-btn active" data-pose="kelly_hint">
+              🤔 Hint
+            </button>
+            <button class="pose-btn" data-pose="kelly_welcome">
+              👋 Welcome
+            </button>
+            <button class="pose-btn" data-pose="kelly_choice_left">
+              👈 Point Left
+            </button>
+            <button class="pose-btn" data-pose="kelly_choice_right">
+              👉 Point Right
+            </button>
+            <button class="pose-btn" data-pose="kelly_idle">
+              🧍 Idle
+            </button>
+            <button class="pose-btn" data-pose="kelly_clasp">
+              🙏 Clasp
+            </button>
+            <button class="pose-btn" data-pose="kelly_listening">
+              👂 Listening
+            </button>
+          </div>
+        </div>
+
+        <!-- Position Testing -->
+        <div class="control-section">
+          <div class="control-section-title">2. Test Popover Position</div>
+          <div class="position-grid">
+            <button class="position-btn" data-position="top-left">
+              ↖️ Top Left
+            </button>
+            <button class="position-btn" data-position="top-right">
+              ↗️ Top Right
+            </button>
+            <button class="position-btn" data-position="left-mid">
+              ← Left Mid
+            </button>
+            <button class="position-btn" data-position="right-mid">
+              → Right Mid
+            </button>
+            <button class="position-btn" data-position="bottom-left">
+              ↙️ Bottom Left
+            </button>
+            <button class="position-btn" data-position="bottom-right">
+              ↘️ Bottom Right
+            </button>
+          </div>
+        </div>
+
+        <!-- Visualization Toggle -->
+        <div class="control-section">
+          <div class="control-section-title">3. Visualization</div>
+          <button class="toggle-btn" id="toggle-zones">
+            Show Safe Zones
+          </button>
+          <button class="toggle-btn" id="toggle-popover">
+            Show Test Popover
+          </button>
+        </div>
+
+        <!-- Stats -->
+        <div class="control-section">
+          <div class="control-section-title">System Stats</div>
+          <div class="stats">
+            <div class="stat">
+              <div class="stat-value" id="stat-safe-zones">0</div>
+              <div class="stat-label">Safe Zones</div>
+            </div>
+            <div class="stat">
+              <div class="stat-value" id="stat-blocked-zones">0</div>
+              <div class="stat-label">Blocked Zones</div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Info -->
+        <div class="control-section">
+          <div class="info-box">
+            <strong>How it works:</strong><br>
+            1. Select a pose to change Kelly's position<br>
+            2. Click a position to test popover placement<br>
+            3. Toggle visualization to see safe/blocked zones<br>
+            <br>
+            <strong>Goal:</strong> Popovers should never cover Kelly's face or hands, even when she's pointing or gesturing.
+          </div>
+        </div>
+
+      </div>
+    </div>
+  </div>
+
+  <!-- Kelly Spatial Intelligence System -->
+  <script src="/js/kelly-spatial-intelligence.js"></script>
+
+  <!-- Test Controls -->
+  <script>
+    let zonesVisible = false;
+    let popoverVisible = false;
+
+    // Wait for Kelly Spatial to initialize
+    window.addEventListener('load', () => {
+      updateStats();
+    });
+
+    // Pose selection
+    document.querySelectorAll('.pose-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        // Update active state
+        document.querySelectorAll('.pose-btn').forEach(b => b.classList.remove('active'));
+        this.classList.add('active');
+        
+        // Change Kelly's pose
+        const pose = this.dataset.pose;
+        const kellyAvatar = document.getElementById('kelly-avatar');
+        kellyAvatar.src = `/kelly/poses/${pose}.png?v=20251202`;
+        
+        // Wait for pose detection
+        setTimeout(() => {
+          updateStats();
+          if (zonesVisible) {
+            window.kellySpatial.visualizeSafeZones();
+          }
+          if (popoverVisible) {
+            repositionPopover();
+          }
+        }, 100);
+      });
+    });
+
+    // Position testing
+    document.querySelectorAll('.position-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const position = this.dataset.position;
+        
+        // Show popover if hidden
+        if (!popoverVisible) {
+          popoverVisible = true;
+          document.getElementById('toggle-popover').classList.add('active');
+          document.getElementById('toggle-popover').textContent = 'Hide Test Popover';
+        }
+        
+        // Position popover
+        const popover = document.getElementById('test-popover');
+        window.kellySpatial.positionPopover(popover, position);
+        popover.classList.add('visible');
+        
+        // Update zone info
+        const zoneInfo = popover.dataset.safeZone || 'unknown';
+        const zoneScore = popover.dataset.safeZoneScore || '0';
+        document.getElementById('current-zone').textContent = `${zoneInfo} (score: ${zoneScore})`;
+      });
+    });
+
+    // Toggle safe zones visualization
+    document.getElementById('toggle-zones').addEventListener('click', function() {
+      zonesVisible = !zonesVisible;
+      
+      if (zonesVisible) {
+        window.kellySpatial.visualizeSafeZones();
+        this.classList.add('active');
+        this.textContent = 'Hide Safe Zones';
+      } else {
+        document.querySelectorAll('.kelly-spatial-debug').forEach(el => el.remove());
+        this.classList.remove('active');
+        this.textContent = 'Show Safe Zones';
+      }
+    });
+
+    // Toggle test popover
+    document.getElementById('toggle-popover').addEventListener('click', function() {
+      popoverVisible = !popoverVisible;
+      const popover = document.getElementById('test-popover');
+      
+      if (popoverVisible) {
+        window.kellySpatial.positionPopover(popover, 'top-right');
+        popover.classList.add('visible');
+        this.classList.add('active');
+        this.textContent = 'Hide Test Popover';
+        
+        const zoneInfo = popover.dataset.safeZone || 'unknown';
+        const zoneScore = popover.dataset.safeZoneScore || '0';
+        document.getElementById('current-zone').textContent = `${zoneInfo} (score: ${zoneScore})`;
+      } else {
+        popover.classList.remove('visible');
+        this.classList.remove('active');
+        this.textContent = 'Show Test Popover';
+      }
+    });
+
+    // Update stats
+    function updateStats() {
+      const safeZones = window.kellySpatial.getSafeZones();
+      const blockedZones = window.kellySpatial.getBlockedZones();
+      
+      document.getElementById('stat-safe-zones').textContent = safeZones.length;
+      document.getElementById('stat-blocked-zones').textContent = blockedZones.length;
+    }
+
+    // Reposition popover after pose change
+    function repositionPopover() {
+      const popover = document.getElementById('test-popover');
+      if (popover.classList.contains('visible')) {
+        const currentZone = popover.dataset.safeZone || 'top-right';
+        window.kellySpatial.positionPopover(popover, currentZone);
+        
+        const zoneInfo = popover.dataset.safeZone || 'unknown';
+        const zoneScore = popover.dataset.safeZoneScore || '0';
+        document.getElementById('current-zone').textContent = `${zoneInfo} (score: ${zoneScore})`;
+      }
+    }
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'z') {
+        document.getElementById('toggle-zones').click();
+      } else if (e.key === 'p') {
+        document.getElementById('toggle-popover').click();
+      }
+    });
+  </script>
+
+</body>
+</html>
+
+
+
+
+

@@ -1,0 +1,489 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kelly Video Spatial - iPhone Lock Screen Test</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: #000;
+      overflow: hidden;
+    }
+
+    /* Kelly Wallpaper (Full-bleed) */
+    .kelly-wallpaper {
+      position: fixed;
+      inset: 0;
+      z-index: 0;
+      overflow: hidden;
+    }
+
+    #kelly-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 20%;
+    }
+
+    /* Floating UI Layer */
+    .floating-ui {
+      position: fixed;
+      inset: 0;
+      z-index: 10;
+      pointer-events: none;
+    }
+
+    .floating-ui > * {
+      pointer-events: auto;
+    }
+
+    /* Time/Date Panel (iPhone Lock Screen Style) */
+    .time-date-panel {
+      position: absolute;
+      /* Position set by kelly-video-spatial.js */
+      
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      
+      border-radius: 16px;
+      padding: 20px 24px;
+      
+      box-shadow: 
+        0 4px 16px rgba(0, 0, 0, 0.15),
+        0 1px 2px rgba(0, 0, 0, 0.05),
+        inset 0 1px 0 rgba(255, 255, 255, 0.5);
+      
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      
+      opacity: 0;
+      transform: scale(0.9);
+      transition: all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1);
+    }
+
+    .time-date-panel.visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .time {
+      font-size: 56px;
+      font-weight: 700;
+      color: #000;
+      line-height: 1;
+      margin-bottom: 6px;
+      letter-spacing: -1px;
+    }
+
+    .date {
+      font-size: 18px;
+      font-weight: 500;
+      color: rgba(0, 0, 0, 0.7);
+      margin-bottom: 16px;
+    }
+
+    .lesson-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #3B82F6;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+
+    /* Action Dock (iPhone Style) */
+    .action-dock {
+      position: absolute;
+      /* Position set by kelly-video-spatial.js */
+      
+      display: flex;
+      gap: 12px;
+      padding: 12px;
+      
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      
+      border-radius: 24px;
+      
+      box-shadow: 
+        0 4px 16px rgba(0, 0, 0, 0.15),
+        0 1px 2px rgba(0, 0, 0, 0.05);
+      
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      
+      opacity: 0;
+      transform: scale(0.9);
+      transition: all 0.4s cubic-bezier(0.4, 0.0, 0.2, 1) 0.1s;
+    }
+
+    .action-dock.visible {
+      opacity: 1;
+      transform: scale(1);
+    }
+
+    .action-btn {
+      width: 52px;
+      height: 52px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255, 255, 255, 0.95);
+      font-size: 26px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+      
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .action-btn:hover {
+      transform: scale(1.1);
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+    }
+
+    .action-btn:active {
+      transform: scale(0.95);
+    }
+
+    /* Swipe Hint */
+    .swipe-hint {
+      position: absolute;
+      bottom: 40px;
+      left: 50%;
+      transform: translateX(-50%);
+      
+      background: rgba(255, 255, 255, 0.85);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      
+      border-radius: 20px;
+      padding: 12px 24px;
+      
+      font-size: 14px;
+      font-weight: 600;
+      color: rgba(0, 0, 0, 0.8);
+      
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.15);
+      border: 1px solid rgba(255, 255, 255, 0.3);
+      
+      opacity: 0;
+      animation: fadeInUp 0.6s ease 0.5s forwards;
+    }
+
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateX(-50%) translateY(20px);
+      }
+      to {
+        opacity: 1;
+        transform: translateX(-50%) translateY(0);
+      }
+    }
+
+    /* Debug Toggle */
+    .debug-toggle {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      z-index: 1000;
+      
+      padding: 10px 16px;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      
+      transition: all 0.2s ease;
+    }
+
+    .debug-toggle:hover {
+      background: rgba(0, 0, 0, 0.9);
+      transform: scale(1.05);
+    }
+
+    .debug-toggle.active {
+      background: #10B981;
+      border-color: #10B981;
+    }
+
+    /* Video Time Display */
+    .video-time {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 1000;
+      
+      padding: 8px 12px;
+      background: rgba(0, 0, 0, 0.8);
+      backdrop-filter: blur(10px);
+      color: white;
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 6px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: 'Courier New', monospace;
+    }
+
+    /* Loading State */
+    .loading-overlay {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: #000;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 20px;
+      
+      opacity: 1;
+      transition: opacity 0.5s ease;
+    }
+
+    .loading-overlay.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(255, 255, 255, 0.2);
+      border-top-color: #3B82F6;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+
+    .loading-text {
+      color: white;
+      font-size: 16px;
+      font-weight: 600;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .time {
+        font-size: 48px;
+      }
+      
+      .date {
+        font-size: 16px;
+      }
+      
+      .action-btn {
+        width: 48px;
+        height: 48px;
+        font-size: 24px;
+      }
+    }
+  </style>
+</head>
+<body>
+  
+  <!-- Loading Overlay -->
+  <div class="loading-overlay" id="loading-overlay">
+    <div class="loading-spinner"></div>
+    <div class="loading-text">Loading Kelly...</div>
+  </div>
+
+  <!-- Kelly Wallpaper (Full-bleed Video) -->
+  <div class="kelly-wallpaper">
+    <video 
+      id="kelly-video"
+      data-video-id="001-welcome"
+      src="/kelly/videos/001/welcome.mp4"
+      autoplay
+      loop
+      muted
+      playsinline
+    ></video>
+  </div>
+
+  <!-- Floating UI Layer -->
+  <div class="floating-ui" id="floating-ui">
+    
+    <!-- Time/Date Panel -->
+    <div class="time-date-panel" id="time-date-panel">
+      <div class="time" id="current-time">2:34</div>
+      <div class="date" id="current-date">Tuesday, December 9</div>
+      <div class="lesson-title">Sharing What We Have</div>
+    </div>
+
+    <!-- Action Dock -->
+    <div class="action-dock" id="action-dock">
+      <button class="action-btn" title="Aha Moment">💡</button>
+      <button class="action-btn" title="Pin to Journal">📌</button>
+      <button class="action-btn" title="Share Lesson">✨</button>
+      <button class="action-btn" title="Talk to Kelly">🎤</button>
+    </div>
+
+    <!-- Swipe Hint -->
+    <div class="swipe-hint">Swipe up to start lesson</div>
+  </div>
+
+  <!-- Debug Toggle -->
+  <button class="debug-toggle" id="debug-toggle">👁️ Show Safe Zones</button>
+
+  <!-- Video Time Display -->
+  <div class="video-time" id="video-time">0:00 / 0:00</div>
+
+  <!-- Kelly Video Spatial System -->
+  <script src="/js/kelly-video-spatial.js"></script>
+
+  <script>
+    // Update time/date
+    function updateTime() {
+      const now = new Date();
+      const hours = now.getHours();
+      const minutes = now.getMinutes();
+      const ampm = hours >= 12 ? 'PM' : 'AM';
+      const displayHours = hours % 12 || 12;
+      
+      document.getElementById('current-time').textContent = 
+        `${displayHours}:${minutes.toString().padStart(2, '0')}`;
+      
+      const days = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+      const months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+      
+      document.getElementById('current-date').textContent = 
+        `${days[now.getDay()]}, ${months[now.getMonth()]} ${now.getDate()}`;
+    }
+    
+    updateTime();
+    setInterval(updateTime, 1000);
+
+    // Update video time display
+    const kellyVideo = document.getElementById('kelly-video');
+    const videoTimeDisplay = document.getElementById('video-time');
+    
+    function formatTime(seconds) {
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60);
+      return `${mins}:${secs.toString().padStart(2, '0')}`;
+    }
+    
+    kellyVideo.addEventListener('timeupdate', () => {
+      const current = formatTime(kellyVideo.currentTime);
+      const duration = formatTime(kellyVideo.duration || 0);
+      videoTimeDisplay.textContent = `${current} / ${duration}`;
+    });
+
+    // Initialize Kelly Video Spatial System
+    kellyVideo.addEventListener('loadedmetadata', async () => {
+      console.log('[Demo] Video metadata loaded');
+      
+      const videoId = kellyVideo.dataset.videoId;
+      const manifestUrl = `/kelly/videos/001/welcome-safe-zones.json`;
+      
+      try {
+        await window.kellyVideoSpatial.init(kellyVideo, manifestUrl);
+        console.log('[Demo] ✅ Kelly Video Spatial initialized');
+        
+        // Hide loading overlay
+        document.getElementById('loading-overlay').classList.add('hidden');
+        
+        // Position UI elements
+        setTimeout(() => {
+          positionFloatingUI();
+        }, 100);
+        
+      } catch (error) {
+        console.error('[Demo] ❌ Failed to initialize:', error);
+        document.querySelector('.loading-text').textContent = 'Error loading spatial system';
+      }
+    });
+
+    // Listen for safe zone updates (60 FPS)
+    window.addEventListener('kelly-safe-zones-updated', (event) => {
+      const { time, safeZones } = event.detail;
+      // Safe zones update automatically, UI repositions smoothly
+    });
+
+    // Position floating UI in safe zones
+    function positionFloatingUI() {
+      const timeDatePanel = document.getElementById('time-date-panel');
+      const actionDock = document.getElementById('action-dock');
+      
+      // Position time/date in top-left safe zone
+      window.kellyVideoSpatial.positionPopover(timeDatePanel, 'top-left');
+      timeDatePanel.classList.add('visible');
+      
+      // Position action dock in bottom-right safe zone
+      window.kellyVideoSpatial.positionPopover(actionDock, 'bottom-right');
+      actionDock.classList.add('visible');
+      
+      console.log('[Demo] UI positioned in safe zones');
+    }
+
+    // Debug toggle
+    let debugActive = false;
+    document.getElementById('debug-toggle').addEventListener('click', function() {
+      debugActive = !debugActive;
+      
+      if (debugActive) {
+        window.kellyVideoSpatial.debugMode = true;
+        window.kellyVideoSpatial.visualizeSafeZones();
+        this.classList.add('active');
+        this.textContent = '👁️ Hide Safe Zones';
+      } else {
+        window.kellyVideoSpatial.debugMode = false;
+        document.querySelectorAll('.kelly-video-spatial-debug').forEach(el => el.remove());
+        this.classList.remove('active');
+        this.textContent = '👁️ Show Safe Zones';
+      }
+    });
+
+    // Action button handlers
+    document.querySelectorAll('.action-btn').forEach(btn => {
+      btn.addEventListener('click', function() {
+        const title = this.getAttribute('title');
+        console.log(`[Demo] Action clicked: ${title}`);
+        
+        // Visual feedback
+        this.style.transform = 'scale(0.9)';
+        setTimeout(() => {
+          this.style.transform = '';
+        }, 150);
+      });
+    });
+
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === ' ') {
+        e.preventDefault();
+        if (kellyVideo.paused) {
+          kellyVideo.play();
+        } else {
+          kellyVideo.pause();
+        }
+      } else if (e.key === 'd') {
+        document.getElementById('debug-toggle').click();
+      }
+    });
+  </script>
+
+</body>
+</html>
+
+
+
+
+

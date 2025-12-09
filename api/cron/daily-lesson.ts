@@ -13,6 +13,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
+import { getTodayLessonDay, getLessonDateStrings } from '../../lib/lesson-dates';
 
 const RESEND_BATCH_URL = 'https://api.resend.com/emails/batch';
 const RESEND_API_URL = 'https://api.resend.com/emails';
@@ -26,10 +27,10 @@ type SubjectStyle = 'emoji' | 'progress' | 'curiosity' | 'time';
 
 function getSubjectStyle(userId: string): SubjectStyle {
   // Deterministic rotation based on user ID + day
-  const dayOfYear = getDayOfYear();
+  const todayLesson = getTodayLessonDay();
   const hash = userId.split('').reduce((a, c) => a + c.charCodeAt(0), 0);
   const styles: SubjectStyle[] = ['emoji', 'progress', 'curiosity', 'time'];
-  return styles[(hash + dayOfYear) % styles.length];
+  return styles[(hash + todayLesson) % styles.length];
 }
 
 function generateSubject(
@@ -57,13 +58,9 @@ function generateSubject(
   }
 }
 
-function getDayOfYear(): number {
-  const now = new Date();
-  const start = new Date(now.getFullYear(), 0, 0);
-  const diff = now.getTime() - start.getTime();
-  const oneDay = 1000 * 60 * 60 * 24;
-  return Math.floor(diff / oneDay);
-}
+// Note: Day calculation moved to lib/lesson-dates.ts
+// Use getTodayLessonDay() for internal day number
+// Year 1: December 17, 2025 → December 16, 2026
 
 function isTodayUserBirthday(birthday: string | null): boolean {
   if (!birthday) return false;
@@ -196,7 +193,7 @@ function generateEnhancedEmailHTML(
           <tr>
             <td style="padding: 24px; text-align: center; border-top: 1px solid #e5e7eb;">
               <p style="font-family: -apple-system, sans-serif; font-size: 12px; color: #9ca3af; margin: 0 0 8px;">
-                Day ${dayNumber} of 365 · <a href="https://curiouskelly.com" style="color: #9ca3af;">curiouskelly.com</a>
+                ${getLessonDateStrings(dayNumber).formatted} · <a href="https://curiouskelly.com" style="color: #9ca3af;">curiouskelly.com</a>
               </p>
               <p style="font-family: -apple-system, sans-serif; font-size: 11px; color: #9ca3af; margin: 0;">
                 <a href="${unsubscribeUrl}" style="color: #9ca3af;">Unsubscribe from daily emails</a>
@@ -243,7 +240,7 @@ function generateEnhancedEmailText(
   text += `${lessonUrl}\n\n`;
   text += `— Kelly\n\n`;
   text += `---\n`;
-  text += `Day ${dayNumber} of 365 · curiouskelly.com\n`;
+  text += `${getLessonDateStrings(dayNumber).formatted} · curiouskelly.com\n`;
   text += `Unsubscribe: ${unsubscribeUrl}`;
   
   return text;
@@ -273,14 +270,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   try {
-    const dayOfYear = getDayOfYear();
+    // Get today's lesson day (internal: 1-365, starting Dec 17)
+    const todayLessonDay = getTodayLessonDay();
+    const dateInfo = getLessonDateStrings(todayLessonDay);
+    
+    console.log(`[Daily Email] Processing for ${dateInfo.formatted} (day ${todayLessonDay})`);
     
     // Fetch today's lesson
     let lesson: any = null;
     const { data: lessonData, error: lessonError } = await supabase
       .from('lessons')
       .select('id, title, emoji, category, day_number')
-      .eq('day_number', dayOfYear)
+      .eq('day_number', todayLessonDay)
       .single();
 
     if (!lessonError && lessonData) {
@@ -290,15 +291,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const { data: fallback } = await supabase
         .from('lessons')
         .select('id, title, emoji, category, day_number')
-        .eq('day_number', dayOfYear)
+        .eq('day_number', todayLessonDay)
         .limit(1)
         .single();
       lesson = fallback;
     }
 
     const lessonEmoji = lesson?.emoji || '📚';
-    const lessonTitle = lesson?.title || `Day ${dayOfYear} Lesson`;
-    const lessonDayNumber = lesson?.day_number || dayOfYear;
+    const lessonTitle = lesson?.title || `${dateInfo.formatted} Lesson`;
+    const lessonDayNumber = lesson?.day_number || todayLessonDay;
     const lessonUrl = `https://curiouskelly.com/day/${lessonDayNumber}`;
 
     // Fetch subscribed users with their progress
@@ -318,7 +319,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({
         success: true,
         message: 'No subscribed users',
-        lesson: { day: lessonDayNumber, title: lessonTitle, emoji: lessonEmoji }
+        lesson: { 
+          dayNumber: lessonDayNumber, // Internal reference
+          date: dateInfo.formatted,   // User-facing: "December 17"
+          title: lessonTitle, 
+          emoji: lessonEmoji 
+        }
       });
     }
 
@@ -426,7 +432,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         milestones: milestoneCount
       },
       lesson: {
-        day: lessonDayNumber,
+        dayNumber: lessonDayNumber, // Internal reference
+        date: dateInfo.formatted,   // User-facing: "December 17"
         title: lessonTitle,
         emoji: lessonEmoji
       },

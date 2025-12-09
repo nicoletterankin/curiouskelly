@@ -1,0 +1,654 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>✨ Kelly - Golden V2 Avatar</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Inter:wght@300;400;500;600;700&display=swap');
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    :root {
+      --kelly-hair: #6B4423;
+      --kelly-hair-highlight: #8B6B4F;
+      --kelly-skin: #D4A574;
+      --kelly-skin-shadow: #C49564;
+      --kelly-skin-highlight: #E8C9A6;
+      --kelly-eyes: #4A3728;
+      --kelly-eye-white: #F8F6F4;
+      --kelly-iris: #5D4037;
+      --kelly-lips: #C97B7B;
+      --kelly-lips-dark: #A65858;
+      --kelly-blush: rgba(219, 112, 147, 0.2);
+      --kelly-teeth: #FFFEF8;
+      --kelly-tongue: #D97B7B;
+      --kelly-eyebrow: #5D4037;
+      --kelly-eyelash: #2D2D2D;
+      
+      /* Background */
+      --bg-warm: #FDF8F3;
+      --bg-accent: #E8D5C4;
+      
+      /* Animation */
+      --transition-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    
+    body {
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(145deg, var(--bg-warm) 0%, var(--bg-accent) 100%);
+      font-family: 'Inter', sans-serif;
+      overflow: hidden;
+    }
+    
+    .header {
+      position: absolute;
+      top: 24px;
+      left: 50%;
+      transform: translateX(-50%);
+      text-align: center;
+    }
+    
+    .header h1 {
+      font-family: 'DM Serif Display', serif;
+      font-size: 2.2rem;
+      color: #3D3029;
+      letter-spacing: -0.02em;
+    }
+    
+    .header p {
+      color: #7A6B5A;
+      font-size: 0.95rem;
+      margin-top: 4px;
+    }
+    
+    .avatar-container {
+      position: relative;
+      width: 400px;
+      height: 500px;
+    }
+    
+    .kelly-avatar {
+      width: 100%;
+      height: 100%;
+    }
+    
+    /* Expression Classes */
+    .kelly-avatar.speaking .mouth-closed { opacity: 0; }
+    .kelly-avatar.speaking .mouth-open { opacity: 1; }
+    .kelly-avatar:not(.speaking) .mouth-closed { opacity: 1; }
+    .kelly-avatar:not(.speaking) .mouth-open { opacity: 0; }
+    
+    /* Viseme Mouth States */
+    .mouth-open { transition: d 0.08s var(--transition-smooth); }
+    
+    /* Blink Animation */
+    @keyframes blink {
+      0%, 95%, 100% { transform: scaleY(1); }
+      97% { transform: scaleY(0.1); }
+    }
+    
+    .eye-blink {
+      animation: blink 4s infinite;
+      transform-origin: center;
+    }
+    
+    /* Breathing Animation */
+    @keyframes breathe {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-2px); }
+    }
+    
+    .body-group {
+      animation: breathe 4s ease-in-out infinite;
+    }
+    
+    /* Subtle Head Movement */
+    @keyframes subtleMove {
+      0%, 100% { transform: rotate(0deg) translateX(0); }
+      25% { transform: rotate(0.5deg) translateX(1px); }
+      75% { transform: rotate(-0.5deg) translateX(-1px); }
+    }
+    
+    .head-group {
+      animation: subtleMove 6s ease-in-out infinite;
+      transform-origin: center bottom;
+    }
+    
+    /* Speaking Animation - More Dynamic */
+    .kelly-avatar.speaking .head-group {
+      animation: speakMove 0.5s ease-in-out infinite;
+    }
+    
+    @keyframes speakMove {
+      0%, 100% { transform: rotate(0deg); }
+      25% { transform: rotate(0.8deg); }
+      75% { transform: rotate(-0.8deg); }
+    }
+    
+    /* Controls */
+    .controls {
+      position: absolute;
+      bottom: 24px;
+      display: flex;
+      gap: 12px;
+    }
+    
+    .btn {
+      padding: 12px 24px;
+      border: none;
+      border-radius: 999px;
+      font-family: 'Inter', sans-serif;
+      font-weight: 600;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s var(--transition-smooth);
+    }
+    
+    .btn-primary {
+      background: linear-gradient(135deg, #4A90A4 0%, #2D6B7F 100%);
+      color: white;
+      box-shadow: 0 4px 12px rgba(45, 107, 127, 0.3);
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 20px rgba(45, 107, 127, 0.4);
+    }
+    
+    .btn-secondary {
+      background: white;
+      color: #3D3029;
+      border: 2px solid #E8D5C4;
+    }
+    
+    .btn-secondary:hover {
+      border-color: #D4A574;
+      background: #FDF8F3;
+    }
+    
+    /* Status Display */
+    .status {
+      position: absolute;
+      bottom: 80px;
+      text-align: center;
+    }
+    
+    .status-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      background: white;
+      border-radius: 999px;
+      font-size: 0.85rem;
+      color: #5D4037;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
+    }
+    
+    .status-badge.speaking {
+      background: linear-gradient(135deg, #E8F5E9 0%, #C8E6C9 100%);
+      color: #2E7D32;
+    }
+    
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: #9E9E9E;
+    }
+    
+    .status-badge.speaking .status-dot {
+      background: #4CAF50;
+      animation: pulse 1s infinite;
+    }
+    
+    @keyframes pulse {
+      0%, 100% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.3); opacity: 0.7; }
+    }
+    
+    /* Viseme Display */
+    .viseme-display {
+      position: absolute;
+      top: 24px;
+      right: 24px;
+      background: white;
+      padding: 16px;
+      border-radius: 12px;
+      box-shadow: 0 2px 12px rgba(0,0,0,0.1);
+      font-size: 0.8rem;
+      min-width: 180px;
+    }
+    
+    .viseme-display h3 {
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      color: #7A6B5A;
+      margin-bottom: 8px;
+    }
+    
+    .viseme-current {
+      font-family: 'DM Serif Display', serif;
+      font-size: 1.4rem;
+      color: #3D3029;
+    }
+    
+    .viseme-bars {
+      display: flex;
+      gap: 3px;
+      margin-top: 8px;
+    }
+    
+    .viseme-bar {
+      width: 8px;
+      height: 24px;
+      background: #E8D5C4;
+      border-radius: 4px;
+      transition: all 0.1s;
+    }
+    
+    .viseme-bar.active {
+      background: linear-gradient(to top, #4A90A4, #2D6B7F);
+      height: 32px;
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>✨ Kelly</h1>
+    <p>Golden V2 Avatar System</p>
+  </div>
+  
+  <div class="avatar-container">
+    <svg class="kelly-avatar" viewBox="0 0 400 500" xmlns="http://www.w3.org/2000/svg">
+      <defs>
+        <!-- Gradients -->
+        <linearGradient id="skinGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#E8C9A6"/>
+          <stop offset="50%" style="stop-color:#D4A574"/>
+          <stop offset="100%" style="stop-color:#C49564"/>
+        </linearGradient>
+        
+        <linearGradient id="hairGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+          <stop offset="0%" style="stop-color:#8B6B4F"/>
+          <stop offset="40%" style="stop-color:#6B4423"/>
+          <stop offset="100%" style="stop-color:#4A2F18"/>
+        </linearGradient>
+        
+        <linearGradient id="lipGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#D4847F"/>
+          <stop offset="100%" style="stop-color:#A65858"/>
+        </linearGradient>
+        
+        <linearGradient id="irisGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#6D5344"/>
+          <stop offset="100%" style="stop-color:#3D2B20"/>
+        </linearGradient>
+        
+        <linearGradient id="shirtGradient" x1="0%" y1="0%" x2="0%" y2="100%">
+          <stop offset="0%" style="stop-color:#5D8A8C"/>
+          <stop offset="100%" style="stop-color:#3D6A6C"/>
+        </linearGradient>
+        
+        <!-- Filters -->
+        <filter id="softShadow" x="-20%" y="-20%" width="140%" height="140%">
+          <feDropShadow dx="0" dy="4" stdDeviation="8" flood-color="#000" flood-opacity="0.15"/>
+        </filter>
+        
+        <filter id="innerGlow">
+          <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur"/>
+          <feOffset in="blur" dx="0" dy="1" result="offsetBlur"/>
+          <feComposite in="SourceGraphic" in2="offsetBlur" operator="over"/>
+        </filter>
+      </defs>
+      
+      <!-- Background Circle -->
+      <circle cx="200" cy="220" r="180" fill="#F5EDE6" opacity="0.5"/>
+      
+      <!-- Body/Shoulders Group -->
+      <g class="body-group">
+        <!-- Neck -->
+        <path d="M170 340 L175 380 L225 380 L230 340 Q200 350 170 340" fill="url(#skinGradient)"/>
+        
+        <!-- Shoulders/Shirt -->
+        <ellipse cx="200" cy="450" rx="140" ry="80" fill="url(#shirtGradient)" filter="url(#softShadow)"/>
+        <ellipse cx="200" cy="445" rx="130" ry="70" fill="url(#shirtGradient)"/>
+        
+        <!-- Collar -->
+        <path d="M160 395 Q200 420 240 395 L235 410 Q200 430 165 410 Z" fill="#4A7072"/>
+      </g>
+      
+      <!-- Head Group -->
+      <g class="head-group">
+        <!-- Hair Back -->
+        <ellipse cx="200" cy="180" rx="95" ry="105" fill="url(#hairGradient)"/>
+        
+        <!-- Face Shape -->
+        <ellipse cx="200" cy="200" rx="75" ry="90" fill="url(#skinGradient)" filter="url(#softShadow)"/>
+        
+        <!-- Hair Front -->
+        <path d="M125 160 
+                 Q130 100 200 95 
+                 Q270 100 275 160 
+                 Q270 130 240 125
+                 Q200 115 160 125
+                 Q130 130 125 160 Z" fill="url(#hairGradient)"/>
+        
+        <!-- Hair Strands -->
+        <path d="M140 120 Q155 90 180 100 Q160 110 145 125" fill="#8B6B4F" opacity="0.6"/>
+        <path d="M220 95 Q240 85 260 100 Q245 95 230 105" fill="#8B6B4F" opacity="0.6"/>
+        
+        <!-- Bangs/Fringe -->
+        <path d="M145 155 Q150 130 175 125 Q160 145 155 160" fill="url(#hairGradient)"/>
+        <path d="M255 155 Q250 130 225 125 Q240 145 245 160" fill="url(#hairGradient)"/>
+        
+        <!-- Ears -->
+        <ellipse cx="125" cy="200" rx="12" ry="18" fill="url(#skinGradient)"/>
+        <ellipse cx="275" cy="200" rx="12" ry="18" fill="url(#skinGradient)"/>
+        
+        <!-- Eyebrows -->
+        <path d="M150 170 Q165 163 180 168" stroke="#5D4037" stroke-width="3" fill="none" stroke-linecap="round"/>
+        <path d="M220 168 Q235 163 250 170" stroke="#5D4037" stroke-width="3" fill="none" stroke-linecap="round"/>
+        
+        <!-- Eyes -->
+        <g class="eyes">
+          <!-- Left Eye -->
+          <g class="eye-blink" style="transform-origin: 165px 195px;">
+            <ellipse cx="165" cy="195" rx="18" ry="14" fill="#F8F6F4"/>
+            <circle cx="165" cy="196" r="10" fill="url(#irisGradient)"/>
+            <circle cx="165" cy="196" r="5" fill="#1A1A1A"/>
+            <circle cx="162" cy="192" r="3" fill="white" opacity="0.9"/>
+            <circle cx="168" cy="198" r="1.5" fill="white" opacity="0.6"/>
+            <!-- Eyelashes -->
+            <path d="M148 188 L145 184 M152 186 L150 181 M156 185 L155 180" stroke="#2D2D2D" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M174 185 L175 180 M178 186 L180 181 M182 188 L185 184" stroke="#2D2D2D" stroke-width="1.5" stroke-linecap="round"/>
+            <!-- Upper eyelid line -->
+            <path d="M147 190 Q165 182 183 190" stroke="#8B6B4F" stroke-width="1.5" fill="none"/>
+          </g>
+          
+          <!-- Right Eye -->
+          <g class="eye-blink" style="transform-origin: 235px 195px;">
+            <ellipse cx="235" cy="195" rx="18" ry="14" fill="#F8F6F4"/>
+            <circle cx="235" cy="196" r="10" fill="url(#irisGradient)"/>
+            <circle cx="235" cy="196" r="5" fill="#1A1A1A"/>
+            <circle cx="232" cy="192" r="3" fill="white" opacity="0.9"/>
+            <circle cx="238" cy="198" r="1.5" fill="white" opacity="0.6"/>
+            <!-- Eyelashes -->
+            <path d="M218 188 L215 184 M222 186 L220 181 M226 185 L225 180" stroke="#2D2D2D" stroke-width="1.5" stroke-linecap="round"/>
+            <path d="M244 185 L245 180 M248 186 L250 181 M252 188 L255 184" stroke="#2D2D2D" stroke-width="1.5" stroke-linecap="round"/>
+            <!-- Upper eyelid line -->
+            <path d="M217 190 Q235 182 253 190" stroke="#8B6B4F" stroke-width="1.5" fill="none"/>
+          </g>
+        </g>
+        
+        <!-- Nose -->
+        <path d="M200 210 L200 235 L192 245 Q200 248 208 245 L200 235" fill="none" stroke="#C49564" stroke-width="2" stroke-linecap="round"/>
+        <ellipse cx="194" cy="243" rx="4" ry="3" fill="#C49564" opacity="0.5"/>
+        <ellipse cx="206" cy="243" rx="4" ry="3" fill="#C49564" opacity="0.5"/>
+        
+        <!-- Blush -->
+        <ellipse cx="145" cy="230" rx="18" ry="10" fill="#E8A0A0" opacity="0.25"/>
+        <ellipse cx="255" cy="230" rx="18" ry="10" fill="#E8A0A0" opacity="0.25"/>
+        
+        <!-- Mouth Group -->
+        <g class="mouth-group" transform="translate(200, 270)">
+          <!-- Closed mouth (smile) -->
+          <g class="mouth-closed">
+            <path d="M-25 0 Q0 12 25 0" fill="none" stroke="url(#lipGradient)" stroke-width="6" stroke-linecap="round"/>
+          </g>
+          
+          <!-- Open mouth (speaking) -->
+          <g class="mouth-open" style="opacity: 0;">
+            <!-- Outer lips -->
+            <ellipse cx="0" cy="5" rx="22" ry="14" fill="url(#lipGradient)"/>
+            <!-- Inner mouth (dark) -->
+            <ellipse cx="0" cy="6" rx="16" ry="10" fill="#4A2020"/>
+            <!-- Teeth -->
+            <path id="teethPath" d="M-12 0 L12 0 L10 6 L-10 6 Z" fill="#FFFEF8"/>
+            <!-- Tongue -->
+            <ellipse id="tonguePath" cx="0" cy="12" rx="10" ry="5" fill="#D97B7B"/>
+          </g>
+        </g>
+        
+        <!-- Chin definition -->
+        <path d="M175 290 Q200 310 225 290" fill="none" stroke="#C49564" stroke-width="1" opacity="0.3"/>
+      </g>
+    </svg>
+  </div>
+  
+  <div class="status">
+    <span class="status-badge" id="statusBadge">
+      <span class="status-dot"></span>
+      <span id="statusText">Idle</span>
+    </span>
+  </div>
+  
+  <div class="viseme-display">
+    <h3>Current Viseme</h3>
+    <div class="viseme-current" id="visemeName">sil</div>
+    <div class="viseme-bars" id="visemeBars">
+      <div class="viseme-bar"></div>
+      <div class="viseme-bar"></div>
+      <div class="viseme-bar"></div>
+      <div class="viseme-bar"></div>
+      <div class="viseme-bar"></div>
+      <div class="viseme-bar"></div>
+      <div class="viseme-bar"></div>
+      <div class="viseme-bar"></div>
+    </div>
+  </div>
+  
+  <div class="controls">
+    <button class="btn btn-primary" id="btnSpeak">▶ Speak Demo</button>
+    <button class="btn btn-secondary" id="btnStop">◼ Stop</button>
+    <button class="btn btn-secondary" id="btnExpression">😊 Expression</button>
+  </div>
+  
+  <script>
+    /**
+     * ═══════════════════════════════════════════════════════════════════════════
+     * KELLY SVG AVATAR CONTROLLER
+     * Golden V2 - Real-time lip-sync animation
+     * ═══════════════════════════════════════════════════════════════════════════
+     */
+    
+    class KellySVGAvatar {
+      constructor() {
+        this.avatar = document.querySelector('.kelly-avatar');
+        this.mouthOpen = document.querySelector('.mouth-open');
+        this.mouthClosed = document.querySelector('.mouth-closed');
+        this.teethPath = document.getElementById('teethPath');
+        this.tonguePath = document.getElementById('tonguePath');
+        this.statusBadge = document.getElementById('statusBadge');
+        this.statusText = document.getElementById('statusText');
+        this.visemeName = document.getElementById('visemeName');
+        this.visemeBars = document.getElementById('visemeBars');
+        
+        this.isSpeaking = false;
+        this.currentViseme = 'sil';
+        
+        // Viseme to mouth shape mapping
+        this.visemeShapes = {
+          'sil': { openness: 0, width: 0, teeth: false, tongue: false },
+          'PP': { openness: 0.1, width: 0.8, teeth: false, tongue: false },
+          'FF': { openness: 0.2, width: 0.7, teeth: true, tongue: false },
+          'TH': { openness: 0.3, width: 0.6, teeth: true, tongue: true },
+          'DD': { openness: 0.35, width: 0.65, teeth: true, tongue: false },
+          'KK': { openness: 0.4, width: 0.7, teeth: false, tongue: false },
+          'CH': { openness: 0.45, width: 0.5, teeth: false, tongue: false },
+          'SS': { openness: 0.25, width: 0.85, teeth: true, tongue: false },
+          'NN': { openness: 0.3, width: 0.7, teeth: true, tongue: false },
+          'RR': { openness: 0.35, width: 0.55, teeth: false, tongue: false },
+          'AA': { openness: 1.0, width: 0.8, teeth: true, tongue: true },
+          'E': { openness: 0.5, width: 0.9, teeth: true, tongue: false },
+          'I': { openness: 0.35, width: 1.0, teeth: true, tongue: false },
+          'O': { openness: 0.75, width: 0.5, teeth: false, tongue: true },
+          'U': { openness: 0.4, width: 0.3, teeth: false, tongue: false }
+        };
+      }
+      
+      setViseme(visemeName) {
+        // Remove 'viseme_' prefix if present
+        const name = visemeName.replace('viseme_', '');
+        this.currentViseme = name;
+        
+        const shape = this.visemeShapes[name] || this.visemeShapes['sil'];
+        
+        // Update mouth shape
+        this.updateMouthShape(shape);
+        
+        // Update display
+        this.visemeName.textContent = name;
+        this.updateVisemeBars(shape.openness);
+      }
+      
+      updateMouthShape(shape) {
+        const mouthGroup = this.mouthOpen;
+        if (!mouthGroup) return;
+        
+        // Scale the mouth opening based on openness
+        const scaleY = 0.5 + shape.openness * 0.8;
+        const scaleX = 0.7 + shape.width * 0.5;
+        
+        // Apply transform to mouth-open group
+        mouthGroup.style.transform = `scale(${scaleX}, ${scaleY})`;
+        mouthGroup.style.transformOrigin = 'center';
+        
+        // Show/hide teeth
+        if (this.teethPath) {
+          this.teethPath.style.opacity = shape.teeth ? '1' : '0';
+        }
+        
+        // Show/hide tongue
+        if (this.tonguePath) {
+          this.tonguePath.style.opacity = shape.tongue ? '1' : '0.3';
+        }
+      }
+      
+      updateVisemeBars(intensity) {
+        const bars = this.visemeBars.querySelectorAll('.viseme-bar');
+        const activeCount = Math.ceil(intensity * bars.length);
+        
+        bars.forEach((bar, i) => {
+          bar.classList.toggle('active', i < activeCount);
+        });
+      }
+      
+      startSpeaking() {
+        this.isSpeaking = true;
+        this.avatar.classList.add('speaking');
+        this.statusBadge.classList.add('speaking');
+        this.statusText.textContent = 'Speaking...';
+      }
+      
+      stopSpeaking() {
+        this.isSpeaking = false;
+        this.avatar.classList.remove('speaking');
+        this.statusBadge.classList.remove('speaking');
+        this.statusText.textContent = 'Idle';
+        this.setViseme('sil');
+      }
+      
+      // Demo: Animate through visemes
+      async playDemo() {
+        this.startSpeaking();
+        
+        const demoSequence = [
+          'sil', 'TH', 'I', 'sil', 
+          'SS', 'U', 'NN', 'sil',
+          'I', 'SS', 'sil',
+          'AA', 'sil',
+          'DD', 'E', 'PP', 'O', 'sil',
+          'TH', 'AA', 'DD', 'sil',
+          'TH', 'E', 'sil',
+          'SS', 'U', 'NN', 'sil',
+          'KK', 'I', 'FF', 'SS', 'sil',
+          'AA', 'O', 'sil',
+          'E', 'FF', 'RR', 'I', 'TH', 'I', 'NN', 'KK'
+        ];
+        
+        for (const viseme of demoSequence) {
+          if (!this.isSpeaking) break;
+          this.setViseme(viseme);
+          await this.sleep(80 + Math.random() * 40);
+        }
+        
+        this.stopSpeaking();
+      }
+      
+      sleep(ms) {
+        return new Promise(resolve => setTimeout(resolve, ms));
+      }
+      
+      // Load and play lip-sync data from JSON
+      async playLipSync(lipSyncData) {
+        if (!lipSyncData || !lipSyncData.frames) return;
+        
+        this.startSpeaking();
+        
+        const startTime = performance.now();
+        const frameRate = lipSyncData.frameRate || 60;
+        const frameDuration = 1000 / frameRate;
+        
+        for (const frame of lipSyncData.frames) {
+          if (!this.isSpeaking) break;
+          
+          const targetTime = startTime + (frame.time * 1000);
+          const now = performance.now();
+          
+          if (targetTime > now) {
+            await this.sleep(targetTime - now);
+          }
+          
+          this.setViseme(frame.viseme);
+        }
+        
+        this.stopSpeaking();
+      }
+    }
+    
+    // Initialize
+    const kelly = new KellySVGAvatar();
+    
+    // Button handlers
+    document.getElementById('btnSpeak').addEventListener('click', () => {
+      kelly.playDemo();
+    });
+    
+    document.getElementById('btnStop').addEventListener('click', () => {
+      kelly.stopSpeaking();
+    });
+    
+    document.getElementById('btnExpression').addEventListener('click', () => {
+      // Cycle through expressions - future feature
+      const expressions = ['happy', 'curious', 'thoughtful', 'excited'];
+      console.log('Expression cycling - coming soon!');
+    });
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.code === 'Space') {
+        e.preventDefault();
+        if (kelly.isSpeaking) {
+          kelly.stopSpeaking();
+        } else {
+          kelly.playDemo();
+        }
+      }
+    });
+    
+    // Expose for external control
+    window.KellySVGAvatar = kelly;
+    
+    console.log('✨ Kelly SVG Avatar initialized');
+    console.log('Press SPACE to play demo');
+  </script>
+</body>
+</html>
+

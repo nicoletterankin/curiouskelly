@@ -4,11 +4,12 @@
  */
 
 const PushNotifications = {
-    // Your VAPID public key (generate a new pair for production)
-    VAPID_PUBLIC_KEY: 'YOUR_VAPID_PUBLIC_KEY_HERE',
+    // VAPID public key for web push (private key stored in Vercel env vars)
+    // Generated: December 2025 for curiouskelly.com
+    VAPID_PUBLIC_KEY: 'BEgmu91QD3hye9UZ9MM6xZxfbIRrmhiKE3cV3XkfvxAlRMATdRY4skdaFAMKVyKNkZJmXKGW2otkUEFcqUqnsOg',
     
-    // Supabase endpoint for storing subscriptions
-    SUBSCRIPTION_ENDPOINT: '/api/push-subscribe',
+    // API endpoint for storing subscriptions (public, no auth required)
+    SUBSCRIPTION_ENDPOINT: '/api/notifications/web-push-subscribe',
     
     /**
      * Check if push notifications are supported
@@ -108,29 +109,57 @@ const PushNotifications = {
      * Save subscription to server
      */
     async saveSubscription(subscription) {
-        // In production, send to your backend
-        const userData = {
-            subscription: subscription.toJSON(),
-            preferences: {
-                dailyReminder: true,
-                reminderTime: '09:00',
-                timezone: Intl.DateTimeFormat().resolvedOptions().timeZone
-            },
+        const subscriptionJson = subscription.toJSON();
+        const timezone = Intl.DateTimeFormat().resolvedOptions().timeZone;
+        
+        // Store locally as backup
+        localStorage.setItem('kelly-push-subscription', JSON.stringify({
+            subscription: subscriptionJson,
+            timezone: timezone,
             createdAt: new Date().toISOString()
-        };
+        }));
         
-        // For now, store locally
-        localStorage.setItem('kelly-push-subscription', JSON.stringify(userData));
-        console.log('[Push] Subscription saved:', userData);
-        
-        // TODO: Send to Supabase
-        // const { error } = await supabase
-        //     .from('push_subscriptions')
-        //     .upsert({
-        //         endpoint: subscription.endpoint,
-        //         keys: subscription.toJSON().keys,
-        //         preferences: userData.preferences
-        //     });
+        // Send to Supabase via API
+        try {
+            const response = await fetch(this.SUBSCRIPTION_ENDPOINT, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify({
+                    endpoint: subscriptionJson.endpoint,
+                    p256dh: subscriptionJson.keys.p256dh,
+                    auth: subscriptionJson.keys.auth,
+                    platform: 'web',
+                    device_id: this.getDeviceId(),
+                    timezone: timezone
+                })
+            });
+            
+            if (!response.ok) {
+                throw new Error(`HTTP ${response.status}`);
+            }
+            
+            const result = await response.json();
+            console.log('[Push] Subscription saved to server:', result);
+            return result;
+        } catch (error) {
+            console.error('[Push] Failed to save subscription to server:', error);
+            // Subscription still works locally, will sync on next visit
+            return null;
+        }
+    },
+    
+    /**
+     * Get or create a unique device ID for this browser
+     */
+    getDeviceId() {
+        let deviceId = localStorage.getItem('kelly-device-id');
+        if (!deviceId) {
+            deviceId = 'web_' + crypto.randomUUID();
+            localStorage.setItem('kelly-device-id', deviceId);
+        }
+        return deviceId;
     },
     
     /**
