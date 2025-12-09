@@ -1,0 +1,506 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+  <title>✨ Golden V5 - Learn with Kelly</title>
+  <meta name="description" content="Experience the ultimate AI-powered learning with Kelly's HD video lessons.">
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><text y='.9em' font-size='90'>✨</text></svg>">
+  
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    :root {
+      --c-bg: #0a0a0a;
+      --c-text: #ffffff;
+      --c-accent: #4a9eff;
+      --radius: 16px;
+      --space: 16px;
+    }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--c-bg);
+      color: var(--c-text);
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+    
+    /* Video Background */
+    .kelly-video {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      z-index: 1;
+    }
+    
+    /* Frosted Glass UI */
+    .frosted {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: var(--radius);
+      padding: var(--space);
+    }
+    
+    /* Lesson Info Panel */
+    .lesson-info {
+      position: fixed;
+      top: 20px;
+      left: 20px;
+      z-index: 10;
+      max-width: 400px;
+      opacity: 0;
+      transform: translateY(-20px);
+      transition: all 0.3s ease;
+    }
+    
+    .lesson-info.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+    
+    .lesson-day {
+      font-size: 14px;
+      opacity: 0.8;
+      margin-bottom: 8px;
+    }
+    
+    .lesson-title {
+      font-size: 24px;
+      font-weight: 700;
+      margin-bottom: 8px;
+    }
+    
+    .lesson-meta {
+      font-size: 14px;
+      opacity: 0.8;
+    }
+    
+    /* Phase Journey Bar */
+    .phase-bar {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 10;
+      display: flex;
+      gap: 8px;
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+    
+    .phase-bar.visible {
+      opacity: 1;
+    }
+    
+    .phase-segment {
+      padding: 12px 20px;
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 12px;
+      cursor: pointer;
+      font-size: 14px;
+      font-weight: 600;
+      transition: all 0.2s ease;
+    }
+    
+    .phase-segment:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: translateY(-2px);
+    }
+    
+    .phase-segment.active {
+      background: var(--c-accent);
+      border-color: var(--c-accent);
+    }
+    
+    /* Action Dock */
+    .action-dock {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      z-index: 10;
+      display: flex;
+      gap: 12px;
+      opacity: 0;
+      transition: all 0.3s ease;
+    }
+    
+    .action-dock.visible {
+      opacity: 1;
+    }
+    
+    .action-btn {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.95);
+      border: none;
+      font-size: 24px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .action-btn:hover {
+      transform: scale(1.1);
+    }
+    
+    .action-btn:active {
+      transform: scale(0.95);
+    }
+    
+    /* Content Panel */
+    .content-panel {
+      position: fixed;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      z-index: 20;
+      background: rgba(10, 10, 10, 0.95);
+      backdrop-filter: blur(40px);
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      padding: 24px;
+      transform: translateY(100%);
+      transition: transform 0.3s ease;
+      max-height: 60vh;
+      overflow-y: auto;
+    }
+    
+    .content-panel.visible {
+      transform: translateY(0);
+    }
+    
+    .content-question {
+      font-size: 20px;
+      font-weight: 600;
+      margin-bottom: 20px;
+    }
+    
+    .options-grid {
+      display: grid;
+      gap: 12px;
+    }
+    
+    .option-card {
+      padding: 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .option-card:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: var(--c-accent);
+    }
+    
+    .option-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: var(--c-accent);
+      margin-bottom: 8px;
+    }
+    
+    .option-text {
+      font-size: 16px;
+    }
+    
+    /* Loading */
+    .loading {
+      position: fixed;
+      inset: 0;
+      z-index: 100;
+      background: var(--c-bg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-direction: column;
+      gap: 20px;
+      transition: opacity 0.3s ease;
+    }
+    
+    .loading.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+    
+    .spinner {
+      width: 50px;
+      height: 50px;
+      border: 3px solid rgba(255, 255, 255, 0.2);
+      border-top-color: var(--c-accent);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .loading-text {
+      font-size: 16px;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <!-- Loading Overlay -->
+  <div class="loading" id="loading">
+    <div class="spinner"></div>
+    <div class="loading-text">Loading Kelly's lesson...</div>
+  </div>
+
+  <!-- Kelly Video Background -->
+  <video id="kelly-video" class="kelly-video" autoplay loop muted playsinline crossorigin="anonymous"></video>
+
+  <!-- Lesson Info Panel -->
+  <div class="lesson-info frosted" id="lesson-info">
+    <div class="lesson-day" id="lesson-day">Day 1 of 365</div>
+    <div class="lesson-title" id="lesson-title">Loading...</div>
+    <div class="lesson-meta" id="lesson-meta">✨ • 8 min • All Ages</div>
+  </div>
+
+  <!-- Phase Journey Bar -->
+  <div class="phase-bar" id="phase-bar">
+    <div class="phase-segment active" data-phase="Hook">Hook</div>
+    <div class="phase-segment" data-phase="Fact1">Fact 1</div>
+    <div class="phase-segment" data-phase="Fact2">Fact 2</div>
+    <div class="phase-segment" data-phase="Fact3">Fact 3</div>
+    <div class="phase-segment" data-phase="Wisdom">Wisdom</div>
+  </div>
+
+  <!-- Action Dock -->
+  <div class="action-dock" id="action-dock">
+    <button class="action-btn" data-action="content" title="Show Content">📝</button>
+    <button class="action-btn" data-action="hint" title="Hint">💡</button>
+    <button class="action-btn" data-action="share" title="Share">✨</button>
+  </div>
+
+  <!-- Content Panel -->
+  <div class="content-panel" id="content-panel">
+    <div class="content-question" id="content-question">Loading question...</div>
+    <div class="options-grid" id="options-grid"></div>
+  </div>
+
+  <!-- Supabase -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.45.0/dist/umd/supabase.js"></script>
+  <script>
+    (function() {
+      const url = 'https://tvjalxxsyryjphkforjv.supabase.co';
+      const key = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI';
+      window.supabaseClient = window.supabase.createClient(url, key);
+      console.log('[Golden V5] ✅ Supabase ready');
+    })();
+  </script>
+
+  <script>
+    // GOLDEN V5 - PRODUCTION LESSON PLAYER
+    const GoldenV5 = {
+      currentDay: 1,
+      currentArchetype: 'The Explorer',
+      currentPhase: 'Hook',
+      lessonData: null,
+      
+      async init() {
+        console.log('[Golden V5] 🚀 Initializing...');
+        
+        this.video = document.getElementById('kelly-video');
+        this.loading = document.getElementById('loading');
+        this.lessonInfo = document.getElementById('lesson-info');
+        this.phaseBar = document.getElementById('phase-bar');
+        this.actionDock = document.getElementById('action-dock');
+        this.contentPanel = document.getElementById('content-panel');
+        
+        // Setup video handlers
+        this.setupVideoHandlers();
+        
+        // Load lesson data
+        await this.loadLesson();
+        
+        // Load initial video
+        await this.loadVideo(this.currentPhase);
+        
+        // Setup UI
+        this.setupUI();
+        
+        console.log('[Golden V5] ✅ Ready');
+      },
+      
+      setupVideoHandlers() {
+        this.video.addEventListener('loadedmetadata', () => {
+          console.log('[Golden V5] ✅ Video loaded');
+          this.hideLoading();
+        });
+        
+        this.video.addEventListener('canplay', () => {
+          this.video.play().catch(e => console.warn('[Golden V5] Autoplay blocked'));
+        });
+        
+        this.video.addEventListener('error', (e) => {
+          console.error('[Golden V5] ❌ Video error:', e);
+          this.video.src = '/kelly/videos/001/welcome.mp4';
+          this.video.load();
+        });
+      },
+      
+      async loadLesson() {
+        try {
+          const { data: coreLesson } = await window.supabaseClient
+            .from('core_lessons')
+            .select('*')
+            .eq('day_number', this.currentDay)
+            .single();
+          
+          const { data: atoms } = await window.supabaseClient
+            .from('lesson_atoms')
+            .select('*')
+            .eq('core_lesson_id', coreLesson.id)
+            .eq('archetype', this.currentArchetype);
+          
+          this.lessonData = {
+            core: coreLesson,
+            atoms: atoms.reduce((acc, atom) => {
+              acc[atom.phase] = atom;
+              return acc;
+            }, {})
+          };
+          
+          this.updateLessonInfo();
+          this.updatePhaseContent(this.currentPhase);
+          
+          console.log('[Golden V5] ✅ Lesson loaded');
+        } catch (error) {
+          console.error('[Golden V5] ❌ Load failed:', error);
+        }
+      },
+      
+      async loadVideo(phase) {
+        if (!this.lessonData || !this.lessonData.atoms[phase]) return;
+        
+        const videoUrl = this.lessonData.atoms[phase].hd_video_url;
+        
+        if (videoUrl) {
+          console.log('[Golden V5] 🎬 Loading:', videoUrl);
+          this.video.src = videoUrl;
+        } else {
+          console.warn('[Golden V5] ⚠️ No video for', phase);
+          this.video.src = '/kelly/videos/001/welcome.mp4';
+        }
+        
+        this.video.load();
+      },
+      
+      updateLessonInfo() {
+        if (!this.lessonData) return;
+        const { core } = this.lessonData;
+        document.getElementById('lesson-day').textContent = `Day ${core.day_number} of 365`;
+        document.getElementById('lesson-title').textContent = core.topic;
+        document.getElementById('lesson-meta').textContent = 
+          `${core.icon_emoji} • ${core.estimated_duration} min • ${core.difficulty_level}`;
+      },
+      
+      updatePhaseContent(phase) {
+        if (!this.lessonData || !this.lessonData.atoms[phase]) return;
+        
+        const atom = this.lessonData.atoms[phase];
+        const content = atom.content;
+        
+        document.getElementById('content-question').textContent = content.script;
+        
+        const grid = document.getElementById('options-grid');
+        grid.innerHTML = '';
+        
+        content.options.forEach(opt => {
+          const card = document.createElement('div');
+          card.className = 'option-card';
+          card.innerHTML = `
+            <div class="option-label">Option ${opt.letter}</div>
+            <div class="option-text">${opt.text}</div>
+          `;
+          card.addEventListener('click', () => this.selectOption(opt.letter));
+          grid.appendChild(card);
+        });
+      },
+      
+      setupUI() {
+        // Phase navigation
+        document.querySelectorAll('.phase-segment').forEach(seg => {
+          seg.addEventListener('click', () => {
+            const phase = seg.dataset.phase;
+            this.navigateToPhase(phase);
+          });
+        });
+        
+        // Action buttons
+        document.querySelectorAll('.action-btn').forEach(btn => {
+          btn.addEventListener('click', () => {
+            const action = btn.dataset.action;
+            if (action === 'content') this.toggleContent();
+          });
+        });
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+          if (e.key === ' ') {
+            e.preventDefault();
+            this.video.paused ? this.video.play() : this.video.pause();
+          } else if (e.key === 'c') {
+            this.toggleContent();
+          } else if (e.key >= '1' && e.key <= '5') {
+            const phases = ['Hook', 'Fact1', 'Fact2', 'Fact3', 'Wisdom'];
+            this.navigateToPhase(phases[parseInt(e.key) - 1]);
+          }
+        });
+        
+        // Show UI
+        this.lessonInfo.classList.add('visible');
+        this.phaseBar.classList.add('visible');
+        this.actionDock.classList.add('visible');
+      },
+      
+      navigateToPhase(phase) {
+        this.currentPhase = phase;
+        
+        document.querySelectorAll('.phase-segment').forEach(seg => {
+          seg.classList.toggle('active', seg.dataset.phase === phase);
+        });
+        
+        this.updatePhaseContent(phase);
+        this.loadVideo(phase);
+      },
+      
+      toggleContent() {
+        this.contentPanel.classList.toggle('visible');
+      },
+      
+      selectOption(letter) {
+        console.log('[Golden V5] Selected:', letter);
+        // TODO: Handle option selection
+      },
+      
+      hideLoading() {
+        this.loading.classList.add('hidden');
+      }
+    };
+    
+    // Initialize when DOM ready
+    document.addEventListener('DOMContentLoaded', () => GoldenV5.init());
+  </script>
+</body>
+</html>
