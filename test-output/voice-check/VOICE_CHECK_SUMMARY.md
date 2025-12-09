@@ -109,3 +109,4 @@ npx tsx scripts/kelly-video-factory/hd-golden-lesson-pipeline.ts --from 2 --to 1
 
 
 
+

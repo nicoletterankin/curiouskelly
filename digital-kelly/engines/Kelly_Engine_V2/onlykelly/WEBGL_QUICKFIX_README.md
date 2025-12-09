@@ -121,3 +121,4 @@ After fix: Kelly has **proper skin tones, hair color, and textures**
 The fix changes the render pipeline from Deferred (not WebGL compatible) to Forward (WebGL compatible) and replaces complex Shader Graph shaders with standard URP/Lit shaders.
 
 
+

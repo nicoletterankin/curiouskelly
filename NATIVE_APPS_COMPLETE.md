@@ -465,3 +465,4 @@ cd mobile-app && npm install && npm run android
 
 
 
+

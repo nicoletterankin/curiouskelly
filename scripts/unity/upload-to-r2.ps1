@@ -114,3 +114,4 @@ Write-Host "Test with:" -ForegroundColor Yellow
 Write-Host "  curl -I https://unity-cdn.nicoletterankin.workers.dev/$BuildName.loader.js"
 
 
+

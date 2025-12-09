@@ -62,3 +62,4 @@ export function isSupabaseConfigured(): boolean {
   return Boolean(supabaseUrl && supabaseServiceKey);
 }
 
+

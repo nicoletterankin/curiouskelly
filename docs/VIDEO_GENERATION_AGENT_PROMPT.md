@@ -317,3 +317,4 @@ Est. time:         ~24 hours (parallel processing)
 
 *This prompt is designed to be loaded into any AI agent working on the Kelly video pipeline. It ensures consistency, prevents duplication, and leverages existing infrastructure.*
 
+

@@ -72,3 +72,4 @@ console.log('   ✅ SQL STATEMENTS GENERATED');
 console.log('   Copy and run these in Supabase SQL editor');
 console.log('═══════════════════════════════════════════════════════════════\n');
 
+

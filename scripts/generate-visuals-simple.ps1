@@ -45,3 +45,4 @@ npx ts-node scripts/generate-all-phase-visuals.ts --range="$StartDay-$EndDay"
 Write-Host ""
 Write-Host "✅ Generation complete!" -ForegroundColor Green
 
+

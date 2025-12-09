@@ -118,3 +118,4 @@ From your screenshot:
 - ✅ PUBLIC_SUPABASE_ANON_KEY
 - ✅ ELEVENLABS_VOICE_ID
 
+

@@ -827,3 +827,4 @@ Close-up of Kelly's face looking at a fossil in her hand with profound wonder. E
 
 [CONTINUING WITH REMAINING 14 LESSONS IN PART 2...]
 
+

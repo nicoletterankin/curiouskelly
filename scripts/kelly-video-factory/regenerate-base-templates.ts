@@ -405,3 +405,4 @@ main().catch(error => {
 
 export { regenerateAllTemplates, regenerateTemplate };
 
+

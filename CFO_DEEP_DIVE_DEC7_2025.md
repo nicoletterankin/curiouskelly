@@ -560,3 +560,4 @@ The unit economics are excellent. The question is: Can we acquire users efficien
 *Company: Lesson of the Day PBC*  
 *Contact: hello@curiouskelly.com*
 
+

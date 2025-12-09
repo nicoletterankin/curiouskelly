@@ -292,3 +292,4 @@ If prompts produce unsatisfactory results:
 
 *"Every image is a lesson. Make them worth seeing."*
 
+

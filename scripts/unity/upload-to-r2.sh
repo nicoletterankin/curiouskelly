@@ -99,3 +99,4 @@ echo "Test with:"
 echo "  curl -I https://unity-cdn.nicoletterankin.workers.dev/${BUILD_NAME}.loader.js"
 
 
+

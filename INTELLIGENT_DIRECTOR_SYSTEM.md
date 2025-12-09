@@ -318,3 +318,4 @@ LessonDirectorIntegration.getStats();
 
 *This system was built to make Kelly feel alive. Every lesson is now a performance.* 🎭✨
 
+

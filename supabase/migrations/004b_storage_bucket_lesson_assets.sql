@@ -177,3 +177,4 @@ WHERE tablename = 'objects'
   AND policyname LIKE '%lesson assets%';
 
 
+

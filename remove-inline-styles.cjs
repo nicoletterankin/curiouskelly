@@ -39,3 +39,4 @@ lines.forEach(line => {
 console.log('\n📊 Result: ' + styleCount + ' inline <style> blocks remaining');
 console.log('📄 File size: ' + (html.length / 1024).toFixed(1) + ' KB');
 
+

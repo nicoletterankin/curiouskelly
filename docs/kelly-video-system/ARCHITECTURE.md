@@ -195,3 +195,4 @@ python kelly_face_audit.py <image.png>
 4. **API**: Create endpoints for serving pre-computed content
 5. **Real-time**: Prototype hybrid approach (2D + video)
 
+

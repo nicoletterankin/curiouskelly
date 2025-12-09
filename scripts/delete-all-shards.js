@@ -56,3 +56,4 @@ async function deleteAllShards() {
 
 deleteAllShards().catch(console.error);
 
+

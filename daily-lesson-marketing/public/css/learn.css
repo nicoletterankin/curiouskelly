@@ -1,0 +1,3229 @@
+/* ═══════════════════════════════════════════════════════════════════════════
+   LEARN.CSS - TikTok-Style Lesson Player Styles
+   Extracted from learn.html for better maintainability
+   
+   STRUCTURE:
+   1. Design Tokens (CSS Variables)
+   2. Base Styles & Reset
+   3. Layout Components
+   4. UI Components (Buttons, Cards, etc.)
+   5. Settings UI (Age, Language, Tone, Mode)
+   6. V2 Layout (Rails, Caption, Bottom Bar)
+   7. Animations & Keyframes
+   8. Responsive Breakpoints
+   9. Commons Overlay
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* ═══════════════════════════════════════════════════════════════════
+           TIKTOK-STYLE LESSON PLAYER
+           Designed to match TikTok's exact proportions and interactions
+           ═══════════════════════════════════════════════════════════════════ */
+
+      * {
+        margin: 0;
+        padding: 0;
+        box-sizing: border-box;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════
+           DESIGN TOKENS - Unified brand colors matching homepage
+           ═══════════════════════════════════════════════════════════════════ */
+      :root {
+        /* Core Colors */
+        --tiktok-bg: #000000; /* True black like iPhone */
+        --tiktok-text: #ffffff;
+        --tiktok-text-secondary: rgba(255, 255, 255, 0.8);
+        --tiktok-text-muted: rgba(255, 255, 255, 0.5);
+        
+        /* Brand Colors */
+        --tiktok-accent: #3b82f6; /* Kelly's blue - primary accent */
+        --tiktok-success: #22c55e; /* Success/positive actions */
+        --tiktok-error: #ef4444; /* Error/negative states */
+        
+        /* Glass Effects */
+        --tiktok-glass: rgba(0, 0, 0, 0.6);
+        --tiktok-glass-light: rgba(255, 255, 255, 0.1);
+
+        /* iOS-native sizes */
+        --action-btn-size: 44px;
+        --action-icon-size: 24px;
+        --action-gap: 18px;
+        --safe-bottom: env(safe-area-inset-bottom, 34px);
+        --safe-top: env(safe-area-inset-top, 47px);
+        --safe-left: env(safe-area-inset-left, 0px);
+        --safe-right: env(safe-area-inset-right, 0px);
+        
+        /* iOS Spring Animation */
+        --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
+        --spring-smooth: cubic-bezier(0.4, 0, 0.2, 1);
+        --ios-timing: cubic-bezier(0.25, 0.1, 0.25, 1);
+      }
+
+      html,
+      body {
+        height: 100%;
+        width: 100%;
+        overflow: hidden;
+        background: var(--tiktok-bg);
+        font-family:
+          -apple-system,
+          BlinkMacSystemFont,
+          'SF Pro Display',
+          'SF Pro Text',
+          system-ui,
+          sans-serif;
+        color: var(--tiktok-text);
+        touch-action: pan-y;
+        -webkit-font-smoothing: antialiased;
+        -moz-osx-font-smoothing: grayscale;
+        /* Prevent pull-to-refresh */
+        overscroll-behavior: none;
+      }
+      
+      /* iOS-native selection */
+      ::selection {
+        background: rgba(59, 130, 246, 0.3);
+      }
+      
+      /* Prevent text selection on UI elements */
+      button, .choice-btn, .action-btn, .nav-item {
+        -webkit-user-select: none;
+        user-select: none;
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════
+           MAIN CONTAINER - Full screen lesson "video"
+           ═══════════════════════════════════════════════════════════════════ */
+      .lesson-container {
+        position: fixed;
+        inset: 0;
+        display: flex;
+        flex-direction: column;
+        background: var(--tiktok-bg);
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════
+           KELLY FRAME - Full-bleed avatar (like TikTok video)
+           ═══════════════════════════════════════════════════════════════════ */
+      .kelly-frame {
+        position: absolute;
+        inset: 0;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        overflow: hidden;
+      }
+
+      .kelly-avatar-container {
+        width: 100%;
+        height: 100%;
+        position: relative;
+      }
+
+      .kelly-avatar-container img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        object-position: center 20%;
+      }
+
+      /* Unity 3D Loading Overlay */
+      .unity-loading {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 100;
+        gap: 16px;
+      }
+
+      .unity-loading-spinner {
+        width: 48px;
+        height: 48px;
+        border: 4px solid rgba(255, 255, 255, 0.1);
+        border-top-color: #2563eb;
+        border-radius: 50%;
+        animation: unity-spin 1s linear infinite;
+      }
+
+      @keyframes unity-spin {
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      .unity-loading-text {
+        color: #a1a1aa;
+        font-size: 14px;
+        text-align: center;
+        font-weight: 500;
+      }
+
+      .unity-loading-progress {
+        width: 200px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 2px;
+        overflow: hidden;
+      }
+
+      .unity-progress-bar {
+        height: 100%;
+        width: 0%;
+        background: linear-gradient(90deg, #2563eb 0%, #7c3aed 100%);
+        transition: width 0.3s ease;
+      }
+
+      /* Pause overlay (shows when tapped) */
+      .pause-indicator {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%) scale(0);
+        width: 100px;
+        height: 100px;
+        background: var(--tiktok-glass);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 40px;
+        opacity: 0;
+        transition: all 0.2s ease;
+        pointer-events: none;
+      }
+
+      .pause-indicator.show {
+        transform: translate(-50%, -50%) scale(1);
+        opacity: 1;
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════
+           TOP BAR - Day counter & progress (like TikTok's Following|For You)
+           ═══════════════════════════════════════════════════════════════════ */
+      .top-bar {
+        position: absolute;
+        top: var(--safe-top);
+        left: 0;
+        right: 0;
+        padding: 0 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 100;
+      }
+
+      .day-badge {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: var(--tiktok-glass);
+        backdrop-filter: blur(12px);
+        padding: 8px 16px;
+        border-radius: 20px;
+      }
+
+      .day-number {
+        font-size: 14px;
+        font-weight: 600;
+        color: var(--tiktok-text);
+      }
+
+      .day-progress {
+        font-size: 12px;
+        color: var(--tiktok-text-muted);
+      }
+
+      /* Phase dots - iOS progress style */
+      .phase-dots {
+        display: flex;
+        gap: 4px;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        padding: 6px 10px;
+        border-radius: 12px;
+      }
+
+      .phase-dot {
+        width: 24px;
+        height: 4px;
+        border-radius: 2px;
+        background: rgba(255, 255, 255, 0.2);
+        transition: all 0.4s var(--spring-smooth);
+        position: relative;
+        overflow: hidden;
+      }
+
+      .phase-dot.active {
+        background: var(--tiktok-accent);
+        box-shadow: 0 0 12px rgba(59, 130, 246, 0.6);
+      }
+      
+      /* Animated fill for active phase */
+      .phase-dot.active::after {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
+        animation: shimmer 2s infinite;
+      }
+      
+      @keyframes shimmer {
+        0% { transform: translateX(-100%); }
+        100% { transform: translateX(100%); }
+      }
+
+      .phase-dot.completed {
+        background: rgba(255, 255, 255, 0.8);
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════
+           RIGHT SIDE ACTIONS - TikTok-style stacked buttons
+           ═══════════════════════════════════════════════════════════════════ */
+      .action-buttons {
+        position: absolute;
+        right: 12px;
+        bottom: calc(180px + var(--safe-bottom));
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: var(--action-gap);
+        z-index: 100;
+      }
+
+      .action-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        background: none;
+        border: none;
+        cursor: pointer;
+        -webkit-tap-highlight-color: transparent;
+      }
+
+      .action-btn .icon-wrap {
+        width: var(--action-btn-size);
+        height: var(--action-btn-size);
+        border-radius: 50%;
+        background: var(--tiktok-glass);
+        backdrop-filter: blur(8px);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: var(--action-icon-size);
+        transition: all 0.2s ease;
+      }
+
+      .action-btn:active .icon-wrap {
+        transform: scale(0.9);
+      }
+
+      .action-btn .label {
+        font-size: 10px;
+        color: var(--tiktok-text);
+        font-weight: 500;
+      }
+
+      .action-btn .badge {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        min-width: 18px;
+        height: 18px;
+        background: var(--tiktok-accent);
+        border-radius: 9px;
+        font-size: 10px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 4px;
+      }
+
+      .action-btn .icon-wrap {
+        position: relative;
+      }
+
+      /* SVG Icon Styling - Clean white icons */
+      .action-btn svg,
+      .sound-btn svg,
+      .nav-icon svg {
+        color: var(--tiktok-text);
+        stroke: currentColor;
+        transition: all 0.2s ease;
+      }
+
+      .action-btn:hover svg,
+      .sound-btn:hover svg {
+        color: var(--tiktok-success);
+      }
+
+      .nav-item.active svg {
+        color: var(--tiktok-success);
+      }
+
+      /* Mode button - always enabled, Unity loads on demand */
+      #btn-mode {
+        opacity: 1;
+        pointer-events: auto;
+        transition: opacity 0.3s ease;
+      }
+
+      #btn-mode.loading {
+        opacity: 0.6;
+        animation: pulse 1s infinite;
+      }
+
+      /* Sound button at bottom (like TikTok's spinning disc) */
+      .sound-btn {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: var(--tiktok-glass);
+        backdrop-filter: blur(8px);
+        border: 2px solid var(--tiktok-text-muted);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 18px;
+        animation: spin 3s linear infinite;
+        animation-play-state: running;
+      }
+
+      .sound-btn.muted {
+        animation-play-state: paused;
+        opacity: 0.5;
+      }
+
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════
+           BOTTOM OVERLAY - Topic, speech, choices (like TikTok caption area)
+           ═══════════════════════════════════════════════════════════════════ */
+      .bottom-overlay {
+        position: absolute;
+        left: 0;
+        right: 70px; /* Space for action buttons */
+        bottom: calc(60px + var(--safe-bottom));
+        padding: 0 16px;
+        z-index: 90;
+      }
+
+      /* Topic header (like @username) */
+      .topic-header {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        margin-bottom: 12px;
+      }
+
+      .topic-emoji {
+        font-size: 24px;
+      }
+
+      .topic-name {
+        font-size: 16px;
+        font-weight: 700;
+        color: var(--tiktok-text);
+      }
+
+      .topic-tag {
+        font-size: 12px;
+        color: var(--tiktok-success);
+        font-weight: 600;
+      }
+
+      /* Speech bubble (Kelly's text) - iOS style card */
+      .speech-bubble {
+        background: rgba(30, 30, 35, 0.85);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 20px;
+        padding: 18px 20px;
+        margin-bottom: 14px;
+        max-height: 140px;
+        overflow-y: auto;
+        border: 1px solid rgba(255, 255, 255, 0.08);
+        box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
+        
+        /* iOS scroll behavior */
+        -webkit-overflow-scrolling: touch;
+        scrollbar-width: none;
+      }
+      
+      .speech-bubble::-webkit-scrollbar {
+        display: none;
+      }
+
+      .speech-text {
+        font-size: 16px;
+        line-height: 1.55;
+        color: var(--tiktok-text);
+        font-weight: 400;
+        letter-spacing: -0.01em;
+      }
+
+      .speech-hint {
+        font-size: 14px;
+        color: var(--tiktok-text-muted);
+        margin-top: 10px;
+        font-style: italic;
+        padding-top: 10px;
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+      }
+
+      /* Choice buttons - iOS native feel */
+      .choices {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+
+      .choice-btn {
+        display: flex;
+        align-items: center;
+        gap: 14px;
+        background: rgba(255, 255, 255, 0.12);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 16px;
+        padding: 16px 18px;
+        cursor: pointer;
+        transition: all 0.15s var(--spring-smooth);
+        text-align: left;
+        position: relative;
+        overflow: hidden;
+      }
+      
+      /* iOS-style touch highlight */
+      .choice-btn::before {
+        content: '';
+        position: absolute;
+        inset: 0;
+        background: rgba(255, 255, 255, 0.1);
+        opacity: 0;
+        transition: opacity 0.1s;
+      }
+      
+      .choice-btn:hover::before {
+        opacity: 1;
+      }
+
+      .choice-btn:active {
+        transform: scale(0.97);
+        transition: transform 0.1s;
+      }
+
+      .choice-btn.selected {
+        background: var(--tiktok-accent);
+        border-color: var(--tiktok-accent);
+        transform: scale(1.02);
+        box-shadow: 0 8px 32px rgba(59, 130, 246, 0.4);
+      }
+      
+      .choice-btn.selected::after {
+        content: '✓';
+        position: absolute;
+        right: 16px;
+        font-size: 18px;
+        animation: checkPop 0.3s var(--spring-bounce);
+      }
+      
+      @keyframes checkPop {
+        0% { transform: scale(0); opacity: 0; }
+        100% { transform: scale(1); opacity: 1; }
+      }
+
+      .choice-btn.disabled {
+        opacity: 0.4;
+        pointer-events: none;
+        transform: none;
+      }
+
+      .choice-letter {
+        width: 28px;
+        height: 28px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.2);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 14px;
+        font-weight: 700;
+        flex-shrink: 0;
+      }
+
+      .choice-text {
+        font-size: 14px;
+        color: var(--tiktok-text);
+        flex: 1;
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════
+           BOTTOM NAV - iOS Tab Bar Style
+           ═══════════════════════════════════════════════════════════════════ */
+      .bottom-nav {
+        position: absolute;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        height: calc(52px + var(--safe-bottom));
+        padding-bottom: var(--safe-bottom);
+        background: rgba(20, 20, 22, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        display: flex;
+        justify-content: space-around;
+        align-items: center;
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+        z-index: 200;
+      }
+
+      .nav-item {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 3px;
+        color: rgba(255, 255, 255, 0.4);
+        text-decoration: none;
+        padding: 6px 16px;
+        transition: all 0.2s var(--spring-smooth);
+        position: relative;
+      }
+      
+      .nav-item:active {
+        transform: scale(0.9);
+      }
+
+      .nav-item.active {
+        color: #fff;
+      }
+      
+      /* Active indicator dot */
+      .nav-item.active::after {
+        content: '';
+        position: absolute;
+        bottom: 0;
+        width: 4px;
+        height: 4px;
+        background: var(--tiktok-accent);
+        border-radius: 50%;
+        animation: dotPop 0.3s var(--spring-bounce);
+      }
+      
+      @keyframes dotPop {
+        0% { transform: scale(0); }
+        100% { transform: scale(1); }
+      }
+
+      .nav-icon {
+        font-size: 22px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 26px;
+        height: 26px;
+        transition: transform 0.15s;
+      }
+      
+      .nav-item:active .nav-icon {
+        transform: scale(0.85);
+      }
+
+      .nav-label {
+        font-size: 10px;
+        font-weight: 500;
+        letter-spacing: 0.01em;
+      }
+
+      /* Learn button (center, highlighted like TikTok's + button) */
+      .nav-item.learn {
+        position: relative;
+      }
+
+      .nav-item.learn .nav-icon {
+        width: 48px;
+        height: 30px;
+        background: linear-gradient(135deg, var(--tiktok-accent), #8b5cf6);
+        border-radius: 8px;
+        box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: var(--tiktok-text);
+        font-size: 18px;
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════
+           SWIPE INDICATORS
+           ═══════════════════════════════════════════════════════════════════ */
+      .swipe-indicator {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        padding: 8px 20px;
+        background: var(--tiktok-glass);
+        backdrop-filter: blur(12px);
+        border-radius: 20px;
+        font-size: 14px;
+        color: var(--tiktok-text);
+        z-index: 150;
+        opacity: 0;
+        transition: all 0.3s ease;
+        pointer-events: none;
+      }
+
+      .swipe-indicator.top {
+        top: calc(var(--safe-top) + 60px);
+      }
+
+      .swipe-indicator.bottom {
+        bottom: calc(250px + var(--safe-bottom));
+      }
+
+      .swipe-indicator.show {
+        opacity: 1;
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════
+           MODALS (same styling)
+           ═══════════════════════════════════════════════════════════════════ */
+      .modal-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.8);
+        display: flex;
+        align-items: flex-end;
+        justify-content: center;
+        z-index: 500;
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+      }
+
+      .modal-overlay.open {
+        opacity: 1;
+        pointer-events: all;
+      }
+
+      .modal-content {
+        width: 100%;
+        max-width: 500px;
+        max-height: 70vh;
+        background: #1a1a1a;
+        border-radius: 20px 20px 0 0;
+        padding: 20px;
+        transform: translateY(100%);
+        transition: transform 0.3s ease;
+        overflow-y: auto;
+      }
+
+      .modal-overlay.open .modal-content {
+        transform: translateY(0);
+      }
+
+      .modal-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .modal-title {
+        font-size: 18px;
+        font-weight: 600;
+      }
+
+      .modal-close {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: var(--tiktok-text);
+        font-size: 20px;
+        cursor: pointer;
+      }
+
+      .variant-option {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px;
+        border-radius: 12px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+
+      .variant-option:hover {
+        background: rgba(255, 255, 255, 0.05);
+      }
+
+      .variant-option.selected {
+        background: rgba(37, 244, 238, 0.15);
+        border: 1px solid var(--tiktok-success);
+      }
+
+      .variant-radio {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        border: 2px solid var(--tiktok-text-muted);
+      }
+
+      .variant-option.selected .variant-radio {
+        border-color: var(--tiktok-success);
+        background: var(--tiktok-success);
+      }
+
+      .variant-name {
+        font-weight: 600;
+      }
+
+      .variant-desc {
+        font-size: 13px;
+        color: var(--tiktok-text-muted);
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════
+           HEART ANIMATION (Double tap)
+           ═══════════════════════════════════════════════════════════════════ */
+      @keyframes heart-burst {
+        0% {
+          transform: translate(-50%, -50%) scale(0);
+          opacity: 1;
+        }
+        50% {
+          transform: translate(-50%, -50%) scale(1.2);
+        }
+        100% {
+          transform: translate(-50%, -100%) scale(1);
+          opacity: 0;
+        }
+      }
+
+      .heart-animation {
+        position: fixed;
+        font-size: 80px;
+        pointer-events: none;
+        z-index: 9999;
+        animation: heart-burst 0.8s ease-out forwards;
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════
+           TOAST NOTIFICATIONS
+           ═══════════════════════════════════════════════════════════════════ */
+      .toast-container {
+        position: fixed;
+        top: calc(var(--safe-top) + 80px);
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 1000;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+
+      .toast {
+        background: var(--tiktok-glass);
+        backdrop-filter: blur(12px);
+        padding: 12px 24px;
+        border-radius: 20px;
+        font-size: 14px;
+        animation: toast-in 0.3s ease;
+      }
+
+      .toast.hiding {
+        animation: toast-out 0.3s ease forwards;
+      }
+
+      @keyframes toast-in {
+        from {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      @keyframes toast-out {
+        from {
+          opacity: 1;
+          transform: translateY(0);
+        }
+        to {
+          opacity: 0;
+          transform: translateY(-10px);
+        }
+      }
+
+      /* ═══════════════════════════════════════════════════════════════════
+           POPOVER MENUS (replaces bottom sheet modals for side controls)
+           ═══════════════════════════════════════════════════════════════════ */
+
+      .popover-overlay {
+        position: fixed;
+        inset: 0;
+        background: transparent;
+        z-index: 9998;
+        display: none;
+      }
+
+      .popover-overlay.active {
+        display: block;
+      }
+
+      .popover {
+        position: fixed;
+        background: rgba(30, 30, 35, 0.98);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 16px;
+        padding: 8px;
+        box-shadow:
+          0 8px 32px rgba(0, 0, 0, 0.4),
+          0 0 0 1px rgba(255, 255, 255, 0.1);
+        z-index: 9999;
+        min-width: 200px;
+        max-width: 280px;
+        opacity: 0;
+        transform: scale(0.9);
+        transition:
+          opacity 0.2s ease,
+          transform 0.2s ease;
+        pointer-events: none;
+      }
+
+      .popover.active {
+        opacity: 1;
+        transform: scale(1);
+        pointer-events: all;
+      }
+
+      /* Arrow pointing to button */
+      .popover-arrow {
+        position: absolute;
+        width: 16px;
+        height: 16px;
+        background: rgba(30, 30, 35, 0.98);
+        transform: rotate(45deg);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        z-index: -1;
+      }
+
+      /* Arrow positions based on popover placement */
+      .popover[data-placement='left'] .popover-arrow {
+        right: -8px;
+        top: 50%;
+        margin-top: -8px;
+        border-left: none;
+        border-bottom: none;
+      }
+
+      .popover[data-placement='right'] .popover-arrow {
+        left: -8px;
+        top: 50%;
+        margin-top: -8px;
+        border-right: none;
+        border-top: none;
+      }
+
+      .popover[data-placement='top'] .popover-arrow {
+        bottom: -8px;
+        left: 50%;
+        margin-left: -8px;
+        border-top: none;
+        border-right: none;
+      }
+
+      .popover[data-placement='bottom'] .popover-arrow {
+        top: -8px;
+        left: 50%;
+        margin-left: -8px;
+        border-bottom: none;
+        border-left: none;
+      }
+
+      /* ═══════════════════════════════════════════════════════════════
+         SETTINGS UI - Modern Interaction Patterns (replaces popovers)
+         ═══════════════════════════════════════════════════════════════ */
+
+      /* === SHARED: Overlay backdrop === */
+      .settings-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(4px);
+        -webkit-backdrop-filter: blur(4px);
+        opacity: 0;
+        pointer-events: none;
+        transition: opacity 0.3s ease;
+        z-index: 500;
+      }
+
+      .settings-overlay.open {
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      /* === PATTERN 1: Horizontal Expand (Language, Mode) === */
+      .expand-container {
+        position: absolute;
+        left: 6px;
+        display: flex;
+        align-items: center;
+        z-index: 510;
+        pointer-events: none;
+        opacity: 0;
+      }
+
+      .expand-container.open {
+        pointer-events: auto;
+        opacity: 1;
+      }
+
+      .expand-trigger {
+        width: 44px;
+        height: 44px;
+        border-radius: 14px;
+        background: rgba(59, 130, 246, 0.9);
+        backdrop-filter: blur(10px);
+        -webkit-backdrop-filter: blur(10px);
+        border: none;
+        color: white;
+        font-size: 18px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        flex-shrink: 0;
+      }
+
+      .expand-panel {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        background: rgba(0, 0, 0, 0.9);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        border-radius: 16px;
+        padding: 8px 12px;
+        margin-left: 10px;
+        transform: translateX(-20px) scale(0.9);
+        opacity: 0;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      .expand-container.open .expand-panel {
+        transform: translateX(0) scale(1);
+        opacity: 1;
+      }
+
+      .expand-option {
+        width: 48px;
+        height: 48px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid transparent;
+        border-radius: 12px;
+        color: white;
+        cursor: pointer;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 2px;
+        transition: all 0.2s ease;
+      }
+
+      .expand-option:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.08);
+      }
+
+      .expand-option.selected {
+        border-color: #22c55e;
+        background: rgba(34, 197, 94, 0.3);
+      }
+
+      .expand-option .flag {
+        font-size: 22px;
+        line-height: 1;
+      }
+
+      .expand-option .label {
+        font-size: 9px;
+        font-weight: 600;
+        opacity: 0.8;
+      }
+
+      /* === PATTERN 2: Age Scrubber === */
+      .age-scrubber {
+        position: fixed;
+        left: 70px;
+        right: 20px;
+        top: 50%;
+        transform: translateY(-50%) scale(0.9);
+        background: rgba(0, 0, 0, 0.95);
+        backdrop-filter: blur(30px);
+        -webkit-backdrop-filter: blur(30px);
+        border-radius: 24px;
+        padding: 24px;
+        z-index: 520;
+        opacity: 0;
+        pointer-events: none;
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      }
+
+      .age-scrubber.open {
+        transform: translateY(-50%) scale(1);
+        opacity: 1;
+        pointer-events: auto;
+      }
+
+      .age-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+
+      .age-title {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.6);
+        text-transform: uppercase;
+        letter-spacing: 1px;
+      }
+
+      .age-value {
+        font-size: 48px;
+        font-weight: 800;
+        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+        background-clip: text;
+      }
+
+      .age-track {
+        position: relative;
+        height: 70px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        margin-bottom: 16px;
+        overflow: hidden;
+        cursor: pointer;
+      }
+
+      .age-track-fill {
+        position: absolute;
+        left: 0;
+        top: 0;
+        bottom: 0;
+        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        border-radius: 16px;
+        transition: width 0.1s ease;
+      }
+
+      .age-thumb {
+        position: absolute;
+        top: 50%;
+        transform: translate(-50%, -50%);
+        width: 80px;
+        height: 56px;
+        background: white;
+        border-radius: 14px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: grab;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+        transition: box-shadow 0.2s, transform 0.1s;
+        user-select: none;
+      }
+
+      .age-thumb:active {
+        cursor: grabbing;
+        transform: translate(-50%, -50%) scale(1.05);
+        box-shadow: 0 12px 40px rgba(0, 0, 0, 0.4);
+      }
+
+      .age-thumb-emoji {
+        font-size: 36px;
+      }
+
+      .age-markers {
+        display: flex;
+        justify-content: space-between;
+        padding: 0 10px;
+        margin-bottom: 20px;
+      }
+
+      .age-marker {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.4);
+        cursor: pointer;
+        padding: 4px 8px;
+        border-radius: 8px;
+        transition: all 0.2s;
+      }
+
+      .age-marker:hover {
+        color: white;
+        background: rgba(255, 255, 255, 0.1);
+      }
+
+      .age-presets {
+        display: flex;
+        gap: 10px;
+        justify-content: center;
+        flex-wrap: wrap;
+      }
+
+      .age-preset {
+        padding: 12px 20px;
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid transparent;
+        border-radius: 30px;
+        color: white;
+        font-size: 13px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .age-preset:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: translateY(-2px);
+      }
+
+      .age-preset.active {
+        border-color: #22c55e;
+        background: rgba(34, 197, 94, 0.2);
+      }
+
+      .age-preset-emoji {
+        font-size: 20px;
+      }
+
+      .age-close {
+        position: absolute;
+        top: 16px;
+        right: 16px;
+        width: 36px;
+        height: 36px;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        border-radius: 50%;
+        color: white;
+        font-size: 18px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s;
+      }
+
+      .age-close:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
+      /* === PATTERN 3: Bottom Sheet (Tone) === */
+      .tone-sheet {
+        position: fixed;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: #1a1a24;
+        border-radius: 28px 28px 0 0;
+        padding: 20px 20px 40px;
+        transform: translateY(100%);
+        transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        z-index: 520;
+        max-height: 70vh;
+        overflow-y: auto;
+      }
+
+      .tone-sheet.open {
+        transform: translateY(0);
+      }
+
+      .tone-handle {
+        width: 40px;
+        height: 4px;
+        background: rgba(255, 255, 255, 0.3);
+        border-radius: 2px;
+        margin: 0 auto 20px;
+      }
+
+      .tone-title {
+        font-size: 20px;
+        font-weight: 700;
+        text-align: center;
+        margin-bottom: 8px;
+      }
+
+      .tone-subtitle {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.5);
+        text-align: center;
+        margin-bottom: 24px;
+      }
+
+      .tone-grid {
+        display: grid;
+        grid-template-columns: repeat(2, 1fr);
+        gap: 12px;
+      }
+
+      @media (min-width: 400px) {
+        .tone-grid {
+          grid-template-columns: repeat(3, 1fr);
+        }
+      }
+
+      .tone-option {
+        background: rgba(255, 255, 255, 0.06);
+        border: 2px solid transparent;
+        border-radius: 20px;
+        padding: 20px 12px;
+        text-align: center;
+        cursor: pointer;
+        transition: all 0.25s ease;
+        color: white;
+      }
+
+      .tone-option:hover {
+        background: rgba(255, 255, 255, 0.12);
+        transform: translateY(-4px);
+      }
+
+      .tone-option.selected {
+        border-color: #3b82f6;
+        background: rgba(59, 130, 246, 0.15);
+      }
+
+      .tone-emoji {
+        font-size: 40px;
+        margin-bottom: 12px;
+      }
+
+      .tone-name {
+        font-size: 15px;
+        font-weight: 700;
+        margin-bottom: 6px;
+      }
+
+      .tone-desc {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.5);
+        line-height: 1.4;
+      }
+
+      /* === Kelly Transform Animation === */
+      .kelly-transforming {
+        animation: kellyTransform 0.6s ease;
+      }
+
+      @keyframes kellyTransform {
+        0% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0; transform: scale(1.1); filter: blur(10px); }
+        100% { opacity: 1; transform: scale(1); }
+      }
+
+      /* === Feedback flash === */
+      .setting-changed-flash {
+        animation: settingFlash 0.4s ease;
+      }
+
+      @keyframes settingFlash {
+        0% { filter: brightness(1); }
+        50% { filter: brightness(1.3); }
+        100% { filter: brightness(1); }
+      }
+
+      /* Hide old popover system */
+      .popover, .popover-overlay { display: none !important; }
+
+      /* ═══════════════════════════════════════════════════════════════════
+           MOBILE-FIRST LAYOUT - Clean TikTok-style experience
+           ═══════════════════════════════════════════════════════════════════ */
+      @media (max-width: 768px) {
+        /* Hide secondary action buttons on mobile - keep only essentials */
+        .action-buttons {
+          right: 8px;
+          bottom: calc(200px + var(--safe-bottom));
+          gap: 16px;
+        }
+
+        .action-btn .icon-wrap {
+          width: 44px;
+          height: 44px;
+        }
+
+        .action-btn .label {
+          font-size: 9px;
+        }
+
+        /* Keep all personalization options visible - they matter to learners */
+        /* Only hide difficulty on mobile (advanced feature) */
+        #btn-difficulty {
+          display: none;
+        }
+
+        /* Bottom overlay - more space for choices */
+        .bottom-overlay {
+          right: 60px;
+          bottom: calc(70px + var(--safe-bottom));
+          padding: 0 12px;
+        }
+
+        /* Topic header - smaller */
+        .topic-header {
+          margin-bottom: 8px;
+        }
+
+        .topic-emoji {
+          font-size: 20px;
+        }
+
+        .topic-name {
+          font-size: 14px;
+        }
+
+        /* Speech bubble - more compact */
+        .speech-bubble {
+          padding: 12px;
+          margin-bottom: 10px;
+          max-height: 120px;
+          border-radius: 12px;
+        }
+
+        .speech-text {
+          font-size: 14px;
+          line-height: 1.4;
+        }
+
+        .speech-hint {
+          font-size: 12px;
+          margin-top: 6px;
+        }
+
+        /* Choice buttons - BIGGER and more tappable */
+        .choices {
+          gap: 10px;
+        }
+
+        .choice-btn {
+          padding: 14px 16px;
+          border-radius: 14px;
+          min-height: 52px;
+        }
+
+        .choice-letter {
+          width: 32px;
+          height: 32px;
+          font-size: 14px;
+        }
+
+        .choice-text {
+          font-size: 14px;
+          font-weight: 500;
+        }
+
+        /* Top bar - more compact */
+        .top-bar {
+          padding: 0 12px;
+        }
+
+        .day-badge {
+          padding: 6px 12px;
+        }
+
+        .day-number {
+          font-size: 12px;
+        }
+
+        .phase-dots {
+          padding: 6px 10px;
+        }
+
+        .phase-dot {
+          width: 6px;
+          height: 6px;
+        }
+
+        /* Bottom nav - ensure it's visible */
+        .bottom-nav {
+          height: 56px;
+        }
+
+        .nav-item {
+          padding: 8px 0;
+        }
+
+        .nav-label {
+          font-size: 10px;
+        }
+      }
+
+      /* Extra small phones */
+      @media (max-width: 375px) {
+        .bottom-overlay {
+          right: 56px;
+          padding: 0 10px;
+        }
+
+        .speech-bubble {
+          max-height: 100px;
+          padding: 10px;
+        }
+
+        .speech-text {
+          font-size: 13px;
+        }
+
+        .choice-btn {
+          padding: 12px 14px;
+          min-height: 48px;
+        }
+
+        .choice-text {
+          font-size: 13px;
+        }
+
+        .action-buttons {
+          right: 6px;
+          gap: 14px;
+        }
+
+        .action-btn .icon-wrap {
+          width: 40px;
+          height: 40px;
+        }
+      }
+
+      /* Landscape mode - side by side layout */
+      @media (max-height: 500px) and (orientation: landscape) {
+        .bottom-overlay {
+          left: 50%;
+          right: 60px;
+          bottom: 16px;
+          max-width: 400px;
+        }
+
+        .speech-bubble {
+          max-height: 80px;
+        }
+
+        .action-buttons {
+          bottom: 16px;
+        }
+
+        .bottom-nav {
+          height: 48px;
+        }
+      }
+
+      /* ═══════════════════════════════════════════════════════════════
+         V2 LAYOUT - Rails + Caption + Bottom Bar
+         ═══════════════════════════════════════════════════════════════ */
+
+      /* === LEFT RAIL - Navigation === */
+      .left-rail {
+        position: absolute;
+        left: 6px;
+        top: calc(var(--safe-top) + 60px);
+        bottom: calc(80px + var(--safe-bottom));
+        width: 48px;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        z-index: 100;
+      }
+
+      .rail-btn {
+        width: 42px;
+        height: 42px;
+        border-radius: 12px;
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: none;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        position: relative;
+        transition: all 0.2s ease;
+        color: var(--tiktok-text);
+        text-decoration: none;
+      }
+
+      .rail-btn:hover {
+        background: rgba(0, 0, 0, 0.7);
+        transform: scale(1.05);
+      }
+
+      .rail-btn:active {
+        transform: scale(0.95);
+      }
+
+      .rail-btn svg {
+        width: 20px;
+        height: 20px;
+        stroke: currentColor;
+      }
+
+      .rail-badge {
+        position: absolute;
+        top: -4px;
+        right: -4px;
+        min-width: 20px;
+        height: 18px;
+        background: var(--tiktok-accent);
+        border-radius: 9px;
+        font-size: 10px;
+        font-weight: 700;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 0 5px;
+      }
+
+      .rail-spacer {
+        height: 12px;
+      }
+
+      .rail-flex {
+        flex: 1;
+        min-height: 20px;
+      }
+
+      /* === RIGHT RAIL - Options === */
+      .right-rail {
+        position: absolute;
+        right: 8px;
+        top: 35%;
+        width: 150px;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 100;
+      }
+
+      .option-card {
+        background: rgba(255, 255, 255, 0.95);
+        color: #1a1a2e;
+        border-radius: 14px;
+        padding: 12px 14px;
+        box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15);
+        cursor: pointer;
+        transition: all 0.25s var(--spring-smooth);
+        display: flex;
+        align-items: flex-start;
+        gap: 10px;
+      }
+
+      .option-card:hover {
+        transform: translateX(-6px);
+        box-shadow: 0 6px 28px rgba(0, 0, 0, 0.2);
+      }
+
+      .option-card.highlighted {
+        background: linear-gradient(135deg, #3b82f6, #1d4ed8);
+        color: white;
+        transform: translateX(-10px) scale(1.03);
+        box-shadow: 0 8px 32px rgba(59, 130, 246, 0.5);
+      }
+
+      .option-card.correct {
+        background: linear-gradient(135deg, #22c55e, #16a34a);
+        color: white;
+      }
+
+      .option-card.incorrect {
+        background: rgba(255, 255, 255, 0.4);
+        opacity: 0.5;
+      }
+
+      .option-letter {
+        width: 24px;
+        height: 24px;
+        border-radius: 50%;
+        background: rgba(59, 130, 246, 0.12);
+        color: #3b82f6;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-weight: 700;
+        font-size: 12px;
+        flex-shrink: 0;
+      }
+
+      .option-card.highlighted .option-letter,
+      .option-card.correct .option-letter {
+        background: rgba(255, 255, 255, 0.25);
+        color: white;
+      }
+
+      .option-text {
+        font-size: 12px;
+        line-height: 1.4;
+        flex: 1;
+      }
+
+      /* === CAPTION BAR - TV Style Karaoke === */
+      .caption-bar {
+        position: absolute;
+        bottom: calc(85px + var(--safe-bottom));
+        left: 60px;
+        right: 165px;
+        z-index: 90;
+        background: rgba(0, 0, 0, 0.75);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 14px;
+        padding: 14px 18px;
+        opacity: 0;
+        transform: translateY(10px);
+        transition: all 0.3s ease;
+      }
+
+      .caption-bar.visible {
+        opacity: 1;
+        transform: translateY(0);
+      }
+
+      .caption-text {
+        font-size: 15px;
+        line-height: 1.5;
+        color: var(--tiktok-text);
+        margin: 0;
+      }
+
+      .caption-text .word {
+        opacity: 0.5;
+        transition: opacity 0.15s ease;
+      }
+
+      .caption-text .word.active {
+        opacity: 1;
+        color: #fff;
+      }
+
+      .caption-text .word.spoken {
+        opacity: 1;
+      }
+
+      /* === BOTTOM BAR - Title === */
+      .bottom-bar {
+        position: absolute;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        padding: 16px 16px calc(16px + var(--safe-bottom));
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 70%, transparent 100%);
+        z-index: 80;
+      }
+
+      .bottom-date {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.6);
+        margin-bottom: 6px;
+      }
+
+      /* Clickable date parts */
+      .date-month, .date-day, .date-year {
+        cursor: pointer;
+        transition: all 0.2s ease;
+        border-radius: 4px;
+        padding: 2px 4px;
+        margin: -2px -4px;
+        text-decoration: underline;
+        text-decoration-color: rgba(255, 255, 255, 0.2);
+        text-underline-offset: 3px;
+      }
+      .date-month:hover, .date-day:hover, .date-year:hover {
+        background: rgba(255, 255, 255, 0.15);
+        color: #60a5fa;
+        text-decoration-color: #60a5fa;
+      }
+      .date-today {
+        color: #22c55e;
+        font-weight: 600;
+      }
+
+      /* === TOP HEADER - Title, Date, Time === */
+      .top-header {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: calc(var(--safe-top, 12px) + 8px) 16px 8px;
+        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 70%, transparent 100%);
+        z-index: 120;
+      }
+      
+      .top-header-left {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        flex: 1;
+        min-width: 0;
+      }
+      
+      .top-title-emoji {
+        font-size: 20px;
+        flex-shrink: 0;
+        display: none; /* Hidden - replaced by Kelly home button */
+      }
+      
+      .kelly-home-btn {
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        width: 36px;
+        height: 36px;
+        border-radius: 50%;
+        overflow: hidden;
+        flex-shrink: 0;
+        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
+        border: 2px solid rgba(255, 255, 255, 0.2);
+      }
+      
+      .kelly-home-btn:hover {
+        transform: scale(1.08);
+        box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
+        border-color: var(--tiktok-accent);
+      }
+      
+      .kelly-home-btn:active {
+        transform: scale(0.95);
+      }
+      
+      .kelly-home-btn img {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+      }
+      
+      .top-title-name {
+        font-size: 15px;
+        font-weight: 600;
+        color: #fff;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+      }
+      
+      .top-header-right {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        flex-shrink: 0;
+      }
+      
+      .top-date {
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.7);
+        font-weight: 500;
+      }
+      
+      .top-time {
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-radius: 10px;
+        padding: 4px 10px;
+        font-size: 12px;
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.9);
+      }
+      
+      @media (max-width: 600px) {
+        .top-header {
+          padding: calc(var(--safe-top, 8px) + 4px) 12px 6px;
+        }
+        .top-title-name {
+          font-size: 13px;
+          max-width: 150px;
+        }
+        .top-date {
+          display: none;
+        }
+      }
+      
+      /* === TALK TO KELLY BUTTON - Main Interaction === */
+      .talk-to-kelly-btn {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 8px;
+        padding: 16px 20px;
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        border: none;
+        border-radius: 20px;
+        cursor: pointer;
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
+        margin-bottom: 12px;
+      }
+      
+      .talk-to-kelly-btn:hover {
+        transform: scale(1.03);
+        box-shadow: 0 6px 28px rgba(59, 130, 246, 0.5);
+      }
+      
+      .talk-to-kelly-btn:active {
+        transform: scale(0.98);
+      }
+      
+      .talk-btn-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(255, 255, 255, 0.2);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      
+      .talk-btn-icon svg {
+        width: 28px;
+        height: 28px;
+        color: #fff;
+      }
+      
+      .talk-btn-label {
+        font-size: 15px;
+        font-weight: 600;
+        color: #fff;
+      }
+      
+      .talk-btn-hint {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.7);
+        text-align: center;
+      }
+      
+      /* Pulse animation when Kelly is listening */
+      .talk-to-kelly-btn.listening {
+        animation: talkPulse 1.5s ease-in-out infinite;
+      }
+      
+      .talk-to-kelly-btn.listening .talk-btn-icon {
+        background: rgba(255, 255, 255, 0.4);
+      }
+      
+      @keyframes talkPulse {
+        0%, 100% { box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4); }
+        50% { box-shadow: 0 4px 30px rgba(139, 92, 246, 0.6); }
+      }
+      
+      /* === BOTTOM CHAT AREA === */
+      .bottom-chat-area {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        display: flex;
+        flex-direction: column;
+        padding: 0 12px calc(var(--safe-bottom, 20px) + 8px);
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.6) 60%, transparent 100%);
+        z-index: 90;
+        max-height: 35vh;
+      }
+      
+      .chat-messages-container {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+        padding: 8px 0;
+        max-height: 150px;
+        scrollbar-width: none;
+        -ms-overflow-style: none;
+      }
+      
+      .chat-messages-container::-webkit-scrollbar {
+        display: none;
+      }
+      
+      /* Chat message styling */
+      .chat-message {
+        display: flex;
+        align-items: flex-start;
+        gap: 8px;
+        padding: 6px 10px;
+        background: rgba(255, 255, 255, 0.08);
+        border-radius: 12px;
+        animation: chatSlideIn 0.3s ease-out;
+      }
+      
+      @keyframes chatSlideIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      
+      .chat-message-avatar {
+        font-size: 16px;
+        flex-shrink: 0;
+      }
+      
+      .chat-message-content {
+        flex: 1;
+        min-width: 0;
+      }
+      
+      .chat-message-name {
+        font-size: 11px;
+        font-weight: 600;
+        color: rgba(255, 255, 255, 0.7);
+      }
+      
+      .chat-message-text {
+        font-size: 13px;
+        color: rgba(255, 255, 255, 0.9);
+        line-height: 1.4;
+      }
+      
+      /* Chat Input Bar */
+      .chat-input-bar {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        padding: 8px 0;
+      }
+      
+      .chat-input {
+        flex: 1;
+        background: rgba(255, 255, 255, 0.12);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 24px;
+        padding: 12px 18px;
+        font-size: 14px;
+        color: #fff;
+        outline: none;
+        transition: all 0.2s ease;
+      }
+      
+      .chat-input::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+      }
+      
+      .chat-input:focus {
+        background: rgba(255, 255, 255, 0.18);
+        border-color: rgba(59, 130, 246, 0.5);
+      }
+      
+      .chat-send-btn {
+        width: 44px;
+        height: 44px;
+        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        border: none;
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        cursor: pointer;
+        transition: all 0.2s ease;
+        flex-shrink: 0;
+      }
+      
+      .chat-send-btn svg {
+        color: #fff;
+      }
+      
+      .chat-send-btn:hover {
+        transform: scale(1.05);
+      }
+      
+      .chat-send-btn:active {
+        transform: scale(0.95);
+      }
+
+      /* Desktop day navigation arrows */
+      .day-nav {
+        position: fixed;
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        width: 44px;
+        height: 44px;
+        color: white;
+        font-size: 18px;
+        cursor: pointer;
+        opacity: 0.5;
+        transition: all 0.2s;
+        z-index: 100;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+      }
+      .day-nav:hover {
+        opacity: 1;
+        transform: translateX(-50%) scale(1.1);
+      }
+      .day-nav-prev { bottom: 100px; }
+      .day-nav-next { top: 80px; }
+      @media (max-width: 768px) {
+        .day-nav { display: none; }
+      }
+
+      /* Search overlay */
+      .search-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.95);
+        backdrop-filter: blur(20px);
+        -webkit-backdrop-filter: blur(20px);
+        z-index: 700;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s, visibility 0.3s;
+      }
+      .search-overlay.open { opacity: 1; visibility: visible; }
+      .search-container {
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 80px 20px 20px;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+      }
+      .search-header {
+        display: flex;
+        gap: 12px;
+        margin-bottom: 24px;
+      }
+      .search-input {
+        flex: 1;
+        background: rgba(255,255,255,0.1);
+        border: 2px solid rgba(255,255,255,0.2);
+        border-radius: 16px;
+        padding: 16px 20px;
+        font-size: 18px;
+        color: white;
+        outline: none;
+      }
+      .search-input:focus { border-color: #3b82f6; }
+      .search-input::placeholder { color: rgba(255,255,255,0.4); }
+      .search-close {
+        width: 52px;
+        height: 52px;
+        background: rgba(255,255,255,0.1);
+        border: none;
+        border-radius: 16px;
+        color: white;
+        font-size: 20px;
+        cursor: pointer;
+        transition: background 0.2s;
+      }
+      .search-close:hover { background: rgba(255,255,255,0.2); }
+      .search-results {
+        flex: 1;
+        overflow-y: auto;
+        display: flex;
+        flex-direction: column;
+        gap: 8px;
+      }
+      .search-result {
+        display: flex;
+        align-items: center;
+        gap: 16px;
+        padding: 16px;
+        background: rgba(255,255,255,0.05);
+        border-radius: 16px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .search-result:hover {
+        background: rgba(255,255,255,0.1);
+        transform: translateX(4px);
+      }
+      .search-result-emoji { font-size: 28px; width: 40px; text-align: center; }
+      .search-result-info { flex: 1; }
+      .search-result-date { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 2px; }
+      .search-result-topic { font-size: 15px; font-weight: 500; }
+      .search-empty { text-align: center; padding: 60px 20px; display: none; }
+      .search-empty p { color: rgba(255,255,255,0.5); margin-bottom: 24px; }
+      .search-generate-btn {
+        padding: 14px 28px;
+        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        border: none;
+        border-radius: 25px;
+        color: white;
+        font-size: 15px;
+        font-weight: 600;
+        cursor: pointer;
+        transition: transform 0.2s;
+      }
+      .search-generate-btn:hover { transform: scale(1.05); }
+      .search-hint {
+        text-align: center;
+        font-size: 12px;
+        color: rgba(255,255,255,0.3);
+        margin-top: 16px;
+      }
+      .search-hint kbd {
+        background: rgba(255,255,255,0.1);
+        padding: 2px 6px;
+        border-radius: 4px;
+        margin: 0 2px;
+      }
+
+      .bottom-title {
+        font-size: 17px;
+        font-weight: 600;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+      }
+
+      .bottom-emoji {
+        font-size: 20px;
+      }
+
+      .bottom-name {
+        color: var(--tiktok-text);
+      }
+
+      .bottom-hashtag {
+        color: #60a5fa;
+        font-weight: 500;
+      }
+
+      /* === TOP BAR - V2 (override) === */
+      .top-bar-v2 {
+        position: absolute;
+        top: var(--safe-top);
+        left: 60px;
+        right: 16px;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        z-index: 100;
+        padding: 8px 0;
+      }
+
+      /* Hide ALL live badges and floating chat from chat-overlay */
+      #live-badge,
+      body > div#live-badge,
+      #chat-overlay {
+        display: none !important;
+      }
+      
+      /* Comments now go to bottom chat area instead */
+      .comments-float {
+        display: none !important;
+      }
+      
+      /* Hide old mic button - we have the new Talk to Kelly button */
+      #kelly-mic-btn,
+      .kelly-mic-btn {
+        display: none !important;
+      }
+
+      /* V2 LIVE indicator - centered at very top */
+      .live-badge-v2 {
+        position: fixed;
+        top: calc(var(--safe-top, 0px) + 8px);
+        left: 50%;
+        transform: translateX(-50%);
+        background: rgba(239, 68, 68, 0.95);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        border-radius: 4px;
+        padding: 4px 12px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+        font-size: 11px;
+        font-weight: 700;
+        letter-spacing: 0.5px;
+        text-transform: uppercase;
+        z-index: 200;
+        color: white;
+      }
+
+      .live-badge-v2 .live-dot {
+        width: 6px;
+        height: 6px;
+        background: white;
+        border-radius: 50%;
+        animation: livePulse 1.5s infinite;
+      }
+
+      .live-dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: #ef4444;
+        animation: livePulse 1.5s ease-in-out infinite;
+      }
+
+      @keyframes livePulse {
+        0%, 100% { opacity: 1; transform: scale(1); }
+        50% { opacity: 0.6; transform: scale(1.1); }
+      }
+
+      .live-text {
+        font-weight: 700;
+        color: var(--tiktok-text);
+      }
+
+      .live-count {
+        color: rgba(255, 255, 255, 0.7);
+      }
+
+      /* === PHASE NAVIGATION BAR - VERTICAL RIGHT RAIL === */
+      .phase-nav-vertical {
+        position: fixed;
+        right: 12px;
+        top: calc(var(--safe-top) + 50px);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 0;
+        z-index: 140;
+        background: rgba(0, 0, 0, 0.6);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border-radius: 24px;
+        padding: 12px 8px;
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      }
+
+      .phase-nav-vertical .phase-btn {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 2px;
+        padding: 10px 8px;
+        background: transparent;
+        border: none;
+        color: rgba(255, 255, 255, 0.4);
+        cursor: pointer;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        border-radius: 12px;
+        min-width: 48px;
+      }
+
+      .phase-nav-vertical .phase-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        color: rgba(255, 255, 255, 0.9);
+        transform: scale(1.05);
+      }
+
+      .phase-nav-vertical .phase-btn:hover .phase-tooltip {
+        opacity: 1;
+        visibility: visible;
+        transform: translateX(-10px);
+      }
+
+      .phase-nav-vertical .phase-btn.active {
+        background: linear-gradient(135deg, var(--tiktok-accent), #7c3aed);
+        color: white;
+        box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+      }
+
+      .phase-nav-vertical .phase-btn.completed {
+        color: rgba(255, 255, 255, 0.8);
+        background: rgba(34, 197, 94, 0.15);
+      }
+
+      .phase-nav-vertical .phase-btn.completed::after {
+        content: '✓';
+        position: absolute;
+        top: 4px;
+        right: 4px;
+        font-size: 8px;
+        color: #22c55e;
+        font-weight: bold;
+      }
+
+      .phase-nav-vertical .phase-dot {
+        width: 10px;
+        height: 10px;
+        border-radius: 50%;
+        background: currentColor;
+        transition: all 0.25s ease;
+      }
+
+      .phase-nav-vertical .phase-btn.active .phase-dot {
+        width: 14px;
+        height: 14px;
+        box-shadow: 0 0 12px rgba(255, 255, 255, 0.5);
+      }
+
+      .phase-nav-vertical .phase-label {
+        font-size: 10px;
+        font-weight: 600;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        white-space: nowrap;
+        margin-top: 2px;
+      }
+
+      .phase-nav-vertical .phase-connector-v {
+        width: 2px;
+        height: 16px;
+        background: rgba(255, 255, 255, 0.15);
+        flex-shrink: 0;
+        transition: background 0.3s ease;
+      }
+
+      .phase-nav-vertical .phase-connector-v.completed {
+        background: rgba(34, 197, 94, 0.5);
+      }
+
+      /* === PHASE TOOLTIPS - Appear on hover === */
+      .phase-tooltip {
+        position: absolute;
+        right: calc(100% + 16px);
+        top: 50%;
+        transform: translateY(-50%) translateX(0);
+        background: rgba(15, 23, 42, 0.95);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        border-radius: 12px;
+        padding: 12px 16px;
+        min-width: 180px;
+        max-width: 280px;
+        opacity: 0;
+        visibility: hidden;
+        transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+        pointer-events: none;
+        box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5);
+        z-index: 200;
+      }
+
+      .phase-tooltip::after {
+        content: '';
+        position: absolute;
+        right: -6px;
+        top: 50%;
+        transform: translateY(-50%) rotate(45deg);
+        width: 12px;
+        height: 12px;
+        background: rgba(15, 23, 42, 0.95);
+        border-right: 1px solid rgba(255, 255, 255, 0.15);
+        border-top: 1px solid rgba(255, 255, 255, 0.15);
+      }
+
+      .phase-tooltip .tooltip-title {
+        display: block;
+        font-size: 11px;
+        font-weight: 700;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+        color: var(--tiktok-accent);
+        margin-bottom: 6px;
+      }
+
+      .phase-tooltip .tooltip-text {
+        display: block;
+        font-size: 13px;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.9);
+      }
+
+      /* Legacy horizontal nav - hidden */
+      .phase-nav {
+        display: none !important;
+      }
+
+      /* === PHASE NAV MOBILE RESPONSIVE === */
+      @media (max-width: 768px) {
+        .phase-nav-vertical {
+          right: 8px;
+          padding: 8px 6px;
+        }
+
+        .phase-nav-vertical .phase-btn {
+          padding: 8px 6px;
+          min-width: 40px;
+        }
+
+        .phase-nav-vertical .phase-dot {
+          width: 8px;
+          height: 8px;
+        }
+
+        .phase-nav-vertical .phase-btn.active .phase-dot {
+          width: 10px;
+          height: 10px;
+        }
+
+        .phase-nav-vertical .phase-label {
+          font-size: 8px;
+        }
+
+        .phase-nav-vertical .phase-connector-v {
+          height: 10px;
+        }
+
+        .phase-tooltip {
+          min-width: 150px;
+          max-width: 200px;
+          padding: 10px 12px;
+          right: calc(100% + 10px);
+        }
+
+        .phase-tooltip .tooltip-text {
+          font-size: 11px;
+        }
+      }
+
+      @media (max-width: 375px) {
+        .phase-nav-vertical {
+          right: 4px;
+          padding: 6px 4px;
+        }
+
+        .phase-nav-vertical .phase-btn {
+          padding: 6px 4px;
+          min-width: 34px;
+        }
+
+        .phase-nav-vertical .phase-label {
+          font-size: 7px;
+        }
+
+        .phase-tooltip {
+          min-width: 120px;
+          max-width: 160px;
+        }
+      }
+
+      /* Legacy progress-dots - hidden */
+      .progress-dots {
+        display: none;
+      }
+
+      .progress-dots .dot {
+        width: 8px;
+        height: 8px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.3);
+        transition: all 0.3s ease;
+      }
+
+      .progress-dots .dot.active {
+        width: 24px;
+        border-radius: 4px;
+        background: var(--tiktok-accent);
+      }
+
+      /* === REPOSITION CHAT-OVERLAY COMMENTS TO TOP CENTER === */
+      #chat-overlay {
+        position: fixed !important;
+        top: calc(var(--safe-top, 44px) + 110px) !important;
+        bottom: auto !important;
+        left: 50% !important;
+        transform: translateX(-50%) !important;
+        right: auto !important;
+        display: flex !important;
+        flex-direction: row !important;
+        flex-wrap: wrap !important;
+        justify-content: center !important;
+        gap: 8px !important;
+        max-width: 85% !important;
+        padding: 8px !important;
+        max-height: none !important;
+        width: auto !important;
+        min-width: 0 !important;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
+      }
+
+      #chat-overlay .chat-comment {
+        background: rgba(0, 0, 0, 0.6) !important;
+        backdrop-filter: blur(10px) !important;
+        -webkit-backdrop-filter: blur(10px) !important;
+        padding: 6px 12px !important;
+        border-radius: 18px !important;
+        font-size: 12px !important;
+        margin: 0 !important;
+        animation: commentFadeIn 0.3s ease !important;
+        white-space: nowrap !important;
+        max-width: none !important;
+        flex-shrink: 0 !important;
+        display: flex !important;
+        align-items: center !important;
+        gap: 6px !important;
+      }
+
+      #chat-overlay .chat-comment .avatar {
+        font-size: 14px !important;
+      }
+
+      #chat-overlay .chat-comment .name {
+        font-weight: 600 !important;
+        color: var(--tiktok-accent) !important;
+      }
+
+      #chat-overlay .chat-comment .text {
+        color: rgba(255, 255, 255, 0.95) !important;
+      }
+
+      @keyframes commentFadeIn {
+        from { opacity: 0; transform: translateY(-8px); }
+        to { opacity: 1; transform: translateY(0); }
+      }
+
+      /* === FLOATING COMMENTS AREA (legacy fallback) === */
+      .comments-float {
+        position: absolute;
+        top: calc(var(--safe-top) + 100px);
+        left: 50%;
+        transform: translateX(-50%);
+        z-index: 130;
+        display: flex;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 6px;
+        max-width: 80%;
+        pointer-events: none;
+      }
+
+      .comments-float .comment-minimal {
+        background: rgba(0, 0, 0, 0.5);
+        backdrop-filter: blur(8px);
+        -webkit-backdrop-filter: blur(8px);
+        padding: 4px 10px;
+        border-radius: 16px;
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.9);
+        white-space: nowrap;
+      }
+
+      .comments-float .comment-minimal .comment-flag {
+        margin-right: 4px;
+      }
+
+      .comments-float .comment-minimal .comment-name {
+        font-weight: 600;
+        margin-right: 4px;
+        color: var(--tiktok-accent);
+      }
+
+      .comment-minimal {
+        font-size: 13px;
+        color: var(--tiktok-text);
+        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7), 0 2px 8px rgba(0, 0, 0, 0.5);
+        animation: commentFadeIn 0.4s ease-out;
+      }
+
+      .comment-minimal strong {
+        font-weight: 600;
+      }
+
+      @keyframes commentFadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+
+      /* === SWIPE NAVIGATION === */
+      .swipe-overlay-v2 {
+        position: absolute;
+        inset: 0;
+        z-index: 200;
+        pointer-events: none;
+        opacity: 0;
+        transition: opacity 0.2s ease;
+      }
+
+      .swipe-overlay-v2.active {
+        opacity: 1;
+      }
+
+      .swipe-next,
+      .swipe-prev {
+        position: absolute;
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 4px;
+        color: var(--tiktok-text);
+        font-size: 14px;
+        font-weight: 600;
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      }
+
+      .swipe-next {
+        top: 60px;
+      }
+
+      .swipe-prev {
+        bottom: 120px;
+      }
+
+      .swipe-arrow {
+        font-size: 24px;
+        animation: swipeBounce 1s ease-in-out infinite;
+      }
+
+      .swipe-prev .swipe-arrow {
+        animation-direction: reverse;
+      }
+
+      @keyframes swipeBounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-8px); }
+      }
+
+      .swipe-hint {
+        position: absolute;
+        bottom: calc(180px + var(--safe-bottom));
+        left: 50%;
+        transform: translateX(-50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 6px;
+        z-index: 150;
+        opacity: 0.7;
+        animation: swipeHintPulse 2s ease-in-out infinite;
+      }
+
+      .swipe-hint.hidden {
+        display: none;
+      }
+
+      .swipe-hint-arrow {
+        font-size: 20px;
+        animation: swipeBounce 1.5s ease-in-out infinite;
+      }
+
+      .swipe-hint-text {
+        font-size: 12px;
+        color: var(--tiktok-text);
+        text-shadow: 0 2px 8px rgba(0, 0, 0, 0.5);
+      }
+
+      @keyframes swipeHintPulse {
+        0%, 100% { opacity: 0.7; }
+        50% { opacity: 0.4; }
+      }
+
+      /* === KELLY ADJUSTMENTS FOR V2 === */
+      .kelly-avatar-container.v2-mode img,
+      .v2-mode #kelly-avatar {
+        width: 160% !important;
+        height: auto !important;
+        object-fit: contain !important;
+        object-position: center top !important;
+        margin-left: -30% !important;
+        margin-top: -5% !important;
+      }
+
+      /* === TRANSITION ANIMATIONS === */
+      .lesson-transition {
+        transition: transform 0.4s ease, opacity 0.4s ease;
+      }
+
+      .lesson-transition.slide-up {
+        transform: translateY(-100%);
+        opacity: 0;
+      }
+
+      .lesson-transition.slide-down {
+        transform: translateY(100%);
+        opacity: 0;
+      }
+
+      /* === HIDE OLD V1 ELEMENTS IN V2 === */
+      .bottom-nav,
+      .action-buttons,
+      .swipe-indicator,
+      .topic-header,
+      .speech-bubble,
+      .choices,
+      .day-badge,
+      .phase-dots:not(.progress-dots) {
+        display: none !important;
+      }
+
+      /* === MOBILE RESPONSIVE V2 === */
+      @media (max-width: 768px) {
+        .left-rail {
+          width: 44px;
+          left: 4px;
+        }
+
+        .rail-btn {
+          width: 38px;
+          height: 38px;
+        }
+
+        .right-rail {
+          width: 130px;
+          right: 6px;
+        }
+
+        .option-card {
+          padding: 10px 12px;
+        }
+
+        .option-text {
+          font-size: 11px;
+        }
+
+        .caption-bar {
+          left: 52px;
+          right: 145px;
+          padding: 10px 14px;
+        }
+
+        .caption-text {
+          font-size: 13px;
+        }
+
+        .bottom-bar {
+          padding: 12px 12px calc(12px + var(--safe-bottom));
+        }
+      }
+
+      @media (max-width: 375px) {
+        .right-rail {
+          width: 110px;
+        }
+
+        .caption-bar {
+          right: 125px;
+        }
+      }
+
+/* ═══════════════════════════════════════════════════════════════════════════
+   COMMONS OVERLAY STYLES
+   Learner Commons feature overlay
+   ═══════════════════════════════════════════════════════════════════════════ */
+
+/* Commons Overlay Styles */
+      .commons-overlay {
+        position: fixed;
+        inset: 0;
+        background: rgba(0, 0, 0, 0.95);
+        z-index: 10000;
+        display: flex;
+        flex-direction: column;
+        opacity: 0;
+        visibility: hidden;
+        transition: opacity 0.3s, visibility 0.3s;
+      }
+      .commons-overlay.open { opacity: 1; visibility: visible; }
+      
+      .commons-container {
+        flex: 1;
+        max-width: 600px;
+        margin: 0 auto;
+        padding: 20px;
+        overflow-y: auto;
+        width: 100%;
+      }
+      
+      .commons-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        margin-bottom: 20px;
+      }
+      
+      .commons-header h2 {
+        font-family: 'Fraunces', Georgia, serif;
+        font-size: 1.5rem;
+        font-weight: 500;
+        color: #fff;
+      }
+      
+      .commons-close {
+        width: 40px;
+        height: 40px;
+        border-radius: 50%;
+        background: rgba(255, 255, 255, 0.1);
+        border: none;
+        color: #fff;
+        font-size: 1.25rem;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .commons-close:hover { background: rgba(255, 255, 255, 0.2); }
+      
+      .commons-lesson-info {
+        display: flex;
+        align-items: center;
+        gap: 12px;
+        padding: 16px;
+        background: rgba(59, 130, 246, 0.15);
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 12px;
+        margin-bottom: 24px;
+      }
+      
+      .commons-lesson-badge {
+        background: #2563eb;
+        color: #fff;
+        padding: 6px 12px;
+        border-radius: 8px;
+        font-size: 0.85rem;
+        font-weight: 600;
+      }
+      
+      .commons-lesson-topic {
+        font-size: 1rem;
+        color: #fff;
+        font-weight: 500;
+      }
+      
+      .commons-actions {
+        display: grid;
+        grid-template-columns: 1fr 1fr;
+        gap: 12px;
+        margin-bottom: 24px;
+      }
+      
+      .commons-action-btn {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        color: #fff;
+        cursor: pointer;
+        transition: all 0.2s;
+        text-align: left;
+      }
+      .commons-action-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        border-color: rgba(59, 130, 246, 0.5);
+        transform: translateY(-2px);
+      }
+      
+      .commons-action-icon { font-size: 1.5rem; }
+      .commons-action-text { font-size: 0.9rem; font-weight: 500; }
+      
+      .commons-proposals h3 {
+        font-size: 1rem;
+        color: #a1a1aa;
+        margin-bottom: 12px;
+        font-weight: 500;
+      }
+      
+      .commons-proposals-list {
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      
+      .commons-proposal-card {
+        padding: 16px;
+        background: rgba(255, 255, 255, 0.05);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 12px;
+        cursor: pointer;
+        transition: all 0.2s;
+      }
+      .commons-proposal-card:hover {
+        background: rgba(255, 255, 255, 0.08);
+        border-color: rgba(59, 130, 246, 0.3);
+      }
+      
+      .commons-proposal-title {
+        font-size: 0.95rem;
+        color: #fff;
+        margin-bottom: 6px;
+        font-weight: 500;
+      }
+      
+      .commons-proposal-meta {
+        display: flex;
+        gap: 12px;
+        font-size: 0.8rem;
+        color: #71717a;
+      }
+      
+      .commons-proposal-score {
+        color: #22c55e;
+        font-weight: 600;
+      }
+      
+      .commons-loading {
+        text-align: center;
+        padding: 20px;
+        color: #71717a;
+      }
+      
+      .commons-empty {
+        text-align: center;
+        padding: 24px;
+        color: #71717a;
+      }
+      
+      .commons-full-link {
+        display: block;
+        text-align: center;
+        padding: 16px;
+        margin-top: 20px;
+        color: #3b82f6;
+        text-decoration: none;
+        font-weight: 600;
+        border: 1px solid rgba(59, 130, 246, 0.3);
+        border-radius: 12px;
+        transition: all 0.2s;
+      }
+      .commons-full-link:hover {
+        background: rgba(59, 130, 246, 0.1);
+      }
+      
+      /* Transparency Portal Styles */
+      .transparency-philosophy {
+        padding: 16px;
+        background: linear-gradient(135deg, rgba(163, 113, 247, 0.1), rgba(59, 130, 246, 0.1));
+        border: 1px solid rgba(163, 113, 247, 0.3);
+        border-radius: 12px;
+        margin-bottom: 20px;
+        text-align: center;
+      }
+      .transparency-philosophy p {
+        color: rgba(255, 255, 255, 0.8);
+        font-size: 0.9rem;
+        margin: 0;
+        font-style: italic;
+      }
+      
+      .transparency-audit {
+        background: rgba(255, 255, 255, 0.03);
+        border: 1px solid rgba(255, 255, 255, 0.1);
+        border-radius: 16px;
+        padding: 20px;
+        margin-bottom: 20px;
+      }
+      
+      .audit-loading {
+        text-align: center;
+        padding: 20px;
+        color: #71717a;
+      }
+      
+      .audit-summary {
+        display: flex;
+        gap: 20px;
+        align-items: center;
+        margin-bottom: 16px;
+      }
+      
+      .audit-health {
+        width: 90px;
+        height: 90px;
+        border-radius: 50%;
+        border: 3px solid;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+      }
+      
+      .audit-health-score {
+        font-size: 1.5rem;
+        font-weight: 700;
+        line-height: 1;
+      }
+      
+      .audit-health-label {
+        font-size: 0.7rem;
+        color: rgba(255, 255, 255, 0.7);
+        margin-top: 4px;
+        text-transform: uppercase;
+        letter-spacing: 0.05em;
+      }
+      
+      .audit-breakdown {
+        display: flex;
+        flex-direction: column;
+        gap: 6px;
+        flex: 1;
+      }
+      
+      .audit-stat {
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        font-size: 0.85rem;
+        color: rgba(255, 255, 255, 0.7);
+      }
+      
+      .audit-stat .stat-num {
+        font-weight: 700;
+        min-width: 24px;
+      }
+      
+      .audit-stat.pass .stat-num { color: #3fb950; }
+      .audit-stat.fail .stat-num { color: #f85149; }
+      .audit-stat.warn .stat-num { color: #d29922; }
+      
+      .audit-details {
+        border-top: 1px solid rgba(255, 255, 255, 0.1);
+        padding-top: 12px;
+        margin-top: 12px;
+      }
+      
+      .audit-item {
+        display: flex;
+        align-items: center;
+        gap: 10px;
+        padding: 8px 0;
+        font-size: 0.85rem;
+      }
+      
+      .audit-icon {
+        font-size: 1rem;
+      }
+      
+      .audit-label {
+        color: rgba(255, 255, 255, 0.9);
+        font-weight: 500;
+      }
+      
+      .audit-issue {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.8rem;
+        margin-left: auto;
+        max-width: 150px;
+        overflow: hidden;
+        text-overflow: ellipsis;
+        white-space: nowrap;
+      }
+      
+      .audit-timestamp {
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.4);
+        margin-top: 12px;
+        text-align: right;
+      }
+      
+      .audit-pending, .audit-coming-soon {
+        text-align: center;
+        padding: 24px;
+      }
+      
+      .pending-icon, .soon-icon {
+        font-size: 2rem;
+        display: block;
+        margin-bottom: 8px;
+      }
+      
+      .pending-text, .soon-text {
+        color: rgba(255, 255, 255, 0.8);
+        font-weight: 500;
+      }
+      
+      .soon-desc {
+        color: rgba(255, 255, 255, 0.5);
+        font-size: 0.85rem;
+        margin-top: 8px;
+      }
+      
+      .trust-score-section {
+        margin-bottom: 20px;
+      }
+      
+      .trust-score-section h3 {
+        font-size: 0.9rem;
+        color: rgba(255, 255, 255, 0.7);
+        margin-bottom: 10px;
+        font-weight: 500;
+      }
+      
+      .trust-score-bar {
+        height: 8px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 4px;
+        overflow: hidden;
+        margin-bottom: 8px;
+      }
+      
+      .trust-score-fill {
+        height: 100%;
+        width: 0%;
+        background: #3fb950;
+        border-radius: 4px;
+        transition: width 0.5s ease, background 0.3s ease;
+      }
+      
+      .trust-score-stats {
+        display: flex;
+        justify-content: space-between;
+        font-size: 0.75rem;
+        color: rgba(255, 255, 255, 0.5);
+      }
+      
+      @media (max-width: 480px) {
+        .commons-actions {
+          grid-template-columns: 1fr;
+        }
+        
+        .audit-summary {
+          flex-direction: column;
+          text-align: center;
+        }
+        
+        .audit-breakdown {
+          width: 100%;
+          flex-direction: row;
+          justify-content: space-around;
+        }
+      }

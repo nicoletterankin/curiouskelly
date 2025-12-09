@@ -421,3 +421,4 @@ GROUP BY archetype;
 
 **The lesson player looks beautiful but the age/language controls are cosmetic only. They update UI state but don't fetch the actual age/language-specific content from the database.**
 
+
