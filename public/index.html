@@ -2756,12 +2756,22 @@
                 // Fetch from Supabase
                 const { data: lesson, error } = await supabase
                     .from('core_lessons')
-                    .select('day_number, topic, universal_truth')
+                    .select('id, day_number, topic, universal_truth, hero_image_url')
                     .eq('day_number', todayNum)
                     .single();
 
                 if (error) throw error;
                 if (lesson) {
+                    // Fetch visual atom if hero_image_url is missing
+                    if (!lesson.hero_image_url) {
+                         const { data: atom } = await supabase
+                            .from('lesson_atoms')
+                            .select('visual_url')
+                            .eq('core_lesson_id', lesson.id)
+                            .eq('phase', 'hook') // Use hook visual for thumbnail
+                            .maybeSingle();
+                         if (atom) lesson.visual_url = atom.visual_url;
+                    }
                     displayTodaysLesson(lesson);
                 }
             } catch (error) {
@@ -2790,6 +2800,24 @@
             if (heroTopicEl && lesson.topic) {
                 heroTopicEl.textContent = lesson.topic;
                 heroTopicEl.classList.remove('topic-skeleton');
+            }
+
+            // Update thumbnail image
+            const thumbEl = document.querySelector('.lesson-thumbnail');
+            if (thumbEl) {
+                const imageUrl = lesson.hero_image_url || lesson.visual_url;
+                if (imageUrl) {
+                    thumbEl.style.backgroundImage = `url('${imageUrl}')`;
+                    thumbEl.style.backgroundSize = 'cover';
+                    thumbEl.style.backgroundPosition = 'center';
+                    
+                    // Hide generic text if we have a real image
+                    const thumbText = document.getElementById('today-thumbnail-text');
+                    if (thumbText) thumbText.style.display = 'none';
+                } else if (lesson.topic) {
+                    // Fallback to gradient
+                    thumbEl.style.background = generateLessonThumbnail(lesson.topic);
+                }
             }
         }
 
