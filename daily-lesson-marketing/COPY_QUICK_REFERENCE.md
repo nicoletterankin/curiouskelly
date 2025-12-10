@@ -16,7 +16,7 @@
 ### Pricing (Always mention both)
 - **Monthly:** $4.99/month
 - **Annual:** $49.99/year (saves $10)
-- **Trial:** 7 days free, no credit card
+- **Trial:** 7 days to explore, no credit card
 
 ---
 
@@ -44,6 +44,9 @@
 - Curious, joyful, fascinating
 
 ### ❌ NEVER USE THESE
+- ❌ **Free** (implies worthless—see `docs/brand/FORBIDDEN_WORD_FREE.md`)
+- ❌ **Free trial** (use "7 days to explore")
+- ❌ **Start free** (use "Start learning")
 - ❌ Concierge
 - ❌ Cohort
 - ❌ Onboarding
@@ -62,10 +65,11 @@
 3. "One topic. Every age. Three languages."
 
 ### CTA Buttons
-- "Start your 7-day free trial"
-- "Start learning free"
-- "Try 7 days free"
-- "Give 365 days of curiosity" (gifting)
+- "Start Learning"
+- "Begin Your Journey"
+- "Take 7 Days to Explore"
+- "Try a Lesson"
+- "Give 365 Days of Curiosity" (gifting)
 
 ### Feature Benefits (Pick 4)
 1. ⏰ **8 minutes a day** - Fits any schedule, builds habits
@@ -96,13 +100,13 @@
 ## 📝 LEAD FORM COPY
 
 ### Form Title
-"Start your 7-day free trial"
+"Start Your Journey"
 
 ### Subtitle
-"No credit card required. Cancel anytime."
+"7 days to explore. No credit card required."
 
 ### Submit Button
-"Start learning free"
+"Start Learning"
 
 ### Success Message
 "Welcome! Check your email to start your first lesson."
@@ -111,8 +115,8 @@
 
 ## ❓ FAQ ANSWERS (Copy-Paste Ready)
 
-**Q: How does the free trial work?**
-A: 7 days free, no credit card required. Try unlimited lessons in all three languages. Cancel anytime.
+**Q: What happens after 7 days?**
+A: Take 7 days to explore—no credit card required. Try unlimited lessons in all three languages. After that, it's just $4.99/month.
 
 **Q: Can my whole family use one account?**
 A: Yes! Create up to 5 profiles per subscription. Each person gets age-adaptive lessons.
@@ -154,9 +158,10 @@ A: We never sell your data, show ads, or track you. Privacy-first means privacy 
 
 ## 🚀 BEFORE YOU PUBLISH CHECKLIST
 
+- [ ] **No "free" anywhere** (use "yours," "included," "7 days to explore")
 - [ ] No forbidden words used (concierge, cohort, etc.)
 - [ ] Pricing mentioned: $4.99/month or $49.99/year
-- [ ] Free trial mentioned: 7 days, no credit card
+- [ ] Trial mentioned: "7 days to explore, no credit card"
 - [ ] Three languages mentioned
 - [ ] Age-adaptive or age range mentioned
 - [ ] Clear call-to-action included
@@ -175,9 +180,9 @@ Based on OpenEnglish model + best practices:
 - Emphasize ease: "No credit card required"
 
 ### High-Converting CTAs
-- Action verb + benefit: "Start learning free"
-- Remove friction: "Try 7 days free"
-- Gift angle: "Give 365 days of curiosity"
+- Action verb + benefit: "Start Learning"
+- Remove friction: "Take 7 Days to Explore"
+- Gift angle: "Give 365 Days of Curiosity"
 
 ### Trust Signals
 - "Trusted by learners in 47 countries"

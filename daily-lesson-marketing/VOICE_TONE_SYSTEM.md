@@ -25,9 +25,9 @@ The Daily Lesson offers three distinct voice tones to match learner preferences.
 - "Available in three languages"
 
 **Example CTAs:**
-- "Start your 7-day free trial"
-- "Begin learning today"
-- "Try it free"
+- "Start Learning"
+- "Begin Your Journey"
+- "Take 7 Days to Explore"
 
 **Voice Characteristics:**
 - Uses facts and data
@@ -55,9 +55,9 @@ The Daily Lesson offers three distinct voice tones to match learner preferences.
 - "Three languages included (because why not? 🌍)"
 
 **Example CTAs:**
-- "Let's go! Start free →"
-- "Try 7 days free (it'll be fun!)"
-- "Get started - it's free!"
+- "Let's go! Start learning →"
+- "Try 7 days (it'll be fun!) ✨"
+- "Get started - you'll love it!"
 
 **Voice Characteristics:**
 - Uses exclamation points (sparingly)
@@ -85,9 +85,9 @@ The Daily Lesson offers three distinct voice tones to match learner preferences.
 - "Learn together with your family, in the language that feels right"
 
 **Example CTAs:**
-- "Start your journey - 7 days free"
-- "Begin with us today"
-- "We're here for you - try free"
+- "Start Your Journey"
+- "Begin with Us Today"
+- "We're Here for You"
 
 **Voice Characteristics:**
 - Uses "we" and "together"
@@ -128,7 +128,7 @@ The Daily Lesson offers three distinct voice tones to match learner preferences.
 Headline: Learn something new every day with Kelly
 Subheadline: 8-minute daily lessons for adults, children, and teachers. 
 Age-adaptive. Three languages. One universal topic.
-CTA: Start your 7-day free trial
+CTA: Start Learning
 ```
 
 **Fun:**
@@ -136,7 +136,7 @@ CTA: Start your 7-day free trial
 Headline: Get curious! Learn something amazing every single day ✨
 Subheadline: Quick 8-minute lessons that actually fit your life! Perfect for 
 adults, kids, teachers - basically everyone. Same topic, your age level!
-CTA: Let's go! Try 7 days free →
+CTA: Let's go! Start learning →
 ```
 
 **Warm:**
@@ -144,7 +144,7 @@ CTA: Let's go! Try 7 days free →
 Headline: Welcome to your daily learning journey
 Subheadline: Spend 8 peaceful minutes with Kelly each day. Learn together 
 with your family, at everyone's own level. You're in good hands.
-CTA: Begin your journey - 7 days free
+CTA: Begin Your Journey
 ```
 
 ### Features Section
@@ -166,16 +166,16 @@ CTA: Begin your journey - 7 days free
 
 ### FAQ Section
 
-**Question: How does the free trial work?**
+**Question: What happens after 7 days?**
 
 **Neutral:**
-"7 days free, no credit card required. Try unlimited lessons in all three languages. If you continue, choose monthly ($4.99) or annual ($49.99). Cancel anytime."
+"Take 7 days to explore—no credit card required. Try unlimited lessons in all three languages. If you continue, choose monthly ($4.99) or annual ($49.99). Cancel anytime."
 
 **Fun:**
-"Get 7 whole days free (no sneaky credit card tricks!). Try everything - all the lessons, all three languages! Love it? It's just $4.99/month. Not feeling it? Cancel with zero hassle. Easy peasy!"
+"You get 7 whole days to explore (no sneaky credit card tricks!). Try everything—all the lessons, all three languages! Love it? It's just $4.99/month. Not feeling it? Cancel with zero hassle. Easy peasy!"
 
 **Warm:**
-"We want you to feel comfortable, so we offer 7 days completely free - no credit card needed. Take your time exploring lessons in all three languages. When you're ready, you can continue for just $4.99 a month. And if it's not right for you, that's okay - cancel anytime."
+"We want you to feel comfortable, so take 7 days to explore—no credit card needed. Discover lessons in all three languages at your own pace. When you're ready, you can continue for just $4.99 a month. And if it's not right for you, that's okay—cancel anytime."
 
 ---
 
@@ -287,15 +287,15 @@ For each piece of copy, verify:
 
 **Neutral:**
 ```
-Title: Start your 7-day free trial
-Subtitle: No credit card required. Cancel anytime.
-Submit: Start learning free
+Title: Start Your Journey
+Subtitle: 7 days to explore. No credit card required.
+Submit: Start Learning
 ```
 
 **Fun:**
 ```
 Title: Ready to start your adventure? 🚀
-Subtitle: 7 days free, no card needed (seriously!)
+Subtitle: 7 days to explore, no card needed (seriously!)
 Submit: Let's do this! →
 ```
 
@@ -303,7 +303,7 @@ Submit: Let's do this! →
 ```
 Title: Begin your learning journey with us
 Subtitle: 7 days to explore, no commitment needed. We're here for you.
-Submit: Start my journey
+Submit: Start My Journey
 ```
 
 ### Pricing Section
@@ -311,15 +311,15 @@ Submit: Start my journey
 **Neutral:**
 ```
 Title: Simple, honest pricing
-Monthly: $4.99/month · Cancel anytime · Try 7 days free
+Monthly: $4.99/month · Cancel anytime · 7 days to explore
 Annual: $49.99/year · Save $10 · Perfect for gifting
 ```
 
 **Fun:**
 ```
 Title: Super simple pricing (no tricks!)
-Monthly: Just $4.99/month! Try it free for 7 days first ✨
-Annual: $49.99/year = $10 saved! (That's like 2 free months! 🎉)
+Monthly: Just $4.99/month! Take 7 days to explore first ✨
+Annual: $49.99/year = $10 saved! 🎉
 ```
 
 **Warm:**

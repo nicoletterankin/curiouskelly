@@ -406,13 +406,18 @@ Logo: Top center
 **Types of CTAs:**
 1. **Engagement:** "What do you think?" "Tag someone who needs this"
 2. **Traffic:** "Link in bio" "Learn more at curiouskelly.com"
-3. **Conversion:** "Start your free trial" "Subscribe today"
+3. **Conversion:** "Start learning" "Begin your journey" "Subscribe today"
 4. **Community:** "Join our Discord" "Share your learning"
 
 **CTA Frequency:**
 - Every post should have one (and only one) primary CTA
 - Engagement CTAs most common (80%)
 - Conversion CTAs occasional (20%)
+
+**IMPORTANT:** Never use "free" in CTAs. See `docs/brand/FORBIDDEN_WORD_FREE.md`.
+- ❌ "Start your free trial" → ✅ "Start learning"
+- ❌ "Try it free" → ✅ "Try a lesson"
+- ❌ "Get started free" → ✅ "Begin your journey"
 
 **CTA Placement:**
 - End of caption (after value provided)

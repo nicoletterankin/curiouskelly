@@ -49,7 +49,7 @@ Kelly is your AI learning companion who delivers 8-minute daily lessons that ada
 - Ready-to-use daily lesson content
 - Saves prep time
 - Engages students with universal topics
-- Free classroom resources
+- Classroom resources included
 
 ---
 
@@ -63,7 +63,7 @@ Kelly is your AI learning companion who delivers 8-minute daily lessons that ada
 - Cancel anytime
 
 ### Annual Plan
-**$49.99/year** (save $10 = 2 months free)
+**$49.99/year** (save $10)
 - All monthly benefits
 - Perfect holiday gift
 - Give the gift of curiosity
@@ -78,6 +78,9 @@ Kelly is your AI learning companion who delivers 8-minute daily lessons that ada
 
 ## Forbidden Language (Never Use)
 
+❌ **"Free"** - Implies worthless; education is priceless, not free (see `docs/brand/FORBIDDEN_WORD_FREE.md`)
+❌ **"Free trial"** - Use "7 days to explore" or "your first week"
+❌ **"Start free"** - Use "Start learning" or "Begin"
 ❌ **"Concierge"** - Too luxury hotel, not education
 ❌ **"Cohort"** - Too academic/exclusive
 ❌ **"Onboarding"** - Too corporate
@@ -100,10 +103,11 @@ Kelly is your AI learning companion who delivers 8-minute daily lessons that ada
 
 ### Call-to-Actions
 ✅ "Start your first lesson"
-✅ "Try 7 days free"
+✅ "Take 7 days to explore"
 ✅ "Give curiosity for Christmas"
 ✅ "Start learning today"
 ✅ "Join thousands of daily learners"
+✅ "Begin your journey"
 
 ---
 
@@ -112,7 +116,7 @@ Kelly is your AI learning companion who delivers 8-minute daily lessons that ada
 ### Hero Section
 **Headline:** Learn something new every day with Kelly
 **Subheadline:** 8-minute daily lessons for adults, children, and teachers. Age-adaptive. Three languages. One universal topic.
-**CTA:** Start your 7-day free trial
+**CTA:** Start Learning
 
 ### Benefits (4 core features)
 1. **⏰ 8 minutes a day** - Fits any schedule, builds lasting habits
@@ -132,10 +136,10 @@ Kelly is your AI learning companion who delivers 8-minute daily lessons that ada
 ## Lead Form Copy
 
 ### Form Title
-**"Start your 7-day free trial"**
+**"Start Your Journey"**
 
 ### Subtitle
-**"No credit card required. Cancel anytime."**
+**"7 days to explore. No credit card required."**
 
 ### Fields
 - Name
@@ -144,7 +148,7 @@ Kelly is your AI learning companion who delivers 8-minute daily lessons that ada
 - "I'm signing up for:" [Adults / Children / Teachers]
 
 ### Submit Button
-**"Start learning free"**
+**"Start Learning"**
 
 ### Success Message
 **"Welcome! Check your email to start your first lesson."**
@@ -153,8 +157,8 @@ Kelly is your AI learning companion who delivers 8-minute daily lessons that ada
 
 ## FAQ (Required on All Pages)
 
-### How does the free trial work?
-7 days free, no credit card required. After your trial, it's just $4.99/month or $49.99/year.
+### What happens after 7 days?
+Take 7 days to explore—no credit card required. After that, it's just $4.99/month or $49.99/year.
 
 ### Can my whole family use one account?
 Yes! Create up to 5 profiles per subscription.
@@ -223,9 +227,9 @@ Must avoid: concierge, cohort, onboarding. Focus on daily learning habits.
 
 ### Generate Lead Form Copy
 ```
-Write lead form copy for The Daily Lesson by Curious Kelly free trial.
+Write lead form copy for The Daily Lesson by Curious Kelly.
 Include: Form title, subtitle, success message. Tone: Encouraging, simple, no friction.
-Must mention: 7 days free, no credit card required.
+Must mention: 7 days to explore, no credit card required. NEVER use the word "free."
 ```
 
 ### Generate Christmas Gift Campaign

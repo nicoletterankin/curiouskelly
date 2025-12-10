@@ -11,7 +11,7 @@
 This system ensures all marketing copy (website, emails, ads) follows brand guidelines, pricing accuracy, and messaging consistency across English, Spanish, and Brazilian Portuguese.
 
 **Key Benefits:**
-- ✅ Prevents use of forbidden language (concierge, cohort, etc.)
+- ✅ Prevents use of forbidden language (free, concierge, cohort, etc.)
 - ✅ Ensures pricing is always accurate ($4.99/month, $49.99/year)
 - ✅ Maintains consistent brand voice inspired by OpenEnglish.com
 - ✅ AI-assisted copy generation and translation
@@ -56,7 +56,7 @@ New marketing copy following all guidelines. Removes:
 
 Adds:
 - ✅ Clear pricing: $4.99/month or $49.99/year
-- ✅ 7-day free trial (no credit card)
+- ✅ 7 days to explore (no credit card)
 - ✅ Christmas gifting angle
 - ✅ "The Daily Lesson by Curious Kelly" branding
 - ✅ 365 universal lessons for 2026
@@ -83,9 +83,9 @@ node tools/copy-agent.js validate src/lib/i18n/en-us.ts
 ```
 
 **What it checks:**
-- ✓ No forbidden words (concierge, cohort, etc.)
+- ✓ No forbidden words (free, concierge, cohort, etc.)
 - ✓ Pricing mentioned correctly
-- ✓ Free trial mentioned
+- ✓ Trial period mentioned (7 days to explore)
 - ✓ All three languages mentioned
 
 ### Step 3: Generate New Copy (Optional)
@@ -120,22 +120,26 @@ cp src/lib/i18n/en-us-UPDATED.ts src/lib/i18n/en-us.ts
 **Pricing:**
 - $4.99/month
 - $49.99/year (saves $10)
-- 7-day free trial, no credit card
+- 7 days to explore, no credit card
 
 **Features:**
 - 8-minute daily lessons
 - Age-adaptive (2-102 years)
 - 3 languages: English, Spanish, Portuguese
 - Up to 5 family profiles
-- Privacy-first, ad-free
+- Privacy-first, ad-free (note: "ad-free" is acceptable—it describes absence of ads, not price)
 
 **Call-to-Actions:**
-- "Start your 7-day free trial"
-- "Start learning free"
-- "Give 365 days of curiosity for 2026"
+- "Start Learning"
+- "Begin Your Journey"
+- "Take 7 Days to Explore"
+- "Give 365 Days of Curiosity for 2026"
 
 ### ❌ Never Use
 
+- **"Free"** → Use "yours," "included," "7 days to explore" (see `docs/brand/FORBIDDEN_WORD_FREE.md`)
+- **"Free trial"** → Use "7 days to explore" or "your first week"
+- **"Start free"** → Use "Start learning" or "Begin"
 - "Concierge" → Use "support team" or nothing
 - "Cohort" → Use "learners" or "subscribers"
 - "Onboarding" → Use "getting started"
@@ -258,8 +262,8 @@ jobs:
 ### Copy Performance Tracking
 
 **Conversion Goals:**
-- Homepage → Free trial signup: **5%**
-- Free trial → Paid subscriber: **40%**
+- Homepage → Trial signup: **5%**
+- Trial → Paid subscriber: **40%**
 - Gift purchases (December): **20% of revenue**
 
 **A/B Testing:**

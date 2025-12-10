@@ -156,10 +156,11 @@ The project uses a "Unified Aquarium" architecture where `index.astro` serves as
 - See: `CURIOUS_KELLLY_EXECUTION_PLAN.md` → “Success Metrics,” “Daily Lesson pipeline.”
 
 ### Pitfalls to avoid
-- Runtime language generation; interest‑driven lesson selection; learner “learning‑style” personalization.
+- Runtime language generation; interest‑driven lesson selection; learner "learning‑style" personalization.
 - Creating/replacing lesson players or pages.
 - Re‑render loops and duplicate API calls; missing asset cache keys.
 - Any dataset degradation (compression, trimming, or filtering down) without explicit approval.
+- **Using the word "free" in any marketing copy** (see `docs/brand/FORBIDDEN_WORD_FREE.md`). Use "yours," "included," "7 days to explore" instead. Education is priceless, not worthless.
 
 ### Change management and precedence
 - This document governs assistant behavior. If it conflicts with `CURIOUS_KELLLY_*`, `BUILD_PLAN.md`, or deployment guides, defer to those and flag the discrepancy.
