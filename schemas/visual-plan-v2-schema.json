@@ -1,0 +1,211 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Visual Plan V2 Schema",
+  "description": "Complete visual orchestration for TikTok-style interactive lessons",
+  "type": "object",
+  "required": ["day", "topic", "theme", "phases"],
+  "properties": {
+    "day": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 365
+    },
+    "topic": {
+      "type": "string",
+      "description": "Lesson topic title"
+    },
+    "theme": {
+      "type": "object",
+      "required": ["colorPalette", "mood", "environment"],
+      "properties": {
+        "colorPalette": {
+          "type": "string",
+          "description": "Primary colors for this lesson",
+          "examples": ["ocean blues, warm oranges", "forest greens, earth browns"]
+        },
+        "mood": {
+          "type": "string",
+          "enum": ["wonder", "curiosity", "excitement", "warmth", "discovery", "reflection"]
+        },
+        "environment": {
+          "type": "string",
+          "description": "Primary setting/backdrop type"
+        }
+      }
+    },
+    "targetDuration": {
+      "type": "object",
+      "properties": {
+        "total": {
+          "type": "integer",
+          "description": "Total lesson duration in seconds",
+          "minimum": 45,
+          "maximum": 90
+        },
+        "perPhase": {
+          "type": "integer",
+          "description": "Average phase duration in seconds",
+          "minimum": 5,
+          "maximum": 15
+        }
+      }
+    },
+    "phases": {
+      "type": "array",
+      "items": {
+        "$ref": "#/definitions/phase"
+      },
+      "minItems": 5,
+      "maxItems": 5
+    }
+  },
+  "definitions": {
+    "phase": {
+      "type": "object",
+      "required": ["phase", "duration", "visual", "kelly"],
+      "properties": {
+        "phase": {
+          "type": "string",
+          "enum": ["hook", "Q1", "Q2", "Q3", "wisdom"]
+        },
+        "duration": {
+          "type": "object",
+          "required": ["target", "max"],
+          "properties": {
+            "target": {
+              "type": "integer",
+              "description": "Target duration in seconds"
+            },
+            "max": {
+              "type": "integer",
+              "description": "Maximum allowed duration"
+            }
+          }
+        },
+        "visual": {
+          "$ref": "#/definitions/phaseVisual"
+        },
+        "kelly": {
+          "$ref": "#/definitions/kellyDirection"
+        },
+        "options": {
+          "$ref": "#/definitions/optionPair"
+        }
+      }
+    },
+    "phaseVisual": {
+      "type": "object",
+      "required": ["type", "prompt", "textOverlay"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": [
+            "split-scene-comparison",
+            "before-after",
+            "process-cycle",
+            "scale-comparison",
+            "anatomy-cross-section",
+            "kelly-hero",
+            "kelly-teaching",
+            "kelly-wisdom"
+          ]
+        },
+        "prompt": {
+          "type": "string",
+          "description": "Full generation prompt for the visual"
+        },
+        "textOverlay": {
+          "type": "string",
+          "description": "Text to appear on the image",
+          "maxLength": 50
+        },
+        "style": {
+          "type": "string",
+          "description": "Visual style descriptor",
+          "examples": ["cinematic photography", "educational infographic", "warm documentary"]
+        },
+        "reasoning": {
+          "type": "string",
+          "description": "Pedagogical reasoning for this visual choice"
+        }
+      }
+    },
+    "kellyDirection": {
+      "type": "object",
+      "required": ["pose", "expression", "framing"],
+      "properties": {
+        "pose": {
+          "type": "string",
+          "description": "Kelly's body position",
+          "examples": [
+            "welcoming stance, arms open",
+            "pointing gesture, teaching",
+            "hands on heart, reflective"
+          ]
+        },
+        "expression": {
+          "type": "string",
+          "description": "Kelly's facial expression",
+          "examples": [
+            "excited curiosity",
+            "engaged explanation",
+            "warm meaningful smile"
+          ]
+        },
+        "framing": {
+          "type": "string",
+          "enum": ["full-body", "medium-shot", "medium-close-up", "close-up"]
+        },
+        "gazeDirection": {
+          "type": "string",
+          "enum": ["camera", "diagram", "off-screen-left", "off-screen-right", "thoughtful-up"],
+          "default": "camera"
+        }
+      }
+    },
+    "optionPair": {
+      "type": "object",
+      "description": "Visual A/B choice options (IMAGES, not just text)",
+      "required": ["optionA", "optionB"],
+      "properties": {
+        "optionA": {
+          "$ref": "#/definitions/optionImage"
+        },
+        "optionB": {
+          "$ref": "#/definitions/optionImage"
+        }
+      }
+    },
+    "optionImage": {
+      "type": "object",
+      "required": ["text", "imagePrompt", "quality"],
+      "properties": {
+        "text": {
+          "type": "string",
+          "description": "Short text label for the option",
+          "maxLength": 30
+        },
+        "imagePrompt": {
+          "type": "string",
+          "description": "Full prompt to generate the 512x512 option card image"
+        },
+        "icon": {
+          "type": "string",
+          "description": "Emoji or icon to overlay",
+          "maxLength": 4
+        },
+        "quality": {
+          "type": "string",
+          "enum": ["best", "good", "redirect"],
+          "description": "Pedagogical quality of this answer"
+        },
+        "responseScript": {
+          "type": "string",
+          "description": "Kelly's response when this option is selected",
+          "maxLength": 150
+        }
+      }
+    }
+  }
+}
+

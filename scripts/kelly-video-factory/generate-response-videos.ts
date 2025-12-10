@@ -61,12 +61,12 @@ const MODELS = {
   MINIMAX: 'minimax/video-01:5aa835260ff7f40f4069c41185f72036accf99e29957bb4a3b3a911f3b6c1912',
 };
 
-// Kelly visual identity
+// Kelly visual identity - LOCKED SINGLE SOURCE OF TRUTH (must match hd-golden-lesson-pipeline.ts)
 const KELLY = {
-  identity: 'Kelly, a warm and engaging AI teacher with auburn hair in loose waves, olive skin, bright curious eyes, wearing her signature deep teal sweater',
-  responseExpression: 'warm supportive smile, engaging eye contact, gentle nod',
-  responseGesture: 'hands gesturing supportively at chest level, slightly leaning forward with encouragement',
-  background: 'soft-focused cozy learning environment with warm lighting',
+  identity: 'kelly, calm confident female teacher, warm brown wavy shoulder-length hair with subtle caramel highlights center-parted, hazel-brown eyes with steady direct gaze, soft natural features, light natural makeup, wearing soft powder blue cashmere crewneck sweater, poised composed posture, looking directly at camera',
+  responseExpression: 'warm supportive smile, steady direct eye contact, calm composed presence',
+  responseGesture: 'hands resting naturally, composed supportive posture, centered in frame',
+  background: 'professional warm classroom setting, soft natural lighting, shallow depth of field',
 };
 
 // Voice settings for responses (warmer, more encouraging)
@@ -249,7 +249,8 @@ async function generateSourceImage(): Promise<string> {
 async function generateMotionVideo(imageUrl: string): Promise<string> {
   const replicate = new Replicate({ auth: CONFIG.REPLICATE_API_TOKEN });
   
-  const motionPrompt = `${KELLY.identity}. ${KELLY.responseExpression}. Motion: ${KELLY.responseGesture}. Natural subtle head movements, blinking, breathing. Professional video quality.`;
+  // CALMED motion prompt with explicit negatives - must match main pipeline
+  const motionPrompt = `${KELLY.identity}. ${KELLY.responseExpression}. ${KELLY.responseGesture}. Steady direct eye contact with camera throughout. Natural subtle breathing, soft gentle blinking. Smooth cinematic quality, warm lighting. CRITICAL: Eyes must stay focused on camera. AVOID: wandering eyes, looking away, darting gaze, head bobbing, excessive movement, sudden motions, AI-generated artifacts.`;
   
   const prediction = await replicate.predictions.create({
     version: MODELS.MINIMAX.split(':')[1],

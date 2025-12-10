@@ -1,0 +1,1030 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🛡️ Kelly Command Center - Protected Workspace</title>
+    <link rel="icon" href="/images/brand/favicon-32.png">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;1,6..72,600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-void: #07080a;
+            --bg-deep: #0c0d10;
+            --bg-surface: #12141a;
+            --bg-elevated: #1a1d24;
+            --bg-input: #1e222b;
+            --border-dim: #2a2f3a;
+            --border-active: #3d4452;
+            --border-warning: #f59e0b;
+            --border-danger: #ef4444;
+            --border-success: #22c55e;
+            --text-bright: #f8f9fa;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --accent-kelly: #3b82f6;
+            --accent-glow: rgba(59, 130, 246, 0.15);
+            --warning: #f59e0b;
+            --warning-bg: rgba(245, 158, 11, 0.1);
+            --danger: #ef4444;
+            --danger-bg: rgba(239, 68, 68, 0.1);
+            --success: #22c55e;
+            --success-bg: rgba(34, 197, 94, 0.1);
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-void);
+            color: var(--text-bright);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        /* Header */
+        .header {
+            background: linear-gradient(135deg, var(--bg-deep) 0%, var(--bg-surface) 100%);
+            border-bottom: 2px solid var(--accent-kelly);
+            padding: 32px 40px;
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .header h1 {
+            font-size: 1.8rem;
+            font-weight: 700;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .header h1 .shield {
+            font-size: 2rem;
+            animation: pulse 2s ease-in-out infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; transform: scale(1); }
+            50% { opacity: 0.8; transform: scale(1.05); }
+        }
+        
+        .header-subtitle {
+            color: var(--text-secondary);
+            font-size: 1rem;
+            font-style: italic;
+            font-family: 'Newsreader', serif;
+        }
+        
+        .quick-links {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .quick-link {
+            padding: 8px 16px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.85rem;
+            transition: all 0.15s;
+        }
+        
+        .quick-link:hover {
+            border-color: var(--accent-kelly);
+            color: var(--text-bright);
+        }
+        
+        /* Main Layout */
+        .main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 40px;
+            display: grid;
+            grid-template-columns: 1fr 380px;
+            gap: 40px;
+        }
+        
+        @media (max-width: 1024px) {
+            .main { grid-template-columns: 1fr; }
+        }
+        
+        /* Request Form */
+        .request-panel {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-dim);
+            border-radius: 16px;
+            overflow: hidden;
+        }
+        
+        .panel-header {
+            padding: 20px 24px;
+            background: var(--bg-elevated);
+            border-bottom: 1px solid var(--border-dim);
+        }
+        
+        .panel-header h2 {
+            font-size: 1.1rem;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .panel-body {
+            padding: 24px;
+        }
+        
+        /* Form Elements */
+        .form-group {
+            margin-bottom: 24px;
+        }
+        
+        .form-label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 600;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .form-input, .form-select, .form-textarea {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-input);
+            border: 2px solid var(--border-dim);
+            border-radius: 10px;
+            color: var(--text-bright);
+            font-family: inherit;
+            font-size: 1rem;
+            transition: all 0.15s;
+        }
+        
+        .form-input:focus, .form-select:focus, .form-textarea:focus {
+            outline: none;
+            border-color: var(--accent-kelly);
+            box-shadow: 0 0 0 4px var(--accent-glow);
+        }
+        
+        .form-input.invalid, .form-select.invalid {
+            border-color: var(--danger);
+            background: var(--danger-bg);
+        }
+        
+        .form-input.valid {
+            border-color: var(--success);
+        }
+        
+        .form-textarea {
+            min-height: 120px;
+            resize: vertical;
+        }
+        
+        .form-hint {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 6px;
+        }
+        
+        .form-error {
+            font-size: 0.85rem;
+            color: var(--danger);
+            margin-top: 8px;
+            padding: 8px 12px;
+            background: var(--danger-bg);
+            border-radius: 6px;
+            display: none;
+        }
+        
+        .form-error.show { display: block; }
+        
+        /* Action Type Selector */
+        .action-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        
+        .action-option {
+            padding: 16px;
+            background: var(--bg-input);
+            border: 2px solid var(--border-dim);
+            border-radius: 10px;
+            cursor: pointer;
+            transition: all 0.15s;
+            text-align: center;
+        }
+        
+        .action-option:hover {
+            border-color: var(--border-active);
+        }
+        
+        .action-option.selected {
+            border-color: var(--accent-kelly);
+            background: var(--accent-glow);
+        }
+        
+        .action-option .icon {
+            font-size: 1.5rem;
+            margin-bottom: 8px;
+        }
+        
+        .action-option .label {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .action-option .desc {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+        
+        /* Validation Panel */
+        .validation-panel {
+            margin-top: 24px;
+            padding: 20px;
+            background: var(--bg-elevated);
+            border-radius: 12px;
+            border: 1px solid var(--border-dim);
+        }
+        
+        .validation-title {
+            font-size: 0.85rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .validation-list {
+            list-style: none;
+        }
+        
+        .validation-item {
+            padding: 8px 0;
+            display: flex;
+            align-items: flex-start;
+            gap: 10px;
+            font-size: 0.9rem;
+        }
+        
+        .validation-item .icon {
+            flex-shrink: 0;
+            width: 20px;
+            text-align: center;
+        }
+        
+        .validation-item.pass { color: var(--success); }
+        .validation-item.fail { color: var(--danger); }
+        .validation-item.warn { color: var(--warning); }
+        
+        /* Submit Button */
+        .submit-section {
+            margin-top: 24px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-dim);
+        }
+        
+        .submit-btn {
+            width: 100%;
+            padding: 16px 24px;
+            background: var(--accent-kelly);
+            border: none;
+            border-radius: 10px;
+            color: white;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+        }
+        
+        .submit-btn:hover:not(:disabled) {
+            background: #2563eb;
+            transform: translateY(-1px);
+        }
+        
+        .submit-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .submit-btn.blocked {
+            background: var(--danger);
+        }
+        
+        /* Rules Sidebar */
+        .rules-panel {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-dim);
+            border-radius: 16px;
+            position: sticky;
+            top: 24px;
+            max-height: calc(100vh - 48px);
+            overflow-y: auto;
+        }
+        
+        .rules-panel .panel-header {
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .rule-card {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-dim);
+        }
+        
+        .rule-card:last-child { border-bottom: none; }
+        
+        .rule-number {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.7rem;
+            color: var(--accent-kelly);
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 6px;
+        }
+        
+        .rule-title {
+            font-weight: 700;
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+        
+        .rule-desc {
+            font-size: 0.85rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+        
+        .rule-examples {
+            background: var(--bg-elevated);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.75rem;
+        }
+        
+        .rule-do {
+            color: var(--success);
+            margin-bottom: 6px;
+        }
+        
+        .rule-dont {
+            color: var(--danger);
+        }
+        
+        /* Output Panel */
+        .output-panel {
+            margin-top: 24px;
+            background: var(--bg-elevated);
+            border-radius: 12px;
+            border: 1px solid var(--border-dim);
+            overflow: hidden;
+            display: none;
+        }
+        
+        .output-panel.show { display: block; }
+        
+        .output-header {
+            padding: 12px 16px;
+            background: var(--bg-surface);
+            border-bottom: 1px solid var(--border-dim);
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+        
+        .output-body {
+            padding: 16px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            white-space: pre-wrap;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        
+        .output-body .command {
+            color: var(--accent-kelly);
+        }
+        
+        .output-body .comment {
+            color: var(--text-muted);
+        }
+        
+        /* Copy Button */
+        .copy-btn {
+            padding: 8px 16px;
+            background: var(--bg-input);
+            border: 1px solid var(--border-dim);
+            border-radius: 6px;
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        
+        .copy-btn:hover {
+            border-color: var(--accent-kelly);
+            color: var(--text-bright);
+        }
+        
+        /* Health Badge */
+        .health-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 6px 14px;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+        
+        .health-badge.healthy {
+            background: var(--success-bg);
+            color: var(--success);
+        }
+        
+        .health-badge.warning {
+            background: var(--warning-bg);
+            color: var(--warning);
+        }
+        
+        .health-badge.critical {
+            background: var(--danger-bg);
+            color: var(--danger);
+        }
+        
+        /* Artist Note */
+        .artist-note {
+            margin-top: 16px;
+            padding: 16px;
+            background: linear-gradient(135deg, rgba(139, 92, 246, 0.1) 0%, rgba(59, 130, 246, 0.1) 100%);
+            border: 1px solid rgba(139, 92, 246, 0.3);
+            border-radius: 12px;
+            font-family: 'Newsreader', serif;
+            font-style: italic;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+        
+        .artist-note .sparkle { margin-right: 8px; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <div class="header-content">
+            <div>
+                <h1>
+                    <span class="shield">🛡️</span>
+                    Kelly Command Center
+                </h1>
+                <p class="header-subtitle">"Structure protects creativity. Rules enable freedom."</p>
+            </div>
+            <div class="quick-links">
+                <a href="/admin/site-health.html" class="quick-link">📊 Site Health</a>
+                <a href="/admin/" class="quick-link">🏠 Admin Home</a>
+                <a href="/learn.html" class="quick-link">📚 Live App</a>
+            </div>
+        </div>
+    </div>
+    
+    <main class="main">
+        <div class="request-panel">
+            <div class="panel-header">
+                <h2>📝 New Request</h2>
+            </div>
+            <div class="panel-body">
+                <!-- Action Type -->
+                <div class="form-group">
+                    <label class="form-label">What do you want to do?</label>
+                    <div class="action-grid">
+                        <div class="action-option" data-action="create" onclick="selectAction('create')">
+                            <div class="icon">✨</div>
+                            <div class="label">Create New</div>
+                            <div class="desc">Page, feature, or asset</div>
+                        </div>
+                        <div class="action-option" data-action="modify" onclick="selectAction('modify')">
+                            <div class="icon">🔧</div>
+                            <div class="label">Modify Existing</div>
+                            <div class="desc">Update, fix, or enhance</div>
+                        </div>
+                        <div class="action-option" data-action="archive" onclick="selectAction('archive')">
+                            <div class="icon">📦</div>
+                            <div class="label">Archive/Remove</div>
+                            <div class="desc">Move to archive or delete</div>
+                        </div>
+                        <div class="action-option" data-action="explore" onclick="selectAction('explore')">
+                            <div class="icon">🔍</div>
+                            <div class="label">Explore/Question</div>
+                            <div class="desc">Research or ask questions</div>
+                        </div>
+                    </div>
+                </div>
+                
+                <!-- Target Location -->
+                <div class="form-group" id="locationGroup" style="display: none;">
+                    <label class="form-label">Where does this belong?</label>
+                    <select class="form-select" id="targetLocation" onchange="validateLocation()">
+                        <option value="">-- Select location --</option>
+                        <optgroup label="✅ Approved Locations">
+                            <option value="public/">public/ (production pages)</option>
+                            <option value="public/admin/">public/admin/ (admin tools)</option>
+                            <option value="public/dev/">public/dev/ (test pages - 7 day limit)</option>
+                            <option value="scripts/">scripts/ (automation)</option>
+                            <option value="docs/">docs/ (documentation)</option>
+                            <option value="_archive/">_archive/ (archived files)</option>
+                        </optgroup>
+                        <optgroup label="⚠️ Restricted (requires justification)">
+                            <option value="root" data-restricted="true">Project root (config only!)</option>
+                            <option value="daily-lesson-marketing/" data-restricted="true">daily-lesson-marketing/ (legacy)</option>
+                            <option value="curious-kellly/" data-restricted="true">curious-kellly/ (legacy)</option>
+                        </optgroup>
+                    </select>
+                    <div class="form-error" id="locationError"></div>
+                </div>
+                
+                <!-- File Name -->
+                <div class="form-group" id="nameGroup" style="display: none;">
+                    <label class="form-label">File name</label>
+                    <input type="text" class="form-input" id="fileName" placeholder="e.g., affiliate-portal.html" oninput="validateName()">
+                    <p class="form-hint">Use kebab-case. No version suffixes (-v1, -old, -backup).</p>
+                    <div class="form-error" id="nameError"></div>
+                </div>
+                
+                <!-- Description -->
+                <div class="form-group">
+                    <label class="form-label">What exactly do you need?</label>
+                    <textarea class="form-textarea" id="description" placeholder="Describe in detail what you want to create, change, or explore...
+
+Be specific:
+• What problem does this solve?
+• Who will use it?
+• What should it look like or do?"></textarea>
+                </div>
+                
+                <!-- Validation Panel -->
+                <div class="validation-panel" id="validationPanel" style="display: none;">
+                    <div class="validation-title">🔍 Rule Check</div>
+                    <ul class="validation-list" id="validationList"></ul>
+                </div>
+                
+                <!-- Artist Note -->
+                <div class="artist-note">
+                    <span class="sparkle">✨</span>
+                    You're an artist - your creativity is your superpower. This system doesn't limit your ideas, it channels them into the right places so they can thrive without causing chaos.
+                </div>
+                
+                <!-- Submit -->
+                <div class="submit-section">
+                    <button class="submit-btn" id="submitBtn" onclick="generateRequest()" disabled>
+                        <span>🚀</span>
+                        <span id="submitText">Select an action to continue</span>
+                    </button>
+                </div>
+                
+                <!-- Output -->
+                <div class="output-panel" id="outputPanel">
+                    <div class="output-header" style="display: flex; justify-content: space-between; align-items: center;">
+                        <span>📋 Ready to Copy</span>
+                        <button class="copy-btn" onclick="copyOutput()">Copy to Clipboard</button>
+                    </div>
+                    <div class="output-body" id="outputBody"></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Rules Sidebar -->
+        <div class="rules-panel">
+            <div class="panel-header">
+                <h2>📜 The Rules</h2>
+            </div>
+            
+            <div class="rule-card">
+                <div class="rule-number">Rule 1</div>
+                <div class="rule-title">Single Source of Truth</div>
+                <div class="rule-desc">Every page type lives in ONE location only.</div>
+                <div class="rule-examples">
+                    <div class="rule-do">✓ /public/about.html</div>
+                    <div class="rule-dont">✗ /about.html (root duplicate)</div>
+                </div>
+            </div>
+            
+            <div class="rule-card">
+                <div class="rule-number">Rule 2</div>
+                <div class="rule-title">No Version Suffixes</div>
+                <div class="rule-desc">Use _archive/ folder, not -v1, -v2, -old, -backup.</div>
+                <div class="rule-examples">
+                    <div class="rule-do">✓ _archive/page-2024-12-10.html</div>
+                    <div class="rule-dont">✗ page-v2.html, page-old.html</div>
+                </div>
+            </div>
+            
+            <div class="rule-card">
+                <div class="rule-number">Rule 3</div>
+                <div class="rule-title">Test Page Lifecycle</div>
+                <div class="rule-desc">Test pages: 7 days max, then delete or move to /dev/.</div>
+                <div class="rule-examples">
+                    <div class="rule-do">✓ /public/dev/test-feature.html</div>
+                    <div class="rule-dont">✗ Leaving test-*.html for months</div>
+                </div>
+            </div>
+            
+            <div class="rule-card">
+                <div class="rule-number">Rule 4</div>
+                <div class="rule-title">Root = Config Only</div>
+                <div class="rule-desc">Project root: only config files, no HTML pages.</div>
+                <div class="rule-examples">
+                    <div class="rule-do">✓ package.json, vercel.json in root</div>
+                    <div class="rule-dont">✗ about.html in root</div>
+                </div>
+            </div>
+            
+            <div class="rule-card">
+                <div class="rule-number">Rule 5</div>
+                <div class="rule-title">Archive Before Delete</div>
+                <div class="rule-desc">Move to _archive/ first for 30-day recovery.</div>
+                <div class="rule-examples">
+                    <div class="rule-do">✓ mv old.html _archive/old.html</div>
+                    <div class="rule-dont">✗ rm old.html (no backup)</div>
+                </div>
+            </div>
+            
+            <div class="rule-card" style="background: var(--accent-glow);">
+                <div class="rule-number">Protected Assets</div>
+                <div class="rule-title">🔒 Never Touch</div>
+                <div class="rule-desc">These require explicit approval:</div>
+                <div class="rule-examples" style="color: var(--danger);">
+                    • Supabase database schema<br>
+                    • /public/index.html (homepage)<br>
+                    • /public/learn.html (lesson player)<br>
+                    • Production video assets<br>
+                    • Kelly voice training data
+                </div>
+            </div>
+        </div>
+    </main>
+
+<script>
+// ============================================
+// STATE
+// ============================================
+let currentAction = null;
+let validationState = {
+    location: false,
+    name: false,
+    description: false
+};
+
+// Protected paths that require extra confirmation
+const PROTECTED_PATHS = [
+    '/public/index.html',
+    '/public/learn.html',
+    '/public/golden-lesson.html',
+    '/public/pricing.html'
+];
+
+// Forbidden patterns
+const FORBIDDEN_PATTERNS = [
+    /-v\d+\./,      // -v1, -v2, etc.
+    /-old\./,       // -old
+    /-backup\./,    // -backup
+    /-copy\./,      // -copy
+    /-final\./,     // -final (ambiguous)
+    /-new\./,       // -new (ambiguous)
+    /\(\d+\)\./,    // (1), (2) etc.
+];
+
+// ============================================
+// ACTION SELECTION
+// ============================================
+function selectAction(action) {
+    currentAction = action;
+    
+    // Update UI
+    document.querySelectorAll('.action-option').forEach(opt => {
+        opt.classList.toggle('selected', opt.dataset.action === action);
+    });
+    
+    // Show/hide relevant fields
+    const locationGroup = document.getElementById('locationGroup');
+    const nameGroup = document.getElementById('nameGroup');
+    
+    if (action === 'create') {
+        locationGroup.style.display = 'block';
+        nameGroup.style.display = 'block';
+    } else if (action === 'modify' || action === 'archive') {
+        locationGroup.style.display = 'block';
+        nameGroup.style.display = 'block';
+    } else {
+        locationGroup.style.display = 'none';
+        nameGroup.style.display = 'none';
+    }
+    
+    // Update submit button
+    updateSubmitButton();
+    runValidation();
+}
+
+// ============================================
+// VALIDATION
+// ============================================
+function validateLocation() {
+    const select = document.getElementById('targetLocation');
+    const error = document.getElementById('locationError');
+    const selectedOption = select.options[select.selectedIndex];
+    
+    if (!select.value) {
+        validationState.location = false;
+        error.textContent = '';
+        error.classList.remove('show');
+        select.classList.remove('valid', 'invalid');
+    } else if (selectedOption?.dataset.restricted) {
+        validationState.location = false;
+        error.textContent = '⚠️ This location is restricted. You must provide justification in your description.';
+        error.classList.add('show');
+        select.classList.add('invalid');
+        select.classList.remove('valid');
+    } else {
+        validationState.location = true;
+        error.textContent = '';
+        error.classList.remove('show');
+        select.classList.add('valid');
+        select.classList.remove('invalid');
+    }
+    
+    runValidation();
+    updateSubmitButton();
+}
+
+function validateName() {
+    const input = document.getElementById('fileName');
+    const error = document.getElementById('nameError');
+    const value = input.value.trim();
+    
+    if (!value) {
+        validationState.name = false;
+        error.textContent = '';
+        error.classList.remove('show');
+        input.classList.remove('valid', 'invalid');
+        runValidation();
+        updateSubmitButton();
+        return;
+    }
+    
+    // Check for forbidden patterns
+    for (const pattern of FORBIDDEN_PATTERNS) {
+        if (pattern.test(value)) {
+            validationState.name = false;
+            error.textContent = `🚫 BLOCKED: "${value}" contains a forbidden pattern. Use _archive/ for versioning.`;
+            error.classList.add('show');
+            input.classList.add('invalid');
+            input.classList.remove('valid');
+            runValidation();
+            updateSubmitButton();
+            return;
+        }
+    }
+    
+    // Check for proper kebab-case
+    if (!/^[a-z0-9]+(-[a-z0-9]+)*\.(html|css|js|ts|json|md)$/.test(value)) {
+        validationState.name = false;
+        error.textContent = '⚠️ Use kebab-case (lowercase, hyphens). Example: my-page.html';
+        error.classList.add('show');
+        input.classList.add('invalid');
+        input.classList.remove('valid');
+        runValidation();
+        updateSubmitButton();
+        return;
+    }
+    
+    validationState.name = true;
+    error.textContent = '';
+    error.classList.remove('show');
+    input.classList.add('valid');
+    input.classList.remove('invalid');
+    runValidation();
+    updateSubmitButton();
+}
+
+function runValidation() {
+    const panel = document.getElementById('validationPanel');
+    const list = document.getElementById('validationList');
+    
+    if (!currentAction || (currentAction === 'explore')) {
+        panel.style.display = 'none';
+        return;
+    }
+    
+    panel.style.display = 'block';
+    
+    const location = document.getElementById('targetLocation').value;
+    const fileName = document.getElementById('fileName').value.trim();
+    const fullPath = location + fileName;
+    
+    let checks = [];
+    
+    // Rule 1: Single source of truth
+    checks.push({
+        rule: 'Rule 1: Single location',
+        status: location && !location.includes('daily-lesson-marketing') && !location.includes('curious-kellly') ? 'pass' : (location ? 'warn' : 'pending'),
+        message: location ? (location.includes('daily-lesson') || location.includes('curious-kellly') ? 'Legacy location - consider /public/' : 'Location approved') : 'Select a location'
+    });
+    
+    // Rule 2: No version suffixes
+    let hasVersionSuffix = FORBIDDEN_PATTERNS.some(p => p.test(fileName));
+    checks.push({
+        rule: 'Rule 2: No version suffixes',
+        status: fileName ? (hasVersionSuffix ? 'fail' : 'pass') : 'pending',
+        message: hasVersionSuffix ? 'BLOCKED: Use _archive/ instead' : (fileName ? 'Name is clean' : 'Enter a file name')
+    });
+    
+    // Rule 3: Test page lifecycle
+    if (fileName.startsWith('test-')) {
+        checks.push({
+            rule: 'Rule 3: Test lifecycle',
+            status: location === 'public/dev/' ? 'pass' : 'warn',
+            message: location === 'public/dev/' ? 'Test page in correct location' : 'Test pages should go to /public/dev/'
+        });
+    }
+    
+    // Rule 4: Root = config only
+    if (location === 'root') {
+        const isConfig = /\.(json|mjs|cjs|js|ts|yaml|yml|toml)$/.test(fileName);
+        checks.push({
+            rule: 'Rule 4: Root = config only',
+            status: isConfig ? 'warn' : 'fail',
+            message: isConfig ? 'Config file in root - needs justification' : 'BLOCKED: Only config files allowed in root'
+        });
+    }
+    
+    // Protected path check
+    if (PROTECTED_PATHS.includes('/' + fullPath)) {
+        checks.push({
+            rule: '🔒 Protected Asset',
+            status: 'fail',
+            message: 'This is a protected file - requires explicit approval'
+        });
+    }
+    
+    // Render checks
+    list.innerHTML = checks.map(check => `
+        <li class="validation-item ${check.status}">
+            <span class="icon">${check.status === 'pass' ? '✓' : check.status === 'fail' ? '✗' : check.status === 'warn' ? '⚠' : '○'}</span>
+            <span><strong>${check.rule}:</strong> ${check.message}</span>
+        </li>
+    `).join('');
+}
+
+function updateSubmitButton() {
+    const btn = document.getElementById('submitBtn');
+    const text = document.getElementById('submitText');
+    const desc = document.getElementById('description').value.trim();
+    
+    if (!currentAction) {
+        btn.disabled = true;
+        text.textContent = 'Select an action to continue';
+        btn.classList.remove('blocked');
+        return;
+    }
+    
+    if (currentAction === 'explore') {
+        btn.disabled = !desc;
+        text.textContent = desc ? 'Generate Request' : 'Add description to continue';
+        btn.classList.remove('blocked');
+        return;
+    }
+    
+    // Check for blocking issues
+    const fileName = document.getElementById('fileName').value.trim();
+    const hasVersionSuffix = FORBIDDEN_PATTERNS.some(p => p.test(fileName));
+    const location = document.getElementById('targetLocation').value;
+    const fullPath = '/' + location + fileName;
+    const isProtected = PROTECTED_PATHS.includes(fullPath);
+    
+    if (hasVersionSuffix) {
+        btn.disabled = true;
+        btn.classList.add('blocked');
+        text.textContent = '🚫 BLOCKED: Version suffix not allowed';
+        return;
+    }
+    
+    if (isProtected && currentAction !== 'explore') {
+        btn.disabled = true;
+        btn.classList.add('blocked');
+        text.textContent = '🔒 BLOCKED: Protected asset';
+        return;
+    }
+    
+    if (location === 'root' && fileName.endsWith('.html')) {
+        btn.disabled = true;
+        btn.classList.add('blocked');
+        text.textContent = '🚫 BLOCKED: No HTML in root';
+        return;
+    }
+    
+    // Normal validation
+    const isValid = desc && (currentAction === 'explore' || (validationState.location && validationState.name));
+    btn.disabled = !isValid;
+    btn.classList.remove('blocked');
+    text.textContent = isValid ? 'Generate Request' : 'Complete all fields to continue';
+}
+
+// Listen for description changes
+document.getElementById('description').addEventListener('input', updateSubmitButton);
+
+// ============================================
+// GENERATE REQUEST
+// ============================================
+function generateRequest() {
+    const action = currentAction;
+    const location = document.getElementById('targetLocation').value;
+    const fileName = document.getElementById('fileName').value.trim();
+    const description = document.getElementById('description').value.trim();
+    
+    const timestamp = new Date().toISOString().split('T')[0];
+    const fullPath = location + fileName;
+    
+    let output = '';
+    
+    output += `<span class="comment"># ═══════════════════════════════════════════════════════════════</span>\n`;
+    output += `<span class="comment"># KELLY COMMAND CENTER REQUEST</span>\n`;
+    output += `<span class="comment"># Generated: ${new Date().toLocaleString()}</span>\n`;
+    output += `<span class="comment"># ═══════════════════════════════════════════════════════════════</span>\n\n`;
+    
+    output += `<span class="comment"># ACTION: ${action.toUpperCase()}</span>\n`;
+    
+    if (fullPath) {
+        output += `<span class="comment"># TARGET: ${fullPath}</span>\n`;
+    }
+    
+    output += `\n<span class="comment"># REQUEST:</span>\n`;
+    output += `${description}\n\n`;
+    
+    output += `<span class="comment"># RULES APPLIED:</span>\n`;
+    output += `<span class="comment"># ✓ Rule 1: Single source of truth (${location || 'N/A'})</span>\n`;
+    output += `<span class="comment"># ✓ Rule 2: No version suffixes</span>\n`;
+    if (fileName.startsWith('test-')) {
+        output += `<span class="comment"># ⚠ Rule 3: Test page - 7 day lifecycle applies</span>\n`;
+    }
+    output += `<span class="comment"># ✓ Rule 5: Archive before delete</span>\n\n`;
+    
+    if (action === 'create') {
+        output += `<span class="command"># INSTRUCTIONS FOR CLAUDE:</span>\n`;
+        output += `Create the file at: <span class="command">${fullPath}</span>\n`;
+        output += `Do NOT create any other versions or copies.\n`;
+        output += `Do NOT use -v1, -v2, -old, -backup, -new, -final suffixes.\n`;
+        output += `If replacing an existing file, archive it first:\n`;
+        output += `  <span class="command">mv public/old-file.html _archive/old-file-${timestamp}.html</span>\n`;
+    } else if (action === 'modify') {
+        output += `<span class="command"># INSTRUCTIONS FOR CLAUDE:</span>\n`;
+        output += `Modify the file at: <span class="command">${fullPath}</span>\n`;
+        output += `Create a backup ONLY if making major changes:\n`;
+        output += `  <span class="command">cp ${fullPath} _archive/${fileName.replace('.', `-${timestamp}.`)}</span>\n`;
+    } else if (action === 'archive') {
+        output += `<span class="command"># INSTRUCTIONS FOR CLAUDE:</span>\n`;
+        output += `Archive (don't delete) the file:\n`;
+        output += `  <span class="command">mv ${fullPath} _archive/${fileName.replace('.', `-${timestamp}.`)}</span>\n`;
+        output += `\nFile will be recoverable for 30 days.\n`;
+    }
+    
+    output += `\n<span class="comment"># ═══════════════════════════════════════════════════════════════</span>\n`;
+    output += `<span class="comment"># Copy this entire block and paste to Claude</span>\n`;
+    output += `<span class="comment"># ═══════════════════════════════════════════════════════════════</span>\n`;
+    
+    document.getElementById('outputBody').innerHTML = output;
+    document.getElementById('outputPanel').classList.add('show');
+    
+    // Scroll to output
+    document.getElementById('outputPanel').scrollIntoView({ behavior: 'smooth' });
+}
+
+function copyOutput() {
+    const output = document.getElementById('outputBody').innerText;
+    navigator.clipboard.writeText(output);
+    
+    const btn = event.target;
+    const originalText = btn.textContent;
+    btn.textContent = '✓ Copied!';
+    setTimeout(() => btn.textContent = originalText, 2000);
+}
+
+</script>
+</body>
+</html>
+

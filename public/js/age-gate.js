@@ -168,8 +168,8 @@
 
             <p style="margin-top: 24px; color: #52525b; font-size: 0.75rem;">
                 By continuing, you agree to our 
-                <a href="/terms.html" style="color: #3b82f6;">Terms</a> and 
-                <a href="/privacy.html" style="color: #3b82f6;">Privacy Policy</a>.
+                <a href="/legal/terms.html" style="color: #3b82f6;">Terms</a> and 
+                <a href="/legal/privacy.html" style="color: #3b82f6;">Privacy Policy</a>.
             </p>
         `;
 

@@ -486,3 +486,4 @@ WHERE p.is_family_admin = TRUE
 GROUP BY p.id, p.email, p.earnings_held_for_minors;
 
 
+

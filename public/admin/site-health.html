@@ -1,0 +1,986 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🔍 Site Health Dashboard - Curious Kelly Admin</title>
+    <link rel="icon" href="/images/brand/favicon-32.png">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-void: #08090a;
+            --bg-deep: #0d0e10;
+            --bg-surface: #131517;
+            --bg-elevated: #1a1c1f;
+            --bg-hover: #22252a;
+            --border-dim: #252830;
+            --border-active: #3a3f4a;
+            --text-bright: #f4f5f6;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --accent-kelly: #3b82f6;
+            --accent-kelly-glow: rgba(59, 130, 246, 0.15);
+            --status-live: #22c55e;
+            --status-live-bg: rgba(34, 197, 94, 0.1);
+            --status-wip: #f59e0b;
+            --status-wip-bg: rgba(245, 158, 11, 0.1);
+            --status-broken: #ef4444;
+            --status-broken-bg: rgba(239, 68, 68, 0.1);
+            --status-test: #8b5cf6;
+            --status-test-bg: rgba(139, 92, 246, 0.1);
+            --status-mockup: #06b6d4;
+            --status-mockup-bg: rgba(6, 182, 212, 0.1);
+            --status-legacy: #6b7280;
+            --status-legacy-bg: rgba(107, 114, 128, 0.1);
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-void);
+            color: var(--text-bright);
+            min-height: 100vh;
+            line-height: 1.5;
+        }
+        
+        /* Hero Header */
+        .hero {
+            background: linear-gradient(135deg, var(--bg-deep) 0%, var(--bg-surface) 100%);
+            border-bottom: 1px solid var(--border-dim);
+            padding: 48px 32px;
+        }
+        
+        .hero-content {
+            max-width: 1600px;
+            margin: 0 auto;
+        }
+        
+        .hero h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 8px;
+            display: flex;
+            align-items: center;
+            gap: 16px;
+        }
+        
+        .hero h1 .sparkle { animation: pulse 2s ease-in-out infinite; }
+        @keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.5; } }
+        
+        .hero p {
+            color: var(--text-secondary);
+            font-size: 1.1rem;
+        }
+        
+        /* Stats Bar */
+        .stats-bar {
+            display: flex;
+            gap: 32px;
+            margin-top: 32px;
+            flex-wrap: wrap;
+        }
+        
+        .stat {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-dim);
+            border-radius: 12px;
+            padding: 20px 28px;
+            min-width: 160px;
+        }
+        
+        .stat-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 2rem;
+            font-weight: 600;
+        }
+        
+        .stat-label {
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            margin-top: 4px;
+        }
+        
+        .stat.live .stat-value { color: var(--status-live); }
+        .stat.wip .stat-value { color: var(--status-wip); }
+        .stat.broken .stat-value { color: var(--status-broken); }
+        .stat.test .stat-value { color: var(--status-test); }
+        
+        /* Filters */
+        .filters {
+            max-width: 1600px;
+            margin: 32px auto;
+            padding: 0 32px;
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+            align-items: center;
+        }
+        
+        .filter-btn {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-dim);
+            color: var(--text-secondary);
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.15s ease;
+            font-family: inherit;
+        }
+        
+        .filter-btn:hover { 
+            border-color: var(--border-active); 
+            color: var(--text-bright);
+        }
+        
+        .filter-btn.active {
+            background: var(--accent-kelly);
+            border-color: var(--accent-kelly);
+            color: white;
+        }
+        
+        .search-box {
+            flex: 1;
+            min-width: 280px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: 10px 16px;
+            color: var(--text-bright);
+            font-size: 0.95rem;
+            font-family: inherit;
+        }
+        
+        .search-box:focus {
+            outline: none;
+            border-color: var(--accent-kelly);
+            box-shadow: 0 0 0 3px var(--accent-kelly-glow);
+        }
+        
+        /* Main Table Container */
+        .table-container {
+            max-width: 1600px;
+            margin: 0 auto 64px;
+            padding: 0 32px;
+        }
+        
+        .page-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+        
+        .page-table th {
+            text-align: left;
+            padding: 16px 12px;
+            background: var(--bg-surface);
+            border-bottom: 2px solid var(--border-dim);
+            color: var(--text-muted);
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+            letter-spacing: 0.5px;
+            position: sticky;
+            top: 0;
+            z-index: 10;
+        }
+        
+        .page-table td {
+            padding: 14px 12px;
+            border-bottom: 1px solid var(--border-dim);
+            vertical-align: top;
+        }
+        
+        .page-table tr:hover td {
+            background: var(--bg-hover);
+        }
+        
+        /* Page Link */
+        .page-link {
+            color: var(--accent-kelly);
+            text-decoration: none;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.85rem;
+            transition: color 0.15s;
+        }
+        
+        .page-link:hover {
+            color: #60a5fa;
+            text-decoration: underline;
+        }
+        
+        /* Status Badges */
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.3px;
+        }
+        
+        .status-badge::before {
+            content: '';
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+        }
+        
+        .status-live { background: var(--status-live-bg); color: var(--status-live); }
+        .status-live::before { background: var(--status-live); }
+        
+        .status-wip { background: var(--status-wip-bg); color: var(--status-wip); }
+        .status-wip::before { background: var(--status-wip); }
+        
+        .status-broken { background: var(--status-broken-bg); color: var(--status-broken); }
+        .status-broken::before { background: var(--status-broken); }
+        
+        .status-test { background: var(--status-test-bg); color: var(--status-test); }
+        .status-test::before { background: var(--status-test); }
+        
+        .status-mockup { background: var(--status-mockup-bg); color: var(--status-mockup); }
+        .status-mockup::before { background: var(--status-mockup); }
+        
+        .status-legacy { background: var(--status-legacy-bg); color: var(--status-legacy); }
+        .status-legacy::before { background: var(--status-legacy); }
+        
+        /* Theme Tags */
+        .theme-tag {
+            display: inline-block;
+            padding: 3px 10px;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-dim);
+            color: var(--text-secondary);
+        }
+        
+        /* Type Tags */
+        .type-tag {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        
+        /* Description */
+        .page-desc {
+            color: var(--text-secondary);
+            font-size: 0.85rem;
+            max-width: 400px;
+        }
+        
+        /* Section Headers */
+        .section-header {
+            background: var(--bg-deep);
+            padding: 20px 12px;
+            font-weight: 700;
+            font-size: 1rem;
+            color: var(--text-bright);
+            border-bottom: 2px solid var(--accent-kelly);
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .section-header .count {
+            background: var(--bg-elevated);
+            padding: 4px 12px;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--text-muted);
+        }
+        
+        /* Footer */
+        footer {
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border-dim);
+            padding: 24px 32px;
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        
+        footer a {
+            color: var(--accent-kelly);
+            text-decoration: none;
+        }
+        
+        /* Responsive */
+        @media (max-width: 1024px) {
+            .hero { padding: 32px 20px; }
+            .hero h1 { font-size: 1.8rem; }
+            .stats-bar { gap: 16px; }
+            .stat { padding: 16px 20px; min-width: 140px; }
+            .filters, .table-container { padding: 0 20px; }
+            .page-table { font-size: 0.8rem; }
+        }
+        
+        @media (max-width: 768px) {
+            .page-table th:nth-child(4),
+            .page-table td:nth-child(4),
+            .page-table th:nth-child(5),
+            .page-table td:nth-child(5) {
+                display: none;
+            }
+        }
+        
+        /* Hidden rows */
+        .page-table tr.hidden { display: none; }
+        
+        /* Expandable sections */
+        .section-toggle {
+            cursor: pointer;
+            user-select: none;
+        }
+        
+        .section-toggle:hover { background: var(--bg-hover); }
+        
+        .section-toggle .chevron {
+            transition: transform 0.2s;
+        }
+        
+        .section-toggle.collapsed .chevron {
+            transform: rotate(-90deg);
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <div class="hero-content">
+            <h1>
+                <span class="sparkle">✨</span>
+                Site Health Dashboard
+            </h1>
+            <p>Complete transparency into every page in the Curious Kelly ecosystem</p>
+            
+            <div class="stats-bar" id="statsBar">
+                <!-- Populated by JS -->
+            </div>
+        </div>
+    </div>
+    
+    <div class="filters">
+        <button class="filter-btn active" data-filter="all">All Pages</button>
+        <button class="filter-btn" data-filter="live">🟢 Live</button>
+        <button class="filter-btn" data-filter="wip">🟡 WIP</button>
+        <button class="filter-btn" data-filter="broken">🔴 Broken</button>
+        <button class="filter-btn" data-filter="test">🟣 Test</button>
+        <button class="filter-btn" data-filter="mockup">🔵 Mockup</button>
+        <button class="filter-btn" data-filter="legacy">⚫ Legacy</button>
+        <input type="text" class="search-box" placeholder="🔍 Search pages..." id="searchBox">
+    </div>
+    
+    <div class="table-container">
+        <table class="page-table">
+            <thead>
+                <tr>
+                    <th style="width: 280px;">Page Path</th>
+                    <th style="width: 100px;">Status</th>
+                    <th style="width: 100px;">Type</th>
+                    <th style="width: 120px;">Theme</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody id="pageTableBody">
+                <!-- Populated by JS -->
+            </tbody>
+        </table>
+    </div>
+    
+    <!-- Preview Drawer -->
+    <div class="preview-drawer" id="previewDrawer">
+        <div class="drawer-header">
+            <div class="drawer-title" id="drawerTitle">Page Preview</div>
+            <div class="drawer-actions">
+                <button class="drawer-btn keep" onclick="markAs('keep')">✓ Keep</button>
+                <button class="drawer-btn archive" onclick="markAs('archive')">📦 Archive</button>
+                <button class="drawer-btn delete" onclick="markAs('delete')">🗑 Delete</button>
+                <button class="drawer-btn" onclick="openExternal()">↗ Open</button>
+                <button class="drawer-close" onclick="closeDrawer()">×</button>
+            </div>
+        </div>
+        <div class="drawer-info">
+            <span id="drawerType"></span> · <span id="drawerTheme"></span> · <span id="drawerDesc"></span>
+        </div>
+        <iframe id="previewIframe" class="drawer-iframe"></iframe>
+    </div>
+    
+    <footer>
+        <p>🔒 Admin Access Only · Last scan: <span id="lastScan"></span> · <a href="/admin/">← Back to Admin</a> · <a href="/admin/archive-review.html">Archive Review Tool</a></p>
+    </footer>
+
+<style>
+    /* Preview Drawer */
+    .preview-drawer {
+        position: fixed;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        height: 0;
+        background: var(--bg-surface);
+        border-top: 2px solid var(--accent-kelly);
+        transition: height 0.3s ease;
+        overflow: hidden;
+        z-index: 100;
+        display: flex;
+        flex-direction: column;
+    }
+    
+    .preview-drawer.open { height: 60vh; }
+    
+    .drawer-header {
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        padding: 12px 24px;
+        background: var(--bg-elevated);
+        border-bottom: 1px solid var(--border-dim);
+    }
+    
+    .drawer-title {
+        font-family: 'JetBrains Mono', monospace;
+        font-size: 1rem;
+        color: var(--accent-kelly);
+    }
+    
+    .drawer-actions { display: flex; gap: 8px; }
+    
+    .drawer-btn {
+        padding: 6px 14px;
+        border-radius: 6px;
+        border: 1px solid var(--border-dim);
+        background: var(--bg-surface);
+        color: var(--text-secondary);
+        font-size: 0.85rem;
+        cursor: pointer;
+        transition: all 0.15s;
+    }
+    
+    .drawer-btn:hover { border-color: var(--border-active); color: var(--text-bright); }
+    .drawer-btn.keep { border-color: var(--status-live); color: var(--status-live); }
+    .drawer-btn.archive { border-color: var(--status-wip); color: var(--status-wip); }
+    .drawer-btn.delete { border-color: var(--status-broken); color: var(--status-broken); }
+    
+    .drawer-close {
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        border: none;
+        background: var(--bg-hover);
+        color: var(--text-secondary);
+        font-size: 1.2rem;
+        cursor: pointer;
+        margin-left: 16px;
+    }
+    
+    .drawer-info {
+        padding: 8px 24px;
+        font-size: 0.85rem;
+        color: var(--text-muted);
+        background: var(--bg-deep);
+    }
+    
+    .drawer-iframe {
+        flex: 1;
+        border: none;
+        background: white;
+    }
+    
+    /* Mark rows with decisions */
+    tr[data-decision="keep"] td:first-child::before {
+        content: '✓';
+        color: var(--status-live);
+        margin-right: 8px;
+    }
+    
+    tr[data-decision="archive"] td:first-child::before {
+        content: '📦';
+        margin-right: 8px;
+    }
+    
+    tr[data-decision="delete"] td:first-child::before {
+        content: '🗑';
+        color: var(--status-broken);
+        margin-right: 8px;
+    }
+    
+    tr[data-decision="keep"] { background: rgba(34, 197, 94, 0.05); }
+    tr[data-decision="archive"] { background: rgba(245, 158, 11, 0.05); }
+    tr[data-decision="delete"] { background: rgba(239, 68, 68, 0.05); }
+</style>
+
+<script>
+// ============================================
+// COMPLETE PAGE INVENTORY
+// ============================================
+const PAGES = [
+    // ====== CORE PRODUCTION PAGES ======
+    { section: "Core Production Pages", pages: [
+        { path: "/index.html", status: "live", type: "Landing", theme: "Dark Kelly", desc: "Main landing page - curiouskelly.com homepage with age gate" },
+        { path: "/learn.html", status: "live", type: "App", theme: "Dark Kelly", desc: "Main lesson player - video lessons with Kelly" },
+        { path: "/pricing.html", status: "live", type: "Marketing", theme: "Dark Kelly", desc: "Subscription pricing with Stripe integration" },
+        { path: "/gifts.html", status: "live", type: "Marketing", theme: "Dark Kelly", desc: "Gift subscription purchase flow" },
+        { path: "/gift-success.html", status: "live", type: "Checkout", theme: "Dark Kelly", desc: "Gift purchase confirmation page" },
+        { path: "/welcome.html", status: "live", type: "Onboarding", theme: "Dark Kelly", desc: "Post-signup welcome experience" },
+        { path: "/about.html", status: "live", type: "Marketing", theme: "Dark Kelly", desc: "About Curious Kelly and mission" },
+        { path: "/curriculum.html", status: "live", type: "Marketing", theme: "Dark Kelly", desc: "365-day curriculum overview" },
+        { path: "/help.html", status: "live", type: "Support", theme: "Dark Kelly", desc: "Help center and FAQs" },
+        { path: "/contact.html", status: "live", type: "Support", theme: "Dark Kelly", desc: "Contact form for inquiries" },
+        { path: "/legal/privacy.html", status: "live", type: "Legal", theme: "Dark Kelly", desc: "Privacy policy (COPPA/GDPR/CCPA compliant)" },
+        { path: "/legal/terms.html", status: "live", type: "Legal", theme: "Dark Kelly", desc: "Terms of service" },
+        { path: "/legal/diversity.html", status: "live", type: "Legal", theme: "Dark Kelly", desc: "Diversity & inclusion commitment" },
+        { path: "/accessibility.html", status: "wip", type: "Legal", theme: "Dark Kelly", desc: "Accessibility statement (TODO)" },
+    ]},
+    
+    // ====== LESSON PLAYERS ======
+    { section: "Lesson Players", pages: [
+        { path: "/golden-lesson.html", status: "live", type: "Player", theme: "Golden V5", desc: "Golden lesson player - HD video playback" },
+        { path: "/golden-v5.html", status: "live", type: "Player", theme: "Golden V5", desc: "Latest golden lesson player iteration" },
+        { path: "/golden-v3-teaser.html", status: "legacy", type: "Player", theme: "Golden V3", desc: "Legacy teaser player" },
+        { path: "/lesson-player-golden.html", status: "wip", type: "Player", theme: "Golden", desc: "Golden player variant" },
+        { path: "/player.html", status: "wip", type: "Player", theme: "Dark", desc: "Generic lesson player shell" },
+        { path: "/lesson-detail.html", status: "wip", type: "Player", theme: "Dark Kelly", desc: "Individual lesson detail view" },
+        { path: "/lesson-commons.html", status: "wip", type: "Player", theme: "Dark", desc: "Commons lesson experience" },
+        { path: "/golden-lesson-review.html", status: "test", type: "Review", theme: "Dark", desc: "Internal lesson review tool" },
+        { path: "/day/index.html", status: "live", type: "Player", theme: "Dark Kelly", desc: "Daily lesson entry point" },
+    ]},
+    
+    // ====== ADMIN PAGES ======
+    { section: "Admin & Internal Tools", pages: [
+        { path: "/admin/index.html", status: "live", type: "Admin", theme: "Dark Admin", desc: "Main admin dashboard" },
+        { path: "/admin/submissions.html", status: "live", type: "Admin", theme: "Dark Admin", desc: "User submissions management" },
+        { path: "/admin/affiliates.html", status: "live", type: "Admin", theme: "Dark Admin", desc: "Affiliate management portal" },
+        { path: "/admin/site-health.html", status: "live", type: "Admin", theme: "Dark Admin", desc: "THIS PAGE - complete site inventory" },
+        { path: "/admin/mission-control.html", status: "live", type: "Admin", theme: "Dark Admin", desc: "Personal command center & guardrails" },
+        { path: "/admin/EXTRACTED_GOLD.md", status: "live", type: "Docs", theme: "Markdown", desc: "Gold mined from archived pages" },
+        { path: "/cfo-dashboard.html", status: "wip", type: "Admin", theme: "Financial", desc: "CFO financial dashboard" },
+        { path: "/cvo-dashboard.html", status: "wip", type: "Admin", theme: "Dark", desc: "Chief Vision Officer dashboard" },
+        { path: "/mission-control.html", status: "wip", type: "Admin", theme: "Mission", desc: "Content pipeline mission control" },
+        { path: "/status.html", status: "live", type: "Admin", theme: "Status", desc: "System status page" },
+        { path: "/global-status.html", status: "live", type: "Admin", theme: "Status", desc: "Global infrastructure status" },
+        { path: "/debug-lessons.html", status: "test", type: "Debug", theme: "Dev", desc: "Lesson debugging tool" },
+    ]},
+    
+    // ====== LIPSYNC & VIDEO TOOLS ======
+    { section: "Lipsync & Video Production", pages: [
+        { path: "/lipsync/index.html", status: "live", type: "Tool", theme: "Dark Tech", desc: "Lipsync generation dashboard" },
+        { path: "/lipsync/dashboard.html", status: "live", type: "Tool", theme: "Dark Tech", desc: "Lipsync job monitoring" },
+        { path: "/lipsync/factory.html", status: "wip", type: "Tool", theme: "Dark Tech", desc: "Batch lipsync factory" },
+        { path: "/lipsync/lessons.html", status: "live", type: "Tool", theme: "Dark Tech", desc: "Lesson video inventory" },
+        { path: "/lipsync/calibration.html", status: "test", type: "Tool", theme: "Dark Tech", desc: "Lipsync calibration tests" },
+        { path: "/lipsync/quality-compare.html", status: "test", type: "Tool", theme: "Dark Tech", desc: "Quality comparison tool" },
+        { path: "/lipsync/s2v-audit.html", status: "test", type: "Audit", theme: "Dark Tech", desc: "Sync Labs video audit" },
+        { path: "/lipsync/kelly-lora-audit.html", status: "test", type: "Audit", theme: "Dark Tech", desc: "Kelly LoRA model audit" },
+        { path: "/lipsync/production-images.html", status: "live", type: "Gallery", theme: "Dark Tech", desc: "Production image gallery" },
+        { path: "/lipsync/templates.html", status: "wip", type: "Tool", theme: "Dark Tech", desc: "Video template library" },
+        { path: "/video-quality-comparison.html", status: "test", type: "Tool", theme: "Dark", desc: "Video quality A/B comparison" },
+    ]},
+    
+    // ====== AFFILIATE & PARTNER ======
+    { section: "Affiliate & Partner Portal", pages: [
+        { path: "/affiliates.html", status: "live", type: "Marketing", theme: "Dark Kelly", desc: "Affiliate program signup" },
+        { path: "/affiliate-assets.html", status: "live", type: "Portal", theme: "Dark", desc: "Affiliate marketing assets" },
+        { path: "/affiliate-dashboard.html", status: "wip", type: "Portal", theme: "Dark", desc: "Affiliate earnings dashboard" },
+        { path: "/partner.html", status: "live", type: "Marketing", theme: "Dark Kelly", desc: "Partner program info" },
+        { path: "/ambassador.html", status: "live", type: "Marketing", theme: "Dark Kelly", desc: "Ambassador program" },
+        { path: "/earnings.html", status: "wip", type: "Portal", theme: "Financial", desc: "Earnings tracking" },
+        { path: "/artist-portal.html", status: "wip", type: "Portal", theme: "Creative", desc: "Artist contributor portal" },
+    ]},
+    
+    // ====== MARKETING & INFO PAGES ======
+    { section: "Marketing & Information", pages: [
+        { path: "/careers.html", status: "wip", type: "Marketing", theme: "Campus", desc: "Affiliate program & job openings" },
+        { path: "/newsroom.html", status: "wip", type: "Marketing", theme: "Campus", desc: "Press releases and news" },
+        { path: "/enterprise.html", status: "wip", type: "Marketing", theme: "Campus", desc: "Enterprise/school licensing" },
+        { path: "/social.html", status: "wip", type: "Marketing", theme: "Campus", desc: "Social media links" },
+        { path: "/impact.html", status: "wip", type: "Marketing", theme: "Dark Kelly", desc: "Social impact report" },
+        { path: "/trust.html", status: "wip", type: "Marketing", theme: "Dark Kelly", desc: "Trust & safety information" },
+        { path: "/perspectives.html", status: "wip", type: "Marketing", theme: "Dark Kelly", desc: "Blog/perspectives" },
+        { path: "/share.html", status: "wip", type: "Marketing", theme: "Dark Kelly", desc: "Share/referral page" },
+        { path: "/compare-us.html", status: "wip", type: "Marketing", theme: "Dark Kelly", desc: "Competitor comparison" },
+        { path: "/api.html", status: "wip", type: "Developer", theme: "Dark", desc: "API documentation" },
+        { path: "/toc.html", status: "wip", type: "Marketing", theme: "Dark Kelly", desc: "Table of contents / sitemap" },
+    ]},
+    
+    // ====== CSS FRAMEWORK ======
+    { section: "CSS Design System", pages: [
+        { path: "/css/brand-tokens.css", status: "live", type: "CSS", theme: "Design System", desc: "Core design tokens - colors, spacing, typography" },
+        { path: "/css/components.css", status: "live", type: "CSS", theme: "Design System", desc: "Reusable UI components library" },
+        { path: "/css/kelly-animations.css", status: "live", type: "CSS", theme: "Design System", desc: "Kelly avatar animation system" },
+        { path: "/css/kelly-os.css", status: "live", type: "CSS", theme: "Design System", desc: "Kelly OS interface styles" },
+        { path: "/css/learn.css", status: "live", type: "CSS", theme: "Design System", desc: "Learning experience styles" },
+    ]},
+    
+    // ====== USER FEATURES ======
+    { section: "User Features", pages: [
+        { path: "/app.html", status: "wip", type: "App", theme: "Dark Kelly", desc: "Main app shell" },
+        { path: "/hub.html", status: "wip", type: "App", theme: "Dark Kelly", desc: "Content hub / browse" },
+        { path: "/missions.html", status: "wip", type: "App", theme: "Gamified", desc: "Learning missions" },
+        { path: "/settings.html", status: "wip", type: "App", theme: "Dark Kelly", desc: "User settings" },
+        { path: "/live.html", status: "wip", type: "App", theme: "Dark Kelly", desc: "Live events" },
+        { path: "/join.html", status: "live", type: "Auth", theme: "Dark Kelly", desc: "Signup flow" },
+        { path: "/submission.html", status: "wip", type: "App", theme: "Dark Kelly", desc: "User content submission" },
+        { path: "/group.html", status: "wip", type: "App", theme: "Dark Kelly", desc: "Group/classroom learning" },
+        { path: "/commons.html", status: "wip", type: "App", theme: "Dark Kelly", desc: "Community commons" },
+    ]},
+    
+    // ====== PAYMENT FLOWS ======
+    { section: "Payment & Checkout", pages: [
+        { path: "/payment-failed.html", status: "live", type: "Checkout", theme: "Error", desc: "Payment failure handling" },
+        { path: "/payment-cancelled.html", status: "live", type: "Checkout", theme: "Warning", desc: "Payment cancellation" },
+    ]},
+    
+    // ====== ERROR PAGES ======
+    { section: "Error Pages", pages: [
+        { path: "/404.html", status: "live", type: "Error", theme: "Dark Kelly", desc: "Page not found" },
+        { path: "/500.html", status: "live", type: "Error", theme: "Dark Kelly", desc: "Server error" },
+    ]},
+    
+    // ====== TEST PAGES ======
+    { section: "Test & Debug Pages", pages: [
+        { path: "/test-lipsync-video.html", status: "test", type: "Test", theme: "Dev", desc: "Lipsync video testing" },
+        { path: "/test-lipsync-demo.html", status: "test", type: "Test", theme: "Dev", desc: "Lipsync demo sandbox" },
+        { path: "/test-lipsync-api.html", status: "test", type: "Test", theme: "Dev", desc: "Lipsync API testing" },
+        { path: "/test-tts-debug.html", status: "test", type: "Test", theme: "Dev", desc: "TTS debugging" },
+        { path: "/test-chat.html", status: "test", type: "Test", theme: "Dev", desc: "Chat interface test" },
+        { path: "/test-dashboard.html", status: "test", type: "Test", theme: "Dev", desc: "Dashboard testing" },
+        { path: "/test-kelly-spatial.html", status: "test", type: "Test", theme: "Dev", desc: "Kelly spatial awareness test" },
+        { path: "/test-kelly-video-spatial.html", status: "test", type: "Test", theme: "Dev", desc: "Kelly video spatial test" },
+        { path: "/unity-test.html", status: "test", type: "Test", theme: "Unity", desc: "Unity WebGL testing" },
+        { path: "/kelly-hero-test.html", status: "test", type: "Test", theme: "Dev", desc: "Kelly hero image testing" },
+        { path: "/teacher-response.html", status: "test", type: "Test", theme: "Dev", desc: "Teacher response testing" },
+        { path: "/picky-nicky.html", status: "test", type: "Easter Egg", theme: "Fun", desc: "🐱 Picky Nicky easter egg" },
+    ]},
+    
+    // ====== KELLY CHARACTER PAGES ======
+    { section: "Kelly Character & Assets", pages: [
+        { path: "/kelly.html", status: "wip", type: "Character", theme: "Dark Kelly", desc: "Meet Kelly page" },
+        { path: "/kelly-svg-avatar.html", status: "test", type: "Asset", theme: "Dev", desc: "SVG avatar testing" },
+        { path: "/kelly-hair-reference-for-arif.html", status: "test", type: "Reference", theme: "Dev", desc: "Hair reference for artist" },
+        { path: "/kelly/lessons/001/preview.html", status: "test", type: "Preview", theme: "Dev", desc: "Day 1 lesson preview" },
+    ]},
+    
+    // ====== UNITY BUILDS ======
+    { section: "Unity WebGL Builds", pages: [
+        { path: "/unity/kelly-v1/index.html", status: "wip", type: "Unity", theme: "3D", desc: "Kelly 3D v1 build" },
+        { path: "/unity/kelly/index.html", status: "legacy", type: "Unity", theme: "3D", desc: "Original Kelly Unity build" },
+        { path: "/unity/kelly-live/index.html", status: "wip", type: "Unity", theme: "3D", desc: "Live Kelly Unity build" },
+    ]},
+    
+    // ====== LEGACY / BACKUP PAGES ======
+    { section: "Legacy & Backup Pages", pages: [
+        { path: "/index-production.html", status: "legacy", type: "Landing", theme: "Old", desc: "Production landing backup" },
+        { path: "/index-final.html", status: "legacy", type: "Landing", theme: "Old", desc: "Final landing backup" },
+        { path: "/index-unified.html", status: "legacy", type: "Landing", theme: "Unified", desc: "Unified aquarium backup" },
+        { path: "/index-old-backup.html", status: "legacy", type: "Landing", theme: "Old", desc: "Old index backup" },
+        { path: "/learn-v1.html", status: "legacy", type: "Player", theme: "V1", desc: "Learn page v1" },
+        { path: "/learn-v2.html", status: "legacy", type: "Player", theme: "V2", desc: "Learn page v2" },
+    ]},
+    
+    // ====== MOCKUPS ======
+    { section: "Design Mockups", pages: [
+        { path: "/mockups/index.html", status: "mockup", type: "Mockup", theme: "Design", desc: "Mockups index" },
+        { path: "/mockups/kelly-frame-mockup.html", status: "mockup", type: "Mockup", theme: "Design", desc: "Kelly frame design mockup" },
+        { path: "/mockups/kelly-hub-mockup.html", status: "mockup", type: "Mockup", theme: "Design", desc: "Kelly hub layout mockup" },
+    ]},
+    
+    // ====== ARIF DESIGN DELIVERIES ======
+    { section: "Arif Character Design", pages: [
+        { path: "/lessons/arif-kelly-character-design/index.html", status: "test", type: "Design", theme: "Artist", desc: "Arif's Kelly character designs" },
+    ]},
+    
+    // ====== CURIOUS KELLLY PLAYER V2 ======
+    { section: "Curious Kellly Player V2 (Legacy)", pages: [
+        { path: "/curious-kellly/lesson-player-v2/index.html", status: "legacy", type: "Player", theme: "V2", desc: "Lesson player V2" },
+        { path: "/curious-kellly/golden-v2/lesson-player-golden.html", status: "legacy", type: "Player", theme: "Golden V2", desc: "Golden player V2" },
+        { path: "/curious-kellly/golden-v2/kelly-svg-avatar.html", status: "legacy", type: "Asset", theme: "V2", desc: "SVG avatar V2" },
+    ]},
+    
+    // ====== DAILY LESSON MARKETING (ASTRO) ======
+    { section: "Daily Lesson Marketing (Astro)", pages: [
+        { path: "/daily-lesson-marketing/index.astro", status: "legacy", type: "Landing", theme: "Astro", desc: "Astro-based landing (thedailylesson.com)" },
+        { path: "/daily-lesson-marketing/checkout.astro", status: "legacy", type: "Checkout", theme: "Astro", desc: "Checkout flow" },
+        { path: "/daily-lesson-marketing/welcome.astro", status: "legacy", type: "Onboarding", theme: "Astro", desc: "Welcome page" },
+        { path: "/daily-lesson-marketing/kelly-first-landing.astro", status: "legacy", type: "Landing", theme: "Astro", desc: "Kelly-first landing variant" },
+        { path: "/daily-lesson-marketing/thank-you/index.astro", status: "legacy", type: "Checkout", theme: "Astro", desc: "Thank you page" },
+        { path: "/daily-lesson-marketing/roadmap/index.astro", status: "legacy", type: "Marketing", theme: "Astro", desc: "Product roadmap" },
+    ]},
+    
+    // ====== DAILY LESSON MARKETING (HTML) ======
+    { section: "Daily Lesson Marketing (HTML)", pages: [
+        { path: "/daily-lesson-marketing/public/index.html", status: "legacy", type: "Landing", theme: "Old", desc: "Static landing page" },
+        { path: "/daily-lesson-marketing/public/landing-preview.html", status: "mockup", type: "Preview", theme: "Design", desc: "Landing preview" },
+        { path: "/daily-lesson-marketing/public/lesson-player/index.html", status: "legacy", type: "Player", theme: "Old", desc: "Lesson player" },
+        { path: "/daily-lesson-marketing/public/lesson-player/kelly-demo.html", status: "test", type: "Demo", theme: "Demo", desc: "Kelly demo player" },
+        { path: "/daily-lesson-marketing/public/lesson-player/kelly-2d-demo.html", status: "test", type: "Demo", theme: "2D", desc: "Kelly 2D demo" },
+        { path: "/daily-lesson-marketing/public/curious-kellly/lesson-player-v2/index.html", status: "legacy", type: "Player", theme: "V2", desc: "Lesson player V2 copy" },
+    ]},
+    
+    // ====== TOOLS & DASHBOARDS ======
+    { section: "External Tools & Dashboards", pages: [
+        { path: "/tools/mission-control/dashboard.html", status: "wip", type: "Tool", theme: "Mission", desc: "Mission control dashboard" },
+        { path: "/tools/kelly-cop/kelly_comparison.html", status: "test", type: "Tool", theme: "Audit", desc: "Kelly image comparison tool" },
+        { path: "/scripts/kelly-visual-identity/review-client.html", status: "test", type: "Tool", theme: "Review", desc: "Visual identity review client" },
+    ]},
+    
+    // ====== ROOT LEVEL PAGES ======
+    { section: "Root Level Pages", pages: [
+        { path: "/about.html (root)", status: "legacy", type: "Marketing", theme: "Old", desc: "Root about page" },
+        { path: "/careers.html (root)", status: "legacy", type: "Marketing", theme: "Old", desc: "Root careers page" },
+        { path: "/diversity.html (root)", status: "legacy", type: "Marketing", theme: "Old", desc: "Root diversity page" },
+        { path: "/enterprise.html (root)", status: "legacy", type: "Marketing", theme: "Old", desc: "Root enterprise page" },
+        { path: "/newsroom.html (root)", status: "legacy", type: "Marketing", theme: "Old", desc: "Root newsroom page" },
+        { path: "/privacy.html (root)", status: "legacy", type: "Legal", theme: "Old", desc: "Root privacy page" },
+        { path: "/social.html (root)", status: "legacy", type: "Marketing", theme: "Old", desc: "Root social page" },
+        { path: "/terms.html (root)", status: "legacy", type: "Legal", theme: "Old", desc: "Root terms page" },
+        { path: "/player.html (root)", status: "legacy", type: "Player", theme: "Old", desc: "Root player page" },
+        { path: "/dashboard.html (root)", status: "legacy", type: "Admin", theme: "Old", desc: "Root dashboard" },
+        { path: "/pipeline-showcase.html", status: "mockup", type: "Showcase", theme: "Demo", desc: "Pipeline showcase" },
+        { path: "/legacy_marketing_site.html", status: "legacy", type: "Landing", theme: "Old", desc: "Legacy marketing site" },
+        { path: "/social-media-hub.html", status: "wip", type: "Marketing", theme: "Social", desc: "Social media hub" },
+        { path: "/antigravity-monitor.html", status: "test", type: "Monitor", theme: "Tech", desc: "Antigravity system monitor" },
+        { path: "/antigravity-monitor-simple.html", status: "test", type: "Monitor", theme: "Tech", desc: "Simple antigravity monitor" },
+        { path: "/antigravity-dashboard-live.html", status: "test", type: "Monitor", theme: "Tech", desc: "Live antigravity dashboard" },
+    ]},
+    
+    // ====== GENERATED PREVIEW PAGES ======
+    { section: "Generated Visual Previews (30 Days)", pages: Array.from({length: 30}, (_, i) => ({
+        path: `/curious-kellly/golden-v2/generated/visuals/day-${String(i+1).padStart(3, '0')}/preview.html`,
+        status: "test",
+        type: "Preview",
+        theme: "Generated",
+        desc: `Day ${i+1} visual preview`
+    }))},
+];
+
+// ============================================
+// RENDER FUNCTIONS
+// ============================================
+
+function renderStats() {
+    let counts = { live: 0, wip: 0, broken: 0, test: 0, mockup: 0, legacy: 0, total: 0 };
+    
+    PAGES.forEach(section => {
+        section.pages.forEach(page => {
+            counts.total++;
+            counts[page.status]++;
+        });
+    });
+    
+    document.getElementById('statsBar').innerHTML = `
+        <div class="stat"><div class="stat-value">${counts.total}</div><div class="stat-label">Total Pages</div></div>
+        <div class="stat live"><div class="stat-value">${counts.live}</div><div class="stat-label">Live</div></div>
+        <div class="stat wip"><div class="stat-value">${counts.wip}</div><div class="stat-label">Work in Progress</div></div>
+        <div class="stat test"><div class="stat-value">${counts.test}</div><div class="stat-label">Test/Debug</div></div>
+        <div class="stat" style="--stat-color: var(--status-mockup);"><div class="stat-value" style="color: var(--status-mockup);">${counts.mockup}</div><div class="stat-label">Mockups</div></div>
+        <div class="stat" style="--stat-color: var(--status-legacy);"><div class="stat-value" style="color: var(--status-legacy);">${counts.legacy}</div><div class="stat-label">Legacy</div></div>
+    `;
+}
+
+function renderTable(filter = 'all', search = '') {
+    const tbody = document.getElementById('pageTableBody');
+    let html = '';
+    
+    PAGES.forEach(section => {
+        const filteredPages = section.pages.filter(page => {
+            const matchesFilter = filter === 'all' || page.status === filter;
+            const matchesSearch = search === '' || 
+                page.path.toLowerCase().includes(search.toLowerCase()) ||
+                page.desc.toLowerCase().includes(search.toLowerCase()) ||
+                page.type.toLowerCase().includes(search.toLowerCase());
+            return matchesFilter && matchesSearch;
+        });
+        
+        if (filteredPages.length === 0) return;
+        
+        html += `
+            <tr class="section-toggle" data-section="${section.section}">
+                <td colspan="5" class="section-header">
+                    <span class="chevron">▼</span>
+                    ${section.section}
+                    <span class="count">${filteredPages.length}</span>
+                </td>
+            </tr>
+        `;
+        
+        filteredPages.forEach(page => {
+            const isExternal = page.path.includes('daily-lesson-marketing') || 
+                              page.path.includes('curious-kellly') ||
+                              page.path.includes('tools/') ||
+                              page.path.includes('scripts/') ||
+                              page.path.includes('(root)');
+            
+            const displayPath = page.path.replace(' (root)', '');
+            const href = isExternal ? '#' : displayPath;
+            const linkClass = isExternal ? 'page-link external' : 'page-link previewable';
+            const style = isExternal ? 'style="opacity: 0.5; cursor: default;"' : '';
+            
+            const escapedDesc = page.desc.replace(/'/g, "\\'");
+            const clickHandler = isExternal ? '' : `onclick="event.preventDefault(); openPreview('${href}', '${page.type}', '${page.theme}', '${escapedDesc}')"`;
+            
+            html += `
+                <tr data-status="${page.status}" data-section="${section.section}" data-path="${href}">
+                    <td>
+                        <a href="${href}" class="${linkClass}" ${style} ${clickHandler}>
+                            ${displayPath}
+                        </a>
+                    </td>
+                    <td><span class="status-badge status-${page.status}">${page.status}</span></td>
+                    <td><span class="type-tag">${page.type}</span></td>
+                    <td><span class="theme-tag">${page.theme}</span></td>
+                    <td><span class="page-desc">${page.desc}</span></td>
+                </tr>
+            `;
+        });
+    });
+    
+    tbody.innerHTML = html;
+    
+    // Add section toggle handlers
+    document.querySelectorAll('.section-toggle').forEach(toggle => {
+        toggle.addEventListener('click', () => {
+            const section = toggle.dataset.section;
+            const rows = document.querySelectorAll(`tr[data-section="${section}"]:not(.section-toggle)`);
+            const isCollapsed = toggle.classList.toggle('collapsed');
+            rows.forEach(row => row.classList.toggle('hidden', isCollapsed));
+        });
+    });
+}
+
+// ============================================
+// EVENT HANDLERS
+// ============================================
+
+document.querySelectorAll('.filter-btn').forEach(btn => {
+    btn.addEventListener('click', () => {
+        document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+        btn.classList.add('active');
+        renderTable(btn.dataset.filter, document.getElementById('searchBox').value);
+        setTimeout(enhanceTableRows, 50);
+    });
+});
+
+document.getElementById('searchBox').addEventListener('input', (e) => {
+    const activeFilter = document.querySelector('.filter-btn.active').dataset.filter;
+    renderTable(activeFilter, e.target.value);
+    setTimeout(enhanceTableRows, 50);
+});
+
+// ============================================
+// PREVIEW DRAWER - VARIABLES (before render functions)
+// ============================================
+let currentPreviewPath = null;
+let archiveDecisions = {};
+
+// Load decisions from localStorage
+try {
+    const saved = localStorage.getItem('site_archive_decisions');
+    if (saved) archiveDecisions = JSON.parse(saved);
+} catch(e) {}
+
+function openPreview(path, type, theme, desc) {
+    currentPreviewPath = path;
+    document.getElementById('drawerTitle').textContent = path;
+    document.getElementById('drawerType').textContent = type || '';
+    document.getElementById('drawerTheme').textContent = theme || '';
+    document.getElementById('drawerDesc').textContent = desc || '';
+    document.getElementById('previewIframe').src = path;
+    document.getElementById('previewDrawer').classList.add('open');
+}
+
+function saveDecisions() {
+    localStorage.setItem('site_archive_decisions', JSON.stringify(archiveDecisions));
+}
+
+function closeDrawer() {
+    document.getElementById('previewDrawer').classList.remove('open');
+    document.getElementById('previewIframe').src = '';
+    currentPreviewPath = null;
+}
+
+function openExternal() {
+    if (currentPreviewPath) {
+        window.open(currentPreviewPath, '_blank');
+    }
+}
+
+function markAs(decision) {
+    if (!currentPreviewPath) return;
+    archiveDecisions[currentPreviewPath] = decision;
+    saveDecisions();
+    
+    // Update the row in the table
+    const rows = document.querySelectorAll('tr[data-path="' + currentPreviewPath + '"]');
+    rows.forEach(row => {
+        row.setAttribute('data-decision', decision);
+    });
+    
+    // Visual feedback
+    const btns = document.querySelectorAll('.drawer-btn');
+    btns.forEach(btn => btn.style.opacity = '0.5');
+    event.target.style.opacity = '1';
+    
+    setTimeout(() => {
+        btns.forEach(btn => btn.style.opacity = '1');
+    }, 300);
+}
+
+// Add click handlers to previewable links
+function enhanceTableRows() {
+    document.querySelectorAll('.page-link.previewable').forEach(link => {
+        const row = link.closest('tr');
+        if (!row) return;
+        
+        const path = row.getAttribute('data-path');
+        const type = row.getAttribute('data-type');
+        const theme = row.getAttribute('data-theme');
+        const desc = row.getAttribute('data-desc');
+        
+        // Apply saved decision
+        if (archiveDecisions[path]) {
+            row.setAttribute('data-decision', archiveDecisions[path]);
+        }
+        
+        // Add click handler for preview
+        link.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            openPreview(path, type, theme, desc);
+        });
+    });
+}
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+    if (!document.getElementById('previewDrawer').classList.contains('open')) return;
+    if (e.target.tagName === 'INPUT') return;
+    
+    switch(e.key.toLowerCase()) {
+        case 'escape': closeDrawer(); break;
+        case 'k': markAs('keep'); break;
+        case 'a': markAs('archive'); break;
+        case 'd': markAs('delete'); break;
+    }
+});
+
+// ============================================
+// INIT
+// ============================================
+
+document.getElementById('lastScan').textContent = new Date().toLocaleString();
+renderStats();
+renderTable();
+
+// Wait for table to render, then enhance rows
+setTimeout(enhanceTableRows, 100);
+
+</script>
+</body>
+</html>
+

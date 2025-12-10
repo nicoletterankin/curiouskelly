@@ -1,0 +1,133 @@
+name: Database Backup
+
+on:
+  schedule:
+    # Daily at 3:00 AM UTC
+    - cron: '0 3 * * *'
+  workflow_dispatch:
+    inputs:
+      backup_type:
+        description: 'Backup type'
+        required: true
+        default: 'full'
+        type: choice
+        options:
+          - full
+          - lesson_atoms_only
+
+env:
+  SUPABASE_URL: ${{ secrets.PUBLIC_SUPABASE_URL }}
+  SUPABASE_ANON_KEY: ${{ secrets.PUBLIC_SUPABASE_ANON_KEY }}
+
+jobs:
+  backup:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+
+      - name: Install dependencies
+        run: npm install @supabase/supabase-js
+
+      - name: Create backup script
+        run: |
+          cat > backup.mjs << 'EOF'
+          import { createClient } from '@supabase/supabase-js';
+          import { writeFileSync, mkdirSync, existsSync } from 'fs';
+          
+          const supabase = createClient(
+            process.env.SUPABASE_URL,
+            process.env.SUPABASE_ANON_KEY
+          );
+          
+          const BACKUP_DIR = './db-backup';
+          const TIMESTAMP = new Date().toISOString().replace(/[:.]/g, '-');
+          const PAGE_SIZE = 1000;
+          
+          async function backupTable(tableName) {
+            console.log(`📦 Backing up ${tableName}...`);
+            
+            let allData = [];
+            let page = 0;
+            let hasMore = true;
+            
+            while (hasMore) {
+              const from = page * PAGE_SIZE;
+              const to = from + PAGE_SIZE - 1;
+              
+              const { data, error } = await supabase
+                .from(tableName)
+                .select('*')
+                .range(from, to);
+              
+              if (error) {
+                console.error(`❌ Error: ${error.message}`);
+                break;
+              }
+              
+              if (data?.length > 0) {
+                allData = allData.concat(data);
+                if (data.length < PAGE_SIZE) hasMore = false;
+                else page++;
+              } else {
+                hasMore = false;
+              }
+            }
+            
+            if (allData.length === 0) {
+              console.log(`⚠️ ${tableName}: No data`);
+              return null;
+            }
+            
+            const filename = `${BACKUP_DIR}/${tableName}_${TIMESTAMP}.json`;
+            writeFileSync(filename, JSON.stringify(allData, null, 2));
+            console.log(`✅ ${tableName}: ${allData.length} rows`);
+            return filename;
+          }
+          
+          async function main() {
+            if (!existsSync(BACKUP_DIR)) mkdirSync(BACKUP_DIR, { recursive: true });
+            
+            console.log('╔═══════════════════════════════════╗');
+            console.log('║     DATABASE BACKUP               ║');
+            console.log(`║     ${new Date().toISOString()}    ║`);
+            console.log('╚═══════════════════════════════════╝\n');
+            
+            await backupTable('core_lessons');
+            await backupTable('lesson_atoms');
+            await backupTable('lesson_shards');
+            
+            console.log('\n✅ Backup complete!');
+          }
+          
+          main().catch(console.error);
+          EOF
+
+      - name: Run backup
+        run: node backup.mjs
+
+      - name: Upload backup artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: database-backup-${{ github.run_number }}
+          path: db-backup/
+          retention-days: 30
+
+      - name: Create GitHub Issue on failure
+        if: failure()
+        uses: actions/github-script@v7
+        with:
+          script: |
+            github.rest.issues.create({
+              owner: context.repo.owner,
+              repo: context.repo.repo,
+              title: '🚨 Database Backup Failed',
+              body: `The database backup workflow failed on ${new Date().toISOString()}\n\nRun: ${context.serverUrl}/${context.repo.owner}/${context.repo.repo}/actions/runs/${context.runId}`,
+              labels: ['database', 'backup', 'urgent']
+            });
+

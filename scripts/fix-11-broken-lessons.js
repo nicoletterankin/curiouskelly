@@ -73,3 +73,4 @@ console.log('   Copy and run these in Supabase SQL editor');
 console.log('═══════════════════════════════════════════════════════════════\n');
 
 
+

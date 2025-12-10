@@ -1,19 +1,24 @@
 /**
- * 🏭 CURIOUS KELLY LESSON FACTORY
- * World-class lesson generation at any quality tier
+ * 🏭 CURIOUS KELLY LESSON FACTORY (LEGACY)
  * 
- * This is the orchestrator that coordinates:
- * - Text generation (Claude)
- * - Visual generation (Flux + Kelly LoRA)
- * - Audio generation (ElevenLabs)
- * - Video generation (Hedra/OmniHuman)
- * - Quality control
- * - Database updates
+ * ⚠️ THIS FILE IS DEPRECATED
  * 
- * Usage:
- *   npx ts-node scripts/lesson-factory --day=1 --tier=free
- *   npx ts-node scripts/lesson-factory --day=1 --tier=premium
- *   npx ts-node scripts/lesson-factory --topic="Why the sky is blue" --tier=free
+ * Use the new UNIFIED FACTORY instead:
+ *   npx tsx scripts/lesson-factory/unified-factory.ts --day 1
+ * 
+ * Or run preflight check first:
+ *   npx tsx scripts/lesson-factory/preflight-check.ts --day 1
+ * 
+ * The new unified factory includes:
+ * - Full HD video generation (ElevenLabs → Flux+LoRA → MiniMax → Sync Labs lipsync-2-pro)
+ * - Infographic generation (Flux Pro)
+ * - Option card images (512×512)
+ * - Response videos with different Kelly expressions
+ * - Supabase upload with database updates
+ * - Cloudflare R2 backup
+ * - Language/age/tone expansion support
+ * 
+ * See: vom/UNIFIED_LESSON_FACTORY_FINAL.md for complete documentation
  */
 
 import * as dotenv from 'dotenv';
@@ -520,5 +525,6 @@ Environment Variables Required:
 }
 
 main().catch(console.error);
+
 
 

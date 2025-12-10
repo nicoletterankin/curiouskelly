@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Mission Control · Curious Kelly</title>
+    <link rel="icon" href="/images/brand/favicon-32.png">
+    <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Instrument+Serif:ital@0;1&display=swap');
+        
+        :root {
+            --void: #05060a;
+            --deep: #0a0c12;
+            --surface: #0f1218;
+            --elevated: #161a24;
+            --card: #1c212d;
+            --border: #2a3142;
+            --kelly-blue: #3b82f6;
+            --kelly-glow: rgba(59, 130, 246, 0.12);
+            --green: #10b981;
+            --amber: #f59e0b;
+            --red: #ef4444;
+            --purple: #8b5cf6;
+            --text: #e8eaed;
+            --text-dim: #8b92a5;
+            --text-muted: #5a6175;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Space Grotesk', system-ui, sans-serif;
+            background: var(--void);
+            color: var(--text);
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        /* Ambient Background */
+        .ambient {
+            position: fixed;
+            inset: 0;
+            background: 
+                radial-gradient(ellipse 80% 50% at 50% -20%, rgba(59, 130, 246, 0.08) 0%, transparent 50%),
+                radial-gradient(ellipse 60% 40% at 90% 80%, rgba(139, 92, 246, 0.05) 0%, transparent 40%);
+            pointer-events: none;
+            z-index: 0;
+        }
+        
+        /* Layout */
+        .container {
+            position: relative;
+            z-index: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 32px;
+        }
+        
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 48px;
+        }
+        
+        .greeting {
+            font-family: 'Instrument Serif', serif;
+            font-size: 2.5rem;
+            font-weight: 400;
+            margin-bottom: 8px;
+        }
+        
+        .greeting .time {
+            color: var(--kelly-blue);
+        }
+        
+        .date {
+            color: var(--text-dim);
+            font-size: 1rem;
+        }
+        
+        .quick-nav {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .nav-btn {
+            padding: 10px 18px;
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text-dim);
+            text-decoration: none;
+            font-size: 0.9rem;
+            transition: all 0.15s;
+        }
+        
+        .nav-btn:hover {
+            background: var(--elevated);
+            color: var(--text);
+            border-color: var(--kelly-blue);
+        }
+        
+        /* Status Strip */
+        .status-strip {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 16px;
+            margin-bottom: 40px;
+        }
+        
+        .status-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .status-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 3px;
+        }
+        
+        .status-card.green::before { background: var(--green); }
+        .status-card.amber::before { background: var(--amber); }
+        .status-card.red::before { background: var(--red); }
+        .status-card.blue::before { background: var(--kelly-blue); }
+        
+        .status-label {
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+        
+        .status-value {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1.8rem;
+            font-weight: 600;
+        }
+        
+        .status-card.green .status-value { color: var(--green); }
+        .status-card.amber .status-value { color: var(--amber); }
+        .status-card.red .status-value { color: var(--red); }
+        
+        .status-detail {
+            font-size: 0.85rem;
+            color: var(--text-dim);
+            margin-top: 4px;
+        }
+        
+        /* Main Grid */
+        .main-grid {
+            display: grid;
+            grid-template-columns: 2fr 1fr;
+            gap: 24px;
+        }
+        
+        @media (max-width: 1024px) {
+            .main-grid { grid-template-columns: 1fr; }
+            .status-strip { grid-template-columns: repeat(2, 1fr); }
+        }
+        
+        /* Sections */
+        .section {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            overflow: hidden;
+            margin-bottom: 24px;
+        }
+        
+        .section-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .section-title {
+            font-size: 1.1rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .section-body {
+            padding: 24px;
+        }
+        
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 12px;
+        }
+        
+        .action-btn {
+            background: var(--elevated);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+            text-align: left;
+        }
+        
+        .action-btn:hover {
+            background: var(--card);
+            border-color: var(--kelly-blue);
+            transform: translateY(-2px);
+        }
+        
+        .action-btn .icon {
+            font-size: 1.5rem;
+            margin-bottom: 12px;
+        }
+        
+        .action-btn .label {
+            font-weight: 600;
+            font-size: 0.95rem;
+            margin-bottom: 4px;
+        }
+        
+        .action-btn .desc {
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+        
+        /* Task List */
+        .task-list {
+            list-style: none;
+        }
+        
+        .task-item {
+            display: flex;
+            align-items: flex-start;
+            gap: 16px;
+            padding: 16px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .task-item:last-child { border-bottom: none; }
+        
+        .task-priority {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-top: 6px;
+            flex-shrink: 0;
+        }
+        
+        .task-priority.critical { background: var(--red); box-shadow: 0 0 8px var(--red); }
+        .task-priority.high { background: var(--amber); }
+        .task-priority.normal { background: var(--kelly-blue); }
+        
+        .task-content {
+            flex: 1;
+        }
+        
+        .task-title {
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+        
+        .task-meta {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+        
+        .task-action {
+            padding: 6px 14px;
+            background: transparent;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text-dim);
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        
+        .task-action:hover {
+            background: var(--kelly-blue);
+            border-color: var(--kelly-blue);
+            color: white;
+        }
+        
+        /* Chat Interface */
+        .chat-section {
+            background: linear-gradient(135deg, var(--surface) 0%, rgba(59, 130, 246, 0.03) 100%);
+        }
+        
+        .chat-messages {
+            max-height: 300px;
+            overflow-y: auto;
+            margin-bottom: 16px;
+        }
+        
+        .chat-message {
+            padding: 12px 16px;
+            border-radius: 12px;
+            margin-bottom: 12px;
+            max-width: 90%;
+        }
+        
+        .chat-message.system {
+            background: var(--elevated);
+            border: 1px solid var(--border);
+        }
+        
+        .chat-message.user {
+            background: var(--kelly-blue);
+            margin-left: auto;
+        }
+        
+        .chat-input-area {
+            display: flex;
+            gap: 12px;
+        }
+        
+        .chat-input {
+            flex: 1;
+            padding: 14px 18px;
+            background: var(--elevated);
+            border: 2px solid var(--border);
+            border-radius: 12px;
+            color: var(--text);
+            font-size: 0.95rem;
+            font-family: inherit;
+            resize: none;
+        }
+        
+        .chat-input:focus {
+            outline: none;
+            border-color: var(--kelly-blue);
+        }
+        
+        .chat-send {
+            padding: 14px 24px;
+            background: var(--kelly-blue);
+            border: none;
+            border-radius: 12px;
+            color: white;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        
+        .chat-send:hover {
+            background: #2563eb;
+        }
+        
+        /* Pipeline Status */
+        .pipeline-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .pipeline-item:last-child { border-bottom: none; }
+        
+        .pipeline-name {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .pipeline-icon {
+            width: 36px;
+            height: 36px;
+            background: var(--elevated);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .pipeline-status {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.85rem;
+        }
+        
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        .status-dot.active { background: var(--green); animation: pulse 2s infinite; }
+        .status-dot.idle { background: var(--text-muted); }
+        .status-dot.error { background: var(--red); }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        /* Chaos Meter */
+        .chaos-meter {
+            margin-top: 16px;
+        }
+        
+        .chaos-bar {
+            height: 8px;
+            background: var(--elevated);
+            border-radius: 4px;
+            overflow: hidden;
+            margin-bottom: 8px;
+        }
+        
+        .chaos-fill {
+            height: 100%;
+            border-radius: 4px;
+            transition: width 0.5s;
+        }
+        
+        .chaos-low { background: var(--green); }
+        .chaos-medium { background: var(--amber); }
+        .chaos-high { background: var(--red); }
+        
+        .chaos-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 0.8rem;
+            color: var(--text-dim);
+        }
+        
+        /* Rules Reminder */
+        .rules-reminder {
+            background: var(--elevated);
+            border-radius: 12px;
+            padding: 16px;
+            margin-top: 16px;
+        }
+        
+        .rule-mini {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 0;
+            font-size: 0.85rem;
+            color: var(--text-dim);
+        }
+        
+        .rule-mini .icon {
+            width: 20px;
+            text-align: center;
+        }
+        
+        /* Footer */
+        .footer {
+            margin-top: 48px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+        }
+        
+        .footer a {
+            color: var(--kelly-blue);
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="ambient"></div>
+    
+    <div class="container">
+        <header class="header">
+            <div>
+                <h1 class="greeting">
+                    <span class="time" id="greeting">Good evening</span>, creator.
+                </h1>
+                <p class="date" id="currentDate">Wednesday, December 10, 2025</p>
+            </div>
+            <nav class="quick-nav">
+                <a href="/learn.html" class="nav-btn">📚 Today's Lesson</a>
+                <a href="/admin/site-health.html" class="nav-btn">📊 Site Health</a>
+                <a href="https://supabase.com/dashboard" class="nav-btn" target="_blank">🗄️ Supabase</a>
+            </nav>
+        </header>
+        
+        <!-- Status Strip -->
+        <div class="status-strip">
+            <div class="status-card green">
+                <div class="status-label">Day 1 Videos</div>
+                <div class="status-value">42/42</div>
+                <div class="status-detail">All archetypes complete</div>
+            </div>
+            <div class="status-card amber">
+                <div class="status-label">Days with Videos</div>
+                <div class="status-value">1/365</div>
+                <div class="status-detail">364 days remaining</div>
+            </div>
+            <div class="status-card red">
+                <div class="status-label">Codebase Chaos</div>
+                <div class="status-value">68%</div>
+                <div class="status-detail">50+ legacy files</div>
+            </div>
+            <div class="status-card blue">
+                <div class="status-label">Launch Target</div>
+                <div class="status-value" id="daysToLaunch">7</div>
+                <div class="status-detail">December 17, 2025</div>
+            </div>
+        </div>
+        
+        <!-- Main Grid -->
+        <div class="main-grid">
+            <div class="left-column">
+                <!-- Quick Actions -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2 class="section-title">⚡ Quick Actions</h2>
+                    </div>
+                    <div class="section-body">
+                        <div class="quick-actions">
+                            <button class="action-btn" onclick="startAction('generate-day')">
+                                <div class="icon">🎬</div>
+                                <div class="label">Generate Next Day</div>
+                                <div class="desc">Run HD video pipeline for Day 2</div>
+                            </button>
+                            <button class="action-btn" onclick="startAction('cleanup')">
+                                <div class="icon">🧹</div>
+                                <div class="label">Cleanup Codebase</div>
+                                <div class="desc">Archive legacy files, reduce chaos</div>
+                            </button>
+                            <button class="action-btn" onclick="startAction('new-page')">
+                                <div class="icon">📄</div>
+                                <div class="label">Create New Page</div>
+                                <div class="desc">Properly located, properly named</div>
+                            </button>
+                            <button class="action-btn" onclick="startAction('check-kelly')">
+                                <div class="icon">👩‍🦰</div>
+                                <div class="label">Kelly Consistency</div>
+                                <div class="desc">Audit character images</div>
+                            </button>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Today's Priorities -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2 class="section-title">🎯 Today's Priorities</h2>
+                        <span style="font-size: 0.85rem; color: var(--text-dim);">Based on your patterns</span>
+                    </div>
+                    <div class="section-body">
+                        <ul class="task-list">
+                            <li class="task-item">
+                                <div class="task-priority critical"></div>
+                                <div class="task-content">
+                                    <div class="task-title">Day 2-365 videos need generation</div>
+                                    <div class="task-meta">HD pipeline ready · ~40 min per day</div>
+                                </div>
+                                <button class="task-action" onclick="startAction('generate-day')">Start</button>
+                            </li>
+                            <li class="task-item">
+                                <div class="task-priority high"></div>
+                                <div class="task-content">
+                                    <div class="task-title">Archive 50+ legacy files</div>
+                                    <div class="task-meta">Duplicates in root, daily-lesson-marketing/</div>
+                                </div>
+                                <button class="task-action" onclick="startAction('cleanup')">Review</button>
+                            </li>
+                            <li class="task-item">
+                                <div class="task-priority normal"></div>
+                                <div class="task-content">
+                                    <div class="task-title">Visual plans missing for 95 days</div>
+                                    <div class="task-meta">Infographic pipeline needs to run</div>
+                                </div>
+                                <button class="task-action" onclick="startAction('infographics')">Generate</button>
+                            </li>
+                        </ul>
+                    </div>
+                </section>
+                
+                <!-- Talk to Claude -->
+                <section class="section chat-section">
+                    <div class="section-header">
+                        <h2 class="section-title">💬 What do you need?</h2>
+                    </div>
+                    <div class="section-body">
+                        <div class="chat-messages" id="chatMessages">
+                            <div class="chat-message system">
+                                I'm watching your codebase. Before you ask me to create something, I'll check:
+                                <br>• Does this already exist somewhere?
+                                <br>• Is this going to the right location?
+                                <br>• Are you naming it properly?
+                                <br><br>
+                                What do you want to build today?
+                            </div>
+                        </div>
+                        <div class="chat-input-area">
+                            <textarea class="chat-input" id="chatInput" rows="2" placeholder="Tell me what you need... I'll help you do it right."></textarea>
+                            <button class="chat-send" onclick="sendChat()">Send</button>
+                        </div>
+                    </div>
+                </section>
+            </div>
+            
+            <div class="right-column">
+                <!-- Pipeline Status -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2 class="section-title">🔧 Pipelines</h2>
+                    </div>
+                    <div class="section-body">
+                        <div class="pipeline-item">
+                            <div class="pipeline-name">
+                                <div class="pipeline-icon">🎬</div>
+                                <div>
+                                    <div style="font-weight: 500;">HD Video Factory</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-dim);">unified-factory.ts</div>
+                                </div>
+                            </div>
+                            <div class="pipeline-status">
+                                <span class="status-dot idle"></span>
+                                <span>Idle</span>
+                            </div>
+                        </div>
+                        <div class="pipeline-item">
+                            <div class="pipeline-name">
+                                <div class="pipeline-icon">🖼️</div>
+                                <div>
+                                    <div style="font-weight: 500;">Infographic Generator</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-dim);">batch-infographics.ts</div>
+                                </div>
+                            </div>
+                            <div class="pipeline-status">
+                                <span class="status-dot idle"></span>
+                                <span>Idle</span>
+                            </div>
+                        </div>
+                        <div class="pipeline-item">
+                            <div class="pipeline-name">
+                                <div class="pipeline-icon">🔊</div>
+                                <div>
+                                    <div style="font-weight: 500;">ElevenLabs Audio</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-dim);">Audio generation</div>
+                                </div>
+                            </div>
+                            <div class="pipeline-status">
+                                <span class="status-dot active"></span>
+                                <span style="color: var(--green);">Ready</span>
+                            </div>
+                        </div>
+                        <div class="pipeline-item">
+                            <div class="pipeline-name">
+                                <div class="pipeline-icon">👄</div>
+                                <div>
+                                    <div style="font-weight: 500;">Sync Labs Lipsync</div>
+                                    <div style="font-size: 0.8rem; color: var(--text-dim);">lipsync-2-pro</div>
+                                </div>
+                            </div>
+                            <div class="pipeline-status">
+                                <span class="status-dot active"></span>
+                                <span style="color: var(--green);">Ready</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Codebase Chaos -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2 class="section-title">🌪️ Codebase Chaos</h2>
+                    </div>
+                    <div class="section-body">
+                        <div class="chaos-meter">
+                            <div class="chaos-bar">
+                                <div class="chaos-fill chaos-high" style="width: 68%"></div>
+                            </div>
+                            <div class="chaos-label">
+                                <span>Order</span>
+                                <span>68% Chaos</span>
+                            </div>
+                        </div>
+                        
+                        <div class="rules-reminder">
+                            <div class="rule-mini">
+                                <span class="icon">📍</span>
+                                <span>All pages → /public/</span>
+                            </div>
+                            <div class="rule-mini">
+                                <span class="icon">🚫</span>
+                                <span>No -v1, -old, -backup suffixes</span>
+                            </div>
+                            <div class="rule-mini">
+                                <span class="icon">📦</span>
+                                <span>Archive before delete</span>
+                            </div>
+                            <div class="rule-mini">
+                                <span class="icon">⏰</span>
+                                <span>Test pages: 7 days max</span>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Recent Mistakes -->
+                <section class="section">
+                    <div class="section-header">
+                        <h2 class="section-title">⚠️ Recent Chaos</h2>
+                    </div>
+                    <div class="section-body" style="font-size: 0.85rem;">
+                        <div style="padding: 10px 0; border-bottom: 1px solid var(--border); color: var(--amber);">
+                            📂 6 versions of index.html found
+                        </div>
+                        <div style="padding: 10px 0; border-bottom: 1px solid var(--border); color: var(--red);">
+                            📂 HTML files in project root (should be /public/)
+                        </div>
+                        <div style="padding: 10px 0; color: var(--text-dim);">
+                            📂 12 test-*.html files older than 7 days
+                        </div>
+                    </div>
+                </section>
+            </div>
+        </div>
+        
+        <footer class="footer">
+            <div>
+                ✨ Curious Kelly · <a href="/admin/site-health.html">Site Health</a> · <a href="/admin/">Admin</a>
+            </div>
+            <div id="lastUpdate">Last updated: just now</div>
+        </footer>
+    </div>
+
+<script>
+// Update greeting based on time
+function updateGreeting() {
+    const hour = new Date().getHours();
+    const greeting = document.getElementById('greeting');
+    
+    if (hour < 12) greeting.textContent = 'Good morning';
+    else if (hour < 17) greeting.textContent = 'Good afternoon';
+    else greeting.textContent = 'Good evening';
+}
+
+// Update date
+function updateDate() {
+    const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+    document.getElementById('currentDate').textContent = new Date().toLocaleDateString('en-US', options);
+}
+
+// Calculate days to launch
+function updateDaysToLaunch() {
+    const launch = new Date('2025-12-17');
+    const today = new Date();
+    const diff = Math.ceil((launch - today) / (1000 * 60 * 60 * 24));
+    document.getElementById('daysToLaunch').textContent = diff > 0 ? diff : 'TODAY!';
+}
+
+// Quick actions
+function startAction(action) {
+    const messages = {
+        'generate-day': generateDayPrompt(),
+        'cleanup': cleanupPrompt(),
+        'new-page': newPagePrompt(),
+        'check-kelly': kellyAuditPrompt(),
+        'infographics': infographicsPrompt()
+    };
+    
+    const chatMessages = document.getElementById('chatMessages');
+    chatMessages.innerHTML += `
+        <div class="chat-message user">
+            ${getActionLabel(action)}
+        </div>
+        <div class="chat-message system">
+            ${messages[action]}
+        </div>
+    `;
+    
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function getActionLabel(action) {
+    const labels = {
+        'generate-day': "I want to generate the next day's videos",
+        'cleanup': "Help me clean up the codebase",
+        'new-page': "I need to create a new page",
+        'check-kelly': "Run a Kelly consistency check",
+        'infographics': "Generate missing infographics"
+    };
+    return labels[action];
+}
+
+function generateDayPrompt() {
+    return `<strong>📋 Copy this to Claude:</strong>
+<br><br>
+<code style="background: var(--elevated); padding: 12px; border-radius: 8px; display: block; font-size: 0.85rem; white-space: pre-wrap;">
+Run the HD Golden Lesson Pipeline for Day 2:
+
+npx tsx scripts/lesson-factory/unified-factory.ts --day 2
+
+Generate all 3 archetypes (Explorer, Scholar, Rebel).
+Upload to Supabase when complete.
+Follow the existing Day 1 pattern exactly.
+</code>`;
+}
+
+function cleanupPrompt() {
+    return `<strong>📋 I found these issues:</strong>
+<br><br>
+<strong style="color: var(--red);">Delete (duplicates in root):</strong><br>
+• about.html, careers.html, diversity.html<br>
+• enterprise.html, newsroom.html, privacy.html<br>
+• terms.html, social.html, player.html, dashboard.html
+<br><br>
+<strong style="color: var(--amber);">Archive (legacy versions):</strong><br>
+• index-production.html → _archive/<br>
+• index-final.html → _archive/<br>
+• index-unified.html → _archive/<br>
+• learn-v1.html, learn-v2.html → _archive/
+<br><br>
+<strong>Want me to execute this cleanup?</strong><br>
+Copy and tell Claude: "Execute the cleanup plan from Mission Control"`;
+}
+
+function newPagePrompt() {
+    return `<strong>Before creating a new page, answer:</strong>
+<br><br>
+1️⃣ <strong>What is this page for?</strong><br>
+<input type="text" id="pagePurpose" style="width: 100%; padding: 8px; margin: 8px 0; background: var(--elevated); border: 1px solid var(--border); border-radius: 6px; color: var(--text);" placeholder="e.g., Affiliate earnings dashboard">
+<br><br>
+2️⃣ <strong>Where should it live?</strong><br>
+<select id="pageLocation" style="width: 100%; padding: 8px; margin: 8px 0; background: var(--elevated); border: 1px solid var(--border); border-radius: 6px; color: var(--text);">
+    <option value="public/">public/ (production)</option>
+    <option value="public/admin/">public/admin/ (admin tools)</option>
+    <option value="public/dev/">public/dev/ (temporary test)</option>
+</select>
+<br><br>
+3️⃣ <strong>File name (kebab-case):</strong><br>
+<input type="text" id="pageName" style="width: 100%; padding: 8px; margin: 8px 0; background: var(--elevated); border: 1px solid var(--border); border-radius: 6px; color: var(--text);" placeholder="e.g., earnings-dashboard.html">
+<br><br>
+<button onclick="generatePageRequest()" style="padding: 10px 20px; background: var(--kelly-blue); border: none; border-radius: 8px; color: white; cursor: pointer;">Generate Request</button>`;
+}
+
+function kellyAuditPrompt() {
+    return `<strong>📋 Copy this to Claude:</strong>
+<br><br>
+<code style="background: var(--elevated); padding: 12px; border-radius: 8px; display: block; font-size: 0.85rem; white-space: pre-wrap;">
+Run a Kelly character consistency audit:
+
+1. Check all Kelly images in public/assets/kelly/
+2. Compare against canonical reference images
+3. Flag any images that don't match Kelly's approved look
+4. Report face detection confidence scores
+
+Use the kelly-cop audit tool if available.
+</code>`;
+}
+
+function infographicsPrompt() {
+    return `<strong>📋 Copy this to Claude:</strong>
+<br><br>
+<code style="background: var(--elevated); padding: 12px; border-radius: 8px; display: block; font-size: 0.85rem; white-space: pre-wrap;">
+Run the infographic generation pipeline:
+
+npx tsx scripts/kelly-phase-visuals/batch-infographics-from-db.ts
+
+This will generate visual-plan.json + phase images for all days missing them (currently 95 days).
+</code>`;
+}
+
+function generatePageRequest() {
+    const purpose = document.getElementById('pagePurpose')?.value || '';
+    const location = document.getElementById('pageLocation')?.value || 'public/';
+    const name = document.getElementById('pageName')?.value || '';
+    
+    if (!purpose || !name) {
+        alert('Please fill in all fields');
+        return;
+    }
+    
+    // Validate name
+    if (/-v\d+\.|-old\.|-backup\.|-copy\.|-final\.|-new\./.test(name)) {
+        alert('🚫 BLOCKED: No version suffixes allowed!');
+        return;
+    }
+    
+    const request = `Create a new page:
+
+Location: ${location}${name}
+Purpose: ${purpose}
+
+Rules to follow:
+- Create ONLY at ${location}${name}
+- Do NOT create any copies or versions
+- Archive any existing file with same name first
+- Use Dark Kelly theme (var(--bg-color): #0a0a0b)`;
+    
+    navigator.clipboard.writeText(request);
+    alert('✓ Request copied to clipboard! Paste it to Claude.');
+}
+
+// Chat functionality
+function sendChat() {
+    const input = document.getElementById('chatInput');
+    const text = input.value.trim();
+    if (!text) return;
+    
+    const chatMessages = document.getElementById('chatMessages');
+    
+    // Add user message
+    chatMessages.innerHTML += `
+        <div class="chat-message user">${text}</div>
+    `;
+    
+    // Add response with rules reminder
+    chatMessages.innerHTML += `
+        <div class="chat-message system">
+            Copy your request to Claude, and I'll help you do it right.
+            <br><br>
+            <strong>Remember:</strong>
+            <br>• All new pages → /public/
+            <br>• No -v1, -old, -backup suffixes
+            <br>• Test pages go to /public/dev/
+            <br><br>
+            <button onclick="copyRequest('${text.replace(/'/g, "\\'")}')" style="padding: 8px 16px; background: var(--kelly-blue); border: none; border-radius: 6px; color: white; cursor: pointer;">Copy for Claude</button>
+        </div>
+    `;
+    
+    input.value = '';
+    chatMessages.scrollTop = chatMessages.scrollHeight;
+}
+
+function copyRequest(text) {
+    const request = `USER REQUEST:
+${text}
+
+RULES TO ENFORCE:
+1. All pages → /public/ only
+2. No version suffixes (-v1, -old, -backup, -copy, -final, -new)
+3. Test pages → /public/dev/ (7-day limit)
+4. Archive before delete → _archive/
+5. Root = config only (no HTML)
+
+PROTECTED ASSETS (require explicit approval):
+- /public/index.html
+- /public/learn.html
+- /public/golden-lesson.html
+- Supabase database schema
+- Kelly voice training data`;
+
+    navigator.clipboard.writeText(request);
+    alert('✓ Copied! Paste to Claude.');
+}
+
+// Enter key to send
+document.getElementById('chatInput')?.addEventListener('keydown', (e) => {
+    if (e.key === 'Enter' && !e.shiftKey) {
+        e.preventDefault();
+        sendChat();
+    }
+});
+
+// Init
+updateGreeting();
+updateDate();
+updateDaysToLaunch();
+
+</script>
+</body>
+</html>
+

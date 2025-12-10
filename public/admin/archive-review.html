@@ -1,0 +1,1361 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>🗂️ Archive Review - Curious Kelly Admin</title>
+    <link rel="icon" href="/images/brand/favicon-32.png">
+    <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;600&family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <style>
+        :root {
+            --bg-void: #08090a;
+            --bg-deep: #0d0e10;
+            --bg-surface: #131517;
+            --bg-elevated: #1a1c1f;
+            --bg-hover: #22252a;
+            --border-dim: #252830;
+            --border-active: #3a3f4a;
+            --text-bright: #f4f5f6;
+            --text-secondary: #9ca3af;
+            --text-muted: #6b7280;
+            --accent-kelly: #3b82f6;
+            --accent-kelly-glow: rgba(59, 130, 246, 0.15);
+            --status-keep: #22c55e;
+            --status-archive: #f59e0b;
+            --status-delete: #ef4444;
+            --status-review: #8b5cf6;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-void);
+            color: var(--text-bright);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Top Bar */
+        .top-bar {
+            background: var(--bg-deep);
+            border-bottom: 1px solid var(--border-dim);
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .top-bar h1 {
+            font-size: 1.4rem;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .top-bar h1 span { opacity: 0.7; }
+        
+        .actions {
+            display: flex;
+            gap: 12px;
+            align-items: center;
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            border-radius: 8px;
+            border: 1px solid var(--border-dim);
+            background: var(--bg-surface);
+            color: var(--text-bright);
+            font-family: inherit;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.15s;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .btn:hover { border-color: var(--border-active); background: var(--bg-elevated); }
+        
+        .btn-primary { background: var(--accent-kelly); border-color: var(--accent-kelly); }
+        .btn-primary:hover { background: #2563eb; }
+        
+        .btn-danger { background: var(--status-delete); border-color: var(--status-delete); }
+        .btn-danger:hover { background: #dc2626; }
+        
+        .btn-warning { background: var(--status-archive); border-color: var(--status-archive); color: #000; }
+        
+        .stats-mini {
+            display: flex;
+            gap: 16px;
+            font-size: 0.85rem;
+        }
+        
+        .stat-mini {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+        }
+        
+        .stat-mini .dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+        
+        .stat-mini .dot.keep { background: var(--status-keep); }
+        .stat-mini .dot.archive { background: var(--status-archive); }
+        .stat-mini .dot.delete { background: var(--status-delete); }
+        .stat-mini .dot.review { background: var(--status-review); }
+        
+        /* Main Layout */
+        .main-layout {
+            display: flex;
+            flex: 1;
+            overflow: hidden;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            width: 400px;
+            background: var(--bg-surface);
+            border-right: 1px solid var(--border-dim);
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .sidebar-header {
+            padding: 16px;
+            border-bottom: 1px solid var(--border-dim);
+            display: flex;
+            gap: 8px;
+        }
+        
+        .filter-chip {
+            padding: 6px 14px;
+            border-radius: 100px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-dim);
+            color: var(--text-secondary);
+            transition: all 0.15s;
+        }
+        
+        .filter-chip:hover { border-color: var(--border-active); }
+        .filter-chip.active { background: var(--accent-kelly); border-color: var(--accent-kelly); color: white; }
+        
+        .page-list {
+            flex: 1;
+            overflow-y: auto;
+        }
+        
+        .page-group {
+            border-bottom: 1px solid var(--border-dim);
+        }
+        
+        .page-group-header {
+            padding: 12px 16px;
+            background: var(--bg-elevated);
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            cursor: pointer;
+        }
+        
+        .page-group-header:hover { background: var(--bg-hover); }
+        
+        .page-item {
+            padding: 12px 16px;
+            border-bottom: 1px solid var(--border-dim);
+            cursor: pointer;
+            transition: all 0.1s;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+        
+        .page-item:hover { background: var(--bg-hover); }
+        .page-item.active { background: var(--accent-kelly-glow); border-left: 3px solid var(--accent-kelly); }
+        
+        .page-item .status-dot {
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            flex-shrink: 0;
+        }
+        
+        .page-item .status-dot.keep { background: var(--status-keep); }
+        .page-item .status-dot.archive { background: var(--status-archive); }
+        .page-item .status-dot.delete { background: var(--status-delete); }
+        .page-item .status-dot.review { background: var(--status-review); }
+        
+        .page-item .page-info {
+            flex: 1;
+            min-width: 0;
+        }
+        
+        .page-item .page-path {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            color: var(--text-bright);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+        
+        .page-item .page-meta {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 2px;
+        }
+        
+        /* Preview Panel */
+        .preview-panel {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            background: var(--bg-deep);
+        }
+        
+        .preview-header {
+            padding: 16px 24px;
+            border-bottom: 1px solid var(--border-dim);
+            background: var(--bg-surface);
+        }
+        
+        .preview-title {
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 1rem;
+            margin-bottom: 8px;
+        }
+        
+        .preview-actions {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .decision-btn {
+            padding: 8px 16px;
+            border-radius: 6px;
+            border: 2px solid transparent;
+            font-size: 0.85rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.15s;
+            font-family: inherit;
+        }
+        
+        .decision-btn.keep { background: rgba(34, 197, 94, 0.1); color: var(--status-keep); border-color: var(--status-keep); }
+        .decision-btn.keep:hover { background: var(--status-keep); color: #000; }
+        
+        .decision-btn.archive { background: rgba(245, 158, 11, 0.1); color: var(--status-archive); border-color: var(--status-archive); }
+        .decision-btn.archive:hover { background: var(--status-archive); color: #000; }
+        
+        .decision-btn.delete { background: rgba(239, 68, 68, 0.1); color: var(--status-delete); border-color: var(--status-delete); }
+        .decision-btn.delete:hover { background: var(--status-delete); color: white; }
+        
+        .decision-btn.active { color: white !important; }
+        .decision-btn.keep.active { background: var(--status-keep); color: #000 !important; }
+        .decision-btn.archive.active { background: var(--status-archive); color: #000 !important; }
+        .decision-btn.delete.active { background: var(--status-delete); }
+        
+        .preview-frame-container {
+            flex: 1;
+            padding: 16px;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .preview-frame {
+            flex: 1;
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            background: white;
+        }
+        
+        .preview-frame iframe {
+            width: 100%;
+            height: 100%;
+            border: none;
+            border-radius: 8px;
+        }
+        
+        .no-preview {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+            font-size: 1.2rem;
+        }
+        
+        /* Info Panel */
+        .info-panel {
+            padding: 16px 24px;
+            background: var(--bg-surface);
+            border-top: 1px solid var(--border-dim);
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 16px;
+        }
+        
+        .info-item label {
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            color: var(--text-muted);
+            display: block;
+            margin-bottom: 4px;
+        }
+        
+        .info-item .value {
+            font-size: 0.9rem;
+        }
+        
+        /* Notes */
+        .notes-section {
+            margin-top: 12px;
+        }
+        
+        .notes-input {
+            width: 100%;
+            padding: 10px 14px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-dim);
+            border-radius: 6px;
+            color: var(--text-bright);
+            font-family: inherit;
+            font-size: 0.9rem;
+            resize: none;
+        }
+        
+        .notes-input:focus {
+            outline: none;
+            border-color: var(--accent-kelly);
+        }
+        
+        /* Export Modal */
+        .modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .modal-overlay.show { display: flex; }
+        
+        .modal {
+            background: var(--bg-surface);
+            border: 1px solid var(--border-dim);
+            border-radius: 12px;
+            width: 90%;
+            max-width: 800px;
+            max-height: 80vh;
+            overflow: hidden;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .modal-header {
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border-dim);
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+        
+        .modal-header h2 { font-size: 1.2rem; }
+        
+        .modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+        }
+        
+        .modal-body {
+            padding: 24px;
+            overflow-y: auto;
+            flex: 1;
+        }
+        
+        .export-section {
+            margin-bottom: 24px;
+        }
+        
+        .export-section h3 {
+            font-size: 0.9rem;
+            margin-bottom: 12px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .export-list {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: 12px;
+            font-family: 'JetBrains Mono', monospace;
+            font-size: 0.8rem;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        
+        .export-item {
+            padding: 4px 0;
+            display: flex;
+            gap: 12px;
+        }
+        
+        .export-item .path { color: var(--text-bright); }
+        .export-item .note { color: var(--text-muted); font-style: italic; }
+        
+        .modal-footer {
+            padding: 16px 24px;
+            border-top: 1px solid var(--border-dim);
+            display: flex;
+            gap: 12px;
+            justify-content: flex-end;
+        }
+        
+        /* Keyboard shortcuts */
+        .shortcuts {
+            position: fixed;
+            bottom: 16px;
+            right: 16px;
+            background: var(--bg-surface);
+            border: 1px solid var(--border-dim);
+            border-radius: 8px;
+            padding: 12px 16px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+        
+        .shortcuts kbd {
+            background: var(--bg-elevated);
+            padding: 2px 6px;
+            border-radius: 4px;
+            margin-right: 4px;
+        }
+    </style>
+</head>
+<body>
+    <div class="top-bar">
+        <h1>🗂️ Archive Review <span>· Preview before you prune</span></h1>
+        <div class="stats-mini" id="miniStats"></div>
+        <div class="actions">
+            <button class="btn" onclick="resetAllDecisions()">↺ Reset All</button>
+            <button class="btn btn-warning" onclick="showExportModal()">📦 Export Decisions</button>
+            <a href="/admin/site-health.html" class="btn">← Site Health</a>
+        </div>
+    </div>
+    
+    <div class="main-layout">
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <button class="filter-chip active" data-filter="all">All</button>
+                <button class="filter-chip" data-filter="review">⚪ Undecided</button>
+                <button class="filter-chip" data-filter="keep">🟢 Keep</button>
+                <button class="filter-chip" data-filter="archive">🟡 Archive</button>
+                <button class="filter-chip" data-filter="delete">🔴 Delete</button>
+            </div>
+            <div class="page-list" id="pageList"></div>
+        </div>
+        
+        <div class="preview-panel">
+            <div class="preview-header" id="previewHeader" style="display: none;">
+                <div class="preview-title" id="previewTitle"></div>
+                <div class="preview-actions">
+                    <button class="decision-btn keep" onclick="setDecision('keep')">✓ Keep</button>
+                    <button class="decision-btn archive" onclick="setDecision('archive')">📦 Archive</button>
+                    <button class="decision-btn delete" onclick="setDecision('delete')">🗑️ Delete</button>
+                    <button class="btn" onclick="openInNewTab()" style="margin-left: 16px;">↗ Open in Tab</button>
+                    <button class="btn" onclick="nextPage()">Next →</button>
+                </div>
+            </div>
+            
+            <div class="preview-frame-container">
+                <div class="no-preview" id="noPreview">
+                    <div style="text-align: center;">
+                        <div style="font-size: 3rem; margin-bottom: 16px;">👈</div>
+                        <div>Select a page from the sidebar to preview</div>
+                    </div>
+                </div>
+                <div class="preview-frame" id="previewFrame" style="display: none;">
+                    <iframe id="previewIframe" sandbox="allow-same-origin allow-scripts"></iframe>
+                </div>
+            </div>
+            
+            <div class="info-panel" id="infoPanel" style="display: none;">
+                <div class="info-grid">
+                    <div class="info-item">
+                        <label>Type</label>
+                        <div class="value" id="infoType">-</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Theme</label>
+                        <div class="value" id="infoTheme">-</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Status</label>
+                        <div class="value" id="infoStatus">-</div>
+                    </div>
+                    <div class="info-item">
+                        <label>Recommendation</label>
+                        <div class="value" id="infoRec">-</div>
+                    </div>
+                </div>
+                <div class="notes-section">
+                    <textarea class="notes-input" id="notesInput" placeholder="Add notes about this page..." rows="2"></textarea>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Export Modal -->
+    <div class="modal-overlay" id="exportModal">
+        <div class="modal">
+            <div class="modal-header">
+                <h2>📦 Export Archive Decisions</h2>
+                <button class="modal-close" onclick="hideExportModal()">×</button>
+            </div>
+            <div class="modal-body" id="exportBody"></div>
+            <div class="modal-footer">
+                <button class="btn" onclick="copyToClipboard()">📋 Copy Commands</button>
+                <button class="btn btn-primary" onclick="downloadDecisions()">💾 Download JSON</button>
+            </div>
+        </div>
+    </div>
+    
+    <div class="shortcuts">
+        <kbd>K</kbd> Keep &nbsp;
+        <kbd>A</kbd> Archive &nbsp;
+        <kbd>D</kbd> Delete &nbsp;
+        <kbd>→</kbd> Next &nbsp;
+        <kbd>←</kbd> Prev
+    </div>
+
+<script>
+// ============================================
+// CANDIDATE PAGES FOR REVIEW
+// ============================================
+const CANDIDATES = [
+    // LEGACY INDEX FILES - High priority for cleanup
+    { 
+        path: "/index-production.html", 
+        type: "Landing", 
+        theme: "Old", 
+        status: "legacy",
+        recommendation: "archive",
+        reason: "Backup of production index - should be in version control only"
+    },
+    { 
+        path: "/index-final.html", 
+        type: "Landing", 
+        theme: "Old", 
+        status: "legacy",
+        recommendation: "archive",
+        reason: "Ambiguous 'final' naming - what is this final version of?"
+    },
+    { 
+        path: "/index-unified.html", 
+        type: "Landing", 
+        theme: "Unified", 
+        status: "legacy",
+        recommendation: "archive",
+        reason: "Unified aquarium concept - may have useful patterns to extract"
+    },
+    { 
+        path: "/index-old-backup.html", 
+        type: "Landing", 
+        theme: "Old", 
+        status: "legacy",
+        recommendation: "delete",
+        reason: "Explicit backup file - should only exist in git history"
+    },
+    
+    // LEGACY LEARN VERSIONS
+    { 
+        path: "/learn-v1.html", 
+        type: "Player", 
+        theme: "V1", 
+        status: "legacy",
+        recommendation: "archive",
+        reason: "First version of learn page - may have useful reference code"
+    },
+    { 
+        path: "/learn-v2.html", 
+        type: "Player", 
+        theme: "V2", 
+        status: "legacy",
+        recommendation: "archive",
+        reason: "Second iteration - review for any missed features"
+    },
+    
+    // TEST PAGES - Should these stay?
+    { 
+        path: "/test-lipsync-video.html", 
+        type: "Test", 
+        theme: "Dev", 
+        status: "test",
+        recommendation: "archive",
+        reason: "Lipsync testing - still useful for development?"
+    },
+    { 
+        path: "/test-lipsync-demo.html", 
+        type: "Test", 
+        theme: "Dev", 
+        status: "test",
+        recommendation: "archive",
+        reason: "Demo sandbox - may be useful for testing"
+    },
+    { 
+        path: "/test-lipsync-api.html", 
+        type: "Test", 
+        theme: "Dev", 
+        status: "test",
+        recommendation: "keep",
+        reason: "API testing tool - useful for debugging"
+    },
+    { 
+        path: "/test-tts-debug.html", 
+        type: "Test", 
+        theme: "Dev", 
+        status: "test",
+        recommendation: "keep",
+        reason: "TTS debugging - still needed for ElevenLabs work"
+    },
+    { 
+        path: "/test-chat.html", 
+        type: "Test", 
+        theme: "Dev", 
+        status: "test",
+        recommendation: "archive",
+        reason: "Chat interface test - is chat feature planned?"
+    },
+    { 
+        path: "/test-dashboard.html", 
+        type: "Test", 
+        theme: "Dev", 
+        status: "test",
+        recommendation: "delete",
+        reason: "Generic dashboard test - likely obsolete"
+    },
+    { 
+        path: "/test-kelly-spatial.html", 
+        type: "Test", 
+        theme: "Dev", 
+        status: "test",
+        recommendation: "keep",
+        reason: "Spatial awareness testing - active feature development"
+    },
+    { 
+        path: "/test-kelly-video-spatial.html", 
+        type: "Test", 
+        theme: "Dev", 
+        status: "test",
+        recommendation: "keep",
+        reason: "Video spatial testing - active feature development"
+    },
+    { 
+        path: "/unity-test.html", 
+        type: "Test", 
+        theme: "Unity", 
+        status: "test",
+        recommendation: "keep",
+        reason: "Unity WebGL testing - needed for 3D Kelly development"
+    },
+    { 
+        path: "/kelly-hero-test.html", 
+        type: "Test", 
+        theme: "Dev", 
+        status: "test",
+        recommendation: "archive",
+        reason: "Hero image testing - probably served its purpose"
+    },
+    
+    // GOLDEN PLAYER VERSIONS
+    { 
+        path: "/golden-v3-teaser.html", 
+        type: "Player", 
+        theme: "Golden V3", 
+        status: "legacy",
+        recommendation: "archive",
+        reason: "Old teaser format - superseded by V5"
+    },
+    { 
+        path: "/lesson-player-golden.html", 
+        type: "Player", 
+        theme: "Golden", 
+        status: "wip",
+        recommendation: "review",
+        reason: "Unclear relationship to golden-lesson.html - duplicate?"
+    },
+    
+    // CURIOUS-KELLLY LEGACY
+    { 
+        path: "/curious-kellly/lesson-player-v2/index.html", 
+        type: "Player", 
+        theme: "V2", 
+        status: "legacy",
+        recommendation: "archive",
+        reason: "Old lesson player - superseded by public/learn.html"
+    },
+    { 
+        path: "/curious-kellly/golden-v2/lesson-player-golden.html", 
+        type: "Player", 
+        theme: "Golden V2", 
+        status: "legacy",
+        recommendation: "archive",
+        reason: "Golden V2 - superseded by V5"
+    },
+    { 
+        path: "/curious-kellly/golden-v2/kelly-svg-avatar.html", 
+        type: "Asset", 
+        theme: "V2", 
+        status: "legacy",
+        recommendation: "archive",
+        reason: "SVG avatar testing - may have useful code"
+    },
+    
+    // ROOT LEVEL DUPLICATES
+    { 
+        path: "/about.html", 
+        type: "Marketing", 
+        theme: "Old", 
+        status: "legacy",
+        recommendation: "delete",
+        reason: "Root level duplicate - /public/about.html is canonical",
+        isRoot: true
+    },
+    { 
+        path: "/careers.html", 
+        type: "Marketing", 
+        theme: "Old", 
+        status: "legacy",
+        recommendation: "delete",
+        reason: "Root level duplicate - /public/careers.html is canonical",
+        isRoot: true
+    },
+    { 
+        path: "/diversity.html", 
+        type: "Marketing", 
+        theme: "Old", 
+        status: "legacy",
+        recommendation: "delete",
+        reason: "Root level duplicate - /public/diversity.html is canonical",
+        isRoot: true
+    },
+    { 
+        path: "/enterprise.html", 
+        type: "Marketing", 
+        theme: "Old", 
+        status: "legacy",
+        recommendation: "delete",
+        reason: "Root level duplicate - /public/enterprise.html is canonical",
+        isRoot: true
+    },
+    { 
+        path: "/newsroom.html", 
+        type: "Marketing", 
+        theme: "Old", 
+        status: "legacy",
+        recommendation: "delete",
+        reason: "Root level duplicate - /public/newsroom.html is canonical",
+        isRoot: true
+    },
+    { 
+        path: "/privacy.html", 
+        type: "Legal", 
+        theme: "Old", 
+        status: "legacy",
+        recommendation: "delete",
+        reason: "Root level duplicate - /public/privacy.html is canonical",
+        isRoot: true
+    },
+    { 
+        path: "/terms.html", 
+        type: "Legal", 
+        theme: "Old", 
+        status: "legacy",
+        recommendation: "delete",
+        reason: "Root level duplicate - /public/terms.html is canonical",
+        isRoot: true
+    },
+    { 
+        path: "/social.html", 
+        type: "Marketing", 
+        theme: "Old", 
+        status: "legacy",
+        recommendation: "delete",
+        reason: "Root level duplicate - /public/social.html is canonical",
+        isRoot: true
+    },
+    { 
+        path: "/player.html", 
+        type: "Player", 
+        theme: "Old", 
+        status: "legacy",
+        recommendation: "delete",
+        reason: "Root level duplicate - /public/player.html exists",
+        isRoot: true
+    },
+    { 
+        path: "/dashboard.html", 
+        type: "Admin", 
+        theme: "Old", 
+        status: "legacy",
+        recommendation: "delete",
+        reason: "Root level duplicate - /public/dashboard.html exists",
+        isRoot: true
+    },
+    
+    // MOCKUPS
+    { 
+        path: "/mockups/index.html", 
+        type: "Mockup", 
+        theme: "Design", 
+        status: "mockup",
+        recommendation: "archive",
+        reason: "Mockups index - should move to design archive"
+    },
+    { 
+        path: "/mockups/kelly-frame-mockup.html", 
+        type: "Mockup", 
+        theme: "Design", 
+        status: "mockup",
+        recommendation: "archive",
+        reason: "Frame mockup - review if design was implemented"
+    },
+    { 
+        path: "/mockups/kelly-hub-mockup.html", 
+        type: "Mockup", 
+        theme: "Design", 
+        status: "mockup",
+        recommendation: "archive",
+        reason: "Hub mockup - compare to current hub.html"
+    },
+    
+    // DAILY LESSON MARKETING
+    { 
+        path: "/daily-lesson-marketing/public/index.html", 
+        type: "Landing", 
+        theme: "Old", 
+        status: "legacy",
+        recommendation: "archive",
+        reason: "thedailylesson.com landing - domain still active?"
+    },
+    { 
+        path: "/daily-lesson-marketing/public/landing-preview.html", 
+        type: "Preview", 
+        theme: "Design", 
+        status: "mockup",
+        recommendation: "archive",
+        reason: "Landing preview - likely obsolete"
+    },
+    { 
+        path: "/daily-lesson-marketing/public/lesson-player/kelly-demo.html", 
+        type: "Demo", 
+        theme: "Demo", 
+        status: "test",
+        recommendation: "archive",
+        reason: "Kelly demo - still being used?"
+    },
+    { 
+        path: "/daily-lesson-marketing/public/lesson-player/kelly-2d-demo.html", 
+        type: "Demo", 
+        theme: "2D", 
+        status: "test",
+        recommendation: "archive",
+        reason: "2D demo - review before removing"
+    },
+    
+    // OTHER LEGACY
+    { 
+        path: "/legacy_marketing_site.html", 
+        type: "Landing", 
+        theme: "Old", 
+        status: "legacy",
+        recommendation: "delete",
+        reason: "Explicit legacy file - archive and remove"
+    },
+    { 
+        path: "/pipeline-showcase.html", 
+        type: "Showcase", 
+        theme: "Demo", 
+        status: "mockup",
+        recommendation: "archive",
+        reason: "Pipeline showcase - useful for documentation?"
+    },
+    { 
+        path: "/social-media-hub.html", 
+        type: "Marketing", 
+        theme: "Social", 
+        status: "wip",
+        recommendation: "review",
+        reason: "Social media hub - is this actively developed?"
+    },
+    { 
+        path: "/antigravity-monitor.html", 
+        type: "Monitor", 
+        theme: "Tech", 
+        status: "test",
+        recommendation: "archive",
+        reason: "Antigravity system monitor - still relevant?"
+    },
+    { 
+        path: "/antigravity-monitor-simple.html", 
+        type: "Monitor", 
+        theme: "Tech", 
+        status: "test",
+        recommendation: "archive",
+        reason: "Simple monitor variant - duplicate?"
+    },
+    { 
+        path: "/antigravity-dashboard-live.html", 
+        type: "Monitor", 
+        theme: "Tech", 
+        status: "test",
+        recommendation: "archive",
+        reason: "Live dashboard - is antigravity feature active?"
+    },
+    
+    // MISC PAGES
+    { 
+        path: "/teacher-response.html", 
+        type: "Test", 
+        theme: "Dev", 
+        status: "test",
+        recommendation: "archive",
+        reason: "Teacher response testing - review purpose"
+    },
+    { 
+        path: "/kelly-svg-avatar.html", 
+        type: "Asset", 
+        theme: "Dev", 
+        status: "test",
+        recommendation: "archive",
+        reason: "SVG avatar in public - duplicate of curious-kellly version?"
+    },
+    { 
+        path: "/kelly-hair-reference-for-arif.html", 
+        type: "Reference", 
+        theme: "Dev", 
+        status: "test",
+        recommendation: "delete",
+        reason: "Artist reference - should be in design docs, not public"
+    },
+    { 
+        path: "/golden-lesson-review.html", 
+        type: "Review", 
+        theme: "Dark", 
+        status: "test",
+        recommendation: "keep",
+        reason: "Internal review tool - useful for QA"
+    },
+    { 
+        path: "/video-quality-comparison.html", 
+        type: "Tool", 
+        theme: "Dark", 
+        status: "test",
+        recommendation: "keep",
+        reason: "Quality comparison - useful for video QA"
+    },
+    { 
+        path: "/picky-nicky.html", 
+        type: "Easter Egg", 
+        theme: "Fun", 
+        status: "test",
+        recommendation: "keep",
+        reason: "Easter egg - adds personality to the site 🐱"
+    },
+];
+
+// ============================================
+// STATE
+// ============================================
+let decisions = {};  // path -> { decision: 'keep'|'archive'|'delete', notes: '' }
+let currentIndex = -1;
+let currentFilter = 'all';
+
+// Load from localStorage
+try {
+    const saved = localStorage.getItem('archive_decisions');
+    if (saved) decisions = JSON.parse(saved);
+} catch(e) {}
+
+// ============================================
+// FUNCTIONS
+// ============================================
+
+function saveDecisions() {
+    localStorage.setItem('archive_decisions', JSON.stringify(decisions));
+    updateMiniStats();
+}
+
+function getDecision(path) {
+    return decisions[path]?.decision || 'review';
+}
+
+function setDecision(decision) {
+    if (currentIndex < 0) return;
+    const page = getFilteredPages()[currentIndex];
+    if (!decisions[page.path]) decisions[page.path] = {};
+    decisions[page.path].decision = decision;
+    saveDecisions();
+    renderPageList();
+    updateDecisionButtons();
+}
+
+function updateDecisionButtons() {
+    if (currentIndex < 0) return;
+    const page = getFilteredPages()[currentIndex];
+    const decision = getDecision(page.path);
+    
+    document.querySelectorAll('.decision-btn').forEach(btn => {
+        btn.classList.remove('active');
+        if (btn.classList.contains(decision)) btn.classList.add('active');
+    });
+}
+
+function getFilteredPages() {
+    if (currentFilter === 'all') return CANDIDATES;
+    return CANDIDATES.filter(p => getDecision(p.path) === currentFilter);
+}
+
+function renderPageList() {
+    const pages = getFilteredPages();
+    const groups = {};
+    
+    pages.forEach(page => {
+        const group = page.status;
+        if (!groups[group]) groups[group] = [];
+        groups[group].push(page);
+    });
+    
+    let html = '';
+    const groupLabels = {
+        legacy: '📦 Legacy Pages',
+        test: '🧪 Test Pages',
+        mockup: '🎨 Mockups',
+        wip: '🚧 Work in Progress'
+    };
+    
+    Object.entries(groups).forEach(([group, pages]) => {
+        html += `
+            <div class="page-group">
+                <div class="page-group-header">
+                    ${groupLabels[group] || group}
+                    <span>${pages.length}</span>
+                </div>
+        `;
+        
+        pages.forEach((page, idx) => {
+            const globalIdx = getFilteredPages().indexOf(page);
+            const decision = getDecision(page.path);
+            const isActive = globalIdx === currentIndex;
+            
+            html += `
+                <div class="page-item ${isActive ? 'active' : ''}" onclick="selectPage(${globalIdx})">
+                    <div class="status-dot ${decision}"></div>
+                    <div class="page-info">
+                        <div class="page-path">${page.path}</div>
+                        <div class="page-meta">${page.type} · ${page.theme}</div>
+                    </div>
+                </div>
+            `;
+        });
+        
+        html += '</div>';
+    });
+    
+    document.getElementById('pageList').innerHTML = html;
+}
+
+function selectPage(index) {
+    currentIndex = index;
+    const pages = getFilteredPages();
+    if (index < 0 || index >= pages.length) return;
+    
+    const page = pages[index];
+    
+    // Update sidebar
+    renderPageList();
+    
+    // Show preview
+    document.getElementById('noPreview').style.display = 'none';
+    document.getElementById('previewFrame').style.display = 'flex';
+    document.getElementById('previewHeader').style.display = 'block';
+    document.getElementById('infoPanel').style.display = 'block';
+    
+    // Set preview
+    document.getElementById('previewTitle').textContent = page.path;
+    
+    // Handle iframe - some pages may not be previewable
+    const iframe = document.getElementById('previewIframe');
+    const previewPath = page.isRoot ? page.path : page.path;
+    
+    // For root files or external paths, show a message instead
+    if (page.isRoot || page.path.includes('curious-kellly') || page.path.includes('daily-lesson-marketing')) {
+        iframe.srcdoc = `
+            <html>
+            <body style="font-family: system-ui; padding: 40px; background: #1a1c1f; color: #f4f5f6;">
+                <h2>📂 External File</h2>
+                <p style="color: #9ca3af;">This file is outside the public folder.</p>
+                <p style="color: #9ca3af;">Path: <code style="background: #252830; padding: 4px 8px; border-radius: 4px;">${page.path}</code></p>
+                <p style="margin-top: 24px; color: #6b7280;">${page.reason}</p>
+            </body>
+            </html>
+        `;
+    } else {
+        iframe.src = page.path;
+    }
+    
+    // Set info
+    document.getElementById('infoType').textContent = page.type;
+    document.getElementById('infoTheme').textContent = page.theme;
+    document.getElementById('infoStatus').textContent = page.status;
+    document.getElementById('infoRec').innerHTML = `
+        <span style="color: var(--status-${page.recommendation});">
+            ${page.recommendation.toUpperCase()}
+        </span>
+        <span style="color: var(--text-muted); margin-left: 8px;">${page.reason}</span>
+    `;
+    
+    // Set notes
+    const notes = decisions[page.path]?.notes || '';
+    document.getElementById('notesInput').value = notes;
+    
+    updateDecisionButtons();
+}
+
+function nextPage() {
+    const pages = getFilteredPages();
+    if (currentIndex < pages.length - 1) {
+        selectPage(currentIndex + 1);
+    }
+}
+
+function prevPage() {
+    if (currentIndex > 0) {
+        selectPage(currentIndex - 1);
+    }
+}
+
+function openInNewTab() {
+    if (currentIndex < 0) return;
+    const page = getFilteredPages()[currentIndex];
+    window.open(page.path, '_blank');
+}
+
+function updateMiniStats() {
+    let counts = { keep: 0, archive: 0, delete: 0, review: 0 };
+    CANDIDATES.forEach(p => {
+        const d = getDecision(p.path);
+        counts[d]++;
+    });
+    
+    document.getElementById('miniStats').innerHTML = `
+        <div class="stat-mini"><div class="dot review"></div><span>${counts.review} undecided</span></div>
+        <div class="stat-mini"><div class="dot keep"></div><span>${counts.keep} keep</span></div>
+        <div class="stat-mini"><div class="dot archive"></div><span>${counts.archive} archive</span></div>
+        <div class="stat-mini"><div class="dot delete"></div><span>${counts.delete} delete</span></div>
+    `;
+}
+
+function resetAllDecisions() {
+    if (confirm('Reset all decisions? This cannot be undone.')) {
+        decisions = {};
+        saveDecisions();
+        renderPageList();
+        updateMiniStats();
+        if (currentIndex >= 0) updateDecisionButtons();
+    }
+}
+
+// Notes saving
+document.getElementById('notesInput')?.addEventListener('input', (e) => {
+    if (currentIndex < 0) return;
+    const page = getFilteredPages()[currentIndex];
+    if (!decisions[page.path]) decisions[page.path] = {};
+    decisions[page.path].notes = e.target.value;
+    saveDecisions();
+});
+
+// Filter chips
+document.querySelectorAll('.filter-chip').forEach(chip => {
+    chip.addEventListener('click', () => {
+        document.querySelectorAll('.filter-chip').forEach(c => c.classList.remove('active'));
+        chip.classList.add('active');
+        currentFilter = chip.dataset.filter;
+        currentIndex = -1;
+        renderPageList();
+        document.getElementById('noPreview').style.display = 'flex';
+        document.getElementById('previewFrame').style.display = 'none';
+        document.getElementById('previewHeader').style.display = 'none';
+        document.getElementById('infoPanel').style.display = 'none';
+    });
+});
+
+// Keyboard shortcuts
+document.addEventListener('keydown', (e) => {
+    if (e.target.tagName === 'TEXTAREA' || e.target.tagName === 'INPUT') return;
+    
+    switch(e.key.toLowerCase()) {
+        case 'k': setDecision('keep'); break;
+        case 'a': setDecision('archive'); break;
+        case 'd': setDecision('delete'); break;
+        case 'arrowright': nextPage(); break;
+        case 'arrowleft': prevPage(); break;
+    }
+});
+
+// Export functions
+function showExportModal() {
+    const modal = document.getElementById('exportModal');
+    const body = document.getElementById('exportBody');
+    
+    const keep = CANDIDATES.filter(p => getDecision(p.path) === 'keep');
+    const archive = CANDIDATES.filter(p => getDecision(p.path) === 'archive');
+    const del = CANDIDATES.filter(p => getDecision(p.path) === 'delete');
+    const undecided = CANDIDATES.filter(p => getDecision(p.path) === 'review');
+    
+    let html = '';
+    
+    if (undecided.length > 0) {
+        html += `
+            <div class="export-section">
+                <h3>⚪ Undecided (${undecided.length})</h3>
+                <div class="export-list">
+                    ${undecided.map(p => `<div class="export-item"><span class="path">${p.path}</span></div>`).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    if (keep.length > 0) {
+        html += `
+            <div class="export-section">
+                <h3>🟢 Keep (${keep.length})</h3>
+                <div class="export-list">
+                    ${keep.map(p => `<div class="export-item">
+                        <span class="path">${p.path}</span>
+                        ${decisions[p.path]?.notes ? `<span class="note"># ${decisions[p.path].notes}</span>` : ''}
+                    </div>`).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    if (archive.length > 0) {
+        html += `
+            <div class="export-section">
+                <h3>🟡 Archive (${archive.length})</h3>
+                <p style="color: var(--text-muted); margin-bottom: 12px;">These files will be moved to <code>_archive/</code></p>
+                <div class="export-list">
+                    ${archive.map(p => `<div class="export-item">
+                        <span class="path">${p.path}</span>
+                        ${decisions[p.path]?.notes ? `<span class="note"># ${decisions[p.path].notes}</span>` : ''}
+                    </div>`).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    if (del.length > 0) {
+        html += `
+            <div class="export-section">
+                <h3 style="color: var(--status-delete);">🔴 Delete (${del.length})</h3>
+                <p style="color: var(--text-muted); margin-bottom: 12px;">⚠️ These files will be permanently removed</p>
+                <div class="export-list">
+                    ${del.map(p => `<div class="export-item">
+                        <span class="path">${p.path}</span>
+                        ${decisions[p.path]?.notes ? `<span class="note"># ${decisions[p.path].notes}</span>` : ''}
+                    </div>`).join('')}
+                </div>
+            </div>
+        `;
+    }
+    
+    body.innerHTML = html || '<p style="color: var(--text-muted);">No decisions made yet.</p>';
+    modal.classList.add('show');
+}
+
+function hideExportModal() {
+    document.getElementById('exportModal').classList.remove('show');
+}
+
+function downloadDecisions() {
+    const data = {
+        exportedAt: new Date().toISOString(),
+        decisions: Object.entries(decisions).map(([path, data]) => ({
+            path,
+            decision: data.decision,
+            notes: data.notes || '',
+            pageInfo: CANDIDATES.find(c => c.path === path)
+        })),
+        summary: {
+            keep: CANDIDATES.filter(p => getDecision(p.path) === 'keep').length,
+            archive: CANDIDATES.filter(p => getDecision(p.path) === 'archive').length,
+            delete: CANDIDATES.filter(p => getDecision(p.path) === 'delete').length,
+            undecided: CANDIDATES.filter(p => getDecision(p.path) === 'review').length
+        }
+    };
+    
+    const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `archive-decisions-${new Date().toISOString().split('T')[0]}.json`;
+    a.click();
+}
+
+function copyToClipboard() {
+    const archive = CANDIDATES.filter(p => getDecision(p.path) === 'archive');
+    const del = CANDIDATES.filter(p => getDecision(p.path) === 'delete');
+    
+    let commands = '# Archive commands\n';
+    archive.forEach(p => {
+        const dest = p.path.replace(/^\//, '_archive/');
+        commands += `# ${p.reason}\nmv "${p.path.substring(1)}" "${dest}"\n\n`;
+    });
+    
+    commands += '\n# Delete commands\n';
+    del.forEach(p => {
+        commands += `# ${p.reason}\nrm "${p.path.substring(1)}"\n\n`;
+    });
+    
+    navigator.clipboard.writeText(commands);
+    alert('Commands copied to clipboard!');
+}
+
+// ============================================
+// INIT
+// ============================================
+renderPageList();
+updateMiniStats();
+
+</script>
+</body>
+</html>
+

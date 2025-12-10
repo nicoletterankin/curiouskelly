@@ -398,3 +398,4 @@ git push origin main
 **Live URL:** https://curiouskelly.com
 
 **All systems ready for deployment!** 🚀
+

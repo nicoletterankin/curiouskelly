@@ -145,3 +145,4 @@ SELECT current_streak, last_lesson_at FROM users WHERE email = 'user@example.com
 | 18:00 | /api/cron/gentle-return | Re-engagement (1pm EST) |
 
 
+

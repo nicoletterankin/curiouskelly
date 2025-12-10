@@ -181,3 +181,4 @@ The current UI is desktop-first. For mobile:
 The lesson player looks beautiful but the core personalization promise (age-appropriate content) is completely broken. This should be the #1 priority to fix before any UI polish.
 
 
+

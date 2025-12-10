@@ -66,6 +66,7 @@
 
     <!-- Brand CSS -->
     <link rel="stylesheet" href="/css/brand-colors.css" />
+    <link rel="stylesheet" href="/css/components.css" />
 
     <!-- Fonts -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -4199,6 +4200,11 @@
       // BUILD LESSON FROM ATOMS
       // ═══════════════════════════════════════════════════════════════════
       function buildLessonFromAtoms(coreLesson, atoms) {
+        // PHASE ORDER: Hook → Fact1 → Fact2 → Fact3 → Wisdom
+        // Database orders alphabetically, so we need to sort properly
+        const phaseOrder = { Hook: 1, Fact1: 2, Fact2: 3, Fact3: 4, Wisdom: 5 };
+        atoms.sort((a, b) => (phaseOrder[a.phase] || 99) - (phaseOrder[b.phase] || 99));
+        
         // Map phase names to types
         // Database actually uses: Hook, Fact1, Fact2, Fact3, Wisdom
         // Phase order: Hook (engaging intro) → Q1 → Q2 → Q3 → Wisdom (complete)
@@ -4659,8 +4665,9 @@
         // ═══════════════════════════════════════════════════════════════
         // VISUAL SYSTEM: UPDATE SCENE FOR THIS PHASE
         // This sets background, Kelly pose, props based on phase type
+        // ONLY when no HD video is playing (video replaces all static visuals)
         // ═══════════════════════════════════════════════════════════════
-        if (kellyVisualSystem) {
+        if (kellyVisualSystem && !phase.videoUrl) {
           // Map phase types to visual system phases
           // For questions, we track Q1/Q2/Q3 based on the question index in the lesson
           let visualPhase = 'welcome';
@@ -4682,10 +4689,13 @@
 
         // ═══════════════════════════════════════════════════════════════
         // KELLY PHASE VISUAL (Kelly in educational context)
-        // Load phase-specific image showing Kelly in the lesson environment
+        // Load phase-specific image ONLY when no HD video is available
         // ═══════════════════════════════════════════════════════════════
-        if (kellyAvatar && kellyAvatar.loadPhaseVisual && state.dayNumber) {
-          // Map phase type to phase file name
+        if (phase.videoUrl) {
+          // HD video is present — DON'T load static image (it would override video)
+          console.log('[Learn] HD video present, skipping static phase image');
+        } else if (kellyAvatar && kellyAvatar.loadPhaseVisual && state.dayNumber) {
+          // No HD video — load static image as fallback
           let phaseFile = 'hook';
           if (phase.type === 'question') {
             const questionPhases = state.lesson?.phases?.filter(p => p.type === 'question') || [];
@@ -4699,40 +4709,42 @@
         
         // ═══════════════════════════════════════════════════════════════
         // KELLY EXPRESSION MAPPING (based on phase type) - FALLBACK
-        // Only used when phase visuals are not available
+        // Only used when NO HD video is playing
         // ═══════════════════════════════════════════════════════════════
-        // Use new Kelly Production Assets if available
-        if (window.kellyAssets) {
-          const phaseToState = {
-            welcome: 'hello',
-            hook: 'hello',       // The engaging hook - excited/welcoming
-            question: 'thinking', 
-            wisdom: 'hello',
-            celebrating: 'hello'
-          };
-          const kellyState = phaseToState[phase.type] || 'thinking';
-          window.kellyAssets.setState(kellyState);
-          console.log(`[Learn] Kelly state set to: ${kellyState}`);
-        }
-        
-        // Legacy avatar controller (with safety check)
-        if (kellyAvatar && typeof kellyAvatar.setExpression === 'function') {
-          const phaseToExpression = {
-            welcome: 'curious',
-            hook: 'curious',     // The engaging hook - curious/excited
-            question: 'explaining',
-            wisdom: 'wisdom',
-            celebrating: 'celebrating'
-          };
-          const expression = phaseToExpression[phase.type] || 'curious';
-          try {
-            kellyAvatar.setExpression(expression);
-            if (typeof kellyAvatar.setPhase === 'function') {
-              kellyAvatar.setPhase(phase.type);
+        if (!phase.videoUrl) {
+          // No HD video — use static expressions
+          if (window.kellyAssets) {
+            const phaseToState = {
+              welcome: 'hello',
+              hook: 'hello',       // The engaging hook - excited/welcoming
+              question: 'thinking', 
+              wisdom: 'hello',
+              celebrating: 'hello'
+            };
+            const kellyState = phaseToState[phase.type] || 'thinking';
+            window.kellyAssets.setState(kellyState);
+            console.log(`[Learn] Kelly state set to: ${kellyState}`);
+          }
+          
+          // Legacy avatar controller (with safety check)
+          if (kellyAvatar && typeof kellyAvatar.setExpression === 'function') {
+            const phaseToExpression = {
+              welcome: 'curious',
+              hook: 'curious',     // The engaging hook - curious/excited
+              question: 'explaining',
+              wisdom: 'wisdom',
+              celebrating: 'celebrating'
+            };
+            const expression = phaseToExpression[phase.type] || 'curious';
+            try {
+              kellyAvatar.setExpression(expression);
+              if (typeof kellyAvatar.setPhase === 'function') {
+                kellyAvatar.setPhase(phase.type);
+              }
+              setUnityExpression(expression, 1.0);
+            } catch (e) {
+              console.warn('[Learn] Legacy avatar error:', e.message);
             }
-            setUnityExpression(expression, 1.0);
-          } catch (e) {
-            console.warn('[Learn] Legacy avatar error:', e.message);
           }
         }
 
