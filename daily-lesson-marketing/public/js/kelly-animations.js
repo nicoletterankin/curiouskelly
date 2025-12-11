@@ -8,11 +8,11 @@
 
     // Configuration
     const CONFIG = {
-        snowflakeCount: 25,
-        sparkleTrailEnabled: true,
-        activityFeedEnabled: true,
-        particleCount: 12,
-        isChristmasSeason: true // Toggle for seasonal effects
+        snowflakeCount: 15, // Reduced for calm
+        sparkleTrailEnabled: false, // Too noisy
+        activityFeedEnabled: false, // Sleazy
+        particleCount: 8, // Reduced
+        isChristmasSeason: false // Remove banner
     };
 
     // ========================================
@@ -337,20 +337,20 @@
     function initAll() {
         console.log('✨ Kelly Animation System initializing...');
         
-        // Core animations
-        initSparkleTrail();
+        // Core animations (Subtle only)
+        // initSparkleTrail(); // Disabled
         initSnowfall();
-        initDayCounter();
-        initActivityFeed();
+        // initDayCounter(); // Disabled - "Day X of 365" is sleazy
+        // initActivityFeed(); // Disabled - Fake social proof is sleazy
         initParticles();
         initScrollReveal();
         initSparkleHovers();
         
         // Seasonal
-        initChristmasBanner();
+        // initChristmasBanner(); // Disabled
         
         // Kelly personality
-        initKellyGreeting();
+        // initKellyGreeting(); // Disabled - Popups are annoying
         
         console.log('✨ Kelly Animation System ready!');
     }
