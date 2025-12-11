@@ -511,6 +511,11 @@ class KellyOS {
             day: lesson.day_number,
             topic: lesson.topic,
             universal_truth: lesson.universal_truth,
+            // Video URL for Welcome/Hook
+            welcomeVideoUrl: atoms.find(a => a.phase === 'Hook')?.hd_video_url,
+            // Video URL for Wisdom
+            wisdomVideoUrl: atoms.find(a => a.phase === 'Wisdom')?.hd_video_url,
+            
             // Create a "Universal" variant that applies to all ages for now (until Shards are fully implemented)
             ageVariants: {
               '18-35': {
@@ -523,6 +528,7 @@ class KellyOS {
             interactions: [
               {
                 step: 'teaching', // Maps to Fact1/Q1
+                videoUrl: atoms.find(a => a.phase === 'Fact1')?.hd_video_url,
                 question: atoms.find(a => a.phase === 'Fact1')?.content?.script || 'Ready to learn?',
                 ageAdaptations: {
                   '18-35': {
@@ -536,6 +542,7 @@ class KellyOS {
               },
               {
                 step: 'practice', // Maps to Fact2/Q2
+                videoUrl: atoms.find(a => a.phase === 'Fact2')?.hd_video_url,
                 question: atoms.find(a => a.phase === 'Fact2')?.content?.script || 'Going deeper...',
                  ageAdaptations: {
                   '18-35': {
@@ -722,8 +729,11 @@ class KellyOS {
 
     if (phase === 'welcome') {
       mainText = variant.title;
+      // Pass videoUrl if we have it (from updated fetchDailyLesson)
+      this.setLessonPhase('welcome'); // Trigger video start immediately
+      
       const btn = this.createButton("Let's Begin", () => {
-        this.state.lessonPhase = 'teaching'; // Will map to question_1
+        this.setLessonPhase('teaching'); // Will map to question_1
         this.reloadContentForAge();
         this.playAudio();
       });
@@ -734,6 +744,9 @@ class KellyOS {
       phase === 'question_1' ||
       phase === 'question_2'
     ) {
+      // Ensure we trigger video for this phase
+      this.setLessonPhase(phase);
+      
       // V2 Logic
       if (this.state.currentLesson.core_lesson_structure) {
         const stepKey =
@@ -761,7 +774,7 @@ class KellyOS {
           // Option A
           this.dom.choiceContainer.appendChild(
             this.createButton(examples.option_a, () => {
-              this.state.lessonPhase = stepKey === 'question_1' ? 'practice' : 'wisdom';
+              this.setLessonPhase(stepKey === 'question_1' ? 'practice' : 'wisdom'); // Use setLessonPhase
               this.reloadContentForAge();
             })
           );
@@ -769,7 +782,7 @@ class KellyOS {
           // Option B
           this.dom.choiceContainer.appendChild(
             this.createButton(examples.option_b, () => {
-              this.state.lessonPhase = stepKey === 'question_1' ? 'practice' : 'wisdom';
+              this.setLessonPhase(stepKey === 'question_1' ? 'practice' : 'wisdom'); // Use setLessonPhase
               this.reloadContentForAge();
             })
           );
@@ -782,19 +795,20 @@ class KellyOS {
           mainText = adaptation?.question || interaction.question;
           adaptation?.choices?.forEach(choice => {
             const btn = this.createButton(choice.text, () => {
-              this.state.lessonPhase = choice.nextStep || 'wisdom';
+              this.setLessonPhase(choice.nextStep || 'wisdom'); // Use setLessonPhase
               this.reloadContentForAge();
             });
             this.dom.choiceContainer.appendChild(btn);
           });
         } else {
-          this.state.lessonPhase = 'wisdom';
+          this.setLessonPhase('wisdom');
           this.reloadContentForAge();
           return;
         }
       }
     } else if (phase === 'wisdom') {
       mainText = variant.wisdomMoment;
+      this.setLessonPhase('wisdom'); // Ensure video triggers
       const btn = this.createButton('Finish Lesson', () => this.switchMode('dashboard'));
       this.dom.choiceContainer.appendChild(btn);
     }
@@ -977,11 +991,39 @@ class KellyOS {
   setLessonPhase(phase, choice = null) {
     this.state.lessonPhase = phase;
     
+    // Find video URL for this phase from current lesson data
+    let videoUrl = null;
+    if (this.state.currentLesson && this.state.currentLesson.interactions) {
+        // Map player phase names to Factory names (Canonical Bridge)
+        const factoryPhaseMap = {
+            'welcome': 'Hook',
+            'teaching': 'Fact1',
+            'practice': 'Fact2',
+            'wisdom': 'Wisdom'
+        };
+        const targetPhase = factoryPhaseMap[phase];
+        
+        // Find the interaction/atom that holds this data
+        // Note: In fetchDailyLesson we constructed syntheticDNA.interactions.
+        // We need to store the videoUrl in syntheticDNA or look it up from a raw map.
+        // Let's modify fetchDailyLesson to store it in the interaction object.
+        
+        // For now, let's try to find it in the interaction object if we add it there
+        const interaction = this.state.currentLesson.interactions?.find(i => i.step === phase);
+        if (interaction && interaction.videoUrl) {
+            videoUrl = interaction.videoUrl;
+        } else if (phase === 'welcome' && this.state.currentLesson.welcomeVideoUrl) {
+            videoUrl = this.state.currentLesson.welcomeVideoUrl;
+        } else if (phase === 'wisdom' && this.state.currentLesson.wisdomVideoUrl) {
+            videoUrl = this.state.currentLesson.wisdomVideoUrl;
+        }
+    }
+
     if (this.kellyAvatar) {
-      this.kellyAvatar.setPhase(phase, choice);
+      this.kellyAvatar.setPhase(phase, choice, videoUrl);
     }
     
-    console.log(`[KellyOS] Lesson phase: ${phase}`, { choice });
+    console.log(`[KellyOS] Lesson phase: ${phase}`, { choice, videoUrl });
   }
 
   // Update learner age and sync Kelly avatar

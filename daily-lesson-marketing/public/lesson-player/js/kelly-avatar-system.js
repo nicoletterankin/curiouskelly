@@ -254,6 +254,28 @@ export class KellyAvatarSystem {
       thinkingDots: this.container.querySelector('.thinking-dots'),
       ageShimmer: this.container.querySelector('.age-transition-shimmer')
     };
+
+    // --- VIDEO LAYER INTEGRATION ---
+    // We add a video element dynamically if it doesn't exist
+    this.videoElement = document.createElement('video');
+    this.videoElement.id = 'kelly-avatar-video';
+    this.videoElement.className = 'kelly-avatar-video';
+    this.videoElement.style.position = 'absolute';
+    this.videoElement.style.top = '0';
+    this.videoElement.style.left = '0';
+    this.videoElement.style.width = '100%';
+    this.videoElement.style.height = '100%';
+    this.videoElement.style.objectFit = 'cover';
+    this.videoElement.style.opacity = '0'; // Hidden by default
+    this.videoElement.style.transition = 'opacity 0.5s ease';
+    this.videoElement.muted = true; // Audio handled separately
+    this.videoElement.playsInline = true;
+    
+    // Insert video before the SVG overlay so effects sit on top
+    const imageLayer = this.container.querySelector('.kelly-image-layer');
+    if (imageLayer) {
+        imageLayer.appendChild(this.videoElement);
+    }
   }
   
   setupEventListeners() {
@@ -325,9 +347,10 @@ export class KellyAvatarSystem {
    * Set the current lesson phase
    * @param {string} phase - Phase name (welcome, q1, q2, q3, wisdom)
    * @param {string} choice - User choice (a or b) for reaction phases
+   * @param {string} videoUrl - Optional video URL for this phase
    */
-  async setPhase(phase, choice = null) {
-    console.log(`[KellyAvatar] Phase transition: ${this.currentPhase} → ${phase}`, { choice });
+  async setPhase(phase, choice = null, videoUrl = null) {
+    console.log(`[KellyAvatar] Phase transition: ${this.currentPhase} → ${phase}`, { choice, videoUrl });
     
     // Handle reaction phases
     if (choice && phase.startsWith('q')) {
@@ -344,8 +367,14 @@ export class KellyAvatarSystem {
     this.currentPhase = phase;
     this.elements.wrapper.setAttribute('data-phase', phase);
     
-    // Change pose based on phase
-    await this.setPose(phaseConfig.defaultPose);
+    // VIDEO HANDOFF: If we have a video URL, play it
+    if (videoUrl) {
+       this.playVideo(videoUrl);
+    } else {
+       // Fallback to static pose if no video
+       this.stopVideo();
+       await this.setPose(phaseConfig.defaultPose);
+    }
     
     // Show appropriate effects
     this.showPhaseEffects(phase);
@@ -355,7 +384,10 @@ export class KellyAvatarSystem {
       setTimeout(() => {
         const nextPhase = phaseConfig.transitions[0];
         if (nextPhase) {
-          this.setPhase(nextPhase);
+          // Note: Auto-advance won't know the next video URL without a look-ahead mechanism
+          // Ideally, the 'app.js' controller handles timing via audio-ended events
+          // So we might remove internal auto-advance if app.js is driving
+          // this.setPhase(nextPhase); 
         }
       }, phaseConfig.duration);
     }
@@ -364,6 +396,34 @@ export class KellyAvatarSystem {
     document.dispatchEvent(new CustomEvent('kelly-phase-changed', {
       detail: { phase, pose: phaseConfig.defaultPose }
     }));
+  }
+
+  playVideo(url) {
+    if (!this.videoElement) return;
+    
+    console.log(`[KellyAvatar] Playing video: ${url}`);
+    this.videoElement.src = url;
+    this.videoElement.style.opacity = '1';
+    this.elements.baseImage.style.opacity = '0'; // Hide static image
+    
+    this.videoElement.play().catch(e => console.warn('Video play failed (autoplay policy?):', e));
+    
+    // Ensure loop if it's a loopable phase, or play once?
+    // Usually these are talking heads matching audio
+    this.videoElement.loop = false; 
+    
+    // Sync with audio? The audio is played by 'app.js' via <audio> tag.
+    // Ideally, we should use the video's audio track if it has one (HeyGen does).
+    // BUT 'app.js' is currently designed to play separate MP3s.
+    // For now, let's mute the video and let 'app.js' drive the audio to keep logic simple.
+    this.videoElement.muted = true;
+  }
+
+  stopVideo() {
+    if (!this.videoElement) return;
+    this.videoElement.pause();
+    this.videoElement.style.opacity = '0';
+    this.elements.baseImage.style.opacity = '1'; // Show static image
   }
   
   /**
