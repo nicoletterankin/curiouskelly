@@ -3,9 +3,23 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Curious Kelly Curriculum - 365 days of wonder. See how each lesson adapts to your learning style, language, and mood.">
+
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="Curious Kelly - Learn Something New Every Day">
+    <meta name="description" content="Meet Kelly, your AI-powered teacher. 365 personalized lessons for learners ages 2-102. Emotional intelligence, critical thinking, creativity, and life skills.">
+    <meta name="keywords" content="AI education, personalized learning, digital human teacher, emotional intelligence, kids education, adult learning, daily lessons">
+    <meta name="author" content="Curious Kelly">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="English">
     <title>365 Days of Wonder - Curious Kelly Curriculum</title>
     
+    <!-- Canonical -->
+    <link rel="canonical" href="https://www.curiouskelly.com/curriculum.html">
+
+    <!-- Favicon -->
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
     <!-- Fonts - BULLETPROOF LOADING (fixed 2025-12-10) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
@@ -1150,13 +1164,15 @@
             if (thumbnailManifest) return thumbnailManifest;
             
             try {
-                const response = await fetch('/kelly/thumbnails/manifest.json');
+                // Try production manifest first (has real Kelly thumbnails)
+                const response = await fetch('/assets/kelly/production/thumbnails/manifest.json');
+                if (!response.ok) throw new Error('Manifest not found');
                 thumbnailManifest = await response.json();
                 console.log(`📸 Loaded ${Object.keys(thumbnailManifest.thumbnails).length} Kelly thumbnails from manifest`);
                 return thumbnailManifest;
             } catch (err) {
                 console.warn('⚠️ Could not load thumbnail manifest:', err.message);
-                thumbnailManifest = { basePath: '/kelly/thumbnails/raw/', thumbnails: {} };
+                thumbnailManifest = { basePath: '/assets/kelly/production/thumbnails/', thumbnails: {} };
                 return thumbnailManifest;
             }
         }
