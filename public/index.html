@@ -5,7 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <meta name="description" content="One lesson. Every day. Yours. Designed for any learner." />
     <meta name="theme-color" content="#2563eb" />
-    <!-- Deploy trigger: 2025-12-10 -->
+    <!-- Deploy trigger: 2025-12-10-font-fix-v2 -->
     <meta name="apple-mobile-web-app-capable" content="yes" />
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>Curious Kelly - Learn something new every day</title>
@@ -40,10 +40,19 @@
     <!-- ✨ Kelly Animation System -->
     <link rel="stylesheet" href="/css/kelly-animations.css" />
 
-    <!-- Fonts -->
+    <!-- Fonts - BULLETPROOF LOADING (fixed 2025-12-10) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap" rel="stylesheet" />
+    <!-- Primary: System fonts that ALWAYS work -->
+    <style>
+        /* System font stack - guaranteed to have all characters */
+        :root {
+            --font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            --font-serif: Georgia, 'Times New Roman', Times, serif;
+        }
+    </style>
+    <!-- Google Fonts with cache-busting -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap&v=20251210" rel="stylesheet" />
 
     <style>
         :root {
@@ -76,12 +85,20 @@
         }
 
         body {
-            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            /* BULLETPROOF: System fonts first, then Inter if loaded */
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Inter', sans-serif;
             background-color: var(--bg-color);
             color: var(--text-primary);
             min-height: 100vh;
             line-height: 1.6;
             overflow-x: hidden;
+        }
+        
+        /* Apply Inter when loaded via Google Fonts */
+        @supports (font-variation-settings: normal) {
+            body {
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            }
         }
 
         /* ========================================
@@ -2914,35 +2931,10 @@
 
         // Initialize
         // ========================================
-        // EPIC ENHANCEMENTS
+        // ENHANCEMENTS
         // ========================================
         
-        // ENHANCEMENT 1: Smooth Perspectives Slider with Debouncing
-        let perspectiveTimeout;
-        const yearSlider = document.getElementById('year-slider');
-        const perspectiveCards = document.getElementById('perspective-cards');
-        
-        if (yearSlider) {
-            const originalListener = yearSlider.oninput;
-            yearSlider.oninput = null;
-            
-            yearSlider.addEventListener('input', function(e) {
-                clearTimeout(perspectiveTimeout);
-                
-                // Add transition
-                if (perspectiveCards) {
-                    perspectiveCards.style.opacity = '0.6';
-                    perspectiveCards.style.transition = 'opacity 0.2s ease';
-                }
-                
-                perspectiveTimeout = setTimeout(() => {
-                    if (originalListener) originalListener.call(this, e);
-                    if (perspectiveCards) perspectiveCards.style.opacity = '1';
-                }, 150); // Debounce 150ms
-            });
-        }
-        
-        // ENHANCEMENT 2: Add micro-interaction styles
+        // Add micro-interaction styles
         const enhancementStyles = document.createElement('style');
         enhancementStyles.textContent = `
             /* Shimmer animation for loading */

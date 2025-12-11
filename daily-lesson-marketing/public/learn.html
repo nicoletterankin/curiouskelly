@@ -66,12 +66,20 @@
 
     <!-- Brand CSS -->
     <link rel="stylesheet" href="/css/brand-colors.css" />
+    <link rel="stylesheet" href="/css/components.css" />
 
-    <!-- Fonts -->
+    <!-- Fonts - BULLETPROOF LOADING (fixed 2025-12-10) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <style>
+      /* System font fallback - guaranteed to work */
+      :root {
+        --font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        --font-serif: Georgia, 'Times New Roman', Times, serif;
+      }
+    </style>
     <link
-      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:wght@400;500;600&display=swap"
+      href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=Fraunces:wght@400;500;600&display=swap&v=20251210"
       rel="stylesheet"
     />
 
@@ -88,7 +96,7 @@
     <script src="/js/kelly-production-assets.js"></script>
     
     <!-- Chat Overlay (YouTube Live style) -->
-    <script src="/js/chat-overlay.js"></script>
+    <script src="/js/chat-overlay.js?v=2"></script>
 
     <!-- Golden Lesson Data -->
     <script src="/js/golden-lesson-citizenship.js"></script>
@@ -264,7 +272,7 @@
       .unity-progress-bar {
         height: 100%;
         width: 0%;
-        background: linear-gradient(90deg, #2563eb 0%, #7c3aed 100%);
+        background: #2563eb;
         transition: width 0.3s ease;
       }
 
@@ -372,73 +380,83 @@
         background: rgba(255, 255, 255, 0.8);
       }
 
-      /* ═══════════════════════════════════════════════════════════════════
-           RIGHT SIDE ACTIONS - TikTok-style stacked buttons
-           ═══════════════════════════════════════════════════════════════════ */
-      .action-buttons {
+      /* === RIGHT RAIL - Command Center === */
+      .right-rail {
         position: absolute;
         right: 12px;
-        bottom: calc(180px + var(--safe-bottom));
+        top: 50%;
+        transform: translateY(-50%);
         display: flex;
         flex-direction: column;
         align-items: center;
-        gap: var(--action-gap);
+        gap: 16px;
         z-index: 100;
+        pointer-events: auto;
       }
 
-      .action-btn {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 4px;
-        background: none;
-        border: none;
-        cursor: pointer;
-        -webkit-tap-highlight-color: transparent;
-      }
-
-      .action-btn .icon-wrap {
-        width: var(--action-btn-size);
-        height: var(--action-btn-size);
+      .rail-btn {
+        width: 44px;
+        height: 44px;
         border-radius: 50%;
-        background: var(--tiktok-glass);
-        backdrop-filter: blur(8px);
+        background: rgba(0, 0, 0, 0.4);
+        backdrop-filter: blur(12px);
+        -webkit-backdrop-filter: blur(12px);
+        border: 1px solid rgba(255, 255, 255, 0.1);
         display: flex;
         align-items: center;
         justify-content: center;
-        font-size: var(--action-icon-size);
+        color: white;
+        cursor: pointer;
+        position: relative;
         transition: all 0.2s ease;
       }
 
-      .action-btn:active .icon-wrap {
-        transform: scale(0.9);
+      .rail-btn:hover {
+        background: rgba(255, 255, 255, 0.1);
+        transform: scale(1.05);
       }
 
-      .action-btn .label {
-        font-size: 10px;
-        color: var(--tiktok-text);
-        font-weight: 500;
+      .rail-btn:active {
+        transform: scale(0.95);
       }
 
-      .action-btn .badge {
+      .rail-badge {
         position: absolute;
         top: -4px;
         right: -4px;
-        min-width: 18px;
-        height: 18px;
-        background: var(--tiktok-accent);
-        border-radius: 9px;
+        background: var(--tiktok-accent); /* Blue */
+        color: white;
         font-size: 10px;
         font-weight: 700;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 0 4px;
+        padding: 2px 5px;
+        border-radius: 10px;
+        min-width: 16px;
+        text-align: center;
       }
 
-      .action-btn .icon-wrap {
-        position: relative;
+      .rail-spacer {
+        height: 12px;
       }
+
+      /* Options Container */
+      .options-container {
+        position: absolute;
+        bottom: 140px; /* Above chat */
+        right: 70px; /* Left of rail */
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+        z-index: 95;
+        align-items: flex-end;
+        pointer-events: none;
+      }
+      
+      .options-container > * {
+        pointer-events: auto;
+      }
+
+      /* REMOVED .action-buttons style - replaced by .right-rail */
+
 
       /* SVG Icon Styling - Clean white icons */
       .action-btn svg,
@@ -506,10 +524,15 @@
       .bottom-overlay {
         position: absolute;
         left: 0;
-        right: 70px; /* Space for action buttons */
-        bottom: calc(60px + var(--safe-bottom));
+        right: 180px; /* Increased to clear Right Rail safely (was 70px) */
+        bottom: calc(120px + var(--safe-bottom)); /* Moved up to clear chat area */
         padding: 0 16px;
         z-index: 90;
+        pointer-events: none;
+      }
+      
+      .bottom-overlay > * {
+        pointer-events: auto;
       }
 
       /* Topic header (like @username) */
@@ -748,7 +771,7 @@
       .nav-item.learn .nav-icon {
         width: 48px;
         height: 30px;
-        background: linear-gradient(135deg, var(--tiktok-accent), #8b5cf6);
+        background: var(--tiktok-accent);
         border-radius: 8px;
         box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
         display: flex;
@@ -1203,7 +1226,7 @@
       .age-value {
         font-size: 48px;
         font-weight: 800;
-        background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+        background: #3b82f6;
         -webkit-background-clip: text;
         -webkit-text-fill-color: transparent;
         background-clip: text;
@@ -1224,7 +1247,7 @@
         left: 0;
         top: 0;
         bottom: 0;
-        background: linear-gradient(90deg, #3b82f6, #8b5cf6);
+        background: #3b82f6;
         border-radius: 16px;
         transition: width 0.1s ease;
       }
@@ -1784,13 +1807,13 @@
       /* === CAPTION BAR - TV Style Karaoke === */
       .caption-bar {
         position: absolute;
-        bottom: calc(85px + var(--safe-bottom));
+        bottom: calc(180px + var(--safe-bottom)); /* Moved up to clear chat area */
         left: 60px;
-        right: 165px;
+        right: 180px; /* Increased right margin to clear Right Rail safely */
         z-index: 90;
         background: rgba(0, 0, 0, 0.75);
-        backdrop-filter: blur(12px);
         -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(12px);
         border-radius: 14px;
         padding: 14px 18px;
         opacity: 0;
@@ -1966,72 +1989,7 @@
         }
       }
       
-      /* === TALK TO KELLY BUTTON - Main Interaction === */
-      .talk-to-kelly-btn {
-        display: flex;
-        flex-direction: column;
-        align-items: center;
-        gap: 8px;
-        padding: 16px 20px;
-        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
-        border: none;
-        border-radius: 20px;
-        cursor: pointer;
-        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-        box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4);
-        margin-bottom: 12px;
-      }
-      
-      .talk-to-kelly-btn:hover {
-        transform: scale(1.03);
-        box-shadow: 0 6px 28px rgba(59, 130, 246, 0.5);
-      }
-      
-      .talk-to-kelly-btn:active {
-        transform: scale(0.98);
-      }
-      
-      .talk-btn-icon {
-        width: 48px;
-        height: 48px;
-        background: rgba(255, 255, 255, 0.2);
-        border-radius: 50%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-      }
-      
-      .talk-btn-icon svg {
-        width: 28px;
-        height: 28px;
-        color: #fff;
-      }
-      
-      .talk-btn-label {
-        font-size: 15px;
-        font-weight: 600;
-        color: #fff;
-      }
-      
-      .talk-btn-hint {
-        font-size: 11px;
-        color: rgba(255, 255, 255, 0.7);
-        text-align: center;
-      }
-      
-      /* Pulse animation when Kelly is listening */
-      .talk-to-kelly-btn.listening {
-        animation: talkPulse 1.5s ease-in-out infinite;
-      }
-      
-      .talk-to-kelly-btn.listening .talk-btn-icon {
-        background: rgba(255, 255, 255, 0.4);
-      }
-      
-      @keyframes talkPulse {
-        0%, 100% { box-shadow: 0 4px 20px rgba(59, 130, 246, 0.4); }
-        50% { box-shadow: 0 4px 30px rgba(139, 92, 246, 0.6); }
-      }
+      /* Removed .talk-to-kelly-btn styling - integrated into .rail-btn */
       
       /* === BOTTOM CHAT AREA === */
       .bottom-chat-area {
@@ -2042,9 +2000,14 @@
         display: flex;
         flex-direction: column;
         padding: 0 12px calc(var(--safe-bottom, 20px) + 8px);
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.85) 0%, rgba(0, 0, 0, 0.6) 60%, transparent 100%);
-        z-index: 90;
+        background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 60%, transparent 100%);
+        z-index: 200;
         max-height: 35vh;
+        pointer-events: none; /* Let clicks pass through empty areas */
+      }
+
+      .bottom-chat-area > * {
+        pointer-events: auto; /* Re-enable clicks on content */
       }
       
       .chat-messages-container {
@@ -2139,7 +2102,7 @@
       .chat-send-btn {
         width: 44px;
         height: 44px;
-        background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%);
+        background: #3b82f6;
         border: none;
         border-radius: 50%;
         display: flex;
@@ -2273,7 +2236,7 @@
       .search-empty p { color: rgba(255,255,255,0.5); margin-bottom: 24px; }
       .search-generate-btn {
         padding: 14px 28px;
-        background: linear-gradient(135deg, #8b5cf6, #6366f1);
+        background: #3b82f6;
         border: none;
         border-radius: 25px;
         color: white;
@@ -2448,7 +2411,7 @@
       }
 
       .phase-nav-vertical .phase-btn.active {
-        background: linear-gradient(135deg, var(--tiktok-accent), #7c3aed);
+        background: var(--tiktok-accent);
         color: white;
         box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
       }
@@ -3040,108 +3003,8 @@
         </div>
       </div>
 
-      <!-- LEFT RAIL - Navigation (stacked from bottom) -->
-      <div class="left-rail" id="left-rail">
-        <button class="rail-btn" id="btn-search" aria-label="Search">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-        </button>
-        
-        <!-- Home button moved to top-header with Kelly face icon -->
-        
-        <a href="/calendar.html" class="rail-btn" aria-label="Calendar">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
-            <line x1="16" y1="2" x2="16" y2="6"></line>
-            <line x1="8" y1="2" x2="8" y2="6"></line>
-            <line x1="3" y1="10" x2="21" y2="10"></line>
-          </svg>
-        </a>
-        
-        <div class="rail-spacer"></div>
-        
-        <button class="rail-btn" id="btn-age" aria-label="Age">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
-          <span class="rail-badge" id="badge-age">18</span>
-        </button>
-        
-        <button class="rail-btn" id="btn-language" aria-label="Language">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <line x1="2" y1="12" x2="22" y2="12"></line>
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
-          </svg>
-          <span class="rail-badge" id="badge-language">EN</span>
-        </button>
-        
-        <button class="rail-btn" id="btn-tone" aria-label="Tone">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="10"></circle>
-            <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
-            <line x1="9" y1="9" x2="9.01" y2="9"></line>
-            <line x1="15" y1="9" x2="15.01" y2="9"></line>
-          </svg>
-          <span class="rail-badge" id="badge-tone">C</span>
-        </button>
-        
-        <div class="rail-spacer"></div>
-        
-        <a href="/me.html" class="rail-btn" aria-label="Me">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-            <circle cx="12" cy="7" r="4"></circle>
-          </svg>
-        </a>
-        
-        <a href="/settings.html" class="rail-btn" aria-label="Settings">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-          </svg>
-        </a>
-        
-        <button class="rail-btn" id="btn-commons" aria-label="Learner Commons">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
-            <circle cx="9" cy="7" r="4"></circle>
-            <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
-            <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
-          </svg>
-          <span class="rail-badge" id="badge-commons">🗳️</span>
-        </button>
-        
-        <div class="rail-flex"></div>
-        
-        <button class="rail-btn" id="btn-mode" aria-label="Mode">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
-            <polyline points="17 2 12 7 7 2"></polyline>
-          </svg>
-          <span class="rail-badge" id="badge-mode">2D</span>
-        </button>
-        
-        <button class="rail-btn" id="btn-share" aria-label="Share">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <circle cx="18" cy="5" r="3"></circle>
-            <circle cx="6" cy="12" r="3"></circle>
-            <circle cx="18" cy="19" r="3"></circle>
-            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
-            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
-          </svg>
-        </button>
-        
-        <button class="rail-btn" id="btn-sound" aria-label="Sound">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
-            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
-          </svg>
-        </button>
-      </div>
+      <!-- LEFT RAIL - REMOVED per redesign -->
+      <!-- All controls moved to Right Rail -->
 
       <!-- ═══════════════════════════════════════════════════════════════
            SETTINGS UI COMPONENTS
@@ -3254,21 +3117,103 @@
         </div>
       </div>
 
-      <!-- RIGHT RAIL - Talk Button + Options -->
+      <!-- RIGHT RAIL - Command Center (Navigation, Personalization, Tools) -->
       <div class="right-rail" id="right-rail">
-        <!-- TALK TO KELLY - Main Interaction -->
-        <button class="talk-to-kelly-btn" id="talk-to-kelly-btn" aria-label="Talk to Kelly">
-          <div class="talk-btn-icon">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <path d="M12 14c1.66 0 3-1.34 3-3V5c0-1.66-1.34-3-3-3S9 3.34 9 5v6c0 1.66 1.34 3 3 3z"/>
-              <path d="M17 11c0 2.76-2.24 5-5 5s-5-2.24-5-5H5c0 3.53 2.61 6.43 6 6.92V21h2v-3.08c3.39-.49 6-3.39 6-6.92h-2z"/>
-            </svg>
-          </div>
-          <span class="talk-btn-label">Talk to Kelly</span>
-          <span class="talk-btn-hint">Ask anything about today's lesson</span>
+        
+        <!-- Navigation Group -->
+        <button class="rail-btn" id="btn-search" aria-label="Search" data-popover="popover-search">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="11" cy="11" r="8"></circle>
+            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+          </svg>
         </button>
         
-        <!-- Options -->
+        <a href="/calendar.html" class="rail-btn" aria-label="Calendar">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+            <line x1="16" y1="2" x2="16" y2="6"></line>
+            <line x1="8" y1="2" x2="8" y2="6"></line>
+            <line x1="3" y1="10" x2="21" y2="10"></line>
+          </svg>
+        </a>
+
+        <div class="rail-spacer"></div>
+
+        <!-- Personalization Group -->
+        <button class="rail-btn" id="btn-age" aria-label="Age" data-popover="popover-age">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span class="rail-badge" id="badge-age">18</span>
+        </button>
+        
+        <button class="rail-btn" id="btn-language" aria-label="Language" data-popover="popover-language">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <line x1="2" y1="12" x2="22" y2="12"></line>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+          </svg>
+          <span class="rail-badge" id="badge-language">EN</span>
+        </button>
+        
+        <button class="rail-btn" id="btn-tone" aria-label="Tone" data-popover="popover-tone">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="10"></circle>
+            <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
+            <line x1="9" y1="9" x2="9.01" y2="9"></line>
+            <line x1="15" y1="9" x2="15.01" y2="9"></line>
+          </svg>
+          <span class="rail-badge" id="badge-tone">C</span>
+        </button>
+
+        <button class="rail-btn" id="btn-mode" aria-label="Mode" data-popover="popover-mode">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
+            <polyline points="17 2 12 7 7 2"></polyline>
+          </svg>
+          <span class="rail-badge" id="badge-mode">2D</span>
+        </button>
+
+        <div class="rail-spacer"></div>
+
+        <!-- Tools Group -->
+        <button class="rail-btn" id="talk-to-kelly-btn" aria-label="Talk to Kelly">
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
+            <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
+            <line x1="12" y1="19" x2="12" y2="23"></line>
+            <line x1="8" y1="23" x2="16" y2="23"></line>
+          </svg>
+        </button>
+
+        <button class="rail-btn" id="btn-share" aria-label="Share" data-popover="popover-share">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="18" cy="5" r="3"></circle>
+            <circle cx="6" cy="12" r="3"></circle>
+            <circle cx="18" cy="19" r="3"></circle>
+            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"></line>
+            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"></line>
+          </svg>
+        </button>
+
+        <button class="rail-btn" id="btn-sound" aria-label="Sound">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
+            <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
+          </svg>
+        </button>
+
+        <a href="/settings.html" class="rail-btn" aria-label="Settings">
+          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <circle cx="12" cy="12" r="3"></circle>
+            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+          </svg>
+        </a>
+      </div>
+
+      <!-- Options Container (Moved out of Rail) -->
+      <div class="options-container" id="options-container">
         <div class="option-card" id="option-a" data-letter="A" style="display: none;">
           <span class="option-letter">A</span>
           <span class="option-text" id="option-a-text"></span>
@@ -3569,6 +3514,101 @@
       </div>
     </div>
 
+    <!-- Search Popover -->
+    <div class="popover" id="popover-search" data-placement="left">
+      <div class="popover-arrow"></div>
+      <div class="popover-header">Search Lessons</div>
+      <div style="padding: 8px;">
+        <input type="text" placeholder="Search topics..." style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: white;">
+      </div>
+    </div>
+
+    <!-- Calendar Popover -->
+    <div class="popover" id="popover-calendar" data-placement="left">
+      <div class="popover-arrow"></div>
+      <div class="popover-header">Calendar</div>
+      <div class="popover-option" onclick="window.location.href='/calendar.html'">
+        <span class="popover-option-icon">📅</span>
+        <div class="popover-option-info">
+          <div class="popover-option-name">View Full Calendar</div>
+        </div>
+      </div>
+      <div class="popover-option" onclick="window.location.href='/learn.html'">
+        <span class="popover-option-icon">🎯</span>
+        <div class="popover-option-info">
+          <div class="popover-option-name">Go to Today</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Mode Popover -->
+    <div class="popover" id="popover-mode" data-placement="left">
+      <div class="popover-arrow"></div>
+      <div class="popover-header">View Mode</div>
+      <div class="popover-option selected" data-mode="2D">
+        <span class="popover-option-icon">📷</span>
+        <div class="popover-option-info">
+          <div class="popover-option-name">2D Avatar</div>
+          <div class="popover-option-desc">Fast & Classic</div>
+        </div>
+        <span class="popover-option-check">✓</span>
+      </div>
+      <div class="popover-option" data-mode="3D">
+        <span class="popover-option-icon">🎮</span>
+        <div class="popover-option-info">
+          <div class="popover-option-name">3D Avatar</div>
+          <div class="popover-option-desc">Immersive</div>
+        </div>
+        <span class="popover-option-check">✓</span>
+      </div>
+    </div>
+
+    <!-- Talk Popover -->
+    <div class="popover" id="popover-talk" data-placement="left">
+      <div class="popover-arrow"></div>
+      <div class="popover-header">Talk to Kelly</div>
+      <div style="padding: 12px; text-align: center;">
+        <p style="font-size: 13px; color: #aaa; margin-bottom: 12px;">Microphone active</p>
+        <div style="width: 40px; height: 40px; background: #22c55e; border-radius: 50%; margin: 0 auto; animation: pulse 1.5s infinite;"></div>
+      </div>
+    </div>
+
+    <!-- Share Popover -->
+    <div class="popover" id="popover-share" data-placement="left">
+      <div class="popover-arrow"></div>
+      <div class="popover-header">Share</div>
+      <div class="popover-option">
+        <span class="popover-option-icon">🔗</span>
+        <div class="popover-option-info">
+          <div class="popover-option-name">Copy Link</div>
+        </div>
+      </div>
+      <div class="popover-option">
+        <span class="popover-option-icon">🐦</span>
+        <div class="popover-option-info">
+          <div class="popover-option-name">Twitter / X</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Settings Popover -->
+    <div class="popover" id="popover-settings" data-placement="left">
+      <div class="popover-arrow"></div>
+      <div class="popover-header">Settings</div>
+      <div class="popover-option" onclick="window.location.href='/me.html'">
+        <span class="popover-option-icon">👤</span>
+        <div class="popover-option-info">
+          <div class="popover-option-name">My Profile</div>
+        </div>
+      </div>
+      <div class="popover-option" onclick="window.location.href='/settings.html'">
+        <span class="popover-option-icon">⚙️</span>
+        <div class="popover-option-info">
+          <div class="popover-option-name">All Settings</div>
+        </div>
+      </div>
+    </div>
+
     <!-- Toast Container -->
     <div class="toast-container" id="toast-container"></div>
 
@@ -3762,9 +3802,13 @@
       // Database has: The Scientist, The Survivor, The Explorer, etc.
       // ═══════════════════════════════════════════════════════════════════
       const TONE_TO_ARCHETYPE = {
-        curious: 'The Scientist', // Analytical, evidence-based
-        playful: 'The Explorer',  // Adventurous, discovery-focused
-        serious: 'The Survivor'   // Practical, real-world application
+        curious: 'The Scientist',   // ✅ HAS VIDEOS - Analytical, evidence-based
+        playful: 'The Explorer',    // ✅ HAS VIDEOS - Adventurous, discovery-focused
+        serious: 'The Rebel',       // ✅ HAS VIDEOS - Bold, practical (changed from Survivor)
+        friendly: 'The Explorer',   // ✅ HAS VIDEOS - Warm, discovery-focused
+        wise: 'The Scientist',      // ✅ HAS VIDEOS - Deep understanding
+        coach: 'The Rebel',         // ✅ HAS VIDEOS - Motivating, action-oriented
+        scholar: 'The Scientist'    // ✅ HAS VIDEOS - Academic, evidence-based
       };
 
       // Fallback archetypes if primary not found
@@ -3971,7 +4015,7 @@
       // ═══════════════════════════════════════════════════════════════════
       // SPEED: Lesson Cache for instant loads
       // ═══════════════════════════════════════════════════════════════════
-      const LESSON_CACHE_KEY = 'ck_lesson_cache';
+      const LESSON_CACHE_KEY = 'ck_lesson_cache_v2_dec10';
       const LESSON_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
       
       // Clear cache if ?clearcache=1 in URL
@@ -4195,6 +4239,11 @@
       // BUILD LESSON FROM ATOMS
       // ═══════════════════════════════════════════════════════════════════
       function buildLessonFromAtoms(coreLesson, atoms) {
+        // PHASE ORDER: Hook → Fact1 → Fact2 → Fact3 → Wisdom
+        // Database orders alphabetically, so we need to sort properly
+        const phaseOrder = { Hook: 1, Fact1: 2, Fact2: 3, Fact3: 4, Wisdom: 5 };
+        atoms.sort((a, b) => (phaseOrder[a.phase] || 99) - (phaseOrder[b.phase] || 99));
+        
         // Map phase names to types
         // Database actually uses: Hook, Fact1, Fact2, Fact3, Wisdom
         // Phase order: Hook (engaging intro) → Q1 → Q2 → Q3 → Wisdom (complete)
@@ -4655,8 +4704,9 @@
         // ═══════════════════════════════════════════════════════════════
         // VISUAL SYSTEM: UPDATE SCENE FOR THIS PHASE
         // This sets background, Kelly pose, props based on phase type
+        // ONLY when no HD video is playing (video replaces all static visuals)
         // ═══════════════════════════════════════════════════════════════
-        if (kellyVisualSystem) {
+        if (kellyVisualSystem && !phase.videoUrl) {
           // Map phase types to visual system phases
           // For questions, we track Q1/Q2/Q3 based on the question index in the lesson
           let visualPhase = 'welcome';
@@ -4678,10 +4728,13 @@
 
         // ═══════════════════════════════════════════════════════════════
         // KELLY PHASE VISUAL (Kelly in educational context)
-        // Load phase-specific image showing Kelly in the lesson environment
+        // Load phase-specific image ONLY when no HD video is available
         // ═══════════════════════════════════════════════════════════════
-        if (kellyAvatar && kellyAvatar.loadPhaseVisual && state.dayNumber) {
-          // Map phase type to phase file name
+        if (phase.videoUrl) {
+          // HD video is present — DON'T load static image (it would override video)
+          console.log('[Learn] HD video present, skipping static phase image');
+        } else if (kellyAvatar && kellyAvatar.loadPhaseVisual && state.dayNumber) {
+          // No HD video — load static image as fallback
           let phaseFile = 'hook';
           if (phase.type === 'question') {
             const questionPhases = state.lesson?.phases?.filter(p => p.type === 'question') || [];
@@ -4695,40 +4748,42 @@
         
         // ═══════════════════════════════════════════════════════════════
         // KELLY EXPRESSION MAPPING (based on phase type) - FALLBACK
-        // Only used when phase visuals are not available
+        // Only used when NO HD video is playing
         // ═══════════════════════════════════════════════════════════════
-        // Use new Kelly Production Assets if available
-        if (window.kellyAssets) {
-          const phaseToState = {
-            welcome: 'hello',
-            hook: 'hello',       // The engaging hook - excited/welcoming
-            question: 'thinking', 
-            wisdom: 'hello',
-            celebrating: 'hello'
-          };
-          const kellyState = phaseToState[phase.type] || 'thinking';
-          window.kellyAssets.setState(kellyState);
-          console.log(`[Learn] Kelly state set to: ${kellyState}`);
-        }
-        
-        // Legacy avatar controller (with safety check)
-        if (kellyAvatar && typeof kellyAvatar.setExpression === 'function') {
-          const phaseToExpression = {
-            welcome: 'curious',
-            hook: 'curious',     // The engaging hook - curious/excited
-            question: 'explaining',
-            wisdom: 'wisdom',
-            celebrating: 'celebrating'
-          };
-          const expression = phaseToExpression[phase.type] || 'curious';
-          try {
-            kellyAvatar.setExpression(expression);
-            if (typeof kellyAvatar.setPhase === 'function') {
-              kellyAvatar.setPhase(phase.type);
+        if (!phase.videoUrl) {
+          // No HD video — use static expressions
+          if (window.kellyAssets) {
+            const phaseToState = {
+              welcome: 'hello',
+              hook: 'hello',       // The engaging hook - excited/welcoming
+              question: 'thinking', 
+              wisdom: 'hello',
+              celebrating: 'hello'
+            };
+            const kellyState = phaseToState[phase.type] || 'thinking';
+            window.kellyAssets.setState(kellyState);
+            console.log(`[Learn] Kelly state set to: ${kellyState}`);
+          }
+          
+          // Legacy avatar controller (with safety check)
+          if (kellyAvatar && typeof kellyAvatar.setExpression === 'function') {
+            const phaseToExpression = {
+              welcome: 'curious',
+              hook: 'curious',     // The engaging hook - curious/excited
+              question: 'explaining',
+              wisdom: 'wisdom',
+              celebrating: 'celebrating'
+            };
+            const expression = phaseToExpression[phase.type] || 'curious';
+            try {
+              kellyAvatar.setExpression(expression);
+              if (typeof kellyAvatar.setPhase === 'function') {
+                kellyAvatar.setPhase(phase.type);
+              }
+              setUnityExpression(expression, 1.0);
+            } catch (e) {
+              console.warn('[Learn] Legacy avatar error:', e.message);
             }
-            setUnityExpression(expression, 1.0);
-          } catch (e) {
-            console.warn('[Learn] Legacy avatar error:', e.message);
           }
         }
 
@@ -5082,7 +5137,7 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
-            z-index: 15;
+            z-index: 50;
             opacity: 0;
             transition: opacity 0.3s ease;
             pointer-events: none;
@@ -5100,7 +5155,17 @@
         return goldenVideoElement;
       }
       
+      // Track currently playing video to prevent double-play
+      let currentPlayingVideoUrl = null;
+      
       function playGoldenVideo(videoUrl, onComplete) {
+        // Guard: Don't restart the same video that's already playing
+        if (currentPlayingVideoUrl === videoUrl) {
+          console.log(`[Golden] ⏭️ Video already playing, skipping duplicate call`);
+          return;
+        }
+        currentPlayingVideoUrl = videoUrl;
+        
         const video = initGoldenVideoPlayer();
         
         // Hide 2D avatar when video plays
@@ -5121,6 +5186,8 @@
         // Handle video events
         video.onended = () => {
           console.log('[Golden] Video ended');
+          // Reset tracking so next phase video can play
+          currentPlayingVideoUrl = null;
           // Fade out video
           video.style.opacity = '0';
           // Show 2D avatar again
@@ -5133,6 +5200,8 @@
         
         video.onerror = (e) => {
           console.error('[Golden] Video error:', e);
+          // Reset tracking so next phase can try
+          currentPlayingVideoUrl = null;
           // Fallback: show avatar and continue
           video.style.opacity = '0';
           if (avatar2D) {
@@ -5185,7 +5254,19 @@
         
         state.currentPhase++;
         if (state.currentPhase <= state.lesson.phases.length) {
-          renderPhase(state.lesson.phases[state.currentPhase - 1]);
+          const phase = state.lesson.phases[state.currentPhase - 1];
+          
+          // ═══════════════════════════════════════════════════════════════════
+          // CRITICAL: Play video on EVERY phase advance
+          // ═══════════════════════════════════════════════════════════════════
+          if (phase && phase.videoUrl) {
+            console.log(`[Golden] 🎬 Phase changed, playing: ${phase.videoUrl}`);
+            playGoldenVideo(phase.videoUrl, () => {
+              console.log('[Golden] ✅ Video finished for phase:', phase.type);
+            });
+          }
+          
+          renderPhase(phase);
         }
       }
 
@@ -6388,9 +6469,24 @@
         OptionsSystem.resetAll();
         OptionsSystem.hideAll();
 
-        // Update state and render
+        // Update state
         state.currentPhase = targetPhase;
-        renderPhase(state.lesson.phases[targetPhase - 1]);
+        
+        // Get the phase object
+        const phase = state.lesson.phases[targetPhase - 1];
+        
+        // ═══════════════════════════════════════════════════════════════════
+        // CRITICAL: Play video on EVERY phase navigation
+        // ═══════════════════════════════════════════════════════════════════
+        if (phase && phase.videoUrl) {
+          console.log(`[Golden] 🎬 Phase changed, playing: ${phase.videoUrl}`);
+          playGoldenVideo(phase.videoUrl, () => {
+            console.log('[Golden] ✅ Video finished for phase:', phase.type);
+          });
+        }
+        
+        // Render phase content (this handles captions, options, etc.)
+        renderPhase(phase);
         
         // Update navigation
         updatePhaseNavV2();
@@ -7064,6 +7160,34 @@
           grid-template-columns: 1fr;
         }
       }
+      /* === MOBILE RESPONSIVE TWEAKS === */
+      @media (max-width: 768px) {
+        .right-rail {
+          gap: 12px;
+          right: 8px;
+        }
+        
+        .rail-btn {
+          width: 40px;
+          height: 40px;
+        }
+        
+        .rail-btn svg {
+          width: 20px;
+          height: 20px;
+        }
+        
+        /* Hide spacer to save space */
+        .rail-spacer {
+          height: 6px;
+        }
+        
+        /* Ensure bottom options don't overlap chat */
+        .options-container {
+          bottom: 120px;
+          right: 60px;
+        }
+      }
     </style>
 
     <script>
@@ -7445,6 +7569,35 @@
       } else {
         LearnerCommons.init();
       }
+      // ═══════════════════════════════════════════════════════════════════
+      // POPOVER BINDING (Universal)
+      // ═══════════════════════════════════════════════════════════════════
+      document.addEventListener('DOMContentLoaded', () => {
+        document.querySelectorAll('[data-popover]').forEach(btn => {
+          btn.addEventListener('click', (e) => {
+            e.stopPropagation();
+            const rawId = btn.getAttribute('data-popover');
+            const popoverId = rawId.replace('popover-', '');
+            
+            // Close if already open
+            const popover = document.getElementById(rawId);
+            if (popover && popover.classList.contains('active')) {
+              closePopover();
+            } else {
+              // Close others first
+              closePopover();
+              openPopover(popoverId, btn);
+            }
+          });
+        });
+        
+        // Close on click outside
+        document.addEventListener('click', (e) => {
+          if (!e.target.closest('.popover') && !e.target.closest('[data-popover]')) {
+            closePopover();
+          }
+        });
+      });
     </script>
   </body>
 </html>

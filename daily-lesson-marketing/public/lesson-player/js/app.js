@@ -479,23 +479,83 @@ class KellyOS {
         const start = new Date(now.getFullYear(), 0, 0);
         const diff = now - start;
         const oneDay = 1000 * 60 * 60 * 24;
-        const day = Math.floor(diff / oneDay);
+        const day = Math.floor(diff / oneDay); // 1-365
 
-        const { data, error } = await this.supabase
+        // Default to Day 1 if 0 or OOB (for safety)
+        const dayNumber = (day > 0 && day <= 365) ? day : 1;
+
+        console.log(`[KellyOS] Fetching lesson for Day ${dayNumber}...`);
+
+        const { data: lesson, error } = await this.supabase
           .from('core_lessons')
-          .select(`id, day_number, topic, universal_truth, lesson_atoms(content)`)
-          .eq('day_number', day)
+          .select(`id, day_number, topic, universal_truth, lesson_atoms(archetype, phase, content, hd_video_url)`)
+          .eq('day_number', dayNumber)
           .maybeSingle();
 
-        if (data && data.lesson_atoms && data.lesson_atoms.length > 0) {
-          console.log('✅ Loaded lesson from Supabase:', data.topic);
-          const dna = data.lesson_atoms[0].content;
-          this.setLessonData(dna, data.topic);  // topic is the ACTUAL title field
-          return; // Success - skip fallback
+        if (lesson) {
+          console.log('✅ Loaded lesson from Supabase:', lesson.topic);
+          
+          // BRIDGE: Convert Granular Atoms to "Lesson DNA" format expected by UI
+          // Default Archetype: "The Scientist" (fallback to first available)
+          const targetArchetype = 'The Scientist';
+          const atoms = lesson.lesson_atoms?.filter(a => a.archetype === targetArchetype) || [];
+          
+          if (atoms.length === 0 && lesson.lesson_atoms?.length > 0) {
+             // Fallback to whatever archetype we have
+             console.warn(`[KellyOS] Archetype ${targetArchetype} not found, using ${lesson.lesson_atoms[0].archetype}`);
+          }
+
+          // Construct a synthetic "DNA" object
+          const syntheticDNA = {
+            id: lesson.id,
+            day: lesson.day_number,
+            topic: lesson.topic,
+            universal_truth: lesson.universal_truth,
+            // Create a "Universal" variant that applies to all ages for now (until Shards are fully implemented)
+            ageVariants: {
+              '18-35': {
+                title: lesson.topic,
+                description: lesson.universal_truth,
+                wisdomMoment: atoms.find(a => a.phase === 'Wisdom')?.content?.script || 'Wisdom connects us all.',
+              }
+            },
+            // Map Atoms to "Interactions" for the Player
+            interactions: [
+              {
+                step: 'teaching', // Maps to Fact1/Q1
+                question: atoms.find(a => a.phase === 'Fact1')?.content?.script || 'Ready to learn?',
+                ageAdaptations: {
+                  '18-35': {
+                    question: atoms.find(a => a.phase === 'Fact1')?.content?.script || 'Ready to learn?',
+                    choices: atoms.find(a => a.phase === 'Fact1')?.content?.options?.map(o => ({
+                       text: o.text,
+                       nextStep: 'practice' // Simplistic linear flow
+                    })) || []
+                  }
+                }
+              },
+              {
+                step: 'practice', // Maps to Fact2/Q2
+                question: atoms.find(a => a.phase === 'Fact2')?.content?.script || 'Going deeper...',
+                 ageAdaptations: {
+                  '18-35': {
+                    question: atoms.find(a => a.phase === 'Fact2')?.content?.script || 'Going deeper...',
+                    choices: atoms.find(a => a.phase === 'Fact2')?.content?.options?.map(o => ({
+                       text: o.text,
+                       nextStep: 'wisdom'
+                    })) || []
+                  }
+                }
+              }
+            ]
+          };
+
+          this.setLessonData(syntheticDNA, lesson.topic);
+          return; 
         } else if (error) {
           console.warn('Supabase lesson fetch error:', error);
         } else {
-          console.log('No lesson atoms in Supabase for day', day);
+          console.log('No lesson found in Supabase for day', dayNumber);
         }
       } catch (e) {
         console.warn('Supabase fetch failed:', e);

@@ -1,9 +1,10 @@
 // Curious Kelly Service Worker
 // Handles push notifications and caching
 
-const CACHE_NAME = 'curious-kelly-v1';
+const CACHE_NAME = 'curious-kelly-v2'; // Updated 2025-12-10 to fix font issue
 const urlsToCache = [
     '/',
+    '/index.html',
     '/kelly.html',
     '/learn.html',
     '/curriculum.html',
@@ -143,7 +144,7 @@ async function syncLessonProgress() {
     console.log('[SW] Syncing lesson progress...');
 }
 
-console.log('[SW] Service Worker loaded - Curious Kelly v1');
+console.log('[SW] Service Worker loaded - Curious Kelly v2');
 
 
 

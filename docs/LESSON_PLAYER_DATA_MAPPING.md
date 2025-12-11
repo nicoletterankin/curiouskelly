@@ -1,5 +1,7 @@
 # Lesson Player Data Structure & Interface Mapping
 
+> ⚠️ **NOTE:** For the strict canonical definitions of IDs, Archetypes, and Phases, please refer to [CANONICAL_IDS_AND_TERMS.md](../architecture/CANONICAL_IDS_AND_TERMS.md). This document describes the *mapping* between the player runtime and the data.
+
 ## PHASE 1: DATA STRUCTURE AUDIT
 
 ### Supabase Tables
