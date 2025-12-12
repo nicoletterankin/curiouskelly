@@ -15,6 +15,7 @@ const KellyLessonLoader = {
   supabase: null,
   cache: new Map(),
   preloadQueue: new Set(),
+  emergencyLessonsPromise: null,
   
   // Archetype mapping (id -> database name)
   ARCHETYPES: {
@@ -43,9 +44,28 @@ const KellyLessonLoader = {
   
   /**
    * Initialize with Supabase client
+   * Falls back to global window.supabaseClient or creates one from config
    */
   init(supabaseClient) {
-    this.supabase = supabaseClient;
+    if (supabaseClient) {
+      this.supabase = supabaseClient;
+    } else if (window.supabaseClient) {
+      // Try global client first
+      this.supabase = window.supabaseClient;
+      console.log('📚 KellyLessonLoader using global supabaseClient');
+    } else if (window.supabase?.createClient && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
+      // Create from global config
+      this.supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
+      console.log('📚 KellyLessonLoader created Supabase client from config');
+    } else if (window.supabase?.createClient && window.KELLY_CONFIG?.supabaseUrl && window.KELLY_CONFIG?.supabaseKey) {
+      // Create from KELLY_CONFIG
+      this.supabase = window.supabase.createClient(window.KELLY_CONFIG.supabaseUrl, window.KELLY_CONFIG.supabaseKey);
+      console.log('📚 KellyLessonLoader created Supabase client from KELLY_CONFIG');
+    } else {
+      console.error('❌ KellyLessonLoader: No Supabase client available');
+      return this;
+    }
+    
     console.log('📚 KellyLessonLoader initialized');
     return this;
   },
@@ -114,7 +134,7 @@ const KellyLessonLoader = {
     
     if (!this.supabase) {
       console.error('❌ Supabase not initialized');
-      return this.getFallback(dayNum);
+      return await this.getFallback(dayNum);
     }
     
     try {
@@ -127,7 +147,7 @@ const KellyLessonLoader = {
       
       if (lessonError || !lesson) {
         console.error('Lesson not found:', dayNum, lessonError);
-        return this.getFallback(dayNum);
+        return await this.getFallback(dayNum);
       }
       
       // Fetch atoms (dialog) for this archetype
@@ -183,8 +203,39 @@ const KellyLessonLoader = {
       
     } catch (error) {
       console.error('❌ Lesson fetch error:', error);
-      return this.getFallback(dayNum);
+      return await this.getFallback(dayNum);
     }
+  },
+
+  /**
+   * Load emergency lessons bundle once
+   */
+  async ensureEmergencyLessons() {
+    if (this.emergencyLessonsPromise) return this.emergencyLessonsPromise;
+    
+    this.emergencyLessonsPromise = new Promise((resolve) => {
+      if (typeof window === 'undefined' || typeof document === 'undefined') {
+        resolve({});
+        return;
+      }
+      
+      if (window.EMERGENCY_LESSONS) {
+        resolve(window.EMERGENCY_LESSONS);
+        return;
+      }
+      
+      const script = document.createElement('script');
+      script.src = '/data/emergency-lessons.js';
+      script.async = true;
+      script.onload = () => resolve(window.EMERGENCY_LESSONS || {});
+      script.onerror = () => {
+        console.warn('⚠️ Emergency lessons script failed to load');
+        resolve({});
+      };
+      document.head.appendChild(script);
+    });
+    
+    return this.emergencyLessonsPromise;
   },
   
   /**
@@ -434,22 +485,34 @@ const KellyLessonLoader = {
   /**
    * Fallback for missing lessons
    */
-  getFallback(dayNumber) {
-    console.warn(`⚠️ Using fallback for Day ${dayNumber}`);
+  async getFallback(dayNumber) {
+    console.warn('⚠️ Using fallback data');
+    
+    const emergencyLessons = await this.ensureEmergencyLessons();
+    const entry = (emergencyLessons && emergencyLessons[dayNumber]) || {};
     
     const lesson = {
-      id: `fallback-${dayNumber}`,
-      day_number: dayNumber,
-      topic: 'Daily Discovery',
-      universal_truth: 'Every day brings something new to learn.',
-      marketing_headline: 'Discover something amazing today',
-      marketing_tagline: 'Learning never stops'
+      id: entry.id || `fallback-${dayNumber}`,
+      day_number: entry.day_number || dayNumber,
+      topic: entry.topic || entry.title || 'Daily Discovery',
+      universal_truth: entry.universal_truth || entry.script || 'Every day brings something new to learn.',
+      marketing_headline: entry.marketing_headline || entry.title || 'Discover something amazing today',
+      marketing_tagline: entry.marketing_tagline || entry.subtitle || 'Learning never stops',
+      hero_image_url: entry.hero_image_url || entry.imageUrl || entry.thumbnail_url,
+      thumbnail_url: entry.thumbnail_url
     };
     
+    const fallbackGreeting = 'Every day brings something new to learn!';
+    const script = entry.script || entry.universal_truth || lesson.universal_truth;
+    const greeting = entry.greeting || fallbackGreeting;
+    const imageUrl = lesson.hero_image_url || '/images/fallback-lesson.png';
+    const atoms = entry.atoms || [];
+    const shards = entry.shards || [];
+
     return {
       lesson,
-      atoms: [],
-      shards: [],
+      atoms,
+      shards,
       dayNumber,
       archetype: 'The Scientist',
       region: 'adult',
@@ -459,9 +522,9 @@ const KellyLessonLoader = {
       get subtitle() { return lesson.marketing_tagline; },
       get topic() { return lesson.topic; },
       get universalTruth() { return lesson.universal_truth; },
-      get greeting() { return 'Every day brings something new to learn!'; },
-      get script() { return lesson.universal_truth; },
-      get imageUrl() { return '/images/fallback-lesson.png'; },
+      get greeting() { return greeting; },
+      get script() { return script; },
+      get imageUrl() { return imageUrl; },
       get audioUrl() { return null; },
       get quickQuiz() { return []; },
       get reflectionPrompts() { return []; },
