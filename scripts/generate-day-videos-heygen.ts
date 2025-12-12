@@ -72,7 +72,9 @@ const PHASE_TO_ASSET_PHASE: Record<string, string> = {
   Wisdom: 'wisdom',
 };
 
-type AgeVariant = 'kid' | 'teen' | 'adult' | 'elder' | 'super_elder' | 'mature';
+type AgeVariant = 'kid' | 'teen' | 'adult' | 'elder' | 'super_elder';
+
+const AGE_VARIANTS: AgeVariant[] = ['kid', 'teen', 'adult', 'elder', 'super_elder'];
 
 function getArg(name: string, fallback?: string) {
   const arg = process.argv.slice(2).find(a => a.startsWith(`--${name}=`));
@@ -291,7 +293,11 @@ async function upsertKellyVideoAsset(params: {
 
 async function main() {
   const day = parseInt(getArg('day', '1')!, 10);
-  const age = (getArg('age', 'adult') as AgeVariant) || 'adult';
+  const ageRaw = (getArg('age', 'adult') || 'adult').trim();
+  if (!AGE_VARIANTS.includes(ageRaw as AgeVariant)) {
+    throw new Error(`Invalid --age=${ageRaw}. Expected one of: ${AGE_VARIANTS.join(', ')}`);
+  }
+  const age = ageRaw as AgeVariant;
   const lang = getArg('lang', 'en')!;
   const targetArchetype = getArg('archetype');
   const dryRun = hasFlag('dry-run') || hasFlag('dryRun');

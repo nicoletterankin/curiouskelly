@@ -45,7 +45,6 @@ const CANONICAL_PERSONAS = [
 ] as const;
 
 const CANONICAL_AGE_VARIANTS = ['kid', 'teen', 'adult', 'elder', 'super_elder'] as const;
-const LEGACY_AGE_VARIANTS = ['mature'] as const;
 
 function getArg(name: string, fallback?: string) {
   const arg = process.argv.slice(2).find(a => a.startsWith(`--${name}=`));
@@ -145,8 +144,7 @@ async function main() {
   // 3) HeyGen talking photo IDs
   console.log('\n[HeyGen] Talking Photo ID maps (local files)');
 
-  const allAges = [...CANONICAL_AGE_VARIANTS, ...LEGACY_AGE_VARIANTS];
-  for (const age of allAges) {
+  for (const age of CANONICAL_AGE_VARIANTS) {
     const idMapPath = path.join(
       process.cwd(),
       'generated-images',

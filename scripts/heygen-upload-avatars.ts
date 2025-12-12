@@ -52,8 +52,6 @@ function resolveImagesDir(): { imagesDir: string; label: string; isHeadOnly: boo
   //   npx tsx scripts/heygen-upload-avatars.ts --head-only --age elder
   //   npx tsx scripts/heygen-upload-avatars.ts --head-only --age super_elder
   //
-  // NOTE: `mature` is a legacy alias. If present in your tree, we treat it as `elder`.
-  //
   // - Explicit directory override:
   //   npx tsx scripts/heygen-upload-avatars.ts --dir "generated-images/kelly-archetypes-head-only/age/mature"
   const explicitDir = getArgValue('--dir') || getArgValue('--images-dir') || getArgValue('--imagesDir');
@@ -68,10 +66,13 @@ function resolveImagesDir(): { imagesDir: string; label: string; isHeadOnly: boo
     if (!age) {
       throw new Error('Missing --age when using --head-only (expected: kid|teen|adult|elder|super_elder)');
     }
-    const normalizedAge = age === 'mature' ? 'elder' : age;
+    const allowed = new Set(['kid', 'teen', 'adult', 'elder', 'super_elder']);
+    if (!allowed.has(age)) {
+      throw new Error(`Invalid --age ${age} (expected: kid|teen|adult|elder|super_elder)`);
+    }
     return {
-      imagesDir: path.join(process.cwd(), 'generated-images', 'kelly-archetypes-head-only', 'age', normalizedAge),
-      label: `age:${normalizedAge}`,
+      imagesDir: path.join(process.cwd(), 'generated-images', 'kelly-archetypes-head-only', 'age', age),
+      label: `age:${age}`,
       isHeadOnly: true,
     };
   }
