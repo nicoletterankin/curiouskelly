@@ -412,3 +412,6 @@ watermark, logo, text errors
 *Templates based on Day 5 "How Sound Moves" gold standard*  
 *Last updated: December 9, 2025*
 
+
+
+

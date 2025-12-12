@@ -292,16 +292,16 @@
 
           <div
             class="setting-item"
-            id="sign-out-btn"
-            onclick="handleSignOut()"
+            id="sync-progress-btn"
+            onclick="showSyncModal()"
             style="cursor: pointer"
           >
             <div class="setting-info">
-              <div class="setting-label" style="color: #ef4444">Sign Out</div>
-              <div class="setting-desc">End your session</div>
+              <div class="setting-label" style="color: #3b82f6">Sync Progress</div>
+              <div class="setting-desc">Access your progress on any device</div>
             </div>
             <div class="setting-value">
-              <span style="color: #ef4444">→</span>
+              <span style="color: #3b82f6">☁️</span>
             </div>
           </div>
         </div>
@@ -419,37 +419,70 @@
 
       console.log('[Settings] Loaded user preferences');
 
-      // Sign out function
-      async function handleSignOut() {
-        const confirmSignOut = confirm('Are you sure you want to sign out?');
-        if (!confirmSignOut) return;
-
+      // Get progress stats
+      function getProgressStats() {
         try {
-          const supabase = window.supabase.createClient(
-            window.SUPABASE_URL || 'https://tvjalxxsyryjphkforjv.supabase.co',
-            window.SUPABASE_ANON_KEY ||
-              'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI'
-          );
-
-          const { error } = await supabase.auth.signOut();
-
-          if (error) {
-            console.error('[Settings] Sign out error:', error);
-            alert('Error signing out. Please try again.');
-            return;
-          }
-
-          console.log('[Settings] ✅ Signed out successfully');
-
-          // Clear local storage
-          localStorage.clear();
-
-          // Redirect to homepage
-          window.location.href = '/';
-        } catch (error) {
-          console.error('[Settings] Sign out failed:', error);
-          alert('Error signing out. Please try again.');
+          const progress = JSON.parse(localStorage.getItem('kelly_progress') || '{}');
+          return {
+            completed: progress.completed?.length || 0,
+            streak: progress.streaks?.current || 0,
+            bestStreak: progress.streaks?.best || 0
+          };
+        } catch (e) {
+          return { completed: 0, streak: 0, bestStreak: 0 };
         }
+      }
+
+      // Display progress stats
+      const stats = getProgressStats();
+      console.log('[Settings] Progress stats:', stats);
+
+      // Sync progress modal
+      function showSyncModal() {
+        const stats = getProgressStats();
+        const modal = document.createElement('div');
+        modal.style.cssText = `
+          position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+          background: rgba(0,0,0,0.8); display: flex; align-items: center;
+          justify-content: center; z-index: 9999; padding: 24px;
+        `;
+        modal.innerHTML = `
+          <div style="background: #1a1a2e; border-radius: 16px; padding: 32px; max-width: 400px; width: 100%;">
+            <h2 style="color: #fff; margin: 0 0 16px; font-size: 24px;">☁️ Sync Progress</h2>
+            <div style="background: #2a2a3e; border-radius: 12px; padding: 16px; margin-bottom: 24px;">
+              <p style="color: #aaa; margin: 0 0 12px; font-size: 14px;">Your Local Progress</p>
+              <div style="display: flex; gap: 16px;">
+                <div style="text-align: center; flex: 1;">
+                  <div style="font-size: 28px; font-weight: 700; color: #3b82f6;">${stats.completed}</div>
+                  <div style="font-size: 12px; color: #888;">Lessons</div>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                  <div style="font-size: 28px; font-weight: 700; color: #f59e0b;">${stats.streak}</div>
+                  <div style="font-size: 12px; color: #888;">Day Streak</div>
+                </div>
+                <div style="text-align: center; flex: 1;">
+                  <div style="font-size: 28px; font-weight: 700; color: #10b981;">${stats.bestStreak}</div>
+                  <div style="font-size: 12px; color: #888;">Best Streak</div>
+                </div>
+              </div>
+            </div>
+            <p style="color: #888; margin: 0 0 24px; font-size: 14px;">
+              Create an account to sync your progress across devices. Your learning history will be safely stored in the cloud.
+            </p>
+            <div style="display: flex; gap: 12px;">
+              <button onclick="this.closest('div').parentElement.remove()" 
+                style="flex: 1; padding: 14px; border-radius: 8px; border: 1px solid #444; background: transparent; color: #fff; cursor: pointer; font-size: 16px;">
+                Later
+              </button>
+              <button onclick="window.location.href='/join.html'" 
+                style="flex: 1; padding: 14px; border-radius: 8px; border: none; background: #3b82f6; color: #fff; cursor: pointer; font-size: 16px; font-weight: 600;">
+                Create Account
+              </button>
+            </div>
+          </div>
+        `;
+        modal.onclick = (e) => { if (e.target === modal) modal.remove(); };
+        document.body.appendChild(modal);
       }
     </script>
   </body>

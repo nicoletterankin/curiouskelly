@@ -17,6 +17,14 @@
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
     <title>Curious Kelly - Learn Something New Every Day</title>
 
+    <!-- Kelly OS shared foundation -->
+    <script src="/config.js"></script>
+    <script src="/js/kelly-time.js"></script>
+    <script src="/js/kelly-calendar.js"></script>
+    <script src="/js/kelly-calendar-export.js"></script>
+    <script src="/js/kelly-lesson.js"></script>
+    <script src="/js/kelly-presence.js"></script>
+
     <!-- Canonical -->
     <link rel="canonical" href="https://www.curiouskelly.com/">
 
@@ -74,6 +82,8 @@
     }
     </script>
 
+    <script src="/config.js"></script>
+
     <script type="application/ld+json">
     {
       "@context": "https://schema.org",
@@ -94,6 +104,8 @@
     <link rel="stylesheet" href="/css/components.css" />
     <!-- ✨ Kelly Animation System -->
     <link rel="stylesheet" href="/css/kelly-animations.css" />
+    <!-- Kelly Time Authority -->
+    <link rel="stylesheet" href="/styles/kelly-time-authority.css" />
 
     <!-- Fonts - BULLETPROOF LOADING (fixed 2025-12-10) -->
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -270,27 +282,45 @@
             background: var(--bg-color);
         }
 
-        /* Daily Streak Badge */
-        .hero-streak-badge {
+        /* Today's Date Badge with Live Indicator */
+        .hero-date-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 24px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .live-indicator {
             display: inline-flex;
             align-items: center;
             gap: 6px;
-            background: linear-gradient(135deg, #ff6b35 0%, #f7931e 100%);
-            color: white;
-            padding: 6px 14px;
-            border-radius: 20px;
-            font-size: 0.85rem;
-            font-weight: 600;
-            margin-bottom: 16px;
-            box-shadow: 0 2px 8px rgba(255, 107, 53, 0.3);
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #ef4444;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            animation: pulse-live 2s ease-in-out infinite;
         }
 
-        .streak-icon {
-            font-size: 1rem;
+        .live-indicator.hidden {
+            display: none;
         }
 
-        .streak-text {
+        @keyframes pulse-live {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .date-text {
             letter-spacing: 0.02em;
+            color: var(--text-secondary);
         }
 
         .hero-eyebrow {
@@ -2685,6 +2715,13 @@
     
     <!-- Kelly Message System (replaces ugly browser alerts) -->
     <script src="/js/kelly-messages.js"></script>
+
+    <!-- Kelly OS shared foundation (Phase 1) -->
+    <link rel="stylesheet" href="/styles/kelly-foundation.css">
+    <script src="/js/kelly-time.js"></script>
+    <script src="/js/kelly-calendar.js"></script>
+    <script src="/js/kelly-lesson.js"></script>
+    <script src="/js/kelly-presence.js"></script>
 </head>
 <body>
     <!-- ========================================
@@ -2783,10 +2820,23 @@
     <section class="hero" id="hero">
         <div class="hero-left">
             <div class="main-content">
-                <!-- Daily Streak Badge -->
-                <div class="hero-streak-badge" id="hero-streak-badge">
-                    <span class="streak-icon">🔥</span>
-                    <span class="streak-text">Day <span id="current-day-number">1</span></span>
+                <!-- Today's Date Badge -->
+                <div class="hero-date-badge" id="hero-date-badge">
+                    <span class="live-indicator" id="live-indicator" title="Live class in session">🔴 LIVE</span>
+                    <span class="date-text" id="today-full-date">Loading...</span>
+                </div>
+
+                <!-- Kelly Time Authority - Live Clock -->
+                <div id="kelly-clock" class="kelly-clock" data-kelly-clock data-seconds="true">
+                  <div class="kelly-clock-time">--:--:-- --</div>
+                  <div class="kelly-clock-date">Loading...</div>
+                  <div class="kelly-clock-tz"></div>
+                </div>
+
+                <!-- Kelly Time Authority - Live Class Countdown -->
+                <div id="kelly-countdown" class="kelly-countdown" data-kelly-countdown>
+                  <span class="countdown-label">Next class:</span>
+                  <span class="countdown-timer">--:--</span>
                 </div>
 
                 <!-- The Promise -->
@@ -2810,12 +2860,11 @@
                    data-analytics-day="today">
                     Start today's lesson →
                 </a>
-                <a href="/learn.html?day=1"
+                <a href="/curriculum.html"
                    class="hero-cta-secondary"
-                   data-analytics-action="choose-day"
-                   data-analytics-location="hero"
-                   data-analytics-day="1">
-                    Choose Day 1
+                   data-analytics-action="view-curriculum"
+                   data-analytics-location="hero">
+                    View all 365 lessons
                 </a>
                 
                 <p class="hero-note">5 minutes. No signup. Just learning.</p>
@@ -2989,7 +3038,7 @@
                     <img src="/images/brand/kelly-mark-circle-512.png" alt="Kelly" class="kelly-preview">
                 </div>
 
-                <a href="/learn.html?day=1" class="today-cta">
+                <a href="/learn.html" class="today-cta">
                     <span>Begin Today's Lesson</span>
                     <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
                 </a>
@@ -3222,6 +3271,30 @@
     <!-- Newsroom section moved to /newsroom.html -->
 
     <!-- ========================================
+         CALENDAR SUBSCRIBE - Kelly Time Authority
+         ======================================== -->
+    <section class="calendar-section" id="calendar-subscribe" style="padding: 60px 48px; background: var(--bg-secondary); text-align: center;">
+        <div style="max-width: 600px; margin: 0 auto;">
+            <h2 style="font-family: 'Newsreader', Georgia, serif; font-size: 2rem; margin-bottom: 1rem;">Never miss a lesson</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 2rem;">Add Kelly's daily lessons to your calendar. Get reminders at 9:00 AM your time.</p>
+            <div id="calendar-subscribe-buttons"></div>
+        </div>
+        <script>
+            // Initialize calendar subscribe buttons
+            if (typeof KellyCalendarSubscribe !== 'undefined') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    if (typeof KellyCalendarSubscribe !== 'undefined' && typeof KellyCalendarSubscribe.createSubscribeButtons === 'function') {
+                        KellyCalendarSubscribe.createSubscribeButtons('calendar-subscribe-buttons', {
+                            type: 'lessons',
+                            title: ''
+                        });
+                    }
+                });
+            }
+        </script>
+    </section>
+
+    <!-- ========================================
          FOOTER
          ======================================== -->
     <footer class="site-footer">
@@ -3370,7 +3443,7 @@
                     const { data, error } = await supabase.auth.signInWithOtp({
                         email: email,
                         options: {
-                            emailRedirectTo: `${window.location.origin}/learn.html?day=1`
+                            emailRedirectTo: `${window.location.origin}/learn.html`
                         }
                     });
 
@@ -3391,7 +3464,7 @@
                 const { data, error } = await supabase.auth.signInWithOAuth({
                     provider: provider,
                     options: {
-                        redirectTo: `${window.location.origin}/learn.html?day=1`
+                        redirectTo: `${window.location.origin}/learn.html`
                     }
                 });
 
@@ -3421,12 +3494,12 @@
             if (window.AgeGate && !window.AgeGate.isVerified()) {
                 window.AgeGate.show(() => {
                     localStorage.setItem('guestMode', 'true');
-                    window.location.href = '/learn.html?day=1';
+                    window.location.href = '/learn.html';
                 });
                 return;
             }
             localStorage.setItem('guestMode', 'true');
-            window.location.href = '/learn.html?day=1';
+            window.location.href = '/learn.html';
         };
 
         // Helpers
@@ -3441,6 +3514,10 @@
 
         // Helper: Convert day number to formatted date
         function dayNumberToDate(dayNumber, year = 2025) {
+            if (window.KellyTime?.dayNumberToDate && window.KellyTime?.fullDate) {
+                const date = window.KellyTime.dayNumberToDate(dayNumber, year);
+                return window.KellyTime.fullDate(date);
+            }
             const date = new Date(year, 0, dayNumber);
             const options = { month: 'long', day: 'numeric', year: 'numeric' };
             return date.toLocaleDateString('en-US', options);
@@ -3500,13 +3577,15 @@
         // ========================================
         // TODAY'S LESSON - Mini Calendar System
         // ========================================
-        let calendarMonth = new Date().getMonth(); // 0-indexed
-        let calendarYear = 2025;
+        let calendarMonth = (window.KellyTime?.month?.() || new Date().getMonth() + 1) - 1; // 0-indexed
+        let calendarYear = window.KellyTime?.year?.() || new Date().getFullYear();
         const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
         const MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 
-        // Convert date to day number (1-366)
+        // Convert date to canonical lesson dayNumber (1–365) via KellyTime
         function dateToDayNumber(date) {
+            if (window.KellyTime?.dateToDayNumber) return window.KellyTime.dateToDayNumber(date);
+            // Fallback (should not be used if KellyTime is loaded)
             const start = new Date(date.getFullYear(), 0, 0);
             const diff = date - start;
             const oneDay = 1000 * 60 * 60 * 24;
@@ -3514,7 +3593,8 @@
         }
 
         // Convert day number to Date object
-        function dayNumberToDateObj(dayNum, year = 2025) {
+        function dayNumberToDateObj(dayNum, year = (window.KellyTime?.year?.() || new Date().getFullYear())) {
+            if (window.KellyTime?.dayNumberToDate) return window.KellyTime.dayNumberToDate(dayNum, year);
             const date = new Date(year, 0);
             date.setDate(dayNum);
             return date;
@@ -3522,8 +3602,47 @@
 
         // Get today's day number
         function getTodayDayNumber() {
-            const now = new Date();
+            if (window.KellyTime?.getLessonDayForTimeZone && window.KellyTime?.getUserTimeZone) {
+                return window.KellyTime.getLessonDayForTimeZone(Date.now(), window.KellyTime.getUserTimeZone());
+            }
+            const now = window.KellyTime?.now?.() || new Date();
             return dateToDayNumber(now);
+        }
+
+        // Fetch today's topic from Supabase
+        async function fetchTodaysTopic(dayNumber) {
+            const heroQuestion = document.getElementById('hero-question');
+            if (!heroQuestion) return;
+            
+            try {
+                // Get Supabase client from KellyLesson or config
+                const supabase = window.KellyLesson?.getSupabase?.();
+                if (!supabase) {
+                    console.log('Supabase not available, using fallback topic');
+                    return; // Keep the static fallback question
+                }
+                
+                // Fetch today's lesson from core_lessons table
+                const { data, error } = await supabase
+                    .from('core_lessons')
+                    .select('title, hook_question')
+                    .eq('day_number', dayNumber)
+                    .single();
+                
+                if (error) {
+                    console.log('Could not fetch topic:', error.message);
+                    return; // Keep fallback
+                }
+                
+                if (data?.hook_question) {
+                    heroQuestion.textContent = data.hook_question;
+                } else if (data?.title) {
+                    heroQuestion.textContent = data.title;
+                }
+            } catch (err) {
+                console.log('Error fetching topic:', err);
+                // Keep fallback question
+            }
         }
 
         // Navigate calendar months
@@ -3578,7 +3697,10 @@
                     className += ' future';
                 }
                 
-                html += `<a href="/day/${dayNum}" class="${className}" title="Day ${dayNum}">${day}</a>`;
+                const dayTitle = (window.KellyTime?.formatDayNumber)
+                  ? window.KellyTime.formatDayNumber(dayNum, { includeYear: true })
+                  : `Lesson ${dayNum}`;
+                html += `<a href="/day/${dayNum}" class="${className}" title="${dayTitle}">${day}</a>`;
             }
             
             daysEl.innerHTML = html;
@@ -3589,13 +3711,24 @@
         // ========================================
         function initImmediateUI() {
             const todayNum = getTodayDayNumber();
-            const today = new Date();
-            const options = { month: 'long', day: 'numeric', year: 'numeric' };
-            const formattedDate = today.toLocaleDateString('en-US', options);
+            const today = window.KellyTime?.now?.() || new Date();
+            
+            // Full date with weekday: "Thursday, December 12, 2025"
+            const fullDateWithWeekday = today.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                month: 'long', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+            const formattedDate = window.KellyTime?.fullDate?.(today) || today.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            
+            // Update hero date badge with full date including weekday
+            const fullDateEl = document.getElementById('today-full-date');
+            if (fullDateEl) fullDateEl.textContent = fullDateWithWeekday;
             
             // Update ALL date elements immediately (no "Loading...")
             const dateEl = document.getElementById('today-date');
-            if (dateEl) dateEl.textContent = `${formattedDate} · Day ${todayNum}`;
+            if (dateEl) dateEl.textContent = formattedDate;
             
             const dateMeta = document.getElementById('today-date-meta');
             if (dateMeta) dateMeta.textContent = formattedDate;
@@ -3605,17 +3738,16 @@
             const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             if (dayBadge) dayBadge.textContent = `${monthNames[today.getMonth()]} ${today.getDate()}`;
             
-            // Update hero streak badge with current day number
-            const currentDayEl = document.getElementById('current-day-number');
-            if (currentDayEl) currentDayEl.textContent = todayNum;
-            
-            // Update hero CTA to point to today's lesson
+            // Update hero CTA to point to today's lesson (no day param - use today)
             const heroCta = document.querySelector('.hero-cta');
             if (heroCta) {
-                heroCta.href = `/learn.html?day=${todayNum}`;
-                heroCta.textContent = `Start Day ${todayNum} →`;
+                heroCta.href = `/learn.html`;
+                heroCta.textContent = `Start today's lesson →`;
                 heroCta.dataset.analyticsDay = todayNum;
             }
+            
+            // Fetch today's topic from Supabase
+            fetchTodaysTopic(todayNum);
         }
 
         // Hero video initialization with fallback
@@ -3844,7 +3976,7 @@
 
         // Make lesson card clickable
         document.querySelector('.lesson-card')?.addEventListener('click', function() {
-            window.location.href = '/learn.html?day=1';
+            window.location.href = '/learn.html';
         });
 
         // Initialize
@@ -4016,7 +4148,9 @@
                                 <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
                                     <span style="font-size: 1.5rem;">${topicEmojis[lesson.topic] || '📚'}</span>
                                     <div>
-                                        <div style="color: var(--accent-primary); font-size: 0.75rem; font-weight: 600;">Day ${lesson.day_number}</div>
+                                        <div style="color: var(--accent-primary); font-size: 0.75rem; font-weight: 600;">
+                                            ${(window.KellyTime?.formatDayNumber) ? window.KellyTime.formatDayNumber(lesson.day_number, { includeYear: false }) : lesson.day_number}
+                                        </div>
                                         <div style="font-weight: 600; font-size: 0.95rem;">${lesson.topic}</div>
                                     </div>
                                 </div>
@@ -4091,7 +4225,7 @@
                 if (session) {
                     const fromApp = document.referrer.includes('/learn.html');
                     if (!fromApp) {
-                        window.location.href = '/learn.html?day=1';
+                        window.location.href = '/learn.html';
                     }
                 }
             } catch (e) {
@@ -4377,6 +4511,20 @@
             init();
         }
     })();
+    </script>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', async () => {
+        if (window.KellyTimeSync) {
+          await KellyTimeSync.init();
+        }
+        if (window.KellyClock) {
+          new KellyClock('kelly-clock').start();
+        }
+        if (window.KellyCountdown && document.getElementById('kelly-countdown')) {
+          new KellyCountdown('kelly-countdown').start();
+        }
+      });
     </script>
 </body>
 

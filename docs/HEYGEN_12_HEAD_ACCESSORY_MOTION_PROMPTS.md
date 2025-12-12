@@ -42,3 +42,6 @@ Use these simple prompts in HeyGen's "Custom prompt" field. They are optimized t
 ### 12. THE SURVIVOR 🏕️ (Bandana + dog tags)
 `Grounded, no-nonsense directness. Bandana stays stable. Unwavering resilient eye contact. Minimal meaningful gestures. Strong posture. Serious determination. Practical, battle-tested energy.`
 
+
+
+

@@ -1,150 +1,107 @@
 // Curious Kelly Service Worker
-// Handles push notifications and caching
+// App-shell caching + (optional) push notifications
 
-const CACHE_NAME = 'curious-kelly-v2'; // Updated 2025-12-10 to fix font issue
-const urlsToCache = [
-    '/',
-    '/index.html',
-    '/kelly.html',
-    '/learn.html',
-    '/curriculum.html',
-    '/css/brand-colors.css',
-    '/images/kelly/kelly-hero.jpeg'
+const CACHE_NAME = 'curious-kelly-app-v1';
+
+const APP_SHELL = [
+  '/learn.html',
+  '/config.js',
+  '/manifest.json',
+  '/sw.js',
+  '/styles/kelly-foundation.css',
+  '/js/kelly-time.js',
+  '/js/kelly-calendar.js',
+  '/js/kelly-lesson.js',
+  '/js/kelly-presence.js',
+  '/assets/kelly/kelly-personas-manifest.json',
+  '/icons/icon-192.png',
+  '/icons/icon-512.png',
+  '/icons/apple-touch-icon.png'
 ];
 
-// Install event - cache essential assets
 self.addEventListener('install', (event) => {
-    event.waitUntil(
-        caches.open(CACHE_NAME)
-            .then((cache) => {
-                console.log('[SW] Caching essential assets');
-                return cache.addAll(urlsToCache);
-            })
-            .catch((error) => {
-                console.log('[SW] Cache failed:', error);
-            })
-    );
-    self.skipWaiting();
+  event.waitUntil(
+    caches.open(CACHE_NAME)
+      .then((cache) => cache.addAll(APP_SHELL))
+      .then(() => self.skipWaiting())
+  );
 });
 
-// Activate event - clean up old caches
 self.addEventListener('activate', (event) => {
-    event.waitUntil(
-        caches.keys().then((cacheNames) => {
-            return Promise.all(
-                cacheNames.map((cacheName) => {
-                    if (cacheName !== CACHE_NAME) {
-                        console.log('[SW] Deleting old cache:', cacheName);
-                        return caches.delete(cacheName);
-                    }
-                })
-            );
-        })
-    );
-    self.clients.claim();
+  event.waitUntil(
+    caches.keys().then((keys) =>
+      Promise.all(keys.filter((k) => k !== CACHE_NAME).map((k) => caches.delete(k)))
+    ).then(() => self.clients.claim())
+  );
 });
 
-// Fetch event - serve from cache, fallback to network
 self.addEventListener('fetch', (event) => {
+  const req = event.request;
+  if (req.method !== 'GET') return;
+
+  const url = new URL(req.url);
+
+  // Network-first for API and Supabase
+  if (url.pathname.startsWith('/api/') || url.hostname.includes('supabase')) {
     event.respondWith(
-        caches.match(event.request)
-            .then((response) => {
-                // Return cached version or fetch from network
-                return response || fetch(event.request);
-            })
+      fetch(req).catch(() => caches.match(req))
     );
+    return;
+  }
+
+  // Cache-first for same-origin static
+  if (url.origin === self.location.origin) {
+    event.respondWith(
+      caches.match(req).then((cached) => cached || fetch(req).then((res) => {
+        const copy = res.clone();
+        caches.open(CACHE_NAME).then((cache) => cache.put(req, copy)).catch(() => {});
+        return res;
+      }))
+    );
+  }
 });
 
-// Push notification event
+// Push notification event (copy must be honest and non-deceptive)
 self.addEventListener('push', (event) => {
-    console.log('[SW] Push received');
-    
-    let data = {
-        title: "✨ Kelly's going live!",
-        body: "Today's lesson is starting. Join millions learning together.",
-        icon: '/images/kelly/kelly-icon.png',
-        badge: '/images/kelly/kelly-badge.png',
-        url: '/kelly.html'
-    };
-    
-    if (event.data) {
-        try {
-            data = event.data.json();
-        } catch (e) {
-            data.body = event.data.text();
-        }
+  let data = {
+    title: "✨ Today's lesson is ready",
+    body: "Open Curious Kelly when you're ready to learn.",
+    icon: '/icons/icon-192.png',
+    badge: '/icons/icon-192.png',
+    url: '/learn.html'
+  };
+
+  if (event.data) {
+    try {
+      data = { ...data, ...event.data.json() };
+    } catch (e) {
+      data.body = event.data.text();
     }
-    
-    const options = {
-        body: data.body,
-        icon: data.icon || '/images/kelly/kelly-icon.png',
-        badge: data.badge || '/images/kelly/kelly-badge.png',
-        vibrate: [100, 50, 100],
-        data: {
-            url: data.url || '/kelly.html',
-            dateOfArrival: Date.now()
-        },
-        actions: [
-            { action: 'join', title: 'Join Class', icon: '/images/icons/play.png' },
-            { action: 'later', title: 'Remind Later', icon: '/images/icons/clock.png' }
-        ],
-        tag: 'kelly-class-notification',
-        renotify: true,
-        requireInteraction: true
-    };
-    
-    event.waitUntil(
-        self.registration.showNotification(data.title, options)
-    );
+  }
+
+  const options = {
+    body: data.body,
+    icon: data.icon,
+    badge: data.badge,
+    data: { url: data.url, dateOfArrival: Date.now() },
+    tag: 'kelly-daily-lesson',
+    renotify: true
+  };
+
+  event.waitUntil(self.registration.showNotification(data.title, options));
 });
 
-// Notification click event
 self.addEventListener('notificationclick', (event) => {
-    console.log('[SW] Notification clicked');
-    
-    event.notification.close();
-    
-    if (event.action === 'join') {
-        // Open the class immediately
-        event.waitUntil(
-            clients.openWindow(event.notification.data.url || '/kelly.html')
-        );
-    } else if (event.action === 'later') {
-        // Schedule a reminder for 5 minutes later
-        console.log('[SW] User requested reminder');
-        // In production, this would schedule a delayed notification
-    } else {
-        // Default: open the class
-        event.waitUntil(
-            clients.matchAll({ type: 'window' }).then((windowClients) => {
-                // Check if there's already a window open
-                for (const client of windowClients) {
-                    if (client.url.includes('kelly') && 'focus' in client) {
-                        return client.focus();
-                    }
-                }
-                // Otherwise open a new window
-                if (clients.openWindow) {
-                    return clients.openWindow(event.notification.data.url || '/kelly.html');
-                }
-            })
-        );
-    }
+  event.notification.close();
+  event.waitUntil(
+    clients.matchAll({ type: 'window', includeUncontrolled: true }).then((windowClients) => {
+      for (const client of windowClients) {
+        if (client.url.includes('/learn') && 'focus' in client) return client.focus();
+      }
+      return clients.openWindow(event.notification.data?.url || '/learn.html');
+    })
+  );
 });
-
-// Background sync for offline lesson tracking
-self.addEventListener('sync', (event) => {
-    if (event.tag === 'sync-lesson-progress') {
-        event.waitUntil(syncLessonProgress());
-    }
-});
-
-async function syncLessonProgress() {
-    // Sync any offline lesson progress to the server
-    console.log('[SW] Syncing lesson progress...');
-}
-
-console.log('[SW] Service Worker loaded - Curious Kelly v2');
 
 
 

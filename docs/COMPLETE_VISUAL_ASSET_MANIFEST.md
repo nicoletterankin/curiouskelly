@@ -409,3 +409,6 @@ ffmpeg -i input.mov \
 *Manifest Version 2.0 - December 2025*  
 *24 assets × 365 days = 8,760 production assets*
 
+
+
+

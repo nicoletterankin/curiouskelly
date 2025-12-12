@@ -141,9 +141,6 @@ def main():
     # Process all archetypes
     test_archetypes = ARCHETYPES
     
-    # DEBUG: Run only for Neutral/Diplomat and Provider/Strategist to fix gaps
-    # test_archetypes = {"neutral": "the_diplomat", "provider": "the_provider", "strategist": "the_strategist"}
-    
     for arch in test_archetypes:
         for phase in PHASES:
             if compile_video(arch, phase):

@@ -227,3 +227,6 @@ For fast entry into HeyGen:
 *Created: December 10, 2025*
 *For HeyGen Photo Avatar video generation*
 
+
+
+

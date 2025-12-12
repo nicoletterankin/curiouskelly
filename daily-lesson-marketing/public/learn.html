@@ -4139,7 +4139,10 @@
       function archetypeToPersonaId(archetype) {
         // \"The Scientist\" -> \"scientist\"
         const a = String(archetype || '').trim();
-        return a.toLowerCase().replace(/^the\\s+/, '').replace(/\\s+/g, '_');
+        return a
+          .toLowerCase()
+          .replace(/^the\\s+/, '')
+          .replace(/\\s+/g, '_');
       }
 
       function getCurrentPersonaId() {
@@ -4150,7 +4153,9 @@
       async function loadPersonaManifestOnce() {
         if (kellyPersonaManifest) return kellyPersonaManifest;
         try {
-          const resp = await fetch('/assets/kelly/kelly-personas-manifest.json', { cache: 'no-store' });
+          const resp = await fetch('/assets/kelly/kelly-personas-manifest.json', {
+            cache: 'no-store',
+          });
           if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
           kellyPersonaManifest = await resp.json();
           return kellyPersonaManifest;
@@ -4199,7 +4204,13 @@
         return 'hook';
       }
 
-      async function getPreGeneratedAudioUrl({ dayNumber, dbPhase, personaId, ageVariant, language }) {
+      async function getPreGeneratedAudioUrl({
+        dayNumber,
+        dbPhase,
+        personaId,
+        ageVariant,
+        language,
+      }) {
         try {
           const { data, error } = await supabase
             .from('kelly_video_assets')
@@ -4233,7 +4244,13 @@
         if (lastSpokenPhaseKey === key) return;
         lastSpokenPhaseKey = key;
 
-        const audioUrl = await getPreGeneratedAudioUrl({ dayNumber, dbPhase, personaId, ageVariant, language });
+        const audioUrl = await getPreGeneratedAudioUrl({
+          dayNumber,
+          dbPhase,
+          personaId,
+          ageVariant,
+          language,
+        });
         kellyAudio.speak(text, { language, audioUrl });
       }
 

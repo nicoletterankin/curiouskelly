@@ -55,6 +55,14 @@ const CONFIG = {
   DAY_NUMBER: 1,
 };
 
+const TONE_TO_ARCHETYPE: Record<string, string> = {
+  curious: 'The Scientist',
+  playful: 'The Explorer',
+  serious: 'The Rebel',
+};
+
+const DEFAULT_LANGUAGE = 'en';
+
 // Replicate model versions
 const MODELS = {
   FLUX_LORA: 'lucataco/flux-dev-lora:a22c463f11808638ad5e2ebd582e07a469031f48dd567366fb4c6fdab91d614d',
@@ -85,6 +93,7 @@ interface ResponseContent {
   phase: string;
   choiceLetter: string;
   responseScript: string;
+  language: string;
 }
 
 interface GenerationResult {
@@ -127,7 +136,7 @@ function log(emoji: string, message: string, indent = 0): void {
 // FETCH RESPONSE SCRIPTS FROM DATABASE
 // =============================================================================
 
-async function fetchResponseScripts(dayNumber: number): Promise<ResponseContent[]> {
+async function fetchResponseScripts(dayNumber: number, language: string, archetypeFilter?: string): Promise<ResponseContent[]> {
   const sb = getSupabase();
   const responses: ResponseContent[] = [];
   
@@ -154,25 +163,27 @@ async function fetchResponseScripts(dayNumber: number): Promise<ResponseContent[
   }
   
   for (const atom of atoms) {
+    if (archetypeFilter && atom.archetype !== archetypeFilter) continue;
     const content = atom.content as any;
     const options = content?.options || [];
-    const responseMap = content?.responses || {};
+    const translations = content?.translations || {};
+    const translatedOptions = translations[language]?.options || [];
     
     // Process each option
     options.forEach((option: any, index: number) => {
       const letter = String.fromCharCode(65 + index); // A, B, C
+      const translated = translatedOptions[index];
+      const responseScript = (translated?.response || option.response || '').trim();
       
-      // Response can be in option.response or in responseMap
-      let responseScript = option.response || responseMap[letter] || '';
+      if (!responseScript) return;
       
-      if (responseScript) {
-        responses.push({
-          archetype: atom.archetype,
-          phase: atom.phase,
-          choiceLetter: letter,
-          responseScript,
-        });
-      }
+      responses.push({
+        archetype: atom.archetype,
+        phase: atom.phase,
+        choiceLetter: letter,
+        responseScript,
+        language,
+      });
     });
   }
   
@@ -362,7 +373,8 @@ async function applyLipSync(videoUrl: string, audioPath: string): Promise<string
 async function downloadAndUpload(
   videoUrl: string,
   response: ResponseContent,
-  dayNumber: number
+  dayNumber: number,
+  localPath?: string
 ): Promise<string> {
   // Download video
   const fetchResponse = await fetch(videoUrl);
@@ -372,14 +384,20 @@ async function downloadAndUpload(
   
   const buffer = Buffer.from(await fetchResponse.arrayBuffer());
   
+  // Save local copy if requested
+  if (localPath) {
+    fs.mkdirSync(path.dirname(localPath), { recursive: true });
+    fs.writeFileSync(localPath, buffer);
+  }
+  
   // Normalize names for storage
   const archetype = response.archetype.replace(/^The\s+/, '').toLowerCase();
   const phase = response.phase.toLowerCase();
   const letter = response.choiceLetter.toLowerCase();
   const dayStr = String(dayNumber).padStart(3, '0');
   
-  // Storage path: day-001/explorer/fact1_response_a.mp4
-  const storagePath = `day-${dayStr}/${archetype}/${phase}_response_${letter}.mp4`;
+  // Storage path: day-001/explorer/fact1_response_a_es.mp4
+  const storagePath = `day-${dayStr}/${archetype}/${phase}_response_${letter}_${response.language}.mp4`;
   
   // Upload to Supabase
   const sb = getSupabase();
@@ -409,7 +427,8 @@ async function downloadAndUpload(
 async function generateResponseVideo(
   response: ResponseContent,
   dayNumber: number,
-  dryRun: boolean
+  dryRun: boolean,
+  force: boolean
 ): Promise<GenerationResult> {
   const result: GenerationResult = {
     success: false,
@@ -438,6 +457,13 @@ async function generateResponseVideo(
       `${response.phase.toLowerCase()}_response_${response.choiceLetter.toLowerCase()}`
     );
     fs.mkdirSync(baseDir, { recursive: true });
+    const rawVideoPath = path.join(baseDir, `${response.language}.mp4`);
+    if (!force && fs.existsSync(rawVideoPath)) {
+      log('⏩', 'Video already exists. Skipping.', 1);
+      result.success = true;
+      result.outputPath = rawVideoPath;
+      return result;
+    }
     
     // Step 1: Generate audio
     log('🎤', 'Generating audio...', 1);
@@ -462,7 +488,7 @@ async function generateResponseVideo(
     
     // Step 5: Download and upload to Supabase
     log('📤', 'Uploading to Supabase...', 1);
-    const publicUrl = await downloadAndUpload(lipsyncVideoUrl, response, dayNumber);
+    const publicUrl = await downloadAndUpload(lipsyncVideoUrl, response, dayNumber, rawVideoPath);
     log('✅', `Uploaded: ${publicUrl}`, 2);
     
     result.success = true;
@@ -483,17 +509,27 @@ async function generateResponseVideo(
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
-  
+  const force = args.includes('--force');
+
+  const langIdx = args.indexOf('--language');
+  const language = langIdx >= 0 && args[langIdx + 1] ? args[langIdx + 1].toLowerCase() : DEFAULT_LANGUAGE;
+
+  const toneIdx = args.indexOf('--tone');
+  const toneArg = toneIdx >= 0 && args[toneIdx + 1] ? args[toneIdx + 1].toLowerCase() : null;
+
   let filterArchetype: string | undefined;
   const archetypeIdx = args.indexOf('--archetype');
   if (archetypeIdx >= 0 && args[archetypeIdx + 1]) {
     filterArchetype = args[archetypeIdx + 1];
+  } else if (toneArg && TONE_TO_ARCHETYPE[toneArg]) {
+    filterArchetype = TONE_TO_ARCHETYPE[toneArg];
   }
   
   console.log('\n');
   console.log('╔' + '═'.repeat(70) + '╗');
   console.log('║  🎬 GENERATE RESPONSE VIDEOS - DAY 1                                 ║');
   console.log('╚' + '═'.repeat(70) + '╝');
+  console.log(`   Language: ${language.toUpperCase()}${toneArg ? ` | Tone: ${toneArg}` : ''}${filterArchetype ? ` | Archetype: ${filterArchetype}` : ''}`);
   
   if (dryRun) {
     console.log('\n⚠️  DRY RUN MODE - No videos will be generated\n');
@@ -514,7 +550,7 @@ async function main() {
   
   // Fetch response scripts
   log('📚', 'Fetching response scripts from database...');
-  let responses = await fetchResponseScripts(CONFIG.DAY_NUMBER);
+  let responses = await fetchResponseScripts(CONFIG.DAY_NUMBER, language, filterArchetype);
   
   if (filterArchetype) {
     responses = responses.filter(r => r.archetype === filterArchetype);
@@ -545,7 +581,7 @@ async function main() {
   
   for (let i = 0; i < responses.length; i++) {
     console.log(`\n[${i + 1}/${responses.length}]`);
-    const result = await generateResponseVideo(responses[i], CONFIG.DAY_NUMBER, dryRun);
+    const result = await generateResponseVideo(responses[i], CONFIG.DAY_NUMBER, dryRun, force);
     results.push(result);
     
     // Brief pause between generations

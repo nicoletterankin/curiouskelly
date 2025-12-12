@@ -44,3 +44,6 @@ Use these simplified prompts for the "No Props" archetypes. They focus strictly 
 ### 12. THE SURVIVOR 🏕️
 `Subject speaks with serious, determined grit. Steady, unblinking gaze. Set jaw while talking. Resilient and strong expression. No wasted movement.`
 
+
+
+

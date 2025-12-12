@@ -2,49 +2,97 @@
  * Dynamic Lesson Page
  * 
  * Serves lesson content for /day/{number}
- * Renders a beautiful, Kelly-style lesson page
+ * Queries core_lessons table for proper content
+ * Includes SEO-optimized meta tags and Schema.org JSON-LD
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { createClient } from '@supabase/supabase-js';
+import { getSupabaseAdmin, isSupabaseConfigured } from '../lib/supabase';
 
-const supabaseUrl = process.env.PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-interface Lesson {
+interface CoreLesson {
+  id: string;
   day_number: number;
-  title: string;
-  emoji: string;
-  content: { description?: string };
+  topic: string;
+  universal_truth: string;
+  marketing_headline: string;
+  marketing_tagline?: string;
+  marketing_pitch?: string;
 }
 
-function generateLessonPage(lesson: Lesson, prevDay: number | null, nextDay: number | null): string {
-  const description = lesson.content?.description || '';
+function escapeHtml(text: string): string {
+  return text
+    .replace(/&/g, '&amp;')
+    .replace(/</g, '&lt;')
+    .replace(/>/g, '&gt;')
+    .replace(/"/g, '&quot;')
+    .replace(/'/g, '&#039;');
+}
+
+function getDayDate(dayNumber: number): string {
+  // Convert day number to a date in 2025
+  const date = new Date(2025, 0, dayNumber);
+  return date.toLocaleDateString('en-US', {
+    weekday: 'long',
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric'
+  });
+}
+
+function generateLessonPage(lesson: CoreLesson, prevDay: number | null, nextDay: number | null): string {
+  const topic = escapeHtml(lesson.topic || 'Daily Discovery');
+  const headline = escapeHtml(lesson.marketing_headline || lesson.topic);
+  const tagline = escapeHtml(lesson.marketing_tagline || '');
+  const universalTruth = escapeHtml(lesson.universal_truth || '');
+  const dateStr = getDayDate(lesson.day_number);
   
-  return `
-<!DOCTYPE html>
+  const schemaOrg = {
+    "@context": "https://schema.org",
+    "@type": "LearningResource",
+    "name": topic,
+    "description": headline,
+    "educationalLevel": "All ages",
+    "learningResourceType": "Lesson",
+    "timeRequired": "PT5M",
+    "datePublished": dateStr,
+    "provider": {
+      "@type": "Organization",
+      "name": "Curious Kelly",
+      "url": "https://curiouskelly.com"
+    },
+    "url": `https://curiouskelly.com/day/${lesson.day_number}`
+  };
+  
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>${lesson.emoji} ${lesson.title} - Day ${lesson.day_number} | Curious Kelly</title>
-  <meta name="description" content="${description}">
+  <title>${topic} - Day ${lesson.day_number} | Curious Kelly</title>
+  <meta name="description" content="${headline}">
   
   <!-- Open Graph -->
-  <meta property="og:title" content="${lesson.emoji} ${lesson.title}">
-  <meta property="og:description" content="${description}">
+  <meta property="og:title" content="${topic} - Day ${lesson.day_number}">
+  <meta property="og:description" content="${headline}">
   <meta property="og:type" content="article">
   <meta property="og:url" content="https://curiouskelly.com/day/${lesson.day_number}">
-  <meta property="og:image" content="https://curiouskelly.com/og/day-${lesson.day_number}.png">
+  <meta property="og:image" content="https://curiouskelly.com/api/og/${lesson.day_number}">
+  <meta property="og:site_name" content="Curious Kelly">
   
   <!-- Twitter -->
   <meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="${lesson.emoji} ${lesson.title}">
-  <meta name="twitter:description" content="${description}">
+  <meta name="twitter:title" content="${topic}">
+  <meta name="twitter:description" content="${headline}">
+  <meta name="twitter:image" content="https://curiouskelly.com/api/og/${lesson.day_number}">
+  <meta name="twitter:site" content="@CuriousKelly">
   
+  <link rel="canonical" href="https://curiouskelly.com/day/${lesson.day_number}">
   <link rel="icon" href="/favicon.ico">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link href="https://fonts.googleapis.com/css2?family=Crimson+Pro:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+  
+  <!-- Schema.org JSON-LD -->
+  <script type="application/ld+json">${JSON.stringify(schemaOrg)}</script>
   
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
@@ -53,7 +101,7 @@ function generateLessonPage(lesson: Lesson, prevDay: number | null, nextDay: num
       --bg: #fafaf9;
       --text: #1c1917;
       --text-muted: #57534e;
-      --accent: #2563eb;
+      --accent: #3b82f6;
       --border: #e7e5e4;
     }
     
@@ -78,7 +126,13 @@ function generateLessonPage(lesson: Lesson, prevDay: number | null, nextDay: num
       color: var(--text-muted);
       letter-spacing: 0.05em;
       text-transform: uppercase;
-      margin-bottom: 16px;
+      margin-bottom: 8px;
+    }
+    
+    .date-line {
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-bottom: 24px;
     }
     
     .lesson-icon {
@@ -91,15 +145,32 @@ function generateLessonPage(lesson: Lesson, prevDay: number | null, nextDay: num
       font-size: 36px;
       font-weight: 500;
       line-height: 1.3;
-      margin-bottom: 24px;
+      margin-bottom: 16px;
       letter-spacing: -0.02em;
+    }
+    
+    .tagline {
+      font-size: 21px;
+      color: var(--accent);
+      font-weight: 500;
+      margin-bottom: 24px;
     }
     
     .description {
       font-size: 21px;
       color: var(--text-muted);
-      margin-bottom: 48px;
+      margin-bottom: 32px;
       font-style: italic;
+    }
+    
+    .universal-truth {
+      font-size: 19px;
+      line-height: 1.9;
+      padding: 24px;
+      background: #f5f5f4;
+      border-left: 4px solid var(--accent);
+      border-radius: 0 8px 8px 0;
+      margin-bottom: 32px;
     }
     
     .lesson-content {
@@ -136,6 +207,11 @@ function generateLessonPage(lesson: Lesson, prevDay: number | null, nextDay: num
       font-family: -apple-system, sans-serif;
       font-size: 15px;
       font-weight: 500;
+      transition: background 0.2s;
+    }
+    
+    .cta a:hover {
+      background: #2563eb;
     }
     
     .nav {
@@ -167,30 +243,35 @@ function generateLessonPage(lesson: Lesson, prevDay: number | null, nextDay: num
     .footer a {
       color: var(--text-muted);
     }
+    
+    @media (max-width: 640px) {
+      .container { padding: 40px 20px 60px; }
+      h1 { font-size: 28px; }
+      .tagline { font-size: 18px; }
+      .description { font-size: 18px; }
+    }
   </style>
 </head>
 <body>
   <main class="container">
     <div class="day-badge">Day ${lesson.day_number} of 365</div>
+    <div class="date-line">${dateStr}</div>
     
-    <span class="lesson-icon">${lesson.emoji}</span>
+    <h1>${topic}</h1>
     
-    <h1>${lesson.title}</h1>
+    ${tagline ? `<p class="tagline">${tagline}</p>` : ''}
     
-    <p class="description">${description}</p>
+    ${headline ? `<p class="description">${headline}</p>` : ''}
     
-    <div class="lesson-content">
-      <p>
-        This lesson is coming soon. We're building something special — 365 days of wonder, one lesson at a time.
-      </p>
-      <p>
-        Want to be notified when this lesson is ready? Sign up for daily emails and you'll never miss a thing.
-      </p>
+    ${universalTruth ? `
+    <div class="universal-truth">
+      ${universalTruth}
     </div>
+    ` : ''}
     
     <div class="cta">
-      <p>Get daily lessons delivered to your inbox</p>
-      <a href="https://curiouskelly.com/#signup">Subscribe →</a>
+      <p>Experience this lesson with Kelly, your AI learning companion</p>
+      <a href="/learn.html?day=${lesson.day_number}">Start Learning →</a>
     </div>
     
     <nav class="nav">
@@ -199,17 +280,24 @@ function generateLessonPage(lesson: Lesson, prevDay: number | null, nextDay: num
     </nav>
     
     <footer class="footer">
-      <a href="https://curiouskelly.com">✨ Curious Kelly</a>
+      <a href="https://curiouskelly.com">✨ Curious Kelly</a> · 
+      <a href="/sitemap.xml">Sitemap</a>
     </footer>
   </main>
+  
+  <script>
+    // Auto-redirect for humans (bots stay for indexing)
+    if (!/bot|crawl|spider|googlebot|bingbot|facebookexternalhit/i.test(navigator.userAgent)) {
+      // Optional: Uncomment to auto-redirect after brief preview
+      // setTimeout(() => { window.location.href = '/learn.html?day=${lesson.day_number}'; }, 3000);
+    }
+  </script>
 </body>
-</html>
-  `.trim();
+</html>`;
 }
 
 function generate404Page(dayNumber: number): string {
-  return `
-<!DOCTYPE html>
+  return `<!DOCTYPE html>
 <html lang="en">
 <head>
   <meta charset="UTF-8">
@@ -233,7 +321,7 @@ function generate404Page(dayNumber: number): string {
     p { font-size: 17px; color: #4b5563; line-height: 1.8; margin-bottom: 24px; }
     a.button {
       display: inline-block;
-      background: #2563eb;
+      background: #3b82f6;
       color: white;
       padding: 12px 24px;
       border-radius: 8px;
@@ -248,11 +336,10 @@ function generate404Page(dayNumber: number): string {
     <div class="icon">🔍</div>
     <h1>Day ${dayNumber} not found</h1>
     <p>Lessons are numbered 1 to 365. Try a different day?</p>
-    <a href="https://curiouskelly.com" class="button">Go Home</a>
+    <a href="/" class="button">Go Home</a>
   </div>
 </body>
-</html>
-  `.trim();
+</html>`;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -264,20 +351,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(404).send(generate404Page(dayNumber || 0));
   }
 
-  if (!supabaseUrl || !supabaseServiceKey) {
+  if (!isSupabaseConfigured()) {
     return res.status(500).send('Configuration error');
   }
 
-  const supabase = createClient(supabaseUrl, supabaseServiceKey);
+  const supabase = getSupabaseAdmin();
 
   try {
+    // Query core_lessons (the correct table with 365 rows)
     const { data: lesson, error } = await supabase
-      .from('lessons')
-      .select('day_number, title, emoji, content')
+      .from('core_lessons')
+      .select('id, day_number, topic, universal_truth, marketing_headline, marketing_tagline, marketing_pitch')
       .eq('day_number', dayNumber)
       .single();
 
     if (error || !lesson) {
+      console.warn('Lesson not found in core_lessons:', dayNumber, error?.message);
       res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=86400, stale-while-revalidate=604800');
       return res.status(404).send(generate404Page(dayNumber));
     }
@@ -295,4 +384,3 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(500).send('Something went wrong');
   }
 }
-

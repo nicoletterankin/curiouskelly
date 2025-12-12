@@ -15,8 +15,8 @@
  * - Non-leap years:  topic_day = day_of_year (1–365)
  * - Leap years:
  *     - Jan 1 – Feb 28: topic_day = day_of_year
- *     - Feb 29:         topic_day = 60 (shares topic with March 1)
- *     - Mar 1 – Dec 31: topic_day = day_of_year - 1
+ *     - Feb 29:         topic_day = 366 (special bonus lesson)
+ *     - Mar 1 – Dec 31: topic_day = day_of_year - 1  (compress after Feb 29)
  *
  * User-facing content should ALWAYS show real dates.
  * The day_number is internal only (database, APIs, URLs, scheduling).
@@ -35,6 +35,12 @@ function isLeapYear(year: number): boolean {
 
 const DAYS_IN_MONTH_COMMON = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
 const DAYS_IN_MONTH_LEAP = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+function getNextLeapYear(fromYear: number): number {
+  let y = fromYear;
+  while (!isLeapYear(y)) y++;
+  return y;
+}
 
 function getDaysInMonth(year: number, month: number): number {
   return (isLeapYear(year) ? DAYS_IN_MONTH_LEAP : DAYS_IN_MONTH_COMMON)[month];
@@ -85,18 +91,27 @@ function dateFromDayOfYear(year: number, dayOfYear: number): Date {
  * @returns Date object for that lesson in the specified year
  */
 export function dayNumberToDate(dayNumber: number, year?: number): Date {
-  if (dayNumber < 1 || dayNumber > 365) {
-    throw new Error(`Invalid day number: ${dayNumber}. Must be 1–365.`);
+  if (dayNumber < 1 || dayNumber > 366) {
+    throw new Error(`Invalid day number: ${dayNumber}. Must be 1–366.`);
   }
 
-  const targetYear = year ?? new Date().getFullYear();
-  const leap = isLeapYear(targetYear);
+  const baseYear = year ?? new Date().getFullYear();
+
+  // Leap Day is a special bonus lesson and maps to Feb 29.
+  // If the caller asks for 366 in a non-leap year, map it to the next leap year
+  // so the returned Date is valid.
+  if (dayNumber === 366) {
+    const targetYear = isLeapYear(baseYear) ? baseYear : getNextLeapYear(baseYear);
+    return new Date(targetYear, 1, 29);
+  }
+
+  const leap = isLeapYear(baseYear);
 
   // Map canonical topic day → actual day-of-year for the target year.
   // In leap years, everything from Mar 1 onward moves one day later.
   const dayOfYear = leap && dayNumber >= 60 ? dayNumber + 1 : dayNumber;
 
-  return dateFromDayOfYear(targetYear, dayOfYear);
+  return dateFromDayOfYear(baseYear, dayOfYear);
 }
 
 /**
@@ -118,19 +133,50 @@ export function dateToLessonDay(date: Date): number {
     return dayOfYear;
   }
 
-  // Leap year compression rules
+  // Leap year rules:
+  // - Jan 1–Feb 28: canonical topic day == day-of-year
+  // - Feb 29: special bonus lesson (366)
+  // - Mar 1 onward: subtract 1 to keep month/day stable across years
+  if (month === 1 && day === 29) {
+    return 366;
+  }
+
   if (dayOfYear <= 59) {
     // Jan 1–Feb 28
     return dayOfYear;
   }
 
-  if (month === 1 && day === 29) {
-    // Feb 29 shares topic with March 1
-    return 60;
-  }
-
   // March 1 onward: shift back by one
   return dayOfYear - 1;
+}
+
+/**
+ * Canonical lesson identity for a calendar date.
+ * - For most dates, `day` is 1–365 and `isLeapDay` is false.
+ * - For Feb 29, `day` is 366 and `isLeapDay` is true.
+ */
+export function getCanonicalLessonDay(date: Date = new Date()): { day: number; isLeapDay: boolean } {
+  const day = dateToLessonDay(date);
+  return { day, isLeapDay: day === 366 };
+}
+
+/**
+ * Canonical DB lookup key for core_lessons by month/day.
+ * Feb 29 is represented as { isLeapDay: true }.
+ */
+export function getCanonicalLessonCalendarKey(
+  date: Date = new Date()
+): { calendarMonth: number; calendarDay: number; isLeapDay: boolean } {
+  const { isLeapDay } = getCanonicalLessonDay(date);
+  if (isLeapDay) {
+    return { calendarMonth: 2, calendarDay: 29, isLeapDay: true };
+  }
+
+  return {
+    calendarMonth: date.getMonth() + 1,
+    calendarDay: date.getDate(),
+    isLeapDay: false,
+  };
 }
 
 /**

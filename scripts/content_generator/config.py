@@ -33,7 +33,8 @@ ANTHROPIC_API_KEY = os.environ.get("ANTHROPIC_API_KEY")
 # Supabase
 SUPABASE_URL = os.environ.get("PUBLIC_SUPABASE_URL", "https://tvjalxxsyryjphkforjv.supabase.co")
 SUPABASE_KEY = os.environ.get("PUBLIC_SUPABASE_ANON_KEY", "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI")
-SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_KEY", SUPABASE_KEY)
+# Try both naming conventions for service key
+SUPABASE_SERVICE_KEY = os.environ.get("SUPABASE_SERVICE_ROLE_KEY") or os.environ.get("SUPABASE_SERVICE_KEY") or SUPABASE_KEY
 
 # Archetypes - personality profiles for content adaptation
 ARCHETYPES = [

@@ -42,3 +42,6 @@ Use these prompts for the "Shadow" archetypes. They are designed to convey speci
 ### 12. THE SABOTEUR 🗡️ (Mischief)
 `Subject speaks with cunning, secretive energy. Eyes look sideways conspiratorially. Sly, tricky smirk. Head lowers slightly. Radiates 'I'm up to no good'.`
 
+
+
+

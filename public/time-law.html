@@ -1,0 +1,665 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta
+      name="viewport"
+      content="width=device-width, initial-scale=1.0, viewport-fit=cover"
+    />
+    <title>Kelly Time & Calendar Law — Diagnostic</title>
+    <meta
+      name="description"
+      content="Interactive diagnostic page for the Curious Kelly Time & Calendar Law: see how any date and timezone maps to the topic of the day and next live class."
+    />
+    <meta name="robots" content="noindex, nofollow" />
+
+    <style>
+      :root {
+        --bg: #020617;
+        --bg-elevated: #020617;
+        --panel: #020617;
+        --panel-soft: #020617;
+        --accent: #38bdf8;
+        --accent-soft: rgba(56, 189, 248, 0.12);
+        --accent-strong: rgba(56, 189, 248, 0.35);
+        --text: #e5e7eb;
+        --muted: #9ca3af;
+        --border: #1f2937;
+        --border-soft: rgba(15, 23, 42, 0.8);
+        --error: #f97373;
+        --radius-lg: 18px;
+        --radius-md: 12px;
+        --radius-pill: 999px;
+        --shadow-soft: 0 24px 80px rgba(15, 23, 42, 0.85);
+      }
+
+      * {
+        box-sizing: border-box;
+        margin: 0;
+        padding: 0;
+      }
+
+      body {
+        min-height: 100vh;
+        font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+          sans-serif;
+        background: radial-gradient(circle at top, #0b1120 0, #020617 50%);
+        color: var(--text);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 32px 16px;
+      }
+
+      .shell {
+        width: 100%;
+        max-width: 1040px;
+        background: linear-gradient(145deg, #020617, #020617);
+        border-radius: 28px;
+        border: 1px solid rgba(148, 163, 184, 0.2);
+        box-shadow: var(--shadow-soft);
+        padding: 24px 24px 28px;
+      }
+
+      .header {
+        display: flex;
+        justify-content: space-between;
+        align-items: flex-start;
+        gap: 12px;
+        margin-bottom: 20px;
+      }
+
+      .title-block {
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      .eyebrow {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 9px;
+        border-radius: 999px;
+        border: 1px solid rgba(56, 189, 248, 0.35);
+        background: radial-gradient(
+          circle at top,
+          rgba(56, 189, 248, 0.18),
+          rgba(15, 23, 42, 0.9)
+        );
+        font-size: 10px;
+        text-transform: uppercase;
+        letter-spacing: 0.09em;
+        color: #e0f2fe;
+      }
+
+      .eyebrow-dot {
+        width: 6px;
+        height: 6px;
+        border-radius: 50%;
+        background: #22c55e;
+        box-shadow: 0 0 0 4px rgba(34, 197, 94, 0.32);
+      }
+
+      .title {
+        font-size: 19px;
+        font-weight: 600;
+        letter-spacing: -0.02em;
+      }
+
+      .subtitle {
+        font-size: 12px;
+        color: var(--muted);
+      }
+
+      .badge-row {
+        display: flex;
+        flex-wrap: wrap;
+        gap: 8px;
+        justify-content: flex-end;
+      }
+
+      .pill {
+        padding: 4px 10px;
+        border-radius: var(--radius-pill);
+        font-size: 10px;
+        border: 1px solid rgba(148, 163, 184, 0.3);
+        color: var(--muted);
+        background: radial-gradient(
+          circle at top,
+          rgba(148, 163, 184, 0.1),
+          rgba(15, 23, 42, 0.9)
+        );
+      }
+
+      .pill-strong {
+        border-color: rgba(56, 189, 248, 0.6);
+        color: #e0f2fe;
+        background: radial-gradient(
+          circle at top left,
+          rgba(56, 189, 248, 0.2),
+          rgba(15, 23, 42, 0.95)
+        );
+      }
+
+      .grid {
+        display: grid;
+        grid-template-columns: minmax(0, 1.1fr) minmax(0, 1.2fr);
+        gap: 18px;
+      }
+
+      @media (max-width: 840px) {
+        .shell {
+          padding: 20px 16px 22px;
+        }
+
+        .grid {
+          grid-template-columns: minmax(0, 1fr);
+        }
+
+        .header {
+          flex-direction: column;
+        }
+      }
+
+      .panel {
+        border-radius: var(--radius-lg);
+        border: 1px solid var(--border);
+        background: radial-gradient(
+              circle at top left,
+              rgba(56, 189, 248, 0.08),
+              transparent 52%
+            )
+            no-repeat,
+          radial-gradient(
+              circle at bottom right,
+              rgba(148, 163, 184, 0.12),
+              transparent 60%
+            )
+            no-repeat,
+          rgba(15, 23, 42, 0.96);
+        padding: 14px 14px 16px;
+      }
+
+      .panel h2 {
+        font-size: 13px;
+        letter-spacing: 0.04em;
+        text-transform: uppercase;
+        color: var(--muted);
+        margin-bottom: 12px;
+      }
+
+      .field-row {
+        display: flex;
+        gap: 8px;
+        align-items: center;
+        flex-wrap: wrap;
+        margin-bottom: 10px;
+      }
+
+      .field {
+        flex: 1;
+        min-width: 160px;
+        display: flex;
+        flex-direction: column;
+        gap: 4px;
+      }
+
+      label {
+        font-size: 11px;
+        color: var(--muted);
+      }
+
+      input,
+      select {
+        width: 100%;
+        padding: 7px 9px;
+        border-radius: 10px;
+        border: 1px solid var(--border);
+        background: radial-gradient(
+              circle at top left,
+              rgba(30, 64, 175, 0.28),
+              rgba(15, 23, 42, 0.98)
+            )
+            no-repeat;
+        color: var(--text);
+        font-size: 12px;
+      }
+
+      input:focus,
+      select:focus {
+        outline: none;
+        border-color: rgba(56, 189, 248, 0.85);
+        box-shadow: 0 0 0 1px rgba(56, 189, 248, 0.7);
+      }
+
+      .hint {
+        font-size: 10px;
+        color: var(--muted);
+      }
+
+      .results {
+        margin-top: 6px;
+        border-radius: var(--radius-md);
+        border: 1px solid rgba(148, 163, 184, 0.28);
+        background: linear-gradient(
+          145deg,
+          rgba(15, 23, 42, 0.95),
+          rgba(15, 23, 42, 0.96)
+        );
+        padding: 10px 11px;
+        display: grid;
+        grid-template-columns: repeat(2, minmax(0, 1fr));
+        gap: 10px;
+      }
+
+      @media (max-width: 600px) {
+        .results {
+          grid-template-columns: minmax(0, 1fr);
+        }
+      }
+
+      .result-block {
+        display: flex;
+        flex-direction: column;
+        gap: 2px;
+      }
+
+      .result-label {
+        font-size: 10px;
+        color: var(--muted);
+        text-transform: uppercase;
+        letter-spacing: 0.08em;
+      }
+
+      .result-value {
+        font-size: 13px;
+        font-weight: 500;
+      }
+
+      .result-pill {
+        display: inline-flex;
+        align-items: center;
+        gap: 6px;
+        padding: 3px 9px;
+        border-radius: var(--radius-pill);
+        font-size: 11px;
+        background: var(--accent-soft);
+        border: 1px solid var(--accent-strong);
+        color: #e0f2fe;
+      }
+
+      .code-panel {
+        margin-top: 10px;
+        border-radius: var(--radius-md);
+        border: 1px dashed rgba(148, 163, 184, 0.35);
+        background: radial-gradient(
+          circle at top left,
+          rgba(30, 64, 175, 0.4),
+          rgba(15, 23, 42, 0.95)
+        );
+        padding: 10px 11px;
+      }
+
+      .code-panel pre {
+        font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas,
+          'Liberation Mono', 'Courier New', monospace;
+        font-size: 11px;
+        color: #e5e7eb;
+        white-space: pre-wrap;
+        word-break: break-word;
+      }
+
+      .footer {
+        margin-top: 18px;
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: space-between;
+        gap: 10px;
+        font-size: 10px;
+        color: var(--muted);
+      }
+
+      .footer strong {
+        color: #e5e7eb;
+      }
+    </style>
+  </head>
+  <body>
+    <main class="shell">
+      <header class="header">
+        <div class="title-block">
+          <div class="eyebrow">
+            <span class="eyebrow-dot"></span>
+            <span>Canonical Time & Calendar Law</span>
+          </div>
+          <div class="title">Kelly’s Topic of the Day — Global Diagnostic</div>
+          <div class="subtitle">
+            One canonical topic, every day, everywhere on Earth. This page lets
+            you prove it.
+          </div>
+        </div>
+        <div class="badge-row">
+          <div class="pill pill-strong">Day 1 = January 1, 2026</div>
+          <div class="pill">Leap‑year safe · Timezone aware</div>
+          <div class="pill">Every 15 minutes · Live class slots</div>
+        </div>
+      </header>
+
+      <section class="grid">
+        <section class="panel" aria-label="Input controls">
+          <h2>Inputs</h2>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="date-input">Local date</label>
+              <input id="date-input" type="date" />
+              <div class="hint">
+                This is the learner’s civil date in their timezone.
+              </div>
+            </div>
+            <div class="field">
+              <label for="timezone-input">Timezone (IANA)</label>
+              <select id="timezone-input">
+                <option value="America/Los_Angeles">America/Los_Angeles</option>
+                <option value="America/New_York">America/New_York</option>
+                <option value="Europe/London">Europe/London</option>
+                <option value="Europe/Berlin">Europe/Berlin</option>
+                <option value="Asia/Tokyo">Asia/Tokyo</option>
+                <option value="Australia/Sydney">Australia/Sydney</option>
+                <option value="UTC">UTC</option>
+              </select>
+              <div class="hint">
+                In production this comes from the user profile in Supabase.
+              </div>
+            </div>
+          </div>
+
+          <div class="field-row">
+            <div class="field">
+              <label for="utc-input">UTC timestamp</label>
+              <input id="utc-input" type="datetime-local" step="1" />
+              <div class="hint">
+                Cron / servers always start from UTC, then convert to local
+                time.
+              </div>
+            </div>
+          </div>
+
+          <div class="results" id="results">
+            <div class="result-block">
+              <div class="result-label">Canonical Topic Day</div>
+              <div class="result-value" id="topic-day">–</div>
+              <div class="hint" id="topic-hint">
+                Day number 1–365 that selects the core lesson.
+              </div>
+            </div>
+            <div class="result-block">
+              <div class="result-label">Local Lesson Date</div>
+              <div class="result-value" id="local-date">–</div>
+              <div class="hint" id="local-date-hint">
+                What the learner actually sees in their calendar.
+              </div>
+            </div>
+            <div class="result-block">
+              <div class="result-label">Next Live Class Slot</div>
+              <div class="result-value" id="live-slot">–</div>
+              <div class="hint">
+                Rounded to the next 15‑minute boundary in local time.
+              </div>
+            </div>
+            <div class="result-block">
+              <div class="result-label">Special Notes</div>
+              <div class="result-value" id="notes">–</div>
+            </div>
+          </div>
+        </section>
+
+        <section class="panel" aria-label="Explanation and code">
+          <h2>How Kelly Thinks About Time</h2>
+          <p class="hint" style="margin-bottom: 8px">
+            This mirrors the logic in <code>lib/lesson-dates.ts</code>. For
+            production behavior, always use that library — this page is a human
+            explainer.
+          </p>
+
+          <div class="code-panel">
+            <pre id="code-snippet"></pre>
+          </div>
+        </section>
+      </section>
+
+      <footer class="footer">
+        <div>
+          <strong>Verification use:</strong> change the date, timezone, or UTC
+          instant and confirm that the topic day behaves exactly as designed
+          (including Feb 29 leap years).
+        </div>
+        <div>
+          <strong>Implementation source:</strong>
+          <code>lib/lesson-dates.ts</code> ·
+          <code>docs/architecture/TIME_AND_CALENDAR_LAW.md</code>
+        </div>
+      </footer>
+    </main>
+
+    <script>
+      // Minimal mirror of lib/lesson-dates.ts logic for this demo page only.
+
+      function isLeapYear(year) {
+        if (year % 4 !== 0) return false;
+        if (year % 100 !== 0) return true;
+        return year % 400 === 0;
+      }
+
+      const DAYS_IN_MONTH_COMMON = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+      const DAYS_IN_MONTH_LEAP = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+      function getDayOfYear(year, month, day) {
+        const daysInMonths = isLeapYear(year)
+          ? DAYS_IN_MONTH_LEAP
+          : DAYS_IN_MONTH_COMMON;
+        let doy = day;
+        for (let m = 0; m < month; m++) {
+          doy += daysInMonths[m];
+        }
+        return doy;
+      }
+
+      function dateToLessonDay(date) {
+        const year = date.getFullYear();
+        const month = date.getMonth();
+        const day = date.getDate();
+
+        const leap = isLeapYear(year);
+        const dayOfYear = getDayOfYear(year, month, day);
+
+        if (!leap) return dayOfYear;
+
+        if (dayOfYear <= 59) return dayOfYear; // Jan 1–Feb 28
+        if (month === 1 && day === 29) return 60; // Feb 29 shares March 1
+        return dayOfYear - 1; // March 1 onward
+      }
+
+      function getLessonDayForTimeZone(utcMillis, timeZone) {
+        const instant = new Date(utcMillis);
+        const formatter = new Intl.DateTimeFormat('en-CA', {
+          timeZone,
+          year: 'numeric',
+          month: '2-digit',
+          day: '2-digit',
+        });
+
+        const parts = formatter.formatToParts(instant);
+        const lookup = {};
+        for (const part of parts) {
+          if (part.type !== 'literal') {
+            lookup[part.type] = part.value;
+          }
+        }
+
+        const year = Number(lookup.year);
+        const month = Number(lookup.month) - 1;
+        const day = Number(lookup.day);
+        const localDate = new Date(year, month, day);
+        return { topicDay: dateToLessonDay(localDate), localDate };
+      }
+
+      function getNextLiveClassSlot(now, intervalMinutes) {
+        const start = new Date(now.getTime());
+        start.setSeconds(0, 0);
+
+        const minutes = start.getMinutes();
+        const remainder = minutes % intervalMinutes;
+        if (remainder !== 0) {
+          start.setMinutes(minutes + (intervalMinutes - remainder));
+        }
+
+        const end = new Date(start.getTime() + intervalMinutes * 60_000);
+        return { start, end };
+      }
+
+      function formatDateForDisplay(date, options) {
+        return date.toLocaleDateString('en-US', {
+          month: options?.short ? 'short' : 'long',
+          day: 'numeric',
+          year: options?.includeYear ? 'numeric' : undefined,
+          weekday: options?.includeWeekday ? 'long' : undefined,
+        });
+      }
+
+      const dateInput = document.getElementById('date-input');
+      const tzInput = document.getElementById('timezone-input');
+      const utcInput = document.getElementById('utc-input');
+      const topicDayEl = document.getElementById('topic-day');
+      const localDateEl = document.getElementById('local-date');
+      const notesEl = document.getElementById('notes');
+      const liveSlotEl = document.getElementById('live-slot');
+      const codeSnippetEl = document.getElementById('code-snippet');
+
+      function isoLocal(dt) {
+        const pad = (n) => String(n).padStart(2, '0');
+        return (
+          dt.getFullYear() +
+          '-' +
+          pad(dt.getMonth() + 1) +
+          '-' +
+          pad(dt.getDate()) +
+          'T' +
+          pad(dt.getHours()) +
+          ':' +
+          pad(dt.getMinutes())
+        );
+      }
+
+      function updateFromInputs() {
+        const tz = tzInput.value;
+        const now = new Date();
+
+        // If UTC field is empty, default to now
+        const utcValue = utcInput.value;
+        let utcMillis;
+        if (utcValue) {
+          const parsed = new Date(utcValue);
+          utcMillis = parsed.getTime();
+        } else {
+          utcMillis = now.getTime();
+        }
+
+        const { topicDay, localDate } = getLessonDayForTimeZone(utcMillis, tz);
+        const { start, end } = getNextLiveClassSlot(
+          new Date(utcMillis),
+          15
+        );
+
+        topicDayEl.textContent = topicDay;
+        localDateEl.textContent = formatDateForDisplay(localDate, {
+          includeYear: true,
+          includeWeekday: true,
+        });
+
+        const leapNote = isLeapYear(localDate.getFullYear())
+          ? 'Leap year'
+          : 'Common year';
+        const isFeb29 =
+          localDate.getMonth() === 1 && localDate.getDate() === 29;
+
+        if (isFeb29) {
+          notesEl.textContent =
+            'Feb 29 shares its topic with March 1 (canonical topic day 60).';
+        } else {
+          notesEl.textContent = leapNote + ' · topic mapping is stable.';
+        }
+
+        liveSlotEl.textContent =
+          start.toLocaleTimeString([], {
+            hour: 'numeric',
+            minute: '2-digit',
+          }) +
+          ' → ' +
+          end.toLocaleTimeString([], {
+            hour: 'numeric',
+            minute: '2-digit',
+          }) +
+          ' (' +
+          tz +
+          ')';
+
+        // Update code snippet to match the current scenario
+        codeSnippetEl.textContent =
+`// Given a UTC instant and IANA timezone, map to canonical topic day
+const utcMillis = ${utcMillis}; // ${new Date(utcMillis).toISOString()}
+const timeZone = '${tz}';
+
+const formatter = new Intl.DateTimeFormat('en-CA', {
+  timeZone,
+  year: 'numeric',
+  month: '2-digit',
+  day: '2-digit',
+});
+
+const parts = formatter.formatToParts(new Date(utcMillis));
+const lookup = Object.fromEntries(
+  parts.filter(p => p.type !== 'literal').map(p => [p.type, p.value])
+);
+
+const year = Number(lookup.year);
+const month = Number(lookup.month) - 1; // 0-indexed
+const day = Number(lookup.day);
+const localDate = new Date(year, month, day);
+
+const topicDay = dateToLessonDay(localDate); // → ${topicDay}
+`;
+      }
+
+      // Initialize defaults
+      (function init() {
+        const now = new Date();
+        const pad = (n) => String(n).padStart(2, '0');
+        dateInput.value =
+          now.getFullYear() +
+          '-' +
+          pad(now.getMonth() + 1) +
+          '-' +
+          pad(now.getDate());
+        utcInput.value = isoLocal(now);
+        updateFromInputs();
+      })();
+
+      dateInput.addEventListener('change', () => {
+        // When the date changes, recompute as if midnight local in the chosen timezone
+        // For this diagnostic, we only update the display date; canonical mapping
+        // is always driven by UTC + timezone via the controls above.
+        updateFromInputs();
+      });
+
+      tzInput.addEventListener('change', updateFromInputs);
+      utcInput.addEventListener('change', updateFromInputs);
+    </script>
+  </body>
+  </html>
+
+
+
+
+

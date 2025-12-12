@@ -2,13 +2,14 @@
 
 > **"Never miss a class with Kelly!"**
 
-**Launch Date**: December 17, 2025  
-**Year 1 Content**: December 17, 2025 → December 16, 2026
+**Canonical Calendar Anchor**: January 1, 2026 (Topic Day 1)  
+**Topic Index**: `day_number` 1–365 mapped via `lib/lesson-dates.ts`
 
-### ⚠️ IMPORTANT: Date Display Convention
-- **Internal**: `day_number` (1-365) — used in database, APIs, URLs
-- **User-Facing**: Real calendar dates — "December 17" not "Day 1"
-- **Utility**: `lib/lesson-dates.ts` for all date conversions
+### ⚠️ IMPORTANT: Date & Time Convention
+- **Internal**: `day_number` (1–365) — canonical topic index, independent of year
+- **User-Facing**: Real calendar dates — "January 1" not "Day 1"
+- **Timezone‑Aware**: Use `getLessonDayForTimeZone(utcMillis, user.timezone)` for all cron/notification decisions
+- **Utility**: `lib/lesson-dates.ts` for all date conversions (see `docs/architecture/TIME_AND_CALENDAR_LAW.md`)
 
 This index provides quick navigation to all notification system documentation and code.
 
@@ -76,8 +77,8 @@ This index provides quick navigation to all notification system documentation an
 UI-TARS-desktop/
 ├── lib/
 │   ├── lesson-dates.ts                 # 📅 Date utilities (CRITICAL)
-│   │                                   # Converts day_number ↔ calendar dates
-│   │                                   # December 17, 2025 = Day 1
+│   │                                   # Canonical topic calendar (Day 1 = Jan 1)
+│   │                                   # Converts day_number ↔ calendar dates + time zone mapping
 │   └── push-sender.ts                  # 🚀 Push notification sender
 │                                       # Web Push, APNs, FCM unified API
 ├── api/

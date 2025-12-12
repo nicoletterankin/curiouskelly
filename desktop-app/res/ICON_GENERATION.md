@@ -1,0 +1,40 @@
+# Icon Generation for Desktop App
+
+## Current Icons
+
+| File | Platform | Size |
+|------|----------|------|
+| `icon.png` | All/Linux | 512×512 |
+| `icon.ico` | Windows | Multi-size |
+| `icon.icns` | macOS | Multi-size (needs generation) |
+
+## Generating macOS .icns (requires Mac)
+
+```bash
+# 1. Create iconset folder
+mkdir icon.iconset
+
+# 2. Generate all required sizes from the 512px source
+sips -z 16 16     icon.png --out icon.iconset/icon_16x16.png
+sips -z 32 32     icon.png --out icon.iconset/icon_16x16@2x.png
+sips -z 32 32     icon.png --out icon.iconset/icon_32x32.png
+sips -z 64 64     icon.png --out icon.iconset/icon_32x32@2x.png
+sips -z 128 128   icon.png --out icon.iconset/icon_128x128.png
+sips -z 256 256   icon.png --out icon.iconset/icon_128x128@2x.png
+sips -z 256 256   icon.png --out icon.iconset/icon_256x256.png
+sips -z 512 512   icon.png --out icon.iconset/icon_256x256@2x.png
+sips -z 512 512   icon.png --out icon.iconset/icon_512x512.png
+cp icon.png icon.iconset/icon_512x512@2x.png
+
+# 3. Convert to icns
+iconutil -c icns icon.iconset -o icon.icns
+
+# 4. Cleanup
+rm -rf icon.iconset
+```
+
+## Placeholder .icns
+
+Until generated on Mac, Windows/Linux builds will work. macOS builds require the .icns file.
+
+

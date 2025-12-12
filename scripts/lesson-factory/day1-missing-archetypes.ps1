@@ -67,3 +67,6 @@ Write-Host ""
 Write-Host "Next: npx tsx scripts/lesson-factory/verify-day1-assets.ts" -ForegroundColor Yellow
 Write-Host ""
 
+
+
+

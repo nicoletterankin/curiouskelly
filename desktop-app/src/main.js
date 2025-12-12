@@ -28,7 +28,7 @@ function createWindow() {
       enableRemoteModule: false,
       preload: path.join(__dirname, 'preload.js')
     },
-    icon: path.join(__dirname, '../build/icon.png'),
+    icon: path.join(__dirname, '../res/icon.png'),
     show: false // Don't show until ready
   });
 

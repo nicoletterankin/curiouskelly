@@ -9,8 +9,9 @@ if (!HEYGEN_API_KEY) {
 }
 
 async function listTalkingPhotos() {
+  console.log('Listing talking photos...');
   try {
-    const response = await fetch('https://api.heygen.com/v2/talking_photos', {
+    const response = await fetch('https://api.heygen.com/v1/talking_photo.list', {
       headers: {
         'X-Api-Key': HEYGEN_API_KEY,
         'Content-Type': 'application/json'
@@ -18,15 +19,14 @@ async function listTalkingPhotos() {
     });
 
     if (!response.ok) {
-      throw new Error(`Failed to list talking photos: ${response.statusText}`);
+      throw new Error(`Failed to list talking photos: ${response.status} ${response.statusText}`);
     }
 
     const data = await response.json();
-    console.log('Talking Photos:', JSON.stringify(data.data.talking_photos, null, 2));
+    console.log(JSON.stringify(data, null, 2));
   } catch (error) {
     console.error('Error:', error);
   }
 }
 
 listTalkingPhotos();
-

@@ -1,9 +1,10 @@
 /**
- * Kelly Visual System v1.0
+ * Kelly Visual System v1.1
  * ═══════════════════════════════════════════════════════════════════════════════
  * 
  * Manages immersive backgrounds, props, and visual choreography for Kelly lessons.
  * Handles phase transitions with appropriate visual theming.
+ * Now includes safe-zone metadata for caption positioning and infographic panels.
  * 
  * @module KellyVisualSystem
  */
@@ -18,12 +19,18 @@ class KellyVisualSystem {
       enableChoreography: options.enableChoreography !== false,
       enableAudioSync: options.enableAudioSync !== false,
       transitionDuration: options.transitionDuration || 500,
+      enableSafeZones: options.enableSafeZones !== false,
       ...options
     };
     
     this.currentPhase = null;
     this.currentLesson = null;
     this.isLoading = false;
+    
+    // Safe zone and visual plan data
+    this.safeZones = null;
+    this.visualPlan = null;
+    this.currentSafeZone = null;
     
     // Visual theme definitions per phase type
     this.phaseThemes = {
@@ -123,22 +130,13 @@ class KellyVisualSystem {
     
     try {
       this.currentLesson = dayNumber;
+      const paddedDay = String(dayNumber).padStart(3, '0');
       
-      // Check if we have pre-generated visual assets for this day
-      // (Phase images, backgrounds from infographic pipeline)
-      const visualPlanUrl = `/content/days/day-${String(dayNumber).padStart(3, '0')}/visual-plan.json`;
+      // Load visual plan (v2 format from content/visual-plans/)
+      await this._loadVisualPlan(dayNumber);
       
-      try {
-        const response = await fetch(visualPlanUrl);
-        if (response.ok) {
-          const visualPlan = await response.json();
-          this.lessonVisuals = visualPlan;
-          console.log(`[KellyVisualSystem] Loaded visual plan for day ${dayNumber}`);
-        }
-      } catch (e) {
-        // Visual plan not available - use default theming
-        this.lessonVisuals = null;
-      }
+      // Load safe zones for video-based lessons
+      await this._loadSafeZones(dayNumber);
       
       // Apply initial welcome theme
       await this.setPhase('welcome', { dayNumber });
@@ -146,6 +144,201 @@ class KellyVisualSystem {
     } finally {
       this.isLoading = false;
     }
+  }
+  
+  /**
+   * Load visual plan for the lesson
+   * @param {number} dayNumber - The lesson day number
+   * @private
+   */
+  async _loadVisualPlan(dayNumber) {
+    const paddedDay = String(dayNumber).padStart(3, '0');
+    
+    // Try v2 format first (content/visual-plans/)
+    const visualPlanUrls = [
+      `/content/visual-plans/day-${paddedDay}-visual-plan-v2.json`,
+      `/content/days/day-${paddedDay}/visual-plan.json`,
+      `/kelly/phases/${paddedDay}/visual-plan.json`
+    ];
+    
+    for (const url of visualPlanUrls) {
+      try {
+        const response = await fetch(url);
+        if (response.ok) {
+          this.visualPlan = await response.json();
+          this.lessonVisuals = this.visualPlan;
+          console.log(`[KellyVisualSystem] ✅ Loaded visual plan from ${url}`);
+          return;
+        }
+      } catch (e) {
+        // Continue to next URL
+      }
+    }
+    
+    this.visualPlan = null;
+    this.lessonVisuals = null;
+    console.log(`[KellyVisualSystem] No visual plan found for day ${dayNumber}`);
+  }
+  
+  /**
+   * Load safe zones JSON for video positioning
+   * @param {number} dayNumber - The lesson day number
+   * @private
+   */
+  async _loadSafeZones(dayNumber) {
+    const paddedDay = String(dayNumber).padStart(3, '0');
+    const safeZoneUrl = `/kelly/videos/${paddedDay}/welcome-safe-zones.json`;
+    
+    try {
+      const response = await fetch(safeZoneUrl);
+      if (response.ok) {
+        this.safeZones = await response.json();
+        console.log(`[KellyVisualSystem] ✅ Loaded safe zones for day ${dayNumber}`);
+        
+        // Set initial safe zone (first segment)
+        if (this.safeZones?.safe_zones?.length > 0) {
+          this.currentSafeZone = this.safeZones.safe_zones[0];
+        }
+      }
+    } catch (e) {
+      this.safeZones = null;
+      console.log(`[KellyVisualSystem] No safe zones found for day ${dayNumber}`);
+    }
+  }
+  
+  /**
+   * Get the current safe zone based on video time
+   * @param {number} videoTime - Current video playback time in seconds
+   * @returns {object|null} Safe zone object with position data
+   */
+  getSafeZoneForTime(videoTime) {
+    if (!this.safeZones?.safe_zones) return null;
+    
+    for (const zone of this.safeZones.safe_zones) {
+      if (videoTime >= zone.time_start && videoTime < zone.time_end) {
+        this.currentSafeZone = zone;
+        return zone;
+      }
+    }
+    
+    return this.currentSafeZone;
+  }
+  
+  /**
+   * Get optimal caption position based on current safe zone
+   * @returns {object} Position object with CSS properties
+   */
+  getCaptionPosition() {
+    const zone = this.currentSafeZone;
+    if (!zone?.safe_zones) {
+      // Default: bottom center
+      return {
+        position: 'bottom-center',
+        top: 'auto',
+        bottom: 'calc(120px + var(--safe-bottom, 0px))',
+        left: '50%',
+        transform: 'translateX(-50%)',
+        maxWidth: '60%'
+      };
+    }
+    
+    // Find the best safe zone for captions (prefer bottom zones)
+    const bottomZones = zone.safe_zones.filter(z => z.name.includes('bottom'));
+    const bestZone = bottomZones.length > 0 
+      ? bottomZones.reduce((a, b) => a.score > b.score ? a : b)
+      : zone.safe_zones.reduce((a, b) => a.score > b.score ? a : b);
+    
+    // Convert normalized coordinates to CSS
+    return {
+      position: bestZone.name,
+      top: bestZone.name.includes('top') ? `${bestZone.y * 100}%` : 'auto',
+      bottom: bestZone.name.includes('bottom') ? `${(1 - bestZone.y - bestZone.height) * 100}%` : 'auto',
+      left: `${bestZone.x * 100}%`,
+      width: `${bestZone.width * 100}%`,
+      maxWidth: `${bestZone.width * 100}%`
+    };
+  }
+  
+  /**
+   * Get optimal infographic panel position based on current safe zone
+   * @returns {object} Position object with CSS properties for infographic panel
+   */
+  getInfographicPosition() {
+    const zone = this.currentSafeZone;
+    if (!zone?.safe_zones) {
+      // Default: top right
+      return {
+        position: 'top-right',
+        top: '80px',
+        right: '160px',
+        bottom: 'auto',
+        left: 'auto',
+        width: '320px',
+        maxWidth: '35%'
+      };
+    }
+    
+    // Find the best safe zone for infographic (prefer top-right, avoid Kelly's face)
+    const preferredOrder = ['top-right', 'right-mid', 'top-left', 'left-mid'];
+    let bestZone = null;
+    
+    for (const preferred of preferredOrder) {
+      const match = zone.safe_zones.find(z => z.name === preferred);
+      if (match && match.score >= 0.8) {
+        bestZone = match;
+        break;
+      }
+    }
+    
+    if (!bestZone) {
+      bestZone = zone.safe_zones.reduce((a, b) => a.score > b.score ? a : b);
+    }
+    
+    // Convert normalized coordinates to CSS
+    const isRight = bestZone.name.includes('right');
+    const isTop = bestZone.name.includes('top');
+    
+    return {
+      position: bestZone.name,
+      top: isTop ? `${bestZone.y * 100}%` : 'auto',
+      bottom: !isTop ? `${(1 - bestZone.y - bestZone.height) * 100}%` : 'auto',
+      right: isRight ? `${(1 - bestZone.x - bestZone.width) * 100}%` : 'auto',
+      left: !isRight ? `${bestZone.x * 100}%` : 'auto',
+      width: `${bestZone.width * 100}%`,
+      maxWidth: `${Math.min(bestZone.width * 100, 40)}%`
+    };
+  }
+  
+  /**
+   * Get visual plan data for a specific phase
+   * @param {string} phase - Phase name (hook, q1, q2, q3, wisdom)
+   * @returns {object|null} Phase visual data
+   */
+  getPhaseVisual(phase) {
+    if (!this.visualPlan?.phases) return null;
+    
+    const normalizedPhase = phase.toLowerCase().replace(/[^a-z0-9]/g, '');
+    
+    // Visual plan v2 uses array format
+    if (Array.isArray(this.visualPlan.phases)) {
+      return this.visualPlan.phases.find(p => 
+        p.phase?.toLowerCase() === normalizedPhase ||
+        p.phase?.toLowerCase() === phase.toLowerCase()
+      );
+    }
+    
+    // Legacy object format
+    return this.visualPlan.phases[normalizedPhase];
+  }
+  
+  /**
+   * Get infographic prompt for current phase (for generation)
+   * @param {string} phase - Phase name
+   * @returns {string|null} Image generation prompt
+   */
+  getInfographicPrompt(phase) {
+    const phaseVisual = this.getPhaseVisual(phase);
+    return phaseVisual?.visual?.prompt || null;
   }
   
   /**
