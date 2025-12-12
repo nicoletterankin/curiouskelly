@@ -1847,6 +1847,428 @@
         opacity: 1;
       }
 
+      /* === INLINE INFOGRAPHIC PANEL === */
+      .infographic-panel {
+        position: absolute;
+        top: 80px;
+        left: 60px;  /* Desktop: left-side slide-in */
+        right: auto;
+        width: 340px;
+        max-width: 38%;
+        z-index: 85;
+        background: rgba(0, 0, 0, 0.88);
+        -webkit-backdrop-filter: blur(20px);
+        backdrop-filter: blur(20px);
+        border-radius: 16px;
+        border: 1px solid rgba(255, 255, 255, 0.12);
+        overflow: hidden;
+        opacity: 0;
+        transform: translateX(-30px) scale(0.95);  /* Slide from left */
+        transition: all 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+        pointer-events: none;
+        box-shadow: 0 12px 48px rgba(0, 0, 0, 0.5);
+        will-change: transform, opacity;
+      }
+
+      .infographic-panel.visible {
+        opacity: 1;
+        transform: translateX(0) scale(1);
+        pointer-events: auto;
+      }
+
+      .infographic-panel.closing {
+        opacity: 0;
+        transform: translateX(-30px) scale(0.95);
+      }
+
+      /* Dragging state for swipe-to-dismiss */
+      .infographic-panel.dragging {
+        transition: none !important;
+      }
+
+      .infographic-image-container {
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        overflow: hidden;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+        touch-action: none; /* Enable pinch-to-zoom */
+      }
+
+      .infographic-image {
+        width: 100%;
+        height: 100%;
+        object-fit: cover;
+        transition: transform 0.3s ease;
+        transform-origin: center center;
+        touch-action: none;
+      }
+
+      .infographic-panel:hover .infographic-image:not(.zoomed) {
+        transform: scale(1.02);
+      }
+
+      /* Kelly-branded skeleton loading animation */
+      .infographic-skeleton {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: linear-gradient(135deg, #1a1a2e 0%, #16213e 50%, #1a1a2e 100%);
+        background-size: 200% 200%;
+        animation: skeletonShimmer 2s ease-in-out infinite;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+      }
+
+      .infographic-skeleton::before {
+        content: '✨';
+        font-size: 32px;
+        animation: skeletonPulse 1.5s ease-in-out infinite;
+      }
+
+      .infographic-skeleton::after {
+        content: 'Loading visual...';
+        font-size: 12px;
+        color: rgba(255, 255, 255, 0.5);
+        font-weight: 500;
+        letter-spacing: 0.5px;
+      }
+
+      @keyframes skeletonShimmer {
+        0%, 100% { background-position: 0% 0%; }
+        50% { background-position: 100% 100%; }
+      }
+
+      @keyframes skeletonPulse {
+        0%, 100% { transform: scale(1); opacity: 0.7; }
+        50% { transform: scale(1.1); opacity: 1; }
+      }
+
+      .infographic-loading {
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        gap: 10px;
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 12px;
+        z-index: 2;
+      }
+
+      .infographic-loading-spinner {
+        width: 28px;
+        height: 28px;
+        border: 2px solid rgba(255, 255, 255, 0.15);
+        border-top-color: var(--tiktok-accent);
+        border-radius: 50%;
+        animation: spin 0.8s linear infinite;
+      }
+
+      @keyframes spin {
+        to { transform: rotate(360deg); }
+      }
+
+      /* Kelly-branded fallback state */
+      .infographic-fallback {
+        position: absolute;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        gap: 12px;
+        background: linear-gradient(135deg, #1a1a2e 0%, #0f3460 100%);
+        color: rgba(255, 255, 255, 0.7);
+        font-size: 12px;
+        text-align: center;
+        padding: 20px;
+      }
+
+      .infographic-fallback-icon {
+        width: 48px;
+        height: 48px;
+        background: rgba(255, 255, 255, 0.1);
+        border-radius: 50%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        font-size: 24px;
+        animation: fallbackBounce 2s ease-in-out infinite;
+      }
+
+      @keyframes fallbackBounce {
+        0%, 100% { transform: translateY(0); }
+        50% { transform: translateY(-4px); }
+      }
+
+      .infographic-fallback-text {
+        font-weight: 500;
+        color: rgba(255, 255, 255, 0.8);
+      }
+
+      .infographic-fallback-subtext {
+        font-size: 10px;
+        color: rgba(255, 255, 255, 0.4);
+        max-width: 180px;
+      }
+
+      .infographic-caption {
+        padding: 12px 16px;
+        font-size: 13px;
+        line-height: 1.5;
+        color: rgba(255, 255, 255, 0.9);
+        border-top: 1px solid rgba(255, 255, 255, 0.08);
+      }
+
+      .infographic-caption-title {
+        font-weight: 600;
+        color: #fff;
+        margin-bottom: 4px;
+        display: flex;
+        align-items: center;
+        gap: 6px;
+      }
+
+      .infographic-caption-title::before {
+        content: '📊';
+        font-size: 14px;
+      }
+
+      .infographic-close {
+        position: absolute;
+        top: 8px;
+        right: 8px;
+        width: 32px;
+        height: 32px;
+        border-radius: 50%;
+        background: rgba(0, 0, 0, 0.7);
+        border: none;
+        color: #fff;
+        font-size: 18px;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        transition: all 0.2s ease;
+        z-index: 10;
+        opacity: 0.7;
+      }
+
+      .infographic-panel:hover .infographic-close {
+        opacity: 1;
+      }
+
+      .infographic-close:hover {
+        background: rgba(255, 255, 255, 0.2);
+        transform: scale(1.1);
+      }
+
+      /* Zoom indicator */
+      .infographic-zoom-hint {
+        position: absolute;
+        bottom: 8px;
+        right: 8px;
+        padding: 4px 8px;
+        background: rgba(0, 0, 0, 0.6);
+        border-radius: 6px;
+        font-size: 10px;
+        color: rgba(255, 255, 255, 0.7);
+        opacity: 0;
+        transition: opacity 0.3s ease;
+        pointer-events: none;
+      }
+
+      .infographic-image-container:hover .infographic-zoom-hint,
+      .infographic-image-container:active .infographic-zoom-hint {
+        opacity: 1;
+      }
+
+      /* Infographic pill trigger button */
+      .infographic-pill {
+        position: absolute;
+        top: 80px;
+        left: 60px;  /* Match panel left position */
+        right: auto;
+        padding: 10px 16px;
+        background: rgba(0, 0, 0, 0.75);
+        -webkit-backdrop-filter: blur(12px);
+        backdrop-filter: blur(12px);
+        border-radius: 24px;
+        border: 1px solid rgba(255, 255, 255, 0.15);
+        color: #fff;
+        font-size: 13px;
+        font-weight: 500;
+        cursor: pointer;
+        display: flex;
+        align-items: center;
+        gap: 8px;
+        z-index: 84;
+        opacity: 0;
+        transform: translateX(-20px);
+        transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
+        pointer-events: none;
+        box-shadow: 0 4px 16px rgba(0, 0, 0, 0.3);
+      }
+
+      .infographic-pill.visible {
+        opacity: 1;
+        transform: translateX(0);
+        pointer-events: auto;
+      }
+
+      .infographic-pill:hover {
+        background: rgba(59, 130, 246, 0.85);
+        border-color: rgba(59, 130, 246, 0.5);
+        transform: scale(1.05);
+      }
+
+      .infographic-pill:active {
+        transform: scale(0.98);
+      }
+
+      .infographic-pill-icon {
+        font-size: 16px;
+      }
+
+      /* ═══════════════════════════════════════════════════════════════
+         MOBILE: Bottom Sheet Style Infographic
+         ═══════════════════════════════════════════════════════════════ */
+      @media (max-width: 768px) {
+        .infographic-panel {
+          position: fixed;
+          top: auto;
+          bottom: 0;
+          left: 0;
+          right: 0;
+          width: 100%;
+          max-width: 100%;
+          max-height: 70vh;
+          border-radius: 20px 20px 0 0;
+          transform: translateY(100%);  /* Slide up from bottom */
+          transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+          padding-bottom: env(safe-area-inset-bottom, 20px);
+          overflow-y: auto;
+        }
+
+        .infographic-panel.visible {
+          transform: translateY(0);
+        }
+
+        .infographic-panel.closing {
+          transform: translateY(100%);
+        }
+
+        /* Bottom sheet drag handle */
+        .infographic-drag-handle {
+          display: block;
+          width: 40px;
+          height: 4px;
+          background: rgba(255, 255, 255, 0.3);
+          border-radius: 2px;
+          margin: 12px auto 8px;
+        }
+
+        .infographic-pill {
+          position: fixed;
+          top: auto;
+          bottom: calc(180px + env(safe-area-inset-bottom, 0px));
+          left: 50%;
+          right: auto;
+          transform: translateX(-50%) translateY(10px);
+          padding: 12px 20px;
+          font-size: 14px;
+        }
+
+        .infographic-pill.visible {
+          transform: translateX(-50%) translateY(0);
+        }
+
+        .infographic-pill:hover {
+          transform: translateX(-50%) scale(1.02);
+        }
+
+        .infographic-image-container {
+          aspect-ratio: 16 / 10;
+        }
+
+        .infographic-caption {
+          padding: 14px 18px 20px;
+          font-size: 14px;
+        }
+
+        .infographic-close {
+          opacity: 1;
+          top: 12px;
+          right: 12px;
+          width: 36px;
+          height: 36px;
+        }
+
+        .infographic-zoom-hint {
+          opacity: 0.8;
+          font-size: 11px;
+        }
+      }
+
+      @media (max-width: 375px) {
+        .infographic-panel {
+          max-height: 65vh;
+        }
+
+        .infographic-pill {
+          bottom: calc(160px + env(safe-area-inset-bottom, 0px));
+        }
+      }
+
+      /* Hide drag handle on desktop */
+      .infographic-drag-handle {
+        display: none;
+      }
+
+      @media (max-width: 768px) {
+        .infographic-drag-handle {
+          display: block;
+        }
+      }
+
+      /* Safe-zone dynamic positioning classes */
+      .infographic-panel.safe-zone-top-left {
+        top: 5%;
+        left: 5%;
+      }
+
+      .infographic-panel.safe-zone-top-right {
+        top: 5%;
+        left: auto;
+        right: 160px;
+        transform: translateX(30px) scale(0.95);
+      }
+
+      .infographic-panel.safe-zone-top-right.visible {
+        transform: translateX(0) scale(1);
+      }
+
+      @media (max-width: 375px) {
+        .infographic-panel {
+          bottom: 220px;
+        }
+
+        .infographic-pill {
+          bottom: 280px;
+        }
+      }
+
       /* === BOTTOM BAR - Title === */
       .bottom-bar {
         position: absolute;
@@ -3233,6 +3655,56 @@
         <p class="caption-text" id="caption-text"></p>
       </div>
 
+      <!-- INLINE INFOGRAPHIC PANEL -->
+      <div class="infographic-pill" id="infographic-pill">
+        <span class="infographic-pill-icon">📊</span>
+        <span>See Visual</span>
+      </div>
+      
+      <div class="infographic-panel" id="infographic-panel">
+        <!-- Mobile drag handle for swipe-to-dismiss -->
+        <div class="infographic-drag-handle" id="infographic-drag-handle"></div>
+        
+        <button class="infographic-close" id="infographic-close" aria-label="Close infographic">×</button>
+        
+        <div class="infographic-image-container" id="infographic-image-container">
+          <!-- Skeleton loading animation -->
+          <div class="infographic-skeleton" id="infographic-skeleton"></div>
+          
+          <!-- Loading spinner -->
+          <div class="infographic-loading" id="infographic-loading">
+            <div class="infographic-loading-spinner"></div>
+            <span>Loading visual...</span>
+          </div>
+          
+          <!-- Kelly-branded fallback when no image found -->
+          <div class="infographic-fallback" id="infographic-fallback" style="display: none;">
+            <span class="infographic-fallback-icon">✨</span>
+            <span class="infographic-fallback-text">Visual coming soon</span>
+            <span class="infographic-fallback-subtext">Kelly's preparing something special for this lesson</span>
+          </div>
+          
+          <!-- Main infographic image -->
+          <img 
+            class="infographic-image" 
+            id="infographic-image" 
+            src="" 
+            alt="Phase infographic"
+            style="display: none;"
+          />
+          
+          <!-- Zoom hint -->
+          <div class="infographic-zoom-hint" id="infographic-zoom-hint">
+            <span>📌 Pinch to zoom</span>
+          </div>
+        </div>
+        
+        <div class="infographic-caption" id="infographic-caption">
+          <div class="infographic-caption-title" id="infographic-title">Visual Aid</div>
+          <p id="infographic-description"></p>
+        </div>
+      </div>
+
       <!-- TOP HEADER - Kelly Home Button, Topic, Date, Time -->
       <div class="top-header" id="top-header">
         <div class="top-header-left">
@@ -3675,6 +4147,8 @@
       let kellyAvatar = null;
       let kellyAudio = null;
       let loadingTimeout = null; // Track loading timeout
+      let kellyPersonaManifest = null; // Loaded from /assets/kelly/kelly-personas-manifest.json
+      let lastSpokenPhaseKey = null; // Prevent repeat audio on rerender
 
       // ═══════════════════════════════════════════════════════════════════
       // KELLY AVATAR CONTROLLER INITIALIZATION
@@ -3695,9 +4169,12 @@
           return;
         }
 
-        // Initialize 2D avatar controller (using Kelly2DAvatar - the active module)
-        kellyAvatar = new Kelly2DAvatar(container2D);
-        console.log('[Learn] Kelly 2D avatar initialized');
+        // Launch-mode directive (Dec 2025):
+        // We are shipping with HIGH QUALITY static persona heads + ElevenLabs audio.
+        // Do NOT replace the <img id="kelly-avatar"> node with a controller that clears the DOM,
+        // because we need a stable target for persona head swapping.
+        kellyAvatar = null;
+        console.log('[Learn] Kelly 2D avatar controller disabled (persona-head mode active)');
 
         // ═══════════════════════════════════════════════════════════════════
         // INITIALIZE KELLY VISUAL SYSTEM
@@ -3707,8 +4184,11 @@
           try {
             kellyVisualSystem = new KellyVisualSystem(kellyFrame, {
               enableChoreography: true,
-              enableAudioSync: true
+              enableAudioSync: true,
+              enableSafeZones: true
             });
+            // Expose to window for InfographicPanel and other modules
+            window.kellyVisualSystem = kellyVisualSystem;
             console.log('[Learn] ✅ Kelly Visual System initialized');
           } catch (e) {
             console.warn('[Learn] Visual system init failed, using fallback:', e.message);
@@ -3817,6 +4297,126 @@
         'The Explorer': ['Explorer', 'Jester', 'The Storyteller'],
         'The Survivor': ['Survivor', 'Ruler', 'The Strategist']
       };
+
+      // ═══════════════════════════════════════════════════════════════════
+      // LAUNCH MODE: PERSONA HEADS + AUDIO (NO VIDEO REQUIRED)
+      // ═══════════════════════════════════════════════════════════════════
+      function mapUiAgeToHeadVariant(uiAgeBucket) {
+        // UI stores coarse buckets; we map to the 5 canonical head sets.
+        const v = String(uiAgeBucket || '').trim();
+        if (v === '2-5' || v === '6-12') return 'kid';
+        if (v === '13-17') return 'teen';
+        if (v === '36-60') return 'elder';
+        if (v === '61+') return 'super_elder';
+        return 'adult';
+      }
+
+      function archetypeToPersonaId(archetype) {
+        // "The Scientist" -> "scientist"
+        const a = String(archetype || '').trim();
+        return a.toLowerCase().replace(/^the\s+/, '').replace(/\s+/g, '_');
+      }
+
+      function getCurrentPersonaId() {
+        const archetype = TONE_TO_ARCHETYPE[state?.variants?.tone] || 'The Scientist';
+        return archetypeToPersonaId(archetype);
+      }
+
+      async function loadPersonaManifestOnce() {
+        if (kellyPersonaManifest) return kellyPersonaManifest;
+        try {
+          const resp = await fetch('/assets/kelly/kelly-personas-manifest.json', { cache: 'no-store' });
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          kellyPersonaManifest = await resp.json();
+          return kellyPersonaManifest;
+        } catch (e) {
+          console.warn('[Learn] Failed loading persona manifest:', e?.message || e);
+          kellyPersonaManifest = null;
+          return null;
+        }
+      }
+
+      function getPersonaHeadUrl(personaId, ageVariant) {
+        if (!kellyPersonaManifest) return null;
+        const p = kellyPersonaManifest?.personas?.[personaId];
+        if (!p) return null;
+        const cdnBase = kellyPersonaManifest.cdnBase;
+        const rel = p?.images?.headByAge?.[ageVariant] || p?.images?.head;
+        if (!cdnBase || !rel) return null;
+        return `${cdnBase}/${rel}`;
+      }
+
+      function setKellyPersonaHeadImage() {
+        const img = document.getElementById('kelly-avatar');
+        if (!img) return;
+        if (!kellyPersonaManifest) return;
+
+        const personaId = getCurrentPersonaId();
+        const ageVariant = mapUiAgeToHeadVariant(state?.variants?.age);
+        const url = getPersonaHeadUrl(personaId, ageVariant);
+
+        if (!url) return;
+
+        // Only swap if changed (avoid reflow)
+        if (img.dataset?.personaSrc === url) return;
+        img.dataset.personaSrc = url;
+        img.src = url;
+      }
+
+      function phaseToDbPhase(phase) {
+        // The player uses types: welcome, hook, question, wisdom, complete.
+        // Our assets use: hook, q1, q2, q3, wisdom.
+        if (!phase) return 'hook';
+        if (phase.type === 'hook' || phase.type === 'welcome') return 'hook';
+        if (phase.type === 'wisdom' || phase.type === 'complete') return 'wisdom';
+        if (phase.type === 'question') {
+          const questionPhases = state.lesson?.phases?.filter(p => p.type === 'question') || [];
+          const idx = questionPhases.findIndex(p => p === phase);
+          return `q${Math.max(1, idx + 1)}`;
+        }
+        return 'hook';
+      }
+
+      async function getPreGeneratedAudioUrl({ dayNumber, dbPhase, personaId, ageVariant, language }) {
+        // Query the kelly_video_assets table for an audio asset if it exists.
+        // If it doesn't exist yet, return null and we fall back to /api/tts.
+        try {
+          const { data, error } = await supabase
+            .from('kelly_video_assets')
+            .select('public_url')
+            .eq('day_number', dayNumber)
+            .eq('phase', dbPhase)
+            .eq('asset_type', 'audio')
+            .eq('age_bucket', ageVariant)
+            .eq('language', language)
+            .eq('template', personaId)
+            .in('status', ['validated', 'published', 'generated'])
+            .limit(1);
+
+          if (error) return null;
+          if (data && data.length > 0 && data[0]?.public_url) return data[0].public_url;
+          return null;
+        } catch {
+          return null;
+        }
+      }
+
+      async function speakPhaseIfNeeded(text, phase) {
+        if (!kellyAudio || state.isPaused) return;
+        const dayNumber = state.dayNumber;
+        const personaId = getCurrentPersonaId();
+        const ageVariant = mapUiAgeToHeadVariant(state?.variants?.age);
+        const language = state?.variants?.language || 'en';
+        const dbPhase = phaseToDbPhase(phase);
+        const phaseKey = `${dayNumber}-${dbPhase}-${personaId}-${ageVariant}-${language}`;
+
+        if (lastSpokenPhaseKey === phaseKey) return;
+        lastSpokenPhaseKey = phaseKey;
+
+        // Try pre-generated first, then fall back to secure /api/tts (still ElevenLabs).
+        const audioUrl = await getPreGeneratedAudioUrl({ dayNumber, dbPhase, personaId, ageVariant, language });
+        kellyAudio.speak(text, { language, audioUrl });
+      }
 
       // ═══════════════════════════════════════════════════════════════════
       // AGE/LANGUAGE PERSONALIZATION - Loads age hooks + lesson shards
@@ -4724,26 +5324,29 @@
           kellyVisualSystem.setPhase(visualPhase, state.lesson).catch(e => 
             console.warn('[Visual] Phase transition error:', e.message)
           );
+          
+          // ═══════════════════════════════════════════════════════════════
+          // INFOGRAPHIC PANEL: Update for this phase
+          // ═══════════════════════════════════════════════════════════════
+          if (typeof InfographicPanel !== 'undefined') {
+            // Close panel when switching phases
+            InfographicPanel.hide();
+            
+            // Get visual data for this phase and set up the pill
+            const phaseVisual = kellyVisualSystem.getPhaseVisual?.(visualPhase);
+            InfographicPanel.setPhase(visualPhase, phaseVisual);
+            
+            // Update position based on safe zones
+            InfographicPanel.updatePosition();
+          }
         }
 
         // ═══════════════════════════════════════════════════════════════
-        // KELLY PHASE VISUAL (Kelly in educational context)
-        // Load phase-specific image ONLY when no HD video is available
+        // LAUNCH MODE: PERSONA HEAD VISUAL (static, high quality)
+        // Video will replace this once HeyGen motion is ready.
         // ═══════════════════════════════════════════════════════════════
-        if (phase.videoUrl) {
-          // HD video is present — DON'T load static image (it would override video)
-          console.log('[Learn] HD video present, skipping static phase image');
-        } else if (kellyAvatar && kellyAvatar.loadPhaseVisual && state.dayNumber) {
-          // No HD video — load static image as fallback
-          let phaseFile = 'hook';
-          if (phase.type === 'question') {
-            const questionPhases = state.lesson?.phases?.filter(p => p.type === 'question') || [];
-            const questionIndex = questionPhases.findIndex(p => p === phase);
-            phaseFile = `q${Math.max(1, questionIndex + 1)}`;
-          } else if (phase.type === 'wisdom' || phase.type === 'complete') {
-            phaseFile = 'wisdom';
-          }
-          kellyAvatar.loadPhaseVisual(state.dayNumber, phaseFile);
+        if (!phase.videoUrl) {
+          setKellyPersonaHeadImage();
         }
         
         // ═══════════════════════════════════════════════════════════════
@@ -4803,6 +5406,9 @@
         // V2: Use Caption System for TV-style karaoke text
         console.log(`[V2 Caption] Setting text: "${text.substring(0, 50)}..."`);
         CaptionSystem.startTypewriter(text, 4); // 4 words per second for better pacing
+
+        // Voice: speak the phase (pre-generated audio preferred, then secure /api/tts)
+        speakPhaseIfNeeded(text, phase);
 
         // V2: Update Bottom Bar and Progress
         updateBottomBarV2();
@@ -5194,6 +5800,11 @@
           if (avatar2D) {
             avatar2D.style.opacity = '1';
           }
+          // Stop safe-zone tracking and close infographic panel
+          if (typeof InfographicPanel !== 'undefined') {
+            InfographicPanel.stopSafeZoneTracking();
+            InfographicPanel.hide();
+          }
           // Call completion callback
           if (onComplete) onComplete();
         };
@@ -5207,8 +5818,17 @@
           if (avatar2D) {
             avatar2D.style.opacity = '1';
           }
+          // Stop safe-zone tracking
+          if (typeof InfographicPanel !== 'undefined') {
+            InfographicPanel.stopSafeZoneTracking();
+          }
           if (onComplete) onComplete();
         };
+        
+        // Start safe-zone tracking for infographic positioning during video playback
+        if (typeof InfographicPanel !== 'undefined') {
+          InfographicPanel.startSafeZoneTracking(video);
+        }
         
         // Play with retry
         const playPromise = video.play();
@@ -5625,6 +6245,572 @@
       };
 
       // ═══════════════════════════════════════════════════════════════════
+      // V2 INFOGRAPHIC PANEL SYSTEM - Inline visual aids with gestures
+      // ═══════════════════════════════════════════════════════════════════
+      const InfographicPanel = {
+        // DOM Elements
+        panel: null,
+        pill: null,
+        image: null,
+        imageContainer: null,
+        loading: null,
+        skeleton: null,
+        fallback: null,
+        title: null,
+        description: null,
+        closeBtn: null,
+        dragHandle: null,
+        zoomHint: null,
+        
+        // State
+        isVisible: false,
+        currentPhase: null,
+        isMobile: false,
+        
+        // Swipe-to-dismiss state
+        isDragging: false,
+        dragStartY: 0,
+        dragCurrentY: 0,
+        dragThreshold: 100, // px to dismiss
+        
+        // Pinch-to-zoom state
+        currentScale: 1,
+        lastScale: 1,
+        lastTapTime: 0,
+        initialDistance: 0,
+        isPinching: false,
+        translateX: 0,
+        translateY: 0,
+        
+        // Safe-zone tracking
+        safeZoneInterval: null,
+        
+        init() {
+          // Get DOM elements
+          this.panel = document.getElementById('infographic-panel');
+          this.pill = document.getElementById('infographic-pill');
+          this.image = document.getElementById('infographic-image');
+          this.imageContainer = document.getElementById('infographic-image-container');
+          this.loading = document.getElementById('infographic-loading');
+          this.skeleton = document.getElementById('infographic-skeleton');
+          this.fallback = document.getElementById('infographic-fallback');
+          this.title = document.getElementById('infographic-title');
+          this.description = document.getElementById('infographic-description');
+          this.closeBtn = document.getElementById('infographic-close');
+          this.dragHandle = document.getElementById('infographic-drag-handle');
+          this.zoomHint = document.getElementById('infographic-zoom-hint');
+          
+          if (!this.panel || !this.pill) {
+            console.warn('[Infographic] Panel elements not found');
+            return;
+          }
+          
+          // Detect mobile
+          this.isMobile = window.matchMedia('(max-width: 768px)').matches;
+          window.matchMedia('(max-width: 768px)').addEventListener('change', (e) => {
+            this.isMobile = e.matches;
+          });
+          
+          // Pill click opens panel
+          this.pill.addEventListener('click', () => this.toggle());
+          
+          // Close button
+          this.closeBtn?.addEventListener('click', (e) => {
+            e.stopPropagation();
+            this.hide();
+          });
+          
+          // Click outside to close (desktop only)
+          document.addEventListener('click', (e) => {
+            if (this.isVisible && 
+                !this.panel.contains(e.target) && 
+                !this.pill.contains(e.target)) {
+              this.hide();
+            }
+          });
+          
+          // Setup swipe-to-dismiss for mobile
+          this._setupSwipeToDismiss();
+          
+          // Setup pinch-to-zoom
+          this._setupPinchToZoom();
+          
+          console.log('[Infographic] ✅ Initialized with gestures');
+        },
+        
+        // ═══════════════════════════════════════════════════════════════
+        // SWIPE-TO-DISMISS (Mobile Bottom Sheet)
+        // ═══════════════════════════════════════════════════════════════
+        _setupSwipeToDismiss() {
+          if (!this.panel) return;
+          
+          // Touch start
+          this.panel.addEventListener('touchstart', (e) => {
+            if (!this.isMobile || !this.isVisible) return;
+            
+            // Only allow drag from top area or drag handle
+            const touch = e.touches[0];
+            const rect = this.panel.getBoundingClientRect();
+            const isTopArea = touch.clientY < rect.top + 60;
+            const isDragHandle = e.target.classList.contains('infographic-drag-handle');
+            
+            if (isTopArea || isDragHandle) {
+              this.isDragging = true;
+              this.dragStartY = touch.clientY;
+              this.dragCurrentY = touch.clientY;
+              this.panel.classList.add('dragging');
+            }
+          }, { passive: true });
+          
+          // Touch move
+          this.panel.addEventListener('touchmove', (e) => {
+            if (!this.isDragging) return;
+            
+            const touch = e.touches[0];
+            this.dragCurrentY = touch.clientY;
+            const deltaY = this.dragCurrentY - this.dragStartY;
+            
+            // Only allow dragging down
+            if (deltaY > 0) {
+              const resistance = 0.5; // Add resistance for better feel
+              const translation = deltaY * resistance;
+              this.panel.style.transform = `translateY(${translation}px)`;
+              
+              // Fade out as we drag
+              const opacity = Math.max(0, 1 - (deltaY / (this.dragThreshold * 2)));
+              this.panel.style.opacity = opacity;
+            }
+          }, { passive: true });
+          
+          // Touch end
+          this.panel.addEventListener('touchend', () => {
+            if (!this.isDragging) return;
+            
+            this.isDragging = false;
+            this.panel.classList.remove('dragging');
+            
+            const deltaY = this.dragCurrentY - this.dragStartY;
+            
+            if (deltaY > this.dragThreshold) {
+              // Dismiss
+              this.hide();
+            } else {
+              // Snap back with spring animation
+              this.panel.style.transform = '';
+              this.panel.style.opacity = '';
+            }
+          });
+          
+          // Touch cancel
+          this.panel.addEventListener('touchcancel', () => {
+            if (!this.isDragging) return;
+            
+            this.isDragging = false;
+            this.panel.classList.remove('dragging');
+            this.panel.style.transform = '';
+            this.panel.style.opacity = '';
+          });
+        },
+        
+        // ═══════════════════════════════════════════════════════════════
+        // PINCH-TO-ZOOM + DOUBLE-TAP RESET
+        // ═══════════════════════════════════════════════════════════════
+        _setupPinchToZoom() {
+          if (!this.imageContainer || !this.image) return;
+          
+          // Double-tap to reset
+          this.imageContainer.addEventListener('touchend', (e) => {
+            const now = Date.now();
+            const timeSince = now - this.lastTapTime;
+            
+            if (timeSince < 300 && e.touches.length === 0) {
+              // Double tap detected
+              this._resetZoom();
+              e.preventDefault();
+            }
+            
+            this.lastTapTime = now;
+          });
+          
+          // Pinch gesture
+          this.imageContainer.addEventListener('touchstart', (e) => {
+            if (e.touches.length === 2) {
+              this.isPinching = true;
+              this.initialDistance = this._getDistance(e.touches[0], e.touches[1]);
+              this.lastScale = this.currentScale;
+            }
+          }, { passive: true });
+          
+          this.imageContainer.addEventListener('touchmove', (e) => {
+            if (!this.isPinching || e.touches.length !== 2) return;
+            
+            e.preventDefault();
+            
+            const currentDistance = this._getDistance(e.touches[0], e.touches[1]);
+            const scaleChange = currentDistance / this.initialDistance;
+            
+            // Calculate new scale (clamp between 1x and 2x)
+            this.currentScale = Math.min(2, Math.max(1, this.lastScale * scaleChange));
+            
+            // Apply transform
+            this._applyZoom();
+          }, { passive: false });
+          
+          this.imageContainer.addEventListener('touchend', (e) => {
+            if (e.touches.length < 2) {
+              this.isPinching = false;
+              this.lastScale = this.currentScale;
+              
+              // Snap back to 1x if close
+              if (this.currentScale < 1.1) {
+                this._resetZoom();
+              }
+            }
+          });
+        },
+        
+        _getDistance(touch1, touch2) {
+          const dx = touch1.clientX - touch2.clientX;
+          const dy = touch1.clientY - touch2.clientY;
+          return Math.sqrt(dx * dx + dy * dy);
+        },
+        
+        _applyZoom() {
+          if (!this.image) return;
+          this.image.style.transform = `scale(${this.currentScale})`;
+          this.image.classList.toggle('zoomed', this.currentScale > 1.05);
+          
+          // Update zoom hint
+          if (this.zoomHint) {
+            this.zoomHint.innerHTML = this.currentScale > 1.05 
+              ? '<span>👆 Double-tap to reset</span>'
+              : '<span>📌 Pinch to zoom</span>';
+          }
+        },
+        
+        _resetZoom() {
+          this.currentScale = 1;
+          this.lastScale = 1;
+          this.translateX = 0;
+          this.translateY = 0;
+          
+          if (this.image) {
+            this.image.style.transform = 'scale(1)';
+            this.image.classList.remove('zoomed');
+          }
+          
+          if (this.zoomHint) {
+            this.zoomHint.innerHTML = '<span>📌 Pinch to zoom</span>';
+          }
+          
+          console.log('[Infographic] Zoom reset');
+        },
+        
+        // ═══════════════════════════════════════════════════════════════
+        // PHASE MANAGEMENT
+        // ═══════════════════════════════════════════════════════════════
+        setPhase(phase, visualData = null) {
+          this.currentPhase = phase;
+          
+          // Reset zoom when changing phases
+          this._resetZoom();
+          
+          // Get visual data from kelly visual system if available
+          if (!visualData && window.kellyVisualSystem) {
+            visualData = window.kellyVisualSystem.getPhaseVisual(phase);
+          }
+          
+          if (visualData?.visual) {
+            // Show pill indicator
+            this.showPill();
+            
+            // Update content
+            const textOverlay = visualData.visual.textOverlay || visualData.visual.type || 'Visual Aid';
+            if (this.title) this.title.textContent = textOverlay;
+            if (this.description) this.description.textContent = visualData.visual.reasoning || '';
+            
+            // Try to load the infographic image
+            this.loadImage(phase, visualData);
+          } else {
+            // No visual data for this phase
+            this.hidePill();
+            this.hide();
+          }
+        },
+        
+        // ═══════════════════════════════════════════════════════════════
+        // IMAGE LOADING WITH SKELETON + 1s TIMEOUT FALLBACK
+        // ═══════════════════════════════════════════════════════════════
+        loadImageTimeout: null,
+        imageLoadStartTime: 0,
+        
+        loadImage(phase, visualData) {
+          if (!this.image) return;
+          
+          // Clear any existing timeout
+          if (this.loadImageTimeout) {
+            clearTimeout(this.loadImageTimeout);
+            this.loadImageTimeout = null;
+          }
+          
+          // Track load start time
+          this.imageLoadStartTime = Date.now();
+          
+          // Show skeleton loading state
+          if (this.skeleton) this.skeleton.style.display = 'flex';
+          if (this.loading) this.loading.style.display = 'none'; // Hide spinner, skeleton has its own
+          if (this.fallback) this.fallback.style.display = 'none';
+          this.image.style.display = 'none';
+          
+          // Set 1-second timeout to show fallback if no asset loads
+          this.loadImageTimeout = setTimeout(() => {
+            const elapsed = Date.now() - this.imageLoadStartTime;
+            console.log(`[Infographic] ⏱️ 1s timeout reached (${elapsed}ms), showing fallback`);
+            this._showFallback();
+          }, 1000);
+          
+          // Build image paths to try
+          const dayNumber = state.dayNumber || 1;
+          const paddedDay = String(dayNumber).padStart(3, '0');
+          
+          const imagePaths = [
+            `/kelly/phases/${paddedDay}/${phase}.png`,
+            `/kelly/phases/${paddedDay}/${phase.toLowerCase()}.png`,
+            `/generated-assets/unified-factory/day-${paddedDay}/${phase}-infographic.png`,
+            `/kelly/day-${paddedDay}-perfect/${phase}/kelly-infographic.png`,
+            `/assets/infographics/${paddedDay}-${phase}.png`
+          ];
+          
+          // Try each path
+          this.tryLoadImages(imagePaths, 0);
+        },
+        
+        tryLoadImages(paths, index) {
+          // Check if we've already timed out
+          if (!this.loadImageTimeout) return;
+          
+          if (index >= paths.length) {
+            // No image found - clear timeout and show fallback
+            console.log('[Infographic] No image found after trying all paths');
+            this._clearLoadTimeout();
+            this._showFallback();
+            return;
+          }
+          
+          const testImg = new Image();
+          testImg.onload = () => {
+            // Success! Clear timeout and show image
+            this._clearLoadTimeout();
+            
+            if (this.image) {
+              this.image.src = paths[index];
+              this.image.style.display = 'block';
+            }
+            if (this.skeleton) this.skeleton.style.display = 'none';
+            if (this.loading) this.loading.style.display = 'none';
+            if (this.fallback) this.fallback.style.display = 'none';
+            
+            const elapsed = Date.now() - this.imageLoadStartTime;
+            console.log(`[Infographic] ✅ Loaded in ${elapsed}ms: ${paths[index]}`);
+          };
+          testImg.onerror = () => {
+            this.tryLoadImages(paths, index + 1);
+          };
+          testImg.src = paths[index];
+        },
+        
+        _clearLoadTimeout() {
+          if (this.loadImageTimeout) {
+            clearTimeout(this.loadImageTimeout);
+            this.loadImageTimeout = null;
+          }
+        },
+        
+        _showFallback() {
+          this._clearLoadTimeout();
+          if (this.skeleton) this.skeleton.style.display = 'none';
+          if (this.loading) this.loading.style.display = 'none';
+          if (this.fallback) this.fallback.style.display = 'flex';
+          if (this.image) this.image.style.display = 'none';
+        },
+        
+        // ═══════════════════════════════════════════════════════════════
+        // VISIBILITY CONTROLS
+        // ═══════════════════════════════════════════════════════════════
+        showPill() {
+          if (this.pill) {
+            this.pill.classList.add('visible');
+          }
+        },
+        
+        hidePill() {
+          if (this.pill) {
+            this.pill.classList.remove('visible');
+          }
+        },
+        
+        show() {
+          if (this.panel) {
+            this.panel.classList.add('visible');
+            this.panel.classList.remove('closing');
+            this.panel.style.transform = '';
+            this.panel.style.opacity = '';
+            this.isVisible = true;
+            console.log('[Infographic] Panel shown');
+          }
+        },
+        
+        hide() {
+          if (this.panel) {
+            this.panel.classList.add('closing');
+            this.panel.classList.remove('visible');
+            this.isVisible = false;
+            
+            // Reset zoom on close
+            this._resetZoom();
+            
+            // Remove closing class after animation
+            setTimeout(() => {
+              if (this.panel) {
+                this.panel.classList.remove('closing');
+                this.panel.style.transform = '';
+                this.panel.style.opacity = '';
+              }
+            }, 500);
+            
+            console.log('[Infographic] Panel hidden');
+          }
+        },
+        
+        toggle() {
+          if (this.isVisible) {
+            this.hide();
+          } else {
+            this.show();
+          }
+        },
+        
+        // ═══════════════════════════════════════════════════════════════
+        // SAFE-ZONE VIDEO TIME TRACKING (500ms updates)
+        // Repositions both captions AND infographic panel to avoid Kelly
+        // ═══════════════════════════════════════════════════════════════
+        startSafeZoneTracking(videoElement) {
+          if (this.safeZoneInterval) {
+            clearInterval(this.safeZoneInterval);
+          }
+          
+          if (!videoElement || !window.kellyVisualSystem) return;
+          
+          this.safeZoneInterval = setInterval(() => {
+            if (!videoElement.paused) {
+              const currentTime = videoElement.currentTime;
+              const zone = window.kellyVisualSystem.getSafeZoneForTime(currentTime);
+              
+              // Update infographic panel position (if visible)
+              if (this.isVisible) {
+                this.updatePosition();
+              }
+              
+              // Update caption position based on safe zone
+              this._updateCaptionPosition(zone);
+            }
+          }, 500);
+          
+          console.log('[Infographic] Started safe-zone guardian (500ms polling)');
+        },
+        
+        stopSafeZoneTracking() {
+          if (this.safeZoneInterval) {
+            clearInterval(this.safeZoneInterval);
+            this.safeZoneInterval = null;
+            
+            // Reset caption to default position
+            this._resetCaptionPosition();
+            
+            console.log('[Infographic] Stopped safe-zone guardian');
+          }
+        },
+        
+        /**
+         * Update caption bar position based on current safe zone
+         * @param {object} zone - Safe zone data from kellyVisualSystem
+         */
+        _updateCaptionPosition(zone) {
+          const captionBar = document.getElementById('caption-bar');
+          if (!captionBar || !window.kellyVisualSystem) return;
+          
+          const position = window.kellyVisualSystem.getCaptionPosition();
+          if (!position) return;
+          
+          // Apply position styles to caption bar
+          captionBar.style.transition = 'all 0.3s ease-out';
+          
+          if (position.bottom !== 'auto') {
+            captionBar.style.bottom = position.bottom;
+          }
+          if (position.left) {
+            captionBar.style.left = position.left;
+          }
+          if (position.transform) {
+            captionBar.style.transform = position.transform;
+          }
+          if (position.maxWidth) {
+            captionBar.style.maxWidth = position.maxWidth;
+          }
+        },
+        
+        /**
+         * Reset caption to default CSS-defined position
+         */
+        _resetCaptionPosition() {
+          const captionBar = document.getElementById('caption-bar');
+          if (!captionBar) return;
+          
+          // Remove inline styles to revert to CSS defaults
+          captionBar.style.removeProperty('bottom');
+          captionBar.style.removeProperty('left');
+          captionBar.style.removeProperty('transform');
+          captionBar.style.removeProperty('max-width');
+          captionBar.style.removeProperty('transition');
+        },
+        
+        // ═══════════════════════════════════════════════════════════════
+        // POSITION UPDATES (Safe-zone aware)
+        // ═══════════════════════════════════════════════════════════════
+        updatePosition() {
+          // Skip position updates on mobile (bottom sheet is fixed)
+          if (this.isMobile || !this.panel || !window.kellyVisualSystem) return;
+          
+          const position = window.kellyVisualSystem.getInfographicPosition();
+          
+          if (position) {
+            // Remove existing safe-zone classes
+            this.panel.classList.remove('safe-zone-top-left', 'safe-zone-top-right');
+            
+            // Apply position class based on safe zone
+            if (position.position === 'top-right') {
+              this.panel.classList.add('safe-zone-top-right');
+            } else if (position.position === 'top-left') {
+              this.panel.classList.add('safe-zone-top-left');
+            }
+            
+            // Also update pill position
+            if (this.pill && !this.isMobile) {
+              if (position.position.includes('right')) {
+                this.pill.style.left = 'auto';
+                this.pill.style.right = '160px';
+              } else {
+                this.pill.style.left = '60px';
+                this.pill.style.right = 'auto';
+              }
+            }
+            
+            console.log(`[Infographic] Safe-zone position: ${position.position}`);
+          }
+        }
+      };
+
+      // ═══════════════════════════════════════════════════════════════════
       // V2 OPTIONS SYSTEM - Right rail choices
       // ═══════════════════════════════════════════════════════════════════
       const OptionsSystem = {
@@ -5903,6 +7089,9 @@
           
           // Reload lesson
           this.reloadLesson();
+
+          // Keep Kelly head visuals in sync with settings changes
+          if (typeof setKellyPersonaHeadImage === 'function') setKellyPersonaHeadImage();
           
           setTimeout(() => this.closeAll(), 250);
           console.log(`[SettingsUI] Language: ${code}`);
@@ -5948,6 +7137,9 @@
           
           // Transform Kelly
           this.transformKelly(age);
+
+          // Keep Kelly head visuals in sync with settings changes
+          if (typeof setKellyPersonaHeadImage === 'function') setKellyPersonaHeadImage();
           
           // Reload lesson (debounced during drag)
           if (!this.isDraggingAge) {
@@ -6070,6 +7262,9 @@
           if (typeof state !== 'undefined') state.variants.tone = tone;
           
           this.reloadLesson();
+
+          // Keep Kelly head visuals in sync with settings changes
+          if (typeof setKellyPersonaHeadImage === 'function') setKellyPersonaHeadImage();
           
           setTimeout(() => this.closeAll(), 250);
           console.log(`[SettingsUI] Tone: ${tone}`);
@@ -6607,21 +7802,18 @@
         // Initialize V2 Systems
         CaptionSystem.init();
         OptionsSystem.init();
+        InfographicPanel.init();
         SwipeNav.init();
         SettingsUI.init();
         initPhaseNavigation();
         
         // Initialize Kelly Avatar (2D/3D controller)
         initKellyAvatar();
-        
-        // 🔧 FIX: Initialize Kelly Asset Manager BEFORE loading lesson
-        // This prevents race condition where renderPhase() is called before kellyAssets exists
-        const kellyImg = document.getElementById('kelly-avatar');
-        if (kellyImg && window.KellyAssetManager) {
-          window.kellyAssets = new KellyAssetManager(kellyImg);
-          window.kellyAssets.preloadEssential();
-          console.log('[Learn] ✅ Kelly Asset Manager initialized early');
-        }
+
+        // Load persona manifest once (for head image swapping)
+        await loadPersonaManifestOnce();
+        // Set initial head image immediately (before the first renderPhase)
+        setKellyPersonaHeadImage();
 
         // Initialize audio (ElevenLabs via secure /api/tts - NO BROWSER TTS)
         kellyAudio = new KellyAudio({
@@ -6644,6 +7836,24 @@
 
         // Load initial lesson
         await loadLesson(day);
+
+        // Autoplay policies vary by browser. If audio was blocked, the first user tap
+        // will re-trigger the current phase speech once.
+        document.addEventListener(
+          'pointerdown',
+          () => {
+            try {
+              const current = state.lesson?.phases?.[state.currentPhase - 1];
+              if (current) {
+                const t = getVariantText(current);
+                speakPhaseIfNeeded(t, current);
+              }
+            } catch (e) {
+              // no-op
+            }
+          },
+          { once: true }
+        );
 
         // Setup gestures
         setupGestures();
