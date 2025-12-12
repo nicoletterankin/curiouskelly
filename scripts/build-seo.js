@@ -6,10 +6,24 @@ import { fileURLToPath } from 'node:url';
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = path.dirname(__filename);
 
-const supabase = createClient(
-  process.env.SUPABASE_URL,
-  process.env.SUPABASE_ANON_KEY
-);
+const supabaseUrl =
+  process.env.SUPABASE_URL ||
+  process.env.PUBLIC_SUPABASE_URL ||
+  process.env.NEXT_PUBLIC_SUPABASE_URL ||
+  '';
+const supabaseAnonKey =
+  process.env.SUPABASE_ANON_KEY ||
+  process.env.PUBLIC_SUPABASE_ANON_KEY ||
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY ||
+  '';
+
+if (!supabaseUrl || !supabaseAnonKey) {
+  // Don't fail the deployment if SEO enrichment isn't configured.
+  console.warn('[build-seo] Missing Supabase env vars; skipping SEO generation.');
+  process.exit(0);
+}
+
+const supabase = createClient(supabaseUrl, supabaseAnonKey);
 
 async function generateSitemapsAndLlms() {
   // Fetch all lessons
