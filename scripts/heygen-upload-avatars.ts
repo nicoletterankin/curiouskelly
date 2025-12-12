@@ -12,7 +12,6 @@ import * as path from 'path';
 
 const CONFIG = {
   HEYGEN_API_KEY: process.env.HEYGEN_API_KEY!,
-  IMAGES_DIR: path.join(process.cwd(), 'generated-images', 'kelly-archetypes-lora'),
 };
 
 const ARCHETYPES = [
@@ -30,76 +29,166 @@ const ARCHETYPES = [
   'survivor',
 ];
 
-async function uploadToHeyGen(imagePath: string, name: string): Promise<string | null> {
+function titleCase(s: string) {
+  return s.charAt(0).toUpperCase() + s.slice(1);
+}
+
+function getArgValue(flag: string): string | null {
+  const idx = process.argv.indexOf(flag);
+  if (idx === -1) return null;
+  const val = process.argv[idx + 1];
+  return val && !val.startsWith('--') ? val : null;
+}
+
+function resolveImagesDir(): { imagesDir: string; label: string; isHeadOnly: boolean } {
+  // Usage examples:
+  // - Default (legacy): generated-images/kelly-archetypes-lora/kelly_archetype_<arch>.png
+  //   npx tsx scripts/heygen-upload-avatars.ts
+  //
+  // - Head-only age variants (recommended for your 36-base-head system):
+  //   npx tsx scripts/heygen-upload-avatars.ts --head-only --age kid
+  //   npx tsx scripts/heygen-upload-avatars.ts --head-only --age teen
+  //   npx tsx scripts/heygen-upload-avatars.ts --head-only --age adult
+  //   npx tsx scripts/heygen-upload-avatars.ts --head-only --age elder
+  //   npx tsx scripts/heygen-upload-avatars.ts --head-only --age super_elder
+  //
+  // NOTE: `mature` is a legacy alias. If present in your tree, we treat it as `elder`.
+  //
+  // - Explicit directory override:
+  //   npx tsx scripts/heygen-upload-avatars.ts --dir "generated-images/kelly-archetypes-head-only/age/mature"
+  const explicitDir = getArgValue('--dir') || getArgValue('--images-dir') || getArgValue('--imagesDir');
+  const isHeadOnly = process.argv.includes('--head-only') || process.argv.includes('--headOnly');
+  const age = getArgValue('--age');
+
+  if (explicitDir) {
+    return { imagesDir: path.isAbsolute(explicitDir) ? explicitDir : path.join(process.cwd(), explicitDir), label: 'custom', isHeadOnly };
+  }
+
+  if (isHeadOnly) {
+    if (!age) {
+      throw new Error('Missing --age when using --head-only (expected: kid|teen|adult|elder|super_elder)');
+    }
+    const normalizedAge = age === 'mature' ? 'elder' : age;
+    return {
+      imagesDir: path.join(process.cwd(), 'generated-images', 'kelly-archetypes-head-only', 'age', normalizedAge),
+      label: `age:${normalizedAge}`,
+      isHeadOnly: true,
+    };
+  }
+
+  return {
+    imagesDir: path.join(process.cwd(), 'generated-images', 'kelly-archetypes-lora'),
+    label: 'lora',
+    isHeadOnly: false,
+  };
+}
+
+function getImagePath(imagesDir: string, archetype: string, isHeadOnly: boolean) {
+  // legacy
+  if (!isHeadOnly) return path.join(imagesDir, `kelly_archetype_${archetype}.png`);
+  // head-only (age variant directories)
+  return path.join(imagesDir, `kelly_${archetype}_head.png`);
+}
+
+function loadUrlManifest(imagesDir: string): Record<string, string> {
+  // Prefer URL manifests that were created by our generators (avoid base64 uploads).
+  const candidates = [
+    path.join(imagesDir, 'archetype_head_urls.json'),
+    path.join(imagesDir, 'archetype_urls.json'),
+  ];
+
+  for (const p of candidates) {
+    if (!fs.existsSync(p)) continue;
+    try {
+      const raw = JSON.parse(fs.readFileSync(p, 'utf-8'));
+      // head-only format: { archetype: { url, description } }
+      if (raw && typeof raw === 'object') {
+        const out: Record<string, string> = {};
+        for (const [k, v] of Object.entries(raw)) {
+          if (typeof v === 'string') {
+            out[k] = v;
+          } else if (v && typeof v === 'object' && typeof (v as any).url === 'string') {
+            out[k] = (v as any).url;
+          }
+        }
+        if (Object.keys(out).length > 0) return out;
+      }
+    } catch {
+      // ignore and continue
+    }
+  }
+
+  return {};
+}
+
+async function postJson(url: string, body: any) {
+  const response = await fetch(url, {
+    method: 'POST',
+    headers: {
+      'X-Api-Key': CONFIG.HEYGEN_API_KEY,
+      'Content-Type': 'application/json',
+    },
+    body: JSON.stringify(body),
+  });
+  const text = await response.text();
+  let json: any = null;
+  try {
+    json = JSON.parse(text);
+  } catch {
+    // ignore
+  }
+  return { ok: response.ok, status: response.status, text, json };
+}
+
+async function uploadToHeyGen(imageUrl: string, name: string): Promise<string | null> {
   console.log(`\n📤 Uploading: ${name}`);
   
-  // Read the image file
-  const imageBuffer = fs.readFileSync(imagePath);
-  const base64Image = imageBuffer.toString('base64');
-  
-  // Try the talking_photo endpoint
+  // HeyGen APIs differ by account/version. We try multiple known-good endpoints.
   try {
-    const response = await fetch('https://api.heygen.com/v1/talking_photo', {
-      method: 'POST',
-      headers: {
-        'X-Api-Key': CONFIG.HEYGEN_API_KEY,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        image: `data:image/png;base64,${base64Image}`,
-        name: `Kelly ${name}`,
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      console.log(`   ⚠️ v1/talking_photo failed: ${error}`);
-      
-      // Try v2 endpoint
-      return await tryV2Endpoint(imagePath, name);
+    // 1) Most consistent: v1/talking_photo.add (expects image_url)
+    {
+      const res = await postJson('https://api.heygen.com/v1/talking_photo.add', {
+        image_url: imageUrl,
+        name,
+      });
+      if (res.ok) {
+        const id = res.json?.data?.talking_photo_id || res.json?.data?.id || res.json?.data;
+        console.log(`   ✅ Uploaded via v1/talking_photo.add! ID: ${id}`);
+        return id || null;
+      }
+      console.log(`   ⚠️ v1/talking_photo.add failed (${res.status}): ${res.text.substring(0, 200)}`);
     }
 
-    const result = await response.json();
-    console.log(`   ✅ Uploaded! ID: ${result.data?.talking_photo_id || result.data?.id}`);
-    return result.data?.talking_photo_id || result.data?.id;
+    // 2) v2 photo avatar generate (also expects image_url on many accounts)
+    {
+      const res = await postJson('https://api.heygen.com/v2/photo_avatar/generate', {
+        image_url: imageUrl,
+        name,
+      });
+      if (res.ok) {
+        const id = res.json?.data?.talking_photo_id || res.json?.data?.id || res.json?.data;
+        console.log(`   ✅ Uploaded via v2/photo_avatar/generate! ID: ${id}`);
+        return id || null;
+      }
+      console.log(`   ⚠️ v2/photo_avatar/generate failed (${res.status}): ${res.text.substring(0, 200)}`);
+    }
+
+    // 3) v2 talking photo (some accounts)
+    {
+      const res = await postJson('https://api.heygen.com/v2/talking_photo', {
+        image_url: imageUrl,
+        name,
+      });
+      if (res.ok) {
+        const id = res.json?.data?.talking_photo_id || res.json?.data?.id || res.json?.data;
+        console.log(`   ✅ Uploaded via v2/talking_photo! ID: ${id}`);
+        return id || null;
+      }
+      console.log(`   ⚠️ v2/talking_photo failed (${res.status}): ${res.text.substring(0, 200)}`);
+    }
 
   } catch (error: any) {
     console.error(`   ❌ Error: ${error.message}`);
-    return null;
-  }
-}
-
-async function tryV2Endpoint(imagePath: string, name: string): Promise<string | null> {
-  console.log(`   🔄 Trying v2 endpoint...`);
-  
-  const imageBuffer = fs.readFileSync(imagePath);
-  const base64Image = imageBuffer.toString('base64');
-  
-  try {
-    const response = await fetch('https://api.heygen.com/v2/photo_avatar', {
-      method: 'POST',
-      headers: {
-        'X-Api-Key': CONFIG.HEYGEN_API_KEY,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        image: `data:image/png;base64,${base64Image}`,
-        name: `Kelly ${name}`,
-      }),
-    });
-
-    if (!response.ok) {
-      const error = await response.text();
-      console.log(`   ⚠️ v2/photo_avatar also failed: ${error}`);
-      return null;
-    }
-
-    const result = await response.json();
-    console.log(`   ✅ Uploaded via v2! ID: ${result.data?.id}`);
-    return result.data?.id;
-
-  } catch (error: any) {
-    console.error(`   ❌ v2 Error: ${error.message}`);
     return null;
   }
 }
@@ -114,25 +203,47 @@ async function main() {
     process.exit(1);
   }
 
-  // Check for images
-  if (!fs.existsSync(CONFIG.IMAGES_DIR)) {
-    console.error(`❌ Images directory not found: ${CONFIG.IMAGES_DIR}`);
-    console.error('Run generate-12-kellys-with-lora.ts first!');
+  let imagesDirInfo: { imagesDir: string; label: string; isHeadOnly: boolean };
+  try {
+    imagesDirInfo = resolveImagesDir();
+  } catch (e: any) {
+    console.error(`❌ ${e.message}`);
     process.exit(1);
+  }
+
+  const { imagesDir, label, isHeadOnly } = imagesDirInfo;
+  console.log(`\n📁 Images: ${imagesDir}`);
+  console.log(`🏷️  Mode: ${label}${isHeadOnly ? ' (head-only)' : ''}`);
+
+  // Check for images
+  if (!fs.existsSync(imagesDir)) {
+    console.error(`❌ Images directory not found: ${imagesDir}`);
+    if (!isHeadOnly) console.error('Run generate-with-trained-lora.ts or generate-12-kellys-with-lora.ts first!');
+    if (isHeadOnly) console.error('Run generate-12-kellys-head-accessories.ts --ages=mature,elder first!');
+    process.exit(1);
+  }
+
+  const urlManifest = loadUrlManifest(imagesDir);
+  const hasUrls = Object.keys(urlManifest).length > 0;
+  if (!hasUrls) {
+    console.warn('⚠️ No URL manifest found (archetype_head_urls.json / archetype_urls.json).');
+    console.warn('   This uploader expects already-uploaded image URLs. Re-run the generator (it uploads to Supabase and writes a manifest).');
   }
 
   const results: Record<string, string | null> = {};
 
   for (const archetype of ARCHETYPES) {
-    const imagePath = path.join(CONFIG.IMAGES_DIR, `kelly_archetype_${archetype}.png`);
-    
-    if (!fs.existsSync(imagePath)) {
-      console.log(`⚠️ Image not found: ${imagePath}`);
+    const imageUrl = urlManifest[archetype];
+    if (!imageUrl || !imageUrl.startsWith('http')) {
+      console.log(`⚠️ URL not found for: ${archetype}`);
       results[archetype] = null;
       continue;
     }
 
-    const avatarId = await uploadToHeyGen(imagePath, archetype);
+    const displayName = isHeadOnly
+      ? `Kelly ${titleCase(archetype)} (${label})`
+      : `Kelly ${titleCase(archetype)}`;
+    const avatarId = await uploadToHeyGen(imageUrl, displayName);
     results[archetype] = avatarId;
 
     // Rate limit
@@ -141,12 +252,13 @@ async function main() {
 
   // Summary
   console.log('\n\n' + '═'.repeat(60));
-  console.log('📋 AVATAR IDS - Copy these to heygen-day1-batch.ts');
+  console.log('📋 TALKING PHOTO IDS - Copy into pipeline mapping');
   console.log('═'.repeat(60));
-  console.log('\nconst KELLY_AVATAR_IDS: Record<string, string> = {');
+  console.log(`\n// Source: ${label}`);
+  console.log('const AVATAR_MAP: Record<string, string> = {');
   
   for (const [archetype, id] of Object.entries(results)) {
-    const formattedName = `The ${archetype.charAt(0).toUpperCase() + archetype.slice(1)}`;
+    const formattedName = `The ${titleCase(archetype)}`;
     if (id) {
       console.log(`  "${formattedName}": "${id}",`);
     } else {
@@ -157,7 +269,7 @@ async function main() {
   console.log('};');
 
   // Save to file
-  const outputPath = path.join(CONFIG.IMAGES_DIR, 'heygen_avatar_ids.json');
+  const outputPath = path.join(imagesDir, 'heygen_talking_photo_ids.json');
   fs.writeFileSync(outputPath, JSON.stringify(results, null, 2));
   console.log(`\n💾 Saved to: ${outputPath}`);
 }

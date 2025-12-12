@@ -20,61 +20,31 @@
 // =============================================================================
 
 /**
- * 6 age buckets matching the voice engine and design docs.
+ * 5 age buckets matching production head sets (2–102).
  * Each bucket defines visual characteristics for that age range.
  */
 const AGE_BUCKETS = {
-  '2-5': {
-    name: 'Little Learner',
+  '2-12': {
+    name: 'Kid Learner',
     minAge: 2,
-    maxAge: 5,
-    persona: 'Playful Friend',
-    // CSS filter values
-    filters: {
-      brightness: 1.08,    // Brighter, more vibrant
-      saturation: 1.15,    // More colorful
-      warmth: 0,           // Neutral
-      softness: 0.3,       // Slight softening
-      hueRotate: -5        // Slightly cooler (youthful)
-    },
-    // Transform effects
-    transform: {
-      scale: 1.0,          // Slightly larger feel
-      headTilt: 2          // Slight playful tilt
-    },
-    // Expression intensity multiplier
-    expressionMultiplier: 1.4,  // +40% expression intensity
-    // Animation speed
-    animationSpeed: 1.1,
-    // Background mood
-    bgMood: 'playful',
-    // Future: dedicated image set
-    imageSet: 'child',
-    // Kelly's teaching style for this age
-    teachingStyle: 'Story-based, Fun & Playful'
-  },
-
-  '6-12': {
-    name: 'Curious Explorer',
-    minAge: 6,
     maxAge: 12,
-    persona: 'Cool Big Sister',
+    persona: 'Friendly Guide',
     filters: {
-      brightness: 1.04,
-      saturation: 1.08,
-      warmth: 2,
-      softness: 0.15,
-      hueRotate: 0
+      brightness: 1.06,
+      saturation: 1.12,
+      warmth: 1,
+      softness: 0.2,
+      hueRotate: -2
     },
     transform: {
       scale: 1.0,
-      headTilt: 1
+      headTilt: 1.5
     },
     expressionMultiplier: 1.25,
-    animationSpeed: 1.05,
+    animationSpeed: 1.07,
     bgMood: 'curious',
     imageSet: 'kid',
-    teachingStyle: 'Hands-on, Engaging & Curious'
+    teachingStyle: 'Hands-on, Engaging, High-energy'
   },
 
   '13-17': {
@@ -100,10 +70,10 @@ const AGE_BUCKETS = {
     teachingStyle: 'Direct, Relatable, No Fluff'
   },
 
-  '18-35': {
+  '18-49': {
     name: 'Adult Learner',
     minAge: 18,
-    maxAge: 35,
+    maxAge: 49,
     persona: 'Equal Partner',
     filters: {
       brightness: 1.0,       // BASE (Kelly is 27)
@@ -123,50 +93,50 @@ const AGE_BUCKETS = {
     teachingStyle: 'Practical, Clear, Conversational'
   },
 
-  '36-60': {
-    name: 'Seasoned Mind',
-    minAge: 36,
-    maxAge: 60,
-    persona: 'Respectful Guide',
-    filters: {
-      brightness: 0.98,
-      saturation: 0.95,
-      warmth: 5,            // Warmer tones
-      softness: 0.1,
-      hueRotate: 3          // Slightly warmer hue
-    },
-    transform: {
-      scale: 1.0,
-      headTilt: 0
-    },
-    expressionMultiplier: 0.85,  // More measured expressions
-    animationSpeed: 0.95,
-    bgMood: 'confident',
-    imageSet: 'mature',
-    teachingStyle: 'Efficient, Substantive, Respectful'
-  },
-
-  '61-102': {
-    name: 'Wisdom Keeper',
-    minAge: 61,
-    maxAge: 102,
+  '50-75': {
+    name: 'Elder Learner',
+    minAge: 50,
+    maxAge: 75,
     persona: 'Warm Companion',
     filters: {
-      brightness: 0.96,
-      saturation: 0.88,
-      warmth: 10,           // Warm, golden tones
-      softness: 0.25,       // Gentler overall
-      hueRotate: 8          // Warmer hue shift
+      brightness: 0.98,
+      saturation: 0.92,
+      warmth: 8,
+      softness: 0.18,
+      hueRotate: 6
     },
     transform: {
       scale: 1.0,
       headTilt: -1          // Slight gentle lean
     },
-    expressionMultiplier: 0.75,  // Gentle, subtle expressions
-    animationSpeed: 0.9,
+    expressionMultiplier: 0.8,
+    animationSpeed: 0.93,
     bgMood: 'warm',
     imageSet: 'elder',
     teachingStyle: 'Warm, Thoughtful, Reflective'
+  },
+
+  '76-102': {
+    name: 'Super Elder Learner',
+    minAge: 76,
+    maxAge: 102,
+    persona: 'Wise Elder',
+    filters: {
+      brightness: 0.96,
+      saturation: 0.88,
+      warmth: 10,
+      softness: 0.25,
+      hueRotate: 8
+    },
+    transform: {
+      scale: 1.0,
+      headTilt: -1
+    },
+    expressionMultiplier: 0.75,
+    animationSpeed: 0.9,
+    bgMood: 'warm',
+    imageSet: 'super_elder',
+    teachingStyle: 'Calm, Gentle, Dignified'
   }
 };
 
@@ -205,12 +175,11 @@ const IMAGE_PATHS = {
   // Future age-variant image paths (to be commissioned)
   // Format: kelly-{imageSet}-{expression}.png
   ageVariants: {
-    child: '/assets/kelly/age-variants/child/',    // 2-5
-    kid: '/assets/kelly/age-variants/kid/',        // 6-12
+    kid: '/assets/kelly/age-variants/kid/',        // 2-12
     teen: '/assets/kelly/age-variants/teen/',      // 13-17
-    adult: '/assets/kelly/age-variants/adult/',    // 18-35 (base)
-    mature: '/assets/kelly/age-variants/mature/',  // 36-60
-    elder: '/assets/kelly/age-variants/elder/'     // 61-102
+    adult: '/assets/kelly/age-variants/adult/',    // 18-49 (base)
+    elder: '/assets/kelly/age-variants/elder/',    // 50-75
+    super_elder: '/assets/kelly/age-variants/super_elder/' // 76-102
   }
 };
 
@@ -323,10 +292,6 @@ class KellyAgeAdaptiveAvatar {
       }
       
       /* Age bucket visual themes */
-      .kelly-age-adaptive.age-bucket-child {
-        --kelly-mood-color: rgba(147, 197, 253, 0.1); /* Soft blue */
-      }
-      
       .kelly-age-adaptive.age-bucket-kid {
         --kelly-mood-color: rgba(134, 239, 172, 0.1); /* Fresh green */
       }
@@ -339,12 +304,12 @@ class KellyAgeAdaptiveAvatar {
         --kelly-mood-color: transparent; /* Base/neutral */
       }
       
-      .kelly-age-adaptive.age-bucket-mature {
-        --kelly-mood-color: rgba(251, 191, 36, 0.05); /* Subtle gold */
-      }
-      
       .kelly-age-adaptive.age-bucket-elder {
         --kelly-mood-color: rgba(251, 146, 60, 0.08); /* Warm amber */
+      }
+
+      .kelly-age-adaptive.age-bucket-super_elder {
+        --kelly-mood-color: rgba(251, 146, 60, 0.12); /* Deeper warm amber */
       }
       
       /* Smooth transitions between ages */
