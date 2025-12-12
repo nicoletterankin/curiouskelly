@@ -190,7 +190,7 @@ function generateLessonPage(lesson: Lesson, prevDay: number | null, nextDay: num
     
     <div class="cta">
       <p>Get daily lessons delivered to your inbox</p>
-      <a href="https://curiouskelly.com/#signup">Subscribe Free →</a>
+      <a href="https://curiouskelly.com/#signup">Subscribe →</a>
     </div>
     
     <nav class="nav">
@@ -260,6 +260,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const dayNumber = parseInt(number as string, 10);
 
   if (isNaN(dayNumber) || dayNumber < 1 || dayNumber > 365) {
+    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=86400, stale-while-revalidate=604800');
     return res.status(404).send(generate404Page(dayNumber || 0));
   }
 
@@ -277,14 +278,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       .single();
 
     if (error || !lesson) {
+      res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=86400, stale-while-revalidate=604800');
       return res.status(404).send(generate404Page(dayNumber));
     }
 
     const prevDay = dayNumber > 1 ? dayNumber - 1 : null;
     const nextDay = dayNumber < 365 ? dayNumber + 1 : null;
 
-    res.setHeader('Content-Type', 'text/html');
-    res.setHeader('Cache-Control', 's-maxage=3600, stale-while-revalidate');
+    res.setHeader('Content-Type', 'text/html; charset=utf-8');
+    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400');
     
     return res.status(200).send(generateLessonPage(lesson, prevDay, nextDay));
 

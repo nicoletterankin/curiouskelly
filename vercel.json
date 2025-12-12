@@ -2,8 +2,8 @@
   "version": 2,
   "public": true,
   "framework": null,
-  "installCommand": "true",
-  "buildCommand": "echo skip-build",
+  "installCommand": "npm install",
+  "buildCommand": "node scripts/build-seo.js",
   "outputDirectory": "public",
   "functions": {
     "api/**/*.ts": {
@@ -37,9 +37,28 @@
     { "source": "/arif", "destination": "/kelly-hair-reference-for-arif.html" },
     { "source": "/submission/:id", "destination": "/submission.html" },
     { "source": "/mission-control", "destination": "/admin/index.html" },
-    { "source": "/admin", "destination": "/admin/index.html" }
+    { "source": "/admin", "destination": "/admin/index.html" },
+    { "source": "/lesson/:day", "destination": "/learn.html?day=:day" }
   ],
   "headers": [
+    {
+      "source": "/assets/kelly/kelly-personas-manifest\\.json",
+      "headers": [
+        { "key": "Cache-Control", "value": "public, max-age=0, s-maxage=86400, stale-while-revalidate=604800" }
+      ]
+    },
+    {
+      "source": "/(test-|debug-).+\\.html",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    },
+    {
+      "source": "/mockups/(.*)",
+      "headers": [
+        { "key": "X-Robots-Tag", "value": "noindex, nofollow" }
+      ]
+    },
     {
       "source": "/(.*)\\.html",
       "headers": [
@@ -49,6 +68,7 @@
     {
       "source": "/(.*)",
       "headers": [
+        { "key": "X-Robots-Tag", "value": "index, follow" },
         { "key": "X-Content-Type-Options", "value": "nosniff" },
         { "key": "X-Frame-Options", "value": "DENY" },
         { "key": "X-XSS-Protection", "value": "1; mode=block" },

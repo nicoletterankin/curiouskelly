@@ -28,14 +28,10 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Get API key from environment
   const apiKey = process.env.ELEVENLABS_API_KEY;
   
-  // Debug logging (remove in production)
   console.log('[TTS API] Request received');
-  console.log('[TTS API] API key present:', !!apiKey);
-  console.log('[TTS API] API key prefix:', apiKey ? apiKey.substring(0, 10) + '...' : 'NOT SET');
   
   if (!apiKey) {
     console.error('[TTS API] ❌ ELEVENLABS_API_KEY not set in environment');
-    console.error('[TTS API] Available env vars:', Object.keys(process.env).filter(k => k.includes('ELEVEN') || k.includes('API')));
     return res.status(500).json({ 
       error: 'TTS service not configured',
       details: 'ELEVENLABS_API_KEY environment variable is not set',
@@ -46,11 +42,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Parse request
   const { text, voiceId } = req.body;
   
-  console.log('[TTS API] Request body:', { 
-    textLength: text?.length, 
-    voiceId: voiceId || 'default',
-    hasText: !!text 
-  });
+  console.log('[TTS API] Request body:', { textLength: text?.length, voiceId: voiceId || 'default', hasText: !!text });
   
   if (!text || typeof text !== 'string') {
     console.error('[TTS API] ❌ Invalid text:', typeof text);
@@ -121,7 +113,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     
     res.setHeader('Content-Type', 'audio/mpeg');
     res.setHeader('Content-Length', audioBuffer.byteLength.toString());
-    res.setHeader('Cache-Control', 'public, max-age=31536000'); // Cache for 1 year
+    // POST responses are not cached by default by CDNs; keep this conservative.
+    res.setHeader('Cache-Control', 'no-store');
     
     return res.send(Buffer.from(audioBuffer));
 

@@ -4149,6 +4149,7 @@
       let loadingTimeout = null; // Track loading timeout
       let kellyPersonaManifest = null; // Loaded from /assets/kelly/kelly-personas-manifest.json
       let lastSpokenPhaseKey = null; // Prevent repeat audio on rerender
+      const PERSONA_MANIFEST_URL = '/assets/kelly/kelly-personas-manifest.json?v=2.0.0';
 
       // ═══════════════════════════════════════════════════════════════════
       // KELLY AVATAR CONTROLLER INITIALIZATION
@@ -4325,7 +4326,7 @@
       async function loadPersonaManifestOnce() {
         if (kellyPersonaManifest) return kellyPersonaManifest;
         try {
-          const resp = await fetch('/assets/kelly/kelly-personas-manifest.json', { cache: 'no-store' });
+          const resp = await fetch(PERSONA_MANIFEST_URL, { cache: 'force-cache' });
           if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
           kellyPersonaManifest = await resp.json();
           return kellyPersonaManifest;
