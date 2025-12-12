@@ -569,6 +569,84 @@
             color: var(--text-muted);
         }
 
+        /* Persona controls (age + teaching style) */
+        .persona-controls {
+            width: 100%;
+            max-width: 460px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            margin: 0 0 14px;
+            padding: 12px 12px;
+            border-radius: 14px;
+            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.02);
+        }
+
+        .age-pills {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            gap: 8px;
+        }
+
+        .age-pill {
+            appearance: none;
+            border: 1px solid var(--border-color);
+            background: transparent;
+            color: var(--text-secondary);
+            padding: 8px 10px;
+            border-radius: 999px;
+            font-size: 0.8rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .age-pill:hover {
+            color: var(--text-primary);
+            border-color: var(--border-hover);
+            background: rgba(255, 255, 255, 0.03);
+        }
+
+        .age-pill.active {
+            color: white;
+            border-color: rgba(59, 130, 246, 0.55);
+            background: rgba(59, 130, 246, 0.18);
+            box-shadow: 0 0 18px rgba(59, 130, 246, 0.12);
+        }
+
+        .tone-select-wrap {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 10px;
+        }
+
+        .tone-label {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+            font-weight: 600;
+            letter-spacing: 0.01em;
+        }
+
+        .tone-select {
+            flex: 1;
+            max-width: 260px;
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            padding: 10px 12px;
+            font-size: 0.9rem;
+            outline: none;
+        }
+
+        .tone-select:focus {
+            border-color: rgba(59, 130, 246, 0.55);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+        }
+
         /* Compact Personas Strip */
         .personas-strip-compact {
             display: flex;
@@ -603,6 +681,29 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+        }
+
+        /* Secondary hero CTA */
+        .hero-cta-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 10px 16px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            margin-top: 12px;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+            width: fit-content;
+        }
+
+        .hero-cta-secondary:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.03);
+            border-color: var(--border-hover);
         }
 
         /* ========================================
@@ -2701,13 +2802,20 @@
                     <p class="question-text" id="hero-question">Why do leaves change color?</p>
                 </div>
 
-                <!-- Single powerful CTA -->
-                <a href="/learn.html?day=1" 
+                <!-- Primary CTA -->
+                <a href="/learn.html" 
                    class="hero-cta"
                    data-analytics-action="start-learning"
                    data-analytics-location="hero"
+                   data-analytics-day="today">
+                    Start today's lesson →
+                </a>
+                <a href="/learn.html?day=1"
+                   class="hero-cta-secondary"
+                   data-analytics-action="choose-day"
+                   data-analytics-location="hero"
                    data-analytics-day="1">
-                    Start Day 1 →
+                    Choose Day 1
                 </a>
                 
                 <p class="hero-note">5 minutes. No signup. Just learning.</p>
@@ -2788,6 +2896,19 @@
                 </div>
             </div>
             
+            <!-- Persona preview controls (age + teaching style) -->
+            <div class="persona-controls" aria-label="Preview Kelly's teaching styles">
+                <div class="age-pills" id="persona-age-pills" role="tablist" aria-label="Age preview">
+                    <!-- Rendered by JS -->
+                </div>
+                <div class="tone-select-wrap">
+                    <label class="tone-label" for="persona-tone-select">Teaching style</label>
+                    <select id="persona-tone-select" class="tone-select" aria-label="Teaching style (persona)">
+                        <!-- Rendered by JS -->
+                    </select>
+                </div>
+            </div>
+
             <!-- 12 Personas - Compact strip at bottom -->
             <div class="personas-strip-compact" id="personas-strip">
                 <!-- Generated by JS -->
@@ -3992,164 +4113,150 @@
     <script>
     (function() {
         'use strict';
-        
-        // Kelly's 12 Teaching Personas - Production CDN Images
-        // Head-only archetype images hosted on Supabase CDN for global distribution
-        const SUPABASE_CDN = 'https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only';
-        
-        const PERSONAS = [
-            { 
-                id: 'scientist',
-                name: 'The Scientist', 
-                icon: '🔬', 
-                tagline: 'Data-driven precision',
-                description: 'Lab goggles on forehead',
-                video: null,
-                image: `${SUPABASE_CDN}/kelly_scientist_head.png`
-            },
-            { 
-                id: 'explorer',
-                name: 'The Explorer', 
-                icon: '🧭', 
-                tagline: 'Wonder and discovery',
-                description: 'Aviator goggles + bandana',
-                video: null,
-                image: `${SUPABASE_CDN}/kelly_explorer_head.png`
-            },
-            { 
-                id: 'rebel',
-                name: 'The Rebel', 
-                icon: '⚡', 
-                tagline: 'Bold challenging spirit',
-                description: 'Sunglasses in hair + earring',
-                video: null,
-                image: `${SUPABASE_CDN}/kelly_rebel_head.png`
-            },
-            { 
-                id: 'architect',
-                name: 'The Architect', 
-                icon: '🏛️', 
-                tagline: 'Methodical structure',
-                description: 'Pencil behind ear + glasses',
-                video: null,
-                image: `${SUPABASE_CDN}/kelly_architect_head.png`
-            },
-            { 
-                id: 'diplomat',
-                name: 'The Diplomat', 
-                icon: '🤝', 
-                tagline: 'Inclusive harmony',
-                description: 'Pearl studs + velvet headband',
-                video: null,
-                image: `${SUPABASE_CDN}/kelly_diplomat_head.png`
-            },
-            { 
-                id: 'empath',
-                name: 'The Empath', 
-                icon: '💗', 
-                tagline: 'Nurturing warmth',
-                description: 'Pink headband + lavender',
-                video: null,
-                image: `${SUPABASE_CDN}/kelly_empath_head.png`
-            },
-            { 
-                id: 'macgyver',
-                name: 'The MacGyver', 
-                icon: '🔧', 
-                tagline: 'Hands-on problem solver',
-                description: 'Shop glasses + red bandana',
-                video: null,
-                image: `${SUPABASE_CDN}/kelly_macgyver_head.png`
-            },
-            { 
-                id: 'mystic',
-                name: 'The Mystic', 
-                icon: '✨', 
-                tagline: 'Profound serenity',
-                description: 'Third eye amethyst + gold chain',
-                video: null,
-                image: `${SUPABASE_CDN}/kelly_mystic_head.png`
-            },
-            { 
-                id: 'provider',
-                name: 'The Provider', 
-                icon: '🛡️', 
-                tagline: 'Reassuring strength',
-                description: 'Cream knit headband',
-                video: null,
-                image: `${SUPABASE_CDN}/kelly_provider_head.png`
-            },
-            { 
-                id: 'storyteller',
-                name: 'The Storyteller', 
-                icon: '📖', 
-                tagline: 'Theatrical captivation',
-                description: 'Gold glasses + peacock feather',
-                video: null,
-                image: `${SUPABASE_CDN}/kelly_storyteller_head.png`
-            },
-            { 
-                id: 'strategist',
-                name: 'The Strategist', 
-                icon: '🎯', 
-                tagline: 'Sharp tactical mind',
-                description: 'Angular glasses + chess clip',
-                video: null,
-                image: `${SUPABASE_CDN}/kelly_strategist_head.png`
-            },
-            { 
-                id: 'survivor',
-                name: 'The Survivor', 
-                icon: '🏕️', 
-                tagline: 'Grounded resilience',
-                description: 'Military bandana + dog tags',
-                video: null,
-                image: `${SUPABASE_CDN}/kelly_survivor_head.png`
-            }
-        ];
 
+        const MANIFEST_URL = '/assets/kelly/kelly-personas-manifest.json';
+        const AGE_VARIANTS = ['kid', 'teen', 'adult', 'elder', 'super_elder'];
+        const AGE_LABELS = {
+            kid: 'Kid',
+            teen: 'Teen',
+            adult: 'Adult',
+            elder: 'Elder',
+            super_elder: 'Super'
+        };
+
+        const FALLBACK_CDN_BASE = 'https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates';
+        const FALLBACK_DEFAULT = `${FALLBACK_CDN_BASE}/heygen/archetypes-head-only/kelly_scientist_head.png`;
+
+        let manifest = null;
+        let personas = [];
+        let selectedAge = 'adult';
         let currentPersonaIndex = 0;
         let cycleInterval = null;
         const CYCLE_DURATION = 5000; // 5 seconds per persona
 
-        function initPersonasShowcase() {
+        function safeJsonParse(text) {
+            try { return JSON.parse(text); } catch { return null; }
+        }
+
+        async function loadManifest() {
+            const resp = await fetch(MANIFEST_URL, { cache: 'force-cache' });
+            if (!resp.ok) throw new Error(`manifest fetch failed: ${resp.status}`);
+            const text = await resp.text();
+            const json = safeJsonParse(text);
+            if (!json || !json.personas || !json.cdnBase) throw new Error('manifest invalid');
+            return json;
+        }
+
+        function buildPersonasFromManifest(m) {
+            const order = Array.isArray(m.personaOrder) && m.personaOrder.length
+                ? m.personaOrder
+                : Object.keys(m.personas);
+
+            return order
+                .filter(id => m.personas[id])
+                .map(id => {
+                    const p = m.personas[id];
+                    return {
+                        id,
+                        name: p.name || id,
+                        icon: p.icon || '✨',
+                        tagline: p.tagline || '',
+                        images: p.images || {}
+                    };
+                });
+        }
+
+        function getHeadUrl(personaId, age) {
+            const p = manifest && manifest.personas && manifest.personas[personaId];
+            if (!p || !p.images) return FALLBACK_DEFAULT;
+            const headByAge = p.images.headByAge || {};
+            const rel = headByAge[age] || p.images.head;
+            if (!rel) return FALLBACK_DEFAULT;
+            return `${manifest.cdnBase}/${rel}`;
+        }
+
+        function setSelectedAge(age) {
+            if (!AGE_VARIANTS.includes(age)) return;
+            selectedAge = age;
+            localStorage.setItem('ck_home_age', age);
+            renderAgePills();
+            renderStrip();
+            updateFeaturedPersona(currentPersonaIndex);
+        }
+
+        function setSelectedPersonaId(personaId) {
+            const idx = personas.findIndex(p => p.id === personaId);
+            if (idx >= 0) {
+                selectPersona(idx, { userInitiated: true });
+                const selectEl = document.getElementById('persona-tone-select');
+                if (selectEl && selectEl.value !== personaId) selectEl.value = personaId;
+            }
+        }
+
+        function renderAgePills() {
+            const container = document.getElementById('persona-age-pills');
+            if (!container) return;
+            container.innerHTML = AGE_VARIANTS.map(age => {
+                const active = age === selectedAge ? 'active' : '';
+                const label = AGE_LABELS[age] || age;
+                return `<button class="age-pill ${active}" type="button" data-age="${age}" role="tab" aria-selected="${age === selectedAge}">${label}</button>`;
+            }).join('');
+
+            container.querySelectorAll('.age-pill').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    stopCycle();
+                    setSelectedAge(btn.getAttribute('data-age'));
+                    startCycle();
+                });
+            });
+        }
+
+        function renderToneSelect() {
+            const select = document.getElementById('persona-tone-select');
+            if (!select) return;
+            select.innerHTML = personas.map(p => {
+                const label = `${p.icon} ${p.name}`;
+                return `<option value="${p.id}">${label}</option>`;
+            }).join('');
+
+            select.addEventListener('change', () => {
+                stopCycle();
+                setSelectedPersonaId(select.value);
+                startCycle();
+            });
+        }
+
+        function renderStrip() {
             const strip = document.getElementById('personas-strip');
-            const featuredImage = document.getElementById('featured-persona-image');
-            
             if (!strip) return;
 
-            // Render compact thumbnail strip (circles only, no icons)
-            strip.innerHTML = PERSONAS.map((persona, index) => `
-                <div class="persona-thumb ${index === 1 ? 'active' : ''}" 
-                     data-index="${index}" 
-                     data-id="${persona.id}"
-                     title="${persona.name}">
-                    <img 
-                        src="${persona.image}" 
-                        alt="${persona.name}"
-                        class="persona-thumb-img"
-                        loading="${index < 6 ? 'eager' : 'lazy'}"
-                        onerror="this.src='https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/kelly_scientist_head.png'"
-                    />
-                </div>
-            `).join('');
+            strip.innerHTML = personas.map((persona, index) => {
+                const isActive = index === currentPersonaIndex;
+                const imgUrl = getHeadUrl(persona.id, selectedAge);
+                return `
+                    <div class="persona-thumb ${isActive ? 'active' : ''}"
+                         data-index="${index}"
+                         data-id="${persona.id}"
+                         title="${persona.name}">
+                        <img
+                            src="${imgUrl}"
+                            alt="${persona.name}"
+                            class="persona-thumb-img"
+                            loading="${index < 6 ? 'eager' : 'lazy'}"
+                            onerror="this.src='${FALLBACK_DEFAULT}'"
+                        />
+                    </div>
+                `;
+            }).join('');
 
-            // Add click handlers
             strip.querySelectorAll('.persona-thumb').forEach(thumb => {
                 thumb.addEventListener('click', () => {
-                    const index = parseInt(thumb.dataset.index);
-                    selectPersona(index);
-                    // Reset auto-cycle
+                    const index = parseInt(thumb.getAttribute('data-index') || '0', 10);
+                    selectPersona(index, { userInitiated: true });
                     stopCycle();
                     startCycle();
                 });
             });
-
-            // Set initial featured persona (Explorer = 1)
-            updateFeaturedPersona(1);
-
-            // Start auto-cycling
-            startCycle();
 
             // Pause cycling on hover over the strip
             strip.addEventListener('mouseenter', stopCycle);
@@ -4157,47 +4264,51 @@
         }
 
         function updateFeaturedPersona(index) {
-            const persona = PERSONAS[index];
+            const persona = personas[index];
             const featuredImage = document.getElementById('featured-persona-image');
             const kellyName = document.querySelector('.kelly-name');
-            
-            if (!featuredImage) return;
+
+            if (!persona || !featuredImage) return;
+
+            const url = getHeadUrl(persona.id, selectedAge);
 
             // Smooth transition
             featuredImage.style.opacity = '0.7';
             featuredImage.style.transform = 'scale(0.98)';
-            
+
             setTimeout(() => {
-                featuredImage.src = persona.image;
+                featuredImage.src = url;
                 featuredImage.alt = `Kelly - ${persona.name}`;
                 featuredImage.style.opacity = '1';
                 featuredImage.style.transform = 'scale(1)';
-                
-                // Update name if element exists
-                if (kellyName) {
-                    kellyName.textContent = `Meet ${persona.name.replace('The ', '')} Kelly`;
-                }
-            }, 150);
+                if (kellyName) kellyName.textContent = `Meet ${persona.name.replace('The ', '')} Kelly`;
+            }, 140);
 
-            // Update active thumbnail
             document.querySelectorAll('.persona-thumb').forEach((thumb, i) => {
                 thumb.classList.toggle('active', i === index);
             });
 
+            const select = document.getElementById('persona-tone-select');
+            if (select && select.value !== persona.id) select.value = persona.id;
+
             currentPersonaIndex = index;
+            localStorage.setItem('ck_home_persona', persona.id);
         }
 
-        function selectPersona(index) {
+        function selectPersona(index, opts) {
             updateFeaturedPersona(index);
+            if (opts && opts.userInitiated) {
+                // User action wins; keep cycling but don't immediately jump back.
+            }
         }
 
         function nextPersona() {
-            const nextIndex = (currentPersonaIndex + 1) % PERSONAS.length;
+            const nextIndex = (currentPersonaIndex + 1) % personas.length;
             updateFeaturedPersona(nextIndex);
         }
 
         function startCycle() {
-            if (cycleInterval) return;
+            if (cycleInterval || !personas.length) return;
             cycleInterval = setInterval(nextPersona, CYCLE_DURATION);
         }
 
@@ -4208,19 +4319,63 @@
             }
         }
 
-        // Initialize when DOM ready
-        if (document.readyState === 'loading') {
-            document.addEventListener('DOMContentLoaded', initPersonasShowcase);
-        } else {
-            initPersonasShowcase();
+        function preloadFirstImages() {
+            try {
+                const ids = personas.slice(0, 6).map(p => p.id);
+                ids.forEach(id => {
+                    const img = new Image();
+                    img.src = getHeadUrl(id, selectedAge);
+                });
+            } catch (e) {}
         }
 
-        // Expose for debugging
-        window.personasShowcase = {
-            PERSONAS,
-            selectPersona,
-            nextPersona
-        };
+        async function init() {
+            const strip = document.getElementById('personas-strip');
+            if (!strip) return;
+
+            try {
+                manifest = await loadManifest();
+            } catch (e) {
+                // If manifest ever fails, keep the page functional with the existing featured image.
+                console.warn('[Personas] manifest unavailable:', e && e.message ? e.message : e);
+                return;
+            }
+
+            personas = buildPersonasFromManifest(manifest);
+            if (!personas.length) return;
+
+            // Restore last selection (or use manifest default)
+            const savedAge = localStorage.getItem('ck_home_age');
+            if (savedAge && AGE_VARIANTS.includes(savedAge)) selectedAge = savedAge;
+
+            const savedPersona = localStorage.getItem('ck_home_persona');
+            const defaultPersona = manifest.defaultPersona || (manifest.personaOrder && manifest.personaOrder[0]) || personas[0].id;
+            const initialPersonaId = savedPersona || defaultPersona;
+            const initialIndex = Math.max(0, personas.findIndex(p => p.id === initialPersonaId));
+            currentPersonaIndex = initialIndex;
+
+            renderAgePills();
+            renderToneSelect();
+            renderStrip();
+            preloadFirstImages();
+            updateFeaturedPersona(currentPersonaIndex);
+            startCycle();
+
+            // Expose for debugging
+            window.personasShowcase = {
+                manifest,
+                personas,
+                setSelectedAge,
+                setSelectedPersonaId,
+                nextPersona
+            };
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
     })();
     </script>
 </body>
