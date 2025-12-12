@@ -114,7 +114,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
-      const giftMeta = body.giftData || {};
+      const giftMeta = body.giftData || {
+        recipientEmail: '',
+        gifterName: '',
+        message: '',
+        deliveryDate: ''
+      };
       sessionConfig = {
         payment_method_types: ['card'],
         line_items: [{ price: giftPriceId, quantity: 1 }],

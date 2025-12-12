@@ -67,7 +67,6 @@ Every day I find something wonderful and I can't wait to share it. Today's lesso
 Want to come along? https://curiouskelly.com/learn
 
 — Kelly
-💡 Did you know? ${fact}
 
 ---
 ✨ Curious Kelly | Learn something new every day
