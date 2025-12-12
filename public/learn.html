@@ -23,6 +23,11 @@
   <script src="/js/kelly-calendar-export.js"></script>
   <script src="/js/kelly-lesson.js"></script>
   <script src="/js/kelly-presence.js"></script>
+  
+  <!-- Emergency fallback data - always available -->
+  <script src="/data/emergency-lessons.js"></script>
+  
+  <!-- Lesson loader with fallback support -->
   <script src="/js/kelly-lesson-loader.js"></script>
   
   <style>
@@ -3302,10 +3307,28 @@
       
       document.getElementById('complete-streak').textContent = state.streak;
       
-      // Load tomorrow's lesson topic
+      // Load tomorrow's lesson topic with fallback
       const tomorrowDay = state.currentDay + 1;
+      const tomorrowTopicEl = document.getElementById('tomorrow-topic');
+      
       if (tomorrowDay <= 365) {
+        tomorrowTopicEl.textContent = 'Loading...';
+        
         try {
+          // Try KellyLessonLoader first (handles all fallbacks)
+          if (window.KellyLessonLoader && window.KellyLessonLoader.supabase) {
+            const tomorrow = await window.KellyLessonLoader.getLesson(tomorrowDay, {
+              archetype: localStorage.getItem('kelly_current_persona') || 'The Scientist',
+              age: parseInt(localStorage.getItem('kelly_teaching_age') || '30')
+            });
+            
+            if (tomorrow && tomorrow.title) {
+              tomorrowTopicEl.textContent = tomorrow.title;
+              return;
+            }
+          }
+          
+          // Direct Supabase fallback
           if (supabase) {
             const { data } = await supabase
               .from('core_lessons')
@@ -3313,15 +3336,32 @@
               .eq('day_number', tomorrowDay)
               .single();
             
-            if (data) {
-              document.getElementById('tomorrow-topic').textContent = data.topic;
+            if (data && data.topic) {
+              tomorrowTopicEl.textContent = data.topic;
+              return;
             }
           }
+          
+          // Emergency fallback
+          if (typeof window.getEmergencyLesson === 'function') {
+            const emergency = window.getEmergencyLesson(tomorrowDay);
+            tomorrowTopicEl.textContent = emergency.title || emergency.topic || 'Another adventure awaits!';
+            return;
+          }
+          
+          tomorrowTopicEl.textContent = `Day ${tomorrowDay} Adventure`;
         } catch (e) {
-          document.getElementById('tomorrow-topic').textContent = `Lesson for ${getDisplayDate(tomorrowDay)}`;
+          console.warn('Tomorrow preview error:', e);
+          // Use emergency fallback on error
+          if (typeof window.getEmergencyLesson === 'function') {
+            const emergency = window.getEmergencyLesson(tomorrowDay);
+            tomorrowTopicEl.textContent = emergency.title || emergency.topic || 'Another adventure awaits!';
+          } else {
+            tomorrowTopicEl.textContent = 'Another adventure awaits!';
+          }
         }
       } else {
-        document.getElementById('tomorrow-topic').textContent = "You've completed the journey!";
+        tomorrowTopicEl.textContent = "You've completed the journey!";
       }
     }
     

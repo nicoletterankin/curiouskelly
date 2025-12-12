@@ -483,31 +483,93 @@ const KellyLessonLoader = {
   },
   
   /**
-   * Fallback for missing lessons
+   * Try loading from static JSON files (pre-exported)
+   */
+  async tryStaticFiles(dayNumber, archetype, region) {
+    try {
+      const paddedDay = String(dayNumber).padStart(3, '0');
+      const response = await fetch(`/data/lessons/day-${paddedDay}.json`);
+      
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`✅ Loaded day ${dayNumber} from static files`);
+        
+        const lesson = data.lesson || data;
+        const atoms = data.atoms || [];
+        const shards = data.shards || [];
+        
+        // Filter atoms/shards for archetype if available
+        const filteredAtoms = atoms.filter(a => 
+          !a.archetype || a.archetype === archetype
+        );
+        const filteredShards = shards.filter(s => 
+          (!s.archetype || s.archetype === archetype) &&
+          (!s.region || s.region === region || s.region === 'en')
+        );
+        
+        return this.buildResult(lesson, filteredAtoms, filteredShards, {
+          dayNumber,
+          archetype,
+          region,
+          source: 'static'
+        });
+      }
+    } catch (error) {
+      console.warn(`⚠️ Static files failed for day ${dayNumber}:`, error.message);
+    }
+    return null;
+  },
+
+  /**
+   * Fallback for missing lessons - tries static files first, then emergency
    */
   async getFallback(dayNumber) {
-    console.warn('⚠️ Using fallback data');
+    console.warn('⚠️ Primary data source failed, trying fallbacks...');
     
+    // Try static files first
+    const staticResult = await this.tryStaticFiles(dayNumber, 'The Scientist', 'adult');
+    if (staticResult) {
+      return staticResult;
+    }
+    
+    // Use emergency lessons as last resort
+    console.log(`🆘 Using emergency fallback for day ${dayNumber}`);
+    
+    // Try global getEmergencyLesson if available
+    if (typeof window !== 'undefined' && typeof window.getEmergencyLesson === 'function') {
+      const emergency = window.getEmergencyLesson(dayNumber);
+      return this.formatEmergencyLesson(emergency, dayNumber);
+    }
+    
+    // Otherwise load emergency lessons
     const emergencyLessons = await this.ensureEmergencyLessons();
     const entry = (emergencyLessons && emergencyLessons[dayNumber]) || {};
     
+    return this.formatEmergencyLesson(entry, dayNumber);
+  },
+
+  /**
+   * Format emergency lesson data into standard result format
+   */
+  formatEmergencyLesson(entry, dayNumber) {
     const lesson = {
       id: entry.id || `fallback-${dayNumber}`,
       day_number: entry.day_number || dayNumber,
       topic: entry.topic || entry.title || 'Daily Discovery',
-      universal_truth: entry.universal_truth || entry.script || 'Every day brings something new to learn.',
-      marketing_headline: entry.marketing_headline || entry.title || 'Discover something amazing today',
+      universal_truth: entry.universal_truth || entry.content || 'Every day brings something new to learn.',
+      marketing_headline: entry.marketing_headline || entry.marketing_hook || entry.title || 'Discover something amazing today',
       marketing_tagline: entry.marketing_tagline || entry.subtitle || 'Learning never stops',
       hero_image_url: entry.hero_image_url || entry.imageUrl || entry.thumbnail_url,
       thumbnail_url: entry.thumbnail_url
     };
     
     const fallbackGreeting = 'Every day brings something new to learn!';
-    const script = entry.script || entry.universal_truth || lesson.universal_truth;
+    const script = entry.content || entry.script || entry.universal_truth || lesson.universal_truth;
     const greeting = entry.greeting || fallbackGreeting;
     const imageUrl = lesson.hero_image_url || '/images/fallback-lesson.png';
     const atoms = entry.atoms || [];
     const shards = entry.shards || [];
+    const source = entry.source || 'emergency';
 
     return {
       lesson,
@@ -516,6 +578,7 @@ const KellyLessonLoader = {
       dayNumber,
       archetype: 'The Scientist',
       region: 'adult',
+      source,
       
       get id() { return lesson.id; },
       get title() { return lesson.topic; },
@@ -530,7 +593,10 @@ const KellyLessonLoader = {
       get reflectionPrompts() { return []; },
       get masteryCriteria() { return ''; },
       getPhase() { return null; },
-      getPhases() { return []; }
+      getPhases() { return []},
+      
+      // Add helper to check source
+      get isEmergencyFallback() { return source === 'emergency' || source === 'generic-fallback'; }
     };
   },
   
