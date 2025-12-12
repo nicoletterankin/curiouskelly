@@ -74,7 +74,8 @@
     <style>
       /* System font fallback - guaranteed to work */
       :root {
-        --font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+        --font-system:
+          -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
         --font-serif: Georgia, 'Times New Roman', Times, serif;
       }
     </style>
@@ -91,10 +92,10 @@
     <script src="/js/unity-kelly-loader.js"></script>
     <!-- DISABLED: Old controller uses wrong image paths (/images/expressions/) -->
     <!-- <script src="/js/kelly-avatar-controller.js"></script> -->
-    
+
     <!-- Production Kelly Assets -->
     <script src="/js/kelly-production-assets.js"></script>
-    
+
     <!-- Chat Overlay (YouTube Live style) -->
     <script src="/js/chat-overlay.js?v=2"></script>
 
@@ -103,16 +104,16 @@
 
     <!-- Audio & Interaction System -->
     <script src="/js/kelly-audio.js"></script>
-    
+
     <!-- Kelly Lesson System (Phases, Poses, Completion) -->
     <script src="/js/kelly-lesson-system.js"></script>
-    
+
     <!-- Share Hub Overlay -->
     <script src="/js/share-hub.js"></script>
-    
+
     <!-- Kelly Conversational AI (Voice Chat) -->
     <script src="/js/kelly-conversation.js"></script>
-    
+
     <!-- Kelly Visual Learning System (Immersive Backgrounds, Props, Choreography) -->
     <script src="/js/kelly-visual-system.js?v=2"></script>
 
@@ -148,7 +149,7 @@
         --safe-top: env(safe-area-inset-top, 47px);
         --safe-left: env(safe-area-inset-left, 0px);
         --safe-right: env(safe-area-inset-right, 0px);
-        
+
         /* iOS Spring Animation */
         --spring-bounce: cubic-bezier(0.34, 1.56, 0.64, 1);
         --spring-smooth: cubic-bezier(0.4, 0, 0.2, 1);
@@ -162,12 +163,7 @@
         overflow: hidden;
         background: var(--tiktok-bg);
         font-family:
-          -apple-system,
-          BlinkMacSystemFont,
-          'SF Pro Display',
-          'SF Pro Text',
-          system-ui,
-          sans-serif;
+          -apple-system, BlinkMacSystemFont, 'SF Pro Display', 'SF Pro Text', system-ui, sans-serif;
         color: var(--tiktok-text);
         touch-action: pan-y;
         -webkit-font-smoothing: antialiased;
@@ -175,14 +171,17 @@
         /* Prevent pull-to-refresh */
         overscroll-behavior: none;
       }
-      
+
       /* iOS-native selection */
       ::selection {
         background: rgba(59, 130, 246, 0.3);
       }
-      
+
       /* Prevent text selection on UI elements */
-      button, .choice-btn, .action-btn, .nav-item {
+      button,
+      .choice-btn,
+      .action-btn,
+      .nav-item {
         -webkit-user-select: none;
         user-select: none;
       }
@@ -361,7 +360,7 @@
         background: var(--tiktok-accent);
         box-shadow: 0 0 12px rgba(59, 130, 246, 0.6);
       }
-      
+
       /* Animated fill for active phase */
       .phase-dot.active::after {
         content: '';
@@ -370,10 +369,14 @@
         background: linear-gradient(90deg, transparent, rgba(255, 255, 255, 0.4), transparent);
         animation: shimmer 2s infinite;
       }
-      
+
       @keyframes shimmer {
-        0% { transform: translateX(-100%); }
-        100% { transform: translateX(100%); }
+        0% {
+          transform: translateX(-100%);
+        }
+        100% {
+          transform: translateX(100%);
+        }
       }
 
       .phase-dot.completed {
@@ -443,6 +446,13 @@
         position: absolute;
         bottom: 140px; /* Above chat */
         right: 70px; /* Left of rail */
+        /* UI FIX: Ensure options don't cover PiP Kelly (bottom-right) */
+        /* If Kelly is ~378px wide/high in bottom-right corner with 30px padding */
+        /* She occupies roughly right: 30px to 408px, bottom: 30px to 408px */
+        /* The rail is at right: 12px. Options are at right: 70px. */
+        /* We should move options to the LEFT or HIGHER if they overlap. */
+        /* Moving higher: */
+        bottom: 420px;
         display: flex;
         flex-direction: column;
         gap: 10px;
@@ -450,13 +460,12 @@
         align-items: flex-end;
         pointer-events: none;
       }
-      
+
       .options-container > * {
         pointer-events: auto;
       }
 
       /* REMOVED .action-buttons style - replaced by .right-rail */
-
 
       /* SVG Icon Styling - Clean white icons */
       .action-btn svg,
@@ -530,7 +539,7 @@
         z-index: 90;
         pointer-events: none;
       }
-      
+
       .bottom-overlay > * {
         pointer-events: auto;
       }
@@ -571,12 +580,12 @@
         overflow-y: auto;
         border: 1px solid rgba(255, 255, 255, 0.08);
         box-shadow: 0 4px 24px rgba(0, 0, 0, 0.3);
-        
+
         /* iOS scroll behavior */
         -webkit-overflow-scrolling: touch;
         scrollbar-width: none;
       }
-      
+
       .speech-bubble::-webkit-scrollbar {
         display: none;
       }
@@ -621,7 +630,7 @@
         position: relative;
         overflow: hidden;
       }
-      
+
       /* iOS-style touch highlight */
       .choice-btn::before {
         content: '';
@@ -631,7 +640,7 @@
         opacity: 0;
         transition: opacity 0.1s;
       }
-      
+
       .choice-btn:hover::before {
         opacity: 1;
       }
@@ -647,7 +656,7 @@
         transform: scale(1.02);
         box-shadow: 0 8px 32px rgba(59, 130, 246, 0.4);
       }
-      
+
       .choice-btn.selected::after {
         content: '✓';
         position: absolute;
@@ -655,10 +664,16 @@
         font-size: 18px;
         animation: checkPop 0.3s var(--spring-bounce);
       }
-      
+
       @keyframes checkPop {
-        0% { transform: scale(0); opacity: 0; }
-        100% { transform: scale(1); opacity: 1; }
+        0% {
+          transform: scale(0);
+          opacity: 0;
+        }
+        100% {
+          transform: scale(1);
+          opacity: 1;
+        }
       }
 
       .choice-btn.disabled {
@@ -717,7 +732,7 @@
         transition: all 0.2s var(--spring-smooth);
         position: relative;
       }
-      
+
       .nav-item:active {
         transform: scale(0.9);
       }
@@ -725,7 +740,7 @@
       .nav-item.active {
         color: #fff;
       }
-      
+
       /* Active indicator dot */
       .nav-item.active::after {
         content: '';
@@ -737,10 +752,14 @@
         border-radius: 50%;
         animation: dotPop 0.3s var(--spring-bounce);
       }
-      
+
       @keyframes dotPop {
-        0% { transform: scale(0); }
-        100% { transform: scale(1); }
+        0% {
+          transform: scale(0);
+        }
+        100% {
+          transform: scale(1);
+        }
       }
 
       .nav-icon {
@@ -752,7 +771,7 @@
         height: 26px;
         transition: transform 0.15s;
       }
-      
+
       .nav-item:active .nav-icon {
         transform: scale(0.85);
       }
@@ -1265,7 +1284,9 @@
         justify-content: center;
         cursor: grab;
         box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-        transition: box-shadow 0.2s, transform 0.1s;
+        transition:
+          box-shadow 0.2s,
+          transform 0.1s;
         user-select: none;
       }
 
@@ -1456,9 +1477,19 @@
       }
 
       @keyframes kellyTransform {
-        0% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0; transform: scale(1.1); filter: blur(10px); }
-        100% { opacity: 1; transform: scale(1); }
+        0% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0;
+          transform: scale(1.1);
+          filter: blur(10px);
+        }
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
       }
 
       /* === Feedback flash === */
@@ -1467,13 +1498,22 @@
       }
 
       @keyframes settingFlash {
-        0% { filter: brightness(1); }
-        50% { filter: brightness(1.3); }
-        100% { filter: brightness(1); }
+        0% {
+          filter: brightness(1);
+        }
+        50% {
+          filter: brightness(1.3);
+        }
+        100% {
+          filter: brightness(1);
+        }
       }
 
       /* Hide old popover system */
-      .popover, .popover-overlay { display: none !important; }
+      .popover,
+      .popover-overlay {
+        display: none !important;
+      }
 
       /* ═══════════════════════════════════════════════════════════════════
            MOBILE-FIRST LAYOUT - Clean TikTok-style experience
@@ -1854,7 +1894,12 @@
         left: 0;
         right: 0;
         padding: 16px 16px calc(16px + var(--safe-bottom));
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.8) 0%, rgba(0, 0, 0, 0.4) 70%, transparent 100%);
+        background: linear-gradient(
+          to top,
+          rgba(0, 0, 0, 0.8) 0%,
+          rgba(0, 0, 0, 0.4) 70%,
+          transparent 100%
+        );
         z-index: 80;
       }
 
@@ -1865,7 +1910,9 @@
       }
 
       /* Clickable date parts */
-      .date-month, .date-day, .date-year {
+      .date-month,
+      .date-day,
+      .date-year {
         cursor: pointer;
         transition: all 0.2s ease;
         border-radius: 4px;
@@ -1875,7 +1922,9 @@
         text-decoration-color: rgba(255, 255, 255, 0.2);
         text-underline-offset: 3px;
       }
-      .date-month:hover, .date-day:hover, .date-year:hover {
+      .date-month:hover,
+      .date-day:hover,
+      .date-year:hover {
         background: rgba(255, 255, 255, 0.15);
         color: #60a5fa;
         text-decoration-color: #60a5fa;
@@ -1895,10 +1944,15 @@
         justify-content: space-between;
         align-items: center;
         padding: calc(var(--safe-top, 12px) + 8px) 16px 8px;
-        background: linear-gradient(to bottom, rgba(0, 0, 0, 0.7) 0%, rgba(0, 0, 0, 0.3) 70%, transparent 100%);
+        background: linear-gradient(
+          to bottom,
+          rgba(0, 0, 0, 0.7) 0%,
+          rgba(0, 0, 0, 0.3) 70%,
+          transparent 100%
+        );
         z-index: 120;
       }
-      
+
       .top-header-left {
         display: flex;
         align-items: center;
@@ -1906,13 +1960,13 @@
         flex: 1;
         min-width: 0;
       }
-      
+
       .top-title-emoji {
         font-size: 20px;
         flex-shrink: 0;
         display: none; /* Hidden - replaced by Kelly home button */
       }
-      
+
       .kelly-home-btn {
         display: flex;
         align-items: center;
@@ -1922,27 +1976,29 @@
         border-radius: 50%;
         overflow: hidden;
         flex-shrink: 0;
-        transition: transform 0.2s ease, box-shadow 0.2s ease;
+        transition:
+          transform 0.2s ease,
+          box-shadow 0.2s ease;
         box-shadow: 0 2px 8px rgba(0, 0, 0, 0.3);
         border: 2px solid rgba(255, 255, 255, 0.2);
       }
-      
+
       .kelly-home-btn:hover {
         transform: scale(1.08);
         box-shadow: 0 4px 16px rgba(37, 99, 235, 0.4);
         border-color: var(--tiktok-accent);
       }
-      
+
       .kelly-home-btn:active {
         transform: scale(0.95);
       }
-      
+
       .kelly-home-btn img {
         width: 100%;
         height: 100%;
         object-fit: cover;
       }
-      
+
       .top-title-name {
         font-size: 15px;
         font-weight: 600;
@@ -1951,20 +2007,20 @@
         overflow: hidden;
         text-overflow: ellipsis;
       }
-      
+
       .top-header-right {
         display: flex;
         align-items: center;
         gap: 12px;
         flex-shrink: 0;
       }
-      
+
       .top-date {
         font-size: 12px;
         color: rgba(255, 255, 255, 0.7);
         font-weight: 500;
       }
-      
+
       .top-time {
         background: rgba(0, 0, 0, 0.4);
         backdrop-filter: blur(8px);
@@ -1975,7 +2031,7 @@
         font-weight: 500;
         color: rgba(255, 255, 255, 0.9);
       }
-      
+
       @media (max-width: 600px) {
         .top-header {
           padding: calc(var(--safe-top, 8px) + 4px) 12px 6px;
@@ -1988,9 +2044,9 @@
           display: none;
         }
       }
-      
+
       /* Removed .talk-to-kelly-btn styling - integrated into .rail-btn */
-      
+
       /* === BOTTOM CHAT AREA === */
       .bottom-chat-area {
         position: fixed;
@@ -2000,7 +2056,12 @@
         display: flex;
         flex-direction: column;
         padding: 0 12px calc(var(--safe-bottom, 20px) + 8px);
-        background: linear-gradient(to top, rgba(0, 0, 0, 0.9) 0%, rgba(0, 0, 0, 0.7) 60%, transparent 100%);
+        background: linear-gradient(
+          to top,
+          rgba(0, 0, 0, 0.9) 0%,
+          rgba(0, 0, 0, 0.7) 60%,
+          transparent 100%
+        );
         z-index: 200;
         max-height: 35vh;
         pointer-events: none; /* Let clicks pass through empty areas */
@@ -2009,7 +2070,7 @@
       .bottom-chat-area > * {
         pointer-events: auto; /* Re-enable clicks on content */
       }
-      
+
       .chat-messages-container {
         flex: 1;
         overflow-y: auto;
@@ -2021,11 +2082,11 @@
         scrollbar-width: none;
         -ms-overflow-style: none;
       }
-      
+
       .chat-messages-container::-webkit-scrollbar {
         display: none;
       }
-      
+
       /* Chat message styling */
       .chat-message {
         display: flex;
@@ -2036,7 +2097,7 @@
         border-radius: 12px;
         animation: chatSlideIn 0.3s ease-out;
       }
-      
+
       @keyframes chatSlideIn {
         from {
           opacity: 0;
@@ -2047,29 +2108,29 @@
           transform: translateY(0);
         }
       }
-      
+
       .chat-message-avatar {
         font-size: 16px;
         flex-shrink: 0;
       }
-      
+
       .chat-message-content {
         flex: 1;
         min-width: 0;
       }
-      
+
       .chat-message-name {
         font-size: 11px;
         font-weight: 600;
         color: rgba(255, 255, 255, 0.7);
       }
-      
+
       .chat-message-text {
         font-size: 13px;
         color: rgba(255, 255, 255, 0.9);
         line-height: 1.4;
       }
-      
+
       /* Chat Input Bar */
       .chat-input-bar {
         display: flex;
@@ -2077,7 +2138,7 @@
         gap: 8px;
         padding: 8px 0;
       }
-      
+
       .chat-input {
         flex: 1;
         background: rgba(255, 255, 255, 0.12);
@@ -2089,16 +2150,16 @@
         outline: none;
         transition: all 0.2s ease;
       }
-      
+
       .chat-input::placeholder {
         color: rgba(255, 255, 255, 0.4);
       }
-      
+
       .chat-input:focus {
         background: rgba(255, 255, 255, 0.18);
         border-color: rgba(59, 130, 246, 0.5);
       }
-      
+
       .chat-send-btn {
         width: 44px;
         height: 44px;
@@ -2112,15 +2173,15 @@
         transition: all 0.2s ease;
         flex-shrink: 0;
       }
-      
+
       .chat-send-btn svg {
         color: #fff;
       }
-      
+
       .chat-send-btn:hover {
         transform: scale(1.05);
       }
-      
+
       .chat-send-btn:active {
         transform: scale(0.95);
       }
@@ -2151,10 +2212,16 @@
         opacity: 1;
         transform: translateX(-50%) scale(1.1);
       }
-      .day-nav-prev { bottom: 100px; }
-      .day-nav-next { top: 80px; }
+      .day-nav-prev {
+        bottom: 100px;
+      }
+      .day-nav-next {
+        top: 80px;
+      }
       @media (max-width: 768px) {
-        .day-nav { display: none; }
+        .day-nav {
+          display: none;
+        }
       }
 
       /* Search overlay */
@@ -2167,9 +2234,14 @@
         z-index: 700;
         opacity: 0;
         visibility: hidden;
-        transition: opacity 0.3s, visibility 0.3s;
+        transition:
+          opacity 0.3s,
+          visibility 0.3s;
       }
-      .search-overlay.open { opacity: 1; visibility: visible; }
+      .search-overlay.open {
+        opacity: 1;
+        visibility: visible;
+      }
       .search-container {
         max-width: 600px;
         margin: 0 auto;
@@ -2185,20 +2257,24 @@
       }
       .search-input {
         flex: 1;
-        background: rgba(255,255,255,0.1);
-        border: 2px solid rgba(255,255,255,0.2);
+        background: rgba(255, 255, 255, 0.1);
+        border: 2px solid rgba(255, 255, 255, 0.2);
         border-radius: 16px;
         padding: 16px 20px;
         font-size: 18px;
         color: white;
         outline: none;
       }
-      .search-input:focus { border-color: #3b82f6; }
-      .search-input::placeholder { color: rgba(255,255,255,0.4); }
+      .search-input:focus {
+        border-color: #3b82f6;
+      }
+      .search-input::placeholder {
+        color: rgba(255, 255, 255, 0.4);
+      }
       .search-close {
         width: 52px;
         height: 52px;
-        background: rgba(255,255,255,0.1);
+        background: rgba(255, 255, 255, 0.1);
         border: none;
         border-radius: 16px;
         color: white;
@@ -2206,7 +2282,9 @@
         cursor: pointer;
         transition: background 0.2s;
       }
-      .search-close:hover { background: rgba(255,255,255,0.2); }
+      .search-close:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
       .search-results {
         flex: 1;
         overflow-y: auto;
@@ -2219,21 +2297,41 @@
         align-items: center;
         gap: 16px;
         padding: 16px;
-        background: rgba(255,255,255,0.05);
+        background: rgba(255, 255, 255, 0.05);
         border-radius: 16px;
         cursor: pointer;
         transition: all 0.2s;
       }
       .search-result:hover {
-        background: rgba(255,255,255,0.1);
+        background: rgba(255, 255, 255, 0.1);
         transform: translateX(4px);
       }
-      .search-result-emoji { font-size: 28px; width: 40px; text-align: center; }
-      .search-result-info { flex: 1; }
-      .search-result-date { font-size: 11px; color: rgba(255,255,255,0.4); margin-bottom: 2px; }
-      .search-result-topic { font-size: 15px; font-weight: 500; }
-      .search-empty { text-align: center; padding: 60px 20px; display: none; }
-      .search-empty p { color: rgba(255,255,255,0.5); margin-bottom: 24px; }
+      .search-result-emoji {
+        font-size: 28px;
+        width: 40px;
+        text-align: center;
+      }
+      .search-result-info {
+        flex: 1;
+      }
+      .search-result-date {
+        font-size: 11px;
+        color: rgba(255, 255, 255, 0.4);
+        margin-bottom: 2px;
+      }
+      .search-result-topic {
+        font-size: 15px;
+        font-weight: 500;
+      }
+      .search-empty {
+        text-align: center;
+        padding: 60px 20px;
+        display: none;
+      }
+      .search-empty p {
+        color: rgba(255, 255, 255, 0.5);
+        margin-bottom: 24px;
+      }
       .search-generate-btn {
         padding: 14px 28px;
         background: #3b82f6;
@@ -2245,15 +2343,17 @@
         cursor: pointer;
         transition: transform 0.2s;
       }
-      .search-generate-btn:hover { transform: scale(1.05); }
+      .search-generate-btn:hover {
+        transform: scale(1.05);
+      }
       .search-hint {
         text-align: center;
         font-size: 12px;
-        color: rgba(255,255,255,0.3);
+        color: rgba(255, 255, 255, 0.3);
         margin-top: 16px;
       }
       .search-hint kbd {
-        background: rgba(255,255,255,0.1);
+        background: rgba(255, 255, 255, 0.1);
         padding: 2px 6px;
         border-radius: 4px;
         margin: 0 2px;
@@ -2299,12 +2399,12 @@
       #chat-overlay {
         display: none !important;
       }
-      
+
       /* Comments now go to bottom chat area instead */
       .comments-float {
         display: none !important;
       }
-      
+
       /* Hide old mic button - we have the new Talk to Kelly button */
       #kelly-mic-btn,
       .kelly-mic-btn {
@@ -2350,8 +2450,15 @@
       }
 
       @keyframes livePulse {
-        0%, 100% { opacity: 1; transform: scale(1); }
-        50% { opacity: 0.6; transform: scale(1.1); }
+        0%,
+        100% {
+          opacity: 1;
+          transform: scale(1);
+        }
+        50% {
+          opacity: 0.6;
+          transform: scale(1.1);
+        }
       }
 
       .live-text {
@@ -2659,8 +2766,14 @@
       }
 
       @keyframes commentFadeIn {
-        from { opacity: 0; transform: translateY(-8px); }
-        to { opacity: 1; transform: translateY(0); }
+        from {
+          opacity: 0;
+          transform: translateY(-8px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
       }
 
       /* === FLOATING COMMENTS AREA (legacy fallback) === */
@@ -2703,7 +2816,9 @@
       .comment-minimal {
         font-size: 13px;
         color: var(--tiktok-text);
-        text-shadow: 0 1px 4px rgba(0, 0, 0, 0.7), 0 2px 8px rgba(0, 0, 0, 0.5);
+        text-shadow:
+          0 1px 4px rgba(0, 0, 0, 0.7),
+          0 2px 8px rgba(0, 0, 0, 0.5);
         animation: commentFadeIn 0.4s ease-out;
       }
 
@@ -2769,8 +2884,13 @@
       }
 
       @keyframes swipeBounce {
-        0%, 100% { transform: translateY(0); }
-        50% { transform: translateY(-8px); }
+        0%,
+        100% {
+          transform: translateY(0);
+        }
+        50% {
+          transform: translateY(-8px);
+        }
       }
 
       .swipe-hint {
@@ -2803,8 +2923,13 @@
       }
 
       @keyframes swipeHintPulse {
-        0%, 100% { opacity: 0.7; }
-        50% { opacity: 0.4; }
+        0%,
+        100% {
+          opacity: 0.7;
+        }
+        50% {
+          opacity: 0.4;
+        }
       }
 
       /* === KELLY ADJUSTMENTS FOR V2 === */
@@ -2820,7 +2945,9 @@
 
       /* === TRANSITION ANIMATIONS === */
       .lesson-transition {
-        transition: transform 0.4s ease, opacity 0.4s ease;
+        transition:
+          transform 0.4s ease,
+          opacity 0.4s ease;
       }
 
       .lesson-transition.slide-up {
@@ -2911,7 +3038,13 @@
             src="/kelly/poses/kelly_hint.png?v=20251202"
             alt="Kelly"
             id="kelly-avatar"
-            style="width: 100%; height: 100%; object-fit: cover; object-position: center 20%; transition: opacity 0.3s ease;"
+            style="
+              width: 100%;
+              height: 100%;
+              object-fit: cover;
+              object-position: center 20%;
+              transition: opacity 0.3s ease;
+            "
           />
         </div>
 
@@ -2934,8 +3067,13 @@
 
       <!-- TOP BAR - V2 Minimal -->
       <!-- Social Learning indicator - centered at very top (Trust & Safety compliant) -->
-      <div class="live-badge-v2" id="live-badge-v2" title="Tap to learn about simulated social content" onclick="chatOverlay?.showTooltip?.()">
-        <span class="live-dot" style="background: #f59e0b;"></span>
+      <div
+        class="live-badge-v2"
+        id="live-badge-v2"
+        title="Tap to learn about simulated social content"
+        onclick="chatOverlay?.showTooltip?.()"
+      >
+        <span class="live-dot" style="background: #f59e0b"></span>
         <span class="live-text">✨ Social</span>
       </div>
 
@@ -2993,7 +3131,7 @@
       </div>
 
       <!-- Hidden legacy top-bar for compatibility -->
-      <div class="top-bar top-bar-v2" style="display: none;">
+      <div class="top-bar top-bar-v2" style="display: none">
         <div class="progress-dots" id="progress-dots">
           <span class="dot active" data-phase="1"></span>
           <span class="dot" data-phase="2"></span>
@@ -3014,7 +3152,7 @@
       <div class="settings-overlay" id="settings-overlay"></div>
 
       <!-- LANGUAGE: Horizontal Expand -->
-      <div class="expand-container" id="expand-language" style="top: 320px;">
+      <div class="expand-container" id="expand-language" style="top: 320px">
         <button class="expand-trigger">🌐</button>
         <div class="expand-panel">
           <button class="expand-option selected" data-lang="EN">
@@ -3045,7 +3183,7 @@
       </div>
 
       <!-- MODE: Horizontal Expand -->
-      <div class="expand-container" id="expand-mode" style="top: 370px;">
+      <div class="expand-container" id="expand-mode" style="top: 370px">
         <button class="expand-trigger">📺</button>
         <div class="expand-panel">
           <button class="expand-option selected" data-mode="2D">
@@ -3065,8 +3203,8 @@
           <span class="age-value" id="age-display">18</span>
         </div>
         <div class="age-track" id="age-track">
-          <div class="age-track-fill" id="age-track-fill" style="width: 16%;"></div>
-          <div class="age-thumb" id="age-thumb" style="left: 16%;">
+          <div class="age-track-fill" id="age-track-fill" style="width: 16%"></div>
+          <div class="age-thumb" id="age-thumb" style="left: 16%">
             <span class="age-thumb-emoji" id="age-thumb-emoji">👩</span>
           </div>
         </div>
@@ -3081,12 +3219,24 @@
           <span class="age-marker" data-age="102">102</span>
         </div>
         <div class="age-presets">
-          <button class="age-preset" data-age="2"><span class="age-preset-emoji">👶</span> Toddler</button>
-          <button class="age-preset" data-age="8"><span class="age-preset-emoji">🧒</span> Child</button>
-          <button class="age-preset active" data-age="18"><span class="age-preset-emoji">👩</span> Young Adult</button>
-          <button class="age-preset" data-age="35"><span class="age-preset-emoji">👩‍💼</span> Adult</button>
-          <button class="age-preset" data-age="65"><span class="age-preset-emoji">👵</span> Senior</button>
-          <button class="age-preset" data-age="102"><span class="age-preset-emoji">🧓</span> Elder</button>
+          <button class="age-preset" data-age="2">
+            <span class="age-preset-emoji">👶</span> Toddler
+          </button>
+          <button class="age-preset" data-age="8">
+            <span class="age-preset-emoji">🧒</span> Child
+          </button>
+          <button class="age-preset active" data-age="18">
+            <span class="age-preset-emoji">👩</span> Young Adult
+          </button>
+          <button class="age-preset" data-age="35">
+            <span class="age-preset-emoji">👩‍💼</span> Adult
+          </button>
+          <button class="age-preset" data-age="65">
+            <span class="age-preset-emoji">👵</span> Senior
+          </button>
+          <button class="age-preset" data-age="102">
+            <span class="age-preset-emoji">🧓</span> Elder
+          </button>
         </div>
       </div>
 
@@ -3097,39 +3247,64 @@
         <div class="tone-subtitle">Choose how Kelly explains things to you</div>
         <div class="tone-grid">
           <button class="tone-option" data-tone="curious">
-            <div class="tone-emoji">🤔</div><div class="tone-name">Curious</div><div class="tone-desc">Questions everything</div>
+            <div class="tone-emoji">🤔</div>
+            <div class="tone-name">Curious</div>
+            <div class="tone-desc">Questions everything</div>
           </button>
           <button class="tone-option selected" data-tone="friendly">
-            <div class="tone-emoji">😊</div><div class="tone-name">Friendly</div><div class="tone-desc">Warm & supportive</div>
+            <div class="tone-emoji">😊</div>
+            <div class="tone-name">Friendly</div>
+            <div class="tone-desc">Warm & supportive</div>
           </button>
           <button class="tone-option" data-tone="playful">
-            <div class="tone-emoji">🎮</div><div class="tone-name">Playful</div><div class="tone-desc">Fun & games</div>
+            <div class="tone-emoji">🎮</div>
+            <div class="tone-name">Playful</div>
+            <div class="tone-desc">Fun & games</div>
           </button>
           <button class="tone-option" data-tone="wise">
-            <div class="tone-emoji">🦉</div><div class="tone-name">Wise</div><div class="tone-desc">Deep insights</div>
+            <div class="tone-emoji">🦉</div>
+            <div class="tone-name">Wise</div>
+            <div class="tone-desc">Deep insights</div>
           </button>
           <button class="tone-option" data-tone="coach">
-            <div class="tone-emoji">💪</div><div class="tone-name">Coach</div><div class="tone-desc">Motivating</div>
+            <div class="tone-emoji">💪</div>
+            <div class="tone-name">Coach</div>
+            <div class="tone-desc">Motivating</div>
           </button>
           <button class="tone-option" data-tone="scholar">
-            <div class="tone-emoji">📚</div><div class="tone-name">Scholar</div><div class="tone-desc">Academic</div>
+            <div class="tone-emoji">📚</div>
+            <div class="tone-name">Scholar</div>
+            <div class="tone-desc">Academic</div>
           </button>
         </div>
       </div>
 
       <!-- RIGHT RAIL - Command Center (Navigation, Personalization, Tools) -->
       <div class="right-rail" id="right-rail">
-        
         <!-- Navigation Group -->
         <button class="rail-btn" id="btn-search" aria-label="Search" data-popover="popover-search">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
           </svg>
         </button>
-        
+
         <a href="/calendar.html" class="rail-btn" aria-label="Calendar">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
             <line x1="16" y1="2" x2="16" y2="6"></line>
             <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -3141,24 +3316,52 @@
 
         <!-- Personalization Group -->
         <button class="rail-btn" id="btn-age" aria-label="Age" data-popover="popover-age">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
             <circle cx="12" cy="7" r="4"></circle>
           </svg>
           <span class="rail-badge" id="badge-age">18</span>
         </button>
-        
-        <button class="rail-btn" id="btn-language" aria-label="Language" data-popover="popover-language">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+
+        <button
+          class="rail-btn"
+          id="btn-language"
+          aria-label="Language"
+          data-popover="popover-language"
+        >
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <circle cx="12" cy="12" r="10"></circle>
             <line x1="2" y1="12" x2="22" y2="12"></line>
-            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+            <path
+              d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"
+            ></path>
           </svg>
           <span class="rail-badge" id="badge-language">EN</span>
         </button>
-        
+
         <button class="rail-btn" id="btn-tone" aria-label="Tone" data-popover="popover-tone">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <circle cx="12" cy="12" r="10"></circle>
             <path d="M8 14s1.5 2 4 2 4-2 4-2"></path>
             <line x1="9" y1="9" x2="9.01" y2="9"></line>
@@ -3168,7 +3371,14 @@
         </button>
 
         <button class="rail-btn" id="btn-mode" aria-label="Mode" data-popover="popover-mode">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <rect x="2" y="7" width="20" height="15" rx="2" ry="2"></rect>
             <polyline points="17 2 12 7 7 2"></polyline>
           </svg>
@@ -3179,7 +3389,14 @@
 
         <!-- Tools Group -->
         <button class="rail-btn" id="talk-to-kelly-btn" aria-label="Talk to Kelly">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            width="24"
+            height="24"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <path d="M12 1a3 3 0 0 0-3 3v8a3 3 0 0 0 6 0V4a3 3 0 0 0-3-3z"></path>
             <path d="M19 10v2a7 7 0 0 1-14 0v-2"></path>
             <line x1="12" y1="19" x2="12" y2="23"></line>
@@ -3188,7 +3405,14 @@
         </button>
 
         <button class="rail-btn" id="btn-share" aria-label="Share" data-popover="popover-share">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <circle cx="18" cy="5" r="3"></circle>
             <circle cx="6" cy="12" r="3"></circle>
             <circle cx="18" cy="19" r="3"></circle>
@@ -3198,31 +3422,47 @@
         </button>
 
         <button class="rail-btn" id="btn-sound" aria-label="Sound">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"></polygon>
             <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"></path>
           </svg>
         </button>
 
         <a href="/settings.html" class="rail-btn" aria-label="Settings">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <svg
+            width="20"
+            height="20"
+            viewBox="0 0 24 24"
+            fill="none"
+            stroke="currentColor"
+            stroke-width="2"
+          >
             <circle cx="12" cy="12" r="3"></circle>
-            <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+            <path
+              d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+            ></path>
           </svg>
         </a>
       </div>
 
       <!-- Options Container (Moved out of Rail) -->
       <div class="options-container" id="options-container">
-        <div class="option-card" id="option-a" data-letter="A" style="display: none;">
+        <div class="option-card" id="option-a" data-letter="A" style="display: none">
           <span class="option-letter">A</span>
           <span class="option-text" id="option-a-text"></span>
         </div>
-        <div class="option-card" id="option-b" data-letter="B" style="display: none;">
+        <div class="option-card" id="option-b" data-letter="B" style="display: none">
           <span class="option-letter">B</span>
           <span class="option-text" id="option-b-text"></span>
         </div>
-        <div class="option-card" id="option-c" data-letter="C" style="display: none;">
+        <div class="option-card" id="option-c" data-letter="C" style="display: none">
           <span class="option-letter">C</span>
           <span class="option-text" id="option-c-text"></span>
         </div>
@@ -3237,7 +3477,7 @@
       <div class="top-header" id="top-header">
         <div class="top-header-left">
           <a href="/" class="kelly-home-btn" aria-label="Home" title="Go Home">
-            <img src="/images/brand/kelly-mark-circle-64.png" alt="Kelly" width="36" height="36">
+            <img src="/images/brand/kelly-mark-circle-64.png" alt="Kelly" width="36" height="36" />
           </a>
           <span class="top-title-emoji" id="top-title-emoji">🏛️</span>
           <span class="top-title-name" id="top-title-name">Rules Everyone Agrees On</span>
@@ -3258,26 +3498,26 @@
         <div class="chat-messages-container" id="chat-messages-container">
           <!-- Comments will be injected here by chat-overlay.js -->
         </div>
-        
+
         <!-- Chat Input -->
         <div class="chat-input-bar" id="chat-input-bar">
-          <input 
-            type="text" 
-            class="chat-input" 
-            id="chat-input" 
+          <input
+            type="text"
+            class="chat-input"
+            id="chat-input"
             placeholder="Say something to Kelly or the world..."
             autocomplete="off"
           />
           <button class="chat-send-btn" id="chat-send-btn" aria-label="Send message">
             <svg viewBox="0 0 24 24" fill="currentColor" width="20" height="20">
-              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z"/>
+              <path d="M2.01 21L23 12 2.01 3 2 10l15 2-15 2z" />
             </svg>
           </button>
         </div>
       </div>
 
       <!-- Hidden legacy bottom bar for compatibility -->
-      <div class="bottom-bar" id="bottom-bar" style="display: none;">
+      <div class="bottom-bar" id="bottom-bar" style="display: none">
         <div class="bottom-date" id="bottom-date"></div>
         <div class="bottom-title">
           <span class="bottom-emoji" id="bottom-emoji">🏛️</span>
@@ -3287,13 +3527,13 @@
       </div>
 
       <!-- Hidden elements for compatibility with existing JS -->
-      <div id="bottom-overlay" style="display: none;">
-        <span id="day-display" style="display: none;">December 2, 2025</span>
-        <span id="topic-emoji" style="display: none;">🏛️</span>
-        <span id="topic-name" style="display: none;">Citizenship</span>
-        <p id="speech-text" style="display: none;">✨ Preparing your lesson...</p>
-        <p id="speech-hint" style="display: none;"></p>
-        <div id="choices-container" style="display: none;"></div>
+      <div id="bottom-overlay" style="display: none">
+        <span id="day-display" style="display: none">December 2, 2025</span>
+        <span id="topic-emoji" style="display: none">🏛️</span>
+        <span id="topic-name" style="display: none">Citizenship</span>
+        <p id="speech-text" style="display: none">✨ Preparing your lesson...</p>
+        <p id="speech-hint" style="display: none"></p>
+        <div id="choices-container" style="display: none"></div>
       </div>
 
       <!-- SWIPE NAVIGATION V2 -->
@@ -3313,24 +3553,38 @@
         <span class="swipe-hint-arrow">↑</span>
         <span class="swipe-hint-text">Swipe for next lesson</span>
       </div>
-      
+
       <!-- Legacy swipe indicators (hidden, for compatibility) -->
-      <div class="swipe-indicator top" id="swipe-up-indicator" style="display: none;">
+      <div class="swipe-indicator top" id="swipe-up-indicator" style="display: none">
         ↑ Day <span id="next-day">337</span>
       </div>
-      <div class="swipe-indicator bottom" id="swipe-down-indicator" style="display: none;">
+      <div class="swipe-indicator bottom" id="swipe-down-indicator" style="display: none">
         ↓ Day <span id="prev-day">335</span>
       </div>
 
       <!-- BOTTOM NAV - Hidden in V2, navigation moved to left rail -->
-      <nav class="bottom-nav" style="display: none;">
+      <nav class="bottom-nav" style="display: none">
         <a href="/" class="nav-item">
-          <span class="nav-icon"><img src="/images/brand/kelly-mark-circle-64.png" alt="" width="22" height="22" style="border-radius:50%;"></span>
+          <span class="nav-icon"
+            ><img
+              src="/images/brand/kelly-mark-circle-64.png"
+              alt=""
+              width="22"
+              height="22"
+              style="border-radius: 50%"
+          /></span>
           <span class="nav-label">Home</span>
         </a>
         <a href="/calendar.html" class="nav-item">
           <span class="nav-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
               <line x1="16" y1="2" x2="16" y2="6"></line>
               <line x1="8" y1="2" x2="8" y2="6"></line>
@@ -3341,7 +3595,14 @@
         </a>
         <a href="/learn.html" class="nav-item active">
           <span class="nav-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
               <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
             </svg>
@@ -3350,7 +3611,14 @@
         </a>
         <a href="/me.html" class="nav-item">
           <span class="nav-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
               <circle cx="12" cy="7" r="4"></circle>
             </svg>
@@ -3359,9 +3627,18 @@
         </a>
         <a href="/settings.html" class="nav-item">
           <span class="nav-icon">
-            <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+            <svg
+              width="22"
+              height="22"
+              viewBox="0 0 24 24"
+              fill="none"
+              stroke="currentColor"
+              stroke-width="2"
+            >
               <circle cx="12" cy="12" r="3"></circle>
-              <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              <path
+                d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"
+              ></path>
             </svg>
           </span>
           <span class="nav-label">Settings</span>
@@ -3518,8 +3795,19 @@
     <div class="popover" id="popover-search" data-placement="left">
       <div class="popover-arrow"></div>
       <div class="popover-header">Search Lessons</div>
-      <div style="padding: 8px;">
-        <input type="text" placeholder="Search topics..." style="width: 100%; padding: 8px; border-radius: 8px; border: 1px solid rgba(255,255,255,0.2); background: rgba(255,255,255,0.1); color: white;">
+      <div style="padding: 8px">
+        <input
+          type="text"
+          placeholder="Search topics..."
+          style="
+            width: 100%;
+            padding: 8px;
+            border-radius: 8px;
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            background: rgba(255, 255, 255, 0.1);
+            color: white;
+          "
+        />
       </div>
     </div>
 
@@ -3527,13 +3815,13 @@
     <div class="popover" id="popover-calendar" data-placement="left">
       <div class="popover-arrow"></div>
       <div class="popover-header">Calendar</div>
-      <div class="popover-option" onclick="window.location.href='/calendar.html'">
+      <div class="popover-option" onclick="window.location.href = '/calendar.html'">
         <span class="popover-option-icon">📅</span>
         <div class="popover-option-info">
           <div class="popover-option-name">View Full Calendar</div>
         </div>
       </div>
-      <div class="popover-option" onclick="window.location.href='/learn.html'">
+      <div class="popover-option" onclick="window.location.href = '/learn.html'">
         <span class="popover-option-icon">🎯</span>
         <div class="popover-option-info">
           <div class="popover-option-name">Go to Today</div>
@@ -3567,9 +3855,18 @@
     <div class="popover" id="popover-talk" data-placement="left">
       <div class="popover-arrow"></div>
       <div class="popover-header">Talk to Kelly</div>
-      <div style="padding: 12px; text-align: center;">
-        <p style="font-size: 13px; color: #aaa; margin-bottom: 12px;">Microphone active</p>
-        <div style="width: 40px; height: 40px; background: #22c55e; border-radius: 50%; margin: 0 auto; animation: pulse 1.5s infinite;"></div>
+      <div style="padding: 12px; text-align: center">
+        <p style="font-size: 13px; color: #aaa; margin-bottom: 12px">Microphone active</p>
+        <div
+          style="
+            width: 40px;
+            height: 40px;
+            background: #22c55e;
+            border-radius: 50%;
+            margin: 0 auto;
+            animation: pulse 1.5s infinite;
+          "
+        ></div>
       </div>
     </div>
 
@@ -3595,13 +3892,13 @@
     <div class="popover" id="popover-settings" data-placement="left">
       <div class="popover-arrow"></div>
       <div class="popover-header">Settings</div>
-      <div class="popover-option" onclick="window.location.href='/me.html'">
+      <div class="popover-option" onclick="window.location.href = '/me.html'">
         <span class="popover-option-icon">👤</span>
         <div class="popover-option-info">
           <div class="popover-option-name">My Profile</div>
         </div>
       </div>
-      <div class="popover-option" onclick="window.location.href='/settings.html'">
+      <div class="popover-option" onclick="window.location.href = '/settings.html'">
         <span class="popover-option-icon">⚙️</span>
         <div class="popover-option-info">
           <div class="popover-option-name">All Settings</div>
@@ -3623,7 +3920,7 @@
         SUPABASE_ANON_KEY:
           window.SUPABASE_ANON_KEY ||
           'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI',
-        TOTAL_LESSONS: 365
+        TOTAL_LESSONS: 365,
       };
 
       // ═══════════════════════════════════════════════════════════════════
@@ -3635,7 +3932,7 @@
         const options = { month: 'long', day: 'numeric', year: 'numeric' };
         return date.toLocaleDateString('en-US', options);
       }
-      
+
       function getTodaysDayNumber() {
         // Calculate day of year for current date
         const now = new Date();
@@ -3644,7 +3941,7 @@
         const oneDay = 1000 * 60 * 60 * 24;
         return Math.floor(diff / oneDay);
       }
-      
+
       function isToday(dayNumber) {
         return dayNumber === getTodaysDayNumber();
       }
@@ -3666,15 +3963,17 @@
           language: localStorage.getItem('kelly_language') || 'en',
           tone: localStorage.getItem('kelly_tone') || 'curious',
           difficulty: parseInt(localStorage.getItem('kelly_difficulty') || '2'),
-          mode: localStorage.getItem('kelly_mode') || '2D'
+          mode: localStorage.getItem('kelly_mode') || '2D',
         },
 
-        choicesMade: {}
+        choicesMade: {},
       };
 
       let kellyAvatar = null;
       let kellyAudio = null;
       let loadingTimeout = null; // Track loading timeout
+      let kellyPersonaManifest = null; // Loaded from /assets/kelly/kelly-personas-manifest.json
+      let lastSpokenPhaseKey = null; // Prevent repeat audio on rerender
 
       // ═══════════════════════════════════════════════════════════════════
       // KELLY AVATAR CONTROLLER INITIALIZATION
@@ -3695,9 +3994,12 @@
           return;
         }
 
-        // Initialize 2D avatar controller (using Kelly2DAvatar - the active module)
-        kellyAvatar = new Kelly2DAvatar(container2D);
-        console.log('[Learn] Kelly 2D avatar initialized');
+        // Launch-mode directive (Dec 2025):
+        // Ship with high-quality static persona heads + ElevenLabs audio now.
+        // Keep the existing <img id="kelly-avatar"> node stable for persona swaps.
+        window.KELLY_PERSONA_HEAD_MODE = true;
+        kellyAvatar = null;
+        console.log('[Learn] Kelly 2D avatar controller disabled (persona-head mode active)');
 
         // ═══════════════════════════════════════════════════════════════════
         // INITIALIZE KELLY VISUAL SYSTEM
@@ -3707,7 +4009,7 @@
           try {
             kellyVisualSystem = new KellyVisualSystem(kellyFrame, {
               enableChoreography: true,
-              enableAudioSync: true
+              enableAudioSync: true,
             });
             console.log('[Learn] ✅ Kelly Visual System initialized');
           } catch (e) {
@@ -3789,7 +4091,10 @@
       // ═══════════════════════════════════════════════════════════════════
       // SUPABASE CLIENT
       // ═══════════════════════════════════════════════════════════════════
-      const supabase = window.supabase.createClient(window.CONFIG.SUPABASE_URL, window.CONFIG.SUPABASE_ANON_KEY);
+      const supabase = window.supabase.createClient(
+        window.CONFIG.SUPABASE_URL,
+        window.CONFIG.SUPABASE_ANON_KEY
+      );
       const CONFIG = window.CONFIG; // Local alias for convenience
 
       // ═══════════════════════════════════════════════════════════════════
@@ -3802,31 +4107,145 @@
       // Database has: The Scientist, The Survivor, The Explorer, etc.
       // ═══════════════════════════════════════════════════════════════════
       const TONE_TO_ARCHETYPE = {
-        curious: 'The Scientist',   // ✅ HAS VIDEOS - Analytical, evidence-based
-        playful: 'The Explorer',    // ✅ HAS VIDEOS - Adventurous, discovery-focused
-        serious: 'The Rebel',       // ✅ HAS VIDEOS - Bold, practical (changed from Survivor)
-        friendly: 'The Explorer',   // ✅ HAS VIDEOS - Warm, discovery-focused
-        wise: 'The Scientist',      // ✅ HAS VIDEOS - Deep understanding
-        coach: 'The Rebel',         // ✅ HAS VIDEOS - Motivating, action-oriented
-        scholar: 'The Scientist'    // ✅ HAS VIDEOS - Academic, evidence-based
+        curious: 'The Scientist', // ✅ HAS VIDEOS - Analytical, evidence-based
+        playful: 'The Explorer', // ✅ HAS VIDEOS - Adventurous, discovery-focused
+        serious: 'The Rebel', // ✅ HAS VIDEOS - Bold, practical (changed from Survivor)
+        friendly: 'The Explorer', // ✅ HAS VIDEOS - Warm, discovery-focused
+        wise: 'The Scientist', // ✅ HAS VIDEOS - Deep understanding
+        coach: 'The Rebel', // ✅ HAS VIDEOS - Motivating, action-oriented
+        scholar: 'The Scientist', // ✅ HAS VIDEOS - Academic, evidence-based
       };
 
       // Fallback archetypes if primary not found
       const ARCHETYPE_FALLBACKS = {
         'The Scientist': ['Scientist', 'Sage', 'The Sage'],
         'The Explorer': ['Explorer', 'Jester', 'The Storyteller'],
-        'The Survivor': ['Survivor', 'Ruler', 'The Strategist']
+        'The Survivor': ['Survivor', 'Ruler', 'The Strategist'],
       };
+
+      // ═══════════════════════════════════════════════════════════════════
+      // LAUNCH MODE: PERSONA HEADS + AUDIO (NO HEYGEN MOTION REQUIRED)
+      // ═══════════════════════════════════════════════════════════════════
+      function mapUiAgeToHeadVariant(uiAgeBucket) {
+        // UI stores coarse buckets; we map to the 5 canonical head sets.
+        const v = String(uiAgeBucket || '').trim();
+        if (v === '2-5' || v === '6-12') return 'kid';
+        if (v === '13-17') return 'teen';
+        if (v === '36-60') return 'elder';
+        if (v === '61+') return 'super_elder';
+        return 'adult';
+      }
+
+      function archetypeToPersonaId(archetype) {
+        // \"The Scientist\" -> \"scientist\"
+        const a = String(archetype || '').trim();
+        return a.toLowerCase().replace(/^the\\s+/, '').replace(/\\s+/g, '_');
+      }
+
+      function getCurrentPersonaId() {
+        const archetype = TONE_TO_ARCHETYPE[state?.variants?.tone] || 'The Scientist';
+        return archetypeToPersonaId(archetype);
+      }
+
+      async function loadPersonaManifestOnce() {
+        if (kellyPersonaManifest) return kellyPersonaManifest;
+        try {
+          const resp = await fetch('/assets/kelly/kelly-personas-manifest.json', { cache: 'no-store' });
+          if (!resp.ok) throw new Error(`HTTP ${resp.status}`);
+          kellyPersonaManifest = await resp.json();
+          return kellyPersonaManifest;
+        } catch (e) {
+          console.warn('[Learn] Failed loading persona manifest:', e?.message || e);
+          kellyPersonaManifest = null;
+          return null;
+        }
+      }
+
+      function getPersonaHeadUrl(personaId, ageVariant) {
+        if (!kellyPersonaManifest) return null;
+        const p = kellyPersonaManifest?.personas?.[personaId];
+        if (!p) return null;
+        const cdnBase = kellyPersonaManifest.cdnBase;
+        const rel = p?.images?.headByAge?.[ageVariant] || p?.images?.head;
+        if (!cdnBase || !rel) return null;
+        return `${cdnBase}/${rel}`;
+      }
+
+      function setKellyPersonaHeadImage() {
+        if (!window.KELLY_PERSONA_HEAD_MODE) return;
+        const img = document.getElementById('kelly-avatar');
+        if (!img) return;
+        if (!kellyPersonaManifest) return;
+
+        const personaId = getCurrentPersonaId();
+        const ageVariant = mapUiAgeToHeadVariant(state?.variants?.age);
+        const url = getPersonaHeadUrl(personaId, ageVariant);
+        if (!url) return;
+
+        if (img.dataset?.personaSrc === url) return;
+        img.dataset.personaSrc = url;
+        img.src = url;
+      }
+
+      function phaseToDbPhase(phase) {
+        if (!phase) return 'hook';
+        if (phase.type === 'hook' || phase.type === 'welcome') return 'hook';
+        if (phase.type === 'wisdom' || phase.type === 'complete') return 'wisdom';
+        if (phase.type === 'question') {
+          const questionPhases = state.lesson?.phases?.filter(p => p.type === 'question') || [];
+          const idx = questionPhases.findIndex(p => p === phase);
+          return `q${Math.max(1, idx + 1)}`;
+        }
+        return 'hook';
+      }
+
+      async function getPreGeneratedAudioUrl({ dayNumber, dbPhase, personaId, ageVariant, language }) {
+        try {
+          const { data, error } = await supabase
+            .from('kelly_video_assets')
+            .select('public_url')
+            .eq('day_number', dayNumber)
+            .eq('phase', dbPhase)
+            .eq('asset_type', 'audio')
+            .eq('age_bucket', ageVariant)
+            .eq('language', language)
+            .eq('template', personaId)
+            .in('status', ['validated', 'published', 'generated'])
+            .limit(1);
+
+          if (error) return null;
+          if (data && data.length > 0 && data[0]?.public_url) return data[0].public_url;
+          return null;
+        } catch {
+          return null;
+        }
+      }
+
+      async function speakPhaseIfNeeded(text, phase) {
+        if (!kellyAudio || state.isPaused) return;
+        const dayNumber = state.dayNumber;
+        const personaId = getCurrentPersonaId();
+        const ageVariant = mapUiAgeToHeadVariant(state?.variants?.age);
+        const language = state?.variants?.language || 'en';
+        const dbPhase = phaseToDbPhase(phase);
+        const key = `${dayNumber}-${dbPhase}-${personaId}-${ageVariant}-${language}`;
+
+        if (lastSpokenPhaseKey === key) return;
+        lastSpokenPhaseKey = key;
+
+        const audioUrl = await getPreGeneratedAudioUrl({ dayNumber, dbPhase, personaId, ageVariant, language });
+        kellyAudio.speak(text, { language, audioUrl });
+      }
 
       // ═══════════════════════════════════════════════════════════════════
       // AGE/LANGUAGE PERSONALIZATION - Loads age hooks + lesson shards
       // ═══════════════════════════════════════════════════════════════════
-      
+
       // Personalization state
       let personalization = {
-        ageHook: null,        // Age-specific intro hook
-        currentShard: null,   // Matched shard for age/region/tone
-        lessonShards: []      // All shards for current lesson (cached)
+        ageHook: null, // Age-specific intro hook
+        currentShard: null, // Matched shard for age/region/tone
+        lessonShards: [], // All shards for current lesson (cached)
       };
 
       // Map app age bucket format to database format
@@ -3837,7 +4256,7 @@
           '13-17': '13-17',
           '18-35': '18-29',
           '36-60': '30-54',
-          '61+': '55+'
+          '61+': '55+',
         };
         return mapping[appBucket] || '18-29';
       }
@@ -3851,9 +4270,9 @@
       async function loadAgeHook() {
         const dayNumber = getCurrentDayNumber();
         const dbAgeBucket = mapAgeBucketToDb(state.variants.age);
-        
+
         console.log(`[Learn] Loading age hook for day ${dayNumber}, bucket ${dbAgeBucket}`);
-        
+
         try {
           const { data, error } = await supabase
             .from('lesson_age_hooks')
@@ -3899,10 +4318,10 @@
 
           personalization.lessonShards = data || [];
           console.log(`[Learn] ✅ Loaded ${data?.length || 0} shards for lesson`);
-          
+
           // Find matching shard
           findMatchingShard();
-          
+
           return personalization.lessonShards;
         } catch (e) {
           console.warn('[Learn] Shards fetch error:', e);
@@ -3924,11 +4343,7 @@
         const region = state.variants.language || 'en';
 
         // Try exact match: age + tone + region
-        let shard = shards.find(s => 
-          s.age === age && 
-          s.tone === tone && 
-          s.region === region
-        );
+        let shard = shards.find(s => s.age === age && s.tone === tone && s.region === region);
 
         // Fallback: age + region
         if (!shard) {
@@ -3952,7 +4367,9 @@
 
         if (shard) {
           personalization.currentShard = shard;
-          console.log(`[Learn] ✅ Shard matched: age=${shard.age}, tone=${shard.tone}, region=${shard.region}`);
+          console.log(
+            `[Learn] ✅ Shard matched: age=${shard.age}, tone=${shard.tone}, region=${shard.region}`
+          );
         } else {
           personalization.currentShard = null;
           console.log('[Learn] No matching shard found');
@@ -3965,19 +4382,19 @@
       async function reloadPersonalizedContent() {
         console.log('[Learn] Reloading personalized content...');
         showToast('✨ Personalizing content...');
-        
+
         // Load age hook and shards in parallel
         const currentLessonId = state.lesson?.id || null;
         await Promise.all([
           loadAgeHook(),
-          currentLessonId ? loadLessonShards(currentLessonId) : Promise.resolve()
+          currentLessonId ? loadLessonShards(currentLessonId) : Promise.resolve(),
         ]);
-        
+
         // Re-render current phase with personalized content
         if (state.lesson && state.lesson.phases && state.lesson.phases[state.currentPhase - 1]) {
           renderPhase(state.lesson.phases[state.currentPhase - 1]);
         }
-        
+
         const ageLabel = state.variants.age || '18-35';
         const langLabel = (state.variants.language || 'en').toUpperCase();
         showToast(`✨ Personalized for ages ${ageLabel} (${langLabel})`);
@@ -4017,7 +4434,7 @@
       // ═══════════════════════════════════════════════════════════════════
       const LESSON_CACHE_KEY = 'ck_lesson_cache_v2_dec10';
       const LESSON_CACHE_TTL = 30 * 60 * 1000; // 30 minutes
-      
+
       // Clear cache if ?clearcache=1 in URL
       if (new URLSearchParams(window.location.search).get('clearcache')) {
         console.log('[Learn] 🗑️ Clearing lesson cache...');
@@ -4028,7 +4445,7 @@
         });
         console.log('[Learn] ✅ Cache cleared');
       }
-      
+
       function getCachedLesson(dayNumber, tone) {
         try {
           const cached = localStorage.getItem(`${LESSON_CACHE_KEY}_${dayNumber}_${tone}`);
@@ -4042,11 +4459,13 @@
         } catch (e) {}
         return null;
       }
-      
+
       function cacheLesson(dayNumber, tone, lesson) {
         try {
-          localStorage.setItem(`${LESSON_CACHE_KEY}_${dayNumber}_${tone}`, 
-            JSON.stringify({ lesson, timestamp: Date.now() }));
+          localStorage.setItem(
+            `${LESSON_CACHE_KEY}_${dayNumber}_${tone}`,
+            JSON.stringify({ lesson, timestamp: Date.now() })
+          );
         } catch (e) {}
       }
 
@@ -4064,7 +4483,7 @@
         state.dayNumber = dayNumber;
         state.currentPhase = 1;
         state.choicesMade = {};
-        
+
         const tone = state.variants.tone || 'curious';
 
         // ⚡ TRY CACHE FIRST for instant load
@@ -4074,17 +4493,20 @@
           state.isLoading = false;
           state.startTime = Date.now(); // Track lesson start time
           document.getElementById('day-display').textContent = dayNumberToDate(dayNumber);
-          
+
           // ═══════════════════════════════════════════════════════════════════
           // LOAD VISUAL ASSETS FOR THIS LESSON (backgrounds, props, Kelly poses)
           // ═══════════════════════════════════════════════════════════════════
           if (kellyVisualSystem) {
             console.log('[Learn] 🎨 Loading visual assets for day', dayNumber);
-            kellyVisualSystem.loadLesson(dayNumber)
+            kellyVisualSystem
+              .loadLesson(dayNumber)
               .then(() => console.log('[Learn] 🎨 Visual assets loaded for day', dayNumber))
-              .catch(e => console.warn('[Learn] Visual assets not available for day', dayNumber, e.message));
+              .catch(e =>
+                console.warn('[Learn] Visual assets not available for day', dayNumber, e.message)
+              );
           }
-          
+
           updateUI();
           renderPhase(state.lesson.phases[0]);
           console.log('[Learn] ⚡ Instant load from cache!');
@@ -4153,13 +4575,13 @@
 
           if (atomsError || !atoms || atoms.length === 0) {
             console.warn(`[Learn] No atoms found for archetype "${archetype}":`, atomsError);
-            
+
             // Log what archetypes ARE available for this lesson
             const { data: availableAtoms } = await supabase
               .from('lesson_atoms')
               .select('archetype, phase')
               .eq('core_lesson_id', coreLesson.id);
-            
+
             if (availableAtoms && availableAtoms.length > 0) {
               const archetypes = [...new Set(availableAtoms.map(a => a.archetype))];
               const phases = [...new Set(availableAtoms.map(a => a.phase))];
@@ -4174,7 +4596,7 @@
               .select('phase, content, archetype, hd_video_url, visual_url')
               .eq('core_lesson_id', coreLesson.id)
               .order('phase');
-            
+
             if (anyAtoms && anyAtoms.length > 0) {
               console.log(`[Learn] ✓ Found ${anyAtoms.length} atoms (any archetype)`);
               // Use the first set we find
@@ -4220,16 +4642,22 @@
           state.lesson = createPlaceholderLesson(dayNumber);
           state.isLoading = false;
           clearTimeout(loadingTimeout);
-          
+
           // ═══════════════════════════════════════════════════════════════════
           // LOAD VISUAL ASSETS FOR THIS LESSON (backgrounds, props, Kelly poses)
           // ═══════════════════════════════════════════════════════════════════
           if (kellyVisualSystem) {
-            kellyVisualSystem.loadLesson(state.dayNumber).catch(e => 
-              console.warn('[Learn] Visual assets not available for day', state.dayNumber, e.message)
-            );
+            kellyVisualSystem
+              .loadLesson(state.dayNumber)
+              .catch(e =>
+                console.warn(
+                  '[Learn] Visual assets not available for day',
+                  state.dayNumber,
+                  e.message
+                )
+              );
           }
-          
+
           updateUI();
           renderPhase(state.lesson.phases[0]);
         }
@@ -4243,7 +4671,7 @@
         // Database orders alphabetically, so we need to sort properly
         const phaseOrder = { Hook: 1, Fact1: 2, Fact2: 3, Fact3: 4, Wisdom: 5 };
         atoms.sort((a, b) => (phaseOrder[a.phase] || 99) - (phaseOrder[b.phase] || 99));
-        
+
         // Map phase names to types
         // Database actually uses: Hook, Fact1, Fact2, Fact3, Wisdom
         // Phase order: Hook (engaging intro) → Q1 → Q2 → Q3 → Wisdom (complete)
@@ -4254,7 +4682,7 @@
           welcome: 'welcome',
           // Fact phases = Question/interactive phases
           Fact1: 'question',
-          Fact2: 'question', 
+          Fact2: 'question',
           Fact3: 'question',
           fact1: 'question',
           fact2: 'question',
@@ -4269,21 +4697,22 @@
           // Other possible phases
           teaching: 'welcome',
           practice: 'question',
-          reflection: 'wisdom'
+          reflection: 'wisdom',
         };
 
         // Build phases array (with null safety)
         console.log(`[Learn] Building lesson from ${atoms.length} atoms:`);
-        
+
         const phases = atoms.map((atom, index) => {
           // Null safety: ensure content exists
           const content = atom.content || {};
           const phaseType = phaseTypeMap[atom.phase] || 'welcome';
-          
+
           // Debug: log what we're getting from each atom
           console.log(`[Learn] Atom ${index + 1}: phase="${atom.phase}" → type="${phaseType}"`);
           console.log(`[Learn]   content keys: ${Object.keys(content).join(', ') || 'EMPTY'}`);
-          if (content.script) console.log(`[Learn]   script: ${content.script.substring(0, 50)}...`);
+          if (content.script)
+            console.log(`[Learn]   script: ${content.script.substring(0, 50)}...`);
           if (content.options) console.log(`[Learn]   options: ${content.options.length} choices`);
 
           return {
@@ -4308,35 +4737,35 @@
                     // Option format: "A: Does it illuminate..." or just "Does it illuminate..."
                     const letter = String.fromCharCode(65 + i); // A, B, C
                     let text = opt;
-                    
+
                     // Strip "A: " prefix if present
                     if (typeof opt === 'string' && opt.match(/^[A-C]:\s*/)) {
                       text = opt.replace(/^[A-C]:\s*/, '');
                     } else if (typeof opt === 'object' && opt.text) {
                       text = opt.text;
                     }
-                    
+
                     // Get response from responses object
                     const response = content.responses?.[letter] || '';
-                    
+
                     return { letter, text, response };
                   })
-                : null
+                : null,
           };
         });
 
         // Build complete lesson object
         state.lesson = {
-          id: coreLesson.id,  // Store ID for personalization queries
+          id: coreLesson.id, // Store ID for personalization queries
           dayNumber: state.dayNumber,
           topic: coreLesson.topic,
           topicEmoji: getTopicEmoji(coreLesson.topic),
           universalTruth: coreLesson.universal_truth,
-          phases: phases
+          phases: phases,
         };
 
         console.log(`[Learn] ✅ Lesson built: ${phases.length} phases`);
-        
+
         // ⚡ CACHE for instant future loads
         cacheLesson(state.dayNumber, state.variants.tone || 'curious', state.lesson);
 
@@ -4352,25 +4781,31 @@
         // LOAD PERSONALIZED CONTENT (age hooks + lesson shards)
         // ═══════════════════════════════════════════════════════════════════
         console.log('[Learn] 🎨 Loading personalized content...');
-        Promise.all([
-          loadAgeHook(),
-          loadLessonShards(coreLesson.id)
-        ]).then(() => {
-          console.log('[Learn] ✅ Personalization loaded');
-          // Re-render with personalized content if available
-          if (state.lesson && state.lesson.phases[0]) {
-            renderPhase(state.lesson.phases[0]);
-          }
-        }).catch(e => console.warn('[Learn] Personalization load warning:', e.message));
+        Promise.all([loadAgeHook(), loadLessonShards(coreLesson.id)])
+          .then(() => {
+            console.log('[Learn] ✅ Personalization loaded');
+            // Re-render with personalized content if available
+            if (state.lesson && state.lesson.phases[0]) {
+              renderPhase(state.lesson.phases[0]);
+            }
+          })
+          .catch(e => console.warn('[Learn] Personalization load warning:', e.message));
 
         // ═══════════════════════════════════════════════════════════════════
         // LOAD VISUAL ASSETS FOR THIS LESSON (backgrounds, props, Kelly poses)
         // ═══════════════════════════════════════════════════════════════════
         if (kellyVisualSystem) {
           console.log('[Learn] 🎨 Loading visual assets for day', state.dayNumber);
-          kellyVisualSystem.loadLesson(state.dayNumber)
+          kellyVisualSystem
+            .loadLesson(state.dayNumber)
             .then(() => console.log('[Learn] 🎨 Visual assets loaded for day', state.dayNumber))
-            .catch(e => console.warn('[Learn] Visual assets not available for day', state.dayNumber, e.message));
+            .catch(e =>
+              console.warn(
+                '[Learn] Visual assets not available for day',
+                state.dayNumber,
+                e.message
+              )
+            );
         }
 
         // Update UI and render first phase
@@ -4417,7 +4852,7 @@
           Music: '🎵',
 
           // Citizenship (legacy)
-          Citizenship: '🏛️'
+          Citizenship: '🏛️',
         };
 
         return emojiMap[topic] || '📚';
@@ -4437,7 +4872,7 @@
           'Honesty',
           'Empathy',
           'Perseverance',
-          'Wisdom'
+          'Wisdom',
         ];
         const topic = topics[(day - 1) % topics.length];
 
@@ -4452,7 +4887,7 @@
               name: 'Welcome',
               text: `Welcome! Today's lesson on ${topic} is being prepared. Check back soon!`,
               hint: null,
-              choices: null
+              choices: null,
             },
             {
               order: 2,
@@ -4460,9 +4895,9 @@
               name: 'Wisdom',
               text: `${topic} is a journey of continuous learning. We're creating something special for you.`,
               hint: null,
-              choices: null
-            }
-          ]
+              choices: null,
+            },
+          ],
         };
       }
 
@@ -4488,11 +4923,11 @@
         // ═══════════════════════════════════════════════════════════════
         if (personalization.currentShard?.script_content) {
           const shardContent = personalization.currentShard.script_content;
-          
+
           // Try phase-specific content from shard
           const phaseKey = phase.name || phase.type;
           const phaseVariants = [phaseKey, phaseKey?.toLowerCase(), phase.type];
-          
+
           for (const key of phaseVariants) {
             if (key && shardContent[key]) {
               const content = shardContent[key];
@@ -4505,7 +4940,7 @@
               }
             }
           }
-          
+
           // Fallback: check for a single script field in the shard
           if (shardContent.script) {
             return shardContent.script;
@@ -4596,18 +5031,18 @@
           '13-17': '13',
           '18-35': '18',
           '36-60': '36',
-          '61+': '61'
+          '61+': '61',
         };
-        
+
         // V2: Add null safety for badges that may not exist
         const setBadge = (id, text) => {
           const el = document.getElementById(id);
           if (el) el.textContent = text;
         };
-        
+
         setBadge('badge-age', ageMap[state.variants.age] || '18');
         setBadge('badge-language', state.variants.language.toUpperCase());
-        
+
         // Update tone badge
         const toneMap = { curious: 'C', playful: 'P', serious: 'S' };
         setBadge('badge-tone', toneMap[state.variants.tone] || 'C');
@@ -4619,28 +5054,28 @@
         // Update topic (with null safety)
         setBadge('topic-name', state.lesson?.topic || 'Preparing...');
         setBadge('topic-emoji', state.lesson?.topicEmoji || '✨');
-        
+
         // ✨ NEW: Update top header with title and date
         setBadge('top-title-name', state.lesson?.topic || 'Preparing...');
         setBadge('top-title-emoji', state.lesson?.topicEmoji || '📚');
         setBadge('top-date', isToday(state.dayNumber) ? 'Today' : dayNumberToDate(state.dayNumber));
-        
+
         // V2: Also update bottom bar
         if (typeof updateBottomBarV2 === 'function') {
           updateBottomBarV2();
         }
 
         // Update modal AND popover selections
-        document.querySelectorAll('[data-age]').forEach((el) => {
+        document.querySelectorAll('[data-age]').forEach(el => {
           el.classList.toggle('selected', el.dataset.age === state.variants.age);
         });
-        document.querySelectorAll('[data-language]').forEach((el) => {
+        document.querySelectorAll('[data-language]').forEach(el => {
           el.classList.toggle('selected', el.dataset.language === state.variants.language);
         });
-        document.querySelectorAll('[data-tone]').forEach((el) => {
+        document.querySelectorAll('[data-tone]').forEach(el => {
           el.classList.toggle('selected', el.dataset.tone === state.variants.tone);
         });
-        document.querySelectorAll('[data-difficulty]').forEach((el) => {
+        document.querySelectorAll('[data-difficulty]').forEach(el => {
           el.classList.toggle(
             'selected',
             el.dataset.difficulty === state.variants.difficulty.toString()
@@ -4655,7 +5090,7 @@
           if (i + 1 < state.currentPhase) dot.classList.add('completed');
           if (i + 1 === state.currentPhase) dot.classList.add('active');
         });
-        
+
         // V2 progress dots
         document.querySelectorAll('.progress-dots .dot').forEach((dot, i) => {
           dot.classList.remove('active', 'completed');
@@ -4717,35 +5152,22 @@
             const questionPhases = state.lesson?.phases?.filter(p => p.type === 'question') || [];
             const questionIndex = questionPhases.findIndex(p => p === phase);
             visualPhase = `q${Math.max(1, questionIndex + 1)}`; // q1, q2, or q3
-          }
-          else if (phase.type === 'wisdom') visualPhase = 'wisdom';
+          } else if (phase.type === 'wisdom') visualPhase = 'wisdom';
           else if (phase.type === 'complete') visualPhase = 'complete';
-          
-          kellyVisualSystem.setPhase(visualPhase, state.lesson).catch(e => 
-            console.warn('[Visual] Phase transition error:', e.message)
-          );
+
+          kellyVisualSystem
+            .setPhase(visualPhase, state.lesson)
+            .catch(e => console.warn('[Visual] Phase transition error:', e.message));
         }
 
         // ═══════════════════════════════════════════════════════════════
-        // KELLY PHASE VISUAL (Kelly in educational context)
-        // Load phase-specific image ONLY when no HD video is available
+        // LAUNCH MODE: PERSONA HEAD VISUAL (static, high quality)
+        // Video will replace this once HeyGen motion is ready.
         // ═══════════════════════════════════════════════════════════════
-        if (phase.videoUrl) {
-          // HD video is present — DON'T load static image (it would override video)
-          console.log('[Learn] HD video present, skipping static phase image');
-        } else if (kellyAvatar && kellyAvatar.loadPhaseVisual && state.dayNumber) {
-          // No HD video — load static image as fallback
-          let phaseFile = 'hook';
-          if (phase.type === 'question') {
-            const questionPhases = state.lesson?.phases?.filter(p => p.type === 'question') || [];
-            const questionIndex = questionPhases.findIndex(p => p === phase);
-            phaseFile = `q${Math.max(1, questionIndex + 1)}`;
-          } else if (phase.type === 'wisdom' || phase.type === 'complete') {
-            phaseFile = 'wisdom';
-          }
-          kellyAvatar.loadPhaseVisual(state.dayNumber, phaseFile);
+        if (!phase.videoUrl) {
+          setKellyPersonaHeadImage();
         }
-        
+
         // ═══════════════════════════════════════════════════════════════
         // KELLY EXPRESSION MAPPING (based on phase type) - FALLBACK
         // Only used when NO HD video is playing
@@ -4755,24 +5177,24 @@
           if (window.kellyAssets) {
             const phaseToState = {
               welcome: 'hello',
-              hook: 'hello',       // The engaging hook - excited/welcoming
-              question: 'thinking', 
+              hook: 'hello', // The engaging hook - excited/welcoming
+              question: 'thinking',
               wisdom: 'hello',
-              celebrating: 'hello'
+              celebrating: 'hello',
             };
             const kellyState = phaseToState[phase.type] || 'thinking';
             window.kellyAssets.setState(kellyState);
             console.log(`[Learn] Kelly state set to: ${kellyState}`);
           }
-          
+
           // Legacy avatar controller (with safety check)
           if (kellyAvatar && typeof kellyAvatar.setExpression === 'function') {
             const phaseToExpression = {
               welcome: 'curious',
-              hook: 'curious',     // The engaging hook - curious/excited
+              hook: 'curious', // The engaging hook - curious/excited
               question: 'explaining',
               wisdom: 'wisdom',
-              celebrating: 'celebrating'
+              celebrating: 'celebrating',
             };
             const expression = phaseToExpression[phase.type] || 'curious';
             try {
@@ -4799,10 +5221,13 @@
           speechHint.textContent = hint || '';
           speechHint.style.display = hint ? 'block' : 'none';
         }
-        
+
         // V2: Use Caption System for TV-style karaoke text
         console.log(`[V2 Caption] Setting text: "${text.substring(0, 50)}..."`);
         CaptionSystem.startTypewriter(text, 4); // 4 words per second for better pacing
+
+        // Voice: speak the phase (pre-generated audio preferred, then secure /api/tts)
+        speakPhaseIfNeeded(text, phase);
 
         // V2: Update Bottom Bar and Progress
         updateBottomBarV2();
@@ -4817,16 +5242,16 @@
           if (window.kellyAssets) {
             window.kellyAssets.setState('thinking');
           }
-          
+
           // V2: Use Options System (Right Rail)
           const formattedChoices = choices.map((choice, index) => ({
             letter: choice.letter || String.fromCharCode(65 + index),
             text: choice.text,
-            correct: choice.correct || false
+            correct: choice.correct || false,
           }));
           // Pass both formatted and raw choices (raw has response text)
           OptionsSystem.setOptions(formattedChoices, choices);
-          
+
           // Legacy: Also populate hidden choices container
           choices.forEach((choice, index) => {
             const btn = document.createElement('button');
@@ -4836,7 +5261,7 @@
                         <span class="choice-letter">${choice.letter}</span>
                         <span class="choice-text">${choice.text}</span>
                     `;
-            
+
             // Kelly points when hovering over choices
             btn.onmouseenter = () => {
               if (window.kellyAssets) {
@@ -4849,7 +5274,7 @@
                 window.kellyAssets.setState('thinking');
               }
             };
-            
+
             btn.onclick = () => selectChoice(choice, index);
             if (container) container.appendChild(btn);
           });
@@ -4865,15 +5290,15 @@
         // ═══════════════════════════════════════════════════════════════════
         // GOLDEN LESSON: HD Video Playback (preferred) OR Audio Fallback
         // ═══════════════════════════════════════════════════════════════════
-        
+
         // Check if this phase has an HD video (Golden Lesson pipeline output)
         if (phase.videoUrl) {
           console.log(`[Golden] 🎬 Playing HD video: ${phase.videoUrl}`);
-          
+
           // Play HD video (replaces both audio AND 2D avatar)
           playGoldenVideo(phase.videoUrl, () => {
             console.log('[Golden] ✅ Video finished');
-            
+
             // AUTO-ADVANCE for non-question phases
             if (phase.type !== 'question') {
               setTimeout(() => {
@@ -4889,7 +5314,7 @@
         // Fallback: Audio only (ElevenLabs + 2D avatar)
         else if (kellyAudio) {
           console.log('[Learn] 🔊 Using audio fallback (no HD video)');
-          
+
           // Kelly speaking animation START
           if (kellyAvatar && typeof kellyAvatar.setSpeaking === 'function') {
             kellyAvatar.setSpeaking(true, text);
@@ -4918,7 +5343,7 @@
                 }, 500); // Small delay before advancing
               }
             })
-            .catch((error) => {
+            .catch(error => {
               console.error('[Learn] Audio error:', error);
               // Even if audio fails, still auto-advance after estimated duration
               if (phase.type !== 'question') {
@@ -4948,26 +5373,30 @@
 
         updatePhaseIndicator();
         updateProgressDotsV2(); // V2: Also update new progress dots
-        console.log(`[V2 Phase ${state.currentPhase}/${state.lesson?.phases?.length || '?'}] ${phase.type}: ${text.substring(0, 50)}...`);
+        console.log(
+          `[V2 Phase ${state.currentPhase}/${state.lesson?.phases?.length || '?'}] ${phase.type}: ${text.substring(0, 50)}...`
+        );
       }
 
       function selectChoice(choice, index = 0) {
-        console.log(`[V2] Choice selected: ${choice.letter} - "${choice.text?.substring(0, 30)}..."`);
-        
+        console.log(
+          `[V2] Choice selected: ${choice.letter} - "${choice.text?.substring(0, 30)}..."`
+        );
+
         // V2: Mark option card as selected
         const optionCard = document.getElementById(`option-${choice.letter.toLowerCase()}`);
         if (optionCard) {
           optionCard.classList.add('correct'); // Highlight selection
         }
-        
+
         // Disable all option cards
         ['a', 'b', 'c'].forEach(l => {
           const card = document.getElementById(`option-${l}`);
           if (card) card.style.pointerEvents = 'none';
         });
-        
+
         // Legacy: Visual feedback on hidden buttons
-        document.querySelectorAll('.choice-btn').forEach((btn) => {
+        document.querySelectorAll('.choice-btn').forEach(btn => {
           btn.classList.add('disabled');
           if (btn.dataset.letter === choice.letter) {
             btn.classList.add('selected');
@@ -4975,7 +5404,7 @@
         });
 
         state.choicesMade[`Q${state.currentPhase - 1}`] = choice.letter;
-        
+
         // ═══════════════════════════════════════════════════════════════════
         // VISUAL SYSTEM: Show feedback visual (Kelly reaction)
         // ═══════════════════════════════════════════════════════════════════
@@ -4983,7 +5412,7 @@
           // All choices are valid learning moments - show positive feedback
           kellyVisualSystem.showCorrectFeedback();
         }
-        
+
         // Kelly celebrates the choice
         if (window.kellyAssets) {
           window.kellyAssets.setState('hello'); // Approving expression
@@ -5003,7 +5432,7 @@
         if (choice.response) {
           const speechEl = document.getElementById('speech-text');
           if (speechEl) speechEl.textContent = choice.response;
-          
+
           const hintEl = document.getElementById('speech-hint');
           if (hintEl) hintEl.style.display = 'none';
 
@@ -5041,34 +5470,34 @@
       // ═══════════════════════════════════════════════════════════════════
       async function handleLessonComplete() {
         console.log('[Learn] 🎉 Lesson complete!');
-        
+
         // Calculate stats
         const correctCount = Object.values(state.choicesMade).filter((_, i) => {
           // This is a simplified check - actual correctness would need phase data
           return true;
         }).length;
-        
+
         const stats = {
           lessonDay: state.dayNumber,
           duration: Date.now() - (state.startTime || Date.now()),
           correctCount: correctCount,
-          totalQuestions: Object.keys(state.choicesMade).length || 3
+          totalQuestions: Object.keys(state.choicesMade).length || 3,
         };
-        
+
         // Trigger chat celebration
         if (chatOverlay) {
           chatOverlay.setPhase('complete');
           chatOverlay.triggerCompletion();
         }
-        
+
         // Kelly celebrates
         if (window.KellyPoseManager) {
           KellyPoseManager.celebrate();
         }
-        
+
         // Save progress
         await saveProgress();
-        
+
         // Show completion overlay
         if (window.CompletionOverlay) {
           setTimeout(() => {
@@ -5085,7 +5514,7 @@
       async function saveProgress() {
         try {
           const {
-            data: { user }
+            data: { user },
           } = await supabase.auth.getUser();
 
           if (!user) {
@@ -5098,11 +5527,11 @@
             day_number: state.dayNumber,
             completed_at: new Date().toISOString(),
             choices_made: state.choicesMade,
-            variants_used: state.variants
+            variants_used: state.variants,
           };
 
           const { error } = await supabase.from('user_progress').upsert(progressData, {
-            onConflict: 'user_id,day_number'
+            onConflict: 'user_id,day_number',
           });
 
           if (error) {
@@ -5120,9 +5549,9 @@
       // Plays lip-synced HD videos from Supabase Storage
       // Generated by: scripts/kelly-video-factory/hd-golden-lesson-pipeline.ts
       // ═══════════════════════════════════════════════════════════════════
-      
+
       let goldenVideoElement = null;
-      
+
       function initGoldenVideoPlayer() {
         // Create video element if it doesn't exist
         if (!goldenVideoElement) {
@@ -5142,11 +5571,12 @@
             transition: opacity 0.3s ease;
             pointer-events: none;
           `;
-          
+
           // Insert into Kelly container
-          const kellyContainer = document.querySelector('.kelly-container') || 
-                                 document.getElementById('kelly-visual-wrapper') ||
-                                 document.querySelector('.lesson-container');
+          const kellyContainer =
+            document.querySelector('.kelly-container') ||
+            document.getElementById('kelly-visual-wrapper') ||
+            document.querySelector('.lesson-container');
           if (kellyContainer) {
             kellyContainer.style.position = 'relative';
             kellyContainer.appendChild(goldenVideoElement);
@@ -5154,10 +5584,10 @@
         }
         return goldenVideoElement;
       }
-      
+
       // Track currently playing video to prevent double-play
       let currentPlayingVideoUrl = null;
-      
+
       function playGoldenVideo(videoUrl, onComplete) {
         // Guard: Don't restart the same video that's already playing
         if (currentPlayingVideoUrl === videoUrl) {
@@ -5165,24 +5595,24 @@
           return;
         }
         currentPlayingVideoUrl = videoUrl;
-        
+
         const video = initGoldenVideoPlayer();
-        
+
         // Hide 2D avatar when video plays
-        const avatar2D = document.getElementById('kelly-avatar-container') ||
-                         document.querySelector('.kelly-2d');
+        const avatar2D =
+          document.getElementById('kelly-avatar-container') || document.querySelector('.kelly-2d');
         if (avatar2D) {
           avatar2D.style.opacity = '0';
         }
-        
+
         // Set video source and play
         video.src = videoUrl;
         video.muted = state.isMuted;
         video.currentTime = 0;
-        
+
         // Show video with fade
         video.style.opacity = '1';
-        
+
         // Handle video events
         video.onended = () => {
           console.log('[Golden] Video ended');
@@ -5197,8 +5627,8 @@
           // Call completion callback
           if (onComplete) onComplete();
         };
-        
-        video.onerror = (e) => {
+
+        video.onerror = e => {
           console.error('[Golden] Video error:', e);
           // Reset tracking so next phase can try
           currentPlayingVideoUrl = null;
@@ -5209,7 +5639,7 @@
           }
           if (onComplete) onComplete();
         };
-        
+
         // Play with retry
         const playPromise = video.play();
         if (playPromise !== undefined) {
@@ -5227,19 +5657,19 @@
             });
         }
       }
-      
+
       function pauseGoldenVideo() {
         if (goldenVideoElement && !goldenVideoElement.paused) {
           goldenVideoElement.pause();
         }
       }
-      
+
       function resumeGoldenVideo() {
         if (goldenVideoElement && goldenVideoElement.paused && goldenVideoElement.src) {
           goldenVideoElement.play().catch(() => {});
         }
       }
-      
+
       function setGoldenVideoMuted(muted) {
         if (goldenVideoElement) {
           goldenVideoElement.muted = muted;
@@ -5251,11 +5681,11 @@
         CaptionSystem.reset();
         OptionsSystem.resetAll();
         OptionsSystem.hideAll();
-        
+
         state.currentPhase++;
         if (state.currentPhase <= state.lesson.phases.length) {
           const phase = state.lesson.phases[state.currentPhase - 1];
-          
+
           // ═══════════════════════════════════════════════════════════════════
           // CRITICAL: Play video on EVERY phase advance
           // ═══════════════════════════════════════════════════════════════════
@@ -5265,7 +5695,7 @@
               console.log('[Golden] ✅ Video finished for phase:', phase.type);
             });
           }
-          
+
           renderPhase(phase);
         }
       }
@@ -5281,7 +5711,7 @@
 
         container.addEventListener(
           'touchstart',
-          (e) => {
+          e => {
             touchStartY = e.touches[0].clientY;
             touchStartTime = Date.now();
           },
@@ -5290,7 +5720,7 @@
 
         container.addEventListener(
           'touchend',
-          (e) => {
+          e => {
             const touchEndY = e.changedTouches[0].clientY;
             const deltaY = touchEndY - touchStartY;
             const duration = Date.now() - touchStartTime;
@@ -5333,7 +5763,7 @@
         // Show swipe indicators on touch move
         container.addEventListener(
           'touchmove',
-          (e) => {
+          e => {
             const deltaY = e.touches[0].clientY - touchStartY;
             if (deltaY < -40) {
               document.getElementById('swipe-up-indicator').classList.add('show');
@@ -5422,7 +5852,7 @@
         if (!popover || !triggerButton) return;
 
         // Close any open modals first
-        document.querySelectorAll('.modal-overlay.open').forEach((m) => m.classList.remove('open'));
+        document.querySelectorAll('.modal-overlay.open').forEach(m => m.classList.remove('open'));
 
         // Get button position
         const buttonRect = triggerButton.getBoundingClientRect();
@@ -5465,7 +5895,7 @@
 
       function closePopover() {
         const overlay = document.getElementById('popover-overlay');
-        document.querySelectorAll('.popover').forEach((p) => p.classList.remove('active'));
+        document.querySelectorAll('.popover').forEach(p => p.classList.remove('active'));
         overlay.classList.remove('active');
       }
 
@@ -5519,7 +5949,7 @@
             hasLesson: !!state.lesson,
             hasPhases: !!(state.lesson && state.lesson.phases),
             currentPhase: state.currentPhase,
-            phaseCount: state.lesson?.phases?.length || 0
+            phaseCount: state.lesson?.phases?.length || 0,
           });
         }
 
@@ -5536,42 +5966,42 @@
         words: [],
         currentWordIndex: 0,
         isPlaying: false,
-        
+
         init() {
           this.element = document.getElementById('caption-bar');
           this.textElement = document.getElementById('caption-text');
         },
-        
+
         setText(text) {
           if (!text || !this.textElement) return;
-          
+
           // Split text into words and wrap each in a span
           this.words = text.split(/\s+/);
           this.textElement.innerHTML = this.words
             .map((word, i) => `<span class="word" data-index="${i}">${word}</span>`)
             .join(' ');
-          
+
           this.currentWordIndex = 0;
           this.show();
         },
-        
+
         show() {
           if (this.element) {
             this.element.classList.add('visible');
           }
         },
-        
+
         hide() {
           if (this.element) {
             this.element.classList.remove('visible');
           }
         },
-        
+
         // Highlight words progressively (call this during audio playback)
         highlightWord(index) {
           const wordElements = this.textElement?.querySelectorAll('.word');
           if (!wordElements) return;
-          
+
           wordElements.forEach((el, i) => {
             el.classList.remove('active');
             if (i < index) {
@@ -5580,40 +6010,40 @@
               el.classList.add('active');
             }
           });
-          
+
           this.currentWordIndex = index;
         },
-        
+
         // Typewriter effect - reveal words one by one
         async typewriter(wordsPerSecond = 3) {
           const wordElements = this.textElement?.querySelectorAll('.word');
           if (!wordElements) return;
-          
+
           const delay = 1000 / wordsPerSecond;
-          
+
           for (let i = 0; i < wordElements.length; i++) {
             if (!this.isPlaying) break;
             this.highlightWord(i);
             await new Promise(resolve => setTimeout(resolve, delay));
           }
-          
+
           // Mark all as spoken when done
           wordElements.forEach(el => {
             el.classList.remove('active');
             el.classList.add('spoken');
           });
         },
-        
+
         startTypewriter(text, wordsPerSecond = 3) {
           this.setText(text);
           this.isPlaying = true;
           this.typewriter(wordsPerSecond);
         },
-        
+
         stop() {
           this.isPlaying = false;
         },
-        
+
         reset() {
           this.stop();
           this.currentWordIndex = 0;
@@ -5621,7 +6051,7 @@
           wordElements?.forEach(el => {
             el.classList.remove('active', 'spoken');
           });
-        }
+        },
       };
 
       // ═══════════════════════════════════════════════════════════════════
@@ -5630,7 +6060,7 @@
       const OptionsSystem = {
         options: [],
         rawChoices: [], // Store raw choice objects with response text
-        
+
         init() {
           console.log('[V2 Options] Initializing...');
           // Set up click handlers
@@ -5638,7 +6068,7 @@
             const card = document.getElementById(`option-${letter}`);
             if (card) {
               card.addEventListener('click', () => this.selectOption(letter.toUpperCase(), idx));
-              
+
               // Hover effects for Kelly pointing
               card.addEventListener('mouseenter', () => {
                 if (window.kellyAssets) {
@@ -5647,7 +6077,7 @@
                 }
                 card.classList.add('highlighted');
               });
-              
+
               card.addEventListener('mouseleave', () => {
                 if (window.kellyAssets) {
                   window.kellyAssets.setState('thinking');
@@ -5658,13 +6088,13 @@
           });
           console.log('[V2 Options] ✅ Initialized');
         },
-        
+
         setOptions(choices, rawChoiceData) {
           this.options = choices || [];
           this.rawChoices = rawChoiceData || choices || [];
-          
+
           console.log(`[V2 Options] Setting ${this.options.length} options`);
-          
+
           // Hide all first
           ['a', 'b', 'c'].forEach(letter => {
             const card = document.getElementById(`option-${letter}`);
@@ -5674,70 +6104,74 @@
               card.style.pointerEvents = 'auto';
             }
           });
-          
+
           // Show and populate provided options
           this.options.forEach((choice, index) => {
             const letter = String.fromCharCode(97 + index); // 0=a, 1=b, 2=c
             const card = document.getElementById(`option-${letter}`);
             const textEl = document.getElementById(`option-${letter}-text`);
-            
+
             if (card && textEl) {
               textEl.textContent = choice.text;
               card.style.display = 'flex';
               card.dataset.correct = choice.correct ? 'true' : 'false';
               card.dataset.index = index;
-              console.log(`[V2 Options] Card ${choice.letter}: "${choice.text?.substring(0, 30)}..."`);
+              console.log(
+                `[V2 Options] Card ${choice.letter}: "${choice.text?.substring(0, 30)}..."`
+              );
             }
           });
         },
-        
+
         selectOption(letter, index) {
           console.log(`[V2 Options] Option ${letter} selected`);
-          
+
           const card = document.getElementById(`option-${letter.toLowerCase()}`);
           if (!card) return;
-          
+
           // Mark ALL as selected (no "wrong" answers in learning)
           card.classList.add('correct');
-          
+
           // Kelly celebrates
           if (window.kellyAssets) {
             window.kellyAssets.setState('hello');
           }
-          
+
           // Disable further selections
           ['a', 'b', 'c'].forEach(l => {
             const c = document.getElementById(`option-${l}`);
             if (c) c.style.pointerEvents = 'none';
           });
-          
+
           // Find the full choice object (with response)
-          const choiceIndex = index !== undefined ? index : (letter.charCodeAt(0) - 65);
+          const choiceIndex = index !== undefined ? index : letter.charCodeAt(0) - 65;
           const rawChoice = this.rawChoices[choiceIndex];
-          
+
           if (rawChoice && typeof selectChoice === 'function') {
-            console.log(`[V2 Options] Calling selectChoice with response: "${rawChoice.response?.substring(0, 30) || 'none'}..."`);
+            console.log(
+              `[V2 Options] Calling selectChoice with response: "${rawChoice.response?.substring(0, 30) || 'none'}..."`
+            );
             selectChoice(rawChoice, choiceIndex);
           } else {
             // Fallback: create a basic choice object
             const basicChoice = {
               letter: letter,
               text: this.options[choiceIndex]?.text || '',
-              response: ''
+              response: '',
             };
             if (typeof selectChoice === 'function') {
               selectChoice(basicChoice, choiceIndex);
             }
           }
         },
-        
+
         hideAll() {
           ['a', 'b', 'c'].forEach(letter => {
             const card = document.getElementById(`option-${letter}`);
             if (card) card.style.display = 'none';
           });
         },
-        
+
         resetAll() {
           ['a', 'b', 'c'].forEach(letter => {
             const card = document.getElementById(`option-${letter}`);
@@ -5746,7 +6180,7 @@
               card.style.pointerEvents = 'auto';
             }
           });
-        }
+        },
       };
 
       // ═══════════════════════════════════════════════════════════════════
@@ -5759,12 +6193,12 @@
         currentTone: 'friendly',
         currentMode: '2D',
         isDraggingAge: false,
-        
+
         init() {
           this.setupAgeDrag();
           this.setupEventListeners();
           this.positionExpandContainers();
-          
+
           // Initialize from state if available
           if (typeof state !== 'undefined' && state) {
             this.currentAge = parseInt(state.variants?.age) || 18;
@@ -5772,20 +6206,22 @@
             this.currentTone = state.variants?.tone || 'friendly';
             this.currentMode = state.variants?.mode || '2D';
           }
-          
+
           this.updateAllUI();
-          
+
           // Close on escape
-          document.addEventListener('keydown', (e) => {
+          document.addEventListener('keydown', e => {
             if (e.key === 'Escape') this.closeAll();
           });
-          
+
           // Close on overlay click
-          document.getElementById('settings-overlay')?.addEventListener('click', () => this.closeAll());
-          
+          document
+            .getElementById('settings-overlay')
+            ?.addEventListener('click', () => this.closeAll());
+
           console.log('[SettingsUI] Initialized');
         },
-        
+
         positionExpandContainers() {
           // Position language expand to match btn-language
           const langBtn = document.getElementById('btn-language');
@@ -5794,7 +6230,7 @@
             const rect = langBtn.getBoundingClientRect();
             langExpand.style.top = rect.top + 'px';
           }
-          
+
           // Position mode expand to match btn-mode
           const modeBtn = document.getElementById('btn-mode');
           const modeExpand = document.getElementById('expand-mode');
@@ -5803,61 +6239,77 @@
             modeExpand.style.top = rect.top + 'px';
           }
         },
-        
+
         setupEventListeners() {
           // Rail button clicks - remove old onclick handlers
           const ageBtn = document.getElementById('btn-age');
           const langBtn = document.getElementById('btn-language');
           const toneBtn = document.getElementById('btn-tone');
           const modeBtn = document.getElementById('btn-mode');
-          
-          if (ageBtn) ageBtn.onclick = (e) => { e.stopPropagation(); this.toggle('age'); };
-          if (langBtn) langBtn.onclick = (e) => { e.stopPropagation(); this.toggle('language'); };
-          if (toneBtn) toneBtn.onclick = (e) => { e.stopPropagation(); this.toggle('tone'); };
-          if (modeBtn) modeBtn.onclick = (e) => { e.stopPropagation(); this.toggle('mode'); };
-          
+
+          if (ageBtn)
+            ageBtn.onclick = e => {
+              e.stopPropagation();
+              this.toggle('age');
+            };
+          if (langBtn)
+            langBtn.onclick = e => {
+              e.stopPropagation();
+              this.toggle('language');
+            };
+          if (toneBtn)
+            toneBtn.onclick = e => {
+              e.stopPropagation();
+              this.toggle('tone');
+            };
+          if (modeBtn)
+            modeBtn.onclick = e => {
+              e.stopPropagation();
+              this.toggle('mode');
+            };
+
           // Language options
           document.querySelectorAll('#expand-language .expand-option').forEach(opt => {
             opt.addEventListener('click', () => this.setLanguage(opt.dataset.lang));
           });
-          
+
           // Mode options
           document.querySelectorAll('#expand-mode .expand-option').forEach(opt => {
             opt.addEventListener('click', () => this.setMode(opt.dataset.mode));
           });
-          
+
           // Age markers
           document.querySelectorAll('.age-marker').forEach(marker => {
             marker.addEventListener('click', () => this.setAge(parseInt(marker.dataset.age)));
           });
-          
+
           // Age presets
           document.querySelectorAll('.age-preset').forEach(preset => {
             preset.addEventListener('click', () => this.setAge(parseInt(preset.dataset.age)));
           });
-          
+
           // Age close button
           document.querySelector('.age-close')?.addEventListener('click', () => this.closeAll());
-          
+
           // Tone options
           document.querySelectorAll('.tone-option').forEach(opt => {
             opt.addEventListener('click', () => this.setTone(opt.dataset.tone));
           });
         },
-        
+
         toggle(setting) {
           if (this.currentOpen === setting) {
             this.closeAll();
             return;
           }
-          
+
           this.closeAll();
           this.currentOpen = setting;
-          
+
           const overlay = document.getElementById('settings-overlay');
           overlay?.classList.add('open');
-          
-          switch(setting) {
+
+          switch (setting) {
             case 'language':
               document.getElementById('expand-language')?.classList.add('open');
               break;
@@ -5872,7 +6324,7 @@
               break;
           }
         },
-        
+
         closeAll() {
           this.currentOpen = null;
           document.getElementById('settings-overlay')?.classList.remove('open');
@@ -5881,51 +6333,54 @@
           document.getElementById('age-scrubber')?.classList.remove('open');
           document.getElementById('tone-sheet')?.classList.remove('open');
         },
-        
+
         // ═══════════════════════════════════════════════════════════════
         // LANGUAGE
         // ═══════════════════════════════════════════════════════════════
-        
+
         setLanguage(code) {
           this.currentLanguage = code;
-          
+
           // Update UI
           document.querySelectorAll('#expand-language .expand-option').forEach(opt => {
             opt.classList.toggle('selected', opt.dataset.lang === code);
           });
-          
+
           // Update badge
           const badge = document.getElementById('badge-language');
           if (badge) badge.textContent = code;
-          
+
           // Update state
           if (typeof state !== 'undefined') state.variants.language = code.toLowerCase();
-          
+
           // Reload lesson
           this.reloadLesson();
-          
+
+          // Keep Kelly head visuals in sync with settings changes
+          if (typeof setKellyPersonaHeadImage === 'function') setKellyPersonaHeadImage();
+
           setTimeout(() => this.closeAll(), 250);
           console.log(`[SettingsUI] Language: ${code}`);
         },
-        
+
         // ═══════════════════════════════════════════════════════════════
         // AGE
         // ═══════════════════════════════════════════════════════════════
-        
+
         setAge(age) {
           age = Math.max(2, Math.min(102, Math.round(age)));
           this.currentAge = age;
-          
+
           this.updateAgeUI(age);
-          
+
           // Update badge
           const badge = document.getElementById('badge-age');
           if (badge) badge.textContent = age;
-          
+
           // Update presets
           document.querySelectorAll('.age-preset').forEach(btn => {
             const presetAge = parseInt(btn.dataset.age);
-            const isActive = 
+            const isActive =
               (presetAge === 2 && age <= 4) ||
               (presetAge === 8 && age >= 5 && age <= 12) ||
               (presetAge === 18 && age >= 13 && age <= 25) ||
@@ -5934,7 +6389,7 @@
               (presetAge === 102 && age > 85);
             btn.classList.toggle('active', isActive);
           });
-          
+
           // Update state with age range mapping
           if (typeof state !== 'undefined') {
             const ageRanges = ['2-5', '6-12', '13-17', '18-35', '36-60', '61+'];
@@ -5945,30 +6400,33 @@
             else if (age <= 60) state.variants.age = '36-60';
             else state.variants.age = '61+';
           }
-          
+
           // Transform Kelly
           this.transformKelly(age);
-          
+
+          // Keep Kelly head visuals in sync with settings changes
+          if (typeof setKellyPersonaHeadImage === 'function') setKellyPersonaHeadImage();
+
           // Reload lesson (debounced during drag)
           if (!this.isDraggingAge) {
             this.reloadLesson();
           }
-          
+
           console.log(`[SettingsUI] Age: ${age}`);
         },
-        
+
         updateAgeUI(age) {
           const percent = ((age - 2) / 100) * 100;
-          
+
           const display = document.getElementById('age-display');
           if (display) display.textContent = age;
-          
+
           const fill = document.getElementById('age-track-fill');
           if (fill) fill.style.width = percent + '%';
-          
+
           const thumb = document.getElementById('age-thumb');
           if (thumb) thumb.style.left = percent + '%';
-          
+
           const emoji = document.getElementById('age-thumb-emoji');
           if (emoji) {
             if (age <= 4) emoji.textContent = '👶';
@@ -5979,125 +6437,144 @@
             else emoji.textContent = '🧓';
           }
         },
-        
+
         setupAgeDrag() {
           const track = document.getElementById('age-track');
           const thumb = document.getElementById('age-thumb');
           if (!track || !thumb) return;
-          
-          const handleDrag = (clientX) => {
+
+          const handleDrag = clientX => {
             const rect = track.getBoundingClientRect();
             let percent = (clientX - rect.left) / rect.width;
             percent = Math.max(0, Math.min(1, percent));
             const age = Math.round(2 + percent * 100);
             this.setAge(age);
           };
-          
+
           // Mouse
-          thumb.addEventListener('mousedown', (e) => {
+          thumb.addEventListener('mousedown', e => {
             e.preventDefault();
             this.isDraggingAge = true;
           });
-          
-          document.addEventListener('mousemove', (e) => {
+
+          document.addEventListener('mousemove', e => {
             if (this.isDraggingAge) handleDrag(e.clientX);
           });
-          
+
           document.addEventListener('mouseup', () => {
             if (this.isDraggingAge) {
               this.isDraggingAge = false;
               this.reloadLesson();
             }
           });
-          
+
           // Touch
-          thumb.addEventListener('touchstart', () => {
-            this.isDraggingAge = true;
-          }, { passive: true });
-          
-          document.addEventListener('touchmove', (e) => {
-            if (this.isDraggingAge && e.touches[0]) {
-              handleDrag(e.touches[0].clientX);
-            }
-          }, { passive: true });
-          
+          thumb.addEventListener(
+            'touchstart',
+            () => {
+              this.isDraggingAge = true;
+            },
+            { passive: true }
+          );
+
+          document.addEventListener(
+            'touchmove',
+            e => {
+              if (this.isDraggingAge && e.touches[0]) {
+                handleDrag(e.touches[0].clientX);
+              }
+            },
+            { passive: true }
+          );
+
           document.addEventListener('touchend', () => {
             if (this.isDraggingAge) {
               this.isDraggingAge = false;
               this.reloadLesson();
             }
           });
-          
+
           // Click track to jump
-          track.addEventListener('click', (e) => {
+          track.addEventListener('click', e => {
             if (e.target !== thumb && !thumb.contains(e.target)) {
               handleDrag(e.clientX);
             }
           });
         },
-        
+
         transformKelly(age) {
-          const container = document.getElementById('kelly-2d-container') || 
-                            document.querySelector('.kelly-avatar-container');
+          const container =
+            document.getElementById('kelly-2d-container') ||
+            document.querySelector('.kelly-avatar-container');
           if (container) {
             container.classList.add('kelly-transforming');
             setTimeout(() => container.classList.remove('kelly-transforming'), 600);
           }
-          
+
           // If kellyAssets has setAge method, call it
           if (window.kellyAssets?.setAge) {
             window.kellyAssets.setAge(age);
           }
         },
-        
+
         // ═══════════════════════════════════════════════════════════════
         // TONE
         // ═══════════════════════════════════════════════════════════════
-        
+
         setTone(tone) {
           this.currentTone = tone;
-          
+
           document.querySelectorAll('.tone-option').forEach(opt => {
             opt.classList.toggle('selected', opt.dataset.tone === tone);
           });
-          
+
           const badge = document.getElementById('badge-tone');
           if (badge) {
-            const labels = { curious: 'C', friendly: 'F', playful: 'P', wise: 'W', coach: 'M', scholar: 'S' };
+            const labels = {
+              curious: 'C',
+              friendly: 'F',
+              playful: 'P',
+              wise: 'W',
+              coach: 'M',
+              scholar: 'S',
+            };
             badge.textContent = labels[tone] || tone[0].toUpperCase();
           }
-          
+
           if (typeof state !== 'undefined') state.variants.tone = tone;
-          
+
           this.reloadLesson();
-          
+
+          // Keep Kelly head visuals in sync with settings changes
+          if (typeof setKellyPersonaHeadImage === 'function') setKellyPersonaHeadImage();
+
           setTimeout(() => this.closeAll(), 250);
           console.log(`[SettingsUI] Tone: ${tone}`);
         },
-        
+
         // ═══════════════════════════════════════════════════════════════
         // MODE
         // ═══════════════════════════════════════════════════════════════
-        
+
         async setMode(mode) {
           this.currentMode = mode;
-          
+
           document.querySelectorAll('#expand-mode .expand-option').forEach(opt => {
             opt.classList.toggle('selected', opt.dataset.mode === mode);
           });
-          
+
           const badge = document.getElementById('badge-mode');
           const modeBtn = document.getElementById('btn-mode');
-          
+
           // Toggle containers
           const container2D = document.getElementById('kelly-2d-container');
           const container3D = document.getElementById('kelly-3d-container');
-          
+
           if (mode === '3D') {
             // Show loading state
             if (badge) badge.textContent = '⏳';
             if (modeBtn) modeBtn.classList.add('loading');
-            
+
             try {
               // Load Unity 3D on demand
               console.log('[Mode] Loading 3D Kelly...');
@@ -6105,12 +6582,11 @@
                 window.unityInstance = await window.unityKellyLoader.load();
                 console.log('[Mode] ✅ 3D Kelly loaded!');
               }
-              
+
               // Switch to 3D view
               if (container2D) container2D.style.display = 'none';
               if (container3D) container3D.style.display = 'block';
               if (badge) badge.textContent = '3D';
-              
             } catch (err) {
               console.error('[Mode] 3D load failed:', err);
               // Fallback to 2D
@@ -6125,46 +6601,57 @@
             if (container3D) container3D.style.display = 'none';
             if (badge) badge.textContent = '2D';
           }
-          
+
           setTimeout(() => this.closeAll(), 250);
           console.log(`[SettingsUI] Mode: ${mode}`);
         },
-        
+
         // ═══════════════════════════════════════════════════════════════
         // RELOAD LESSON
         // ═══════════════════════════════════════════════════════════════
-        
+
         reloadLesson() {
-          console.log(`[SettingsUI] Reloading with age=${this.currentAge}, lang=${this.currentLanguage}, tone=${this.currentTone}`);
-          
+          console.log(
+            `[SettingsUI] Reloading with age=${this.currentAge}, lang=${this.currentLanguage}, tone=${this.currentTone}`
+          );
+
           if (typeof loadLesson === 'function' && typeof state !== 'undefined' && state.dayNumber) {
             setTimeout(() => loadLesson(state.dayNumber), 100);
           }
         },
-        
+
         updateAllUI() {
           // Set initial badge values
           const ageBadge = document.getElementById('badge-age');
           const langBadge = document.getElementById('badge-language');
           const toneBadge = document.getElementById('badge-tone');
           const modeBadge = document.getElementById('badge-mode');
-          
+
           if (ageBadge) ageBadge.textContent = this.currentAge;
           if (langBadge) langBadge.textContent = this.currentLanguage;
           if (modeBadge) modeBadge.textContent = this.currentMode;
           if (toneBadge) {
-            const labels = { curious: 'C', friendly: 'F', playful: 'P', wise: 'W', coach: 'M', scholar: 'S' };
+            const labels = {
+              curious: 'C',
+              friendly: 'F',
+              playful: 'P',
+              wise: 'W',
+              coach: 'M',
+              scholar: 'S',
+            };
             toneBadge.textContent = labels[this.currentTone] || 'F';
           }
-          
+
           // Set initial selected states
-          document.querySelector(`[data-lang="${this.currentLanguage}"]`)?.classList.add('selected');
+          document
+            .querySelector(`[data-lang="${this.currentLanguage}"]`)
+            ?.classList.add('selected');
           document.querySelector(`[data-mode="${this.currentMode}"]`)?.classList.add('selected');
           document.querySelector(`[data-tone="${this.currentTone}"]`)?.classList.add('selected');
-          
+
           // Update age UI
           this.updateAgeUI(this.currentAge);
-        }
+        },
       };
 
       // ═══════════════════════════════════════════════════════════════════
@@ -6176,26 +6663,26 @@
         threshold: 80,
         maxTime: 500,
         isAnimating: false,
-        
+
         init() {
           const container = document.getElementById('lesson-container');
           if (!container) return;
-          
+
           // Update day indicators
           this.updateDayIndicators();
-          
+
           // Touch events
-          container.addEventListener('touchstart', (e) => this.onTouchStart(e), { passive: true });
-          container.addEventListener('touchmove', (e) => this.onTouchMove(e), { passive: true });
-          container.addEventListener('touchend', (e) => this.onTouchEnd(e), { passive: true });
-          
+          container.addEventListener('touchstart', e => this.onTouchStart(e), { passive: true });
+          container.addEventListener('touchmove', e => this.onTouchMove(e), { passive: true });
+          container.addEventListener('touchend', e => this.onTouchEnd(e), { passive: true });
+
           // Mouse events for desktop
-          container.addEventListener('mousedown', (e) => this.onMouseDown(e));
-          container.addEventListener('mousemove', (e) => this.onMouseMove(e));
-          container.addEventListener('mouseup', (e) => this.onMouseUp(e));
-          
+          container.addEventListener('mousedown', e => this.onMouseDown(e));
+          container.addEventListener('mousemove', e => this.onMouseMove(e));
+          container.addEventListener('mouseup', e => this.onMouseUp(e));
+
           // Keyboard navigation
-          document.addEventListener('keydown', (e) => {
+          document.addEventListener('keydown', e => {
             if (e.key === 'ArrowUp' || e.key === 'k') {
               e.preventDefault();
               this.goToNextDay();
@@ -6204,31 +6691,31 @@
               this.goToPrevDay();
             }
           });
-          
+
           // Hide swipe hint after first swipe
           this.checkSwipeHint();
         },
-        
+
         onTouchStart(e) {
           if (this.isAnimating) return;
           this.startY = e.touches[0].clientY;
           this.startTime = Date.now();
         },
-        
+
         onTouchMove(e) {
           if (this.isAnimating || !this.startY) return;
-          
+
           const deltaY = e.touches[0].clientY - this.startY;
           const overlay = document.getElementById('swipe-overlay');
-          
+
           if (Math.abs(deltaY) > 30) {
             overlay?.classList.add('active');
           }
-          
+
           // Show appropriate indicator
           const nextEl = document.getElementById('swipe-next');
           const prevEl = document.getElementById('swipe-prev');
-          
+
           if (deltaY < -30) {
             // Swiping up - show next
             if (nextEl) nextEl.style.opacity = Math.min(1, Math.abs(deltaY) / this.threshold);
@@ -6239,16 +6726,16 @@
             if (nextEl) nextEl.style.opacity = 0;
           }
         },
-        
+
         onTouchEnd(e) {
           if (this.isAnimating) return;
-          
+
           const deltaY = e.changedTouches[0].clientY - this.startY;
           const duration = Date.now() - this.startTime;
-          
+
           const overlay = document.getElementById('swipe-overlay');
           overlay?.classList.remove('active');
-          
+
           // Check if it's a valid swipe
           if (Math.abs(deltaY) > this.threshold && duration < this.maxTime) {
             if (deltaY < 0) {
@@ -6257,19 +6744,19 @@
               this.goToPrevDay();
             }
           }
-          
+
           // Reset indicators
           const nextEl = document.getElementById('swipe-next');
           const prevEl = document.getElementById('swipe-prev');
           if (nextEl) nextEl.style.opacity = 0;
           if (prevEl) prevEl.style.opacity = 0;
-          
+
           this.startY = 0;
         },
-        
+
         // Mouse equivalents for desktop
         isMouseDown: false,
-        
+
         onMouseDown(e) {
           // Ignore if clicking on interactive elements
           if (e.target.closest('.rail-btn, .option-card, a, button')) return;
@@ -6277,28 +6764,28 @@
           this.startY = e.clientY;
           this.startTime = Date.now();
         },
-        
+
         onMouseMove(e) {
           if (!this.isMouseDown || this.isAnimating) return;
-          
+
           const deltaY = e.clientY - this.startY;
           const overlay = document.getElementById('swipe-overlay');
-          
+
           if (Math.abs(deltaY) > 30) {
             overlay?.classList.add('active');
           }
         },
-        
+
         onMouseUp(e) {
           if (!this.isMouseDown) return;
           this.isMouseDown = false;
-          
+
           const deltaY = e.clientY - this.startY;
           const duration = Date.now() - this.startTime;
-          
+
           const overlay = document.getElementById('swipe-overlay');
           overlay?.classList.remove('active');
-          
+
           if (Math.abs(deltaY) > this.threshold && duration < this.maxTime) {
             if (deltaY < 0) {
               this.goToNextDay();
@@ -6306,44 +6793,44 @@
               this.goToPrevDay();
             }
           }
-          
+
           this.startY = 0;
         },
-        
+
         async goToNextDay() {
           if (this.isAnimating) return;
-          
+
           const currentDay = state?.dayNumber || 1;
           const nextDay = Math.min(currentDay + 1, 365);
-          
+
           if (nextDay === currentDay) return; // Already at max
-          
+
           await this.transitionToDay(nextDay, 'up');
         },
-        
+
         async goToPrevDay() {
           if (this.isAnimating) return;
-          
+
           const currentDay = state?.dayNumber || 1;
           const prevDay = Math.max(currentDay - 1, 1);
-          
+
           if (prevDay === currentDay) return; // Already at min
-          
+
           await this.transitionToDay(prevDay, 'down');
         },
-        
+
         async transitionToDay(newDay, direction) {
           this.isAnimating = true;
-          
+
           const container = document.getElementById('lesson-container');
-          
+
           // Slide out current content
           container.classList.add('lesson-transition');
           container.classList.add(direction === 'up' ? 'slide-up' : 'slide-down');
-          
+
           // Wait for animation
           await new Promise(resolve => setTimeout(resolve, 400));
-          
+
           // Load new day (use existing goToLesson if available)
           if (typeof goToLesson === 'function') {
             goToLesson(newDay);
@@ -6351,60 +6838,60 @@
             // Fallback: update state manually
             if (state) state.dayNumber = newDay;
           }
-          
+
           // Slide in new content from opposite direction
           container.classList.remove('slide-up', 'slide-down');
           container.classList.add(direction === 'up' ? 'slide-down' : 'slide-up');
-          
+
           // Force reflow
           container.offsetHeight;
-          
+
           // Remove transition class to snap to position, then animate in
           container.classList.remove('slide-up', 'slide-down');
-          
+
           await new Promise(resolve => setTimeout(resolve, 50));
-          
+
           container.classList.remove('lesson-transition');
-          
+
           // Update day indicators for next swipe
           this.updateDayIndicators();
-          
+
           // Hide swipe hint after first successful swipe
           this.hideSwipeHint();
-          
+
           this.isAnimating = false;
         },
-        
+
         updateDayIndicators() {
           const currentDay = state?.dayNumber || 1;
-          
+
           const nextNumEl = document.getElementById('next-day-num');
           const prevNumEl = document.getElementById('prev-day-num');
-          
+
           if (nextNumEl) nextNumEl.textContent = Math.min(currentDay + 1, 365);
           if (prevNumEl) prevNumEl.textContent = Math.max(currentDay - 1, 1);
-          
+
           // Update bottom bar date with clickable parts
           if (typeof updateBottomDate === 'function') {
             updateBottomDate(currentDay);
           }
         },
-        
+
         checkSwipeHint() {
           // Show hint only if user hasn't swiped before
           const hasSwipedBefore = localStorage.getItem('curious-kelly-has-swiped');
           const hint = document.getElementById('swipe-hint');
-          
+
           if (hint) {
             hint.classList.toggle('hidden', hasSwipedBefore === 'true');
           }
         },
-        
+
         hideSwipeHint() {
           localStorage.setItem('curious-kelly-has-swiped', 'true');
           const hint = document.getElementById('swipe-hint');
           if (hint) hint.classList.add('hidden');
-        }
+        },
       };
 
       // ═══════════════════════════════════════════════════════════════════
@@ -6414,17 +6901,17 @@
         const emojiEl = document.getElementById('bottom-emoji');
         const nameEl = document.getElementById('bottom-name');
         const dateEl = document.getElementById('bottom-date');
-        
+
         if (state?.lesson) {
           if (emojiEl) emojiEl.textContent = state.lesson.topicEmoji || '📚';
           if (nameEl) nameEl.textContent = state.lesson.topic || "Today's Lesson";
         }
-        
+
         // Update date display
         if (state?.dayNumber && typeof updateBottomDate === 'function') {
           updateBottomDate(state.dayNumber);
         }
-        
+
         // Update day indicators
         if (SwipeNav && typeof SwipeNav.updateDayIndicators === 'function') {
           SwipeNav.updateDayIndicators();
@@ -6471,10 +6958,10 @@
 
         // Update state
         state.currentPhase = targetPhase;
-        
+
         // Get the phase object
         const phase = state.lesson.phases[targetPhase - 1];
-        
+
         // ═══════════════════════════════════════════════════════════════════
         // CRITICAL: Play video on EVERY phase navigation
         // ═══════════════════════════════════════════════════════════════════
@@ -6484,10 +6971,10 @@
             console.log('[Golden] ✅ Video finished for phase:', phase.type);
           });
         }
-        
+
         // Render phase content (this handles captions, options, etc.)
         renderPhase(phase);
-        
+
         // Update navigation
         updatePhaseNavV2();
       }
@@ -6503,7 +6990,7 @@
 
         phaseButtons.forEach((btn, i) => {
           btn.classList.remove('active', 'completed');
-          
+
           if (i < state.currentPhase - 1) {
             btn.classList.add('completed');
           } else if (i === state.currentPhase - 1) {
@@ -6526,7 +7013,7 @@
 
         const phases = state.lesson.phases;
         const phaseLabels = ['The Hook', 'Question 1', 'Question 2', 'Question 3', 'Complete!'];
-        
+
         phases.forEach((phase, i) => {
           const tooltip = document.getElementById(`tooltip-${i + 1}`);
           if (!tooltip) return;
@@ -6549,9 +7036,7 @@
             } else if (text) {
               textEl.textContent = text;
             } else {
-              textEl.textContent = i < phases.length - 1 
-                ? 'Tap to jump here' 
-                : 'You did it! 🎉';
+              textEl.textContent = i < phases.length - 1 ? 'Tap to jump here' : 'You did it! 🎉';
             }
           }
         });
@@ -6564,17 +7049,17 @@
         // Update legacy progress dots (hidden but kept for compatibility)
         const dots = document.querySelectorAll('.progress-dots .dot');
         const totalPhases = state.lesson?.phases?.length || 5;
-        
+
         dots.forEach((dot, i) => {
           dot.classList.remove('active', 'completed');
-          
+
           if (i < state.currentPhase - 1) {
             dot.classList.add('completed');
           } else if (i === state.currentPhase - 1) {
             dot.classList.add('active');
           }
         });
-        
+
         // Update V2 phase navigation
         updatePhaseNavV2();
       }
@@ -6586,18 +7071,20 @@
         // Brief Kelly expression change based on phase
         if (window.kellyAssets) {
           const stateMap = {
-            'welcome': 'hello',
-            'hook': 'hello',      // The engaging hook
-            'question': 'thinking',
-            'wisdom': 'hello'
+            welcome: 'hello',
+            hook: 'hello', // The engaging hook
+            question: 'thinking',
+            wisdom: 'hello',
           };
           window.kellyAssets.setState(stateMap[phaseType] || 'thinking');
         }
-        
+
         // Update progress dots immediately
         updateProgressDotsV2();
-        
-        console.log(`[V2] Phase ${state.currentPhase}/${state.lesson?.phases?.length || '?'}: ${phaseType}`);
+
+        console.log(
+          `[V2] Phase ${state.currentPhase}/${state.lesson?.phases?.length || '?'}: ${phaseType}`
+        );
       }
 
       // ═══════════════════════════════════════════════════════════════════
@@ -6610,18 +7097,14 @@
         SwipeNav.init();
         SettingsUI.init();
         initPhaseNavigation();
-        
+
         // Initialize Kelly Avatar (2D/3D controller)
         initKellyAvatar();
-        
-        // 🔧 FIX: Initialize Kelly Asset Manager BEFORE loading lesson
-        // This prevents race condition where renderPhase() is called before kellyAssets exists
-        const kellyImg = document.getElementById('kelly-avatar');
-        if (kellyImg && window.KellyAssetManager) {
-          window.kellyAssets = new KellyAssetManager(kellyImg);
-          window.kellyAssets.preloadEssential();
-          console.log('[Learn] ✅ Kelly Asset Manager initialized early');
-        }
+
+        // Load persona manifest once (for head image swapping)
+        await loadPersonaManifestOnce();
+        // Set initial head image immediately (before the first renderPhase)
+        setKellyPersonaHeadImage();
 
         // Initialize audio (ElevenLabs via secure /api/tts - NO BROWSER TTS)
         kellyAudio = new KellyAudio({
@@ -6635,7 +7118,7 @@
             console.log('[Audio] ✅ Kelly finished');
             // Update UI to show not speaking
             document.body.classList.remove('kelly-speaking');
-          }
+          },
         });
 
         // Get day from URL or today
@@ -6644,6 +7127,24 @@
 
         // Load initial lesson
         await loadLesson(day);
+
+        // Autoplay policies vary by browser. If audio was blocked, the first user tap
+        // will re-trigger the current phase speech once.
+        document.addEventListener(
+          'pointerdown',
+          () => {
+            try {
+              const current = state.lesson?.phases?.[state.currentPhase - 1];
+              if (current) {
+                const t = getVariantText(current);
+                speakPhaseIfNeeded(t, current);
+              }
+            } catch (e) {
+              // no-op
+            }
+          },
+          { once: true }
+        );
 
         // Setup gestures
         setupGestures();
@@ -6654,7 +7155,7 @@
           const el = document.getElementById(id);
           if (el) el.onclick = handler;
         };
-        
+
         // Note: btn-age, btn-language, btn-tone, btn-mode are now handled by SettingsUI
         // bindBtn('btn-difficulty', (e) => openPopover('difficulty', e.currentTarget));
         bindBtn('btn-share', () => {
@@ -6664,7 +7165,7 @@
           } else if (navigator.share) {
             navigator.share({
               title: `${dayNumberToDate(state.dayNumber)}: ${state.lesson?.topic}`,
-              url: window.location.href
+              url: window.location.href,
             });
           } else {
             navigator.clipboard.writeText(window.location.href);
@@ -6672,7 +7173,7 @@
           }
         });
         // Search is now handled by LessonSearch module
-        
+
         bindBtn('btn-sound', () => {
           state.isMuted = !state.isMuted;
           const btn = document.getElementById('btn-sound');
@@ -6688,7 +7189,7 @@
         // Old popover handlers removed - now handled by SettingsUI
 
         // Keyboard shortcuts
-        document.addEventListener('keydown', (e) => {
+        document.addEventListener('keydown', e => {
           if (e.key === 'ArrowUp') goToLesson(state.dayNumber + 1);
           if (e.key === 'ArrowDown') goToLesson(state.dayNumber - 1);
           if (e.key === ' ') {
@@ -6703,7 +7204,7 @@
         window.renderPhase = renderPhase;
         window.selectChoice = selectChoice;
         window.goToLesson = goToLesson;
-        window.navigateLesson = (direction) => goToLesson(state.dayNumber + direction);
+        window.navigateLesson = direction => goToLesson(state.dayNumber + direction);
         window.kellyAudio = kellyAudio;
 
         console.log('[Learn] 🚀 TikTok-style lesson player ready!');
@@ -6712,12 +7213,12 @@
       // Start
       init();
     </script>
-    
+
     <!-- EPIC: TikTok-Style Social Learning Chat -->
     <script>
       // Initialize chat overlay with topic/phase awareness
       let chatOverlay = null;
-      
+
       document.addEventListener('DOMContentLoaded', () => {
         // Wait for lesson to load, then initialize with topic
         const initChat = () => {
@@ -6728,44 +7229,53 @@
               lessonDay: state.dayNumber,
               useDatabase: true, // Enable Supabase comments
               minInterval: 2000,
-              maxInterval: 5000
+              maxInterval: 5000,
             });
             chatOverlay.start();
-            console.log(`[Chat] 🎭 Initialized with topic: ${state.lesson.topic}, day: ${state.dayNumber}`);
+            console.log(
+              `[Chat] 🎭 Initialized with topic: ${state.lesson.topic}, day: ${state.dayNumber}`
+            );
           } else {
             // Retry until lesson loads
             setTimeout(initChat, 500);
           }
         };
-        
+
         setTimeout(initChat, 1000);
-        
-        // Initialize Kelly Pose Manager (backup system)
-        if (window.KellyPoseManager) {
-          const kellyImg = document.getElementById('kelly-avatar');
-          if (kellyImg) {
-            KellyPoseManager.init(kellyImg);
+
+        // In persona-head mode, we intentionally avoid pose managers that would overwrite the head image.
+        if (!window.KELLY_PERSONA_HEAD_MODE) {
+          // Initialize Kelly Pose Manager (backup system)
+          if (window.KellyPoseManager) {
+            const kellyImg = document.getElementById('kelly-avatar');
+            if (kellyImg) {
+              KellyPoseManager.init(kellyImg);
+            }
           }
-        }
-        
-        // Kelly Asset Manager already initialized in init() - just verify
-        if (!window.kellyAssets) {
-          console.warn('[Learn] kellyAssets not found, initializing late');
-          const kellyImg = document.getElementById('kelly-avatar');
-          if (kellyImg && window.KellyAssetManager) {
-            window.kellyAssets = new KellyAssetManager(kellyImg);
-            window.kellyAssets.preloadEssential();
+
+          // Kelly Asset Manager already initialized in init() - just verify
+          if (!window.kellyAssets) {
+            console.warn('[Learn] kellyAssets not found, initializing late');
+            const kellyImg = document.getElementById('kelly-avatar');
+            if (kellyImg && window.KellyAssetManager) {
+              window.kellyAssets = new KellyAssetManager(kellyImg);
+              window.kellyAssets.preloadEssential();
+            }
           }
+
+          // Force correct pose for current phase
+          if (window.kellyAssets && window.state?.lesson?.phases?.[0]) {
+            const phaseType =
+              window.state.lesson.phases[window.state.currentPhase - 1]?.type || 'question';
+            const stateMap = { welcome: 'hello', question: 'thinking', wisdom: 'hello' };
+            window.kellyAssets.setState(stateMap[phaseType] || 'thinking');
+            console.log('[Learn] ✅ Forced Kelly pose for phase:', phaseType);
+          }
+        } else {
+          // Ensure head image is set once DOM is ready
+          setKellyPersonaHeadImage();
         }
-        
-        // Force correct pose for current phase
-        if (window.kellyAssets && window.state?.lesson?.phases?.[0]) {
-          const phaseType = window.state.lesson.phases[window.state.currentPhase - 1]?.type || 'question';
-          const stateMap = { welcome: 'hello', question: 'thinking', wisdom: 'hello' };
-          window.kellyAssets.setState(stateMap[phaseType] || 'thinking');
-          console.log('[Learn] ✅ Forced Kelly pose for phase:', phaseType);
-        }
-        
+
         // ✨ Wire up Talk to Kelly button
         const talkBtn = document.getElementById('talk-to-kelly-btn');
         if (talkBtn && window.KellyConversation) {
@@ -6780,34 +7290,38 @@
           });
           console.log('[Learn] ✅ Talk to Kelly button wired up');
         }
-        
+
         // ✨ Wire up bottom chat input
         const chatInput = document.getElementById('chat-input');
         const chatSendBtn = document.getElementById('chat-send-btn');
         const chatContainer = document.getElementById('chat-messages-container');
-        
+
         function sendChatMessage() {
           const text = chatInput?.value?.trim();
           if (!text) return;
-          
+
           // Add user message to chat
           addChatMessage('You', text, '👤');
           chatInput.value = '';
-          
+
           // If KellyTextChat is available, use it
           if (window.KellyTextChat) {
             KellyTextChat.sendMessage(text);
           } else {
             // Fallback: Just show message was sent
             setTimeout(() => {
-              addChatMessage('Kelly', "I heard you! Voice chat is ready - tap 'Talk to Kelly' to have a real conversation with me! 💙", '👩‍🏫');
+              addChatMessage(
+                'Kelly',
+                "I heard you! Voice chat is ready - tap 'Talk to Kelly' to have a real conversation with me! 💙",
+                '👩‍🏫'
+              );
             }, 1000);
           }
         }
-        
+
         function addChatMessage(name, text, avatar = '💬') {
           if (!chatContainer) return;
-          
+
           const msg = document.createElement('div');
           msg.className = 'chat-message';
           msg.innerHTML = `
@@ -6819,38 +7333,38 @@
           `;
           chatContainer.appendChild(msg);
           chatContainer.scrollTop = chatContainer.scrollHeight;
-          
+
           // Remove old messages if too many
           while (chatContainer.children.length > 20) {
             chatContainer.removeChild(chatContainer.firstChild);
           }
         }
-        
+
         // Expose for chat-overlay.js to use
         window.addChatMessage = addChatMessage;
-        
+
         if (chatSendBtn) {
           chatSendBtn.addEventListener('click', sendChatMessage);
         }
         if (chatInput) {
-          chatInput.addEventListener('keypress', (e) => {
+          chatInput.addEventListener('keypress', e => {
             if (e.key === 'Enter') sendChatMessage();
           });
         }
-        
+
         console.log('[Learn] ✅ Bottom chat system initialized');
       });
-      
+
       // Hook into phase changes for phase-aware comments
       const originalRenderPhase = window.renderPhase;
-      window.renderPhase = function(phase) {
+      window.renderPhase = function (phase) {
         // Update chat overlay phase
         if (chatOverlay && phase) {
           // Update lesson day if changed
           if (chatOverlay.currentLessonDay !== state.dayNumber) {
             chatOverlay.setLessonDay(state.dayNumber);
           }
-          
+
           // Map phase type to new phase IDs
           // New phase order: hook (1) → q1 (2) → q2 (3) → q3 (4) → wisdom/complete (5)
           let phaseId;
@@ -6864,15 +7378,15 @@
           } else {
             phaseId = phase.type || 'welcome';
           }
-          
+
           chatOverlay.setPhase(phaseId);
-          
+
           // Update Kelly pose via new system
           if (window.KellyPoseManager) {
             const pose = KellyPoseManager.getPoseForPhase(phaseId);
             KellyPoseManager.setPose(pose);
           }
-          
+
           // Trigger specific reactions on phase changes
           if (phase.type === 'wisdom') {
             // Wisdom phase gets breakthrough comments
@@ -6882,35 +7396,35 @@
             chatOverlay.addSpecificComment("This one's interesting! 🤔");
           }
         }
-        
+
         // Call original function
         return originalRenderPhase(phase);
       };
-      
+
       // Hook into choice selection for reaction bursts
       const originalSelectChoice = window.selectChoice;
-      window.selectChoice = function(choice, index) {
+      window.selectChoice = function (choice, index) {
         // Trigger reaction burst when user selects
         if (chatOverlay) {
           setTimeout(() => {
             chatOverlay.triggerReactionBurst(3);
           }, 500);
         }
-        
+
         // Call original function
         return originalSelectChoice(choice, index);
       };
-      
+
       // Update topic when lesson changes
       const originalLoadLesson = window.loadLesson || loadLesson;
-      window.loadLesson = async function(dayNumber) {
+      window.loadLesson = async function (dayNumber) {
         const result = await originalLoadLesson(dayNumber);
-        
+
         // Update chat topic
         if (chatOverlay && state.lesson && state.lesson.topic) {
           chatOverlay.setTopic(state.lesson.topic);
         }
-        
+
         return result;
       };
     </script>
@@ -6919,15 +7433,25 @@
     <div class="search-overlay" id="search-overlay">
       <div class="search-container">
         <div class="search-header">
-          <input type="text" id="search-input" class="search-input" placeholder="Search 365 lessons..." autocomplete="off">
+          <input
+            type="text"
+            id="search-input"
+            class="search-input"
+            placeholder="Search 365 lessons..."
+            autocomplete="off"
+          />
           <button class="search-close" id="search-close">✕</button>
         </div>
         <div class="search-results" id="search-results"></div>
         <div class="search-empty" id="search-empty">
           <p>No lessons found for "<span id="search-query-echo"></span>"</p>
-          <button class="search-generate-btn" id="search-generate-btn">✨ Generate a custom lesson</button>
+          <button class="search-generate-btn" id="search-generate-btn">
+            ✨ Generate a custom lesson
+          </button>
         </div>
-        <div class="search-hint">Press <kbd>Esc</kbd> to close · <kbd>⌘</kbd><kbd>K</kbd> to open</div>
+        <div class="search-hint">
+          Press <kbd>Esc</kbd> to close · <kbd>⌘</kbd><kbd>K</kbd> to open
+        </div>
       </div>
     </div>
 
@@ -6938,12 +7462,12 @@
           <h2>🏛️ Learner Commons</h2>
           <button class="commons-close" id="commons-close">✕</button>
         </div>
-        
+
         <div class="commons-lesson-info" id="commons-lesson-info">
           <span class="commons-lesson-badge">Day <span id="commons-day">1</span></span>
           <span class="commons-lesson-topic" id="commons-topic">Today's Lesson</span>
         </div>
-        
+
         <div class="commons-actions">
           <button class="commons-action-btn" id="commons-suggest">
             <span class="commons-action-icon">💡</span>
@@ -6962,17 +7486,15 @@
             <span class="commons-action-text">Add Knowledge</span>
           </button>
         </div>
-        
+
         <div class="commons-proposals" id="commons-proposals">
           <h3>Open Proposals</h3>
           <div class="commons-proposals-list" id="commons-proposals-list">
             <div class="commons-loading">Loading proposals...</div>
           </div>
         </div>
-        
-        <a href="/commons.html" class="commons-full-link">
-          View Full Learner Commons →
-        </a>
+
+        <a href="/commons.html" class="commons-full-link"> View Full Learner Commons → </a>
       </div>
     </div>
 
@@ -6987,10 +7509,15 @@
         flex-direction: column;
         opacity: 0;
         visibility: hidden;
-        transition: opacity 0.3s, visibility 0.3s;
+        transition:
+          opacity 0.3s,
+          visibility 0.3s;
       }
-      .commons-overlay.open { opacity: 1; visibility: visible; }
-      
+      .commons-overlay.open {
+        opacity: 1;
+        visibility: visible;
+      }
+
       .commons-container {
         flex: 1;
         max-width: 600px;
@@ -6999,21 +7526,21 @@
         overflow-y: auto;
         width: 100%;
       }
-      
+
       .commons-header {
         display: flex;
         justify-content: space-between;
         align-items: center;
         margin-bottom: 20px;
       }
-      
+
       .commons-header h2 {
         font-family: 'Fraunces', Georgia, serif;
         font-size: 1.5rem;
         font-weight: 500;
         color: #fff;
       }
-      
+
       .commons-close {
         width: 40px;
         height: 40px;
@@ -7025,8 +7552,10 @@
         cursor: pointer;
         transition: all 0.2s;
       }
-      .commons-close:hover { background: rgba(255, 255, 255, 0.2); }
-      
+      .commons-close:hover {
+        background: rgba(255, 255, 255, 0.2);
+      }
+
       .commons-lesson-info {
         display: flex;
         align-items: center;
@@ -7037,7 +7566,7 @@
         border-radius: 12px;
         margin-bottom: 24px;
       }
-      
+
       .commons-lesson-badge {
         background: #2563eb;
         color: #fff;
@@ -7046,20 +7575,20 @@
         font-size: 0.85rem;
         font-weight: 600;
       }
-      
+
       .commons-lesson-topic {
         font-size: 1rem;
         color: #fff;
         font-weight: 500;
       }
-      
+
       .commons-actions {
         display: grid;
         grid-template-columns: 1fr 1fr;
         gap: 12px;
         margin-bottom: 24px;
       }
-      
+
       .commons-action-btn {
         display: flex;
         align-items: center;
@@ -7078,23 +7607,28 @@
         border-color: rgba(59, 130, 246, 0.5);
         transform: translateY(-2px);
       }
-      
-      .commons-action-icon { font-size: 1.5rem; }
-      .commons-action-text { font-size: 0.9rem; font-weight: 500; }
-      
+
+      .commons-action-icon {
+        font-size: 1.5rem;
+      }
+      .commons-action-text {
+        font-size: 0.9rem;
+        font-weight: 500;
+      }
+
       .commons-proposals h3 {
         font-size: 1rem;
         color: #a1a1aa;
         margin-bottom: 12px;
         font-weight: 500;
       }
-      
+
       .commons-proposals-list {
         display: flex;
         flex-direction: column;
         gap: 10px;
       }
-      
+
       .commons-proposal-card {
         padding: 16px;
         background: rgba(255, 255, 255, 0.05);
@@ -7107,38 +7641,38 @@
         background: rgba(255, 255, 255, 0.08);
         border-color: rgba(59, 130, 246, 0.3);
       }
-      
+
       .commons-proposal-title {
         font-size: 0.95rem;
         color: #fff;
         margin-bottom: 6px;
         font-weight: 500;
       }
-      
+
       .commons-proposal-meta {
         display: flex;
         gap: 12px;
         font-size: 0.8rem;
         color: #71717a;
       }
-      
+
       .commons-proposal-score {
         color: #22c55e;
         font-weight: 600;
       }
-      
+
       .commons-loading {
         text-align: center;
         padding: 20px;
         color: #71717a;
       }
-      
+
       .commons-empty {
         text-align: center;
         padding: 24px;
         color: #71717a;
       }
-      
+
       .commons-full-link {
         display: block;
         text-align: center;
@@ -7154,7 +7688,7 @@
       .commons-full-link:hover {
         background: rgba(59, 130, 246, 0.1);
       }
-      
+
       @media (max-width: 480px) {
         .commons-actions {
           grid-template-columns: 1fr;
@@ -7166,22 +7700,22 @@
           gap: 12px;
           right: 8px;
         }
-        
+
         .rail-btn {
           width: 40px;
           height: 40px;
         }
-        
+
         .rail-btn svg {
           width: 20px;
           height: 20px;
         }
-        
+
         /* Hide spacer to save space */
         .rail-spacer {
           height: 6px;
         }
-        
+
         /* Ensure bottom options don't overlap chat */
         .options-container {
           bottom: 120px;
@@ -7200,13 +7734,13 @@
           el.textContent = new Date().toLocaleTimeString('en-US', {
             hour: 'numeric',
             minute: '2-digit',
-            hour12: true
+            hour12: true,
           });
         }
       }
       updateTimeDisplay();
       setInterval(updateTimeDisplay, 60000);
-      
+
       document.getElementById('top-time')?.addEventListener('click', () => {
         openCalendar('day', { day: getDayOfYear() });
       });
@@ -7217,16 +7751,16 @@
       function renderLessonDate(dayNumber) {
         const year = new Date().getFullYear();
         const date = new Date(year, 0, dayNumber);
-        
+
         const month = date.toLocaleDateString('en-US', { month: 'long' });
         const day = date.getDate();
         const yearStr = date.getFullYear();
-        
+
         const today = getDayOfYear();
         const isToday = dayNumber === today;
-        
+
         const todayPrefix = isToday ? `<span class="date-today">Today · </span>` : '';
-        
+
         return `${todayPrefix}<span class="date-month" data-view="month" data-month="${date.getMonth()}">${month}</span> <span class="date-day" data-view="day" data-day="${dayNumber}">${day}</span>, <span class="date-year" data-view="year" data-year="${yearStr}">${yearStr}</span>`;
       }
 
@@ -7237,14 +7771,14 @@
             openCalendar('month', { month: parseInt(el.dataset.month) });
           });
         });
-        
+
         document.querySelectorAll('.date-day').forEach(el => {
           el.addEventListener('click', e => {
             e.stopPropagation();
             openCalendar('day', { day: parseInt(el.dataset.day) });
           });
         });
-        
+
         document.querySelectorAll('.date-year').forEach(el => {
           el.addEventListener('click', e => {
             e.stopPropagation();
@@ -7256,11 +7790,12 @@
       function openCalendar(view = 'day', params = {}) {
         console.log(`[Calendar] Opening ${view} view`, params);
         window.calendarRequestedView = { view, params };
-        
+
         // Navigate to calendar page with params
         const calendarUrl = new URL('/calendar.html', window.location.origin);
         if (view === 'day' && params.day) calendarUrl.searchParams.set('day', params.day);
-        if (view === 'month' && params.month !== undefined) calendarUrl.searchParams.set('month', params.month);
+        if (view === 'month' && params.month !== undefined)
+          calendarUrl.searchParams.set('month', params.month);
         if (view === 'year' && params.year) calendarUrl.searchParams.set('year', params.year);
         calendarUrl.searchParams.set('view', view);
         window.location.href = calendarUrl.toString();
@@ -7296,7 +7831,7 @@
       document.addEventListener('keydown', e => {
         if (e.target.tagName === 'INPUT' || e.target.tagName === 'TEXTAREA') return;
         if (LessonSearch?.isOpen) return;
-        
+
         const day = getCurrentDayFromURL();
         if (e.key === 'ArrowUp' || e.key === 'k') {
           e.preventDefault();
@@ -7314,7 +7849,7 @@
       const LessonSearch = {
         lessons: [],
         isOpen: false,
-        
+
         async init() {
           try {
             const { data } = await supabase
@@ -7326,10 +7861,10 @@
           } catch (e) {
             console.warn('[Search] Could not load lessons:', e);
           }
-          
+
           this.bind();
         },
-        
+
         bind() {
           document.getElementById('btn-search')?.addEventListener('click', () => this.open());
           document.getElementById('search-close')?.addEventListener('click', () => this.close());
@@ -7343,27 +7878,29 @@
               this.open();
             }
           });
-          document.getElementById('search-input')?.addEventListener('input', e => this.search(e.target.value));
+          document
+            .getElementById('search-input')
+            ?.addEventListener('input', e => this.search(e.target.value));
           document.getElementById('search-generate-btn')?.addEventListener('click', () => {
             showToast('✨ Custom lessons coming soon!');
             this.close();
           });
         },
-        
+
         open() {
           this.isOpen = true;
           document.getElementById('search-overlay')?.classList.add('open');
           document.getElementById('search-input')?.focus();
           this.showNearby();
         },
-        
+
         close() {
           this.isOpen = false;
           document.getElementById('search-overlay')?.classList.remove('open');
           const input = document.getElementById('search-input');
           if (input) input.value = '';
         },
-        
+
         showNearby() {
           const today = getDayOfYear();
           const nearby = this.lessons
@@ -7372,16 +7909,17 @@
           this.render(nearby.slice(0, 15));
           document.getElementById('search-empty').style.display = 'none';
         },
-        
+
         search(q) {
           if (!q || q.length < 2) {
             this.showNearby();
             return;
           }
-          const matches = this.lessons.filter(l =>
-            (l.topic || '').toLowerCase().includes(q.toLowerCase()) ||
-            (l.category || '').toLowerCase().includes(q.toLowerCase()) ||
-            String(l.day_number).includes(q)
+          const matches = this.lessons.filter(
+            l =>
+              (l.topic || '').toLowerCase().includes(q.toLowerCase()) ||
+              (l.category || '').toLowerCase().includes(q.toLowerCase()) ||
+              String(l.day_number).includes(q)
           );
           if (matches.length) {
             this.render(matches.slice(0, 20));
@@ -7392,27 +7930,29 @@
             document.getElementById('search-empty').style.display = 'block';
           }
         },
-        
+
         render(lessons) {
           const container = document.getElementById('search-results');
           const today = getDayOfYear();
-          container.innerHTML = lessons.map(l => {
-            const date = new Date(new Date().getFullYear(), 0, l.day_number);
-            const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-            const isToday = l.day_number === today;
-            return `<div class="search-result" data-day="${l.day_number}">
+          container.innerHTML = lessons
+            .map(l => {
+              const date = new Date(new Date().getFullYear(), 0, l.day_number);
+              const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+              const isToday = l.day_number === today;
+              return `<div class="search-result" data-day="${l.day_number}">
               <div class="search-result-emoji">${l.emoji || '📚'}</div>
               <div class="search-result-info">
                 <div class="search-result-date">${isToday ? '🔴 Today · ' : ''}${dateStr} · Day ${l.day_number}</div>
                 <div class="search-result-topic">${l.topic}</div>
               </div>
             </div>`;
-          }).join('');
+            })
+            .join('');
           container.querySelectorAll('.search-result').forEach(el => {
             el.addEventListener('click', () => this.goTo(parseInt(el.dataset.day)));
           });
         },
-        
+
         goTo(day) {
           this.close();
           const url = new URL(window.location);
@@ -7421,7 +7961,7 @@
           if (typeof goToLesson === 'function') goToLesson(day);
           else if (typeof loadLesson === 'function') loadLesson(day);
           else location.reload();
-        }
+        },
       };
 
       // Initialize search after DOM ready
@@ -7441,18 +7981,18 @@
         isOpen: false,
         currentDay: null,
         currentLesson: null,
-        
+
         init() {
           this.bind();
         },
-        
+
         bind() {
           document.getElementById('btn-commons')?.addEventListener('click', () => this.open());
           document.getElementById('commons-close')?.addEventListener('click', () => this.close());
           document.getElementById('commons-overlay')?.addEventListener('click', e => {
             if (e.target.id === 'commons-overlay') this.close();
           });
-          
+
           // Action buttons
           document.getElementById('commons-suggest')?.addEventListener('click', () => {
             this.close();
@@ -7470,19 +8010,19 @@
             this.close();
             window.location.href = `/commons.html?tab=knowledge&day=${this.currentDay}`;
           });
-          
+
           document.addEventListener('keydown', e => {
             if (e.key === 'Escape' && this.isOpen) this.close();
           });
         },
-        
+
         async open() {
           this.isOpen = true;
           this.currentDay = getCurrentDayFromURL();
-          
+
           // Update UI with current lesson
           document.getElementById('commons-day').textContent = this.currentDay;
-          
+
           // Get lesson topic
           const topicEl = document.getElementById('commons-topic');
           try {
@@ -7496,21 +8036,21 @@
               this.currentLesson = data;
             }
           } catch (e) {
-            topicEl.textContent = 'Today\'s Lesson';
+            topicEl.textContent = "Today's Lesson";
           }
-          
+
           document.getElementById('commons-overlay')?.classList.add('open');
           this.loadProposals();
         },
-        
+
         close() {
           this.isOpen = false;
           document.getElementById('commons-overlay')?.classList.remove('open');
         },
-        
+
         async loadProposals() {
           const listEl = document.getElementById('commons-proposals-list');
-          
+
           try {
             // Try to load from database
             const { data, error } = await supabase
@@ -7519,11 +8059,13 @@
               .eq('status', 'open')
               .order('vote_score', { ascending: false })
               .limit(5);
-            
+
             if (error) throw error;
-            
+
             if (data && data.length > 0) {
-              listEl.innerHTML = data.map(p => `
+              listEl.innerHTML = data
+                .map(
+                  p => `
                 <div class="commons-proposal-card" onclick="window.location.href='/commons.html?proposal=${p.id}'">
                   <div class="commons-proposal-title">${p.title}</div>
                   <div class="commons-proposal-meta">
@@ -7531,7 +8073,9 @@
                     <span>${this.getTypeLabel(p.type)}</span>
                   </div>
                 </div>
-              `).join('');
+              `
+                )
+                .join('');
             } else {
               this.showSampleProposals();
             }
@@ -7541,7 +8085,7 @@
             this.showSampleProposals();
           }
         },
-        
+
         showSampleProposals() {
           const listEl = document.getElementById('commons-proposals-list');
           listEl.innerHTML = `
@@ -7551,18 +8095,18 @@
             </div>
           `;
         },
-        
+
         getTypeLabel(type) {
           const labels = {
             enhance: '✨ Enhance',
             expand: '📚 Expand',
             correct: '🔧 Correct',
-            simplify: '🎯 Simplify'
+            simplify: '🎯 Simplify',
           };
           return labels[type] || type;
-        }
+        },
       };
-      
+
       // Initialize Commons
       if (document.readyState === 'loading') {
         document.addEventListener('DOMContentLoaded', () => LearnerCommons.init());
@@ -7574,11 +8118,11 @@
       // ═══════════════════════════════════════════════════════════════════
       document.addEventListener('DOMContentLoaded', () => {
         document.querySelectorAll('[data-popover]').forEach(btn => {
-          btn.addEventListener('click', (e) => {
+          btn.addEventListener('click', e => {
             e.stopPropagation();
             const rawId = btn.getAttribute('data-popover');
             const popoverId = rawId.replace('popover-', '');
-            
+
             // Close if already open
             const popover = document.getElementById(rawId);
             if (popover && popover.classList.contains('active')) {
@@ -7590,9 +8134,9 @@
             }
           });
         });
-        
+
         // Close on click outside
-        document.addEventListener('click', (e) => {
+        document.addEventListener('click', e => {
           if (!e.target.closest('.popover') && !e.target.closest('[data-popover]')) {
             closePopover();
           }
