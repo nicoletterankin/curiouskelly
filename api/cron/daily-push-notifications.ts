@@ -45,7 +45,8 @@ interface UserWithPrefs {
   name: string | null;
   current_streak: number | null;
   push_tokens: PushToken[];
-  notification_preferences: NotificationPreference | null;
+  // Supabase nested select returns an array for related rows (even if 0/1 expected)
+  notification_preferences: NotificationPreference[] | null;
 }
 
 interface PushToken {
@@ -340,9 +341,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     let failedCount = 0;
     const errors: string[] = [];
 
-    for (const user of users as UserWithPrefs[]) {
-      // Skip if no preferences (use defaults)
-      const prefs = user.notification_preferences || {
+    const usersList = (users || []) as unknown as UserWithPrefs[];
+
+    for (const user of usersList) {
+      // Skip if no preferences (use defaults). Nested select returns array.
+      const prefRow = Array.isArray(user.notification_preferences)
+        ? user.notification_preferences[0] || null
+        : (user.notification_preferences as any) || null;
+
+      const prefs =
+        prefRow || {
         preferred_time: '09:00',
         timezone: 'America/New_York',
         auto_timing: true,
