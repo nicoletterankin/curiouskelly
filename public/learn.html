@@ -2120,11 +2120,33 @@
     };
     
     // ============================================
-    // SUPABASE CLIENT
+    // SUPABASE CLIENTS
     // ============================================
+    // IMPORTANT:
+    // - We use TWO clients:
+    //   1) supabasePublic: lesson reads using anon role ONLY (prevents RLS/session issues)
+    //   2) supabase: auth/session + progress sync (if user is signed in)
+    //
+    // This prevents a stale/denied authenticated token from making lesson queries look like "not found".
     let supabase = null;
+    let supabasePublic = null;
     try {
       if (CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY && window.supabase?.createClient) {
+        // Public client: never persists/uses user sessions; always uses anon JWT
+        supabasePublic = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY, {
+          auth: {
+            persistSession: false,
+            autoRefreshToken: false,
+            detectSessionInUrl: false
+          },
+          global: {
+            headers: {
+              Authorization: `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+            }
+          }
+        });
+
+        // Auth client: normal behavior for session-based progress sync
         supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
       } else {
         throw new Error('Supabase config missing');
@@ -2751,19 +2773,78 @@
     // ============================================
     // LOAD LESSON FROM SUPABASE
     // ============================================
+    async function loadLessonFromApi(dayNumber, { archetype, ageBucket } = {}) {
+      try {
+        const a = archetype || PERSONA_TO_ARCHETYPE[state.kellyId] || 'The Scientist';
+        const bucket = ageBucket || getAgeBucket(state.age);
+        const res = await fetch(`/api/lessons/${dayNumber}?archetype=${encodeURIComponent(a)}&ageBucket=${encodeURIComponent(bucket)}`, {
+          cache: 'no-store'
+        });
+        if (!res.ok) throw new Error(`API returned ${res.status}`);
+        return await res.json();
+      } catch (e) {
+        console.warn('Local API lesson fallback failed:', e.message);
+        return null;
+      }
+    }
+
+    function applyLoadedLesson(dayNumber, payload) {
+      if (!payload) return null;
+      const lesson = payload.lesson || payload;
+      const atoms = payload.atoms || [];
+      const shards = payload.shards || [];
+
+      currentLesson = {
+        dayNumber,
+        topic: lesson.topic || lesson.title || 'Daily Discovery',
+        headline: lesson.marketing_headline || lesson.topic || '',
+        tagline: lesson.marketing_tagline || '',
+        pitch: lesson.marketing_pitch || '',
+        universalTruth: lesson.universal_truth || '',
+        quickQuiz: lesson.quick_quiz_questions || [],
+        reflectionPrompts: lesson.reflection_prompts || [],
+        shards: shards,
+        kellyContext: null,
+      };
+
+      lessonAtoms = PHASES.map(phase => {
+        const atom = atoms.find(a => a.phase === phase.dbName) || atoms.find(a => a.phase === phase.name);
+        const content = atom?.content || {};
+        return {
+          phase: phase.name,
+          dbPhase: phase.dbName,
+          icon: phase.icon,
+          script:
+            content.script ||
+            content.text ||
+            atom?.script ||
+            `This is ${phase.name.toLowerCase()} content for ${getDisplayDate(dayNumber)}.`,
+          videoUrl: atom?.hd_video_url,
+          visualUrl: atom?.visual_url,
+          atomContent: atom?.content,
+        };
+      });
+
+      return currentLesson;
+    }
+
     async function loadLesson(dayNumber) {
       if (!canAccessDay(dayNumber)) {
         showPaywall();
         return null;
       }
 
-      if (!supabase) {
+      // Prefer supabasePublic for lesson reads (avoids RLS/session edge cases)
+      const db = supabasePublic || supabase;
+      if (!db) {
+        const apiPayload = await loadLessonFromApi(dayNumber);
+        if (apiPayload) return applyLoadedLesson(dayNumber, apiPayload);
         return loadFallbackLesson(dayNumber);
       }
       
       try {
         // Get core lesson
-        const { data: coreLesson, error: coreError } = await supabase
+        const { data: coreLesson, error: coreError } = await db
           .from('core_lessons')
           .select('id, topic, universal_truth, marketing_headline, marketing_tagline, marketing_pitch, quick_quiz_questions, reflection_prompts')
           .eq('day_number', dayNumber)
@@ -2771,6 +2852,9 @@
         
         if (coreError || !coreLesson) {
           console.warn('Core lesson not found:', coreError);
+          // Fallback to local API (does not depend on Supabase)
+          const apiPayload = await loadLessonFromApi(dayNumber);
+          if (apiPayload) return applyLoadedLesson(dayNumber, apiPayload);
           return loadFallbackLesson(dayNumber);
         }
         
@@ -2779,7 +2863,7 @@
         const ageBucket = getAgeBucket(state.age);
         
         // Fetch atoms (dialog) for this archetype
-        const { data: atoms, error: atomsError } = await supabase
+        const { data: atoms, error: atomsError } = await db
           .from('lesson_atoms')
           .select('phase, content, hd_video_url, visual_url')
           .eq('core_lesson_id', coreLesson.id)
@@ -2791,14 +2875,19 @@
         }
         
         // Fetch shards (age-personalized content) for this archetype + age
-        const { data: shards, error: shardsError } = await supabase
-          .from('lesson_shards')
-          .select('*')
-          .eq('core_lesson_id', coreLesson.id)
-          .eq('archetype', archetype);
-        
-        if (shardsError) {
-          console.warn('Shards fetch error:', shardsError);
+        // NOTE: Some environments have a simplified `lesson_shards` schema without `archetype`.
+        // Shards are best-effort; lesson still works without them.
+        let shards = [];
+        try {
+          const { data: shardsData, error: shardsError } = await db
+            .from('lesson_shards')
+            .select('*')
+            .eq('core_lesson_id', coreLesson.id)
+            .eq('archetype', archetype);
+          if (shardsError) console.warn('Shards fetch error:', shardsError);
+          shards = shardsData || [];
+        } catch (e) {
+          console.warn('Shards fetch skipped:', e.message);
         }
         
         // Filter shards by age bucket (try exact match, then region, then any)
@@ -2881,6 +2970,8 @@
         return currentLesson;
       } catch (e) {
         console.error('Lesson load error:', e);
+        const apiPayload = await loadLessonFromApi(dayNumber);
+        if (apiPayload) return applyLoadedLesson(dayNumber, apiPayload);
         return loadFallbackLesson(dayNumber);
       }
     }
@@ -2931,16 +3022,26 @@
     // LOAD WEEK LESSONS FROM SUPABASE
     // ============================================
     async function loadWeekLessons(startDay) {
-      if (!supabase) {
-        return Array.from({ length: 7 }, (_, i) => ({
-          day_number: startDay + i,
-          topic: `Lesson for ${getDisplayDate(startDay + i)}`,
-          marketing_headline: 'An amazing lesson awaits...'
-        }));
+      const db = supabasePublic || supabase;
+      if (!db) {
+        // Use local API fallback so the week view still shows real topics
+        const results = await Promise.all(
+          Array.from({ length: 7 }, async (_, i) => {
+            const dayNum = startDay + i;
+            const apiPayload = await loadLessonFromApi(dayNum);
+            const lesson = apiPayload?.lesson;
+            return {
+              day_number: dayNum,
+              topic: lesson?.topic || `Lesson for ${getDisplayDate(dayNum)}`,
+              marketing_headline: lesson?.marketing_headline || lesson?.topic || 'An amazing lesson awaits...'
+            };
+          })
+        );
+        return results;
       }
       
       try {
-        const { data, error } = await supabase
+        const { data, error } = await db
           .from('core_lessons')
           .select('day_number, topic, marketing_headline')
           .gte('day_number', startDay)
@@ -2948,10 +3049,36 @@
           .order('day_number');
         
         if (error) throw error;
-        return data || [];
+        // If Supabase returns nothing (RLS / caching / transient), fallback to local API per day
+        if (data && data.length > 0) return data;
+        const results = await Promise.all(
+          Array.from({ length: 7 }, async (_, i) => {
+            const dayNum = startDay + i;
+            const apiPayload = await loadLessonFromApi(dayNum);
+            const lesson = apiPayload?.lesson;
+            return {
+              day_number: dayNum,
+              topic: lesson?.topic || `Lesson for ${getDisplayDate(dayNum)}`,
+              marketing_headline: lesson?.marketing_headline || lesson?.topic || 'An amazing lesson awaits...'
+            };
+          })
+        );
+        return results;
       } catch (e) {
         console.warn('Week lessons load failed:', e);
-        return [];
+        const results = await Promise.all(
+          Array.from({ length: 7 }, async (_, i) => {
+            const dayNum = startDay + i;
+            const apiPayload = await loadLessonFromApi(dayNum);
+            const lesson = apiPayload?.lesson;
+            return {
+              day_number: dayNum,
+              topic: lesson?.topic || `Lesson for ${getDisplayDate(dayNum)}`,
+              marketing_headline: lesson?.marketing_headline || lesson?.topic || 'An amazing lesson awaits...'
+            };
+          })
+        );
+        return results;
       }
     }
     
@@ -3070,15 +3197,13 @@
     // TYPEWRITER EFFECT
     // ============================================
     async function typewriterEffect(element, text, speed = 20) {
-      element.classList.add('typing');
-      element.textContent = '';
-      
-      for (let i = 0; i < text.length; i++) {
-        element.textContent += text[i];
-        await new Promise(r => setTimeout(r, speed));
-      }
-      
+      // ⚠️ Launch safety: disable animated text effects.
+      // We previously used a typewriter effect here, but it can overlap when
+      // called multiple times, producing garbled "scrambled" text in the UI.
+      // For reliability, render the final lesson script immediately.
+      if (!element) return;
       element.classList.remove('typing');
+      element.textContent = String(text || '');
     }
     
     // ============================================
@@ -4195,9 +4320,9 @@
       loadProgressFromCalendar(); // Sync progress from calendar system
       loadSubscription();
       
-      // Initialize KellyLessonLoader with Supabase client
-      if (window.KellyLessonLoader && supabase) {
-        window.KellyLessonLoader.init(supabase);
+      // Initialize KellyLessonLoader with lesson-read client (anon-only)
+      if (window.KellyLessonLoader && (supabasePublic || supabase)) {
+        window.KellyLessonLoader.init(supabasePublic || supabase);
       }
       
       console.log('🚀 Kelly Learn initialized', {
