@@ -7,9 +7,10 @@
 // CONFIGURATION
 // ═══════════════════════════════════════════════════════════════════════════════
 const KELLY_CONFIG = {
-  SUPABASE_URL: 'https://bwuqnxxeqhlbwpwbvqkj.supabase.co',
+  SUPABASE_URL: window.SUPABASE_URL || 'https://tvjalxxsyryjphkforjv.supabase.co',
   SUPABASE_ANON_KEY:
-    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3dXFueHhlcWhsYndwd2J2cWtqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3MTczNjYsImV4cCI6MjA1OTI5MzM2Nn0.C_EfNM98BbSNnnlJLVh0QVH4BGBA6YMGG6x6_xD9ZLY',
+    window.SUPABASE_ANON_KEY ||
+    'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI',
 
   // Stripe
   STRIPE_MONTHLY_PRICE: 'price_monthly_999',
@@ -24,7 +25,7 @@ const KELLY_CONFIG = {
   LANGUAGES: ['en', 'es', 'fr'],
   TONES: ['curious', 'playful', 'serious'],
   DIFFICULTIES: [2, 3],
-  MODES: ['2D', '3D']
+  MODES: ['2D', '3D'],
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -56,7 +57,7 @@ const STORAGE_KEYS = {
 
   // Cache
   CURRICULUM_CACHE: 'kelly_curriculum_cache',
-  CURRICULUM_VERSION: 'kelly_curriculum_version'
+  CURRICULUM_VERSION: 'kelly_curriculum_version',
 };
 
 // ═══════════════════════════════════════════════════════════════════════════════
@@ -109,7 +110,7 @@ async function loadCurriculum() {
  */
 function getLesson(dayNumber) {
   if (!curriculumData || !curriculumData.lessons) return null;
-  return curriculumData.lessons.find((l) => l.day === dayNumber) || null;
+  return curriculumData.lessons.find(l => l.day === dayNumber) || null;
 }
 
 /**
@@ -169,7 +170,7 @@ function formatDateFull(date) {
     'September',
     'October',
     'November',
-    'December'
+    'December',
   ];
   return `${days[date.getDay()]}, ${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
 }
@@ -190,7 +191,7 @@ function formatDateShort(date) {
     'September',
     'October',
     'November',
-    'December'
+    'December',
   ];
   return `${months[date.getMonth()]} ${date.getDate()}`;
 }
@@ -208,7 +209,7 @@ function getUserPreferences() {
     language: localStorage.getItem(STORAGE_KEYS.LANGUAGE) || 'en',
     tone: localStorage.getItem(STORAGE_KEYS.TONE) || 'curious',
     difficulty: parseInt(localStorage.getItem(STORAGE_KEYS.DIFFICULTY) || '2'),
-    mode: localStorage.getItem(STORAGE_KEYS.MODE) || '2D'
+    mode: localStorage.getItem(STORAGE_KEYS.MODE) || '2D',
   };
 }
 
@@ -231,7 +232,7 @@ function getUserProgress() {
     totalLessons: parseInt(localStorage.getItem(STORAGE_KEYS.TOTAL_LESSONS) || '0'),
     completedDays: JSON.parse(localStorage.getItem(STORAGE_KEYS.COMPLETED_DAYS) || '[]'),
     lastLessonDay: parseInt(localStorage.getItem(STORAGE_KEYS.LAST_LESSON_DAY) || '0'),
-    lastLessonDate: localStorage.getItem(STORAGE_KEYS.LAST_LESSON_DATE) || null
+    lastLessonDate: localStorage.getItem(STORAGE_KEYS.LAST_LESSON_DATE) || null,
   };
 }
 
@@ -300,7 +301,7 @@ function getBirthdayLesson() {
     day,
     dayNumber: dayNum,
     lesson,
-    formatted: formatDateShort(birthdayDate)
+    formatted: formatDateShort(birthdayDate),
   };
 }
 
@@ -321,7 +322,7 @@ const KELLY_IMAGES = {
   explaining: '/assets/kelly/production/avatars/explaining/kelly-explaining-512.webp',
   listening: '/assets/kelly/production/avatars/listening/kelly-listening-512.webp',
   wisdom: '/assets/kelly/production/avatars/wisdom/kelly-wisdom-512.webp',
-  celebrating: '/assets/kelly/production/avatars/celebrating/kelly-celebrating-512.webp'
+  celebrating: '/assets/kelly/production/avatars/celebrating/kelly-celebrating-512.webp',
 };
 
 /**
@@ -335,7 +336,7 @@ function getKellyImage(expression) {
  * Preload all Kelly images
  */
 function preloadKellyImages() {
-  Object.values(KELLY_IMAGES).forEach((src) => {
+  Object.values(KELLY_IMAGES).forEach(src => {
     const img = new Image();
     img.src = src;
   });
@@ -353,7 +354,7 @@ const PHASE_CONFIG = [
   { order: 2, type: 'question', name: 'Q1', expression: 'explaining' },
   { order: 3, type: 'question', name: 'Q2', expression: 'explaining' },
   { order: 4, type: 'question', name: 'Q3', expression: 'listening' },
-  { order: 5, type: 'wisdom', name: 'Wisdom', expression: 'wisdom' }
+  { order: 5, type: 'wisdom', name: 'Wisdom', expression: 'wisdom' },
 ];
 
 /**
@@ -373,7 +374,7 @@ function generatePhaseContent(lesson, preferences) {
       expression: 'curious',
       text: `Welcome! Today we're exploring ${lesson.title}. ${lesson.learning_essence || lesson.learning_objective}`,
       hint: null,
-      choices: null
+      choices: null,
     },
     {
       order: 2,
@@ -385,8 +386,8 @@ function generatePhaseContent(lesson, preferences) {
       choices: [
         { letter: 'A', text: 'Understanding the basic concepts' },
         { letter: 'B', text: 'Seeing how it connects to everything else' },
-        { letter: 'C', text: 'Both understanding AND seeing connections' }
-      ].slice(0, difficulty)
+        { letter: 'C', text: 'Both understanding AND seeing connections' },
+      ].slice(0, difficulty),
     },
     {
       order: 3,
@@ -398,8 +399,8 @@ function generatePhaseContent(lesson, preferences) {
       choices: [
         { letter: 'A', text: 'In my personal life and relationships' },
         { letter: 'B', text: 'In my community and the wider world' },
-        { letter: 'C', text: 'Both personally AND in my community' }
-      ].slice(0, difficulty)
+        { letter: 'C', text: 'Both personally AND in my community' },
+      ].slice(0, difficulty),
     },
     {
       order: 4,
@@ -411,8 +412,8 @@ function generatePhaseContent(lesson, preferences) {
       choices: [
         { letter: 'A', text: 'Learn more about this topic' },
         { letter: 'B', text: 'Share what I learned with someone' },
-        { letter: 'C', text: 'Both learn more AND share with others' }
-      ].slice(0, difficulty)
+        { letter: 'C', text: 'Both learn more AND share with others' },
+      ].slice(0, difficulty),
     },
     {
       order: 5,
@@ -421,8 +422,8 @@ function generatePhaseContent(lesson, preferences) {
       expression: 'wisdom',
       text: `Here's something to carry with you: ${lesson.universal_concept ? lesson.universal_concept.replace(/_/g, ' ') : 'Every small step of learning adds up to great wisdom over time.'}. What one insight will you remember from today?`,
       hint: null,
-      choices: null
-    }
+      choices: null,
+    },
   ];
 }
 
@@ -463,11 +464,10 @@ window.KellyData = {
 
   // Phases
   PHASE_CONFIG,
-  generatePhaseContent
+  generatePhaseContent,
 };
 
 // Auto-preload Kelly images
 document.addEventListener('DOMContentLoaded', preloadKellyImages);
 
 console.log('📚 Kelly Data Layer loaded');
-

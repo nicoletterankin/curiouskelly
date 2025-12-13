@@ -36,6 +36,9 @@ const KellyLessonLoader = {
   // Cloudflare D1 API endpoint (set after deployment)
   // Update this after deploying the worker
   D1_API_URL: 'https://curiouskelly-lessons.pages.dev',
+
+  // Local API fallback (Vercel functions) — always available in this repo
+  LOCAL_API_ENDPOINT: '/api/lessons',
   
   // Archetype mapping (id -> database name)
   ARCHETYPES: {
@@ -177,6 +180,24 @@ const KellyLessonLoader = {
       } catch (d1Error) {
         console.warn(`⚠️ Cloudflare D1 failed:`, d1Error.message);
       }
+
+      // Try local Vercel API fallback (guaranteed to exist)
+      try {
+        const local = await this.tryLocalApi(dayNum, normalizedArchetype, targetRegion);
+        if (local?.lesson) {
+          const result = this.buildResult(local.lesson, local.atoms || [], local.shards || [], {
+            dayNumber: dayNum,
+            archetype: normalizedArchetype,
+            region: targetRegion,
+            _source: 'vercel-api'
+          });
+          this.cache.set(cacheKey, result);
+          this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
+          return result;
+        }
+      } catch (apiError) {
+        console.warn(`⚠️ Local API fallback failed:`, apiError.message);
+      }
       
       return await this.getFallback(dayNum);
     }
@@ -218,6 +239,26 @@ const KellyLessonLoader = {
       }
     } catch (d1Error) {
       console.warn(`⚠️ [L2] Cloudflare D1 failed: ${d1Error.message}`);
+    }
+
+    // LAYER 2.5: Local Vercel API fallback
+    try {
+      console.log(`🔄 [L2.5] Trying local API fallback for day ${dayNum}...`);
+      const local = await this.tryLocalApi(dayNum, normalizedArchetype, targetRegion);
+      if (local?.lesson) {
+        const result = this.buildResult(local.lesson, local.atoms || [], local.shards || [], {
+          dayNumber: dayNum,
+          archetype: normalizedArchetype,
+          region: targetRegion,
+          _source: 'vercel-api'
+        });
+        this.cache.set(cacheKey, result);
+        this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
+        console.log(`✅ [L2.5] Local API success`);
+        return result;
+      }
+    } catch (apiError) {
+      console.warn(`⚠️ [L2.5] Local API failed: ${apiError.message}`);
     }
     
     // LAYER 3: Static JSON
@@ -772,7 +813,9 @@ const KellyLessonLoader = {
   async tryStaticFiles(dayNumber, archetype, region) {
     try {
       const paddedDay = String(dayNumber).padStart(3, '0');
-      const response = await fetch(`/data/lessons/day-${paddedDay}.json`);
+      // This repo no longer ships `/data/lessons/day-XXX.json`.
+      // Use the local API fallback instead, which is always present.
+      const response = await fetch(`${this.LOCAL_API_ENDPOINT}/${dayNumber}?archetype=${encodeURIComponent(archetype)}&ageBucket=${encodeURIComponent(region)}`);
       
       if (response.ok) {
         const data = await response.json();
@@ -802,6 +845,17 @@ const KellyLessonLoader = {
       console.warn(`⚠️ Static files failed for day ${dayNumber}:`, error.message);
     }
     return null;
+  },
+
+  /**
+   * Try local Vercel API fallback (serverless function)
+   * GET /api/lessons/:dayNumber?archetype=...&ageBucket=...
+   */
+  async tryLocalApi(dayNumber, archetype, region) {
+    const url = `${this.LOCAL_API_ENDPOINT}/${dayNumber}?archetype=${encodeURIComponent(archetype)}&ageBucket=${encodeURIComponent(region)}`;
+    const response = await fetch(url, { signal: AbortSignal.timeout(this.D1_TIMEOUT) });
+    if (!response.ok) throw new Error(`Local API returned ${response.status}`);
+    return await response.json();
   },
 
   /**
@@ -913,3 +967,4 @@ if (typeof module !== 'undefined' && module.exports) {
 window.KellyLessonLoader = KellyLessonLoader;
 
 console.log('📚 Kelly Lesson Loader ready');
+
