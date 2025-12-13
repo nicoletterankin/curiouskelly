@@ -19,6 +19,23 @@
  *   const lesson = await KellyLessonLoader.getToday({ archetype: 'The Scientist', region: 'adult' });
  */
 
+const __kellyLoaderParams = (typeof location !== 'undefined' && location.search)
+  ? new URLSearchParams(location.search)
+  : new URLSearchParams('');
+const __KELLY_LOADER_DEBUG =
+  __kellyLoaderParams.has('debug') ||
+  __kellyLoaderParams.has('audit') ||
+  (typeof localStorage !== 'undefined' && localStorage.getItem('kellyDebug') === '1') ||
+  (typeof window !== 'undefined' && window.KELLY_DEBUG === true);
+
+function __kellyLoaderDebugLog(...args) {
+  if (__KELLY_LOADER_DEBUG) console.log(...args);
+}
+
+function __kellyLoaderDebugWarn(...args) {
+  if (__KELLY_LOADER_DEBUG) console.warn(...args);
+}
+
 const KellyLessonLoader = {
   supabase: null,
   cache: new Map(),
@@ -75,22 +92,22 @@ const KellyLessonLoader = {
     } else if (window.supabaseClient) {
       // Try global client first
       this.supabase = window.supabaseClient;
-      console.log('📚 KellyLessonLoader using global supabaseClient');
+      __kellyLoaderDebugLog('📚 KellyLessonLoader using global supabaseClient');
     } else if (window.supabase?.createClient && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
       // Create from global config
       this.supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-      console.log('📚 KellyLessonLoader created Supabase client from config');
+      __kellyLoaderDebugLog('📚 KellyLessonLoader created Supabase client from config');
     } else if (window.supabase?.createClient && window.KELLY_CONFIG?.supabaseUrl && window.KELLY_CONFIG?.supabaseKey) {
       // Create from KELLY_CONFIG
       this.supabase = window.supabase.createClient(window.KELLY_CONFIG.supabaseUrl, window.KELLY_CONFIG.supabaseKey);
-      console.log('📚 KellyLessonLoader created Supabase client from KELLY_CONFIG');
+      __kellyLoaderDebugLog('📚 KellyLessonLoader created Supabase client from KELLY_CONFIG');
     } else {
-      console.warn('⚠️ KellyLessonLoader: No Supabase client available, will use D1 mirror');
+      __kellyLoaderDebugWarn('⚠️ KellyLessonLoader: No Supabase client available, will use D1 mirror');
     }
     
-    console.log('📚 KellyLessonLoader initialized');
-    console.log(`   Supabase: ${this.supabase ? 'connected' : 'not connected'}`);
-    console.log(`   D1 Mirror: ${this.D1_API_URL}`);
+    __kellyLoaderDebugLog('📚 KellyLessonLoader initialized');
+    __kellyLoaderDebugLog(`   Supabase: ${this.supabase ? 'connected' : 'not connected'}`);
+    __kellyLoaderDebugLog(`   D1 Mirror: ${this.D1_API_URL}`);
     return this;
   },
   
@@ -99,7 +116,7 @@ const KellyLessonLoader = {
    */
   setD1ApiUrl(url) {
     this.D1_API_URL = url;
-    console.log(`📡 D1 API URL set to: ${url}`);
+    __kellyLoaderDebugLog(`📡 D1 API URL set to: ${url}`);
     return this;
   },
   
@@ -148,7 +165,12 @@ const KellyLessonLoader = {
       archetype = 'The Scientist',
       age = 30,
       region = null,
-      useCache = true
+      useCache = true,
+      // Launch hardening:
+      // - Prevent recursive preloading from expanding to all 365 days.
+      // - Only the "primary" (non-preload) request should schedule adjacent preloads.
+      preloadAdjacent = true,
+      _isPreload = false,
     } = options;
     
     const normalizedArchetype = this.normalizeArchetype(archetype);
@@ -159,14 +181,14 @@ const KellyLessonLoader = {
     
     // Check cache
     if (useCache && this.cache.has(cacheKey)) {
-      console.log(`📦 Cache hit: Day ${dayNum}`);
+      __kellyLoaderDebugLog(`📦 Cache hit: Day ${dayNum}`);
       return this.cache.get(cacheKey);
     }
     
-    console.log(`🔍 Loading Day ${dayNum} for ${normalizedArchetype} (${targetRegion})`);
+    __kellyLoaderDebugLog(`🔍 Loading Day ${dayNum} for ${normalizedArchetype} (${targetRegion})`);
     
     if (!this.supabase) {
-      console.warn('⚠️ Supabase not initialized, trying Cloudflare D1...');
+      __kellyLoaderDebugWarn('⚠️ Supabase not initialized, trying Cloudflare D1...');
       
       // Try Cloudflare D1 directly when Supabase is not available
       try {
@@ -174,11 +196,11 @@ const KellyLessonLoader = {
         if (d1Data?.lesson) {
           const result = this.formatD1Response(d1Data, dayNum, normalizedArchetype, targetRegion);
           this.cache.set(cacheKey, result);
-          this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
+          if (preloadAdjacent && !_isPreload) this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
           return result;
         }
       } catch (d1Error) {
-        console.warn(`⚠️ Cloudflare D1 failed:`, d1Error.message);
+        __kellyLoaderDebugWarn(`⚠️ Cloudflare D1 failed:`, d1Error.message);
       }
 
       // Try local Vercel API fallback (guaranteed to exist)
@@ -192,11 +214,11 @@ const KellyLessonLoader = {
             _source: 'vercel-api'
           });
           this.cache.set(cacheKey, result);
-          this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
+          if (preloadAdjacent && !_isPreload) this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
           return result;
         }
       } catch (apiError) {
-        console.warn(`⚠️ Local API fallback failed:`, apiError.message);
+        __kellyLoaderDebugWarn(`⚠️ Local API fallback failed:`, apiError.message);
       }
       
       return await this.getFallback(dayNum);
@@ -216,34 +238,34 @@ const KellyLessonLoader = {
       
       if (supabaseResult) {
         this.cache.set(cacheKey, supabaseResult);
-        this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
+        if (preloadAdjacent && !_isPreload) this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
         return supabaseResult;
       }
       
       throw new Error('Supabase returned no data');
       
     } catch (supabaseError) {
-      console.warn(`⚠️ [L1] Supabase failed: ${supabaseError.message}`);
+      __kellyLoaderDebugWarn(`⚠️ [L1] Supabase failed: ${supabaseError.message}`);
     }
     
     // LAYER 2: D1 Mirror
     try {
-      console.log(`🔄 [L2] Trying Cloudflare D1 for day ${dayNum}...`);
+      __kellyLoaderDebugLog(`🔄 [L2] Trying Cloudflare D1 for day ${dayNum}...`);
       const d1Data = await this.tryCloudflareD1(dayNum, normalizedArchetype, targetRegion);
       if (d1Data?.lesson) {
         const result = this.formatD1Response(d1Data, dayNum, normalizedArchetype, targetRegion);
         this.cache.set(cacheKey, result);
-        this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
-        console.log(`✅ [L2] D1 success`);
+        if (preloadAdjacent && !_isPreload) this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
+        __kellyLoaderDebugLog(`✅ [L2] D1 success`);
         return result;
       }
     } catch (d1Error) {
-      console.warn(`⚠️ [L2] Cloudflare D1 failed: ${d1Error.message}`);
+      __kellyLoaderDebugWarn(`⚠️ [L2] Cloudflare D1 failed: ${d1Error.message}`);
     }
 
     // LAYER 2.5: Local Vercel API fallback
     try {
-      console.log(`🔄 [L2.5] Trying local API fallback for day ${dayNum}...`);
+      __kellyLoaderDebugLog(`🔄 [L2.5] Trying local API fallback for day ${dayNum}...`);
       const local = await this.tryLocalApi(dayNum, normalizedArchetype, targetRegion);
       if (local?.lesson) {
         const result = this.buildResult(local.lesson, local.atoms || [], local.shards || [], {
@@ -253,29 +275,29 @@ const KellyLessonLoader = {
           _source: 'vercel-api'
         });
         this.cache.set(cacheKey, result);
-        this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
-        console.log(`✅ [L2.5] Local API success`);
+        if (preloadAdjacent && !_isPreload) this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
+        __kellyLoaderDebugLog(`✅ [L2.5] Local API success`);
         return result;
       }
     } catch (apiError) {
-      console.warn(`⚠️ [L2.5] Local API failed: ${apiError.message}`);
+      __kellyLoaderDebugWarn(`⚠️ [L2.5] Local API failed: ${apiError.message}`);
     }
     
     // LAYER 3: Static JSON
     try {
-      console.log(`🔄 [L3] Trying Static JSON for day ${dayNum}...`);
+      __kellyLoaderDebugLog(`🔄 [L3] Trying Static JSON for day ${dayNum}...`);
       const staticResult = await this.tryStaticJSON(dayNum, normalizedArchetype, targetRegion);
       if (staticResult) {
         this.cache.set(cacheKey, staticResult);
-        console.log(`✅ [L3] Static JSON success`);
+        __kellyLoaderDebugLog(`✅ [L3] Static JSON success`);
         return staticResult;
       }
     } catch (staticError) {
-      console.warn(`⚠️ [L3] Static JSON failed: ${staticError.message}`);
+      __kellyLoaderDebugWarn(`⚠️ [L3] Static JSON failed: ${staticError.message}`);
     }
     
     // LAYER 4: Emergency Fallback (NEVER FAILS)
-    console.log(`🚨 [L4] Emergency Fallback for day ${dayNum}`);
+    __kellyLoaderDebugLog(`🚨 [L4] Emergency Fallback for day ${dayNum}`);
     return await this.getFallback(dayNum);
   },
   
@@ -433,14 +455,14 @@ const KellyLessonLoader = {
       
       if (response.ok) {
         const data = await response.json();
-        console.log(`✅ Loaded day ${dayNumber} from Cloudflare D1`);
+        __kellyLoaderDebugLog(`✅ Loaded day ${dayNumber} from Cloudflare D1`);
         return data;
       }
       
-      console.warn(`⚠️ Cloudflare D1 returned ${response.status}`);
+      __kellyLoaderDebugWarn(`⚠️ Cloudflare D1 returned ${response.status}`);
       return null;
     } catch (error) {
-      console.warn('⚠️ Cloudflare D1 failed:', error.message);
+      __kellyLoaderDebugWarn('⚠️ Cloudflare D1 failed:', error.message);
       return null;
     }
   },
@@ -554,7 +576,7 @@ const KellyLessonLoader = {
       script.async = true;
       script.onload = () => resolve(window.EMERGENCY_LESSONS || {});
       script.onerror = () => {
-        console.warn('⚠️ Emergency lessons script failed to load');
+        __kellyLoaderDebugWarn('⚠️ Emergency lessons script failed to load');
         resolve({});
       };
       document.head.appendChild(script);
@@ -691,7 +713,7 @@ const KellyLessonLoader = {
     // Clamp to 1-365
     const dayNumber = Math.max(1, Math.min(365, dayOfYear));
     
-    console.log(`📅 Today is Day ${dayNumber} of the year`);
+    __kellyLoaderDebugLog(`📅 Today is Day ${dayNumber} of the year`);
     return this.getLesson(dayNumber, options);
   },
   
@@ -722,14 +744,14 @@ const KellyLessonLoader = {
     if (!this.cache.has(prevKey) && !this.preloadQueue.has(prevKey)) {
       this.preloadQueue.add(prevKey);
       // Fire and forget - don't await
-      this.getLesson(prev, { archetype, region, useCache: true })
+      this.getLesson(prev, { archetype, region, useCache: true, _isPreload: true, preloadAdjacent: false })
         .then(() => this.preloadQueue.delete(prevKey))
         .catch(() => this.preloadQueue.delete(prevKey));
     }
     
     if (!this.cache.has(nextKey) && !this.preloadQueue.has(nextKey)) {
       this.preloadQueue.add(nextKey);
-      this.getLesson(next, { archetype, region, useCache: true })
+      this.getLesson(next, { archetype, region, useCache: true, _isPreload: true, preloadAdjacent: false })
         .then(() => this.preloadQueue.delete(nextKey))
         .catch(() => this.preloadQueue.delete(nextKey));
     }
@@ -751,7 +773,7 @@ const KellyLessonLoader = {
           return data;
         }
       } catch (e) {
-        console.warn('Kellys table not found, using defaults');
+        __kellyLoaderDebugWarn('Kellys table not found, using defaults');
       }
     }
     
@@ -819,7 +841,7 @@ const KellyLessonLoader = {
       
       if (response.ok) {
         const data = await response.json();
-        console.log(`✅ Loaded day ${dayNumber} from static files`);
+        __kellyLoaderDebugLog(`✅ Loaded day ${dayNumber} from static files`);
         
         const lesson = data.lesson || data;
         const atoms = data.atoms || [];
@@ -842,7 +864,7 @@ const KellyLessonLoader = {
         });
       }
     } catch (error) {
-      console.warn(`⚠️ Static files failed for day ${dayNumber}:`, error.message);
+      __kellyLoaderDebugWarn(`⚠️ Static files failed for day ${dayNumber}:`, error.message);
     }
     return null;
   },
@@ -862,7 +884,7 @@ const KellyLessonLoader = {
    * Fallback for missing lessons - tries static files first, then emergency
    */
   async getFallback(dayNumber) {
-    console.warn('⚠️ Primary data source failed, trying fallbacks...');
+    __kellyLoaderDebugWarn('⚠️ Primary data source failed, trying fallbacks...');
     
     // Try static files first
     const staticResult = await this.tryStaticFiles(dayNumber, 'The Scientist', 'adult');
@@ -871,7 +893,7 @@ const KellyLessonLoader = {
     }
     
     // Use emergency lessons as last resort
-    console.log(`🆘 Using emergency fallback for day ${dayNumber}`);
+    __kellyLoaderDebugLog(`🆘 Using emergency fallback for day ${dayNumber}`);
     
     // Try global getEmergencyLesson if available
     if (typeof window !== 'undefined' && typeof window.getEmergencyLesson === 'function') {
@@ -944,7 +966,7 @@ const KellyLessonLoader = {
   clearCache() {
     this.cache.clear();
     this.preloadQueue.clear();
-    console.log('🗑️ Lesson cache cleared');
+    __kellyLoaderDebugLog('🗑️ Lesson cache cleared');
   },
   
   /**
@@ -966,5 +988,5 @@ if (typeof module !== 'undefined' && module.exports) {
 // Make available globally
 window.KellyLessonLoader = KellyLessonLoader;
 
-console.log('📚 Kelly Lesson Loader ready');
+__kellyLoaderDebugLog('📚 Kelly Lesson Loader ready');
 

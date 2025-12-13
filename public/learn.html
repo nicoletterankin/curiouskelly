@@ -779,6 +779,8 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      position: relative;
+      z-index: 30;
       padding: 1rem 2rem;
       gap: 0;
       background: rgba(0,0,0,0.3);
@@ -2058,6 +2060,12 @@
       width: calc(100% - 50vw) !important;
     }
 
+    /* Keep phase bar visible and aligned with content in balanced mode */
+    [data-kelly-presence="50"] #scene-lesson .phase-bar {
+      margin-left: 50vw !important;
+      width: calc(100% - 50vw) !important;
+    }
+
     /* 100% IMMERSIVE MODE — Kelly as blurred background */
     [data-kelly-presence="100"] #scene-lesson .lesson-kelly-container {
       width: 100vw !important;
@@ -2116,6 +2124,12 @@
       transition: margin-left 0.3s ease, width 0.3s ease !important;
     }
 
+    [data-panel-open][data-kelly-presence="50"] #scene-lesson .phase-bar {
+      margin-left: 25vw !important;
+      width: calc(100% - 25vw) !important;
+      transition: margin-left 0.3s ease, width 0.3s ease !important;
+    }
+
     /* Mobile adjustments */
     @media (max-width: 767px) {
       [data-kelly-presence="50"] #scene-lesson .lesson-kelly-container {
@@ -2125,6 +2139,10 @@
       }
       [data-kelly-presence="50"] #scene-lesson .scene-header,
       [data-kelly-presence="50"] #scene-lesson .lesson-content-area {
+        margin-left: 0 !important;
+        width: 100% !important;
+      }
+      [data-kelly-presence="50"] #scene-lesson .phase-bar {
         margin-left: 0 !important;
         width: 100% !important;
       }
@@ -2646,6 +2664,19 @@
     };
 
     // ============================================
+    // DEBUG / AUDIT FLAGS (opt-in)
+    // ============================================
+    const __URL_PARAMS = new URLSearchParams(window.location.search);
+    const DEBUG =
+      __URL_PARAMS.has('debug') ||
+      __URL_PARAMS.has('audit') ||
+      localStorage.getItem('kellyDebug') === '1';
+    window.KELLY_DEBUG = DEBUG;
+
+    function debugLog(...args) { if (DEBUG) console.log(...args); }
+    function debugWarn(...args) { if (DEBUG) console.warn(...args); }
+
+    // ============================================
     // KELLY PRESENCE SYSTEM
     // ============================================
     const KELLY_PRESENCE = {
@@ -2752,7 +2783,116 @@
     try {
       if (!ensureSupabaseClients()) throw new Error('Supabase config missing');
     } catch (e) {
-      console.warn('Supabase not available, using fallback data');
+      debugWarn('Supabase not available, using fallback data');
+    }
+
+    // ============================================
+    // AUDIT MODE (console-only; run with ?audit=1)
+    // ============================================
+    async function auditSupabaseQueries() {
+      const db = supabasePublic || supabase;
+
+      function report({ query, status, error, data }) {
+        console.log(`QUERY: ${query}`);
+        console.log(`STATUS: ${status}`);
+        if (error) console.log(`ERROR: ${error}`);
+        if (data !== undefined) console.log('DATA:', data);
+      }
+
+      // 1) core_lessons (day 1)
+      try {
+        if (!db) {
+          report({ query: 'core_lessons for day 1', status: 'FAIL', error: 'Supabase client not initialized' });
+        } else {
+          const { data, error } = await db
+            .from('core_lessons')
+            .select('*')
+            .eq('day_number', 1)
+            .limit(1);
+          if (error) report({ query: 'core_lessons for day 1', status: 'FAIL', error: error.message });
+          else if (!data || data.length === 0) report({ query: 'core_lessons for day 1', status: 'EMPTY', data });
+          else report({ query: 'core_lessons for day 1', status: 'SUCCESS', data: data[0] });
+        }
+      } catch (e) {
+        report({ query: 'core_lessons for day 1', status: 'FAIL', error: e.message });
+      }
+
+      // 2) lesson_atoms (day 1; archetype-specific)
+      try {
+        if (!db) {
+          report({ query: 'lesson_atoms for day 1', status: 'FAIL', error: 'Supabase client not initialized' });
+        } else {
+          const { data: lessonRow, error: lessonErr } = await db
+            .from('core_lessons')
+            .select('id')
+            .eq('day_number', 1)
+            .single();
+          if (lessonErr || !lessonRow?.id) {
+            report({ query: 'lesson_atoms for day 1', status: 'EMPTY', data: [] });
+          } else {
+            const archetype = PERSONA_TO_ARCHETYPE[state.kellyId] || 'The Scientist';
+            const { data, error } = await db
+              .from('lesson_atoms')
+              .select('phase, content')
+              .eq('core_lesson_id', lessonRow.id)
+              .eq('archetype', archetype)
+              .order('phase', { ascending: true })
+              .limit(5);
+            if (error) report({ query: 'lesson_atoms for day 1', status: 'FAIL', error: error.message });
+            else if (!data || data.length === 0) report({ query: 'lesson_atoms for day 1', status: 'EMPTY', data });
+            else report({ query: 'lesson_atoms for day 1', status: 'SUCCESS', data });
+          }
+        }
+      } catch (e) {
+        report({ query: 'lesson_atoms for day 1', status: 'FAIL', error: e.message });
+      }
+
+      // 3) kelly_video_assets (day 1 Hook audio)
+      try {
+        if (!supabase) {
+          report({ query: 'kelly_video_assets for day 1 (Hook audio)', status: 'FAIL', error: 'Supabase auth client not initialized' });
+        } else {
+          const ageBucket = getAgeBucket(state.age);
+          const { data, error } = await supabase
+            .from('kelly_video_assets')
+            .select('public_url, status, phase, template, age_bucket, language')
+            .eq('day_number', 1)
+            .eq('phase', 'Hook')
+            .eq('template', state.kellyId)
+            .eq('age_bucket', ageBucket)
+            .eq('asset_type', 'audio')
+            .eq('language', state.language)
+            .limit(1);
+          if (error) report({ query: 'kelly_video_assets for day 1 (Hook audio)', status: 'FAIL', error: error.message });
+          else if (!data || data.length === 0) report({ query: 'kelly_video_assets for day 1 (Hook audio)', status: 'EMPTY', data });
+          else report({ query: 'kelly_video_assets for day 1 (Hook audio)', status: 'SUCCESS', data: data[0] });
+        }
+      } catch (e) {
+        report({ query: 'kelly_video_assets for day 1 (Hook audio)', status: 'FAIL', error: e.message });
+      }
+
+      // 4) user_progress (current user)
+      try {
+        if (!supabase) {
+          report({ query: 'user_progress for current user', status: 'FAIL', error: 'Supabase auth client not initialized' });
+        } else {
+          const { data: { session } } = await supabase.auth.getSession();
+          if (!session) {
+            report({ query: 'user_progress for current user', status: 'EMPTY', data: 'SKIPPED (no session)' });
+          } else {
+            const { data, error } = await supabase
+              .from('user_progress')
+              .select('day_number, status')
+              .eq('user_id', session.user.id)
+              .limit(5);
+            if (error) report({ query: 'user_progress for current user', status: 'FAIL', error: error.message });
+            else if (!data || data.length === 0) report({ query: 'user_progress for current user', status: 'EMPTY', data });
+            else report({ query: 'user_progress for current user', status: 'SUCCESS', data });
+          }
+        }
+      } catch (e) {
+        report({ query: 'user_progress for current user', status: 'FAIL', error: e.message });
+      }
     }
     
     // ============================================
@@ -3014,7 +3154,7 @@
     
     if (urlParams.get('bypass') === 'testing') {
       localStorage.setItem('kelly_bypass_paywall', 'true');
-      console.log('🔓 Testing bypass enabled via URL param');
+      debugLog('🔓 Testing bypass enabled via URL param');
     }
     
     // ============================================
@@ -3060,7 +3200,7 @@
     function canAccessDay(dayNumber) {
       // Testing mode - all days accessible
       if (TESTING_MODE || bypassTesting) {
-        console.log(`🔓 Day ${dayNumber} accessible (testing mode)`);
+        debugLog(`🔓 Day ${dayNumber} accessible (testing mode)`);
         return true;
       }
       
@@ -3085,13 +3225,13 @@
     }
 
     function selectPlan(plan) {
-      console.log('Selected plan:', plan);
+      debugLog('Selected plan:', plan);
       showToast('Purchases are coming soon.');
       // Stub only: do not grant entitlements here.
     }
 
     function restorePurchases() {
-      console.log('Restoring purchases...');
+      debugLog('Restoring purchases...');
       showToast('Checking for purchases...');
     }
     
@@ -3161,12 +3301,12 @@
         // Re-save merged state to localStorage
         localStorage.setItem('kellyState', JSON.stringify(state));
         
-        console.log('📥 Progress loaded from Supabase:', {
+        debugLog('✅ Supabase: progress merged', {
           completedLessons: state.completedLessons.length,
           streak: state.streak
         });
       } catch (err) {
-        console.warn('Failed to load from Supabase:', err.message);
+        debugWarn('Failed to load from Supabase:', err.message);
       }
     }
     
@@ -3177,8 +3317,8 @@
         // Sync with kelly_progress for calendar.js compatibility
         syncProgressToCalendar();
         
-        // Sync to Supabase in background (if logged in)
-        syncProgressToSupabase();
+        // Sync to Supabase (debounced; avoids spamming on phase changes)
+        scheduleSupabaseProgressSync();
       } catch (e) {
         console.warn('Could not save state:', e);
       }
@@ -3188,10 +3328,32 @@
      * Sync progress to Supabase (for logged-in users)
      * This runs in the background and doesn't block the UI
      */
-    async function syncProgressToSupabase() {
+    let __supabaseSyncTimer = null;
+    let __lastSupabaseProgressHash = '';
+
+    function __getProgressHashForSync() {
+      return JSON.stringify({
+        streak: state.streak,
+        completed: (state.completedLessons || []).slice().sort((a, b) => a - b)
+      });
+    }
+
+    function scheduleSupabaseProgressSync() {
+      if (!supabase) return;
+      if (__supabaseSyncTimer) return;
+      __supabaseSyncTimer = setTimeout(() => {
+        __supabaseSyncTimer = null;
+        syncProgressToSupabaseNow().catch(() => {});
+      }, 1500);
+    }
+
+    async function syncProgressToSupabaseNow() {
       if (!supabase) return;
       
       try {
+        const hash = __getProgressHashForSync();
+        if (hash === __lastSupabaseProgressHash) return;
+
         const { data: { session } } = await supabase.auth.getSession();
         if (!session) return; // Not logged in
         
@@ -3209,7 +3371,7 @@
           }, { onConflict: 'id' });
         
         if (userError) {
-          console.warn('Failed to sync user progress:', userError.message);
+          debugWarn('Failed to sync user progress:', userError.message);
         }
         
         // Sync completed lessons to user_progress table
@@ -3230,13 +3392,14 @@
             });
           
           if (progressError) {
-            console.warn('Failed to sync lesson progress:', progressError.message);
+            debugWarn('Failed to sync lesson progress:', progressError.message);
           }
         }
         
-        console.log('✅ Progress synced to Supabase');
+        __lastSupabaseProgressHash = hash;
+        debugLog('✅ Supabase: progress synced');
       } catch (err) {
-        console.warn('Supabase sync error:', err.message);
+        debugWarn('Supabase sync error:', err.message);
       }
     }
     
@@ -3345,7 +3508,8 @@
       }
       
       const persona = manifest.personas[personaId];
-      const headPath = persona.images.headByAge?.[ageBucket] || persona.images.head;
+      const headPath = persona?.images?.headByAge?.[ageBucket] || persona?.images?.head;
+      if (!headPath || !manifest?.cdnBase) return '';
       return `${manifest.cdnBase}/${headPath}`;
     }
 
@@ -3394,7 +3558,8 @@
     // ============================================
     async function loadManifest() {
       try {
-        const resp = await fetch(CONFIG.MANIFEST_URL + '?v=' + Date.now());
+        // Reliability: prefer cache; bust via deploy, not per page-load.
+        const resp = await fetch(CONFIG.MANIFEST_URL, { cache: 'force-cache' });
         if (!resp.ok) throw new Error('Manifest fetch failed');
         manifest = await resp.json();
         
@@ -3471,7 +3636,7 @@
         if (!res.ok) throw new Error(`API returned ${res.status}`);
         return await res.json();
       } catch (e) {
-        console.warn('Local API lesson fallback failed:', e.message);
+        debugWarn('Local API lesson fallback failed:', e.message);
         return null;
       }
     }
@@ -3539,7 +3704,7 @@
           .single();
         
         if (coreError || !coreLesson) {
-          console.warn('Core lesson not found:', coreError);
+          debugWarn('Core lesson not found:', coreError);
           // Fallback to local API (does not depend on Supabase)
           const apiPayload = await loadLessonFromApi(dayNumber);
           if (apiPayload) return applyLoadedLesson(dayNumber, apiPayload);
@@ -3547,19 +3712,40 @@
         }
         
         // Get archetype name and age bucket for personalization
-        const archetype = PERSONA_TO_ARCHETYPE[state.kellyId];
+        const archetype = PERSONA_TO_ARCHETYPE[state.kellyId] || 'The Scientist';
         const ageBucket = getAgeBucket(state.age);
         
-        // Fetch atoms (dialog) for this archetype
-        const { data: atoms, error: atomsError } = await db
-          .from('lesson_atoms')
-          .select('phase, content, hd_video_url, visual_url')
-          .eq('core_lesson_id', coreLesson.id)
-          .eq('archetype', archetype)
-          .order('phase');
-        
+        // Fetch atoms (dialog). Prefer archetype-specific, but gracefully fallback if schema differs.
+        let atoms = [];
+        let atomsError = null;
+        try {
+          const res = await db
+            .from('lesson_atoms')
+            .select('phase, content, hd_video_url, visual_url')
+            .eq('core_lesson_id', coreLesson.id)
+            .eq('archetype', archetype)
+            .order('phase', { ascending: true });
+          atoms = res.data || [];
+          atomsError = res.error || null;
+        } catch (e) {
+          atoms = [];
+          atomsError = e;
+        }
+
+        // If no archetype match (or column missing), retry without archetype filter.
+        if (atomsError || atoms.length === 0) {
+          try {
+            const res2 = await db
+              .from('lesson_atoms')
+              .select('phase, content, hd_video_url, visual_url')
+              .eq('core_lesson_id', coreLesson.id)
+              .order('phase', { ascending: true });
+            if (res2.data && res2.data.length > 0) atoms = res2.data;
+          } catch (_) {}
+        }
+
         if (atomsError) {
-          console.warn('Atoms fetch error:', atomsError);
+          debugWarn('Atoms fetch error:', atomsError);
         }
         
         // Fetch shards (age-personalized content) for this archetype + age
@@ -3572,10 +3758,10 @@
             .select('*')
             .eq('core_lesson_id', coreLesson.id)
             .eq('archetype', archetype);
-          if (shardsError) console.warn('Shards fetch error:', shardsError);
+          if (shardsError) debugWarn('Shards fetch error:', shardsError);
           shards = shardsData || [];
         } catch (e) {
-          console.warn('Shards fetch skipped:', e.message);
+          debugWarn('Shards fetch skipped:', e.message);
         }
         
         // Filter shards by age bucket (try exact match, then region, then any)
@@ -3594,7 +3780,12 @@
           }
         }
         
-        console.log(`📚 Day ${dayNumber}: ${atoms?.length || 0} atoms, ${matchedShards.length} shards for ${archetype} (${ageBucket})`);
+        debugLog(`✅ Lesson loaded (Supabase): day ${dayNumber}`, {
+          atoms: atoms?.length || 0,
+          shards: matchedShards.length,
+          archetype,
+          ageBucket
+        });
         
         currentLesson = {
           dayNumber,
@@ -3647,7 +3838,10 @@
             phase: phase.name,
             dbPhase: phase.dbName,
             icon: phase.icon,
-            script: personalizedScript || atom?.content?.script || atom?.content?.text || `This is ${phase.name.toLowerCase()} content for day ${dayNumber}.`,
+            script:
+              personalizedScript ||
+              (typeof atom?.content === 'string' ? atom.content : (atom?.content?.script || atom?.content?.text)) ||
+              `This is ${phase.name.toLowerCase()} content for day ${dayNumber}.`,
             videoUrl: atom?.hd_video_url,
             visualUrl: atom?.visual_url,
             // Keep reference to full atom content for advanced features
@@ -3657,7 +3851,7 @@
         
         return currentLesson;
       } catch (e) {
-        console.error('Lesson load error:', e);
+        debugWarn('Lesson load error:', e);
         const apiPayload = await loadLessonFromApi(dayNumber);
         if (apiPayload) return applyLoadedLesson(dayNumber, apiPayload);
         return loadFallbackLesson(dayNumber);
@@ -3673,7 +3867,7 @@
           p_day_number: dayNumber
         });
       if (error) {
-        console.warn('Failed to get Kelly context:', error);
+        debugWarn('Failed to get Kelly context:', error);
         return null;
       }
       return data;
@@ -3753,7 +3947,7 @@
         );
         return results;
       } catch (e) {
-        console.warn('Week lessons load failed:', e);
+        debugWarn('Week lessons load failed:', e);
         const results = await Promise.all(
           Array.from({ length: 7 }, async (_, i) => {
             const dayNum = startDay + i;
@@ -3803,7 +3997,7 @@
           await this.audio.play();
           return true;
         } catch (e) {
-          console.error('Audio playback failed:', e);
+          debugWarn('Audio playback failed:', e);
           return false;
         }
       }
@@ -3818,14 +4012,14 @@
           const pregen = await getAudioUrl(state.currentDay, phaseDbName, state.kellyId, ageBucket, state.language);
           if (pregen && await this.play(pregen)) return true;
         } catch (e) {
-          console.warn('Pre-generated audio lookup failed:', e);
+          debugWarn('Pre-generated audio lookup failed:', e);
         }
 
         try {
           const ttsUrl = await generateTTS(fallbackText);
           if (ttsUrl && await this.play(ttsUrl)) return true;
         } catch (e) {
-          console.warn('TTS fallback failed:', e);
+          debugWarn('TTS fallback failed:', e);
         }
 
         return false;
@@ -4190,7 +4384,7 @@
     }
     
     function updatePhaseProgress() {
-      console.log('[PHASE] updatePhaseProgress', {
+      debugLog('[PHASE] updatePhaseProgress', {
         phase: state.currentPhase,
         phaseName: PHASES[state.currentPhase]?.name,
         hasAtom: !!lessonAtoms[state.currentPhase],
@@ -4267,7 +4461,7 @@
     }
     
     function advancePhase() {
-      console.log('[PHASE] advancePhase called', {
+      debugLog('[PHASE] advancePhase called', {
         currentPhase: state.currentPhase,
         totalPhases: PHASES.length,
         atomsLoaded: lessonAtoms.length,
@@ -4392,7 +4586,7 @@
           
           tomorrowTopicEl.textContent = `Day ${tomorrowDay} Adventure`;
         } catch (e) {
-          console.warn('Tomorrow preview error:', e);
+          debugWarn('Tomorrow preview error:', e);
           // Use emergency fallback on error
           if (typeof window.getEmergencyLesson === 'function') {
             const emergency = window.getEmergencyLesson(tomorrowDay);
@@ -5184,7 +5378,8 @@
         window.KellyLessonLoader.init(supabasePublic || supabase);
       }
       
-      console.log('🚀 Kelly Learn initialized', {
+      console.log('✅ Kelly Learn initialized');
+      debugLog('Kelly Learn init details', {
         day: state.currentDay,
         kelly: state.kellyId,
         completed: state.completedLessons.length,
@@ -5201,6 +5396,10 @@
       await loadManifest();
       // Best-effort: preload thumbnail index for journey views
       await loadThumbnailManifest();
+
+      if (__URL_PARAMS.has('audit')) {
+        await auditSupabaseQueries();
+      }
       
       buildCarousel();
       preloadKellyImages().catch(() => {});
