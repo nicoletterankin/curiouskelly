@@ -1,0 +1,33 @@
+# Curious Kelly Lessons API Worker
+# Serves lesson data from Cloudflare D1 as a Supabase mirror
+
+name = "curiouskelly-lessons"
+main = "src/index.js"
+compatibility_date = "2024-01-01"
+
+# D1 Database binding
+# IMPORTANT: Replace YOUR_DATABASE_ID_HERE with the actual database_id from:
+#   npx wrangler d1 create kelly-lessons-mirror
+[[d1_databases]]
+binding = "DB"
+database_name = "kelly-lessons-mirror"
+database_id = "YOUR_DATABASE_ID_HERE"  # <-- REPLACE THIS!
+
+[vars]
+ENVIRONMENT = "production"
+
+# Custom domain routing (set up in Cloudflare dashboard after deployment)
+# Recommended: lessons-api.curiouskelly.com
+# routes = [
+#   { pattern = "lessons-api.curiouskelly.com/*", zone_name = "curiouskelly.com" }
+# ]
+
+# Development settings
+[env.dev]
+name = "curiouskelly-lessons-dev"
+vars = { ENVIRONMENT = "development" }
+
+# Preview/staging settings  
+[env.staging]
+name = "curiouskelly-lessons-staging"
+vars = { ENVIRONMENT = "staging" }

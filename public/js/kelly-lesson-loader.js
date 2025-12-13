@@ -1,7 +1,15 @@
 /**
- * Kelly Lesson Loader - Unified Supabase Data Layer
+ * Kelly Lesson Loader - Unified Data Layer with Cascading Fallbacks
  * 
- * Fetches lessons from:
+ * BULLETPROOF LESSON LOADING:
+ *   1. Supabase (Primary) - 5s timeout
+ *   2. Cloudflare D1 (Mirror) - 3s timeout  
+ *   3. Static JSON (Pre-exported) - 2s timeout
+ *   4. Emergency Fallback (Hardcoded) - instant
+ * 
+ * THE LESSON ALWAYS PLAYS.
+ * 
+ * Tables:
  *   - core_lessons (365 rows) - base lesson data
  *   - lesson_atoms (21,915 rows) - archetype-specific dialog
  *   - lesson_shards (38,700 rows) - age/region personalized content
@@ -16,6 +24,18 @@ const KellyLessonLoader = {
   cache: new Map(),
   preloadQueue: new Set(),
   emergencyLessonsPromise: null,
+  
+  // Timeout configuration (never hang forever)
+  SUPABASE_TIMEOUT: 5000,  // 5 seconds
+  D1_TIMEOUT: 3000,        // 3 seconds
+  STATIC_TIMEOUT: 2000,    // 2 seconds
+  
+  // D1 Mirror endpoint
+  D1_ENDPOINT: '/api/lessons',
+  
+  // Cloudflare D1 API endpoint (set after deployment)
+  // Update this after deploying the worker
+  D1_API_URL: 'https://curiouskelly-lessons.pages.dev',
   
   // Archetype mapping (id -> database name)
   ARCHETYPES: {
@@ -62,11 +82,21 @@ const KellyLessonLoader = {
       this.supabase = window.supabase.createClient(window.KELLY_CONFIG.supabaseUrl, window.KELLY_CONFIG.supabaseKey);
       console.log('📚 KellyLessonLoader created Supabase client from KELLY_CONFIG');
     } else {
-      console.error('❌ KellyLessonLoader: No Supabase client available');
-      return this;
+      console.warn('⚠️ KellyLessonLoader: No Supabase client available, will use D1 mirror');
     }
     
     console.log('📚 KellyLessonLoader initialized');
+    console.log(`   Supabase: ${this.supabase ? 'connected' : 'not connected'}`);
+    console.log(`   D1 Mirror: ${this.D1_API_URL}`);
+    return this;
+  },
+  
+  /**
+   * Configure D1 API URL
+   */
+  setD1ApiUrl(url) {
+    this.D1_API_URL = url;
+    console.log(`📡 D1 API URL set to: ${url}`);
     return this;
   },
   
@@ -133,78 +163,332 @@ const KellyLessonLoader = {
     console.log(`🔍 Loading Day ${dayNum} for ${normalizedArchetype} (${targetRegion})`);
     
     if (!this.supabase) {
-      console.error('❌ Supabase not initialized');
+      console.warn('⚠️ Supabase not initialized, trying Cloudflare D1...');
+      
+      // Try Cloudflare D1 directly when Supabase is not available
+      try {
+        const d1Data = await this.tryCloudflareD1(dayNum, normalizedArchetype, targetRegion);
+        if (d1Data?.lesson) {
+          const result = this.formatD1Response(d1Data, dayNum, normalizedArchetype, targetRegion);
+          this.cache.set(cacheKey, result);
+          this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
+          return result;
+        }
+      } catch (d1Error) {
+        console.warn(`⚠️ Cloudflare D1 failed:`, d1Error.message);
+      }
+      
       return await this.getFallback(dayNum);
     }
     
     try {
-      // Fetch base lesson from core_lessons
-      const { data: lesson, error: lessonError } = await this.supabase
-        .from('core_lessons')
-        .select('*')
-        .eq('day_number', dayNum)
-        .single();
+      // Wrap Supabase calls in timeout (NEVER hang forever)
+      const supabasePromise = this.fetchFromSupabaseWithTimeout(dayNum, normalizedArchetype, targetRegion, options.age);
       
-      if (lessonError || !lesson) {
-        console.error('Lesson not found:', dayNum, lessonError);
-        return await this.getFallback(dayNum);
+      // Fetch base lesson from core_lessons (with timeout)
+      const supabaseResult = await Promise.race([
+        supabasePromise,
+        new Promise((_, reject) => 
+          setTimeout(() => reject(new Error('Supabase timeout')), this.SUPABASE_TIMEOUT)
+        )
+      ]);
+      
+      if (supabaseResult) {
+        this.cache.set(cacheKey, supabaseResult);
+        this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
+        return supabaseResult;
       }
       
-      // Fetch atoms (dialog) for this archetype
-      const { data: atoms, error: atomsError } = await this.supabase
+      throw new Error('Supabase returned no data');
+      
+    } catch (supabaseError) {
+      console.warn(`⚠️ [L1] Supabase failed: ${supabaseError.message}`);
+    }
+    
+    // LAYER 2: D1 Mirror
+    try {
+      console.log(`🔄 [L2] Trying Cloudflare D1 for day ${dayNum}...`);
+      const d1Data = await this.tryCloudflareD1(dayNum, normalizedArchetype, targetRegion);
+      if (d1Data?.lesson) {
+        const result = this.formatD1Response(d1Data, dayNum, normalizedArchetype, targetRegion);
+        this.cache.set(cacheKey, result);
+        this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
+        console.log(`✅ [L2] D1 success`);
+        return result;
+      }
+    } catch (d1Error) {
+      console.warn(`⚠️ [L2] Cloudflare D1 failed: ${d1Error.message}`);
+    }
+    
+    // LAYER 3: Static JSON
+    try {
+      console.log(`🔄 [L3] Trying Static JSON for day ${dayNum}...`);
+      const staticResult = await this.tryStaticJSON(dayNum, normalizedArchetype, targetRegion);
+      if (staticResult) {
+        this.cache.set(cacheKey, staticResult);
+        console.log(`✅ [L3] Static JSON success`);
+        return staticResult;
+      }
+    } catch (staticError) {
+      console.warn(`⚠️ [L3] Static JSON failed: ${staticError.message}`);
+    }
+    
+    // LAYER 4: Emergency Fallback (NEVER FAILS)
+    console.log(`🚨 [L4] Emergency Fallback for day ${dayNum}`);
+    return await this.getFallback(dayNum);
+  },
+  
+  /**
+   * Fetch from Supabase with all data
+   */
+  async fetchFromSupabaseWithTimeout(dayNum, archetype, region, age) {
+    // Fetch base lesson from core_lessons
+    const { data: lesson, error: lessonError } = await this.supabase
+      .from('core_lessons')
+      .select('*')
+      .eq('day_number', dayNum)
+      .single();
+    
+    if (lessonError || !lesson) {
+      throw new Error(`Lesson ${dayNum} not found: ${lessonError?.message}`);
+    }
+    
+    // Fetch atoms and shards in parallel for speed
+    const [atomsResult, shardsResult] = await Promise.all([
+      this.supabase
         .from('lesson_atoms')
         .select('*')
         .eq('core_lesson_id', lesson.id)
-        .eq('archetype', normalizedArchetype)
-        .order('phase');
-      
-      if (atomsError) {
-        console.warn('Atoms fetch warning:', atomsError);
-      }
-      
-      // Fetch shards (content variations) for this archetype + region
-      const { data: shards, error: shardsError } = await this.supabase
+        .eq('archetype', archetype)
+        .order('phase'),
+      this.supabase
         .from('lesson_shards')
         .select('*')
         .eq('core_lesson_id', lesson.id)
-        .eq('archetype', normalizedArchetype);
-      
-      if (shardsError) {
-        console.warn('Shards fetch warning:', shardsError);
+        .eq('archetype', archetype)
+    ]);
+    
+    const atoms = atomsResult.data || [];
+    const shards = shardsResult.data || [];
+    
+    // Filter shards by region
+    let matchedShards = shards;
+    if (region && shards.length > 0) {
+      const regionFiltered = shards.filter(s => 
+        s.region === region || 
+        s.region === 'en' ||
+        this.shardMatchesAge(s, age)
+      );
+      if (regionFiltered.length > 0) {
+        matchedShards = regionFiltered;
       }
+    }
+    
+    // Build the result object
+    return this.buildResult(lesson, atoms, matchedShards, {
+      dayNumber: dayNum,
+      archetype: archetype,
+      region: region,
+      _source: 'supabase'
+    });
+  },
+  
+  /**
+   * Try fetching from static JSON files
+   */
+  async tryStaticJSON(dayNum, archetype, region) {
+    const paddedDay = String(dayNum).padStart(3, '0');
+    const jsonUrl = `/generated/lessons/day-${paddedDay}.json`;
+    
+    const response = await fetch(jsonUrl, {
+      signal: AbortSignal.timeout(this.STATIC_TIMEOUT)
+    });
+    
+    if (!response.ok) {
+      throw new Error(`Static JSON returned ${response.status}`);
+    }
+    
+    const data = await response.json();
+    const ageBucket = this.regionToAgeBucket(region);
+    const ageVariant = data.ageVariants?.[ageBucket] || data.ageVariants?.['18-35'] || Object.values(data.ageVariants || {})[0];
+    
+    if (!ageVariant) {
+      throw new Error('No age variant found in static JSON');
+    }
+    
+    // Build lesson from static format
+    const lesson = {
+      id: `static-${dayNum}`,
+      day_number: dayNum,
+      topic: data.meta?.topic || `Day ${dayNum} Lesson`,
+      universal_truth: data.meta?.universalTruth || '',
+      marketing_headline: data.meta?.topic || '',
+      marketing_tagline: ''
+    };
+    
+    // Build atoms from static phases
+    const atoms = this.buildAtomsFromStatic(ageVariant, dayNum);
+    
+    return this.buildResult(lesson, atoms, [], {
+      dayNumber: dayNum,
+      archetype: archetype,
+      region: region,
+      _source: 'static'
+    });
+  },
+  
+  /**
+   * Convert region to age bucket for static JSON
+   */
+  regionToAgeBucket(region) {
+    const mapping = {
+      'kid': '2-5',
+      'teen': '13-17',
+      'adult': '18-35',
+      'mature': '36-60',
+      'elder': '61-102'
+    };
+    return mapping[region] || '18-35';
+  },
+  
+  /**
+   * Build atoms from static JSON phases
+   */
+  buildAtomsFromStatic(ageVariant, dayNumber) {
+    if (!ageVariant?.phases) return [];
+    
+    const phaseMap = {
+      hook: 'Hook',
+      q1: 'Fact1',
+      q2: 'Fact2',
+      q3: 'Fact3',
+      wisdom: 'Wisdom'
+    };
+    
+    return Object.entries(ageVariant.phases).map(([key, content]) => ({
+      phase: phaseMap[key] || key,
+      content: {
+        script: typeof content === 'string' ? content : (content?.en || content?.script || ''),
+        text: typeof content === 'string' ? content : (content?.en || content?.text || '')
+      },
+      dayNumber
+    }));
+  },
+
+  /**
+   * Try fetching lesson from Cloudflare D1 (mirror)
+   * @param {number} dayNumber - Day number (1-365)
+   * @param {string} archetype - Archetype name (e.g., 'The Scientist')
+   * @param {string} region - Age region (e.g., 'adult')
+   * @returns {Object|null} - Lesson data or null if failed
+   */
+  async tryCloudflareD1(dayNumber, archetype, region) {
+    try {
+      const url = `${this.D1_API_URL}/lesson/${dayNumber}?archetype=${encodeURIComponent(archetype)}&region=${encodeURIComponent(region)}`;
       
-      // Filter shards by region (may be in 'region' column or need age match)
-      let matchedShards = shards || [];
-      if (targetRegion && shards) {
-        const regionFiltered = shards.filter(s => 
-          s.region === targetRegion || 
-          s.region === 'en' || // Language fallback
-          this.shardMatchesAge(s, options.age)
-        );
-        if (regionFiltered.length > 0) {
-          matchedShards = regionFiltered;
-        }
-      }
-      
-      // Build the result object
-      const result = this.buildResult(lesson, atoms || [], matchedShards, {
-        dayNumber: dayNum,
-        archetype: normalizedArchetype,
-        region: targetRegion
+      const response = await fetch(url, { 
+        signal: AbortSignal.timeout(5000) // 5 second timeout
       });
       
-      // Cache it
-      this.cache.set(cacheKey, result);
+      if (response.ok) {
+        const data = await response.json();
+        console.log(`✅ Loaded day ${dayNumber} from Cloudflare D1`);
+        return data;
+      }
       
-      // Preload adjacent lessons (fire and forget)
-      this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
-      
-      return result;
-      
+      console.warn(`⚠️ Cloudflare D1 returned ${response.status}`);
+      return null;
     } catch (error) {
-      console.error('❌ Lesson fetch error:', error);
-      return await this.getFallback(dayNum);
+      console.warn('⚠️ Cloudflare D1 failed:', error.message);
+      return null;
     }
+  },
+
+  /**
+   * Format D1 response to match expected lesson structure
+   */
+  formatD1Response(d1Data, dayNumber, archetype, region) {
+    const { lesson, atoms = [], shards = [] } = d1Data;
+    
+    // Build greeting from atoms
+    const greetingAtom = atoms.find(a => 
+      a.phase?.toLowerCase().includes('welcome') || 
+      a.phase?.toLowerCase().includes('intro')
+    );
+    
+    // Build script from shards or atoms
+    let script = '';
+    if (shards.length > 0) {
+      script = shards.map(s => {
+        const content = s.script_content;
+        if (typeof content === 'string') return content;
+        if (content?.text) return content.text;
+        if (content?.script) return content.script;
+        return '';
+      }).filter(Boolean).join('\n\n');
+    }
+    
+    if (!script && atoms.length > 0) {
+      script = atoms.map(a => {
+        const content = a.content;
+        if (typeof content === 'string') return content;
+        if (content?.script) return content.script;
+        if (content?.text) return content.text;
+        return '';
+      }).filter(Boolean).join('\n\n');
+    }
+    
+    let greeting = '';
+    if (greetingAtom?.content) {
+      greeting = greetingAtom.content.script || greetingAtom.content.text || '';
+    }
+    if (!greeting) {
+      greeting = `Let's learn about ${lesson.topic || 'something new'}!`;
+    }
+    
+    return {
+      lesson,
+      atoms,
+      shards,
+      dayNumber,
+      archetype,
+      region,
+      _source: 'cloudflare-d1',
+      
+      get id() { return lesson.id || `d1-${dayNumber}`; },
+      get title() { return lesson.topic || lesson.title || 'Daily Discovery'; },
+      get subtitle() { return lesson.marketing_tagline || lesson.subtitle || ''; },
+      get topic() { return lesson.topic; },
+      get universalTruth() { return lesson.universal_truth || ''; },
+      get marketingHeadline() { return lesson.marketing_headline || ''; },
+      get marketingPitch() { return lesson.marketing_pitch || ''; },
+      get greeting() { return greeting; },
+      get script() { return script || lesson.universal_truth || ''; },
+      
+      get imageUrl() {
+        if (lesson.hero_image_url) return lesson.hero_image_url;
+        if (lesson.thumbnail_url) return lesson.thumbnail_url;
+        const paddedDay = String(dayNumber).padStart(3, '0');
+        return `/generated-assets/day-${paddedDay}/infographic.png`;
+      },
+      
+      get audioUrl() { return lesson.audio_url || null; },
+      get quickQuiz() { return lesson.quick_quiz_questions || []; },
+      get reflectionPrompts() { return lesson.reflection_prompts || []; },
+      get masteryCriteria() { return lesson.mastery_criteria || ''; },
+      
+      getPhase(phaseName) {
+        return atoms.find(a => 
+          a.phase?.toLowerCase() === phaseName.toLowerCase() ||
+          a.phase?.toLowerCase().includes(phaseName.toLowerCase())
+        );
+      },
+      
+      getPhases() {
+        const phaseOrder = ['welcome', 'fact1', 'fact2', 'fact3', 'wisdom'];
+        return phaseOrder.map(p => this.getPhase(p)).filter(Boolean);
+      }
+    };
   },
 
   /**
