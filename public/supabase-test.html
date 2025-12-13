@@ -1,0 +1,365 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Supabase Diagnostic - Curious Kelly</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #0a0a1a;
+      color: #fff;
+      padding: 2rem;
+      min-height: 100vh;
+    }
+    h1 { margin-bottom: 1rem; color: #3b82f6; }
+    h2 { margin: 2rem 0 1rem; color: #60a5fa; font-size: 1.25rem; }
+    .status { 
+      padding: 1rem; 
+      border-radius: 0.5rem; 
+      margin: 0.5rem 0;
+      font-family: monospace;
+    }
+    .success { background: #064e3b; border: 1px solid #10b981; }
+    .error { background: #7f1d1d; border: 1px solid #ef4444; }
+    .warning { background: #78350f; border: 1px solid #f59e0b; }
+    .info { background: #1e3a5f; border: 1px solid #3b82f6; }
+    .query-result {
+      background: #111827;
+      border: 1px solid #374151;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin: 0.5rem 0;
+      overflow-x: auto;
+    }
+    pre { white-space: pre-wrap; word-break: break-all; font-size: 0.875rem; }
+    button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 1rem;
+      margin: 0.5rem 0.5rem 0.5rem 0;
+    }
+    button:hover { background: #2563eb; }
+    button:disabled { background: #4b5563; cursor: not-allowed; }
+    .config-box {
+      background: #1f2937;
+      border: 1px solid #374151;
+      border-radius: 0.5rem;
+      padding: 1rem;
+      margin: 1rem 0;
+    }
+    .config-box code {
+      color: #fbbf24;
+      background: #292524;
+      padding: 0.125rem 0.25rem;
+      border-radius: 0.25rem;
+    }
+    #results { margin-top: 2rem; }
+  </style>
+</head>
+<body>
+  <h1>🔬 Supabase Diagnostic</h1>
+  <p>Zero-trust connectivity test for Curious Kelly</p>
+
+  <div class="config-box">
+    <h3>Configuration</h3>
+    <p><strong>Supabase URL:</strong> <code id="config-url">Loading...</code></p>
+    <p><strong>Anon Key:</strong> <code id="config-key">Loading...</code></p>
+    <p><strong>Timestamp:</strong> <code id="config-time">Loading...</code></p>
+  </div>
+
+  <div>
+    <button id="btn-run-all" onclick="runAllTests()">🚀 Run All Tests</button>
+    <button onclick="testConnection()">Test Connection Only</button>
+    <button onclick="testCoreLessons()">Test core_lessons</button>
+    <button onclick="testLessonAtoms()">Test lesson_atoms</button>
+    <button onclick="testUserProgress()">Test user_progress</button>
+    <button onclick="testKellyAssets()">Test kelly_video_assets</button>
+  </div>
+
+  <div id="results"></div>
+
+  <!-- Supabase JS - load from CDN -->
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  
+  <script>
+    // ============================================
+    // HARDCODED CREDENTIALS - EDIT THESE IF WRONG
+    // ============================================
+    const SUPABASE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co';
+    const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzI0ODgxNzcsImV4cCI6MjA0ODA2NDE3N30.bG0GnUuQHPbeHcx9ax3oFxU7PWyLVyhIvnxGGbZ6aZ8';
+    
+    // ============================================
+    // INITIALIZE SUPABASE CLIENT
+    // ============================================
+    let supabase = null;
+    let initError = null;
+    
+    try {
+      supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+      console.log('✅ Supabase client created');
+    } catch (e) {
+      initError = e;
+      console.error('❌ Failed to create Supabase client:', e);
+    }
+    
+    // Show config
+    document.getElementById('config-url').textContent = SUPABASE_URL;
+    document.getElementById('config-key').textContent = SUPABASE_ANON_KEY.substring(0, 50) + '...';
+    document.getElementById('config-time').textContent = new Date().toISOString();
+    
+    // ============================================
+    // UTILITY FUNCTIONS
+    // ============================================
+    function log(message, type = 'info') {
+      const results = document.getElementById('results');
+      const div = document.createElement('div');
+      div.className = `status ${type}`;
+      div.innerHTML = message;
+      results.appendChild(div);
+      console.log(message.replace(/<[^>]*>/g, ''));
+    }
+    
+    function logQuery(title, data, error, count) {
+      const results = document.getElementById('results');
+      
+      const wrapper = document.createElement('div');
+      wrapper.className = 'query-result';
+      
+      let statusClass = 'success';
+      let statusText = 'SUCCESS';
+      
+      if (error) {
+        statusClass = 'error';
+        statusText = 'ERROR';
+      } else if (!data || data.length === 0) {
+        statusClass = 'warning';
+        statusText = 'EMPTY';
+      }
+      
+      wrapper.innerHTML = `
+        <div class="status ${statusClass}" style="margin-bottom: 0.5rem;">
+          <strong>${title}</strong><br>
+          STATUS: ${statusText} | ROWS: ${data ? data.length : 0}${count !== undefined ? ` of ${count} total` : ''}
+        </div>
+        ${error ? `<pre style="color: #ef4444;">ERROR: ${JSON.stringify(error, null, 2)}</pre>` : ''}
+        ${data && data.length > 0 ? `<pre>SAMPLE DATA:\n${JSON.stringify(data.slice(0, 2), null, 2)}</pre>` : ''}
+      `;
+      
+      results.appendChild(wrapper);
+    }
+    
+    function clearResults() {
+      document.getElementById('results').innerHTML = '<h2>Test Results</h2>';
+    }
+    
+    // ============================================
+    // TEST FUNCTIONS
+    // ============================================
+    async function testConnection() {
+      clearResults();
+      log('🔌 Testing Supabase connection...', 'info');
+      
+      if (initError) {
+        log(`❌ Client initialization failed: ${initError.message}`, 'error');
+        return false;
+      }
+      
+      if (!supabase) {
+        log('❌ Supabase client is null', 'error');
+        return false;
+      }
+      
+      log('✅ Supabase client exists', 'success');
+      
+      // Try a simple query to verify connection
+      try {
+        const start = Date.now();
+        const { data, error } = await supabase.from('core_lessons').select('id').limit(1);
+        const duration = Date.now() - start;
+        
+        if (error) {
+          log(`❌ Connection test failed: ${error.message}<br>Code: ${error.code}<br>Details: ${error.details}`, 'error');
+          return false;
+        }
+        
+        log(`✅ Connection successful (${duration}ms)`, 'success');
+        return true;
+      } catch (e) {
+        log(`❌ Connection exception: ${e.message}`, 'error');
+        return false;
+      }
+    }
+    
+    async function testCoreLessons() {
+      log('<h2>📚 Testing core_lessons table</h2>', 'info');
+      
+      // Test 1: Count total rows
+      const { count, error: countError } = await supabase
+        .from('core_lessons')
+        .select('*', { count: 'exact', head: true });
+      
+      if (countError) {
+        log(`❌ Count query failed: ${countError.message}`, 'error');
+      } else {
+        log(`📊 Total rows in core_lessons: ${count}`, count > 0 ? 'success' : 'warning');
+      }
+      
+      // Test 2: Get day 1
+      const { data: day1, error: day1Error } = await supabase
+        .from('core_lessons')
+        .select('*')
+        .eq('day_number', 1)
+        .single();
+      
+      logQuery('core_lessons WHERE day_number = 1', day1 ? [day1] : [], day1Error, count);
+      
+      // Test 3: Get today (day 348 for Dec 13)
+      const today = 348; // December 13 = day 348
+      const { data: todayLesson, error: todayError } = await supabase
+        .from('core_lessons')
+        .select('*')
+        .eq('day_number', today)
+        .single();
+      
+      logQuery(`core_lessons WHERE day_number = ${today} (today)`, todayLesson ? [todayLesson] : [], todayError, count);
+      
+      // Test 4: Get first 5 lessons (any)
+      const { data: sample, error: sampleError } = await supabase
+        .from('core_lessons')
+        .select('id, day_number, topic, headline')
+        .order('day_number', { ascending: true })
+        .limit(5);
+      
+      logQuery('core_lessons (first 5 by day_number)', sample, sampleError, count);
+      
+      // Test 5: Check columns exist
+      if (day1 && !day1Error) {
+        const columns = Object.keys(day1);
+        log(`📋 Columns found: ${columns.join(', ')}`, 'info');
+      }
+    }
+    
+    async function testLessonAtoms() {
+      log('<h2>⚛️ Testing lesson_atoms table</h2>', 'info');
+      
+      // Count
+      const { count, error: countError } = await supabase
+        .from('lesson_atoms')
+        .select('*', { count: 'exact', head: true });
+      
+      if (countError) {
+        log(`❌ Count query failed: ${countError.message}`, 'error');
+      } else {
+        log(`📊 Total rows in lesson_atoms: ${count}`, count > 0 ? 'success' : 'warning');
+      }
+      
+      // Get atoms for a lesson (need to get lesson ID first)
+      const { data: lesson1 } = await supabase
+        .from('core_lessons')
+        .select('id')
+        .eq('day_number', 1)
+        .single();
+      
+      if (lesson1) {
+        const { data: atoms, error: atomsError } = await supabase
+          .from('lesson_atoms')
+          .select('*')
+          .eq('core_lesson_id', lesson1.id)
+          .order('phase', { ascending: true });
+        
+        logQuery(`lesson_atoms WHERE core_lesson_id = ${lesson1.id} (day 1)`, atoms, atomsError, count);
+        
+        if (atoms && atoms.length > 0) {
+          log(`📋 Atom columns: ${Object.keys(atoms[0]).join(', ')}`, 'info');
+          log(`📋 Phases found: ${atoms.map(a => a.phase).join(', ')}`, 'info');
+        }
+      } else {
+        log('⚠️ Could not find lesson 1 to test atoms', 'warning');
+      }
+    }
+    
+    async function testUserProgress() {
+      log('<h2>📈 Testing user_progress table</h2>', 'info');
+      
+      // This may fail if RLS requires auth
+      const { data, error } = await supabase
+        .from('user_progress')
+        .select('*')
+        .limit(5);
+      
+      if (error && error.code === '42501') {
+        log('🔒 user_progress requires authentication (RLS enabled) - this is expected', 'warning');
+      } else {
+        logQuery('user_progress (first 5)', data, error);
+      }
+    }
+    
+    async function testKellyAssets() {
+      log('<h2>🎬 Testing kelly_video_assets table</h2>', 'info');
+      
+      // Count
+      const { count, error: countError } = await supabase
+        .from('kelly_video_assets')
+        .select('*', { count: 'exact', head: true });
+      
+      if (countError) {
+        if (countError.code === '42P01') {
+          log('⚠️ Table kelly_video_assets does not exist', 'warning');
+        } else {
+          log(`❌ Count query failed: ${countError.message}`, 'error');
+        }
+        return;
+      }
+      
+      log(`📊 Total rows in kelly_video_assets: ${count}`, count > 0 ? 'success' : 'warning');
+      
+      // Sample query
+      const { data, error } = await supabase
+        .from('kelly_video_assets')
+        .select('*')
+        .limit(5);
+      
+      logQuery('kelly_video_assets (first 5)', data, error, count);
+      
+      if (data && data.length > 0) {
+        log(`📋 Columns found: ${Object.keys(data[0]).join(', ')}`, 'info');
+      }
+    }
+    
+    async function runAllTests() {
+      const btn = document.getElementById('btn-run-all');
+      btn.disabled = true;
+      btn.textContent = '⏳ Running...';
+      
+      clearResults();
+      
+      const connected = await testConnection();
+      
+      if (connected) {
+        await testCoreLessons();
+        await testLessonAtoms();
+        await testUserProgress();
+        await testKellyAssets();
+        
+        log('<h2>✅ All tests complete</h2>', 'success');
+      } else {
+        log('<h2>❌ Connection failed - cannot run table tests</h2>', 'error');
+      }
+      
+      btn.disabled = false;
+      btn.textContent = '🚀 Run All Tests';
+    }
+    
+    // Auto-run on load
+    window.addEventListener('DOMContentLoaded', () => {
+      log('Page loaded. Click "Run All Tests" to begin.', 'info');
+    });
+  </script>
+</body>
+</html>
