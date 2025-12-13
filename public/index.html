@@ -263,23 +263,29 @@
             transform: scale(0.98);
         }
 
-        /* ========================================
-           HERO - The Transformation Promise
-           ======================================== */
+        /* ============================================
+           HERO: Kelly Full-Bleed Design
+           Kelly gets 60% of viewport width
+           ============================================ */
+
         .hero {
+            display: grid;
+            grid-template-columns: 40% 60%;
             min-height: 100vh;
-            display: flex;
+            min-height: 100dvh;
             padding-top: var(--header-height);
+            background: var(--bg-color);
+            overflow: hidden;
         }
 
-        .hero-left {
-            flex: 0 0 42%;
-            max-width: 600px;
-            padding: 60px 48px;
+        /* ----- LEFT COLUMN: Content (40%) ----- */
+        .hero-content {
             display: flex;
             flex-direction: column;
             justify-content: center;
-            background: var(--bg-color);
+            padding: 48px 48px 48px 64px;
+            max-width: 580px;
+            margin-left: auto;
         }
 
         /* Today's Date Badge with Live Indicator */
@@ -550,209 +556,192 @@
             }
         }
 
-        /* Hero Right - KELLY DOMINATES (58% of hero) */
-        .hero-right {
-            flex: 1;
-            background: linear-gradient(135deg, var(--bg-secondary) 0%, var(--bg-color) 50%, rgba(59, 130, 246, 0.03) 100%);
+        /* ----- RIGHT COLUMN: KELLY DOMINATES (60%) ----- */
+        .hero-kelly {
             position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            background: linear-gradient(
+                180deg,
+                var(--bg-secondary) 0%,
+                var(--bg-elevated) 40%,
+                var(--bg-color) 100%
+            );
+            padding: 0;
             overflow: hidden;
-            display: flex;
-            flex-direction: column;
-            justify-content: center;
-            align-items: center;
-            padding: 48px;
         }
 
-        .hero-kelly-showcase {
-            position: relative;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            margin-bottom: 24px;
-        }
-
-        .hero-kelly-image {
-            width: 100%;
-            max-width: 550px;
-            height: auto;
-            aspect-ratio: 1 / 1;
-            object-fit: cover;
-            border-radius: 28px;
-            box-shadow: 
-                0 0 0 1px rgba(59, 130, 246, 0.1),
-                0 32px 80px rgba(0, 0, 0, 0.5),
-                0 0 120px -20px rgba(59, 130, 246, 0.25);
-            transition: opacity 0.3s ease, transform 0.3s ease;
-        }
-
-        /* Hero Video Styles - KELLY LARGE */
-        .hero-video-container {
-            position: relative;
-            width: 100%;
-            max-width: 580px;
-        }
-
-        /* Kelly glow effect */
-        .hero-video-container::before {
+        /* Subtle glow behind Kelly */
+        .hero-kelly::before {
             content: '';
             position: absolute;
-            inset: -30px;
+            top: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            height: 70%;
             background: radial-gradient(
                 ellipse at center,
                 rgba(59, 130, 246, 0.12) 0%,
                 transparent 70%
             );
-            z-index: -1;
-            border-radius: 40px;
             pointer-events: none;
+            z-index: 0;
+        }
+
+        .kelly-image-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-top: 48px;
+        }
+
+        /* KELLY: Fill the space - FULL BLEED */
+        .kelly-image {
+            width: auto;
+            height: 85vh;
+            max-height: calc(100vh - var(--header-height) - 100px);
+            max-width: 100%;
+            object-fit: contain;
+            object-position: center bottom;
+            filter: drop-shadow(0 20px 60px rgba(0, 0, 0, 0.4));
+        }
+
+        /* Video container for hero */
+        .hero-video-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
         }
 
         .hero-video {
-            width: 100%;
-            max-width: 580px;
-            aspect-ratio: 1 / 1;
-            border-radius: 28px;
-            object-fit: cover;
-            box-shadow: 
-                0 0 0 1px rgba(59, 130, 246, 0.15),
-                0 25px 60px -12px rgba(0, 0, 0, 0.6),
-                0 0 100px -20px rgba(59, 130, 246, 0.3);
+            width: auto;
+            height: 80vh;
+            max-height: calc(100vh - var(--header-height) - 120px);
+            max-width: 100%;
+            object-fit: contain;
+            border-radius: 0;
+            filter: drop-shadow(0 20px 60px rgba(0, 0, 0, 0.4));
         }
 
-        .hero-video-fallback {
-            display: none;
-        }
-
-        @media (max-width: 768px) {
-            .hero-video {
-                max-width: 100%;
-                border-radius: 20px;
-            }
-        }
-
-        .kelly-intro {
-            margin-top: 24px;
-            text-align: center;
-        }
-
-        .kelly-name {
-            display: block;
-            font-family: 'Newsreader', Georgia, serif;
-            font-size: 1.5rem;
-            color: var(--text-primary);
-            margin-bottom: 4px;
-        }
-
-        .kelly-role {
-            font-size: 0.9rem;
-            color: var(--text-muted);
-        }
-
-        /* Persona controls (age + teaching style) */
+        /* Controls at bottom of Kelly's space */
+        .kelly-controls,
         .persona-controls {
-            width: 100%;
-            max-width: 460px;
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
             display: flex;
             flex-direction: column;
-            gap: 10px;
-            margin: 0 0 14px;
-            padding: 12px 12px;
-            border-radius: 14px;
-            border: 1px solid var(--border-color);
-            background: rgba(255, 255, 255, 0.02);
+            align-items: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 16px 24px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
         }
 
+        .kelly-age-pills,
         .age-pills {
             display: flex;
+            gap: 8px;
             flex-wrap: wrap;
             justify-content: center;
-            gap: 8px;
         }
 
         .age-pill {
-            appearance: none;
-            border: 1px solid var(--border-color);
-            background: transparent;
-            color: var(--text-secondary);
-            padding: 8px 10px;
-            border-radius: 999px;
+            padding: 8px 14px;
             font-size: 0.8rem;
-            font-weight: 600;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 999px;
             cursor: pointer;
             transition: all 0.2s ease;
         }
 
         .age-pill:hover {
             color: var(--text-primary);
-            border-color: var(--border-hover);
-            background: rgba(255, 255, 255, 0.03);
+            border-color: var(--accent-primary);
         }
 
         .age-pill.active {
             color: white;
-            border-color: rgba(59, 130, 246, 0.55);
-            background: rgba(59, 130, 246, 0.18);
-            box-shadow: 0 0 18px rgba(59, 130, 246, 0.12);
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
         }
 
+        .kelly-persona-select,
         .tone-select-wrap {
             display: flex;
             align-items: center;
-            justify-content: space-between;
-            gap: 10px;
+            gap: 12px;
         }
 
+        .kelly-persona-select label,
         .tone-label {
-            color: var(--text-muted);
             font-size: 0.8rem;
-            font-weight: 600;
-            letter-spacing: 0.01em;
+            color: var(--text-secondary);
         }
 
+        .persona-dropdown,
         .tone-select {
-            flex: 1;
-            max-width: 260px;
-            background: var(--bg-elevated);
-            color: var(--text-primary);
-            border: 1px solid var(--border-color);
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
             border-radius: 10px;
-            padding: 10px 12px;
-            font-size: 0.9rem;
-            outline: none;
+            padding: 8px 16px;
+            color: white;
+            font-size: 0.875rem;
+            cursor: pointer;
+            min-width: 180px;
         }
 
         .tone-select:focus {
-            border-color: rgba(59, 130, 246, 0.55);
-            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.12);
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
         }
 
-        /* Compact Personas Strip */
+        .kelly-personas-strip,
         .personas-strip-compact {
             display: flex;
             gap: 8px;
             justify-content: center;
             flex-wrap: wrap;
-            max-width: 400px;
+            max-width: 320px;
         }
 
+        .kelly-personas-strip img,
         .personas-strip-compact .persona-thumb {
-            width: 48px;
-            height: 48px;
+            width: 44px;
+            height: 44px;
             border-radius: 50%;
-            overflow: hidden;
-            cursor: pointer;
+            object-fit: cover;
             border: 2px solid transparent;
+            cursor: pointer;
             transition: all 0.2s ease;
             background: var(--bg-elevated);
         }
 
-        .personas-strip-compact .persona-thumb:hover {
-            border-color: var(--accent-primary);
-            transform: scale(1.1);
-        }
-
+        .kelly-personas-strip img:hover,
+        .kelly-personas-strip img.active,
+        .personas-strip-compact .persona-thumb:hover,
         .personas-strip-compact .persona-thumb.active {
             border-color: var(--accent-primary);
+            transform: scale(1.1);
             box-shadow: 0 0 16px rgba(59, 130, 246, 0.4);
         }
 
@@ -762,27 +751,31 @@
             object-fit: cover;
         }
 
-        /* Secondary hero CTA */
+        /* Legacy support */
+        .hero-video-fallback,
+        .hero-kelly-showcase,
+        .kelly-intro {
+            display: none;
+        }
+
         .hero-cta-secondary {
             display: inline-flex;
             align-items: center;
             justify-content: center;
-            padding: 10px 16px;
-            border-radius: 12px;
+            padding: 12px 20px;
+            border-radius: 10px;
             font-size: 0.9rem;
-            font-weight: 600;
-            margin-top: 12px;
+            font-weight: 500;
             border: 1px solid var(--border-color);
             color: var(--text-secondary);
             text-decoration: none;
             transition: all 0.2s ease;
-            width: fit-content;
         }
 
         .hero-cta-secondary:hover {
             color: var(--text-primary);
-            background: rgba(255, 255, 255, 0.03);
-            border-color: var(--border-hover);
+            background: var(--bg-elevated);
+            border-color: var(--accent-primary);
         }
 
         /* ========================================
@@ -2795,14 +2788,17 @@
             }
 
             .hero {
-                flex-direction: column;
+                grid-template-columns: 1fr;
+                grid-template-rows: 55vh auto;
+                min-height: auto;
             }
 
-            .hero-left {
-                max-width: 100%;
-                padding: 40px 24px;
-                flex: none;
-                order: 1; /* Content after Kelly on mobile */
+            .hero-content {
+                padding: 32px 24px 48px;
+                max-width: none;
+                margin: 0;
+                text-align: center;
+                order: 1;
             }
             
             .hero-headline {
@@ -2831,23 +2827,42 @@
                 font-size: 1.1rem;
             }
 
-            .hero-right {
-                min-height: auto;
-                padding: 32px 24px;
-                order: 0; /* Kelly FIRST on mobile */
+            .hero-kelly {
+                order: -1;
+                min-height: 55vh;
             }
             
-            .hero-kelly-image {
-                max-width: 360px;
-                width: 100%;
-            }
-            
-            .hero-video-container {
-                max-width: 360px;
+            .kelly-image {
+                height: 50vh;
+                max-height: none;
             }
             
             .hero-video {
-                max-width: 360px;
+                height: 50vh;
+                max-height: none;
+            }
+            
+            .hero-badge {
+                margin-left: auto;
+                margin-right: auto;
+            }
+            
+            .hero-cta-group {
+                justify-content: center;
+            }
+            
+            .auth-buttons {
+                justify-content: center;
+            }
+            
+            .hero-trust {
+                justify-content: center;
+            }
+            
+            .kelly-controls,
+            .persona-controls {
+                bottom: 16px;
+                padding: 12px 16px;
             }
             
             .kelly-intro {
@@ -3268,121 +3283,86 @@
          HERO - The Transformation Promise
          ======================================== -->
     <section class="hero" id="hero">
-        <div class="hero-left">
-            <div class="main-content">
-                <!-- Today's Date Badge -->
-                <div class="hero-date-badge" id="hero-date-badge">
-                    <span class="live-indicator" id="live-indicator" title="Live class in session">🔴 LIVE</span>
-                    <span class="date-text" id="today-full-date">Loading...</span>
-                </div>
-
-                <!-- Kelly Time Authority - Live Clock -->
-                <div id="kelly-clock" class="kelly-clock" data-kelly-clock data-seconds="true">
-                  <div class="kelly-clock-time">--:--:-- --</div>
-                  <div class="kelly-clock-date">Loading...</div>
-                  <div class="kelly-clock-tz"></div>
-                </div>
-
-                <!-- Kelly Time Authority - Live Class Countdown -->
-                <div id="kelly-countdown" class="kelly-countdown" data-kelly-countdown>
-                  <span class="countdown-label">Next class:</span>
-                  <span class="countdown-timer">--:--</span>
-                </div>
-
-                <!-- The Promise -->
-                <p class="hero-eyebrow">365 days. 365 lessons. One teacher.</p>
-                
-                <h1 class="hero-headline">
-                    A year from now, you'll know 365 things you don't know today.
-                </h1>
-
-                <!-- Today's Question - Dynamic hook -->
-                <div class="todays-question" id="todays-question">
-                    <span class="question-label">Today's question</span>
-                    <p class="question-text" id="hero-question">Why do leaves change color?</p>
-                </div>
-
-                <!-- Primary CTA -->
+        <!-- LEFT: Content (40%) -->
+        <div class="hero-content">
+            <!-- Date Badge -->
+            <div class="hero-badge" id="hero-date-badge">
+                <span class="live-dot"></span>
+                <span id="today-full-date">Loading...</span>
+            </div>
+            
+            <p class="hero-eyebrow">365 DAYS. 365 LESSONS. ONE TEACHER.</p>
+            
+            <h1 class="hero-headline">
+                A year from now, you'll know 365 things you don't know today.
+            </h1>
+            
+            <div class="hero-question" id="todays-question">
+                <span class="question-label">TODAY'S QUESTION</span>
+                <p class="question-text" id="hero-question">Why do leaves change color?</p>
+            </div>
+            
+            <div class="hero-cta-group">
                 <a href="/learn.html" 
-                   class="hero-cta"
+                   class="btn btn-primary btn-lg"
                    data-analytics-action="start-learning"
                    data-analytics-location="hero"
                    data-analytics-day="today">
                     Start today's lesson →
                 </a>
-                <a href="/curriculum.html"
+                <a href="/curriculum.html" 
                    class="hero-cta-secondary"
                    data-analytics-action="view-curriculum"
                    data-analytics-location="hero">
                     View all 365 lessons
                 </a>
-                
-                <p class="hero-note">5 minutes. No signup. Just learning.</p>
-                
-                <p class="welcome-note">Whether you have 5 minutes or 50, whether you're wide awake or half asleep—Kelly meets you where you are.</p>
-
-                <!-- Mini Auth Module - For returning users & signups -->
-                <!-- Mini Auth Module - Analytics tagged -->
-                <div class="hero-auth-hook" data-analytics-section="hero-auth">
-                    <span class="auth-hook-divider">or</span>
-                    <div class="auth-hook-buttons">
-                        <button class="auth-btn auth-btn-google" 
-                                onclick="handleLogin(this, 'google')" 
-                                id="hero-btn-google"
-                                data-analytics-action="signup"
-                                data-analytics-provider="google"
-                                data-analytics-location="hero">
-                            <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
-                                <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
-                                <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
-                                <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
-                                <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
-                            </svg>
-                            <span>Continue with Google</span>
-                        </button>
-                        <button class="auth-btn auth-btn-email" 
-                                onclick="showEmailSignup()" 
-                                id="hero-btn-email"
-                                data-analytics-action="signup"
-                                data-analytics-provider="email"
-                                data-analytics-location="hero">
-                            ✉️ Email signup
-                        </button>
-                    </div>
-                    <p class="auth-hook-note">Create your account to track your 365-day journey</p>
-                </div>
-
-                <!-- Trust/Proof Strip -->
-                <div class="hero-proof-strip" data-analytics-section="hero-trust">
-                    <button class="proof-strip-toggle" onclick="toggleProofStrip()" aria-expanded="false">
-                        <span class="proof-toggle-text">Why trust Kelly?</span>
-                        <span class="proof-toggle-icon">▼</span>
+            </div>
+            
+            <p class="hero-subtext">5 minutes. No signup. Just learning.</p>
+            
+            <p class="hero-welcome">
+                <em>Whether you have 5 minutes or 50, whether you're wide awake or half asleep—Kelly meets you where you are.</em>
+            </p>
+            
+            <div class="hero-auth" data-analytics-section="hero-auth">
+                <span class="auth-divider">OR</span>
+                <div class="auth-buttons">
+                    <button class="btn-google" 
+                            onclick="handleLogin(this, 'google')" 
+                            id="hero-btn-google"
+                            data-analytics-action="signup"
+                            data-analytics-provider="google"
+                            data-analytics-location="hero">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                        </svg>
+                        Continue with Google
                     </button>
-                    <div class="proof-strip-content" id="proof-strip-content">
-                        <div class="proof-item">
-                            <a href="/trust.html" class="proof-link">
-                                <span class="proof-icon">🔒</span>
-                                <span class="proof-text">COPPA compliant</span>
-                            </a>
-                        </div>
-                        <div class="proof-item">
-                            <a href="/trust.html" class="proof-link">
-                                <span class="proof-icon">👨‍👩‍👧‍👦</span>
-                                <span class="proof-text">Family safe</span>
-                            </a>
-                        </div>
-                        <div class="proof-item">
-                            <span class="proof-icon">📱</span>
-                            <span class="proof-text">Works offline</span>
-                        </div>
-                    </div>
+                    <button class="btn-secondary" 
+                            onclick="showEmailSignup()" 
+                            id="hero-btn-email"
+                            data-analytics-action="signup"
+                            data-analytics-provider="email"
+                            data-analytics-location="hero">
+                        ✉️ Email signup
+                    </button>
                 </div>
+                <p class="auth-note">Create your account to track your 365-day journey</p>
+            </div>
+            
+            <div class="hero-trust">
+                <a href="/trust.html" class="trust-badge">🔒 COPPA compliant</a>
+                <a href="/trust.html" class="trust-badge">👨‍👩‍👧‍👦 Family safe</a>
+                <span class="trust-badge">📱 Works offline</span>
             </div>
         </div>
-
-        <div class="hero-right">
-            <!-- Kelly Video - See her teach -->
-            <div class="hero-video-container">
+        
+        <!-- RIGHT: KELLY OWNS THIS SPACE (60%) -->
+        <div class="hero-kelly">
+            <div class="kelly-image-container">
                 <video 
                     id="hero-kelly-video"
                     autoplay 
@@ -3391,45 +3371,29 @@
                     playsinline
                     preload="metadata"
                     poster="https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/kelly_explorer_head.png"
-                    class="hero-video"
-                    aria-label="Kelly, a friendly AI teacher, greeting you warmly"
+                    class="kelly-image"
+                    aria-label="Kelly, a friendly AI teacher, ready to guide you through today's lesson"
                 >
                     <source src="https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-videos/production/day_001_final/day_001_hook_scientist_dynamic.mp4" type="video/mp4">
                 </video>
             </div>
-
-            <!-- Kelly Visual Fallback - Clean and Bold -->
-            <div class="hero-kelly-showcase hero-video-fallback">
-                <img 
-                    id="featured-persona-image"
-                    class="hero-kelly-image"
-                    src="https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/kelly_explorer_head.png"
-                    alt="Kelly, your AI learning companion, smiling warmly"
-                />
-                
-                <!-- Subtle persona indicator -->
-                <div class="kelly-intro">
-                    <span class="kelly-name">Meet Kelly</span>
-                    <span class="kelly-role">Your AI teacher</span>
-                </div>
-            </div>
             
-            <!-- Persona preview controls (age + teaching style) -->
-            <div class="persona-controls" aria-label="Preview Kelly's teaching styles">
-                <div class="age-pills" id="persona-age-pills" role="tablist" aria-label="Age preview">
+            <!-- Controls anchored to bottom of Kelly's space -->
+            <div class="kelly-controls">
+                <div class="kelly-age-pills" id="persona-age-pills" role="tablist" aria-label="Age preview">
                     <!-- Rendered by JS -->
                 </div>
-                <div class="tone-select-wrap">
-                    <label class="tone-label" for="persona-tone-select">Teaching style</label>
-                    <select id="persona-tone-select" class="tone-select" aria-label="Teaching style (persona)">
+                
+                <div class="kelly-persona-select">
+                    <label for="persona-tone-select">Teaching style</label>
+                    <select id="persona-tone-select" class="persona-dropdown" aria-label="Teaching style (persona)">
                         <!-- Rendered by JS -->
                     </select>
                 </div>
-            </div>
-
-            <!-- 12 Personas - Compact strip at bottom -->
-            <div class="personas-strip-compact" id="personas-strip">
-                <!-- Generated by JS -->
+                
+                <div class="kelly-personas-strip" id="personas-strip">
+                    <!-- Persona thumbnails load via JS -->
+                </div>
             </div>
         </div>
     </section>
