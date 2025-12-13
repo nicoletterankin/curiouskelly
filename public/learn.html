@@ -164,6 +164,7 @@
       display: flex;
       align-items: center;
       justify-content: space-between;
+      gap: 12px;
       position: relative;
       z-index: 20;
     }
@@ -193,6 +194,43 @@
     .header-btn:active {
       transform: scale(0.9);
       background: rgba(255,255,255,0.2);
+    }
+
+    /* Lesson header: playback controls on right */
+    .header-playback-controls {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      margin-left: auto;
+    }
+
+    /* Keep existing header-btn style globally; tune sizes only in playback cluster */
+    .header-playback-controls .header-btn {
+      width: 36px;
+      height: 36px;
+      font-size: 1rem;
+    }
+
+    .header-playback-controls .header-btn-primary {
+      background: var(--kelly-color, #3b82f6);
+      width: 44px;
+      height: 44px;
+    }
+
+    .auto-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      color: rgba(255,255,255,0.7);
+      font-size: 0.75rem;
+      cursor: pointer;
+      -webkit-user-select: none;
+      user-select: none;
+    }
+
+    .auto-toggle input {
+      accent-color: var(--kelly-color, #3b82f6);
+      cursor: pointer;
     }
     
     /* ============================================
@@ -488,35 +526,6 @@
     /* ============================================
        SCENE: LESSON PLAYER
        ============================================ */
-    #scene-lesson .scene-header {
-      flex-direction: column;
-      gap: 12px;
-    }
-    
-    .phase-progress {
-      display: flex;
-      gap: 4px;
-      width: 100%;
-    }
-    
-    .phase-bar {
-      flex: 1;
-      height: 3px;
-      background: rgba(255,255,255,0.2);
-      border-radius: 2px;
-      overflow: hidden;
-      cursor: pointer;
-    }
-    
-    .phase-bar-fill {
-      height: 100%;
-      background: var(--kelly-color);
-      width: 0;
-      transition: width 0.3s ease;
-    }
-    
-    .phase-bar.complete .phase-bar-fill { width: 100%; }
-    .phase-bar.active .phase-bar-fill { width: 50%; }
     
     .day-badge {
       display: flex;
@@ -765,77 +774,68 @@
       }
     }
 
-    /* Phase bar: more prominent + clickable */
-    .phase-progress {
-      display: flex;
-      gap: 0.5rem;
-      padding: 1rem 0;
-      justify-content: center;
-      width: 100%;
-    }
-
+    /* Phase bar (5 segments) */
     .phase-bar {
-      flex: 0 0 auto;
-      width: 3rem;
-      height: 0.5rem;
-      background: rgba(255, 255, 255, 0.3);
-      border-radius: 0.25rem;
-      cursor: pointer;
-      transition: transform 0.2s ease, background 0.2s ease;
-    }
-
-    .phase-bar:hover { transform: scaleY(1.5); }
-    .phase-bar.complete { background: rgba(255, 255, 255, 0.6); }
-    .phase-bar.active { background: var(--kelly-color, #3b82f6); }
-    .phase-bar .phase-bar-fill { display: none; }
-
-    /* Playback controls bar (visible + accessible) */
-    .lesson-controls-bar {
-      position: fixed;
-      bottom: calc(80px + var(--safe-bottom));
-      left: 50%;
-      transform: translateX(-50%);
       display: flex;
       align-items: center;
-      gap: 0.5rem;
-      background: rgba(0, 0, 0, 0.8);
-      -webkit-backdrop-filter: blur(10px);
-      backdrop-filter: blur(10px);
-      padding: 0.75rem 1.5rem;
-      border-radius: 2rem;
-      z-index: 100;
-      max-width: calc(100vw - 24px);
-    }
-
-    .control-btn {
-      background: transparent;
-      border: none;
-      color: white;
-      font-size: 1.5rem;
-      cursor: pointer;
-      padding: 0.5rem;
-      border-radius: 50%;
-      transition: background 0.2s;
-      display: inline-flex;
-      align-items: center;
       justify-content: center;
+      padding: 1rem 2rem;
+      gap: 0;
+      background: rgba(0,0,0,0.3);
     }
 
-    .control-btn:hover { background: rgba(255, 255, 255, 0.1); }
+    .phase-segment {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.25rem;
+      background: none;
+      border: none;
+      cursor: pointer;
+      padding: 0.5rem 1rem;
+      transition: transform 0.2s;
+      color: inherit;
+    }
 
-    .control-btn-primary {
+    .phase-segment:hover { transform: scale(1.1); }
+
+    .phase-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: rgba(255,255,255,0.3);
+      transition: all 0.3s;
+    }
+
+    .phase-segment.active .phase-dot {
       background: var(--kelly-color, #3b82f6);
-      width: 3rem;
-      height: 3rem;
+      box-shadow: 0 0 10px var(--kelly-color, #3b82f6);
     }
 
-    .control-divider {
-      width: 1px;
-      height: 2rem;
-      background: rgba(255, 255, 255, 0.2);
+    .phase-segment.completed .phase-dot { background: rgba(255,255,255,0.7); }
+
+    .phase-name {
+      font-size: 0.625rem;
+      color: rgba(255,255,255,0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
     }
 
-    .control-spacer { flex: 1; }
+    .phase-segment.active .phase-name { color: white; }
+
+    .phase-connector {
+      width: 30px;
+      height: 2px;
+      background: rgba(255,255,255,0.2);
+    }
+
+    .phase-segment.completed + .phase-connector { background: rgba(255,255,255,0.5); }
+
+    @media (max-width: 600px) {
+      .phase-name { display: none; }
+      .phase-segment { padding: 0.5rem; }
+      .phase-connector { width: 20px; }
+    }
     
     .caption-phase {
       display: flex;
@@ -1504,9 +1504,11 @@
       cursor: pointer;
       padding: 8px 20px;
       transition: all 0.2s ease;
+      text-decoration: none;
     }
     
-    .nav-item .icon {
+    .nav-item .nav-icon,
+    .nav-item .nav-play-icon {
       font-size: 22px;
       transition: transform 0.2s ease;
     }
@@ -1515,11 +1517,12 @@
       color: white;
     }
     
-    .nav-item.active .icon {
+    .nav-item.active .nav-icon,
+    .nav-item.active .nav-play-icon {
       transform: scale(1.1);
     }
     
-    .nav-item.primary {
+    .nav-item.nav-play-btn {
       width: 56px;
       height: 56px;
       border-radius: 50%;
@@ -1530,7 +1533,7 @@
       box-shadow: 0 4px 20px rgba(var(--kelly-color-rgb), 0.4);
     }
     
-    .nav-item.primary .icon {
+    .nav-item.nav-play-btn .nav-play-icon {
       font-size: 24px;
     }
     
@@ -1933,8 +1936,8 @@
     [data-kelly-presence="0"] #scene-lesson .lesson-kelly-container,
     [data-kelly-presence="0"] #scene-lesson .lesson-kelly,
     [data-kelly-presence="0"] #scene-lesson #lesson-kelly-img {
-      width: 60px !important;
-      height: 60px !important;
+      width: 80px !important;
+      height: 80px !important;
       position: fixed !important;
       bottom: 100px !important;
       left: 20px !important;
@@ -1942,13 +1945,16 @@
       z-index: 1500 !important;
       overflow: hidden !important;
     }
+    [data-kelly-presence="0"] #scene-lesson .lesson-kelly-container {
+      border: 3px solid var(--kelly-color, #3b82f6) !important;
+      box-shadow: 0 0 20px rgba(59, 130, 246, 0.4) !important;
+    }
     [data-kelly-presence="0"] #scene-lesson .tap-zones,
     [data-kelly-presence="0"] #scene-lesson .side-actions {
       display: none !important;
     }
     [data-kelly-presence="0"] #scene-lesson .scene-header,
-    [data-kelly-presence="0"] #scene-lesson .lesson-content-area,
-    [data-kelly-presence="0"] #scene-lesson .lesson-controls-bar {
+    [data-kelly-presence="0"] #scene-lesson .lesson-content-area {
       margin-left: 0 !important;
       width: 100% !important;
     }
@@ -1979,15 +1985,9 @@
       border-radius: 0 !important;
     }
     [data-kelly-presence="50"] #scene-lesson .scene-header,
-    [data-kelly-presence="50"] #scene-lesson .lesson-content-area,
-    [data-kelly-presence="50"] #scene-lesson .lesson-controls-bar {
+    [data-kelly-presence="50"] #scene-lesson .lesson-content-area {
       margin-left: 50vw !important;
       width: calc(100% - 50vw) !important;
-    }
-    /* Keep controls centered within the right half */
-    [data-kelly-presence="50"] #scene-lesson .lesson-controls-bar {
-      left: 75vw !important;
-      transform: translateX(-50%) !important;
     }
 
     /* 100% IMMERSIVE MODE — Kelly as blurred background */
@@ -2024,8 +2024,7 @@
       z-index: 1 !important;
     }
     [data-kelly-presence="100"] #scene-lesson .scene-header,
-    [data-kelly-presence="100"] #scene-lesson .lesson-content-area,
-    [data-kelly-presence="100"] #scene-lesson .lesson-controls-bar {
+    [data-kelly-presence="100"] #scene-lesson .lesson-content-area {
       position: relative !important;
       z-index: 1 !important;
       background: rgba(0,0,0,0.7) !important;
@@ -2043,15 +2042,10 @@
       transition: width 0.3s ease !important;
     }
     [data-panel-open][data-kelly-presence="50"] #scene-lesson .scene-header,
-    [data-panel-open][data-kelly-presence="50"] #scene-lesson .lesson-content-area,
-    [data-panel-open][data-kelly-presence="50"] #scene-lesson .lesson-controls-bar {
+    [data-panel-open][data-kelly-presence="50"] #scene-lesson .lesson-content-area {
       margin-left: 25vw !important;
       width: calc(100% - 25vw) !important;
       transition: margin-left 0.3s ease, width 0.3s ease !important;
-    }
-    /* Keep controls centered within the content area (25vw..100vw) */
-    [data-panel-open][data-kelly-presence="50"] #scene-lesson .lesson-controls-bar {
-      left: 62.5vw !important;
     }
 
     /* Mobile adjustments */
@@ -2062,13 +2056,9 @@
         top: calc(60px + var(--safe-top)) !important;
       }
       [data-kelly-presence="50"] #scene-lesson .scene-header,
-      [data-kelly-presence="50"] #scene-lesson .lesson-content-area,
-      [data-kelly-presence="50"] #scene-lesson .lesson-controls-bar {
+      [data-kelly-presence="50"] #scene-lesson .lesson-content-area {
         margin-left: 0 !important;
         width: 100% !important;
-      }
-      [data-kelly-presence="50"] #scene-lesson .lesson-controls-bar {
-        left: 50% !important;
       }
       [data-kelly-presence="50"] #scene-lesson .lesson-content-area {
         margin-top: 45vh !important;
@@ -2131,12 +2121,52 @@
          ========================================== -->
     <section class="scene" id="scene-lesson">
       <div class="scene-header">
-        <div class="phase-progress" id="phase-progress"></div>
         <div class="day-badge" id="day-badge" data-scene="journey">
           <span class="live-indicator" id="live-indicator-lesson">🔴 LIVE</span>
           <span class="date-text" id="lesson-date-text">Loading...</span>
           <span class="topic" id="lesson-topic">Loading topic...</span>
         </div>
+
+        <!-- Playback controls (moved to header; right side) -->
+        <div class="header-playback-controls">
+          <button id="btn-prev-phase" class="header-btn" title="Previous" aria-label="Previous phase" type="button">⏮️</button>
+          <button id="btn-play-pause" class="header-btn header-btn-primary" title="Play/Pause" aria-label="Play or pause" type="button">
+            <span id="play-pause-icon" aria-hidden="true">⏸️</span>
+          </button>
+          <button id="btn-next-phase" class="header-btn" title="Next" aria-label="Next phase" type="button">⏭️</button>
+          <label class="auto-toggle" title="Auto-advance">
+            <input type="checkbox" id="auto-advance-toggle" checked>
+            <span>Auto</span>
+          </label>
+        </div>
+      </div>
+
+      <!-- Clickable phase bar (5 phases) -->
+      <div class="phase-bar" id="phase-bar">
+        <button class="phase-segment" data-phase="0" title="Hook">
+          <span class="phase-dot"></span>
+          <span class="phase-name">Hook</span>
+        </button>
+        <div class="phase-connector"></div>
+        <button class="phase-segment" data-phase="1" title="Fact 1">
+          <span class="phase-dot"></span>
+          <span class="phase-name">Fact 1</span>
+        </button>
+        <div class="phase-connector"></div>
+        <button class="phase-segment" data-phase="2" title="Fact 2">
+          <span class="phase-dot"></span>
+          <span class="phase-name">Fact 2</span>
+        </button>
+        <div class="phase-connector"></div>
+        <button class="phase-segment" data-phase="3" title="Fact 3">
+          <span class="phase-dot"></span>
+          <span class="phase-name">Fact 3</span>
+        </button>
+        <div class="phase-connector"></div>
+        <button class="phase-segment" data-phase="4" title="Wisdom">
+          <span class="phase-dot"></span>
+          <span class="phase-name">Wisdom</span>
+        </button>
       </div>
       
       <div class="lesson-viewport">
@@ -2174,32 +2204,6 @@
         </div>
       </div>
 
-      <div class="lesson-controls-bar" id="lesson-controls" aria-label="Lesson controls">
-        <button id="btn-prev-phase" class="control-btn" title="Previous" aria-label="Previous phase" type="button">
-          <span aria-hidden="true">⏮️</span>
-        </button>
-        
-        <button id="btn-play-pause" class="control-btn control-btn-primary" title="Play/Pause" aria-label="Play or pause" type="button">
-          <span id="play-pause-icon" aria-hidden="true">⏸️</span>
-        </button>
-        
-        <button id="btn-next-phase" class="control-btn" title="Next" aria-label="Next phase" type="button">
-          <span aria-hidden="true">⏭️</span>
-        </button>
-        
-        <div class="control-divider" aria-hidden="true"></div>
-        
-        <button id="btn-auto-advance" class="control-btn" title="Auto-advance" aria-label="Toggle auto-advance" type="button">
-          <span aria-hidden="true">🔄</span>
-          <span id="auto-advance-label">Auto</span>
-        </button>
-        
-        <div class="control-spacer" aria-hidden="true"></div>
-        
-        <button id="btn-settings-lesson" class="control-btn" title="Settings" aria-label="Settings" type="button">
-          <span aria-hidden="true">⚙️</span>
-        </button>
-      </div>
     </section>
     
     <!-- ==========================================
@@ -2436,20 +2440,20 @@
          BOTTOM NAV
          ========================================== -->
     <nav class="bottom-nav">
-      <a href="/" class="nav-item" aria-label="Home">
-        <span class="icon">🏠</span>
-        <span>Home</span>
+      <a href="/" class="nav-item">
+        <span class="nav-icon">🏠</span>
+        <span class="nav-label">Home</span>
       </a>
-      <button class="nav-item" data-scene="journey">
-        <span class="icon">📅</span>
-        <span>Journey</span>
+      <button class="nav-item" data-scene="journey" onclick="showScene('journey')" type="button">
+        <span class="nav-icon">📅</span>
+        <span class="nav-label">Journey</span>
       </button>
-      <button class="nav-item primary" data-scene="lesson">
-        <span class="icon">▶</span>
+      <button class="nav-item nav-play-btn" data-scene="lesson" onclick="showScene('lesson')" type="button" aria-label="Play">
+        <span class="nav-play-icon">▶️</span>
       </button>
-      <button class="nav-item" data-scene="settings">
-        <span class="icon">⚙️</span>
-        <span>Settings</span>
+      <button class="nav-item" data-scene="settings" onclick="showScene('settings')" type="button">
+        <span class="nav-icon">⚙️</span>
+        <span class="nav-label">Settings</span>
       </button>
     </nav>
     
@@ -3715,6 +3719,11 @@
       icon.textContent = kellyAudio.isPlaying ? '⏸️' : '▶️';
     }
 
+    function syncAutoAdvanceUI() {
+      const toggle = document.getElementById('auto-advance-toggle');
+      if (toggle) toggle.checked = !!state.autoAdvance;
+    }
+
     async function generateTTS(text) {
       if (!text) return null;
       const response = await fetch('/api/tts', {
@@ -4016,19 +4025,14 @@
     // ============================================
     // LESSON PLAYER
     // ============================================
-    function buildPhaseProgress() {
-      const container = document.getElementById('phase-progress');
-      container.innerHTML = '';
-      
-      PHASES.forEach((_, i) => {
-        const bar = document.createElement('div');
-        bar.className = 'phase-bar';
-        bar.innerHTML = '<div class="phase-bar-fill"></div>';
-        bar.addEventListener('click', () => goToPhase(i));
-        container.appendChild(bar);
+    function updatePhaseBar() {
+      const segments = document.querySelectorAll('.phase-segment');
+      if (!segments || segments.length === 0) return;
+      segments.forEach((seg, i) => {
+        seg.classList.remove('active', 'completed');
+        if (i === state.currentPhase) seg.classList.add('active');
+        else if (i < state.currentPhase) seg.classList.add('completed');
       });
-      
-      updatePhaseProgress();
     }
     
     function updatePhaseProgress() {
@@ -4038,13 +4042,7 @@
         hasAtom: !!lessonAtoms[state.currentPhase],
         atomScript: lessonAtoms[state.currentPhase]?.script?.substring(0, 50)
       });
-      
-      const bars = document.querySelectorAll('.phase-bar');
-      bars.forEach((bar, i) => {
-        bar.classList.remove('complete', 'active');
-        if (i < state.currentPhase) bar.classList.add('complete');
-        else if (i === state.currentPhase) bar.classList.add('active');
-      });
+      updatePhaseBar();
       
       const phase = PHASES[state.currentPhase];
       document.getElementById('caption-phase').innerHTML = `
@@ -4101,8 +4099,9 @@
           <span class="topic">${currentLesson.topic}</span>
         `;
       }
-      
-      buildPhaseProgress();
+
+      // Ensure phase UI reflects current state when entering lesson.
+      updatePhaseProgress();
     }
 
     function goToPhase(index) {
@@ -4694,15 +4693,18 @@
         advancePhase();
       });
 
-      document.getElementById('btn-auto-advance')?.addEventListener('click', () => {
-        state.autoAdvance = !state.autoAdvance;
-        const label = document.getElementById('auto-advance-label');
-        if (label) label.textContent = state.autoAdvance ? 'Auto' : 'Manual';
+      // Header auto-advance toggle
+      document.getElementById('auto-advance-toggle')?.addEventListener('change', (e) => {
+        state.autoAdvance = !!e.target.checked;
         saveState();
       });
 
-      document.getElementById('btn-settings-lesson')?.addEventListener('click', () => {
-        showScene('settings');
+      // Phase bar click handlers
+      document.querySelectorAll('.phase-segment').forEach(segment => {
+        segment.addEventListener('click', () => {
+          const phase = parseInt(segment.dataset.phase, 10);
+          goToPhase(phase);
+        });
       });
       
       // Reactions
@@ -4925,6 +4927,8 @@
       
       // Navigation
       document.querySelectorAll('[data-scene]').forEach(el => {
+        // Avoid double-firing on elements that already use inline onclick handlers.
+        if (el.getAttribute('onclick')) return;
         el.addEventListener('click', () => showScene(el.dataset.scene));
       });
       
@@ -5000,6 +5004,7 @@
       loadProgressFromCalendar(); // Sync progress from calendar system
       loadSubscription();
       syncPlayPauseUI();
+      syncAutoAdvanceUI();
       // Hide known broken / not-yet-shipped controls
       ['#btn-ask', '#btn-downloads'].forEach((sel) => {
         const el = document.querySelector(sel);
@@ -5029,7 +5034,6 @@
       
       buildCarousel();
       preloadKellyImages().catch(() => {});
-      buildPhaseProgress();
       
       const kelly = getCurrentKelly();
       updateBackground(kelly.color);
