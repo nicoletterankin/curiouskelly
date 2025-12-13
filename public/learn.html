@@ -2,7 +2,7 @@
 <html lang="en" style="--kelly-color: #3b82f6; --kelly-color-rgb: 59, 130, 246;">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <meta name="theme-color" content="#3b82f6">
@@ -44,6 +44,8 @@
       --safe-top: env(safe-area-inset-top, 20px);
       /* Lesson player: Kelly takes N% of viewport (width on desktop, height on mobile). */
       --kelly-size: 50; /* 0, 25, 50, 75, 100 */
+      --kelly-desktop-basis: 55%;
+      --kelly-mobile-height: 50vh;
     }
     
     * {
@@ -535,67 +537,90 @@
     }
     
     .lesson-kelly-container {
-      display: flex;
-      align-items: center;
-      justify-content: center;
       position: relative;
       overflow: hidden;
-      padding: 16px;
     }
     
     .lesson-kelly {
-      width: 100%;
-      height: 100%;
-      border-radius: 0;
       display: flex;
       align-items: center;
       justify-content: center;
-      position: relative;
-      overflow: hidden;
-      background: transparent;
     }
     
-    .lesson-kelly img {
-      width: 100%;
-      height: 100%;
-      object-fit: contain;
-      border-radius: 0;
-    }
-
-    /* Kelly size: desktop uses viewport WIDTH, mobile uses viewport HEIGHT */
-    @media (min-width: 900px) {
+    /* Kelly Hero - Desktop */
+    @media (min-width: 768px) {
       .lesson-viewport {
+        display: flex;
         flex-direction: row;
-        align-items: stretch;
+        height: calc(100vh - 120px);
       }
-
+      
       .lesson-kelly-container {
-        flex: 0 0 auto;
-        width: calc(var(--kelly-size) * 1vw);
-        height: 100%;
+        flex: 0 0 var(--kelly-desktop-basis, 55%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        padding: 2rem;
       }
-
-      .caption-area {
+      
+      .lesson-kelly {
+        width: 100%;
+        height: 100%;
+        max-width: 500px;
+        max-height: 500px;
+        border-radius: 0;
+        background: transparent;
+        overflow: hidden;
+      }
+      
+      .lesson-kelly img,
+      #lesson-kelly-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        border-radius: 1rem;
+      }
+      
+      .lesson-content-area {
         flex: 1;
-        text-align: left;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        padding: 2rem;
         overflow-y: auto;
         -webkit-overflow-scrolling: touch;
       }
     }
-
-    @media (max-width: 899px) {
+    
+    /* Kelly Hero - Mobile */
+    @media (max-width: 767px) {
       .lesson-viewport {
+        display: flex;
         flex-direction: column;
+        height: calc(100vh - 120px);
       }
-
+      
       .lesson-kelly-container {
-        flex: 0 0 auto;
-        width: 100%;
-        height: calc(var(--kelly-size) * 1vh);
+        flex: 0 0 var(--kelly-mobile-height, 50vh);
+        display: flex;
+        align-items: center;
+        justify-content: center;
       }
-
-      .caption-area {
-        flex: 1;
+      
+      .lesson-kelly {
+        width: 80%;
+        height: 80%;
+        border-radius: 0;
+        background: transparent;
+        overflow: hidden;
+      }
+      
+      .lesson-kelly img,
+      #lesson-kelly-img {
+        width: 100%;
+        height: 100%;
+        object-fit: contain;
+        border-radius: 1rem;
       }
     }
 
@@ -683,6 +708,102 @@
       padding: 20px;
       text-align: center;
     }
+
+    /* Ensure transcript text is clean (no garble) */
+    #caption-text,
+    .lesson-transcript,
+    .caption-text {
+      font-size: 1.25rem;
+      line-height: 1.6;
+      color: white;
+      text-align: center;
+      max-width: 600px;
+      margin: 0 auto;
+      padding: 1rem;
+      white-space: pre-wrap;
+      word-break: break-word;
+    }
+
+    @media (min-width: 768px) {
+      #caption-text,
+      .lesson-transcript,
+      .caption-text {
+        font-size: 1.5rem;
+        text-align: left;
+      }
+    }
+
+    /* Phase bar: more prominent + clickable */
+    .phase-progress {
+      display: flex;
+      gap: 0.5rem;
+      padding: 1rem 0;
+      justify-content: center;
+      width: 100%;
+    }
+
+    .phase-bar {
+      flex: 0 0 auto;
+      width: 3rem;
+      height: 0.5rem;
+      background: rgba(255, 255, 255, 0.3);
+      border-radius: 0.25rem;
+      cursor: pointer;
+      transition: transform 0.2s ease, background 0.2s ease;
+    }
+
+    .phase-bar:hover { transform: scaleY(1.5); }
+    .phase-bar.complete { background: rgba(255, 255, 255, 0.6); }
+    .phase-bar.active { background: var(--kelly-color, #3b82f6); }
+    .phase-bar .phase-bar-fill { display: none; }
+
+    /* Playback controls bar (visible + accessible) */
+    .lesson-controls-bar {
+      position: fixed;
+      bottom: calc(80px + var(--safe-bottom));
+      left: 50%;
+      transform: translateX(-50%);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: rgba(0, 0, 0, 0.8);
+      -webkit-backdrop-filter: blur(10px);
+      backdrop-filter: blur(10px);
+      padding: 0.75rem 1.5rem;
+      border-radius: 2rem;
+      z-index: 100;
+      max-width: calc(100vw - 24px);
+    }
+
+    .control-btn {
+      background: transparent;
+      border: none;
+      color: white;
+      font-size: 1.5rem;
+      cursor: pointer;
+      padding: 0.5rem;
+      border-radius: 50%;
+      transition: background 0.2s;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .control-btn:hover { background: rgba(255, 255, 255, 0.1); }
+
+    .control-btn-primary {
+      background: var(--kelly-color, #3b82f6);
+      width: 3rem;
+      height: 3rem;
+    }
+
+    .control-divider {
+      width: 1px;
+      height: 2rem;
+      background: rgba(255, 255, 255, 0.2);
+    }
+
+    .control-spacer { flex: 1; }
     
     .caption-phase {
       display: flex;
@@ -1801,7 +1922,7 @@
           </div>
         </div>
         
-        <div class="caption-area">
+        <div class="lesson-content-area caption-area">
           <div class="caption-phase" id="caption-phase">
             <span class="phase-icon">🪝</span>
             <span class="phase-name">Hook</span>
@@ -1815,6 +1936,33 @@
             <button class="reaction-btn">💭 More</button>
           </div>
         </div>
+      </div>
+
+      <div class="lesson-controls-bar" id="lesson-controls" aria-label="Lesson controls">
+        <button id="btn-prev-phase" class="control-btn" title="Previous" aria-label="Previous phase" type="button">
+          <span aria-hidden="true">⏮️</span>
+        </button>
+        
+        <button id="btn-play-pause" class="control-btn control-btn-primary" title="Play/Pause" aria-label="Play or pause" type="button">
+          <span id="play-pause-icon" aria-hidden="true">⏸️</span>
+        </button>
+        
+        <button id="btn-next-phase" class="control-btn" title="Next" aria-label="Next phase" type="button">
+          <span aria-hidden="true">⏭️</span>
+        </button>
+        
+        <div class="control-divider" aria-hidden="true"></div>
+        
+        <button id="btn-auto-advance" class="control-btn" title="Auto-advance" aria-label="Toggle auto-advance" type="button">
+          <span aria-hidden="true">🔄</span>
+          <span id="auto-advance-label">Auto</span>
+        </button>
+        
+        <div class="control-spacer" aria-hidden="true"></div>
+        
+        <button id="btn-settings-lesson" class="control-btn" title="Settings" aria-label="Settings" type="button">
+          <span aria-hidden="true">⚙️</span>
+        </button>
       </div>
     </section>
     
@@ -2167,8 +2315,16 @@
     const CONFIG = {
       // NOTE: Values are provided by /public/config.js at runtime.
       // Avoid hardcoding keys inside this HTML.
-      SUPABASE_URL: window.SUPABASE_URL || '',
-      SUPABASE_ANON_KEY: window.SUPABASE_ANON_KEY || '',
+      // Launch hardening: prefer KELLY_CONFIG, then globals, then final known-good fallback.
+      // (This prevents “Invalid API key” issues if any script overwrites the globals.)
+      SUPABASE_URL:
+        window.KELLY_CONFIG?.supabaseUrl ||
+        window.SUPABASE_URL ||
+        'https://tvjalxxsyryjphkforjv.supabase.co',
+      SUPABASE_ANON_KEY:
+        window.KELLY_CONFIG?.supabaseKey ||
+        window.SUPABASE_ANON_KEY ||
+        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI',
       MANIFEST_URL: window.MANIFEST_URL || '/assets/kelly/kelly-personas-manifest.json',
       ELEVENLABS_VOICE_ID: window.ELEVENLABS_VOICE_ID || 'wAdymQH5YucAkXwmrdL0'
     };
@@ -2184,27 +2340,38 @@
     // This prevents a stale/denied authenticated token from making lesson queries look like "not found".
     let supabase = null;
     let supabasePublic = null;
-    try {
-      if (CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY && window.supabase?.createClient) {
-        // Public client: never persists/uses user sessions; always uses anon JWT
-        supabasePublic = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY, {
-          auth: {
-            persistSession: false,
-            autoRefreshToken: false,
-            detectSessionInUrl: false
-          },
-          global: {
-            headers: {
-              Authorization: `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+    function ensureSupabaseClients() {
+      try {
+        if (CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY && window.supabase?.createClient) {
+          // Public client: never persists/uses user sessions; always uses anon JWT
+          supabasePublic = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY, {
+            auth: {
+              persistSession: false,
+              autoRefreshToken: false,
+              detectSessionInUrl: false
+            },
+            global: {
+              headers: {
+                apikey: CONFIG.SUPABASE_ANON_KEY,
+                Authorization: `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
+              }
             }
-          }
-        });
+          });
 
-        // Auth client: normal behavior for session-based progress sync
-        supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
-      } else {
-        throw new Error('Supabase config missing');
+          // Auth client: normal behavior for session-based progress sync
+          supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+
+          // Make a predictable global for other modules
+          window.supabaseClient = supabasePublic;
+          return true;
+        }
+      } catch (e) {
+        // fall through to false
       }
+      return false;
+    }
+    try {
+      if (!ensureSupabaseClients()) throw new Error('Supabase config missing');
     } catch (e) {
       console.warn('Supabase not available, using fallback data');
     }
@@ -3145,7 +3312,20 @@
         this.audio = new Audio();
         this.audio.addEventListener('play', () => this.onSpeakStart());
         this.audio.addEventListener('ended', () => this.onSpeakEnd());
+        this.audio.addEventListener('pause', () => this.onPause());
         this.audio.addEventListener('error', () => this.onError());
+      }
+
+      get isPlaying() {
+        return !!this.audio && !this.audio.paused && !this.audio.ended;
+      }
+
+      pause() {
+        try { this.audio.pause(); } catch (e) {}
+      }
+
+      resume() {
+        try { return this.audio.play(); } catch (e) { return Promise.resolve(); }
       }
       
       async play(audioUrl) {
@@ -3189,12 +3369,14 @@
         const kelly = document.getElementById('lesson-kelly');
         kelly.classList.remove('idle');
         kelly.classList.add('speaking');
+        syncPlayPauseUI();
       }
       
       onSpeakEnd() {
         const kelly = document.getElementById('lesson-kelly');
         kelly.classList.remove('speaking');
         kelly.classList.add('idle');
+        syncPlayPauseUI();
 
         // Auto-advance if enabled
         if (state.autoAdvance && state.scene === 'lesson') {
@@ -3205,6 +3387,10 @@
       onError() {
         this.onSpeakEnd();
       }
+
+      onPause() {
+        syncPlayPauseUI();
+      }
       
       stop() {
         this.audio.pause();
@@ -3214,6 +3400,12 @@
     }
     
     const kellyAudio = new KellyAudio();
+
+    function syncPlayPauseUI() {
+      const icon = document.getElementById('play-pause-icon');
+      if (!icon) return;
+      icon.textContent = kellyAudio.isPlaying ? '⏸️' : '▶️';
+    }
 
     async function generateTTS(text) {
       if (!text) return null;
@@ -3551,6 +3743,8 @@
     function applyKellySize() {
       const percent = getKellySizePercent(state.kellySize);
       document.documentElement.style.setProperty('--kelly-size', String(percent));
+      document.documentElement.style.setProperty('--kelly-desktop-basis', `${percent}%`);
+      document.documentElement.style.setProperty('--kelly-mobile-height', `${percent}vh`);
 
       const lessonScene = document.getElementById('scene-lesson');
       if (lessonScene) lessonScene.dataset.kellySize = state.kellySize || 'medium';
@@ -4129,6 +4323,35 @@
       // Phase navigation
       document.getElementById('tap-next').addEventListener('click', advancePhase);
       document.getElementById('tap-prev').addEventListener('click', prevPhase);
+
+      // Lesson control bar
+      document.getElementById('btn-play-pause')?.addEventListener('click', () => {
+        if (kellyAudio.isPlaying) {
+          kellyAudio.pause();
+        } else {
+          kellyAudio.resume();
+        }
+        syncPlayPauseUI();
+      });
+
+      document.getElementById('btn-prev-phase')?.addEventListener('click', () => {
+        prevPhase();
+      });
+
+      document.getElementById('btn-next-phase')?.addEventListener('click', () => {
+        advancePhase();
+      });
+
+      document.getElementById('btn-auto-advance')?.addEventListener('click', () => {
+        state.autoAdvance = !state.autoAdvance;
+        const label = document.getElementById('auto-advance-label');
+        if (label) label.textContent = state.autoAdvance ? 'Auto' : 'Manual';
+        saveState();
+      });
+
+      document.getElementById('btn-settings-lesson')?.addEventListener('click', () => {
+        showScene('settings');
+      });
       
       // Reactions
       document.querySelectorAll('.reaction-btn').forEach(btn => {
@@ -4425,6 +4648,12 @@
       loadProgressFromCalendar(); // Sync progress from calendar system
       loadSubscription();
       applyKellySize();
+      syncPlayPauseUI();
+      // Hide known broken / not-yet-shipped controls
+      ['#btn-ask', '#btn-downloads'].forEach((sel) => {
+        const el = document.querySelector(sel);
+        if (el) el.style.display = 'none';
+      });
       
       // Initialize KellyLessonLoader with lesson-read client (anon-only)
       if (window.KellyLessonLoader && (supabasePublic || supabase)) {
