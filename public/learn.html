@@ -3158,6 +3158,13 @@
     }
     
     function updatePhaseProgress() {
+      console.log('[PHASE] updatePhaseProgress', {
+        phase: state.currentPhase,
+        phaseName: PHASES[state.currentPhase]?.name,
+        hasAtom: !!lessonAtoms[state.currentPhase],
+        atomScript: lessonAtoms[state.currentPhase]?.script?.substring(0, 50)
+      });
+      
       const bars = document.querySelectorAll('.phase-bar');
       bars.forEach((bar, i) => {
         bar.classList.remove('complete', 'active');
@@ -3233,6 +3240,13 @@
     }
     
     function advancePhase() {
+      console.log('[PHASE] advancePhase called', {
+        currentPhase: state.currentPhase,
+        totalPhases: PHASES.length,
+        atomsLoaded: lessonAtoms.length,
+        autoAdvance: state.autoAdvance
+      });
+      
       if (state.currentPhase < PHASES.length - 1) {
         state.currentPhase++;
         saveState();
@@ -3805,7 +3819,30 @@
       });
       
       document.getElementById('btn-infographic').addEventListener('click', () => {
-        document.getElementById('overlay-infographic').classList.add('visible');
+        const overlay = document.getElementById('overlay-infographic');
+        const imageEl = document.getElementById('infographic-image');
+        const titleEl = document.getElementById('infographic-title');
+        const descEl = document.getElementById('infographic-desc');
+        
+        // Get current phase's visual data
+        const currentAtom = lessonAtoms[state.currentPhase];
+        const visualUrl = currentAtom?.visualUrl;
+        const phaseName = PHASES[state.currentPhase]?.name || 'Lesson';
+        const topic = currentLesson?.topic || 'Today\'s Topic';
+        
+        if (visualUrl) {
+          // We have an infographic - show it
+          imageEl.innerHTML = `<img src="${visualUrl}" alt="${phaseName} infographic" style="max-width: 100%; max-height: 60vh; border-radius: 12px;">`;
+          titleEl.textContent = `${phaseName}: ${topic}`;
+          descEl.textContent = currentAtom?.script?.substring(0, 150) + '...' || 'Visual representation of this phase';
+        } else {
+          // No infographic for this phase - show helpful message
+          imageEl.innerHTML = '📊';
+          titleEl.textContent = 'Infographic Coming Soon';
+          descEl.textContent = `Visual content for "${phaseName}" is being generated. Check back soon!`;
+        }
+        
+        overlay.classList.add('visible');
       });
       
       // Week navigation
@@ -4138,7 +4175,7 @@
           showLoading(false);
           if (!loaded) return;
           showScene('lesson');
-          updatePhaseProgress();
+          // updatePhaseProgress() removed - already called by showScene chain
         });
         return;
       }
