@@ -1,11 +1,10 @@
 // Curious Kelly Service Worker
 // App-shell caching + (optional) push notifications
 
-const CACHE_NAME = 'curious-kelly-app-v1';
+const CACHE_NAME = 'curious-kelly-app-v2';
 
 const APP_SHELL = [
   '/learn.html',
-  '/config.js',
   '/manifest.json',
   '/sw.js',
   '/styles/kelly-foundation.css',
@@ -41,8 +40,14 @@ self.addEventListener('fetch', (event) => {
 
   const url = new URL(req.url);
 
-  // Network-first for API and Supabase
-  if (url.pathname.startsWith('/api/') || url.hostname.includes('supabase')) {
+  // Network-first for API, Supabase, and runtime config (avoid stale keys)
+  if (
+    url.pathname.startsWith('/api/') ||
+    url.hostname.includes('supabase') ||
+    url.pathname === '/config.js' ||
+    url.pathname === '/sw.js' ||
+    url.pathname.endsWith('.html')
+  ) {
     event.respondWith(
       fetch(req).catch(() => caches.match(req))
     );
