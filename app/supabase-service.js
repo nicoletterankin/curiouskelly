@@ -25,7 +25,7 @@ const getSupabaseUrl = () => {
   }
   // Fallback for development (should be replaced in production)
   console.warn('[SupabaseService] Using fallback URL - configure window.SUPABASE_URL for production');
-  return 'https://tvjalxxsyryjphkforjv.supabase.co';
+  return 'https://tvjalxxsyryjphkforjv.supabase.co'; // Project: forjv
 };
 
 const getSupabaseKey = () => {
@@ -43,7 +43,7 @@ const getSupabaseKey = () => {
   }
   // Fallback for development
   console.warn('[SupabaseService] Using fallback key - configure window.SUPABASE_ANON_KEY for production');
-  return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcnp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzE5NjI3NTcsImV4cCI6MjA0NzUzODc1N30.kLMlC14ckEp-XoL8RX5liw_cMdGs8lR';
+  return 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3MzM4NjI0NzgsImV4cCI6MjA0OTQzODQ3OH0.qfTs_t0tLmVHFNlKlOqXxvbmEgUEZpHdnVAFbQdJv1c'; // Project: forjv
 };
 
 const SUPABASE_URL = getSupabaseUrl();

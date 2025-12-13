@@ -2296,7 +2296,7 @@
     // ============================================
     // TESTING MODE - Set to false for production
     // ============================================
-    const TESTING_MODE = false; // ✅ PRODUCTION MODE - Paywall enabled
+    const TESTING_MODE = true; // ⚠️ DISABLE PAYWALL FOR TESTING - Set to false before launch
     
     // Check URL param or localStorage for testing bypass
     const urlParams = new URLSearchParams(window.location.search);
@@ -2402,8 +2402,61 @@
           const parsed = JSON.parse(saved);
           state = { ...DEFAULT_STATE, ...parsed };
         }
+        
+        // Load from Supabase in background (merges with local state)
+        loadProgressFromSupabase();
       } catch (e) {
         console.warn('Could not load state:', e);
+      }
+    }
+    
+    /**
+     * Load progress from Supabase and merge with local state
+     */
+    async function loadProgressFromSupabase() {
+      if (!supabase) return;
+      
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return; // Not logged in
+        
+        const userId = session.user.id;
+        
+        // Load user profile
+        const { data: profile } = await supabase
+          .from('users')
+          .select('streak_days, total_lessons_completed')
+          .eq('id', userId)
+          .single();
+        
+        // Load completed lessons
+        const { data: progress } = await supabase
+          .from('user_progress')
+          .select('day_number')
+          .eq('user_id', userId)
+          .eq('status', 'completed');
+        
+        if (progress) {
+          // Merge with local completed lessons
+          const fromDb = progress.map(p => p.day_number);
+          const merged = [...new Set([...state.completedLessons, ...fromDb])];
+          state.completedLessons = merged;
+        }
+        
+        // Use higher streak value
+        if (profile?.streak_days > state.streak) {
+          state.streak = profile.streak_days;
+        }
+        
+        // Re-save merged state to localStorage
+        localStorage.setItem('kellyState', JSON.stringify(state));
+        
+        console.log('📥 Progress loaded from Supabase:', {
+          completedLessons: state.completedLessons.length,
+          streak: state.streak
+        });
+      } catch (err) {
+        console.warn('Failed to load from Supabase:', err.message);
       }
     }
     
@@ -2413,8 +2466,67 @@
         
         // Sync with kelly_progress for calendar.js compatibility
         syncProgressToCalendar();
+        
+        // Sync to Supabase in background (if logged in)
+        syncProgressToSupabase();
       } catch (e) {
         console.warn('Could not save state:', e);
+      }
+    }
+    
+    /**
+     * Sync progress to Supabase (for logged-in users)
+     * This runs in the background and doesn't block the UI
+     */
+    async function syncProgressToSupabase() {
+      if (!supabase) return;
+      
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (!session) return; // Not logged in
+        
+        const userId = session.user.id;
+        
+        // Upsert user progress
+        const { error: userError } = await supabase
+          .from('users')
+          .upsert({
+            id: userId,
+            email: session.user.email,
+            streak_days: state.streak,
+            total_lessons_completed: state.completedLessons.length,
+            updated_at: new Date().toISOString()
+          }, { onConflict: 'id' });
+        
+        if (userError) {
+          console.warn('Failed to sync user progress:', userError.message);
+        }
+        
+        // Sync completed lessons to user_progress table
+        if (state.completedLessons.length > 0) {
+          const progressRecords = state.completedLessons.map(dayNumber => ({
+            user_id: userId,
+            day_number: dayNumber,
+            status: 'completed',
+            completed_at: new Date().toISOString()
+          }));
+          
+          // Upsert each completion (ignore conflicts)
+          const { error: progressError } = await supabase
+            .from('user_progress')
+            .upsert(progressRecords, { 
+              onConflict: 'user_id,day_number',
+              ignoreDuplicates: true 
+            });
+          
+          if (progressError) {
+            console.warn('Failed to sync lesson progress:', progressError.message);
+          }
+        }
+        
+        console.log('✅ Progress synced to Supabase');
+      } catch (err) {
+        console.warn('Supabase sync error:', err.message);
       }
     }
     
@@ -4082,6 +4194,11 @@
       loadState();
       loadProgressFromCalendar(); // Sync progress from calendar system
       loadSubscription();
+      
+      // Initialize KellyLessonLoader with Supabase client
+      if (window.KellyLessonLoader && supabase) {
+        window.KellyLessonLoader.init(supabase);
+      }
       
       console.log('🚀 Kelly Learn initialized', {
         day: state.currentDay,

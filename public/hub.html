@@ -22,6 +22,8 @@
     <!-- Styles -->
     <link rel="stylesheet" href="/css/kelly-os.css" />
 
+    <!-- Configuration (single source of truth) -->
+    <script src="/config.js"></script>
     <!-- Supabase -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   </head>
@@ -414,12 +416,11 @@
          ═══════════════════════════════════════════════════════════════════ -->
     <script>
       // ═══════════════════════════════════════════════════════════════════
-      // CONFIGURATION
+      // CONFIGURATION (from /config.js)
       // ═══════════════════════════════════════════════════════════════════
       const CONFIG = {
-        SUPABASE_URL: 'https://bwuqnxxeqhlbwpwbvqkj.supabase.co',
-        SUPABASE_ANON_KEY:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6ImJ3dXFueHhlcWhsYndwd2J2cWtqIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NDM3MTczNjYsImV4cCI6MjA1OTI5MzM2Nn0.C_EfNM98BbSNnnlJLVh0QVH4BGBA6YMGG6x6_xD9ZLY'
+        SUPABASE_URL: window.SUPABASE_URL || window.KELLY_CONFIG?.supabaseUrl || 'https://tvjalxxsyryjphkforjv.supabase.co',
+        SUPABASE_ANON_KEY: window.SUPABASE_ANON_KEY || window.KELLY_CONFIG?.supabaseKey || ''
       };
 
       // Month names
@@ -485,16 +486,89 @@
       const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
 
       // ═══════════════════════════════════════════════════════════════════
-      // SAMPLE CURRICULUM DATA
+      // LESSON CACHE & SUPABASE HELPERS
       // ═══════════════════════════════════════════════════════════════════
-      const CURRICULUM = {
+      const lessonCache = new Map();
+      
+      // Fallback curriculum for when Supabase is unavailable
+      const FALLBACK_CURRICULUM = {
         1: { topic: '🌟 New Beginnings', objective: 'Explore fresh starts and setting intentions' },
         2: { topic: '🧠 Brain Power', objective: 'Understand how your brain learns' },
         3: { topic: '💡 Creativity', objective: 'Unlock your creative potential' },
-        // ... would have all 365 lessons
-        75: { topic: '✍️ Creative Writing', objective: 'Express yourself through storytelling' }, // March 15
-        333: { topic: '🏛️ Citizenship', objective: 'Understand community participation' } // Nov 28
+        75: { topic: '✍️ Creative Writing', objective: 'Express yourself through storytelling' },
+        333: { topic: '🏛️ Citizenship', objective: 'Understand community participation' }
       };
+      
+      /**
+       * Fetch lesson from Supabase by day number
+       * Returns cached result if available
+       */
+      async function fetchLesson(dayNumber) {
+        // Check cache first
+        if (lessonCache.has(dayNumber)) {
+          return lessonCache.get(dayNumber);
+        }
+        
+        try {
+          const { data, error } = await supabase
+            .from('core_lessons')
+            .select('id, day_number, topic, universal_truth, marketing_headline, marketing_tagline')
+            .eq('day_number', dayNumber)
+            .single();
+          
+          if (error) throw error;
+          
+          const lesson = {
+            id: data.id,
+            topic: data.topic || 'Daily Discovery',
+            objective: data.universal_truth || data.marketing_headline || 'Learn something new today',
+            headline: data.marketing_headline,
+            tagline: data.marketing_tagline
+          };
+          
+          lessonCache.set(dayNumber, lesson);
+          return lesson;
+        } catch (err) {
+          console.warn(`Failed to fetch lesson ${dayNumber} from Supabase:`, err.message);
+          // Return fallback
+          return FALLBACK_CURRICULUM[dayNumber] || {
+            topic: '📚 Daily Wisdom',
+            objective: 'Learn something new today'
+          };
+        }
+      }
+      
+      /**
+       * Preload lessons for current month (background)
+       */
+      async function preloadMonthLessons(month, year) {
+        const firstDayOfMonth = new Date(year, month, 1);
+        const lastDayOfMonth = new Date(year, month + 1, 0);
+        const startDayNum = getDayOfYear(firstDayOfMonth);
+        const endDayNum = getDayOfYear(lastDayOfMonth);
+        
+        try {
+          const { data } = await supabase
+            .from('core_lessons')
+            .select('id, day_number, topic, universal_truth, marketing_headline')
+            .gte('day_number', startDayNum)
+            .lte('day_number', endDayNum);
+          
+          if (data) {
+            data.forEach(lesson => {
+              lessonCache.set(lesson.day_number, {
+                id: lesson.id,
+                topic: lesson.topic || 'Daily Discovery',
+                objective: lesson.universal_truth || lesson.marketing_headline || 'Learn something new',
+                headline: lesson.marketing_headline
+              });
+            });
+            console.log(`📚 Preloaded ${data.length} lessons for month ${month + 1}`);
+          }
+        } catch (err) {
+          console.warn('Failed to preload month lessons:', err.message);
+        }
+      }
 
       // ═══════════════════════════════════════════════════════════════════
       // UTILITY FUNCTIONS
@@ -533,18 +607,17 @@
       // ═══════════════════════════════════════════════════════════════════
       // RENDER FUNCTIONS
       // ═══════════════════════════════════════════════════════════════════
-      function renderTodayCard() {
+      async function renderTodayCard() {
         const today = new Date();
         const dayNum = getDayOfYear(today);
 
-        // Get lesson data (would come from Supabase in production)
-        const lesson = CURRICULUM[dayNum] || {
-          topic: '📚 Daily Wisdom',
-          objective: 'Learn something new today'
-        };
+        // Update date immediately
+        document.getElementById('today-date').textContent = formatDate(today);
+        
+        // Fetch lesson from Supabase
+        const lesson = await fetchLesson(dayNum);
         state.todayLesson = { dayNumber: dayNum, ...lesson };
 
-        document.getElementById('today-date').textContent = formatDate(today);
         document.getElementById('today-topic').textContent = lesson.topic;
         document.getElementById('today-objective').textContent = lesson.objective;
 
@@ -578,6 +651,7 @@
             state.currentMonth = index;
             renderMonthTabs();
             renderCalendarGrid();
+            preloadMonthLessons(state.currentMonth, state.currentYear);
           };
           container.appendChild(tab);
         });
@@ -666,35 +740,38 @@
           );
           state.birthdayLessonDay = getDayOfYear(birthdayDate);
 
-          const lesson = CURRICULUM[state.birthdayLessonDay] || { topic: '🎂 Your Special Day' };
-
+          // Show card immediately, fetch lesson in background
           document.getElementById('birthday-label').textContent =
             `Your Birthday · ${MONTH_NAMES[state.birthdayMonth - 1]} ${state.birthdayDay}`;
-          document.getElementById('birthday-topic').textContent = lesson.topic;
+          document.getElementById('birthday-topic').textContent = '🎂 Your Special Day';
           document.getElementById('birthday-card').classList.remove('hidden');
 
           // Click handler
           document.getElementById('birthday-card').onclick = () => {
             showLessonPreview(state.birthdayLessonDay, birthdayDate);
           };
+          
+          // Fetch actual lesson topic in background
+          fetchLesson(state.birthdayLessonDay).then(lesson => {
+            document.getElementById('birthday-topic').textContent = lesson.topic;
+          });
         }
       }
 
-      function showLessonPreview(dayNum, date) {
-        const lesson = CURRICULUM[dayNum] || {
-          topic: '📚 Daily Wisdom',
-          objective: 'Learn something new'
-        };
-
+      async function showLessonPreview(dayNum, date) {
+        // Show modal immediately with loading state
         document.getElementById('preview-day-badge').textContent =
           `Day ${dayNum} · ${MONTH_NAMES[date.getMonth()]} ${date.getDate()}`;
+        document.getElementById('preview-topic').textContent = 'Loading...';
+        document.getElementById('preview-objective').textContent = '';
+        state.previewDayNum = dayNum;
+        document.getElementById('modal-preview').classList.add('open');
+        
+        // Fetch from Supabase
+        const lesson = await fetchLesson(dayNum);
+        
         document.getElementById('preview-topic').textContent = lesson.topic;
         document.getElementById('preview-objective').textContent = lesson.objective;
-
-        // Store for start button
-        state.previewDayNum = dayNum;
-
-        document.getElementById('modal-preview').classList.add('open');
       }
 
       function closeLessonPreview() {
@@ -754,8 +831,8 @@
           document.getElementById('premium-upsell').classList.remove('hidden');
         }
 
-        // Render UI
-        renderTodayCard();
+        // Render UI (renderTodayCard is async)
+        await renderTodayCard();
         renderStats();
         renderMonthTabs();
         renderCalendarGrid();
@@ -768,6 +845,9 @@
         if (window.location.hash === '#calendar') {
           document.getElementById('calendar-section').scrollIntoView({ behavior: 'smooth' });
         }
+        
+        // Preload current month's lessons in background
+        preloadMonthLessons(state.currentMonth, state.currentYear);
       }
 
       function setupEventListeners() {
@@ -784,6 +864,7 @@
           }
           renderMonthTabs();
           renderCalendarGrid();
+          preloadMonthLessons(state.currentMonth, state.currentYear);
         };
 
         document.getElementById('btn-next-month').onclick = () => {
@@ -795,6 +876,7 @@
           }
           renderMonthTabs();
           renderCalendarGrid();
+          preloadMonthLessons(state.currentMonth, state.currentYear);
         };
 
         // Lesson preview modal
