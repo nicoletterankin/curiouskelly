@@ -42,10 +42,6 @@
       --text-dim: rgba(255,255,255,0.3);
       --safe-bottom: env(safe-area-inset-bottom, 20px);
       --safe-top: env(safe-area-inset-top, 20px);
-      /* Lesson player: Kelly takes N% of viewport (width on desktop, height on mobile). */
-      --kelly-size: 50; /* 0, 25, 50, 75, 100 */
-      --kelly-desktop-basis: 55%;
-      --kelly-mobile-height: 50vh;
     }
     
     * {
@@ -595,7 +591,7 @@
       }
       
       .lesson-kelly-container {
-        flex: 0 0 var(--kelly-desktop-basis, 55%);
+        flex: 0 0 55%;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -640,7 +636,7 @@
       }
       
       .lesson-kelly-container {
-        flex: 0 0 var(--kelly-mobile-height, 50vh);
+        flex: 0 0 50vh;
         display: flex;
         align-items: center;
         justify-content: center;
@@ -663,10 +659,7 @@
       }
     }
 
-    /* Hard hide (so caption takes full space). */
-    #scene-lesson[data-kelly-size="hidden"] .lesson-kelly-container {
-      display: none;
-    }
+    /* Note: Kelly visibility/size is controlled by the presence system (data-kelly-presence). */
     
     .lesson-kelly.idle {
       animation: gentleFloat 3s ease-in-out infinite;
@@ -1914,11 +1907,6 @@
       cursor: pointer;
     }
 
-    /* Never hard-hide Kelly when presence is enabled */
-    [data-kelly-presence] #scene-lesson[data-kelly-size="hidden"] .lesson-kelly-container {
-      display: flex !important;
-    }
-
     /* Panel overlay support (so Kelly can remain visible) */
     #scene-lesson.panel-underlay {
       pointer-events: none;
@@ -2291,7 +2279,7 @@
             <div class="label">Kelly Size</div>
             <div class="age-control">
               <span class="age-emoji" id="kelly-size-emoji">🟦</span>
-              <input type="range" class="age-slider" id="kelly-size-slider" min="0" max="100" step="25" value="50" aria-label="Kelly size" title="Kelly size">
+              <input type="range" class="age-slider" id="kelly-size-slider" min="0" max="100" step="50" value="50" aria-label="Kelly size" title="Kelly size">
               <span class="age-value" id="kelly-size-value">50%</span>
             </div>
           </div>
@@ -2602,6 +2590,7 @@
       document.documentElement.setAttribute('data-kelly-presence', level);
       localStorage.setItem('kellyPresence', level);
       updatePresenceToggleUI();
+      updatePresenceSliderUI();
     }
 
     function cycleKellyPresence() {
@@ -2613,6 +2602,24 @@
     function updatePresenceToggleUI() {
       const label = document.getElementById('kelly-presence-label');
       if (label) label.textContent = kellyPresence + '%';
+    }
+
+    function updatePresenceSliderUI() {
+      const slider = document.getElementById('kelly-size-slider');
+      const valueLabel = document.getElementById('kelly-size-value');
+      const emoji = document.getElementById('kelly-size-emoji');
+
+      if (slider) slider.value = String(kellyPresence);
+
+      if (valueLabel) {
+        const labels = { 0: 'Zen', 50: 'Balanced', 100: 'Immersive' };
+        valueLabel.textContent = labels[kellyPresence] || (kellyPresence + '%');
+      }
+
+      if (emoji) {
+        const emojis = { 0: '🧘', 50: '⚖️', 100: '🌟' };
+        emoji.textContent = emojis[kellyPresence] || '🟦';
+      }
     }
 
     // Initialize
@@ -2763,7 +2770,6 @@
       language: 'en',
       voiceSpeed: 'normal',
       autoAdvance: true,
-      kellySize: 'medium', // hidden | small | medium | large | full
       reducedMotion: false,
       streak: 0,
       completedLessons: [],
@@ -2944,6 +2950,8 @@
         const saved = localStorage.getItem('kellyState');
         if (saved) {
           const parsed = JSON.parse(saved);
+          // Kelly size is controlled by the presence system now.
+          if (parsed && typeof parsed === 'object') delete parsed.kellySize;
           state = { ...DEFAULT_STATE, ...parsed };
         }
         
@@ -4056,7 +4064,6 @@
     }
     
     function updateLessonUI() {
-      applyKellySize();
       const kelly = getCurrentKelly();
       const ageBucket = getAgeBucket(state.age);
       const imgUrl = getKellyImageUrl(kelly.id, ageBucket);
@@ -4098,40 +4105,6 @@
       buildPhaseProgress();
     }
 
-    // ============================================
-    // KELLY SIZE (P0)
-    // ============================================
-    const KELLY_SIZES = {
-      hidden: { percent: 0, label: 'Hidden' },
-      small: { percent: 25, label: '25%' },
-      medium: { percent: 50, label: '50%' },
-      large: { percent: 75, label: '75%' },
-      full: { percent: 100, label: '100%' }
-    };
-
-    function getKellySizePercent(sizeKey) {
-      return KELLY_SIZES[sizeKey]?.percent ?? 50;
-    }
-
-    function getKellySizeKeyFromPercent(percent) {
-      const p = Number(percent);
-      if (p <= 0) return 'hidden';
-      if (p <= 25) return 'small';
-      if (p <= 50) return 'medium';
-      if (p <= 75) return 'large';
-      return 'full';
-    }
-
-    function applyKellySize() {
-      const percent = getKellySizePercent(state.kellySize);
-      document.documentElement.style.setProperty('--kelly-size', String(percent));
-      document.documentElement.style.setProperty('--kelly-desktop-basis', `${percent}%`);
-      document.documentElement.style.setProperty('--kelly-mobile-height', `${percent}vh`);
-
-      const lessonScene = document.getElementById('scene-lesson');
-      if (lessonScene) lessonScene.dataset.kellySize = state.kellySize || 'medium';
-    }
-    
     function goToPhase(index) {
       if (index >= 0 && index < PHASES.length) {
         state.currentPhase = index;
@@ -4451,11 +4424,8 @@
       document.getElementById('age-emoji').textContent = getAgeEmoji(state.age);
 
       // Kelly size
-      const kellySizePercent = getKellySizePercent(state.kellySize);
-      const kellySizeSlider = document.getElementById('kelly-size-slider');
-      const kellySizeValueEl = document.getElementById('kelly-size-value');
-      if (kellySizeSlider) kellySizeSlider.value = String(kellySizePercent);
-      if (kellySizeValueEl) kellySizeValueEl.textContent = state.kellySize === 'hidden' ? 'Hidden' : `${kellySizePercent}%`;
+      // Sync Kelly size slider with presence
+      updatePresenceSliderUI();
       
       // Language
       const languages = { en: 'English', es: 'Español', fr: 'Français' };
@@ -4826,9 +4796,9 @@
       document.getElementById('kelly-size-slider')?.addEventListener('input', (e) => {
         e.stopPropagation();
         const percent = parseInt(e.target.value, 10);
-        state.kellySize = getKellySizeKeyFromPercent(percent);
-        saveState();
-        applyKellySize();
+        // Snap to valid presence values (0, 50, 100)
+        const snapped = percent <= 25 ? 0 : percent <= 75 ? 50 : 100;
+        setKellyPresence(snapped);
         updateSettingsUI();
       });
       
@@ -5029,7 +4999,6 @@
       loadState();
       loadProgressFromCalendar(); // Sync progress from calendar system
       loadSubscription();
-      applyKellySize();
       syncPlayPauseUI();
       // Hide known broken / not-yet-shipped controls
       ['#btn-ask', '#btn-downloads'].forEach((sel) => {
