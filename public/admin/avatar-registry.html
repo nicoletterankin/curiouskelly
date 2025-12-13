@@ -1,0 +1,459 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kelly Avatar Registry - HeyGen IDs</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+      background: #0a0a1a;
+      color: #fff;
+      padding: 1rem;
+    }
+    h1 { margin-bottom: 1rem; }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: 100px repeat(12, 1fr);
+      gap: 4px;
+      font-size: 0.75rem;
+    }
+    
+    .header-cell {
+      background: #1e3a5f;
+      padding: 0.5rem;
+      text-align: center;
+      font-weight: bold;
+      position: sticky;
+      top: 0;
+    }
+    
+    .row-header {
+      background: #1e3a5f;
+      padding: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-weight: bold;
+    }
+    
+    .avatar-cell {
+      background: #111827;
+      border: 1px solid #374151;
+      padding: 0.5rem;
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+      min-height: 180px;
+    }
+    
+    .avatar-cell.has-id {
+      border-color: #10b981;
+    }
+    
+    .avatar-cell.complete {
+      border-color: #3b82f6;
+      background: #0f172a;
+    }
+    
+    .avatar-img {
+      width: 100%;
+      aspect-ratio: 1;
+      object-fit: cover;
+      border-radius: 4px;
+      background: #1f2937;
+    }
+    
+    .avatar-id {
+      font-family: monospace;
+      font-size: 0.65rem;
+      background: #1f2937;
+      padding: 2px 4px;
+      border-radius: 2px;
+      cursor: pointer;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    
+    .avatar-id:hover {
+      background: #374151;
+    }
+    
+    .avatar-id.empty {
+      color: #ef4444;
+      font-style: italic;
+    }
+    
+    input[type="text"] {
+      width: 100%;
+      background: #1f2937;
+      border: 1px solid #374151;
+      color: #fff;
+      padding: 4px;
+      border-radius: 2px;
+      font-size: 0.7rem;
+    }
+    
+    textarea {
+      width: 100%;
+      background: #1f2937;
+      border: 1px solid #374151;
+      color: #fff;
+      padding: 4px;
+      border-radius: 2px;
+      font-size: 0.65rem;
+      resize: vertical;
+      min-height: 40px;
+    }
+    
+    .clips {
+      display: flex;
+      gap: 2px;
+    }
+    
+    .clip {
+      flex: 1;
+      padding: 2px;
+      text-align: center;
+      background: #374151;
+      border-radius: 2px;
+      font-size: 0.6rem;
+      cursor: pointer;
+    }
+    
+    .clip:hover {
+      background: #4b5563;
+    }
+    
+    .clip.done {
+      background: #10b981;
+      color: #000;
+    }
+    
+    .actions {
+      margin: 1rem 0;
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    button {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      cursor: pointer;
+      font-size: 0.9rem;
+    }
+    
+    button:hover { background: #2563eb; }
+    
+    .stats {
+      background: #1f2937;
+      padding: 1rem;
+      border-radius: 0.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .legend {
+      display: flex;
+      gap: 1.5rem;
+      margin-bottom: 1rem;
+      font-size: 0.85rem;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .legend-color {
+      width: 16px;
+      height: 16px;
+      border-radius: 2px;
+      border: 2px solid;
+    }
+    
+    .legend-color.no-id { border-color: #374151; background: #111827; }
+    .legend-color.has-id { border-color: #10b981; background: #111827; }
+    .legend-color.complete { border-color: #3b82f6; background: #0f172a; }
+  </style>
+</head>
+<body>
+  <h1>🎬 Kelly Avatar Registry</h1>
+  <p style="margin-bottom: 1rem; color: #9ca3af;">Manage 60 HeyGen avatar IDs (12 personas × 5 age buckets)</p>
+  
+  <div class="legend">
+    <div class="legend-item"><div class="legend-color no-id"></div> No Avatar ID</div>
+    <div class="legend-item"><div class="legend-color has-id"></div> Has Avatar ID</div>
+    <div class="legend-item"><div class="legend-color complete"></div> All 3 Clips Done</div>
+  </div>
+  
+  <div class="stats" id="stats">
+    Loading...
+  </div>
+  
+  <div class="actions">
+    <button onclick="saveToLocal()">💾 Save to LocalStorage</button>
+    <button onclick="exportJSON()">📥 Export JSON</button>
+    <button onclick="importJSON()">📤 Import JSON</button>
+    <button onclick="copyAllIds()">📋 Copy All IDs</button>
+  </div>
+  
+  <div class="grid" id="grid">
+    <!-- Header row -->
+    <div class="header-cell"></div>
+    <!-- Persona headers will be inserted here -->
+  </div>
+
+  <script>
+    // ============================================
+    // DATA STRUCTURE
+    // ============================================
+    
+    const PERSONAS = [
+      { id: 'scientist', name: 'Scientist', icon: '🔬', trait: 'Data-driven precision' },
+      { id: 'explorer', name: 'Explorer', icon: '🧭', trait: 'Wonder and discovery' },
+      { id: 'rebel', name: 'Rebel', icon: '⚡', trait: 'Bold challenging spirit' },
+      { id: 'architect', name: 'Architect', icon: '📐', trait: 'Systematic builder' },
+      { id: 'diplomat', name: 'Diplomat', icon: '🤝', trait: 'Harmony and connection' },
+      { id: 'empath', name: 'Empath', icon: '💜', trait: 'Deep feeling wisdom' },
+      { id: 'macgyver', name: 'MacGyver', icon: '🔧', trait: 'Resourceful solver' },
+      { id: 'mystic', name: 'Mystic', icon: '🔮', trait: 'Intuitive insight' },
+      { id: 'provider', name: 'Provider', icon: '🏠', trait: 'Nurturing strength' },
+      { id: 'storyteller', name: 'Storyteller', icon: '📖', trait: 'Narrative magic' },
+      { id: 'strategist', name: 'Strategist', icon: '♟️', trait: 'Tactical thinking' },
+      { id: 'survivor', name: 'Survivor', icon: '🏔️', trait: 'Resilient grit' }
+    ];
+    
+    const AGE_BUCKETS = [
+      { id: 'kid', name: 'Kid', range: '2-7' },
+      { id: 'teen', name: 'Teen', range: '8-17' },
+      { id: 'adult', name: 'Adult', range: '18-45' },
+      { id: 'elder', name: 'Elder', range: '46-70' },
+      { id: 'super_elder', name: 'Super Elder', range: '71+' }
+    ];
+    
+    // Default motion prompts per persona
+    const DEFAULT_PROMPTS = {
+      scientist: 'Subject speaks with focused concentration. Slight head tilts when explaining. Thoughtful pauses. Curious, analytical expression.',
+      explorer: 'Subject speaks with bright-eyed wonder. Animated expressions. Excited gestures. Adventurous, curious energy.',
+      rebel: 'Subject speaks with confident edge. Direct eye contact. Slight smirk. Bold, challenging energy.',
+      architect: 'Subject speaks with measured precision. Organized gestures. Calm, systematic delivery. Methodical expression.',
+      diplomat: 'Subject speaks with warm diplomacy. Gentle nodding. Open, welcoming expression. Harmonious energy.',
+      empath: 'Subject speaks with deep compassion. Soft, understanding gaze. Gentle head movements. Caring, intuitive presence.',
+      macgyver: 'Subject speaks with practical energy. Quick thinking expressions. Problem-solving focus. Resourceful, can-do attitude.',
+      mystic: 'Subject speaks with calm wisdom. Knowing gaze. Peaceful, centered presence. Intuitive, spiritual energy.',
+      provider: 'Subject speaks with nurturing warmth. Reassuring nods. Protective, caring expression. Supportive energy.',
+      storyteller: 'Subject speaks with animated expression. Dramatic pauses. Engaging eye contact. Captivating, narrative energy.',
+      strategist: 'Subject speaks with calculated confidence. Thoughtful pauses. Strategic gaze. Tactical, planning energy.',
+      survivor: 'Subject speaks with serious, determined grit. Steady, unblinking gaze. Set jaw while talking. Resilient and strong expression.'
+    };
+    
+    // Registry data (loaded from localStorage or empty)
+    let registry = {};
+    
+    // ============================================
+    // INITIALIZATION
+    // ============================================
+    
+    function init() {
+      loadFromLocal();
+      buildGrid();
+      updateStats();
+    }
+    
+    function loadFromLocal() {
+      const saved = localStorage.getItem('kellyAvatarRegistry');
+      if (saved) {
+        registry = JSON.parse(saved);
+      } else {
+        // Initialize empty registry
+        PERSONAS.forEach(p => {
+          AGE_BUCKETS.forEach(a => {
+            const key = `${p.id}_${a.id}`;
+            registry[key] = {
+              personaId: p.id,
+              ageBucket: a.id,
+              avatarId: '',
+              motionPrompt: DEFAULT_PROMPTS[p.id] || '',
+              imageUrl: '',
+              clips: { intro: false, main: false, outro: false }
+            };
+          });
+        });
+      }
+    }
+    
+    function saveToLocal() {
+      // Collect current values from inputs
+      document.querySelectorAll('.avatar-cell').forEach(cell => {
+        const key = cell.dataset.key;
+        if (key && registry[key]) {
+          const idInput = cell.querySelector('.id-input');
+          const promptInput = cell.querySelector('.prompt-input');
+          if (idInput) registry[key].avatarId = idInput.value;
+          if (promptInput) registry[key].motionPrompt = promptInput.value;
+        }
+      });
+      
+      localStorage.setItem('kellyAvatarRegistry', JSON.stringify(registry));
+      alert('Saved to localStorage!');
+      updateStats();
+      buildGrid(); // Refresh to update visual states
+    }
+    
+    // ============================================
+    // BUILD GRID
+    // ============================================
+    
+    function buildGrid() {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      
+      // Header row
+      grid.innerHTML += '<div class="header-cell">Age / Persona</div>';
+      PERSONAS.forEach(p => {
+        grid.innerHTML += `<div class="header-cell">${p.icon}<br>${p.name}</div>`;
+      });
+      
+      // Data rows
+      AGE_BUCKETS.forEach(age => {
+        // Row header
+        grid.innerHTML += `<div class="row-header">${age.name}<br><small>${age.range}</small></div>`;
+        
+        // Cells
+        PERSONAS.forEach(persona => {
+          const key = `${persona.id}_${age.id}`;
+          const data = registry[key] || {};
+          const hasId = data.avatarId && data.avatarId.length > 10;
+          const clipsComplete = data.clips?.intro && data.clips?.main && data.clips?.outro;
+          
+          grid.innerHTML += `
+            <div class="avatar-cell ${hasId ? 'has-id' : ''} ${clipsComplete ? 'complete' : ''}" data-key="${key}">
+              <input type="text" class="id-input" placeholder="Avatar ID" 
+                     value="${data.avatarId || ''}" 
+                     onchange="updateCell('${key}', 'avatarId', this.value)">
+              <textarea class="prompt-input" placeholder="Motion prompt..."
+                        onchange="updateCell('${key}', 'motionPrompt', this.value)">${data.motionPrompt || ''}</textarea>
+              <div class="clips">
+                <div class="clip ${data.clips?.intro ? 'done' : ''}" onclick="toggleClip('${key}', 'intro')" title="Intro clip">1</div>
+                <div class="clip ${data.clips?.main ? 'done' : ''}" onclick="toggleClip('${key}', 'main')" title="Main clip">2</div>
+                <div class="clip ${data.clips?.outro ? 'done' : ''}" onclick="toggleClip('${key}', 'outro')" title="Outro clip">3</div>
+              </div>
+            </div>
+          `;
+        });
+      });
+    }
+    
+    function updateCell(key, field, value) {
+      if (!registry[key]) registry[key] = {};
+      registry[key][field] = value;
+      updateStats();
+    }
+    
+    function toggleClip(key, clipType) {
+      if (!registry[key]) registry[key] = {};
+      if (!registry[key].clips) registry[key].clips = { intro: false, main: false, outro: false };
+      registry[key].clips[clipType] = !registry[key].clips[clipType];
+      buildGrid();
+      updateStats();
+    }
+    
+    // ============================================
+    // STATS
+    // ============================================
+    
+    function updateStats() {
+      const total = 60;
+      let withId = 0;
+      let withPrompt = 0;
+      let clipsComplete = 0;
+      let totalClips = 0;
+      
+      Object.values(registry).forEach(r => {
+        if (r.avatarId && r.avatarId.length > 10) withId++;
+        if (r.motionPrompt && r.motionPrompt.length > 20) withPrompt++;
+        if (r.clips?.intro) totalClips++;
+        if (r.clips?.main) totalClips++;
+        if (r.clips?.outro) totalClips++;
+        if (r.clips?.intro && r.clips?.main && r.clips?.outro) clipsComplete++;
+      });
+      
+      document.getElementById('stats').innerHTML = `
+        <strong>Progress:</strong>
+        Avatar IDs: ${withId}/${total} |
+        Motion Prompts: ${withPrompt}/${total} |
+        Complete (3 clips): ${clipsComplete}/${total} |
+        Total Clips: ${totalClips}/${total * 3}
+      `;
+    }
+    
+    // ============================================
+    // EXPORT/IMPORT
+    // ============================================
+    
+    function exportJSON() {
+      saveToLocal(); // Make sure we have latest
+      const blob = new Blob([JSON.stringify(registry, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'kelly-avatar-registry.json';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    
+    function importJSON() {
+      const input = document.createElement('input');
+      input.type = 'file';
+      input.accept = '.json';
+      input.onchange = async (e) => {
+        const file = e.target.files[0];
+        if (!file) return;
+        try {
+          const text = await file.text();
+          registry = JSON.parse(text);
+          localStorage.setItem('kellyAvatarRegistry', JSON.stringify(registry));
+          buildGrid();
+          updateStats();
+          alert('Import successful!');
+        } catch (err) {
+          alert('Failed to import: ' + err.message);
+        }
+      };
+      input.click();
+    }
+    
+    function copyAllIds() {
+      const ids = Object.entries(registry)
+        .filter(([k, v]) => v.avatarId && v.avatarId.length > 10)
+        .map(([k, v]) => `${k}: ${v.avatarId}`)
+        .join('\n');
+      
+      if (!ids) {
+        alert('No avatar IDs to copy yet!');
+        return;
+      }
+      
+      navigator.clipboard.writeText(ids).then(() => {
+        alert('Copied ' + ids.split('\n').length + ' avatar IDs to clipboard!');
+      }).catch(err => {
+        alert('Failed to copy: ' + err.message);
+      });
+    }
+    
+    // ============================================
+    // INIT
+    // ============================================
+    
+    init();
+  </script>
+</body>
+</html>
