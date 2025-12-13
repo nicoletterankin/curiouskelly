@@ -42,6 +42,8 @@
       --text-dim: rgba(255,255,255,0.3);
       --safe-bottom: env(safe-area-inset-bottom, 20px);
       --safe-top: env(safe-area-inset-top, 20px);
+      /* Lesson player: Kelly takes N% of viewport (width on desktop, height on mobile). */
+      --kelly-size: 50; /* 0, 25, 50, 75, 100 */
     }
     
     * {
@@ -533,30 +535,73 @@
     }
     
     .lesson-kelly-container {
-      flex: 1;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      position: relative;
-    }
-    
-    .lesson-kelly {
-      width: 200px;
-      height: 200px;
-      border-radius: 50%;
       display: flex;
       align-items: center;
       justify-content: center;
       position: relative;
       overflow: hidden;
-      background: var(--bg-card);
+      padding: 16px;
+    }
+    
+    .lesson-kelly {
+      width: 100%;
+      height: 100%;
+      border-radius: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+      background: transparent;
     }
     
     .lesson-kelly img {
       width: 100%;
       height: 100%;
-      object-fit: cover;
-      border-radius: 50%;
+      object-fit: contain;
+      border-radius: 0;
+    }
+
+    /* Kelly size: desktop uses viewport WIDTH, mobile uses viewport HEIGHT */
+    @media (min-width: 900px) {
+      .lesson-viewport {
+        flex-direction: row;
+        align-items: stretch;
+      }
+
+      .lesson-kelly-container {
+        flex: 0 0 auto;
+        width: calc(var(--kelly-size) * 1vw);
+        height: 100%;
+      }
+
+      .caption-area {
+        flex: 1;
+        text-align: left;
+        overflow-y: auto;
+        -webkit-overflow-scrolling: touch;
+      }
+    }
+
+    @media (max-width: 899px) {
+      .lesson-viewport {
+        flex-direction: column;
+      }
+
+      .lesson-kelly-container {
+        flex: 0 0 auto;
+        width: 100%;
+        height: calc(var(--kelly-size) * 1vh);
+      }
+
+      .caption-area {
+        flex: 1;
+      }
+    }
+
+    /* Hard hide (so caption takes full space). */
+    #scene-lesson[data-kelly-size="hidden"] .lesson-kelly-container {
+      display: none;
     }
     
     .lesson-kelly.idle {
@@ -1845,6 +1890,15 @@
               <span class="age-value" id="age-value">30</span>
             </div>
           </div>
+          <div class="settings-item" style="cursor: default;">
+            <div class="icon">🧍</div>
+            <div class="label">Kelly Size</div>
+            <div class="age-control">
+              <span class="age-emoji" id="kelly-size-emoji">🟦</span>
+              <input type="range" class="age-slider" id="kelly-size-slider" min="0" max="100" step="25" value="50" aria-label="Kelly size" title="Kelly size">
+              <span class="age-value" id="kelly-size-value">50%</span>
+            </div>
+          </div>
           <div class="settings-item" id="btn-language">
             <div class="icon">🌐</div>
             <div class="label">Language</div>
@@ -2242,6 +2296,7 @@
       language: 'en',
       voiceSpeed: 'normal',
       autoAdvance: true,
+      kellySize: 'medium', // hidden | small | medium | large | full
       reducedMotion: false,
       streak: 0,
       completedLessons: [],
@@ -3427,6 +3482,7 @@
     }
     
     function updateLessonUI() {
+      applyKellySize();
       const kelly = getCurrentKelly();
       const ageBucket = getAgeBucket(state.age);
       const imgUrl = getKellyImageUrl(kelly.id, ageBucket);
@@ -3466,6 +3522,38 @@
       }
       
       buildPhaseProgress();
+    }
+
+    // ============================================
+    // KELLY SIZE (P0)
+    // ============================================
+    const KELLY_SIZES = {
+      hidden: { percent: 0, label: 'Hidden' },
+      small: { percent: 25, label: '25%' },
+      medium: { percent: 50, label: '50%' },
+      large: { percent: 75, label: '75%' },
+      full: { percent: 100, label: '100%' }
+    };
+
+    function getKellySizePercent(sizeKey) {
+      return KELLY_SIZES[sizeKey]?.percent ?? 50;
+    }
+
+    function getKellySizeKeyFromPercent(percent) {
+      const p = Number(percent);
+      if (p <= 0) return 'hidden';
+      if (p <= 25) return 'small';
+      if (p <= 50) return 'medium';
+      if (p <= 75) return 'large';
+      return 'full';
+    }
+
+    function applyKellySize() {
+      const percent = getKellySizePercent(state.kellySize);
+      document.documentElement.style.setProperty('--kelly-size', String(percent));
+
+      const lessonScene = document.getElementById('scene-lesson');
+      if (lessonScene) lessonScene.dataset.kellySize = state.kellySize || 'medium';
     }
     
     function goToPhase(index) {
@@ -3785,6 +3873,13 @@
       document.getElementById('age-slider').value = state.age;
       document.getElementById('age-value').textContent = state.age;
       document.getElementById('age-emoji').textContent = getAgeEmoji(state.age);
+
+      // Kelly size
+      const kellySizePercent = getKellySizePercent(state.kellySize);
+      const kellySizeSlider = document.getElementById('kelly-size-slider');
+      const kellySizeValueEl = document.getElementById('kelly-size-value');
+      if (kellySizeSlider) kellySizeSlider.value = String(kellySizePercent);
+      if (kellySizeValueEl) kellySizeValueEl.textContent = state.kellySize === 'hidden' ? 'Hidden' : `${kellySizePercent}%`;
       
       // Language
       const languages = { en: 'English', es: 'Español', fr: 'Français' };
@@ -4121,6 +4216,16 @@
         // Rebuild carousel with new age images
         buildCarousel();
       });
+
+      // Kelly size slider
+      document.getElementById('kelly-size-slider')?.addEventListener('input', (e) => {
+        e.stopPropagation();
+        const percent = parseInt(e.target.value, 10);
+        state.kellySize = getKellySizeKeyFromPercent(percent);
+        saveState();
+        applyKellySize();
+        updateSettingsUI();
+      });
       
       // Toggle switches
       const toggleReminder = async (toggleEl) => {
@@ -4319,6 +4424,7 @@
       loadState();
       loadProgressFromCalendar(); // Sync progress from calendar system
       loadSubscription();
+      applyKellySize();
       
       // Initialize KellyLessonLoader with lesson-read client (anon-only)
       if (window.KellyLessonLoader && (supabasePublic || supabase)) {
