@@ -5,11 +5,30 @@ import { promisify } from 'util';
 const execAsync = promisify(exec);
 const sleep = (ms: number) => new Promise(resolve => setTimeout(resolve, ms));
 
-const START_DAY = 2;
-const END_DAY = 30;
+function getArgValue(flag: string): string | undefined {
+  const idx = process.argv.indexOf(flag);
+  if (idx === -1) return undefined;
+  return process.argv[idx + 1];
+}
+
+function getIntArg(flag: string, fallback: number): number {
+  const raw = getArgValue(flag);
+  if (!raw) return fallback;
+  const n = Number.parseInt(raw, 10);
+  if (!Number.isFinite(n)) return fallback;
+  return n;
+}
+
+const START_DAY = getIntArg('--start', 2);
+const END_DAY = getIntArg('--end', 30);
 const DELAY_MS = 30000; // 30 seconds delay
 
 async function runBatch() {
+  if (!Number.isFinite(START_DAY) || !Number.isFinite(END_DAY) || START_DAY < 1 || END_DAY < START_DAY) {
+    console.error('❌ Invalid range. Usage: npx tsx scripts/batch-visual-generation.ts --start <n> --end <n>');
+    process.exit(1);
+  }
+
   console.log(`🚀 Starting batch visual generation for Days ${START_DAY}-${END_DAY}`);
   console.log(`⏱️  Delay between days: ${DELAY_MS}ms`);
 

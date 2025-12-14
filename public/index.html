@@ -3961,6 +3961,8 @@
 
     <!-- Supabase UMD bundle - more reliable than ESM import -->
     <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.47.10/dist/umd/supabase.min.js"></script>
+    <!-- Supabase singleton to prevent multiple GoTrue clients -->
+    <script src="/js/lib/supabase.js"></script>
 
     <!-- Accessibility: Respect reduced motion preferences -->
     <script>
@@ -3985,10 +3987,14 @@
         const SUPABASE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co';
         const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI';
 
-        // Initialize from UMD global (loaded via script tag above)
+        // Initialize from singleton (prevents Multiple GoTrueClient warning)
         try {
-            if (window.supabase && window.supabase.createClient) {
-                supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
+            // Ensure singleton can resolve config even if config.js didn't populate globals
+            window.SUPABASE_URL = window.SUPABASE_URL || SUPABASE_URL;
+            window.SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || SUPABASE_ANON_KEY;
+
+            if (typeof window.getSupabase === 'function') {
+                supabase = window.getSupabase({
                     auth: {
                         autoRefreshToken: true,
                         persistSession: true,
@@ -3997,21 +4003,12 @@
                         flowType: 'pkce'
                     }
                 });
-                console.log('[Auth] ✅ Supabase client initialized (UMD)');
+            }
+
+            if (supabase) {
+                console.log('[Auth] ✅ Supabase client initialized (singleton)');
             } else {
-                console.warn('[Auth] ⚠️ Supabase UMD not loaded, trying ESM fallback...');
-                // ESM fallback
-                const { createClient } = await import('https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.47.10/+esm');
-                supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-                    auth: {
-                        autoRefreshToken: true,
-                        persistSession: true,
-                        detectSessionInUrl: true,
-                        storageKey: 'curious-kelly-auth',
-                        flowType: 'pkce'
-                    }
-                });
-                console.log('[Auth] ✅ Supabase client initialized (ESM fallback)');
+                console.warn('[Auth] ⚠️ Supabase client unavailable (missing SDK or config)');
             }
         } catch (e) {
             console.warn('[Auth] ⚠️ Supabase client failed to load:', e.message);
@@ -4249,7 +4246,7 @@
                 // Fetch today's lesson from core_lessons table
                 const { data, error } = await supabase
                     .from('core_lessons')
-                    .select('topic, hook_question')
+                    .select('topic')
                     .eq('day_number', dayNumber)
                     .single();
                 
@@ -4258,9 +4255,7 @@
                     return; // Keep fallback
                 }
                 
-                if (data?.hook_question) {
-                    heroQuestion.textContent = data.hook_question;
-                } else if (data?.topic) {
+                if (data?.topic) {
                     heroQuestion.textContent = data.topic;
                 }
             } catch (err) {
