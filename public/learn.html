@@ -5471,6 +5471,51 @@
       }
     }
 
+    // ============================================
+    // MOTION CLIPS (generic phase animations)
+    // kelly_motion_library: avatar_key (persona_ageBucket), phase (hook/cliff/...), video_url, status
+    // ============================================
+    const motionClipCache = Object.create(null);
+
+    function getPhaseKeyFromDbPhase(dbPhase) {
+      const match = PHASES?.find((p) => p?.dbName === dbPhase || p?.name === dbPhase || p?.key === dbPhase);
+      return (match?.key || String(dbPhase || '')).toLowerCase();
+    }
+
+    async function getMotionClipUrl(persona, ageBucket, phase) {
+      const db = supabase;
+      if (!db) return null;
+
+      const personaId = String(persona || '').trim() || 'scientist';
+      const bucket = String(ageBucket || '').trim() || 'adult';
+      const phaseKey = String(phase || '').trim().toLowerCase();
+
+      const avatarKey = `${personaId}_${bucket}`;
+      const cacheKey = `${avatarKey}_${phaseKey}`;
+      if (motionClipCache[cacheKey]) return motionClipCache[cacheKey];
+
+      try {
+        const { data, error } = await db
+          .from('kelly_motion_library')
+          .select('video_url')
+          .eq('avatar_key', avatarKey)
+          .eq('phase', phaseKey)
+          .eq('status', 'completed')
+          .single();
+
+        if (error || !data?.video_url) {
+          console.warn(`No motion clip for ${cacheKey}`);
+          return null;
+        }
+
+        motionClipCache[cacheKey] = data.video_url;
+        return data.video_url;
+      } catch (err) {
+        console.error('Motion clip fetch error:', err);
+        return null;
+      }
+    }
+
     function stopAllMedia() {
       stopVideo();
       kellyAudio.stop();
@@ -5481,13 +5526,21 @@
       stopAllMedia();
 
       const ageBucket = getEffectiveAgeBucket();
-      const personaId = state.kellyId;
+      const personaId = state.kellyId || getCurrentKelly()?.id || 'scientist';
+      const phaseKey = getPhaseKeyFromDbPhase(dbPhase);
 
       // Prefer atom-provided video URL (e.g. lesson_atoms.hd_video_url)
       let resolvedVideo = videoUrl || null;
+      let resolvedSource = resolvedVideo ? 'atom' : null;
       if (!resolvedVideo) {
         // Try kelly_video_assets lookup (best-effort)
         resolvedVideo = await getVideoUrl(state.currentDay, dbPhase, personaId, ageBucket, state.language);
+        if (resolvedVideo) resolvedSource = 'kelly_video_assets';
+      }
+      if (!resolvedVideo) {
+        // Final fallback: generic motion clip per persona+age+phase (no day/language coupling)
+        resolvedVideo = await getMotionClipUrl(personaId, ageBucket, phaseKey);
+        if (resolvedVideo) resolvedSource = 'kelly_motion_library';
       }
 
       if (resolvedVideo) {
@@ -5504,11 +5557,17 @@
         v.classList.remove('hidden');
         if (img) img.style.display = 'none';
 
+        console.log(`▶️ Playing: ${personaId}_${ageBucket}_${phaseKey}`);
+
         v.onplay = () => {
           setKellySpeaking(true);
           syncPlayPauseUI();
         };
-        v.onended = () => onPhaseMediaEnd();
+        v.onended = () => {
+          // Return to idle image when clip ends.
+          stopVideo();
+          onPhaseMediaEnd();
+        };
         v.onerror = async () => {
           stopVideo();
           await kellyAudio.speak(dbPhase, script);
