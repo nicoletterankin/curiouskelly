@@ -89,18 +89,16 @@ const KellyLessonLoader = {
   init(supabaseClient) {
     if (supabaseClient) {
       this.supabase = supabaseClient;
+    } else if (typeof window.getSupabase === 'function') {
+      // Preferred: single shared instance (prevents multiple GoTrue clients)
+      this.supabase = window.getSupabase();
+      if (this.supabase) {
+        __kellyLoaderDebugLog('📚 KellyLessonLoader using getSupabase() singleton');
+      }
     } else if (window.supabaseClient) {
       // Try global client first
       this.supabase = window.supabaseClient;
       __kellyLoaderDebugLog('📚 KellyLessonLoader using global supabaseClient');
-    } else if (window.supabase?.createClient && window.SUPABASE_URL && window.SUPABASE_ANON_KEY) {
-      // Create from global config
-      this.supabase = window.supabase.createClient(window.SUPABASE_URL, window.SUPABASE_ANON_KEY);
-      __kellyLoaderDebugLog('📚 KellyLessonLoader created Supabase client from config');
-    } else if (window.supabase?.createClient && window.KELLY_CONFIG?.supabaseUrl && window.KELLY_CONFIG?.supabaseKey) {
-      // Create from KELLY_CONFIG
-      this.supabase = window.supabase.createClient(window.KELLY_CONFIG.supabaseUrl, window.KELLY_CONFIG.supabaseKey);
-      __kellyLoaderDebugLog('📚 KellyLessonLoader created Supabase client from KELLY_CONFIG');
     } else {
       __kellyLoaderDebugWarn('⚠️ KellyLessonLoader: No Supabase client available, will use D1 mirror');
     }

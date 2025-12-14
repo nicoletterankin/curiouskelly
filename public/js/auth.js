@@ -2,22 +2,20 @@
 // CURIOUS KELLY - PRODUCTION AUTH
 // ============================================
 
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
-
-// Initialize Supabase client
-const supabase = createClient(
-  'https://tvjalxxsyryjphkforjv.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI',
-  {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true,
-      storageKey: 'curious-kelly-auth',
-      flowType: 'pkce'
-    }
-  }
-)
+// Use the browser singleton to prevent multiple GoTrue clients.
+// Pages that import this module MUST include the Supabase SDK script tag + /js/lib/supabase.js first.
+const supabase =
+  (typeof window !== 'undefined' && typeof window.getSupabase === 'function'
+    ? window.getSupabase({
+        auth: {
+          autoRefreshToken: true,
+          persistSession: true,
+          detectSessionInUrl: true,
+          storageKey: 'curious-kelly-auth',
+          flowType: 'pkce',
+        },
+      })
+    : null);
 
 // ============================================
 // AUTH FUNCTIONS

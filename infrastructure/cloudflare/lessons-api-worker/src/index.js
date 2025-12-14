@@ -281,3 +281,4 @@ async function handleSyncStatus(db, headers) {
     source: 'cloudflare-d1'
   }, { headers });
 }
+

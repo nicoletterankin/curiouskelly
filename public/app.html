@@ -1152,22 +1152,27 @@
 
     <!-- Supabase & Unity Logic -->
     <script type="module">
-      import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+      // Supabase (singleton)
+      // This page already loads:
+      // - Supabase SDK (UMD)
+      // - /js/lib/supabase.js (singleton)
+      // So we MUST NOT create a second client here.
+      const supabase =
+        (typeof window.getSupabase === 'function'
+          ? window.getSupabase({
+              auth: {
+                autoRefreshToken: true,
+                persistSession: true,
+                detectSessionInUrl: true, // Handles OAuth callback
+                storageKey: 'curious-kelly-auth',
+                flowType: 'pkce'
+              }
+            })
+          : null);
 
-      // Initialize Supabase
-      const SUPABASE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co';
-      const SUPABASE_ANON_KEY =
-        'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI';
-
-      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY, {
-        auth: {
-          autoRefreshToken: true,
-          persistSession: true,
-          detectSessionInUrl: true, // Handles OAuth callback
-          storageKey: 'curious-kelly-auth',
-          flowType: 'pkce'
-        }
-      });
+      if (!supabase) {
+        throw new Error('Supabase not initialized. Ensure /config.js + Supabase SDK + /js/lib/supabase.js are loaded.');
+      }
 
       // ═══════════════════════════════════════════════════════════════
       // KELLY AUDIO & AVATAR SYSTEM - P0 FIX

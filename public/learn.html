@@ -14,6 +14,8 @@
   <script src="/config.js"></script>
   <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <!-- Supabase singleton (prevents multiple GoTrue clients) -->
+  <script src="/js/lib/supabase.js"></script>
 
   <!-- Kelly OS shared foundation (Phase 1) -->
   <link rel="stylesheet" href="/styles/kelly-foundation.css">
@@ -3670,45 +3672,27 @@
     // SUPABASE CLIENTS
     // ============================================
     // IMPORTANT:
-    // - We use TWO clients:
-    //   1) supabasePublic: lesson reads using anon role ONLY (prevents RLS/session issues)
-    //   2) supabase: auth/session + progress sync (if user is signed in)
-    //
-    // This prevents a stale/denied authenticated token from making lesson queries look like "not found".
+    // - We use ONE singleton client per browser context to avoid:
+    //   "Multiple GoTrueClient instances detected in the same browser context"
+    // - Lesson reads + auth/progress share the same instance.
     let supabase = null;
-    let supabasePublic = null;
-    function ensureSupabaseClients() {
+    function ensureSupabaseClient() {
       try {
-        if (CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY && window.supabase?.createClient) {
-          // Public client: never persists/uses user sessions; always uses anon JWT
-          supabasePublic = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY, {
-            auth: {
-              persistSession: false,
-              autoRefreshToken: false,
-              detectSessionInUrl: false
-            },
-            global: {
-              headers: {
-                apikey: CONFIG.SUPABASE_ANON_KEY,
-                Authorization: `Bearer ${CONFIG.SUPABASE_ANON_KEY}`
-              }
-            }
-          });
-
-          // Auth client: normal behavior for session-based progress sync
+        // Prefer shared singleton. Falls back to a direct createClient if needed.
+        if (typeof window.getSupabase === 'function') {
+          supabase = window.getSupabase();
+        } else if (CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY && window.supabase?.createClient) {
           supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
-
-          // Make a predictable global for other modules
-          window.supabaseClient = supabasePublic;
-          return true;
+          window.supabaseClient = supabase;
         }
+        return !!supabase;
       } catch (e) {
         // fall through to false
       }
       return false;
     }
     try {
-      if (!ensureSupabaseClients()) throw new Error('Supabase config missing');
+      if (!ensureSupabaseClient()) throw new Error('Supabase config missing');
     } catch (e) {
       debugWarn('Supabase not available, using fallback data');
     }
@@ -3717,7 +3701,7 @@
     // AUDIT MODE (console-only; run with ?audit=1)
     // ============================================
     async function auditSupabaseQueries() {
-      const db = supabasePublic || supabase;
+      const db = supabase;
 
       function report({ query, status, error, data }) {
         console.log(`QUERY: ${query}`);
@@ -4629,8 +4613,7 @@
         return null;
       }
 
-      // Prefer supabasePublic for lesson reads (avoids RLS/session edge cases)
-      const db = supabasePublic || supabase;
+      const db = supabase;
       if (!db) {
         const apiPayload = await loadLessonFromApi(dayNumber);
         if (apiPayload) return applyLoadedLesson(dayNumber, apiPayload);
@@ -4846,7 +4829,7 @@
     // LOAD WEEK LESSONS FROM SUPABASE
     // ============================================
     async function loadWeekLessons(startDay) {
-      const db = supabasePublic || supabase;
+      const db = supabase;
       if (!db) {
         // Use local API fallback so the week view still shows real topics
         const results = await Promise.all(
@@ -7004,8 +6987,8 @@
       });
       
       // Initialize KellyLessonLoader with lesson-read client (anon-only)
-      if (window.KellyLessonLoader && (supabasePublic || supabase)) {
-        window.KellyLessonLoader.init(supabasePublic || supabase);
+      if (window.KellyLessonLoader && supabase) {
+        window.KellyLessonLoader.init(supabase);
       }
       
       console.log('✅ Kelly Learn initialized');

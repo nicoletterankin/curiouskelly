@@ -38,3 +38,4 @@ rm -rf icon.iconset
 Until generated on Mac, Windows/Linux builds will work. macOS builds require the .icns file.
 
 
+

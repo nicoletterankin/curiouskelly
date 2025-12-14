@@ -2,22 +2,20 @@
 // CURIOUS KELLY - PRODUCTION AUTH
 // ============================================
 
-import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm'
-
-// Initialize Supabase client
-const supabase = createClient(
-  'https://tvjalxxsyryjphkforjv.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI',
-  {
-    auth: {
-      autoRefreshToken: true,
-      persistSession: true,
-      detectSessionInUrl: true,
-      storageKey: 'curious-kelly-auth',
-      flowType: 'pkce'
-    }
-  }
-)
+// Use the browser singleton to prevent multiple GoTrue clients.
+// Pages that import this module MUST include the Supabase SDK script tag + /js/lib/supabase.js first.
+const supabase =
+  typeof window !== 'undefined' && typeof window.getSupabase === 'function'
+    ? window.getSupabase({
+        auth: {
+          autoRefreshToken: true,
+          persistSession: true,
+          detectSessionInUrl: true,
+          storageKey: 'curious-kelly-auth',
+          flowType: 'pkce',
+        },
+      })
+    : null;
 
 // ============================================
 // AUTH FUNCTIONS
@@ -31,48 +29,48 @@ export async function signInWithGoogle() {
       queryParams: {
         access_type: 'offline',
         prompt: 'consent',
-      }
-    }
-  })
-  
+      },
+    },
+  });
+
   if (error) {
-    console.error('Google sign-in error:', error)
-    throw error
+    console.error('Google sign-in error:', error);
+    throw error;
   }
-  
-  return data
+
+  return data;
 }
 
 export async function signInWithApple() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'apple',
     options: {
-      redirectTo: `${window.location.origin}/learn.html`
-    }
-  })
-  
+      redirectTo: `${window.location.origin}/learn.html`,
+    },
+  });
+
   if (error) {
-    console.error('Apple sign-in error:', error)
-    throw error
+    console.error('Apple sign-in error:', error);
+    throw error;
   }
-  
-  return data
+
+  return data;
 }
 
 export async function signInWithGitHub() {
   const { data, error } = await supabase.auth.signInWithOAuth({
     provider: 'github',
     options: {
-      redirectTo: `${window.location.origin}/learn.html`
-    }
-  })
-  
+      redirectTo: `${window.location.origin}/learn.html`,
+    },
+  });
+
   if (error) {
-    console.error('GitHub sign-in error:', error)
-    throw error
+    console.error('GitHub sign-in error:', error);
+    throw error;
   }
-  
-  return data
+
+  return data;
 }
 
 export async function signInWithFacebook() {
@@ -80,16 +78,16 @@ export async function signInWithFacebook() {
     provider: 'facebook',
     options: {
       redirectTo: `${window.location.origin}/learn.html`,
-      scopes: 'public_profile,email' 
-    }
-  })
-  
+      scopes: 'public_profile,email',
+    },
+  });
+
   if (error) {
-    console.error('Facebook sign-in error:', error)
-    throw error
+    console.error('Facebook sign-in error:', error);
+    throw error;
   }
-  
-  return data
+
+  return data;
 }
 
 export async function signInWithOpenAI() {
@@ -98,50 +96,56 @@ export async function signInWithOpenAI() {
     provider: 'oidc', // or specific OpenAI provider key if configured
     options: {
       redirectTo: `${window.location.origin}/learn.html`,
-      scopes: 'openid profile email'
-    }
-  })
-  
+      scopes: 'openid profile email',
+    },
+  });
+
   if (error) {
-    console.error('OpenAI sign-in error:', error)
-    throw error
+    console.error('OpenAI sign-in error:', error);
+    throw error;
   }
-  
-  return data
+
+  return data;
 }
 
 export async function signOut() {
-  const { error } = await supabase.auth.signOut()
-  
+  const { error } = await supabase.auth.signOut();
+
   if (error) {
-    console.error('Sign-out error:', error)
-    throw error
+    console.error('Sign-out error:', error);
+    throw error;
   }
-  
+
   // Redirect to homepage
-  window.location.href = '/'
+  window.location.href = '/';
 }
 
 export async function getSession() {
-  const { data: { session }, error } = await supabase.auth.getSession()
-  
+  const {
+    data: { session },
+    error,
+  } = await supabase.auth.getSession();
+
   if (error) {
-    console.error('Get session error:', error)
-    return null
+    console.error('Get session error:', error);
+    return null;
   }
-  
-  return session
+
+  return session;
 }
 
 export async function getUser() {
-  const { data: { user }, error } = await supabase.auth.getUser()
-  
+  const {
+    data: { user },
+    error,
+  } = await supabase.auth.getUser();
+
   if (error) {
-    console.error('Get user error:', error)
-    return null
+    console.error('Get user error:', error);
+    return null;
   }
-  
-  return user
+
+  return user;
 }
 
 // ============================================
@@ -149,20 +153,20 @@ export async function getUser() {
 // ============================================
 
 export async function requireAuth() {
-  const session = await getSession()
-  
+  const session = await getSession();
+
   if (!session) {
     // Redirect to login
-    window.location.href = '/index.html'
-    return null
+    window.location.href = '/index.html';
+    return null;
   }
-  
-  return session
+
+  return session;
 }
 
 export async function checkAuth() {
-  const session = await getSession()
-  return !!session
+  const session = await getSession();
+  return !!session;
 }
 
 // ============================================
@@ -171,15 +175,15 @@ export async function checkAuth() {
 
 export function onAuthStateChange(callback) {
   return supabase.auth.onAuthStateChange(async (event, session) => {
-    console.log('Auth state changed:', event, session)
-    
+    console.log('Auth state changed:', event, session);
+
     // EARN TO LEARN: Process referral conversion on signup
     if (event === 'SIGNED_IN' && session?.user) {
       await processReferralConversion(session.user.id, session.access_token);
     }
-    
-    callback(event, session)
-  })
+
+    callback(event, session);
+  });
 }
 
 // ============================================
@@ -194,12 +198,12 @@ async function processReferralConversion(userId, accessToken) {
   try {
     // Check if there's a stored referral code (from affiliate-tracking.js)
     let referralCode = null;
-    
+
     // Try the global function first
     if (typeof window.getReferralCode === 'function') {
       referralCode = window.getReferralCode();
     }
-    
+
     // Fallback to parsing localStorage directly
     if (!referralCode) {
       try {
@@ -212,60 +216,59 @@ async function processReferralConversion(userId, accessToken) {
         console.log('[Referral] Could not parse stored referral data');
       }
     }
-    
+
     if (!referralCode) {
       console.log('[Referral] No referral code stored');
       return;
     }
-    
+
     // Check if user is already referred (avoid duplicate processing)
     const { data: userData } = await supabase
       .from('users')
       .select('referred_by_user_id')
       .eq('id', userId)
       .single();
-    
+
     if (userData?.referred_by_user_id) {
       console.log('[Referral] User already has referrer, skipping');
       return;
     }
-    
+
     // Get full tracking data
     const trackingData = window.getReferralTrackingData?.() || {};
-    
+
     console.log('[Referral] Processing conversion for:', referralCode);
-    
+
     // Call the convert endpoint
     const response = await fetch('/api/referral/convert', {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        'Authorization': `Bearer ${accessToken}`
+        Authorization: `Bearer ${accessToken}`,
       },
       body: JSON.stringify({
         userId: userId,
         referralCode: referralCode,
         clickId: trackingData.clickId || null,
-        conversionType: 'signup'
-      })
+        conversionType: 'signup',
+      }),
     });
-    
+
     const result = await response.json();
-    
+
     if (result.success) {
       console.log('[Referral] ✅ Conversion successful!', result);
-      
+
       // Fire analytics event
       if (typeof gtag !== 'undefined') {
         gtag('event', 'referral_signup', {
           event_category: 'referral',
-          event_label: referralCode
+          event_label: referralCode,
         });
       }
     } else {
       console.warn('[Referral] Conversion failed:', result.message);
     }
-    
   } catch (error) {
     console.error('[Referral] Error processing conversion:', error);
   }
@@ -275,7 +278,4 @@ async function processReferralConversion(userId, accessToken) {
 // EXPORT SUPABASE CLIENT
 // ============================================
 
-export { supabase }
-
-
-
+export { supabase };

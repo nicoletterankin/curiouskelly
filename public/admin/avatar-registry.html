@@ -14,6 +14,11 @@
     }
     h1 { margin-bottom: 1rem; }
     
+    .page-subtitle {
+      margin-bottom: 1rem;
+      color: #9ca3af;
+    }
+    
     .grid {
       display: grid;
       grid-template-columns: 100px repeat(12, 1fr);
@@ -45,8 +50,70 @@
       padding: 0.5rem;
       display: flex;
       flex-direction: column;
+      gap: 0.35rem;
+      min-height: 230px;
+    }
+    
+    .avatar-media {
+      width: 100%;
+    }
+    
+    .avatar-placeholder {
+      width: 100%;
+      aspect-ratio: 1;
+      border-radius: 4px;
+      border: 1px dashed #374151;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+      font-size: 0.7rem;
+      color: #9ca3af;
+      padding: 0.5rem;
+      background: #0f172a;
+    }
+    
+    .avatar-placeholder.hidden {
+      display: none;
+    }
+    
+    .image-input {
+      margin-top: 0.1rem;
+    }
+    
+    .image-meta {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      font-size: 0.65rem;
+      color: #9ca3af;
       gap: 0.25rem;
-      min-height: 180px;
+    }
+    
+    .image-meta span {
+      white-space: nowrap;
+      text-overflow: ellipsis;
+      overflow: hidden;
+    }
+    
+    .micro-button {
+      background: transparent;
+      border: 1px solid #374151;
+      color: #9ca3af;
+      padding: 0.1rem 0.4rem;
+      border-radius: 999px;
+      font-size: 0.6rem;
+      cursor: pointer;
+    }
+    
+    .micro-button:hover {
+      background: #374151;
+      color: #fff;
+    }
+    
+    .micro-actions {
+      display: flex;
+      gap: 0.25rem;
     }
     
     .avatar-cell.has-id {
@@ -186,7 +253,7 @@
 </head>
 <body>
   <h1>🎬 Kelly Avatar Registry</h1>
-  <p style="margin-bottom: 1rem; color: #9ca3af;">Manage 60 HeyGen avatar IDs (12 personas × 5 age buckets)</p>
+  <p class="page-subtitle">Manage 60 HeyGen avatar IDs (12 personas × 5 age buckets)</p>
   
   <div class="legend">
     <div class="legend-item"><div class="legend-color no-id"></div> No Avatar ID</div>
@@ -255,6 +322,148 @@
       survivor: 'Subject speaks with serious, determined grit. Steady, unblinking gaze. Set jaw while talking. Resilient and strong expression.'
     };
     
+    const IMAGE_LOOKUP = {
+      "scientist_kid": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/kid/kelly_scientist_head.png",
+      "explorer_kid": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/kid/kelly_explorer_head.png",
+      "rebel_kid": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/kid/kelly_rebel_head.png",
+      "architect_kid": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/kid/kelly_architect_head.png",
+      "diplomat_kid": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/kid/kelly_diplomat_head.png",
+      "empath_kid": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/kid/kelly_empath_head.png",
+      "macgyver_kid": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/kid/kelly_macgyver_head.png",
+      "mystic_kid": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/kid/kelly_mystic_head.png",
+      "provider_kid": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/kid/kelly_provider_head.png",
+      "storyteller_kid": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/kid/kelly_storyteller_head.png",
+      "strategist_kid": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/kid/kelly_strategist_head.png",
+      "survivor_kid": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/kid/kelly_survivor_head.png",
+      "scientist_teen": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/teen/kelly_scientist_head.png",
+      "explorer_teen": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/teen/kelly_explorer_head.png",
+      "rebel_teen": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/teen/kelly_rebel_head.png",
+      "architect_teen": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/teen/kelly_architect_head.png",
+      "diplomat_teen": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/teen/kelly_diplomat_head.png",
+      "empath_teen": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/teen/kelly_empath_head.png",
+      "macgyver_teen": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/teen/kelly_macgyver_head.png",
+      "mystic_teen": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/teen/kelly_mystic_head.png",
+      "provider_teen": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/teen/kelly_provider_head.png",
+      "storyteller_teen": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/teen/kelly_storyteller_head.png",
+      "strategist_teen": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/teen/kelly_strategist_head.png",
+      "survivor_teen": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/teen/kelly_survivor_head.png",
+      "scientist_adult": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/kelly_scientist_head.png",
+      "explorer_adult": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/kelly_explorer_head.png",
+      "rebel_adult": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/kelly_rebel_head.png",
+      "architect_adult": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/kelly_architect_head.png",
+      "diplomat_adult": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/kelly_diplomat_head.png",
+      "empath_adult": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/kelly_empath_head.png",
+      "macgyver_adult": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/kelly_macgyver_head.png",
+      "mystic_adult": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/kelly_mystic_head.png",
+      "provider_adult": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/kelly_provider_head.png",
+      "storyteller_adult": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/kelly_storyteller_head.png",
+      "strategist_adult": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/kelly_strategist_head.png",
+      "survivor_adult": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/kelly_survivor_head.png",
+      "scientist_elder": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/elder/kelly_scientist_head.png",
+      "explorer_elder": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/elder/kelly_explorer_head.png",
+      "rebel_elder": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/elder/kelly_rebel_head.png",
+      "architect_elder": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/elder/kelly_architect_head.png",
+      "diplomat_elder": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/elder/kelly_diplomat_head.png",
+      "empath_elder": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/elder/kelly_empath_head.png",
+      "macgyver_elder": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/elder/kelly_macgyver_head.png",
+      "mystic_elder": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/elder/kelly_mystic_head.png",
+      "provider_elder": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/elder/kelly_provider_head.png",
+      "storyteller_elder": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/elder/kelly_storyteller_head.png",
+      "strategist_elder": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/elder/kelly_strategist_head.png",
+      "survivor_elder": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/elder/kelly_survivor_head.png",
+      "scientist_super_elder": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/super_elder/kelly_scientist_head.png",
+      "explorer_super_elder": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/super_elder/kelly_explorer_head.png",
+      "rebel_super_elder": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/super_elder/kelly_rebel_head.png",
+      "architect_super_elder": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/super_elder/kelly_architect_head.png",
+      "diplomat_super_elder": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/super_elder/kelly_diplomat_head.png",
+      "empath_super_elder": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/super_elder/kelly_empath_head.png",
+      "macgyver_super_elder": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/super_elder/kelly_macgyver_head.png",
+      "mystic_super_elder": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/super_elder/kelly_mystic_head.png",
+      "provider_super_elder": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/super_elder/kelly_provider_head.png",
+      "storyteller_super_elder": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/super_elder/kelly_storyteller_head.png",
+      "strategist_super_elder": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/super_elder/kelly_strategist_head.png",
+      "survivor_super_elder": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/age/super_elder/kelly_survivor_head.png"
+    };
+    
+    const DEFAULT_AVATAR_IDS = {
+      scientist_kid: 'fa4a6780e25a49699ee4f75cb1f03103',
+      scientist_teen: '2099c4a6d84b4795b3eac9e1342181e8',
+      scientist_adult: '4ac0e56fc4424805b70934399a10b084',
+      scientist_elder: 'f4919db9bd0340c2ae40c3f35dc1d030',
+      scientist_super_elder: '98178c87897e4421884b535b7864ba86',
+      explorer_kid: 'd4e960f7a3424d869877f3a951adfae7',
+      explorer_teen: '87abbcd3f963419897f5c2b118055c50',
+      explorer_adult: '28c1517303d7463eb643238db1bc1b4f',
+      explorer_elder: '85228e932d8a4818803a86a85834968c',
+      explorer_super_elder: 'e4ab0d4d1f1b4dc9b81a1076b018557f',
+      rebel_kid: '5cff601bfb344015a65ff46c6b8cd70a',
+      rebel_teen: '05d388c18b724341aba7412ae4335cc4',
+      rebel_adult: '43ed1075e09045598c8a9b5c01822295',
+      rebel_elder: 'c2073ea84f8b4f8bacfc223a1506a2d2',
+      rebel_super_elder: '48acf8e12f984598afdf361f913135bd',
+      architect_kid: 'deaa213342944dc2bf671abe1442e316',
+      architect_teen: '6827da0589374d68ac2bca97bf265ba6',
+      architect_adult: '2e9227fbb359457d9a32fbf6f7793b60',
+      architect_elder: 'c70723da67d44f928e28d65a4f45a4bd',
+      architect_super_elder: '86bbb664016c474eb828c121d8b35680',
+      diplomat_kid: '7b6ab196f2c7430b945411df51a84c58',
+      diplomat_teen: '5fe211a5ff6747448b78087625eb3c91',
+      diplomat_adult: '62516885ca4b4eae8f63b87b8c060e25',
+      diplomat_elder: 'c6e2390531644a59a04b17d45b2cccf9',
+      diplomat_super_elder: '12582467e9ff48889d7b2435642e2d65',
+      empath_kid: 'deeb27f2648848b48c5c1ce59059bd54',
+      empath_teen: '85d09a3cea2a4003b9af7e64f46c0db4',
+      empath_adult: '51be0706d07146f7bcb09b6b9f092747',
+      empath_elder: '94a0ffc1a6054338b570811635d99576',
+      empath_super_elder: '73e1ba0bafc147f8aa7880c90d5309aa',
+      macgyver_kid: 'cc1dd0e9e2fd432099985c9b036ed836',
+      macgyver_teen: '4b4a75b72a194fdca0bf1c2ec5964b90',
+      macgyver_adult: '929b1acec9554514a6483243a8e3b79e',
+      macgyver_elder: '0b3359c26a484c91815321f92e90daf4',
+      macgyver_super_elder: 'cb5b025506284d64b696e296ca2feead',
+      mystic_kid: '48bddc41ae94473caa645ce9ab93136d',
+      mystic_teen: '6a1086451fe6423b8bbbb67fcba5cf30',
+      mystic_adult: '7729b75d6e204be48b577bcf70b46e9d',
+      mystic_elder: 'f5880ee39e4b4e04804218ee9299c445',
+      mystic_super_elder: 'a82183881e284e3782db75b755c3f080',
+      provider_kid: '1024bc304a1146998bc4c360173b2c48',
+      provider_teen: '21b53b1209f7445388f87022c25932d9',
+      provider_adult: '428e126207ef467685388bf7ee1d1801',
+      provider_elder: 'ed8a9fd17b164490ad1247c3df7f9246',
+      provider_super_elder: 'da1d31ffb1d54de6a74d946a6b5d1858',
+      storyteller_kid: '82813816115c4fbe93b3f3f211bd9931',
+      storyteller_teen: 'c4332636e96043e780bc545e661d623f',
+      storyteller_adult: '3d6a9d6f91b444469dae87ebb3d9eba6',
+      storyteller_elder: 'c70723da67d44f928e28d65a4f45a4bd',
+      storyteller_super_elder: '493dac2cf2ba4509b3cc048ff819765e',
+      strategist_kid: 'deaa213342944dc2bf671abe1442e316',
+      strategist_teen: '1abc1248c7ea492e833a7dc3120422be',
+      strategist_adult: 'ff3c1c8f82ad4b50bb75463e34c7e3e6',
+      strategist_elder: '0440e55de518473bbe8a63f3c15677d3',
+      strategist_super_elder: '42e9197ab9d84961915b00d5cc780190',
+      survivor_kid: '6249632f58ce479891de00b4da5fb88d',
+      survivor_teen: '0b6e7bdd0b974768a13926367281beac',
+      survivor_adult: '1968286a49ac48ff9401abc912d61228',
+      survivor_elder: '76c1dbbdad004cd0938a30694dcbcb24',
+      survivor_super_elder: 'c38e30f2a3cf4e81b0365abf41579f22'
+    };
+    
+    function escapeHtml(str = '') {
+      return String(str)
+        .replace(/&/g, '&amp;')
+        .replace(/</g, '&lt;')
+        .replace(/>/g, '&gt;')
+        .replace(/"/g, '&quot;')
+        .replace(/'/g, '&#39;');
+    }
+    
+    function getImageUrlForKey(key) {
+      const entry = registry[key];
+      const custom = entry?.imageUrl?.trim();
+      if (custom) return custom;
+      return IMAGE_LOOKUP[key] || '';
+    }
+    
     // Registry data (loaded from localStorage or empty)
     let registry = {};
     
@@ -270,24 +479,37 @@
     
     function loadFromLocal() {
       const saved = localStorage.getItem('kellyAvatarRegistry');
-      if (saved) {
-        registry = JSON.parse(saved);
-      } else {
-        // Initialize empty registry
-        PERSONAS.forEach(p => {
-          AGE_BUCKETS.forEach(a => {
-            const key = `${p.id}_${a.id}`;
+      registry = saved ? JSON.parse(saved) : {};
+      
+      PERSONAS.forEach(persona => {
+        AGE_BUCKETS.forEach(age => {
+          const key = `${persona.id}_${age.id}`;
+          if (!registry[key]) {
             registry[key] = {
-              personaId: p.id,
-              ageBucket: a.id,
-              avatarId: '',
-              motionPrompt: DEFAULT_PROMPTS[p.id] || '',
-              imageUrl: '',
+              personaId: persona.id,
+              ageBucket: age.id,
+              avatarId: DEFAULT_AVATAR_IDS[key] || '',
+              motionPrompt: DEFAULT_PROMPTS[persona.id] || '',
+              imageUrl: IMAGE_LOOKUP[key] || '',
               clips: { intro: false, main: false, outro: false }
             };
-          });
+            return;
+          }
+          
+          registry[key].personaId = registry[key].personaId || persona.id;
+          registry[key].ageBucket = registry[key].ageBucket || age.id;
+          registry[key].avatarId = registry[key].avatarId || DEFAULT_AVATAR_IDS[key] || '';
+          registry[key].motionPrompt = registry[key].motionPrompt || DEFAULT_PROMPTS[persona.id] || '';
+          registry[key].imageUrl = registry[key].imageUrl || IMAGE_LOOKUP[key] || '';
+          if (!registry[key].clips) {
+            registry[key].clips = { intro: false, main: false, outro: false };
+          } else {
+            registry[key].clips.intro = Boolean(registry[key].clips.intro);
+            registry[key].clips.main = Boolean(registry[key].clips.main);
+            registry[key].clips.outro = Boolean(registry[key].clips.outro);
+          }
         });
-      }
+      });
     }
     
     function saveToLocal() {
@@ -297,8 +519,10 @@
         if (key && registry[key]) {
           const idInput = cell.querySelector('.id-input');
           const promptInput = cell.querySelector('.prompt-input');
+          const imageInput = cell.querySelector('.image-input');
           if (idInput) registry[key].avatarId = idInput.value;
           if (promptInput) registry[key].motionPrompt = promptInput.value;
+          if (imageInput) registry[key].imageUrl = imageInput.value.trim();
         }
       });
       
@@ -333,14 +557,43 @@
           const data = registry[key] || {};
           const hasId = data.avatarId && data.avatarId.length > 10;
           const clipsComplete = data.clips?.intro && data.clips?.main && data.clips?.outro;
+          const customImage = (data.imageUrl || '').trim();
+          const imageUrl = getImageUrlForKey(key);
+          const hasImage = Boolean(imageUrl);
+          const safeImageUrl = escapeHtml(imageUrl);
+          const safeAvatarId = escapeHtml(data.avatarId || '');
+          const safePrompt = escapeHtml(data.motionPrompt || '');
+          const safeCustomImage = escapeHtml(customImage);
+          const personaAgeLabel = escapeHtml(`${persona.name} (${age.name})`);
+          const imageSection = hasImage
+            ? `<div class="avatar-media">
+                <img class="avatar-img" src="${safeImageUrl}" alt="${personaAgeLabel}" loading="lazy" onerror="showImagePlaceholder(this)">
+                <div class="avatar-placeholder hidden">Image failed to load</div>
+               </div>`
+            : `<div class="avatar-media">
+                <div class="avatar-placeholder">Image coming soon</div>
+               </div>`;
+          const imageMeta = `
+            <div class="image-meta">
+              <span>${hasImage ? (customImage ? 'Custom image' : 'Default image') : 'No image yet'}</span>
+              <div class="micro-actions">
+                ${customImage ? `<button type="button" class="micro-button" onclick="resetImageToDefault('${key}')">Use default</button>` : ''}
+                ${hasImage ? `<button type="button" class="micro-button" onclick="copyImageUrl('${key}')">Copy URL</button>` : ''}
+              </div>
+            </div>`;
           
           grid.innerHTML += `
             <div class="avatar-cell ${hasId ? 'has-id' : ''} ${clipsComplete ? 'complete' : ''}" data-key="${key}">
+              ${imageSection}
+              ${imageMeta}
+              <input type="text" class="image-input" placeholder="Paste custom image URL (optional)"
+                     value="${safeCustomImage}"
+                     onchange="updateCell('${key}', 'imageUrl', this.value.trim())">
               <input type="text" class="id-input" placeholder="Avatar ID" 
-                     value="${data.avatarId || ''}" 
+                     value="${safeAvatarId}" 
                      onchange="updateCell('${key}', 'avatarId', this.value)">
               <textarea class="prompt-input" placeholder="Motion prompt..."
-                        onchange="updateCell('${key}', 'motionPrompt', this.value)">${data.motionPrompt || ''}</textarea>
+                        onchange="updateCell('${key}', 'motionPrompt', this.value)">${safePrompt}</textarea>
               <div class="clips">
                 <div class="clip ${data.clips?.intro ? 'done' : ''}" onclick="toggleClip('${key}', 'intro')" title="Intro clip">1</div>
                 <div class="clip ${data.clips?.main ? 'done' : ''}" onclick="toggleClip('${key}', 'main')" title="Main clip">2</div>
@@ -355,6 +608,9 @@
     function updateCell(key, field, value) {
       if (!registry[key]) registry[key] = {};
       registry[key][field] = value;
+      if (field === 'imageUrl') {
+        buildGrid();
+      }
       updateStats();
     }
     
@@ -364,6 +620,40 @@
       registry[key].clips[clipType] = !registry[key].clips[clipType];
       buildGrid();
       updateStats();
+    }
+    
+    function showImagePlaceholder(img) {
+      if (!img) return;
+      img.style.display = 'none';
+      const placeholder = img.nextElementSibling;
+      if (placeholder && placeholder.classList.contains('avatar-placeholder')) {
+        placeholder.classList.remove('hidden');
+        placeholder.textContent = 'Image failed to load';
+      }
+    }
+    
+    function resetImageToDefault(key) {
+      if (!IMAGE_LOOKUP[key]) {
+        alert('No default image available for this persona yet.');
+        return;
+      }
+      if (!registry[key]) registry[key] = {};
+      registry[key].imageUrl = '';
+      buildGrid();
+      updateStats();
+    }
+    
+    function copyImageUrl(key) {
+      const url = getImageUrlForKey(key);
+      if (!url) {
+        alert('No image URL to copy yet!');
+        return;
+      }
+      navigator.clipboard.writeText(url).then(() => {
+        alert(`Copied image URL for ${key}!`);
+      }).catch(err => {
+        alert('Failed to copy: ' + err.message);
+      });
     }
     
     // ============================================
@@ -376,6 +666,7 @@
       let withPrompt = 0;
       let clipsComplete = 0;
       let totalClips = 0;
+      let withImage = 0;
       
       Object.values(registry).forEach(r => {
         if (r.avatarId && r.avatarId.length > 10) withId++;
@@ -384,11 +675,13 @@
         if (r.clips?.main) totalClips++;
         if (r.clips?.outro) totalClips++;
         if (r.clips?.intro && r.clips?.main && r.clips?.outro) clipsComplete++;
+        if (getImageUrlForKey(`${r.personaId || ''}_${r.ageBucket || ''}`)) withImage++;
       });
       
       document.getElementById('stats').innerHTML = `
         <strong>Progress:</strong>
         Avatar IDs: ${withId}/${total} |
+        Avatar Images: ${withImage}/${total} |
         Motion Prompts: ${withPrompt}/${total} |
         Complete (3 clips): ${clipsComplete}/${total} |
         Total Clips: ${totalClips}/${total * 3}

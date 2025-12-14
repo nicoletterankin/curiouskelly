@@ -271,3 +271,4 @@ if (window.EMERGENCY_LESSONS) {
 }
 
 console.log('🚨 Emergency Lessons Extended loaded (30 days coverage)');
+

@@ -15,10 +15,10 @@
   }
 
   function getSupabase() {
-    const createClient = window.supabase?.createClient || window.createClient;
-    if (!createClient || !window.KELLY_CONFIG?.supabaseUrl || !window.KELLY_CONFIG?.supabaseKey) return null;
-    const supabase = createClient(window.KELLY_CONFIG.supabaseUrl, window.KELLY_CONFIG.supabaseKey);
-    return supabase;
+    // Prefer the shared singleton to avoid multiple GoTrueClient instances.
+    if (typeof window.getSupabase === 'function') return window.getSupabase();
+    if (window.supabaseClient) return window.supabaseClient;
+    return null;
   }
 
   function getTodayLessonKey(options = {}) {

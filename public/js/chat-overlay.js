@@ -174,15 +174,18 @@ class ChatOverlay {
    * Load real comments from Supabase
    */
   async _loadDatabaseComments() {
-    if (!window.supabase || !window.CONFIG) {
+    if ((!window.getSupabase && !window.supabaseClient && !window.supabase) || !window.CONFIG) {
       console.log('[ChatOverlay] Supabase not available, using simulated comments');
       return;
     }
     
     try {
-      const supabase = window.supabase.createClient 
-        ? window.supabase.createClient(window.CONFIG.SUPABASE_URL, window.CONFIG.SUPABASE_ANON_KEY)
-        : window.supabase;
+      const supabase =
+        (typeof window.getSupabase === 'function' && window.getSupabase()) ||
+        window.supabaseClient ||
+        // Do not create additional clients in this context. If the singleton isn't present,
+        // treat Supabase as unavailable and fall back to simulated content.
+        null;
       
       // Try to load real comments for this lesson day
       const { data, error } = await supabase
@@ -357,12 +360,15 @@ class ChatOverlay {
    * Save a user comment to the database
    */
   async _saveCommentToDatabase(text) {
-    if (!window.supabase || !window.CONFIG) return;
+    if ((!window.getSupabase && !window.supabaseClient && !window.supabase) || !window.CONFIG) return;
     
     try {
-      const supabase = window.supabase.createClient 
-        ? window.supabase.createClient(window.CONFIG.SUPABASE_URL, window.CONFIG.SUPABASE_ANON_KEY)
-        : window.supabase;
+      const supabase =
+        (typeof window.getSupabase === 'function' && window.getSupabase()) ||
+        window.supabaseClient ||
+        (window.supabase?.createClient
+          ? window.supabase.createClient(window.CONFIG.SUPABASE_URL, window.CONFIG.SUPABASE_ANON_KEY)
+          : window.supabase);
       
       await supabase.from('lesson_comments').insert({
         day_number: this.options.lessonDay,

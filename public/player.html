@@ -499,8 +499,10 @@
       speakBtn: document.getElementById('btn-speak')
     };
 
-    // Initialize
-    const supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+    // Initialize (prefer singleton to avoid multiple GoTrue clients)
+    const supabase =
+      (typeof window.getSupabase === 'function' && window.getSupabase()) ||
+      (window.supabase?.createClient ? window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY) : null);
 
     async function init() {
       console.log('✨ Kelly OS Initializing...');
@@ -679,6 +681,7 @@
   </script>
 </body>
 </html>
+
 
 
 

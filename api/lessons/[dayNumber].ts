@@ -3,10 +3,14 @@
  * 
  * GET /api/lessons/:dayNumber
  * 
- * Serves lessons as a fallback when Supabase and D1 are unavailable.
+ * Primary: serves lessons from Supabase (service role) so unauthenticated
+ * users can still load the full 365-day experience without relying on RLS.
+ *
+ * Fallback: serves static lessons if Supabase isn't configured.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { getSupabaseAdmin, isSupabaseConfigured } from '../lib/supabase';
 
 // Extended static lesson data (first 30 days)
 const STATIC_LESSONS: Record<number, { topic: string; universal_truth: string; greeting: string }> = {
@@ -48,6 +52,59 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       message: 'Day must be between 1 and 365'
     });
   }
+
+  // ---------------------------------------------------------------------------
+  // PRIMARY: Supabase-backed lesson (service role; no auth required)
+  // ---------------------------------------------------------------------------
+  if (isSupabaseConfigured()) {
+    try {
+      const db = getSupabaseAdmin();
+      const resolvedArchetype = Array.isArray(archetype) ? archetype[0] : (archetype || 'The Scientist');
+      const resolvedRegion = Array.isArray(ageBucket) ? ageBucket[0] : (ageBucket || 'adult');
+
+      const { data: lesson, error: lessonError } = await db
+        .from('core_lessons')
+        .select('*')
+        .eq('day_number', day)
+        .single();
+
+      if (lessonError || !lesson) {
+        // Fall through to static fallback if the DB doesn't have this day.
+        throw new Error(lessonError?.message || 'Lesson not found');
+      }
+
+      const [atomsResult, shardsResult] = await Promise.all([
+        db
+          .from('lesson_atoms')
+          .select('*')
+          .eq('core_lesson_id', lesson.id)
+          .eq('archetype', resolvedArchetype)
+          .order('phase', { ascending: true }),
+        db
+          .from('lesson_shards')
+          .select('*')
+          .eq('core_lesson_id', lesson.id)
+          .eq('archetype', resolvedArchetype)
+          // Prefer requested region + English fallback shards if present
+          .in('region', [resolvedRegion, 'en'])
+      ]);
+
+      return res.status(200).json({
+        source: 'supabase-admin',
+        lesson,
+        atoms: atomsResult.data || [],
+        shards: shardsResult.data || [],
+        dayNumber: day,
+        archetype: resolvedArchetype,
+        ageBucket: resolvedRegion,
+      });
+    } catch (e: any) {
+      // Intentionally fall through to static fallback below.
+      // (We keep this endpoint bulletproof even during partial outages.)
+      // eslint-disable-next-line no-console
+      console.warn('[api/lessons/:dayNumber] Supabase path failed:', e?.message || e);
+    }
+  }
   
   // Get lesson from static data (cycle through available lessons)
   const lessonKey = day <= 15 ? day : ((day - 1) % 15) + 1;
@@ -80,3 +137,4 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     ageBucket: ageBucket || 'adult'
   });
 }
+

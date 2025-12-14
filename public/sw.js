@@ -1,7 +1,7 @@
 // Curious Kelly Service Worker
 // App-shell caching + (optional) push notifications
 
-const CACHE_NAME = 'curious-kelly-app-v2';
+const CACHE_NAME = 'curious-kelly-app-v3';
 
 const APP_SHELL = [
   '/learn.html',

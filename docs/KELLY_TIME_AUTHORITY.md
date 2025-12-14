@@ -393,3 +393,4 @@ curl "https://curiouskelly.com/api/calendar/feed?type=live"
 *Kelly Time Authority - December 12, 2025*
 *"When Kelly says 9:00:00, class starts."*
 
+

@@ -45,6 +45,8 @@ const KellyVideoPlayer = {
    */
   init(options = {}) {
     Object.assign(this.config, options);
+    // Watchdog timer used to prevent stuck loading overlays
+    this._loadWatchdog = null;
     
     // Find or create container
     this.videoContainer = document.getElementById(this.config.containerId);
@@ -186,7 +188,7 @@ const KellyVideoPlayer = {
       const videoAvailable = await this.checkVideoAvailable(videoUrl);
       
       if (videoAvailable) {
-        this.playVideo(videoUrl);
+        this.playVideo(videoUrl, { fallbackImage, fallbackAudio });
         return;
       }
     }
@@ -218,7 +220,8 @@ const KellyVideoPlayer = {
    * Play a video file
    * @param {string} url - Video URL
    */
-  playVideo(url) {
+  playVideo(url, fallback = {}) {
+    const { fallbackImage, fallbackAudio } = fallback;
     // Create video element
     const video = document.createElement('video');
     video.src = url;
@@ -229,6 +232,10 @@ const KellyVideoPlayer = {
     
     // Event handlers
     video.oncanplay = () => {
+      if (this._loadWatchdog) {
+        clearTimeout(this._loadWatchdog);
+        this._loadWatchdog = null;
+      }
       this.hideLoading();
       this.videoContainer.classList.add('playing');
       this.isPlaying = true;
@@ -242,7 +249,17 @@ const KellyVideoPlayer = {
     };
     
     video.onerror = () => {
-      this.handleError('Video playback error');
+      if (this._loadWatchdog) {
+        clearTimeout(this._loadWatchdog);
+        this._loadWatchdog = null;
+      }
+      // If video fails, automatically fall back (so we don't leave a spinner up).
+      if (fallbackImage) {
+        this.fallbackMode = true;
+        this.playFallback(fallbackImage, fallbackAudio);
+      } else {
+        this.handleError('Video playback error');
+      }
     };
     
     // Clear container and add video
@@ -255,6 +272,18 @@ const KellyVideoPlayer = {
     
     // Add loading overlay
     this.addLoadingOverlay();
+
+    // Watchdog: if canplay never fires, fall back instead of spinning forever.
+    if (this._loadWatchdog) clearTimeout(this._loadWatchdog);
+    this._loadWatchdog = setTimeout(() => {
+      this._loadWatchdog = null;
+      if (fallbackImage) {
+        this.fallbackMode = true;
+        this.playFallback(fallbackImage, fallbackAudio);
+      } else {
+        this.handleError('Video load timeout');
+      }
+    }, 8000);
   },
   
   /**
@@ -364,7 +393,12 @@ const KellyVideoPlayer = {
    * Hide loading state
    */
   hideLoading() {
-    this.videoContainer?.classList.add('playing');
+    if (this.videoContainer) {
+      // Belt-and-suspenders: never leave a spinner hanging.
+      const overlay = this.videoContainer.querySelector('.loading-overlay');
+      if (overlay) overlay.remove();
+      this.videoContainer.classList.add('playing');
+    }
   },
   
   /**
@@ -389,9 +423,17 @@ const KellyVideoPlayer = {
       this.currentVideo.pause?.();
       this.currentVideo = null;
     }
+    if (this._loadWatchdog) {
+      clearTimeout(this._loadWatchdog);
+      this._loadWatchdog = null;
+    }
     this.isPlaying = false;
     this.fallbackMode = false;
-    this.videoContainer?.classList.remove('playing');
+    if (this.videoContainer) {
+      this.videoContainer.classList.remove('playing');
+      const overlay = this.videoContainer.querySelector('.loading-overlay');
+      if (overlay) overlay.remove();
+    }
   },
   
   /**

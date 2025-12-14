@@ -87,3 +87,4 @@ CREATE TABLE sync_metadata (
 
 -- Insert initial metadata row
 INSERT INTO sync_metadata (id, last_sync_at) VALUES (1, datetime('now'));
+

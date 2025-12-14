@@ -8,26 +8,42 @@ import { supabase } from './auth.js'
 // LESSON API
 // ============================================
 
+function getTodayDayNumber() {
+  // Prefer the repo's canonical time authority if present.
+  if (typeof window !== 'undefined' && window.KellyTime?.getLessonDayForTimeZone && window.KellyTime?.getUserTimeZone) {
+    return window.KellyTime.getLessonDayForTimeZone(Date.now(), window.KellyTime.getUserTimeZone());
+  }
+
+  const now = new Date();
+  const startOfYear = new Date(now.getFullYear(), 0, 0);
+  const diff = now - startOfYear;
+  const day = Math.floor(diff / (1000 * 60 * 60 * 24));
+  return Math.max(1, Math.min(365, day || 1));
+}
+
 export async function getTodaysLesson() {
-  const { data: { user } } = await supabase.auth.getUser()
-  
-  if (!user) throw new Error('Not authenticated')
-  
-  // Get user's current day
-  const { data: userData } = await supabase
-    .from('users')
-    .select('current_day')
-    .eq('id', user.id)
-    .single()
-  
-  const currentDay = userData?.current_day || 1
-  
-  // Get lesson for current day
+  // Guest-safe: prefer user.current_day when logged in, otherwise use today's day-of-year.
+  let currentDay = getTodayDayNumber()
+
+  try {
+    const { data: { user } } = await supabase.auth.getUser()
+    if (user) {
+      const { data: userData } = await supabase
+        .from('users')
+        .select('current_day')
+        .eq('id', user.id)
+        .single()
+      if (userData?.current_day) currentDay = userData.current_day
+    }
+  } catch {
+    // Ignore auth/user lookup errors; lesson metadata is public.
+  }
+
+  // Source of truth: core_lessons
   const { data: lesson, error } = await supabase
-    .from('lessons')
+    .from('core_lessons')
     .select('*')
     .eq('day_number', currentDay)
-    .eq('is_published', true)
     .single()
   
   if (error) throw error
@@ -37,10 +53,9 @@ export async function getTodaysLesson() {
 
 export async function getLesson(lessonId) {
   const { data: lesson, error } = await supabase
-    .from('lessons')
+    .from('core_lessons')
     .select('*')
     .eq('id', lessonId)
-    .eq('is_published', true)
     .single()
   
   if (error) throw error
@@ -50,10 +65,9 @@ export async function getLesson(lessonId) {
 
 export async function getLessonByDay(dayNumber) {
   const { data: lesson, error } = await supabase
-    .from('lessons')
+    .from('core_lessons')
     .select('*')
     .eq('day_number', dayNumber)
-    .eq('is_published', true)
     .single()
   
   if (error) throw error
@@ -62,15 +76,56 @@ export async function getLessonByDay(dayNumber) {
 }
 
 export async function getCalendar() {
-  const { data: lessons, error } = await supabase
-    .from('lessons')
-    .select('id, day_number, title, subtitle, duration_seconds, difficulty, tags')
-    .eq('is_published', true)
-    .order('day_number')
-  
-  if (error) throw error
-  
-  return lessons
+  // Calendar MUST work for unauthenticated users (incognito / first visit).
+  // Prefer the public API (server-side Supabase service role) so RLS/auth never blocks the calendar.
+  try {
+    const res = await fetch('/api/lessons?startDay=1&endDay=365', { cache: 'no-store' });
+    if (!res.ok) throw new Error(`Calendar API returned ${res.status}`);
+    const payload = await res.json();
+    const lessons = (payload?.lessons || []).map((l) => ({
+      // Back-compat shape: expose title/subtitle/duration_seconds keys expected by older UI.
+      id: l.id || null,
+      day_number: l.day_number,
+      title: l.topic || l.title || `Day ${l.day_number}`,
+      subtitle: l.category || l.marketing_tagline || '',
+      duration_seconds: ((l.duration_max || l.duration_min || 8) * 60),
+      difficulty: l.difficulty || null,
+      tags: l.tags || [],
+    }));
+    if (lessons.length > 0) return lessons;
+  } catch (e) {
+    // Fall through
+  }
+
+  // Last-resort: attempt direct Supabase if available.
+  if (supabase) {
+    const { data, error } = await supabase
+      .from('core_lessons')
+      .select('id, day_number, topic, category, tags, duration_min, duration_max')
+      .order('day_number', { ascending: true });
+    if (!error && data && data.length) {
+      return (data || []).map((l) => ({
+        id: l.id,
+        day_number: l.day_number,
+        title: l.topic,
+        subtitle: l.category || '',
+        duration_seconds: ((l.duration_max || l.duration_min || 8) * 60),
+        difficulty: null,
+        tags: l.tags || [],
+      }));
+    }
+  }
+
+  // Final fallback: never return empty
+  return Array.from({ length: 365 }, (_, i) => ({
+    id: null,
+    day_number: i + 1,
+    title: `Day ${i + 1}`,
+    subtitle: '',
+    duration_seconds: 8 * 60,
+    difficulty: null,
+    tags: [],
+  }));
 }
 
 // ============================================
@@ -311,6 +366,7 @@ export async function logEvent(eventType, eventData = {}) {
       user_agent: navigator.userAgent
     })
 }
+
 
 
 

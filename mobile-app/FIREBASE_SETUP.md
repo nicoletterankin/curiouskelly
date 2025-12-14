@@ -53,3 +53,4 @@ Replace `ios/CuriousKellyMobile/GoogleService-Info.plist` with the downloaded fi
 Never commit real Firebase keys to public repositories. Use environment variables or secure vaults in CI/CD.
 
 
+

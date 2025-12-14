@@ -63,3 +63,4 @@ CREATE TABLE IF NOT EXISTS sync_status (
   row_count INTEGER,
   checksum TEXT
 );
+
