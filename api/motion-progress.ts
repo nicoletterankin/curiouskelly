@@ -8,7 +8,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getSupabaseAdmin, isSupabaseConfigured } from './lib/supabase';
+import { createClient } from '@supabase/supabase-js';
 
 type MotionStatus = 'completed' | 'generating' | 'pending' | 'failed' | string;
 
@@ -56,22 +56,60 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  if (!isSupabaseConfigured()) {
+  const supabaseUrl = process.env.PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
+  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
+
+  if (!supabaseUrl || !supabaseServiceKey) {
     return res.status(500).json({
       error: 'Supabase is not configured on the server',
-      required: ['PUBLIC_SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL)', 'SUPABASE_SERVICE_ROLE_KEY'],
+      required: [
+        'PUBLIC_SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL)',
+        'SUPABASE_SERVICE_ROLE_KEY',
+      ],
     });
   }
 
   try {
-    const supabase = getSupabaseAdmin();
+    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
+      auth: { autoRefreshToken: false, persistSession: false },
+      db: { schema: 'public' },
+    });
 
     const { data: clips, error } = await supabase
       .from('kelly_motion_library')
       .select('avatar_key, persona, age_bucket, phase, status, video_url, completed_at, updated_at, created_at');
 
     if (error) {
-      return res.status(500).json({ error: 'Failed to fetch motion library rows', details: error.message });
+      // If table isn't deployed yet, return an empty-but-valid payload so the dashboard still renders.
+      const tableMissing =
+        typeof error.message === 'string' &&
+        (error.message.toLowerCase().includes('does not exist') ||
+          error.message.toLowerCase().includes('relation') ||
+          error.message.toLowerCase().includes('not found'));
+
+      if (tableMissing) {
+        return res.status(200).json({
+          stats: { completed: 0, generating: 0, pending: EXPECTED_TOTAL, failed: 0 },
+          buckets: {
+            kid: { completed: 0, total: DEFAULT_BUCKET_TOTAL },
+            teen: { completed: 0, total: DEFAULT_BUCKET_TOTAL },
+            adult: { completed: 0, total: DEFAULT_BUCKET_TOTAL },
+            elder: { completed: 0, total: DEFAULT_BUCKET_TOTAL },
+            super_elder: { completed: 0, total: DEFAULT_BUCKET_TOTAL },
+          },
+          generating: null,
+          recent: [],
+          total: EXPECTED_TOTAL,
+          totalInTable: 0,
+          generatedAt: new Date().toISOString(),
+          warning: 'Table kelly_motion_library not found (migration may not be applied yet).',
+        });
+      }
+
+      return res.status(500).json({
+        error: 'Failed to fetch motion library rows',
+        details: error.message,
+      });
     }
 
     const rows: MotionRow[] = clips || [];
