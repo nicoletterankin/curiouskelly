@@ -5566,6 +5566,7 @@
     // kelly_motion_library: avatar_key (persona_ageBucket), phase (hook/cliff/...), video_url, status
     // ============================================
     const motionClipCache = Object.create(null);
+    const motionClipInflight = Object.create(null);
 
     function getPhaseKeyFromDbPhase(dbPhase) {
       const match = PHASES?.find((p) => p?.dbName === dbPhase || p?.name === dbPhase || p?.key === dbPhase);
@@ -5579,42 +5580,51 @@
 
       const avatarKey = `${personaId}_${bucket}`;
       const cacheKey = `${avatarKey}_${phaseKey}`;
-      if (motionClipCache[cacheKey]) return motionClipCache[cacheKey];
+      // Cache hit (including negative cache via null)
+      if (cacheKey in motionClipCache) return motionClipCache[cacheKey];
+      // De-dupe concurrent lookups for the same phase (prevents double /api/motion-clip hits)
+      if (motionClipInflight[cacheKey]) return motionClipInflight[cacheKey];
 
-      try {
-        // Use server endpoint to avoid client-side RLS/CORS constraints.
-        const url = `/api/motion-clip?persona=${encodeURIComponent(personaId)}&age=${encodeURIComponent(bucket)}&phase=${encodeURIComponent(phaseKey)}`;
-        const res = await fetch(url);
-        const data = res.ok ? await res.json().catch(() => ({})) : null;
-        const videoUrl = data?.videoUrl || null;
-        if (!videoUrl) {
-          // Local static serving (e.g. `npx serve public`) won't have /api routes.
-          // Fallback to a direct Supabase query if available.
-          try {
-            const db = supabase;
-            if (!db) throw new Error('No supabase client');
-            const { data: row, error } = await db
-              .from('kelly_motion_library')
-              .select('video_url')
-              .eq('avatar_key', avatarKey)
-              .eq('phase', phaseKey)
-              .eq('status', 'completed')
-              .single();
-            if (!error && row?.video_url) {
-              motionClipCache[cacheKey] = row.video_url;
-              return row.video_url;
-            }
-          } catch (_) {}
+      motionClipInflight[cacheKey] = (async () => {
+        try {
+          // Use server endpoint to avoid client-side RLS/CORS constraints.
+          const url = `/api/motion-clip?persona=${encodeURIComponent(personaId)}&age=${encodeURIComponent(bucket)}&phase=${encodeURIComponent(phaseKey)}`;
+          const res = await fetch(url);
+          const data = res.ok ? await res.json().catch(() => ({})) : null;
+          let videoUrl = data?.videoUrl || null;
 
-          console.warn(`No motion clip for ${cacheKey}`);
+          if (!videoUrl) {
+            // Local static serving (e.g. `npx serve public`) won't have /api routes.
+            // Fallback to a direct Supabase query if available.
+            try {
+              const db = supabase;
+              if (!db) throw new Error('No supabase client');
+              const { data: row, error } = await db
+                .from('kelly_motion_library')
+                .select('video_url')
+                .eq('avatar_key', avatarKey)
+                .eq('phase', phaseKey)
+                .eq('status', 'completed')
+                .single();
+              if (!error && row?.video_url) videoUrl = row.video_url;
+            } catch (_) {}
+          }
+
+          if (!videoUrl) console.warn(`No motion clip for ${cacheKey}`);
+
+          // Store positive OR negative result to avoid repeated lookups.
+          motionClipCache[cacheKey] = videoUrl || null;
+          return motionClipCache[cacheKey];
+        } catch (err) {
+          console.error('Motion clip fetch error:', err);
+          motionClipCache[cacheKey] = null;
           return null;
+        } finally {
+          delete motionClipInflight[cacheKey];
         }
-        motionClipCache[cacheKey] = videoUrl;
-        return videoUrl;
-      } catch (err) {
-        console.error('Motion clip fetch error:', err);
-        return null;
-      }
+      })();
+
+      return motionClipInflight[cacheKey];
     }
 
     function stopAllMedia() {
