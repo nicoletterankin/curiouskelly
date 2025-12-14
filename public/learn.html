@@ -12,10 +12,8 @@
   <title>Curious Kelly</title>
   
   <script src="/config.js"></script>
-  <!-- Vercel Analytics -->
-  <script defer src="/_vercel/insights/script.js"></script>
-  <!-- Vercel Speed Insights -->
-  <script defer src="/_vercel/speed-insights/script.js"></script>
+  <!-- Note: Vercel Insights scripts removed to avoid console MIME errors
+       when deployed outside Vercel (those endpoints return HTML/404). -->
   <!-- Supabase SDK -->
   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
   <!-- Supabase singleton (prevents multiple GoTrue clients) -->
@@ -760,8 +758,13 @@
     .bottom-zone {
       grid-area: bottom;
       align-self: end;
-      background: rgba(0,0,0,0.25);
-      border-top: 1px solid rgba(255,255,255,0.06);
+      background: linear-gradient(
+        to bottom,
+        rgba(9,9,11,0) 0%,
+        rgba(9,9,11,0.55) 35%,
+        rgba(9,9,11,0.90) 100%
+      );
+      border-top: none;
       padding-bottom: calc(80px + var(--safe-bottom)); /* leave room for fixed nav */
       /* Sacred rule: captions + phase bar must remain visible */
       position: relative;
@@ -835,6 +838,83 @@
     }
 
     /* Note: Kelly visibility/size is controlled by the presence system (data-kelly-presence). */
+
+    /* ============================================
+       KELLY WALLPAPER MODE (lesson scene)
+       - Kelly fills the viewport as a background layer
+       - Content stays readable via gradient overlay
+       ============================================ */
+
+    #scene-lesson .lesson-kelly-container {
+      /* Wallpaper spans the entire viewport grid */
+      grid-column: 1 / -1;
+      grid-row: 1 / -1;
+      padding: 0;
+      z-index: 1; /* behind panels + captions */
+    }
+
+    #scene-lesson .lesson-kelly {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      max-width: none;
+      max-height: none;
+      aspect-ratio: auto;
+      border-radius: 0;
+      background: #09090b;
+      overflow: hidden;
+      /* Override presence scaling (wallpaper should always fill) */
+      transform: none !important;
+    }
+
+    #scene-lesson #lesson-kelly-img,
+    #scene-lesson #kelly-video {
+      position: absolute;
+      inset: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      object-position: center 20%;
+      border-radius: 0;
+    }
+
+    #scene-lesson .kelly-overlay {
+      position: absolute;
+      inset: 0;
+      z-index: 2;
+      pointer-events: none;
+      background: linear-gradient(
+        to bottom,
+        rgba(9,9,11,0.72) 0%,
+        rgba(9,9,11,0.10) 32%,
+        rgba(9,9,11,0.10) 62%,
+        rgba(9,9,11,0.92) 100%
+      );
+    }
+
+    #scene-lesson .tap-zones,
+    #scene-lesson .side-actions {
+      position: relative;
+      z-index: 3;
+    }
+
+    /* Phase bar at top */
+    .phase-bar-top {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      z-index: 30;
+      padding-top: max(10px, env(safe-area-inset-top));
+      pointer-events: none; /* allow only the bar to be clickable */
+    }
+    .phase-bar-top .phase-bar {
+      pointer-events: auto;
+      background: linear-gradient(to bottom, rgba(9,9,11,0.80), rgba(9,9,11,0));
+      padding: 14px 16px 12px;
+      border-bottom: none;
+    }
 
     /* ============================================
        HOME MODE (in-app hub inside learn.html)
@@ -3115,57 +3195,8 @@
       </div>
 
       <div class="lesson-viewport" id="sacred-layout">
-        <!-- LEFT PANEL (social/chat) -->
-        <aside class="left-panel" id="left-panel" aria-hidden="true">
-          <div class="panel-content">
-            <div class="panel-header">
-              <span>💬 Live Chat</span>
-              <button class="panel-close" type="button" onclick="closePanel()" aria-label="Close chat">✕</button>
-            </div>
-            <div class="comments-feed scrollable" id="comments-feed" aria-label="Comments feed"></div>
-            <div class="chat-input">
-              <input type="text" id="kelly-chat-input" placeholder="Talk to Kelly..." autocomplete="off">
-              <button type="button" onclick="sendToKelly()" aria-label="Send">→</button>
-            </div>
-          </div>
-        </aside>
-
-        <!-- SACRED CENTER (Kelly) -->
-        <div class="lesson-kelly-container" id="kelly-stage">
-          <div class="lesson-kelly idle" id="lesson-kelly">
-            <img id="lesson-kelly-img" class="kelly-img" src="" alt="Kelly">
-            <video id="kelly-video" class="hidden" hidden playsinline preload="auto" style="width:100%;height:100%;object-fit:cover;"></video>
-          </div>
-          
-          <div class="tap-zones">
-            <div class="tap-zone" id="tap-prev"></div>
-            <div class="tap-zone"></div>
-            <div class="tap-zone" id="tap-next"></div>
-          </div>
-          
-          <div class="side-actions">
-            <button class="side-action" id="btn-bookmark">🔖</button>
-            <button class="side-action" id="btn-infographic">📊</button>
-            <button class="side-action" id="btn-ask">💬</button>
-          </div>
-        </div>
-
-        <!-- RIGHT PANEL (journey/settings) -->
-        <aside class="right-panel" id="right-panel" aria-hidden="true">
-          <div class="panel-content">
-            <div class="panel-header">
-              <span id="right-panel-title">📅 Journey</span>
-              <button class="panel-close" type="button" onclick="closePanel()" aria-label="Close panel">✕</button>
-            </div>
-            <div class="panel-body scrollable">
-              <div id="panel-journey-slot"></div>
-              <div id="panel-settings-slot" style="display:none;"></div>
-            </div>
-          </div>
-        </aside>
-
-        <!-- BOTTOM ZONE (phase + captions + controls) -->
-        <div class="lesson-content-area caption-area bottom-zone" id="lesson-bottom-zone">
+        <!-- PHASE BAR - TOP OF SCREEN -->
+        <header class="phase-bar-top" aria-label="Lesson phases">
           <!-- Clickable phase bar (7 phases) -->
           <div class="phase-bar" id="phase-bar">
             <button class="phase-segment" data-phase="0" title="Hook">
@@ -3203,7 +3234,60 @@
               <span class="phase-name">Outro</span>
             </button>
           </div>
+        </header>
 
+        <!-- LEFT PANEL (social/chat) -->
+        <aside class="left-panel" id="left-panel" aria-hidden="true">
+          <div class="panel-content">
+            <div class="panel-header">
+              <span>💬 Live Chat</span>
+              <button class="panel-close" type="button" onclick="closePanel()" aria-label="Close chat">✕</button>
+            </div>
+            <div class="comments-feed scrollable" id="comments-feed" aria-label="Comments feed"></div>
+            <div class="chat-input">
+              <input type="text" id="kelly-chat-input" placeholder="Talk to Kelly..." autocomplete="off">
+              <button type="button" onclick="sendToKelly()" aria-label="Send">→</button>
+            </div>
+          </div>
+        </aside>
+
+        <!-- SACRED CENTER (Kelly) -->
+        <div class="lesson-kelly-container" id="kelly-stage">
+          <div class="lesson-kelly idle" id="lesson-kelly">
+            <img id="lesson-kelly-img" class="kelly-img" src="" alt="Kelly">
+            <video id="kelly-video" class="hidden" hidden playsinline muted preload="auto" style="width:100%;height:100%;object-fit:cover;"></video>
+          </div>
+          <div class="kelly-overlay" aria-hidden="true"></div>
+          
+          <div class="tap-zones">
+            <div class="tap-zone" id="tap-prev"></div>
+            <div class="tap-zone"></div>
+            <div class="tap-zone" id="tap-next"></div>
+          </div>
+          
+          <div class="side-actions">
+            <button class="side-action" id="btn-bookmark">🔖</button>
+            <button class="side-action" id="btn-infographic">📊</button>
+            <button class="side-action" id="btn-ask">💬</button>
+          </div>
+        </div>
+
+        <!-- RIGHT PANEL (journey/settings) -->
+        <aside class="right-panel" id="right-panel" aria-hidden="true">
+          <div class="panel-content">
+            <div class="panel-header">
+              <span id="right-panel-title">📅 Journey</span>
+              <button class="panel-close" type="button" onclick="closePanel()" aria-label="Close panel">✕</button>
+            </div>
+            <div class="panel-body scrollable">
+              <div id="panel-journey-slot"></div>
+              <div id="panel-settings-slot" style="display:none;"></div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- BOTTOM ZONE (phase + captions + controls) -->
+        <div class="lesson-content-area caption-area bottom-zone" id="lesson-bottom-zone">
           <div class="caption-phase" id="caption-phase">
             <span class="phase-icon">🪝</span>
             <span class="phase-name">Hook</span>
@@ -4800,15 +4884,23 @@
     // KELLY IMAGE HELPER
     // ============================================
     function getKellyImageUrl(personaId, ageBucket = 'adult') {
+      // Default: fully-local, LoRA-derived persona renders (no network required).
+      // Remote heads are opt-in via `?remoteHeads=true`.
+      const safePersonaId = String(personaId || 'scientist').trim().toLowerCase();
+      const localPersona = `/images/kelly/personas-16x9/${safePersonaId}.jpg`;
+      const localFallback = `/images/kelly/personas-16x9/scientist.jpg`;
+
       // Launch stability: keep images local unless explicitly enabled.
-      if (!ENABLE_REMOTE_KELLY_HEADS) return KELLY_PLACEHOLDER;
+      if (!ENABLE_REMOTE_KELLY_HEADS) return localPersona;
+
+      // If manifest/CDN is unavailable, stay local (never show broken images).
       if (!manifest || !manifest.personas || !manifest.personas[personaId]) {
-        return KELLY_PLACEHOLDER;
+        return localPersona || localFallback || KELLY_PLACEHOLDER;
       }
       
       const persona = manifest.personas[personaId];
       const headPath = persona?.images?.headByAge?.[ageBucket] || persona?.images?.head;
-      if (!headPath || !manifest?.cdnBase) return KELLY_PLACEHOLDER;
+      if (!headPath || !manifest?.cdnBase) return localPersona || localFallback || KELLY_PLACEHOLDER;
       return `${manifest.cdnBase}/${headPath}`;
     }
 
@@ -5487,9 +5579,6 @@
     }
 
     async function getMotionClipUrl(persona, ageBucket, phase) {
-      const db = supabase;
-      if (!db) return null;
-
       const personaId = String(persona || '').trim() || 'scientist';
       const bucket = String(ageBucket || '').trim() || 'adult';
       const phaseKey = String(phase || '').trim().toLowerCase();
@@ -5499,21 +5588,35 @@
       if (motionClipCache[cacheKey]) return motionClipCache[cacheKey];
 
       try {
-        const { data, error } = await db
-          .from('kelly_motion_library')
-          .select('video_url')
-          .eq('avatar_key', avatarKey)
-          .eq('phase', phaseKey)
-          .eq('status', 'completed')
-          .single();
+        // Use server endpoint to avoid client-side RLS/CORS constraints.
+        const url = `/api/motion-clip?persona=${encodeURIComponent(personaId)}&age=${encodeURIComponent(bucket)}&phase=${encodeURIComponent(phaseKey)}`;
+        const res = await fetch(url);
+        const data = res.ok ? await res.json().catch(() => ({})) : null;
+        const videoUrl = data?.videoUrl || null;
+        if (!videoUrl) {
+          // Local static serving (e.g. `npx serve public`) won't have /api routes.
+          // Fallback to a direct Supabase query if available.
+          try {
+            const db = supabase;
+            if (!db) throw new Error('No supabase client');
+            const { data: row, error } = await db
+              .from('kelly_motion_library')
+              .select('video_url')
+              .eq('avatar_key', avatarKey)
+              .eq('phase', phaseKey)
+              .eq('status', 'completed')
+              .single();
+            if (!error && row?.video_url) {
+              motionClipCache[cacheKey] = row.video_url;
+              return row.video_url;
+            }
+          } catch (_) {}
 
-        if (error || !data?.video_url) {
           console.warn(`No motion clip for ${cacheKey}`);
           return null;
         }
-
-        motionClipCache[cacheKey] = data.video_url;
-        return data.video_url;
+        motionClipCache[cacheKey] = videoUrl;
+        return videoUrl;
       } catch (err) {
         console.error('Motion clip fetch error:', err);
         return null;
@@ -5562,6 +5665,20 @@
         if (img) img.style.display = 'none';
 
         console.log(`▶️ Playing: ${personaId}_${ageBucket}_${phaseKey}`);
+
+        // Autoplay hardening: HeyGen clips should play muted + inline.
+        // Audio is handled separately (kellyAudio), so we keep videos muted.
+        try {
+          v.muted = true;
+          v.defaultMuted = true;
+          v.playsInline = true;
+          v.autoplay = true;
+          v.controls = false;
+          v.loop = false;
+          v.setAttribute('muted', '');
+          v.setAttribute('playsinline', '');
+          v.preload = 'auto';
+        } catch (_) {}
 
         v.onplay = () => {
           setKellySpeaking(true);
@@ -6138,6 +6255,11 @@
         showToast('Choose your Kelly first.');
         return;
       }
+      // Used by index.html to route returning learners straight to /learn.html
+      try {
+        localStorage.setItem('kelly-started', '1');
+        localStorage.setItem('kellyOnboarded', '1');
+      } catch (_) {}
 
       const today = getTodayDayNumber();
       

@@ -28,6 +28,15 @@
       // Persist Kelly presence across pages (learn.html + index.html)
       (function () {
         try {
+          // Route returning learners directly to the lesson player.
+          // learn.html sets these flags the first time the learner hits play.
+          const started = localStorage.getItem('kelly-started') || localStorage.getItem('kellyOnboarded');
+          const hasState = !!localStorage.getItem('kellyState') || !!localStorage.getItem('kelly_progress');
+          if (started || hasState) {
+            window.location.replace('/learn.html');
+            return;
+          }
+
           const kellyPresence = localStorage.getItem('kellyPresence') || '50';
           document.documentElement.setAttribute('data-kelly-presence', kellyPresence);
         } catch (e) {}
