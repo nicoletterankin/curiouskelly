@@ -3,72 +3,49 @@
  * Fast lookup for completed motion clips during lesson playback.
  */
 
-import { createClient } from '@supabase/supabase-js';
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { getSupabaseAdmin, isSupabaseConfigured } from './lib/supabase';
 
-export const config = {
-  runtime: 'edge',
-};
-
-function json(body: unknown, init?: ResponseInit): Response {
-  return new Response(JSON.stringify(body), {
-    ...init,
-    headers: {
-      'Content-Type': 'application/json; charset=utf-8',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-      ...(init?.headers || {}),
-    },
-  });
+function setCors(res: VercelResponse) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
-export default async function handler(request: Request): Promise<Response> {
-  if (request.method === 'OPTIONS') {
-    return json(null, {
-      status: 204,
-      headers: { 'Cache-Control': 'public, max-age=0, s-maxage=0' },
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  setCors(res);
+
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=0');
+    return res.status(204).send('');
+  }
+
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const persona = (req.query?.persona as string | undefined) || null;
+  const age = (req.query?.age as string | undefined) || null;
+  const phase = (req.query?.phase as string | undefined) || null;
+
+  if (!persona || !age || !phase) {
+    return res.status(400).json({
+      error: 'Missing params',
+      required: ['persona', 'age', 'phase'],
     });
   }
 
-  if (request.method !== 'GET') {
-    return json({ error: 'Method not allowed' }, { status: 405 });
-  }
-
-  const url = new URL(request.url);
-  const persona = url.searchParams.get('persona');
-  const age = url.searchParams.get('age');
-  const phase = url.searchParams.get('phase');
-
-  if (!persona || !age || !phase) {
-    return json(
-      {
-        error: 'Missing params',
-        required: ['persona', 'age', 'phase'],
-      },
-      { status: 400 }
-    );
-  }
-
-  const supabaseUrl = process.env.PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
-  const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
-
-  if (!supabaseUrl || !supabaseServiceKey) {
-    return json(
-      {
-        error: 'Supabase is not configured on the server',
-        required: ['PUBLIC_SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL)', 'SUPABASE_SERVICE_ROLE_KEY'],
-      },
-      { status: 500 }
-    );
+  if (!isSupabaseConfigured()) {
+    return res.status(500).json({
+      error: 'Supabase is not configured on the server',
+      required: ['PUBLIC_SUPABASE_URL (or NEXT_PUBLIC_SUPABASE_URL)', 'SUPABASE_SERVICE_ROLE_KEY'],
+    });
   }
 
   const avatarKey = `${persona}_${age}`;
 
   try {
-    const supabase = createClient(supabaseUrl, supabaseServiceKey, {
-      auth: { autoRefreshToken: false, persistSession: false },
-      db: { schema: 'public' },
-    });
+    const supabase = getSupabaseAdmin();
 
     const { data, error } = await supabase
       .from('kelly_motion_library')
@@ -79,40 +56,20 @@ export default async function handler(request: Request): Promise<Response> {
       .maybeSingle();
 
     if (error) {
-      return json(
-        { videoUrl: null, duration: null, fallback: true, error: error.message },
-        {
-          status: 200,
-          headers: { 'Cache-Control': 'public, s-maxage=15, stale-while-revalidate=60' },
-        }
-      );
+      res.setHeader('Cache-Control', 'public, s-maxage=15, stale-while-revalidate=60');
+      return res.status(200).json({ videoUrl: null, duration: null, fallback: true, error: error.message });
     }
 
     if (!data?.video_url || data.status !== 'completed') {
-      return json(
-        { videoUrl: null, duration: data?.duration ?? null, fallback: true },
-        {
-          status: 200,
-          headers: { 'Cache-Control': 'public, s-maxage=30, stale-while-revalidate=300' },
-        }
-      );
+      res.setHeader('Cache-Control', 'public, s-maxage=30, stale-while-revalidate=300');
+      return res.status(200).json({ videoUrl: null, duration: data?.duration ?? null, fallback: true });
     }
 
-    return json(
-      { videoUrl: data.video_url, duration: data.duration ?? null, fallback: false },
-      {
-        status: 200,
-        headers: { 'Cache-Control': 'public, s-maxage=3600, stale-while-revalidate=86400' },
-      }
-    );
+    res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+    return res.status(200).json({ videoUrl: data.video_url, duration: data.duration ?? null, fallback: false });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error';
-    return json(
-      { videoUrl: null, duration: null, fallback: true, error: message },
-      {
-        status: 500,
-        headers: { 'Cache-Control': 'no-store' },
-      }
-    );
+    res.setHeader('Cache-Control', 'no-store');
+    return res.status(500).json({ videoUrl: null, duration: null, fallback: true, error: message });
   }
 }

@@ -1,5 +1,5 @@
 /**
- * Lessons API - Vercel Edge Function
+ * Lessons API
  * 
  * Primary: serves lessons from Supabase (service role) so unauthenticated
  * users can load lesson metadata and build the 365-day calendar without auth.
@@ -8,6 +8,9 @@
  * 
  * GET /api/lessons/:dayNumber
  */
+
+import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { getSupabaseAdmin, isSupabaseConfigured } from './lib/supabase';
 
 // Simple static lesson data for fallback
 const STATIC_LESSONS: Record<number, any> = {
@@ -20,38 +23,28 @@ const STATIC_LESSONS: Record<number, any> = {
   7: { topic: 'The Moon', universal_truth: 'The Moon has watched over Earth for 4.5 billion years.' },
 };
 
-function jsonResponse(body: unknown, status = 200) {
-  return new Response(JSON.stringify(body), {
-    status,
-    headers: {
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-      'Cache-Control': 'public, max-age=300',
-      'Content-Type': 'application/json; charset=utf-8',
-    },
-  });
+function setCors(res: VercelResponse) {
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
-export default async function handler(req: Request): Promise<Response> {
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  setCors(res);
+
   // CORS preflight
   if (req.method === 'OPTIONS') {
-    return new Response(null, {
-      status: 200,
-      headers: {
-        'Access-Control-Allow-Origin': '*',
-        'Access-Control-Allow-Methods': 'GET, OPTIONS',
-        'Access-Control-Allow-Headers': 'Content-Type',
-        'Cache-Control': 'public, max-age=300',
-      },
-    });
+    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=0');
+    return res.status(204).send('');
   }
 
-  // Edge Runtime: parse query params from URL
-  const url = new URL(req.url);
-  const dayParam = url.searchParams.get('dayNumber') || url.searchParams.get('day') || '1';
-  const startParam = url.searchParams.get('startDay') || url.searchParams.get('start') || null;
-  const endParam = url.searchParams.get('endDay') || url.searchParams.get('end') || null;
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
+  const dayParam = (req.query?.dayNumber as string | undefined) || (req.query?.day as string | undefined) || '1';
+  const startParam = (req.query?.startDay as string | undefined) || (req.query?.start as string | undefined) || null;
+  const endParam = (req.query?.endDay as string | undefined) || (req.query?.end as string | undefined) || null;
   const day = Number.parseInt(dayParam, 10);
 
   // ---------------------------------------------------------------------------
@@ -68,15 +61,13 @@ export default async function handler(req: Request): Promise<Response> {
       endDay > 365 ||
       startDay > endDay
     ) {
-      return jsonResponse(
-        { error: 'Invalid range', message: 'startDay/endDay must be 1..365 and startDay <= endDay' },
-        400
-      );
+      return res.status(400).json({
+        error: 'Invalid range',
+        message: 'startDay/endDay must be 1..365 and startDay <= endDay',
+      });
     }
 
     try {
-      // Lazy import to keep Edge bundle small and avoid hard dependency when env vars missing
-      const { getSupabaseAdmin, isSupabaseConfigured } = await import('./lib/supabase.js');
       if (isSupabaseConfigured()) {
         const db = getSupabaseAdmin();
         const { data, error } = await db
@@ -87,7 +78,8 @@ export default async function handler(req: Request): Promise<Response> {
           .order('day_number');
 
         if (!error && data) {
-          return jsonResponse({ source: 'supabase-admin', lessons: data, startDay, endDay });
+          res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
+          return res.status(200).json({ source: 'supabase-admin', lessons: data, startDay, endDay });
         }
       }
     } catch (e) {
@@ -105,24 +97,23 @@ export default async function handler(req: Request): Promise<Response> {
         marketing_tagline: '',
       });
     }
-    return jsonResponse({ source: 'api-static-range', lessons, startDay, endDay });
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
+    return res.status(200).json({ source: 'api-static-range', lessons, startDay, endDay });
   }
 
   if (Number.isNaN(day) || day < 1 || day > 365) {
-    return jsonResponse(
-      {
-        error: 'Invalid day number',
-        message: 'Day must be between 1 and 365',
-      },
-      400
-    );
+    return res.status(400).json({
+      error: 'Invalid day number',
+      message: 'Day must be between 1 and 365',
+    });
   }
 
   // Try to serve from static data (cycle through 1..7)
   const staticLesson = STATIC_LESSONS[day] || STATIC_LESSONS[((day - 1) % 7) + 1];
 
   if (staticLesson) {
-    return jsonResponse({
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
+    return res.status(200).json({
       source: 'api-static',
       lesson: {
         id: `api-${day}`,
@@ -144,7 +135,8 @@ export default async function handler(req: Request): Promise<Response> {
   }
 
   // Fallback for any day (should be unreachable, but keep it bulletproof)
-  return jsonResponse({
+  res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=3600');
+  return res.status(200).json({
     source: 'api-fallback',
     lesson: {
       id: `fallback-${day}`,
@@ -164,9 +156,3 @@ export default async function handler(req: Request): Promise<Response> {
     dayNumber: day,
   });
 }
-
-export const config = {
-  runtime: 'edge',
-};
-
-

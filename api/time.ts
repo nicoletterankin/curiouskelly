@@ -7,11 +7,21 @@
  * "When Kelly says 9:00:00 AM, class starts. Everywhere. For everyone. To the second."
  */
 
-export const config = {
-  runtime: 'edge',
-};
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
-export default function handler(req: Request): Response {
+export default function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+    return res.status(204).send('');
+  }
+
+  if (req.method !== 'GET') {
+    return res.status(405).json({ error: 'Method not allowed' });
+  }
+
   const now = Date.now();
   const date = new Date(now);
   
@@ -36,21 +46,19 @@ export default function handler(req: Request): Response {
     server: 'kelly-time-authority',
     version: '1.0.0',
   };
-  
-  return new Response(JSON.stringify(payload), {
-    status: 200,
-    headers: {
-      'Content-Type': 'application/json',
-      // CRITICAL: Never cache time responses
-      'Cache-Control': 'no-store, no-cache, must-revalidate, max-age=0',
-      'Pragma': 'no-cache',
-      'Expires': '0',
-      // Allow cross-origin for widget embeds
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET, OPTIONS',
-      'Access-Control-Allow-Headers': 'Content-Type',
-    },
-  });
+
+  // CRITICAL: Never cache time responses
+  res.setHeader('Content-Type', 'application/json; charset=utf-8');
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  // Allow cross-origin for widget embeds
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+  return res.status(200).send(JSON.stringify(payload));
 }
+
 
 

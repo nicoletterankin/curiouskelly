@@ -10,11 +10,7 @@
  * - Apple Calendar: webcal://curiouskelly.com/api/calendar/feed
  */
 
-import { createClient } from '@supabase/supabase-js';
-
-export const config = {
-  runtime: 'edge',
-};
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 
 // Live class schedule (local hours)
 const LIVE_CLASS_HOURS = [6, 9, 12, 18, 21];
@@ -42,9 +38,21 @@ function generateUID(prefix: string): string {
   return `${prefix}-${Date.now()}-${Math.random().toString(36).substr(2, 9)}@curiouskelly.com`;
 }
 
-export default async function handler(req: Request): Promise<Response> {
-  const url = new URL(req.url);
-  const feedType = url.searchParams.get('type') || 'lessons';
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  if (req.method === 'OPTIONS') {
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=0');
+    return res.status(204).send('');
+  }
+
+  if (req.method !== 'GET') {
+    return res.status(405).send('Method not allowed');
+  }
+
+  const feedTypeRaw = (req.query?.type as string | undefined) || 'lessons';
+  const feedType = feedTypeRaw === 'live' ? 'live' : 'lessons';
   
   const now = new Date();
   const year = now.getFullYear();
@@ -111,17 +119,15 @@ export default async function handler(req: Request): Promise<Response> {
   icsLines.push('END:VCALENDAR');
   
   const icsContent = icsLines.join('\r\n');
-  
-  return new Response(icsContent, {
-    status: 200,
-    headers: {
-      'Content-Type': 'text/calendar; charset=utf-8',
-      'Content-Disposition': `attachment; filename="kelly-${feedType}.ics"`,
-      // Cache for 1 hour - lessons don't change that often
-      'Cache-Control': 'public, max-age=3600',
-      'Access-Control-Allow-Origin': '*',
-    },
-  });
+
+  res.setHeader('Content-Type', 'text/calendar; charset=utf-8');
+  res.setHeader('Content-Disposition', `attachment; filename="kelly-${feedType}.ics"`);
+  // Cache for 1 hour - lessons don't change that often
+  res.setHeader('Cache-Control', 'public, max-age=3600, s-maxage=3600, stale-while-revalidate=86400');
+  res.setHeader('Access-Control-Allow-Origin', '*');
+
+  return res.status(200).send(icsContent);
 }
+
 
 
