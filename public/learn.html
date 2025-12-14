@@ -4884,23 +4884,17 @@
     // KELLY IMAGE HELPER
     // ============================================
     function getKellyImageUrl(personaId, ageBucket = 'adult') {
-      // Default: fully-local, LoRA-derived persona renders (no network required).
-      // Remote heads are opt-in via `?remoteHeads=true`.
-      const safePersonaId = String(personaId || 'scientist').trim().toLowerCase();
-      const localPersona = `/images/kelly/personas-16x9/${safePersonaId}.jpg`;
-      const localFallback = `/images/kelly/personas-16x9/scientist.jpg`;
-
       // Launch stability: keep images local unless explicitly enabled.
-      if (!ENABLE_REMOTE_KELLY_HEADS) return localPersona;
+      // (Local persona renders are not guaranteed to exist on all deployments.)
+      if (!ENABLE_REMOTE_KELLY_HEADS) return KELLY_PLACEHOLDER;
 
-      // If manifest/CDN is unavailable, stay local (never show broken images).
       if (!manifest || !manifest.personas || !manifest.personas[personaId]) {
-        return localPersona || localFallback || KELLY_PLACEHOLDER;
+        return KELLY_PLACEHOLDER;
       }
       
       const persona = manifest.personas[personaId];
       const headPath = persona?.images?.headByAge?.[ageBucket] || persona?.images?.head;
-      if (!headPath || !manifest?.cdnBase) return localPersona || localFallback || KELLY_PLACEHOLDER;
+      if (!headPath || !manifest?.cdnBase) return KELLY_PLACEHOLDER;
       return `${manifest.cdnBase}/${headPath}`;
     }
 
