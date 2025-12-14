@@ -6,7 +6,8 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getSupabaseAdmin, isSupabaseConfigured } from './lib/supabase';
+// NOTE: `.js` extension required for Vercel's ESM output.
+import { getSupabaseAdmin, isSupabaseConfigured } from './lib/supabase.js';
 
 const EXPECTED_TOTAL = 420; // 12 personas × 5 ages × 7 phases
 const DEFAULT_BUCKET_TOTAL = 84; // 12 personas × 7 phases

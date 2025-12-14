@@ -10,7 +10,8 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getSupabaseAdmin, isSupabaseConfigured } from './lib/supabase';
+// NOTE: `.js` extension required for Vercel's ESM output.
+import { getSupabaseAdmin, isSupabaseConfigured } from './lib/supabase.js';
 
 // Simple static lesson data for fallback
 const STATIC_LESSONS: Record<number, any> = {
