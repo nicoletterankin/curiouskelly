@@ -10,7 +10,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import { getSupabaseAdmin, isSupabaseConfigured } from '../../lib/supabase';
+import { getSupabaseAdmin, isSupabaseConfigured } from '../lib/supabase.js';
 
 // Extended static lesson data (first 30 days)
 const STATIC_LESSONS: Record<number, { topic: string; universal_truth: string; greeting: string }> = {

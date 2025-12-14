@@ -76,7 +76,7 @@ export default async function handler(req: Request): Promise<Response> {
 
     try {
       // Lazy import to keep Edge bundle small and avoid hard dependency when env vars missing
-      const { getSupabaseAdmin, isSupabaseConfigured } = await import('../lib/supabase');
+      const { getSupabaseAdmin, isSupabaseConfigured } = await import('./lib/supabase.js');
       if (isSupabaseConfigured()) {
         const db = getSupabaseAdmin();
         const { data, error } = await db
