@@ -121,6 +121,11 @@
       text-decoration: none;
       font-weight: 600;
       letter-spacing: 0.2px;
+      background: transparent;
+      border: none;
+      padding: 0;
+      cursor: pointer;
+      font: inherit;
     }
 
     .kelly-home-link:hover {
@@ -577,14 +582,28 @@
     
     .lesson-viewport {
       flex: 1;
-      display: flex;
-      flex-direction: column;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(300px, 50%) minmax(0, 1fr);
+      grid-template-rows: 1fr auto;
+      grid-template-areas:
+        "left center right"
+        "bottom bottom bottom";
       position: relative;
+      overflow: hidden;
+      /* Prevent tall panel content from expanding the whole page */
+      min-height: 0;
     }
     
     .lesson-kelly-container {
+      grid-area: center;
       position: relative;
       overflow: hidden;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px;
+      /* Sacred rule: Kelly must never be covered by panels */
+      z-index: 20;
     }
     
     .lesson-kelly {
@@ -592,85 +611,312 @@
       align-items: center;
       justify-content: center;
     }
+
+    /* Sacred side panels */
+    .left-panel {
+      grid-area: left;
+      transform: translateX(-100%);
+      transition: transform 0.3s ease;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .left-panel.open {
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+
+    .right-panel {
+      grid-area: right;
+      transform: translateX(100%);
+      transition: transform 0.3s ease;
+      z-index: 10;
+      pointer-events: none;
+      display: flex;
+      flex-direction: column;
+      min-height: 0;
+    }
+    .right-panel.open {
+      transform: translateX(0);
+      pointer-events: auto;
+    }
+
+    .panel-content {
+      height: 100%;
+      display: flex;
+      flex-direction: column;
+      background: rgba(15, 15, 25, 0.95);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 16px;
+      margin: 16px;
+      overflow: hidden;
+      -webkit-backdrop-filter: blur(14px);
+      backdrop-filter: blur(14px);
+      min-height: 0;
+    }
+
+    .panel-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 10px;
+      padding: 14px 14px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+      font-weight: 700;
+      font-size: 13px;
+      letter-spacing: 0.3px;
+    }
+
+    .panel-close {
+      width: 34px;
+      height: 34px;
+      border-radius: 10px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.06);
+      color: white;
+      cursor: pointer;
+      font-size: 16px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .panel-close:active { transform: scale(0.95); }
+
+    .panel-body {
+      flex: 1;
+      overflow-y: auto;
+      -webkit-overflow-scrolling: touch;
+      padding: 12px;
+    }
+
+    /* Left panel chat UI */
+    .comments-feed {
+      flex: 1;
+      padding: 12px;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+
+    .comment {
+      display: flex;
+      gap: 8px;
+      align-items: flex-start;
+      font-size: 13px;
+      line-height: 1.35;
+      color: rgba(255,255,255,0.92);
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.06);
+      padding: 10px 12px;
+      border-radius: 14px;
+    }
+
+    .comment .disclosure {
+      font-weight: 800;
+      color: rgba(255,255,255,0.85);
+    }
+    .comment .emoji { width: 18px; text-align: center; flex: 0 0 18px; }
+    .comment.user { background: rgba(var(--kelly-color-rgb), 0.14); border-color: rgba(var(--kelly-color-rgb), 0.20); }
+    .comment.simulated { opacity: 0.96; }
+    .comment.fading { opacity: 0; transition: opacity 0.6s ease; }
+
+    .chat-input {
+      display: flex;
+      gap: 10px;
+      padding: 12px;
+      border-top: 1px solid rgba(255,255,255,0.08);
+    }
+    .chat-input input {
+      flex: 1;
+      border-radius: 14px;
+      border: 1px solid rgba(255,255,255,0.12);
+      background: rgba(255,255,255,0.06);
+      color: white;
+      padding: 12px 12px;
+      outline: none;
+      font-size: 14px;
+      -webkit-user-select: text;
+      user-select: text;
+    }
+    .chat-input button {
+      width: 44px;
+      height: 44px;
+      border-radius: 14px;
+      border: none;
+      background: var(--kelly-color, #3b82f6);
+      color: white;
+      font-weight: 800;
+      cursor: pointer;
+    }
+    .chat-input button:active { transform: scale(0.96); }
+
+    /* Bottom zone inside the sacred layout */
+    .bottom-zone {
+      grid-area: bottom;
+      align-self: end;
+      background: rgba(0,0,0,0.25);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding-bottom: calc(80px + var(--safe-bottom)); /* leave room for fixed nav */
+      /* Sacred rule: captions + phase bar must remain visible */
+      position: relative;
+      z-index: 20;
+    }
     
     /* Kelly Hero - Desktop */
     @media (min-width: 768px) {
-      .lesson-viewport {
-        display: flex;
-        flex-direction: row;
-        height: calc(100vh - 120px);
-      }
-      
-      .lesson-kelly-container {
-        flex: 0 0 55%;
-        display: flex;
-        align-items: center;
-        justify-content: center;
-        padding: 2rem;
-      }
-      
       .lesson-kelly {
+        position: relative;
         width: 100%;
-        height: 100%;
-        max-width: 500px;
-        max-height: 500px;
-        border-radius: 0;
-        background: transparent;
+        max-width: 800px;
+        aspect-ratio: 16 / 9;
+        border-radius: 16px;
+        background: #111;
         overflow: hidden;
       }
       
       .lesson-kelly img,
       #lesson-kelly-img {
+        position: absolute;
+        inset: 0;
         width: 100%;
         height: 100%;
-        object-fit: contain;
-        border-radius: 1rem;
+        object-fit: cover;
+        border-radius: 0;
       }
       
-      .lesson-content-area {
-        flex: 1;
-        display: flex;
-        flex-direction: column;
-        justify-content: center;
-        padding: 2rem;
-        overflow-y: auto;
-        -webkit-overflow-scrolling: touch;
-      }
+      .lesson-content-area { padding: 0; }
     }
     
     /* Kelly Hero - Mobile */
     @media (max-width: 767px) {
       .lesson-viewport {
-        display: flex;
-        flex-direction: column;
-        height: calc(100vh - 120px);
-      }
-      
-      .lesson-kelly-container {
-        flex: 0 0 50vh;
-        display: flex;
-        align-items: center;
-        justify-content: center;
+        grid-template-columns: 0 minmax(0, 1fr) 0;
       }
       
       .lesson-kelly {
-        width: 80%;
-        height: 80%;
-        border-radius: 0;
-        background: transparent;
+        position: relative;
+        width: 100%;
+        aspect-ratio: 16 / 9;
+        max-height: min(52vh, 420px);
+        border-radius: 16px;
+        background: #111;
         overflow: hidden;
       }
       
       .lesson-kelly img,
       #lesson-kelly-img {
+        position: absolute;
+        inset: 0;
         width: 100%;
         height: 100%;
-        object-fit: contain;
-        border-radius: 1rem;
+        object-fit: cover;
+        border-radius: 0;
+      }
+
+      /* Mobile panels overlay edges but we keep Kelly visible by shrinking stage */
+      html[data-panel-open] .lesson-kelly {
+        transform: scale(0.90);
+        transform-origin: center;
+      }
+
+      html[data-panel-open="left"] #scene-lesson .lesson-viewport {
+        grid-template-columns: minmax(260px, 70vw) minmax(0, 1fr) 0;
+      }
+      html[data-panel-open="journey"] #scene-lesson .lesson-viewport,
+      html[data-panel-open="settings"] #scene-lesson .lesson-viewport {
+        grid-template-columns: 0 minmax(0, 1fr) minmax(260px, 70vw);
       }
     }
 
     /* Note: Kelly visibility/size is controlled by the presence system (data-kelly-presence). */
+
+    /* ============================================
+       HOME MODE (in-app hub inside learn.html)
+       ============================================ */
+    #home-overlay {
+      display: none;
+      padding: 24px 18px;
+      max-width: 720px;
+      margin: 0 auto;
+      text-align: center;
+    }
+
+    html[data-ui-mode="home"] #home-overlay {
+      display: block;
+    }
+
+    html[data-ui-mode="home"] #phase-bar,
+    html[data-ui-mode="home"] #caption-phase,
+    html[data-ui-mode="home"] #caption-text,
+    html[data-ui-mode="home"] .reactions,
+    html[data-ui-mode="home"] #cliff-container {
+      display: none !important;
+    }
+
+    .home-state {
+      text-align: center;
+      padding: 4px 0;
+    }
+
+    .streak-display {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+
+    .streak-icon {
+      font-size: 2rem;
+    }
+
+    .streak-count {
+      font-size: 2.5rem;
+      font-weight: 800;
+      color: #f59e0b;
+    }
+
+    .streak-label {
+      font-size: 0.9rem;
+      color: rgba(255,255,255,0.65);
+    }
+
+    .today-info {
+      margin-bottom: 22px;
+    }
+
+    .today-day {
+      font-size: 1.15rem;
+      font-weight: 700;
+      margin-bottom: 6px;
+    }
+
+    .today-topic {
+      color: rgba(255,255,255,0.65);
+      font-style: italic;
+      line-height: 1.35;
+      max-width: 680px;
+      margin: 0 auto;
+    }
+
+    .start-lesson-btn {
+      background: #6366f1;
+      color: white;
+      border: none;
+      padding: 14px 28px;
+      border-radius: 30px;
+      font-size: 1.05rem;
+      font-weight: 800;
+      cursor: pointer;
+      transition: transform 0.2s, background 0.2s;
+    }
+
+    .start-lesson-btn:hover {
+      background: #5558e3;
+      transform: scale(1.02);
+    }
     
     .lesson-kelly.idle {
       animation: gentleFloat 3s ease-in-out infinite;
@@ -2777,203 +3023,21 @@
       cursor: pointer;
     }
 
-    /* Panel overlay support (so Kelly can remain visible) */
-    #scene-lesson.panel-underlay {
-      pointer-events: none;
-    }
-    
-    /* Settings panel - fixed-width slide-over from right */
-    [data-panel-open] .scene.panel-overlay {
-      position: fixed !important;
-      top: 0 !important;
-      right: 0 !important;
-      bottom: 0 !important;
-      left: auto !important;
-      width: 100% !important;
-      max-width: 400px !important;
-      background: rgba(0,0,0,0.92) !important;
-      -webkit-backdrop-filter: blur(16px) !important;
-      backdrop-filter: blur(16px) !important;
-      box-shadow: -20px 0 60px rgba(0,0,0,0.6) !important;
-      border-left: 1px solid rgba(255,255,255,0.1) !important;
-      z-index: 1000 !important;
-      transform: translateX(0) !important;
-      overflow-y: auto !important;
-    }
-    
-    /* Ensure panel is NOT affected by Kelly presence modes */
-    [data-kelly-presence="0"] .scene.panel-overlay,
-    [data-kelly-presence="50"] .scene.panel-overlay,
-    [data-kelly-presence="100"] .scene.panel-overlay {
-      position: fixed !important;
-      top: 0 !important;
-      right: 0 !important;
-      bottom: 0 !important;
-      left: auto !important;
-      width: 100% !important;
-      max-width: 400px !important;
-    }
-    
-    @media (max-width: 767px) {
-      [data-panel-open] .scene.panel-overlay {
-        width: 100vw !important;
-        max-width: 100vw !important;
-      }
+    /* SACRED LAYOUT: Kelly presence scales only (never repositions) */
+    [data-kelly-presence="0"] #scene-lesson .lesson-kelly {
+      transform: scale(0.70);
+      transform-origin: center;
+      opacity: 0.95;
     }
 
-    /* 0% ZEN MODE — mini Kelly + full content */
-    [data-kelly-presence="0"] #scene-lesson .lesson-kelly-container,
-    [data-kelly-presence="0"] #scene-lesson .lesson-kelly,
-    [data-kelly-presence="0"] #scene-lesson #lesson-kelly-img {
-      width: 80px !important;
-      height: 80px !important;
-      position: fixed !important;
-      bottom: 100px !important;
-      left: 20px !important;
-      border-radius: 50% !important;
-      z-index: 1500 !important;
-      overflow: hidden !important;
-    }
-    [data-kelly-presence="0"] #scene-lesson .lesson-kelly-container {
-      border: 3px solid var(--kelly-color, #3b82f6) !important;
-      box-shadow: 0 0 20px rgba(59, 130, 246, 0.4) !important;
-    }
-    [data-kelly-presence="0"] #scene-lesson .tap-zones,
-    [data-kelly-presence="0"] #scene-lesson .side-actions {
-      display: none !important;
-    }
-    [data-kelly-presence="0"] #scene-lesson .scene-header,
-    [data-kelly-presence="0"] #scene-lesson .lesson-content-area {
-      margin-left: 0 !important;
-      width: 100% !important;
-    }
-
-    /* 50% BALANCED MODE — Kelly takes left half */
-    [data-kelly-presence="50"] #scene-lesson .lesson-kelly-container {
-      width: 50vw !important;
-      height: calc(100vh - 120px) !important;
-      position: fixed !important;
-      left: 0 !important;
-      top: calc(60px + var(--safe-top)) !important;
-      padding: 0 !important;
-      z-index: 10 !important;
-    }
     [data-kelly-presence="50"] #scene-lesson .lesson-kelly {
-      width: 100% !important;
-      height: 100% !important;
-      max-width: none !important;
-      max-height: none !important;
-      border-radius: 0 !important;
-    }
-    [data-kelly-presence="50"] #scene-lesson #lesson-kelly-img {
-      width: 100% !important;
-      height: 100% !important;
-      max-width: none !important;
-      max-height: none !important;
-      object-fit: contain !important;
-      border-radius: 0 !important;
-    }
-    [data-kelly-presence="50"] #scene-lesson .scene-header,
-    [data-kelly-presence="50"] #scene-lesson .lesson-content-area {
-      margin-left: 50vw !important;
-      width: calc(100% - 50vw) !important;
+      transform: scale(1);
+      transform-origin: center;
     }
 
-    /* Keep phase bar visible and aligned with content in balanced mode */
-    [data-kelly-presence="50"] #scene-lesson .phase-bar {
-      margin-left: 50vw !important;
-      width: calc(100% - 50vw) !important;
-    }
-
-    /* 100% IMMERSIVE MODE — Kelly as blurred background */
-    [data-kelly-presence="100"] #scene-lesson .lesson-kelly-container {
-      width: 100vw !important;
-      height: 100vh !important;
-      position: fixed !important;
-      left: 0 !important;
-      top: 0 !important;
-      z-index: 0 !important;
-      padding: 0 !important;
-    }
     [data-kelly-presence="100"] #scene-lesson .lesson-kelly {
-      width: 100% !important;
-      height: 100% !important;
-      max-width: none !important;
-      max-height: none !important;
-      pointer-events: none !important;
-    }
-    [data-kelly-presence="100"] #scene-lesson #lesson-kelly-img {
-      width: 100% !important;
-      height: 100% !important;
-      object-fit: cover !important;
-      opacity: 0.3 !important;
-      filter: blur(3px) !important;
-      border-radius: 0 !important;
-    }
-    [data-kelly-presence="100"] #scene-lesson .tap-zones,
-    [data-kelly-presence="100"] #scene-lesson .side-actions {
-      z-index: 2 !important;
-    }
-    [data-kelly-presence="100"] #scene-lesson .lesson-viewport {
-      position: relative !important;
-      z-index: 1 !important;
-    }
-    [data-kelly-presence="100"] #scene-lesson .scene-header,
-    [data-kelly-presence="100"] #scene-lesson .lesson-content-area {
-      position: relative !important;
-      z-index: 1 !important;
-      background: rgba(0,0,0,0.7) !important;
-      margin: 1rem auto !important;
-      max-width: 600px !important;
-      border-radius: 1rem !important;
-    }
-    [data-kelly-presence="100"] #scene-lesson .lesson-content-area {
-      padding: 2rem !important;
-    }
-
-    /* Kelly slides/shrinks when a panel is open (balanced mode) */
-    [data-panel-open][data-kelly-presence="50"] #scene-lesson .lesson-kelly-container {
-      width: 25vw !important;
-      transition: width 0.3s ease !important;
-    }
-    [data-panel-open][data-kelly-presence="50"] #scene-lesson .scene-header,
-    [data-panel-open][data-kelly-presence="50"] #scene-lesson .lesson-content-area {
-      margin-left: 25vw !important;
-      width: calc(100% - 25vw) !important;
-      transition: margin-left 0.3s ease, width 0.3s ease !important;
-    }
-
-    [data-panel-open][data-kelly-presence="50"] #scene-lesson .phase-bar {
-      margin-left: 25vw !important;
-      width: calc(100% - 25vw) !important;
-      transition: margin-left 0.3s ease, width 0.3s ease !important;
-    }
-
-    /* Mobile adjustments */
-    @media (max-width: 767px) {
-      [data-kelly-presence="50"] #scene-lesson .lesson-kelly-container {
-        width: 100vw !important;
-        height: 45vh !important;
-        top: calc(60px + var(--safe-top)) !important;
-      }
-      [data-kelly-presence="50"] #scene-lesson .scene-header,
-      [data-kelly-presence="50"] #scene-lesson .lesson-content-area {
-        margin-left: 0 !important;
-        width: 100% !important;
-      }
-      [data-kelly-presence="50"] #scene-lesson .phase-bar {
-        margin-left: 0 !important;
-        width: 100% !important;
-      }
-      [data-kelly-presence="50"] #scene-lesson .lesson-content-area {
-        margin-top: 45vh !important;
-      }
-      [data-panel-open][data-kelly-presence="50"] #scene-lesson .lesson-kelly-container {
-        width: 100vw !important;
-      }
-      [data-panel-open][data-kelly-presence="50"] #scene-lesson .lesson-content-area {
-        margin-top: 45vh !important;
-      }
+      transform: scale(1.12);
+      transform-origin: center;
     }
   </style>
 </head>
@@ -2986,10 +3050,10 @@
 
   <!-- Unified top navigation -->
   <nav class="kelly-top-nav">
-    <a href="/" class="kelly-home-link" title="Home">
+    <button type="button" class="kelly-home-link" title="Home" onclick="handleHomeButton()">
       <span class="kelly-logo">🏠</span>
       <span class="kelly-logo-text">Curious Kelly</span>
-    </a>
+    </button>
   </nav>
 
   <div class="app">
@@ -3046,38 +3110,27 @@
         </div>
       </div>
 
-      <!-- Clickable phase bar (5 phases) -->
-      <div class="phase-bar" id="phase-bar">
-        <button class="phase-segment" data-phase="0" title="Hook">
-          <span class="phase-dot"></span>
-          <span class="phase-name">Hook</span>
-        </button>
-        <div class="phase-connector"></div>
-        <button class="phase-segment" data-phase="1" title="Fact 1">
-          <span class="phase-dot"></span>
-          <span class="phase-name">Fact 1</span>
-        </button>
-        <div class="phase-connector"></div>
-        <button class="phase-segment" data-phase="2" title="Fact 2">
-          <span class="phase-dot"></span>
-          <span class="phase-name">Fact 2</span>
-        </button>
-        <div class="phase-connector"></div>
-        <button class="phase-segment" data-phase="3" title="Fact 3">
-          <span class="phase-dot"></span>
-          <span class="phase-name">Fact 3</span>
-        </button>
-        <div class="phase-connector"></div>
-        <button class="phase-segment" data-phase="4" title="Wisdom">
-          <span class="phase-dot"></span>
-          <span class="phase-name">Wisdom</span>
-        </button>
-      </div>
-      
-      <div class="lesson-viewport">
-        <div class="lesson-kelly-container">
+      <div class="lesson-viewport" id="sacred-layout">
+        <!-- LEFT PANEL (social/chat) -->
+        <aside class="left-panel" id="left-panel" aria-hidden="true">
+          <div class="panel-content">
+            <div class="panel-header">
+              <span>💬 Live Chat</span>
+              <button class="panel-close" type="button" onclick="closePanel()" aria-label="Close chat">✕</button>
+            </div>
+            <div class="comments-feed scrollable" id="comments-feed" aria-label="Comments feed"></div>
+            <div class="chat-input">
+              <input type="text" id="kelly-chat-input" placeholder="Talk to Kelly..." autocomplete="off">
+              <button type="button" onclick="sendToKelly()" aria-label="Send">→</button>
+            </div>
+          </div>
+        </aside>
+
+        <!-- SACRED CENTER (Kelly) -->
+        <div class="lesson-kelly-container" id="kelly-stage">
           <div class="lesson-kelly idle" id="lesson-kelly">
             <img id="lesson-kelly-img" class="kelly-img" src="" alt="Kelly">
+            <video id="kelly-video" class="hidden" hidden playsinline preload="auto" style="width:100%;height:100%;object-fit:cover;"></video>
           </div>
           
           <div class="tap-zones">
@@ -3092,14 +3145,88 @@
             <button class="side-action" id="btn-ask">💬</button>
           </div>
         </div>
-        
-        <div class="lesson-content-area caption-area">
+
+        <!-- RIGHT PANEL (journey/settings) -->
+        <aside class="right-panel" id="right-panel" aria-hidden="true">
+          <div class="panel-content">
+            <div class="panel-header">
+              <span id="right-panel-title">📅 Journey</span>
+              <button class="panel-close" type="button" onclick="closePanel()" aria-label="Close panel">✕</button>
+            </div>
+            <div class="panel-body scrollable">
+              <div id="panel-journey-slot"></div>
+              <div id="panel-settings-slot" style="display:none;"></div>
+            </div>
+          </div>
+        </aside>
+
+        <!-- BOTTOM ZONE (phase + captions + controls) -->
+        <div class="lesson-content-area caption-area bottom-zone" id="lesson-bottom-zone">
+          <!-- Clickable phase bar (7 phases) -->
+          <div class="phase-bar" id="phase-bar">
+            <button class="phase-segment" data-phase="0" title="Hook">
+              <span class="phase-dot"></span>
+              <span class="phase-name">Hook</span>
+            </button>
+            <div class="phase-connector"></div>
+            <button class="phase-segment" data-phase="1" title="Cliff">
+              <span class="phase-dot"></span>
+              <span class="phase-name">Cliff</span>
+            </button>
+            <div class="phase-connector"></div>
+            <button class="phase-segment" data-phase="2" title="Fact 1">
+              <span class="phase-dot"></span>
+              <span class="phase-name">Fact 1</span>
+            </button>
+            <div class="phase-connector"></div>
+            <button class="phase-segment" data-phase="3" title="Fact 2">
+              <span class="phase-dot"></span>
+              <span class="phase-name">Fact 2</span>
+            </button>
+            <div class="phase-connector"></div>
+            <button class="phase-segment" data-phase="4" title="Fact 3">
+              <span class="phase-dot"></span>
+              <span class="phase-name">Fact 3</span>
+            </button>
+            <div class="phase-connector"></div>
+            <button class="phase-segment" data-phase="5" title="Wisdom">
+              <span class="phase-dot"></span>
+              <span class="phase-name">Wisdom</span>
+            </button>
+            <div class="phase-connector"></div>
+            <button class="phase-segment" data-phase="6" title="Outro">
+              <span class="phase-dot"></span>
+              <span class="phase-name">Outro</span>
+            </button>
+          </div>
+
           <div class="caption-phase" id="caption-phase">
             <span class="phase-icon">🪝</span>
             <span class="phase-name">Hook</span>
           </div>
           <div class="caption-text" id="caption-text">
             Every great journey begins with a single curious thought...
+          </div>
+
+        <!-- Home overlay (rendered by JS; hidden during lessons) -->
+        <div id="home-overlay" aria-hidden="true"></div>
+          
+          <!-- CLIFF MECHANIC (hidden except during Cliff phase) -->
+          <div id="cliff-container" class="hidden" hidden>
+            <div id="cliff-prompt">Which path calls to you?</div>
+            <div id="cliff-choices">
+              <button id="cliff-choice-a" class="cliff-btn" data-choice="A" type="button">
+                <span class="cliff-icon">🌊</span>
+                <span class="cliff-label" id="cliff-label-a">Path A</span>
+              </button>
+              <button id="cliff-choice-b" class="cliff-btn" data-choice="B" type="button">
+                <span class="cliff-icon">🔥</span>
+                <span class="cliff-label" id="cliff-label-b">Path B</span>
+              </button>
+            </div>
+            <div id="cliff-timer" class="hidden" hidden style="width:100%;max-width:520px;">
+              <div id="cliff-timer-bar" style="height:4px;width:0%;background:rgba(255,255,255,0.65);border-radius:999px;"></div>
+            </div>
           </div>
           <div class="reactions">
             <button class="reaction-btn">💡 Got it</button>
@@ -3431,10 +3558,10 @@
          BOTTOM NAV
          ========================================== -->
     <nav class="bottom-nav">
-      <a href="/" class="nav-item">
+      <button class="nav-item" id="nav-home-btn" type="button" onclick="handleHomeButton()">
         <span class="nav-icon">🏠</span>
         <span class="nav-label">Home</span>
-      </a>
+      </button>
       <button class="nav-item" data-scene="journey" onclick="showScene('journey')" type="button">
         <span class="nav-icon">📅</span>
         <span class="nav-label">Journey</span>
@@ -3588,6 +3715,21 @@
     const DEV_AUTOPLAY = __URL_PARAMS.get('autoplay') !== 'false'; // Default: true
     const DEV_START_PHASE = parseInt(__URL_PARAMS.get('phase'), 10) || 0;
     const DEV_START_DAY = parseInt(__URL_PARAMS.get('day'), 10) || null;
+
+    // Production polish: stable local fallback media
+    const KELLY_PLACEHOLDER = '/images/kelly-placeholder-16x9.jpg';
+    // Disable runtime TTS by default (opt-in via ?tts=true) to avoid noisy 400/500s when keys are not configured.
+    const ENABLE_RUNTIME_TTS = __URL_PARAMS.get('tts') === 'true';
+    // Remote persona head images can be opt-in (otherwise keep the app fully local/quiet).
+    const ENABLE_REMOTE_KELLY_HEADS = __URL_PARAMS.get('remoteHeads') === 'true';
+    // Static-only mode (e.g. `npx serve public -l 3000`): no Vercel `/api/*` routes available.
+    const STATIC_ONLY_MODE =
+      (location.hostname === 'localhost' || location.hostname === '127.0.0.1') &&
+      String(location.port || '') === '3000';
+    // Disable browser-direct Supabase reads by default; prefer serverless /api for production stability.
+    const ENABLE_SUPABASE_CLIENT =
+      __URL_PARAMS.get('supabaseClient') === 'true' ||
+      window.KELLY_CONFIG?.enableSupabaseClient === true;
     
     if (!DEV_AUTOPLAY) {
       console.log('⏸️ DEV MODE: Auto-advance DISABLED. Use Next button to advance phases.');
@@ -3660,12 +3802,215 @@
     // ============================================
     // PANEL OPEN/CLOSE TRACKING
     // ============================================
+    function syncSacredPanels() {
+      const open = document.documentElement.getAttribute('data-panel-open');
+      const left = document.getElementById('left-panel');
+      const right = document.getElementById('right-panel');
+      const rightTitle = document.getElementById('right-panel-title');
+      const journeySlot = document.getElementById('panel-journey-slot');
+      const settingsSlot = document.getElementById('panel-settings-slot');
+
+      const leftOpen = open === 'left';
+      const rightOpen = open === 'journey' || open === 'settings';
+
+      if (left) {
+        left.classList.toggle('open', leftOpen);
+        left.setAttribute('aria-hidden', String(!leftOpen));
+      }
+      if (right) {
+        right.classList.toggle('open', rightOpen);
+        right.setAttribute('aria-hidden', String(!rightOpen));
+      }
+
+      if (rightTitle) {
+        rightTitle.textContent = open === 'settings' ? '⚙️ Settings' : '📅 Journey';
+      }
+
+      if (journeySlot && settingsSlot) {
+        journeySlot.style.display = open === 'journey' ? '' : 'none';
+        settingsSlot.style.display = open === 'settings' ? '' : 'none';
+      }
+
+      // Nav highlight: when a panel is open, highlight that tab; otherwise defer to scene management.
+      if (open === 'journey' || open === 'settings') {
+        document.querySelectorAll('.nav-item[data-scene]').forEach((item) => {
+          item.classList.toggle('active', item.dataset.scene === open);
+        });
+      }
+    }
+
     function openPanel(name) {
+      // Enforce: one panel at a time.
       document.documentElement.setAttribute('data-panel-open', name);
+      syncSacredPanels();
     }
 
     function closePanel() {
       document.documentElement.removeAttribute('data-panel-open');
+      syncSacredPanels();
+
+      // When closing a panel, default back to Lesson tab highlight if lesson is active.
+      const lessonScene = document.getElementById('scene-lesson');
+      if (lessonScene?.classList?.contains('active')) {
+        document.querySelectorAll('.nav-item[data-scene]').forEach((item) => {
+          item.classList.toggle('active', item.dataset.scene === 'lesson');
+        });
+      }
+    }
+
+    function mountSacredRightPanelContent() {
+      const journeyScene = document.getElementById('scene-journey');
+      const settingsScene = document.getElementById('scene-settings');
+      const journeyScroll = journeyScene?.querySelector('.journey-scroll');
+      const settingsScroll = settingsScene?.querySelector('.settings-scroll');
+      const journeySlot = document.getElementById('panel-journey-slot');
+      const settingsSlot = document.getElementById('panel-settings-slot');
+
+      if (journeyScroll && journeySlot && journeyScroll.parentElement !== journeySlot) {
+        journeySlot.appendChild(journeyScroll);
+      }
+      if (settingsScroll && settingsSlot && settingsScroll.parentElement !== settingsSlot) {
+        settingsSlot.appendChild(settingsScroll);
+      }
+
+      // These are now panel contents, not standalone scenes.
+      if (journeyScene) journeyScene.style.display = 'none';
+      if (settingsScene) settingsScene.style.display = 'none';
+    }
+
+    // ============================================
+    // SOCIAL COMMENTS (LEFT PANEL)
+    // Simulated social content MUST be disclosed with ✨
+    // ============================================
+    let __commentSimTimer = null;
+    let __commentSimPhaseKey = null;
+
+    const PHASE_COMMENTS = {
+      hook: [
+        { emoji: '👋', text: 'Here we go!' },
+        { emoji: '🔥', text: 'Love this topic' },
+        { emoji: '✨', text: 'Ready to learn' },
+      ],
+      cliff: [
+        { emoji: '🤔', text: 'Tough choice…' },
+        { emoji: '🎯', text: 'Going with A' },
+        { emoji: '🧭', text: 'B feels right' },
+      ],
+      fact1: [
+        { emoji: '😮', text: 'Whoa—didn’t know that' },
+        { emoji: '📝', text: 'Taking notes' },
+        { emoji: '💡', text: 'That clicked' },
+      ],
+      fact2: [
+        { emoji: '🧠', text: 'This is making sense' },
+        { emoji: '🔍', text: 'Details matter' },
+        { emoji: '👏', text: 'Nice explanation' },
+      ],
+      fact3: [
+        { emoji: '⚡', text: 'Big insight' },
+        { emoji: '📌', text: 'Key point right here' },
+        { emoji: '💭', text: 'Thinking…' },
+      ],
+      wisdom: [
+        { emoji: '🙏', text: 'Beautiful' },
+        { emoji: '💎', text: 'This is gold' },
+        { emoji: '❤️', text: 'Needed this today' },
+      ],
+      outro: [
+        { emoji: '🌙', text: 'See you tomorrow' },
+        { emoji: '✅', text: 'Done for today' },
+        { emoji: '✨', text: 'That was lovely' },
+      ],
+    };
+
+    function appendComment({ emoji = '', text = '', simulated = false, user = false } = {}) {
+      const feed = document.getElementById('comments-feed');
+      if (!feed) return;
+
+      const el = document.createElement('div');
+      el.className = `comment ${simulated ? 'simulated' : ''} ${user ? 'user' : ''}`.trim();
+
+      // Disclosure is non-negotiable for simulated social content.
+      const disclosure = simulated ? `<span class="disclosure">✨</span>` : '';
+      const emojiSpan = emoji ? `<span class="emoji">${emoji}</span>` : `<span class="emoji"></span>`;
+      const safeText = String(text || '');
+      el.innerHTML = `${disclosure}${emojiSpan}<span class="text">${safeText}</span>`;
+
+      feed.appendChild(el);
+      feed.scrollTop = feed.scrollHeight;
+
+      if (simulated) {
+        // Soft fade-out to keep feed fresh.
+        setTimeout(() => el.classList.add('fading'), 10000);
+        setTimeout(() => el.remove(), 11000);
+      }
+    }
+
+    function spawnSimulatedComment(phaseKey) {
+      const key = String(phaseKey || 'hook').toLowerCase();
+      const options = PHASE_COMMENTS[key] || PHASE_COMMENTS.hook;
+      const comment = options[Math.floor(Math.random() * options.length)];
+      appendComment({ emoji: comment.emoji, text: comment.text, simulated: true });
+    }
+
+    function stopCommentSimulation() {
+      if (__commentSimTimer) {
+        clearTimeout(__commentSimTimer);
+        __commentSimTimer = null;
+      }
+      __commentSimPhaseKey = null;
+    }
+
+    function startCommentSimulation(phaseKey) {
+      const key = String(phaseKey || 'hook').toLowerCase();
+      __commentSimPhaseKey = key;
+
+      const tick = () => {
+        // Only simulate while the lesson scene is visible.
+        const lessonScene = document.getElementById('scene-lesson');
+        if (!lessonScene?.classList?.contains('active')) {
+          stopCommentSimulation();
+          return;
+        }
+
+        spawnSimulatedComment(__commentSimPhaseKey);
+        const delay = 3000 + Math.random() * 4000; // 3–7s
+        __commentSimTimer = setTimeout(tick, delay);
+      };
+
+      if (!__commentSimTimer) {
+        const initialDelay = 1200 + Math.random() * 1200;
+        __commentSimTimer = setTimeout(tick, initialDelay);
+      }
+    }
+
+    function syncSimulatedCommentsForPhase() {
+      try {
+        const lessonScene = document.getElementById('scene-lesson');
+        if (!lessonScene?.classList?.contains('active')) {
+          stopCommentSimulation();
+          return;
+        }
+
+        const phaseKey = (typeof PHASES !== 'undefined' && typeof state !== 'undefined')
+          ? (PHASES[state.currentPhase]?.key || PHASES[state.currentPhase]?.dbName || 'hook')
+          : 'hook';
+        const normalized = String(phaseKey || 'hook').toLowerCase();
+        if (__commentSimPhaseKey !== normalized) {
+          stopCommentSimulation();
+          startCommentSimulation(normalized);
+        }
+      } catch {
+        // Never break lesson playback for social simulation.
+      }
+    }
+
+    function sendToKelly() {
+      const input = document.getElementById('kelly-chat-input');
+      const text = String(input?.value || '').trim();
+      if (!text) return;
+      appendComment({ emoji: '🗣️', text, simulated: false, user: true });
+      if (input) input.value = '';
     }
     
     // ============================================
@@ -3678,6 +4023,7 @@
     let supabase = null;
     function ensureSupabaseClient() {
       try {
+        if (!ENABLE_SUPABASE_CLIENT) return false;
         // Prefer shared singleton. Falls back to a direct createClient if needed.
         if (typeof window.getSupabase === 'function') {
           supabase = window.getSupabase();
@@ -3827,13 +4173,23 @@
       { id: 'survivor', name: 'The Survivor', tagline: 'Grounded resilience', color: '#84cc16', icon: '🏕️', stats: { curiosity: 75, warmth: 80, energy: 70, structure: 75 }, quote: "We'll get through this." }
     ];
     
-    const PHASES = [
-      { name: 'Hook', dbName: 'Hook', icon: '🪝' },
-      { name: 'Fact 1', dbName: 'Fact1', icon: '💡' },
-      { name: 'Fact 2', dbName: 'Fact2', icon: '💡' },
-      { name: 'Fact 3', dbName: 'Fact3', icon: '💡' },
-      { name: 'Wisdom', dbName: 'Wisdom', icon: '✨' }
-    ];
+    // ============================================
+    // PHASE SYSTEM (SINGLE SOURCE OF TRUTH)
+    // ============================================
+    const CLIFF_WAIT_TIME = 10000; // 10 seconds before auto-select
+
+    const PHASE_CONFIG = {
+      hook:   { name: 'Hook',   icon: '🎬', dbName: 'Hook',   journey: 'Welcome',   kelly: 'active' },
+      cliff:  { name: 'Cliff',  icon: '🔀', dbName: 'Cliff',  journey: 'Choose',    kelly: 'reflective', hasChoice: true },
+      fact1:  { name: 'Fact 1', icon: '💡', dbName: 'Fact1',  journey: 'Explore',   kelly: 'active' },
+      fact2:  { name: 'Fact 2', icon: '💡', dbName: 'Fact2',  journey: 'Discover',  kelly: 'active' },
+      fact3:  { name: 'Fact 3', icon: '💡', dbName: 'Fact3',  journey: 'Challenge', kelly: 'active' },
+      wisdom: { name: 'Wisdom', icon: '✨', dbName: 'Wisdom', journey: 'Reflect',   kelly: 'reflective' },
+      outro:  { name: 'Outro',  icon: '🎉', dbName: 'Outro',  journey: 'Celebrate', kelly: 'warm' },
+    };
+
+    const PHASE_ORDER = ['hook', 'cliff', 'fact1', 'fact2', 'fact3', 'wisdom', 'outro'];
+    const PHASES = PHASE_ORDER.map((key) => ({ key, ...PHASE_CONFIG[key] }));
     
     const BADGES = [
       { id: 'first-lesson', icon: '🌟', name: 'First Light', desc: 'Complete your first lesson' },
@@ -3977,6 +4333,12 @@
       carouselIndex: 0,
       currentDay: getTodayDayNumber(),
       currentPhase: 0,
+      // Cliff mechanic
+      cliffChoice: null,        // 'A' | 'B' | null
+      cliffTimeout: null,       // setTimeout reference (non-durable)
+      waitingForChoice: false,  // true during cliff wait period
+      // Internal control flags (non-scripted but required to avoid double-advances)
+      manualAdvancePending: false,
       age: 30,
       ageBucket: 'adult',
       language: 'en',
@@ -4172,6 +4534,11 @@
 
         // Backfill derived fields for older saved states.
         if (!state.ageBucket) state.ageBucket = getAgeBucket(state.age);
+
+        // Never restore transient Cliff timer/wait flags from disk.
+        state.cliffTimeout = null;
+        state.waitingForChoice = false;
+        state.manualAdvancePending = false;
         
         // Load from Supabase in background (merges with local state)
         loadProgressFromSupabase();
@@ -4429,13 +4796,15 @@
     // KELLY IMAGE HELPER
     // ============================================
     function getKellyImageUrl(personaId, ageBucket = 'adult') {
+      // Launch stability: keep images local unless explicitly enabled.
+      if (!ENABLE_REMOTE_KELLY_HEADS) return KELLY_PLACEHOLDER;
       if (!manifest || !manifest.personas || !manifest.personas[personaId]) {
-        return '';
+        return KELLY_PLACEHOLDER;
       }
       
       const persona = manifest.personas[personaId];
       const headPath = persona?.images?.headByAge?.[ageBucket] || persona?.images?.head;
-      if (!headPath || !manifest?.cdnBase) return '';
+      if (!headPath || !manifest?.cdnBase) return KELLY_PLACEHOLDER;
       return `${manifest.cdnBase}/${headPath}`;
     }
 
@@ -4554,6 +4923,7 @@
     // ============================================
     async function loadLessonFromApi(dayNumber, { archetype, ageBucket } = {}) {
       try {
+        if (STATIC_ONLY_MODE) return null;
         const a = archetype || PERSONA_TO_ARCHETYPE[state.kellyId] || 'The Scientist';
         const bucket = ageBucket || getEffectiveAgeBucket();
         const res = await fetch(`/api/lessons/${dayNumber}?archetype=${encodeURIComponent(a)}&ageBucket=${encodeURIComponent(bucket)}`, {
@@ -4892,6 +5262,64 @@
     // ============================================
     // AUDIO SYSTEM
     // ============================================
+    function setKellySpeaking(isSpeaking) {
+      const kelly = document.getElementById('lesson-kelly');
+      if (!kelly) return;
+      kelly.classList.toggle('speaking', !!isSpeaking);
+      kelly.classList.toggle('idle', !isSpeaking);
+    }
+
+    function getKellyVideoEl() {
+      return document.getElementById('kelly-video');
+    }
+
+    function isVideoActive() {
+      const v = getKellyVideoEl();
+      return !!v && !v.hidden && !v.classList.contains('hidden') && !!v.src;
+    }
+
+    function isVideoPlaying() {
+      const v = getKellyVideoEl();
+      return !!v && isVideoActive() && !v.paused && !v.ended;
+    }
+
+    function stopVideo() {
+      const v = getKellyVideoEl();
+      if (!v) return;
+      try { v.pause(); } catch (_) {}
+      try { v.removeAttribute('src'); v.load(); } catch (_) {}
+      v.hidden = true;
+      v.classList.add('hidden');
+      // Show image again if present
+      const img = document.getElementById('lesson-kelly-img');
+      if (img) img.style.display = '';
+    }
+
+    function pauseVideo() {
+      const v = getKellyVideoEl();
+      try { v?.pause(); } catch (_) {}
+    }
+
+    function resumeVideo() {
+      const v = getKellyVideoEl();
+      try { return v?.play?.(); } catch (_) { return Promise.resolve(); }
+    }
+
+    function onPhaseMediaEnd() {
+      setKellySpeaking(false);
+      syncPlayPauseUI();
+
+      // Cliff owns pacing; never auto-advance while waiting or while a manual advance is pending.
+      if (state.waitingForChoice || state.manualAdvancePending || isCliffPhase()) return;
+
+      // Auto-advance if enabled (respects both state.autoAdvance AND DEV_AUTOPLAY URL param)
+      if (DEV_AUTOPLAY && state.autoAdvance && state.scene === 'lesson') {
+        setTimeout(() => advancePhase(), 800);
+      } else if (!DEV_AUTOPLAY) {
+        console.log('⏸️ Auto-advance disabled via URL. Click Next to continue.');
+      }
+    }
+
     class KellyAudio {
       constructor() {
         this.audio = new Audio();
@@ -4951,28 +5379,16 @@
       }
       
       onSpeakStart() {
-        const kelly = document.getElementById('lesson-kelly');
-        kelly.classList.remove('idle');
-        kelly.classList.add('speaking');
+        setKellySpeaking(true);
         syncPlayPauseUI();
       }
       
       onSpeakEnd() {
-        const kelly = document.getElementById('lesson-kelly');
-        kelly.classList.remove('speaking');
-        kelly.classList.add('idle');
-        syncPlayPauseUI();
-
-        // Auto-advance if enabled (respects both state.autoAdvance AND DEV_AUTOPLAY URL param)
-        if (DEV_AUTOPLAY && state.autoAdvance && state.scene === 'lesson') {
-          setTimeout(() => advancePhase(), 800);
-        } else if (!DEV_AUTOPLAY) {
-          console.log('⏸️ Auto-advance disabled via URL. Click Next to continue.');
-        }
+        onPhaseMediaEnd();
       }
       
       onError() {
-        this.onSpeakEnd();
+        onPhaseMediaEnd();
       }
 
       onPause() {
@@ -4982,7 +5398,9 @@
       stop() {
         this.audio.pause();
         this.audio.currentTime = 0;
-        this.onSpeakEnd();
+        // Stopping is not a "natural end" (do not auto-advance).
+        setKellySpeaking(false);
+        syncPlayPauseUI();
       }
     }
     
@@ -4991,7 +5409,7 @@
     function syncPlayPauseUI() {
       const icon = document.getElementById('play-pause-icon');
       if (!icon) return;
-      icon.textContent = kellyAudio.isPlaying ? '⏸️' : '▶️';
+      icon.textContent = (isVideoPlaying() || kellyAudio.isPlaying) ? '⏸️' : '▶️';
     }
 
     function syncAutoAdvanceUI() {
@@ -5000,6 +5418,7 @@
     }
 
     async function generateTTS(text) {
+      if (!ENABLE_RUNTIME_TTS) return null;
       if (!text) return null;
       const response = await fetch('/api/tts', {
         method: 'POST',
@@ -5031,6 +5450,84 @@
 
       return data?.[0]?.public_url || null;
     }
+
+    async function getVideoUrl(dayNumber, phase, personaId, ageBucket, language = 'en') {
+      if (!supabase) return null;
+      try {
+        const { data } = await supabase
+          .from('kelly_video_assets')
+          .select('public_url')
+          .eq('day_number', dayNumber)
+          .eq('phase', phase)
+          .eq('template', personaId)
+          .eq('age_bucket', ageBucket)
+          .eq('asset_type', 'video')
+          .eq('language', language)
+          .in('status', ['validated', 'published', 'generated'])
+          .limit(1);
+        return data?.[0]?.public_url || null;
+      } catch (e) {
+        return null;
+      }
+    }
+
+    function stopAllMedia() {
+      stopVideo();
+      kellyAudio.stop();
+    }
+
+    async function playPhaseMedia({ dbPhase, script, videoUrl } = {}) {
+      // Video-first playback, with audio fallback.
+      stopAllMedia();
+
+      const ageBucket = getEffectiveAgeBucket();
+      const personaId = state.kellyId;
+
+      // Prefer atom-provided video URL (e.g. lesson_atoms.hd_video_url)
+      let resolvedVideo = videoUrl || null;
+      if (!resolvedVideo) {
+        // Try kelly_video_assets lookup (best-effort)
+        resolvedVideo = await getVideoUrl(state.currentDay, dbPhase, personaId, ageBucket, state.language);
+      }
+
+      if (resolvedVideo) {
+        const v = getKellyVideoEl();
+        const img = document.getElementById('lesson-kelly-img');
+        if (!v) {
+          // No video element; fall back to audio.
+          await kellyAudio.speak(dbPhase, script);
+          return true;
+        }
+
+        // Show video, hide image (but keep DOM stable)
+        v.hidden = false;
+        v.classList.remove('hidden');
+        if (img) img.style.display = 'none';
+
+        v.onplay = () => {
+          setKellySpeaking(true);
+          syncPlayPauseUI();
+        };
+        v.onended = () => onPhaseMediaEnd();
+        v.onerror = async () => {
+          stopVideo();
+          await kellyAudio.speak(dbPhase, script);
+        };
+
+        v.src = resolvedVideo;
+        try {
+          await v.play();
+          return true;
+        } catch (e) {
+          stopVideo();
+          await kellyAudio.speak(dbPhase, script);
+          return false;
+        }
+      }
+
+      await kellyAudio.speak(dbPhase, script);
+      return true;
+    }
     
     // ============================================
     // TYPEWRITER EFFECT
@@ -5049,89 +5546,43 @@
     // SCENE MANAGEMENT
     // ============================================
     function showScene(name) {
-      const PANEL_SCENES = new Set(['settings', 'journey', 'achievements']);
-      const isPanelScene = (n) => PANEL_SCENES.has(String(n || ''));
-
       const lessonScene = document.getElementById('scene-lesson');
       const panelOpenName = document.documentElement.getAttribute('data-panel-open');
+      const target = String(name || '');
 
-      // If a panel is open and we are navigating to a non-panel scene, close it first.
-      if (panelOpenName && !isPanelScene(name) && name !== 'lesson') {
-        closePanel();
-        PANEL_SCENES.forEach((s) => {
-          const el = document.getElementById(`scene-${s}`);
-          if (el) el.classList.remove('panel-overlay', 'active', 'exiting');
-        });
-        if (lessonScene) lessonScene.classList.remove('panel-underlay', 'active');
+      // Sacred layout: Journey/Settings are right-side panels (not full scenes).
+      if (target === 'journey' || target === 'settings') {
+        // Ensure we are in the lesson shell first.
+        if (!lessonScene?.classList?.contains('active')) {
+          showScene('lesson');
+        }
+
+        openPanel(target);
+        state.scene = target;
+        saveState();
+
+        if (target === 'journey') {
+          const savedTab = state.journeyTab || 'calendar';
+          switchJourneyTab(savedTab);
+          updateJourneyStats();
+        } else {
+          updateSettingsUI();
+        }
+        return;
       }
 
-      // Closing a panel returns to lesson without reloading state.
-      if (name === 'lesson' && panelOpenName) {
+      // Closing a panel returns to lesson without reloading.
+      if (target === 'lesson' && panelOpenName) {
         closePanel();
-        PANEL_SCENES.forEach((s) => {
-          const el = document.getElementById(`scene-${s}`);
-          if (el) el.classList.remove('panel-overlay', 'active', 'exiting');
-        });
-        if (lessonScene) {
-          lessonScene.classList.remove('panel-underlay');
-          lessonScene.classList.add('active');
-        }
-        state.scene = name;
+        state.scene = 'lesson';
         saveState();
-        document.querySelectorAll('.nav-item').forEach(item => {
-          item.classList.toggle('active', item.dataset.scene === name);
-        });
         updateLessonUI();
         return;
       }
 
-      // Open certain scenes as panels over the lesson (so Kelly never disappears).
-      if (isPanelScene(name) && lessonScene?.classList.contains('active')) {
-        openPanel(name);
-
-        // Ensure lesson remains visible behind, but not interactive.
-        lessonScene.classList.add('active');
-        lessonScene.classList.add('panel-underlay');
-
-        // Close any other open panel scene.
-        PANEL_SCENES.forEach((s) => {
-          if (s === name) return;
-          const el = document.getElementById(`scene-${s}`);
-          if (el) el.classList.remove('panel-overlay', 'active', 'exiting');
-        });
-
-        const next = document.getElementById(`scene-${name}`);
-        if (!next) return;
-        next.classList.add('panel-overlay');
-        next.classList.add('active');
-
-        state.scene = name;
-        saveState();
-
-        // Update nav
-        document.querySelectorAll('.nav-item').forEach(item => {
-          item.classList.toggle('active', item.dataset.scene === name);
-        });
-
-        // Scene-specific updates (panel)
-        if (name === 'journey') {
-          // Initialize with saved tab or default to calendar
-          const savedTab = state.journeyTab || 'calendar';
-          switchJourneyTab(savedTab);
-          updateJourneyStats();
-        }
-        if (name === 'settings') {
-          updateSettingsUI();
-        }
-        if (name === 'achievements') {
-          buildBadges();
-        }
-        return;
-      }
-
-      // Normal scene transition (single active scene)
-      closePanel();
-      if (lessonScene) lessonScene.classList.remove('panel-underlay');
+      // Leaving the lesson flow: always close panels first.
+      if (panelOpenName) closePanel();
+      if (target !== 'lesson') stopCommentSimulation();
 
       const current = document.querySelector('.scene.active');
       const next = document.getElementById(`scene-${name}`);
@@ -5156,16 +5607,6 @@
       // Scene-specific updates
       if (name === 'lesson') {
         updateLessonUI();
-      }
-      
-      if (name === 'journey') {
-        const savedTab = state.journeyTab || 'calendar';
-        switchJourneyTab(savedTab);
-        updateJourneyStats();
-      }
-      
-      if (name === 'settings') {
-        updateSettingsUI();
       }
       
       if (name === 'complete') {
@@ -5303,6 +5744,181 @@
     // ============================================
     // LESSON PLAYER
     // ============================================
+    // CLIFF: local-only helpers (UI + timers)
+    let __cliffTimerRaf = null;
+    function __cancelCliffTimerAnimation() {
+      if (__cliffTimerRaf) {
+        cancelAnimationFrame(__cliffTimerRaf);
+        __cliffTimerRaf = null;
+      }
+    }
+
+    function isCliffPhase(index = state.currentPhase) {
+      return PHASES[index]?.key === 'cliff' || PHASES[index]?.dbName === 'Cliff';
+    }
+
+    function isOutroPhase(index = state.currentPhase) {
+      return PHASES[index]?.key === 'outro' || PHASES[index]?.dbName === 'Outro';
+    }
+
+    function clearCliffTimeout() {
+      if (state.cliffTimeout) {
+        try { clearTimeout(state.cliffTimeout); } catch (_) {}
+        state.cliffTimeout = null;
+      }
+    }
+
+    function hideCliffUI({ resetSelection = true } = {}) {
+      const container = document.getElementById('cliff-container');
+      if (!container) return;
+      container.hidden = true;
+      container.classList.add('hidden');
+      container.classList.remove('choice-made');
+      __cancelCliffTimerAnimation();
+      const timer = document.getElementById('cliff-timer');
+      const bar = document.getElementById('cliff-timer-bar');
+      if (timer) {
+        timer.hidden = true;
+        timer.classList.add('hidden');
+      }
+      if (bar) bar.style.width = '0%';
+      if (resetSelection) {
+        document.getElementById('cliff-choice-a')?.classList.remove('selected');
+        document.getElementById('cliff-choice-b')?.classList.remove('selected');
+      }
+    }
+
+    function animateCliffTimer() {
+      const timer = document.getElementById('cliff-timer');
+      const bar = document.getElementById('cliff-timer-bar');
+      if (!timer || !bar) return;
+      timer.hidden = false;
+      timer.classList.remove('hidden');
+      bar.style.width = '0%';
+
+      const start = performance.now();
+      const duration = CLIFF_WAIT_TIME;
+
+      __cancelCliffTimerAnimation();
+      const tick = (now) => {
+        const elapsed = Math.max(0, now - start);
+        const pct = Math.min(1, elapsed / duration);
+        bar.style.width = `${(pct * 100).toFixed(1)}%`;
+        if (pct < 1 && state.waitingForChoice) {
+          __cliffTimerRaf = requestAnimationFrame(tick);
+        } else {
+          __cliffTimerRaf = null;
+        }
+      };
+      __cliffTimerRaf = requestAnimationFrame(tick);
+    }
+
+    function getCliffSpec(lessonData) {
+      // Current data sources don’t ship cliff yet, so we use best-effort fallback.
+      const cliff = lessonData?.cliff || lessonData?.lesson?.cliff || null;
+      return cliff || {
+        prompt: 'Two paths lie before you...',
+        optionA: { label: 'Explore the familiar', icon: '🌊' },
+        optionB: { label: 'Venture into unknown', icon: '🔥' },
+        default: 'A',
+        kellyPrompt: 'I want you to make a choice...',
+      };
+    }
+
+    function enterCliffPhase(lessonData) {
+      const cliff = getCliffSpec(lessonData);
+
+      // Reset UI + state
+      clearCliffTimeout();
+      state.waitingForChoice = true;
+      state.manualAdvancePending = false;
+      // Do NOT clear state.cliffChoice here; we want it to persist for this run once chosen.
+      hideCliffUI({ resetSelection: true });
+
+      // Update UI labels/icons
+      const promptEl = document.getElementById('cliff-prompt');
+      const labelAEl = document.getElementById('cliff-label-a');
+      const labelBEl = document.getElementById('cliff-label-b');
+      const btnA = document.getElementById('cliff-choice-a');
+      const btnB = document.getElementById('cliff-choice-b');
+      if (promptEl) promptEl.textContent = cliff.prompt || 'Which path calls to you?';
+      if (labelAEl) labelAEl.textContent = cliff.optionA?.label || 'Path A';
+      if (labelBEl) labelBEl.textContent = cliff.optionB?.label || 'Path B';
+      if (btnA && cliff.optionA?.icon) btnA.querySelector('.cliff-icon')?.replaceChildren(document.createTextNode(cliff.optionA.icon));
+      if (btnB && cliff.optionB?.icon) btnB.querySelector('.cliff-icon')?.replaceChildren(document.createTextNode(cliff.optionB.icon));
+
+      // Show container
+      const container = document.getElementById('cliff-container');
+      if (container) {
+        container.hidden = false;
+        container.classList.remove('hidden');
+      }
+
+      // Keep caption aligned with what’s happening (stable reference for talking track)
+      typewriterEffect(document.getElementById('caption-text'), cliff.prompt || 'Which path calls to you?');
+
+      // Kelly speaks the prompt (phase dbName = Cliff)
+      playPhaseMedia({
+        dbPhase: 'Cliff',
+        script: cliff.kellyPrompt || 'I want you to make a choice...',
+        // no videoUrl here (yet)
+      }).catch(() => {});
+
+      // Start timeout for auto-select
+      state.cliffTimeout = setTimeout(() => {
+        if (state.waitingForChoice) autoSelectCliff(cliff.default || 'A');
+      }, CLIFF_WAIT_TIME);
+
+      animateCliffTimer();
+      saveState();
+    }
+
+    function handleCliffChoice(choice) {
+      if (!state.waitingForChoice) return;
+      clearCliffTimeout();
+      state.waitingForChoice = false;
+      state.cliffChoice = choice;
+      state.manualAdvancePending = true;
+
+      // Visual feedback
+      document.getElementById('cliff-choice-a')?.classList.toggle('selected', choice === 'A');
+      document.getElementById('cliff-choice-b')?.classList.toggle('selected', choice === 'B');
+      document.getElementById('cliff-container')?.classList.add('choice-made');
+
+      // Kelly acknowledges (don’t auto-advance off the audio end; we advance manually below)
+      const ack = choice === 'A'
+        ? "Wonderful choice! Let's explore this path together..."
+        : "Bold choice! I love your curiosity...";
+      playPhaseMedia({ dbPhase: 'Cliff', script: ack }).catch(() => {});
+
+      // Advance after a natural beat
+      setTimeout(() => {
+        hideCliffUI({ resetSelection: false });
+        state.manualAdvancePending = false;
+        saveState();
+        advancePhase();
+      }, 3000);
+    }
+
+    function autoSelectCliff(defaultChoice) {
+      clearCliffTimeout();
+      state.waitingForChoice = false;
+      state.cliffChoice = defaultChoice || 'A';
+      state.manualAdvancePending = true;
+
+      playPhaseMedia({
+        dbPhase: 'Cliff',
+        script: "I see you're taking it all in... Let me guide us forward...",
+      }).catch(() => {});
+
+      setTimeout(() => {
+        hideCliffUI({ resetSelection: false });
+        state.manualAdvancePending = false;
+        saveState();
+        advancePhase();
+      }, 3000);
+    }
+
     function updatePhaseBar() {
       const segments = document.querySelectorAll('.phase-segment');
       if (!segments || segments.length === 0) return;
@@ -5327,15 +5943,36 @@
         <span class="phase-icon">${phase.icon}</span>
         <span class="phase-name">${phase.name}</span>
       `;
-      
-      // Update caption text
+
+      // Social simulation: keep phase-synced comments running during lessons.
+      syncSimulatedCommentsForPhase();
+
+      // Phase-specific mechanics
+      if (isCliffPhase()) {
+        // Cliff owns the UI + pacing.
+        enterCliffPhase(currentLesson);
+        return;
+      }
+
+      // Leaving cliff (or any non-cliff phase) should reset cliff wait state/UI.
+      if (state.waitingForChoice) state.waitingForChoice = false;
+      clearCliffTimeout();
+      hideCliffUI({ resetSelection: true });
+
+      if (isOutroPhase()) {
+        enterOutroPhase().catch(() => {});
+        return;
+      }
+
+      // Default phases: update caption + play media (video-first, audio fallback)
       if (lessonAtoms[state.currentPhase]) {
         const text = lessonAtoms[state.currentPhase].script;
         typewriterEffect(document.getElementById('caption-text'), text);
-        // Kick audio chain (best-effort). If it fails, the lesson still works.
-        const dbPhase = lessonAtoms[state.currentPhase].dbPhase;
-        kellyAudio.stop();
-        kellyAudio.speak(dbPhase, text).catch(() => {});
+        playPhaseMedia({
+          dbPhase: lessonAtoms[state.currentPhase].dbPhase,
+          script: text,
+          videoUrl: lessonAtoms[state.currentPhase].videoUrl,
+        }).catch(() => {});
       }
     }
     
@@ -5345,18 +5982,21 @@
       const imgUrl = getKellyImageUrl(kelly.id, ageBucket);
       
       const lessonKellyImg = document.getElementById('lesson-kelly-img');
-      if (imgUrl) {
+      if (lessonKellyImg) {
         lessonKellyImg.dataset.fallback = kelly.icon;
-        lessonKellyImg.src = imgUrl;
-        lessonKellyImg.onerror = () => {
-          const parent = document.getElementById('lesson-kelly');
-          if (parent) parent.innerHTML = kelly.icon;
-        };
         lessonKellyImg.style.display = 'block';
+        lessonKellyImg.onerror = () => {
+          // One-shot fallback to local placeholder (never show a broken avatar).
+          if (lessonKellyImg.src && lessonKellyImg.src.includes(KELLY_PLACEHOLDER)) {
+            // Final fallback: emoji icon (should be extremely rare).
+            const parent = document.getElementById('lesson-kelly');
+            if (parent) parent.innerHTML = kelly.icon;
+            return;
+          }
+          lessonKellyImg.src = KELLY_PLACEHOLDER;
+        };
+        lessonKellyImg.src = imgUrl || KELLY_PLACEHOLDER;
         addImageLoadHandlers(document.getElementById('lesson-kelly'));
-      } else {
-        lessonKellyImg.style.display = 'none';
-        document.getElementById('lesson-kelly').innerHTML = kelly.icon;
       }
       
       updateBackground(kelly.color);
@@ -5370,16 +6010,19 @@
           day: 'numeric', 
           year: 'numeric' 
         });
-        
-        document.getElementById('day-badge').innerHTML = `
-          <span class="live-indicator" id="live-indicator-lesson">🔴 LIVE</span>
-          <span class="date-text">${fullDateWithWeekday}</span>
-          <span class="topic">${currentLesson.topic}</span>
-        `;
+
+        // Keep IDs stable for Kelly script references (do NOT overwrite innerHTML).
+        const dateEl = document.getElementById('lesson-date-text');
+        const topicEl = document.getElementById('lesson-topic');
+        if (dateEl) dateEl.textContent = fullDateWithWeekday;
+        if (topicEl) topicEl.textContent = currentLesson.topic || 'Loading topic...';
       }
 
       // Ensure phase UI reflects current state when entering lesson.
-      updatePhaseProgress();
+      // Home mode intentionally keeps the lesson shell visible but hides phase UI and does not autoplay media.
+      if (document.documentElement.getAttribute('data-ui-mode') !== 'home') {
+        updatePhaseProgress();
+      }
     }
 
     function goToPhase(index) {
@@ -5424,6 +6067,8 @@
     // SMART PLAY BUTTON
     // ============================================
     async function handlePlayButton() {
+      // Enter lesson mode (ensures phase UI is visible and home overlay is hidden).
+      setUiMode('lesson');
       // First-time users must choose a Kelly via the carousel onboarding.
       if (!state.kellyId) {
         showScene('character');
@@ -5463,6 +6108,10 @@
         debugLog('[SMART PLAY] Starting today\'s lesson', today);
         state.currentDay = today;
         state.currentPhase = 0;
+        state.cliffChoice = null;
+        state.waitingForChoice = false;
+        state.manualAdvancePending = false;
+        clearCliffTimeout();
         saveState();
         showLoading(true);
         await loadLesson(today);
@@ -5476,6 +6125,90 @@
       debugLog('[SMART PLAY] Today completed, showing complete scene');
       showScene('complete');
       updatePlayButtonIndicator();
+    }
+
+    // ============================================
+    // HOME BUTTON (IN-APP)
+    // Must never navigate away from learn.html.
+    // ============================================
+    function handleHomeButton() {
+      showHomeState();
+    }
+
+    function setUiMode(mode) {
+      const m = String(mode || 'lesson').toLowerCase();
+      if (m === 'home') document.documentElement.setAttribute('data-ui-mode', 'home');
+      else document.documentElement.removeAttribute('data-ui-mode');
+
+      const overlay = document.getElementById('home-overlay');
+      if (!overlay) return;
+
+      if (m === 'home') {
+        overlay.setAttribute('aria-hidden', 'false');
+        overlay.innerHTML = buildHomeOverlayHtml();
+      } else {
+        overlay.setAttribute('aria-hidden', 'true');
+        overlay.innerHTML = '';
+      }
+    }
+
+    function buildHomeOverlayHtml() {
+      const streak = Number.isFinite(state.streak) ? state.streak : 0;
+      const day = state.currentDay || getTodayDayNumber();
+      const topic = (currentLesson && currentLesson.topic) ||
+        (document.getElementById('lesson-topic')?.textContent || '').trim() ||
+        'Ready to learn';
+
+      return `
+        <div class="home-state">
+          <div class="streak-display">
+            <span class="streak-icon">🔥</span>
+            <span class="streak-count">${streak}</span>
+            <span class="streak-label">Day Streak</span>
+          </div>
+          <div class="today-info">
+            <div class="today-day">Day ${day}</div>
+            <div class="today-topic">${escapeHtml(topic)}</div>
+          </div>
+          <button class="start-lesson-btn" type="button" onclick="handlePlayButton()">
+            ▶️ Start Today's Lesson
+          </button>
+        </div>
+      `;
+    }
+
+    function escapeHtml(str) {
+      return String(str || '')
+        .replaceAll('&', '&amp;')
+        .replaceAll('<', '&lt;')
+        .replaceAll('>', '&gt;')
+        .replaceAll('"', '&quot;')
+        .replaceAll("'", '&#039;');
+    }
+
+    function setHomeNavActive() {
+      const homeBtn = document.getElementById('nav-home-btn');
+      document.querySelectorAll('.bottom-nav .nav-item').forEach((item) => item.classList.remove('active'));
+      if (homeBtn) homeBtn.classList.add('active');
+    }
+
+    function showHomeState() {
+      try { if (document.documentElement.hasAttribute('data-panel-open')) closePanel(); } catch (_) {}
+      try { stopAllMedia(); } catch (_) {}
+
+      // If no Kelly yet, "Home" is onboarding (choose your Kelly).
+      if (!state.kellyId) {
+        setUiMode('lesson');
+        showScene('character');
+        return;
+      }
+
+      setUiMode('home');
+      // Keep the sacred lesson shell visible (Kelly stays centered).
+      showScene('lesson');
+      // Refresh background + avatar with local placeholder.
+      try { updateLessonUI(); } catch (_) {}
+      setHomeNavActive();
     }
     
     function updatePlayButtonIndicator() {
@@ -5496,9 +6229,9 @@
         indicator.textContent = '✓';
         indicator.title = 'Today\'s lesson completed!';
       } else if (hasProgress) {
-        // Show current phase number (1-5)
+        // Show current phase number (1-N)
         indicator.textContent = state.currentPhase + 1;
-        indicator.title = `Resume at phase ${state.currentPhase + 1} of 5`;
+        indicator.title = `Resume at phase ${state.currentPhase + 1} of ${PHASES.length}`;
       } else {
         // Show waiting/ready state with phase 1
         btn.classList.add('waiting');
@@ -5518,6 +6251,8 @@
     }
     
     function completeLesson() {
+      // Ensure media stops when moving to completion.
+      stopAllMedia();
       if (!state.completedLessons.includes(state.currentDay)) {
         state.completedLessons.push(state.currentDay);
         state.streak++;
@@ -5540,6 +6275,84 @@
       
       updatePlayButtonIndicator();
       showScene('complete');
+    }
+
+    // ============================================
+    // OUTRO PHASE (now a real phase, not just a scene)
+    // ============================================
+    async function getTomorrowTitleForOutro() {
+      const tomorrowDay = state.currentDay + 1;
+      if (tomorrowDay > 365) return "what's next";
+
+      // 1) KellyLessonLoader (best, when initialized)
+      if (!STATIC_ONLY_MODE) {
+        try {
+          // Only use the loader when server routes are available (avoid noisy 404s in static-only mode).
+          if (window.KellyLessonLoader) {
+            const tomorrow = await window.KellyLessonLoader.getLesson(tomorrowDay, {
+              archetype: PERSONA_TO_ARCHETYPE[state.kellyId] || 'The Scientist',
+              age: state.age,
+              region: getEffectiveAgeBucket(),
+              preloadAdjacent: false
+            });
+            if (tomorrow?.title) return tomorrow.title;
+          }
+        } catch (_) {}
+      }
+
+      // 2) Local API fallback
+      if (!STATIC_ONLY_MODE) {
+        try {
+          const payload = await loadLessonFromApi(tomorrowDay);
+          const lesson = payload?.lesson || payload;
+          if (lesson?.topic) return lesson.topic;
+          if (lesson?.title) return lesson.title;
+        } catch (_) {}
+      }
+
+      // 3) Supabase direct fallback
+      try {
+        if (supabase) {
+          const { data } = await supabase
+            .from('core_lessons')
+            .select('topic')
+            .eq('day_number', tomorrowDay)
+            .single();
+          if (data?.topic) return data.topic;
+        }
+      } catch (_) {}
+
+      // 4) Emergency fallback
+      try {
+        if (typeof window.getEmergencyLesson === 'function') {
+          const emergency = window.getEmergencyLesson(tomorrowDay);
+          return emergency?.title || emergency?.topic || 'another adventure';
+        }
+      } catch (_) {}
+
+      return 'another adventure';
+    }
+
+    async function enterOutroPhase() {
+      // Ensure cliff timers/UI are cleared (Outro must be clean)
+      state.waitingForChoice = false;
+      state.manualAdvancePending = false;
+      clearCliffTimeout();
+      hideCliffUI({ resetSelection: true });
+
+      const tomorrowTitle = await getTomorrowTitleForOutro();
+      const projectedStreak = state.completedLessons.includes(state.currentDay) ? state.streak : (state.streak + 1);
+      const outroText = `You did it! That's ${projectedStreak} days in a row. Tomorrow, we'll explore ${tomorrowTitle}...`;
+
+      typewriterEffect(document.getElementById('caption-text'), outroText);
+
+      // Play Outro media (video-first, audio fallback)
+      const atom = lessonAtoms[state.currentPhase];
+      await playPhaseMedia({
+        dbPhase: 'Outro',
+        script: outroText,
+        videoUrl: atom?.videoUrl,
+      });
     }
     
     // ============================================
@@ -5680,6 +6493,10 @@
           el.addEventListener('click', async () => {
             state.currentDay = dayNum;
             state.currentPhase = 0;
+            state.cliffChoice = null;
+            state.waitingForChoice = false;
+            state.manualAdvancePending = false;
+            clearCliffTimeout();
             saveState();
             updatePlayButtonIndicator();
             
@@ -5801,14 +6618,23 @@
       { id: 'social', name: 'Society & Culture', icon: '🌍', color: '#00bcd4', keywords: ['society', 'culture', 'community', 'tradition', 'language', 'communication', 'relationship'] }
     ];
     
-    // Phase names and icons
-    const PHASE_INFO = [
-      { name: 'Welcome', icon: '👋', desc: 'Introduction to the topic' },
-      { name: 'Explore', icon: '🔍', desc: 'Deep dive into concepts' },
-      { name: 'Challenge', icon: '🧩', desc: 'Test your understanding' },
-      { name: 'Reflect', icon: '💭', desc: 'Personal reflection' },
-      { name: 'Celebrate', icon: '🎉', desc: 'Wrap up and celebrate' }
-    ];
+    // Phase labels for Journey UI (derived from PHASE_CONFIG / PHASES)
+    const PHASE_INFO = PHASES.map((p) => {
+      const descByKey = {
+        hook: 'Opening and orientation',
+        cliff: 'Choose your path',
+        fact1: 'First insight',
+        fact2: 'Second insight',
+        fact3: 'Third insight',
+        wisdom: 'Deeper meaning',
+        outro: 'Celebrate and preview tomorrow',
+      };
+      return {
+        name: p.journey || p.name,
+        icon: p.icon,
+        desc: descByKey[p.key] || '',
+      };
+    });
     
     // Switch journey tabs
     function switchJourneyTab(tabId) {
@@ -5892,6 +6718,10 @@
           hidePhaseSelector();
           state.currentDay = dayNumber;
           state.currentPhase = index;
+          state.cliffChoice = null;
+          state.waitingForChoice = false;
+          state.manualAdvancePending = false;
+          clearCliffTimeout();
           saveState();
           
           showLoading(true);
@@ -6581,12 +7411,18 @@
       document.getElementById('tap-next').addEventListener('click', advancePhase);
       document.getElementById('tap-prev').addEventListener('click', prevPhase);
 
+      // Cliff choice buttons
+      document.getElementById('cliff-choice-a')?.addEventListener('click', () => handleCliffChoice('A'));
+      document.getElementById('cliff-choice-b')?.addEventListener('click', () => handleCliffChoice('B'));
+
       // Lesson control bar
       document.getElementById('btn-play-pause')?.addEventListener('click', () => {
-        if (kellyAudio.isPlaying) {
-          kellyAudio.pause();
+        if (isVideoActive()) {
+          if (isVideoPlaying()) pauseVideo();
+          else resumeVideo();
         } else {
-          kellyAudio.resume();
+          if (kellyAudio.isPlaying) kellyAudio.pause();
+          else kellyAudio.resume();
         }
         syncPlayPauseUI();
       });
@@ -6658,6 +7494,27 @@
         }
         
         overlay.classList.add('visible');
+      });
+
+      // Sacred left panel (chat)
+      document.getElementById('btn-ask')?.addEventListener('click', () => {
+        openPanel('left');
+      });
+
+      // Send on Enter
+      document.getElementById('kelly-chat-input')?.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter') sendToKelly();
+      });
+
+      // Tap outside panels closes them (center + bottom zone)
+      document.getElementById('kelly-stage')?.addEventListener('click', () => {
+        if (document.documentElement.hasAttribute('data-panel-open')) closePanel();
+      });
+      document.getElementById('lesson-bottom-zone')?.addEventListener('click', (e) => {
+        // Don't close when interacting with buttons/inputs inside the bottom zone.
+        const t = e.target;
+        if (t && (t.closest?.('button') || t.closest?.('input') || t.closest?.('label'))) return;
+        if (document.documentElement.hasAttribute('data-panel-open')) closePanel();
       });
       
       // Week navigation
@@ -6981,7 +7838,7 @@
       }
       
       // Hide known broken / not-yet-shipped controls
-      ['#btn-ask', '#btn-downloads'].forEach((sel) => {
+      ['#btn-downloads'].forEach((sel) => {
         const el = document.querySelector(sel);
         if (el) el.style.display = 'none';
       });
@@ -7027,6 +7884,8 @@
       showLoading(false);
       
       setupEventListeners();
+      mountSacredRightPanelContent();
+      syncSacredPanels();
 
       // Initial route:
       // - First-time users (no saved state yet): show the carousel onboarding
@@ -7154,7 +8013,10 @@
 
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
-      if (window.KellyTimeSync) {
+      const staticOnly =
+        (location.hostname === 'localhost' || location.hostname === '127.0.0.1') &&
+        String(location.port || '') === '3000';
+      if (window.KellyTimeSync && !staticOnly) {
         await KellyTimeSync.init();
       }
       if (window.KellyClock) {

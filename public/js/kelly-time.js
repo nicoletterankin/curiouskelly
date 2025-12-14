@@ -27,6 +27,12 @@
   const LAUNCH_DATE_ISO = '2025-12-17';
   const TIME_SYNC_ENDPOINT = '/api/time';
   const SYNC_INTERVAL_MS = 60000; // Sync every 60 seconds
+  // When running as a pure static site (e.g. `npx serve public -l 3000`),
+  // serverless `/api/*` routes are unavailable. In that mode we skip sync
+  // and just use client time to avoid noisy 404s in the console.
+  const STATIC_ONLY_MODE =
+    (location.hostname === 'localhost' || location.hostname === '127.0.0.1') &&
+    String(location.port || '') === '3000';
 
   const DAYS_IN_MONTH_COMMON = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
   const DAYS_IN_MONTH_LEAP = [31, 29, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
@@ -670,8 +676,10 @@
    * Auto-start clocks and countdowns on elements with data attributes
    */
   function initTimeAuthority() {
-    // Initialize time sync
-    KellyTimeSync.init();
+    // Initialize time sync (skip in static-only mode)
+    if (!STATIC_ONLY_MODE) {
+      KellyTimeSync.init();
+    }
     
     // Auto-start clocks
     document.querySelectorAll('[data-kelly-clock]').forEach(el => {

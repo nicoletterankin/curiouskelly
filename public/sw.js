@@ -1,7 +1,7 @@
 // Curious Kelly Service Worker
 // App-shell caching + (optional) push notifications
 
-const CACHE_NAME = 'curious-kelly-app-v3';
+const CACHE_NAME = 'curious-kelly-app-v4';
 
 const APP_SHELL = [
   '/learn.html',
@@ -13,9 +13,9 @@ const APP_SHELL = [
   '/js/kelly-lesson.js',
   '/js/kelly-presence.js',
   '/assets/kelly/kelly-personas-manifest.json',
-  '/icons/icon-192.png',
-  '/icons/icon-512.png',
-  '/icons/apple-touch-icon.png'
+  '/images/brand/android-chrome-192.png',
+  '/images/brand/android-chrome-512.png',
+  '/images/brand/apple-touch-icon.png'
 ];
 
 self.addEventListener('install', (event) => {
@@ -71,8 +71,8 @@ self.addEventListener('push', (event) => {
   let data = {
     title: "✨ Today's lesson is ready",
     body: "Open Curious Kelly when you're ready to learn.",
-    icon: '/icons/icon-192.png',
-    badge: '/icons/icon-192.png',
+    icon: '/images/brand/android-chrome-192.png',
+    badge: '/images/brand/android-chrome-192.png',
     url: '/learn.html'
   };
 
