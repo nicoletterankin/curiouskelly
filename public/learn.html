@@ -5628,9 +5628,13 @@
     }
 
     function stopAllMedia() {
+      __nowPlayingKey = null;
       stopVideo();
       kellyAudio.stop();
     }
+
+    // Tracks the currently playing phase media to prevent double-starts.
+    let __nowPlayingKey = null;
 
     // De-dupe phase media triggers (updatePhaseProgress can fire twice on load)
     const phaseMediaInflight = Object.create(null);
@@ -5640,6 +5644,13 @@
       const personaId = state.kellyId || getCurrentKelly()?.id || 'scientist';
       const phaseKey = getPhaseKeyFromDbPhase(dbPhase);
 
+      const requestKey = `${state.currentDay || ''}|${state.currentPhase}|${personaId}|${ageBucket}|${phaseKey}`;
+      // If the exact same phase media is already active, don't restart it.
+      if (__nowPlayingKey === requestKey && (isVideoActive() || kellyAudio.isPlaying)) {
+        syncPlayPauseUI();
+        return true;
+      }
+
       const inflightKey = `${state.currentDay || ''}|${state.currentPhase}|${personaId}|${ageBucket}|${String(dbPhase || '')}`;
       if (phaseMediaInflight[inflightKey]) return phaseMediaInflight[inflightKey];
 
@@ -5647,6 +5658,7 @@
       phaseMediaInflight[inflightKey] = (async () => {
         try {
           stopAllMedia();
+          __nowPlayingKey = requestKey;
 
       // Prefer atom-provided video URL (e.g. lesson_atoms.hd_video_url)
       let resolvedVideo = videoUrl || null;
