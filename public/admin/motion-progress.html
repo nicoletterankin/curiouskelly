@@ -4,7 +4,6 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Kelly Motion Library - Progress Dashboard</title>
-  <meta http-equiv="refresh" content="30"> <!-- Auto-refresh every 30s -->
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
     body {
@@ -321,6 +320,8 @@
   <h1>🎬 Kelly Motion Library</h1>
   <p class="subtitle">Real-time generation progress</p>
 
+  <div id="error-container" style="display:none; margin-bottom: 16px;"></div>
+
   <!-- Stats Grid -->
   <div class="stats-grid" id="stats-grid">
     <div class="stat-card">
@@ -406,6 +407,25 @@
   const DEFAULT_TOTAL_CLIPS = 420; // 12 personas × 5 ages × 7 phases
   const AVG_CLIP_TIME = 150; // seconds per clip (rough estimate)
 
+  function showError(message) {
+    const container = document.getElementById('error-container');
+    if (!container) return;
+    container.style.display = 'block';
+    container.innerHTML = `
+      <div style="background:#2a1a1a;border:1px solid #ef4444;color:#fecaca;padding:12px 14px;border-radius:12px;">
+        <div style="font-weight:600;margin-bottom:4px;">⚠️ ${message}</div>
+        <div style="font-size:0.85rem;color:#fca5a5;">Check the database migration + Vercel env vars.</div>
+      </div>
+    `;
+  }
+
+  function clearError() {
+    const container = document.getElementById('error-container');
+    if (!container) return;
+    container.style.display = 'none';
+    container.innerHTML = '';
+  }
+
   function normalizeStatus(status) {
     if (!status) return 'pending';
     if (status === 'completed' || status === 'generating' || status === 'pending' || status === 'failed') return status;
@@ -477,28 +497,52 @@
 
   async function fetchProgress() {
     try {
+      const indicator = document.getElementById('refresh-indicator');
+      indicator?.classList.add('loading');
+      if (indicator) indicator.textContent = '🔄 Loading...';
+
       const res = await fetch('/api/motion-progress', { cache: 'no-store' });
       if (!res.ok) {
         const err = await res.json().catch(() => ({}));
         throw new Error(err?.error || `HTTP ${res.status}`);
       }
       const data = await res.json();
+      if (data?.error) {
+        showError(data?.message || data?.error);
+        return null;
+      }
+
+      clearError();
+      if (indicator) {
+        const ms = typeof data?.queryTime === 'number' ? data.queryTime : null;
+        indicator.textContent = ms != null ? `🔄 Refreshed (${ms}ms)` : '🔄 Auto-refresh: 30s';
+      }
       return {
         statusCounts: data.stats,
         bucketCounts: data.buckets,
         generating: data.generating,
         recent: data.recent,
         total: data.total || DEFAULT_TOTAL_CLIPS,
+        percentComplete: data.percentComplete,
+        eta: data.eta,
       };
     } catch (err) {
       console.warn('API fetch failed, trying public Supabase fallback:', err);
       try {
         const fallback = await fetchProgressFromPublicSupabase();
+        if (!fallback) showError('Failed to connect to API (and no fallback available).');
         return fallback;
       } catch (e) {
         console.error('Fallback fetch error:', e);
+        showError('Failed to connect to API.');
         return null;
+      } finally {
+        const indicator = document.getElementById('refresh-indicator');
+        indicator?.classList.remove('loading');
       }
+    } finally {
+      const indicator = document.getElementById('refresh-indicator');
+      indicator?.classList.remove('loading');
     }
   }
 
@@ -508,7 +552,7 @@
       return;
     }
 
-    const { statusCounts, bucketCounts, generating, recent, total } = data;
+    const { statusCounts, bucketCounts, generating, recent, total, percentComplete, eta } = data;
 
     // Update stats
     document.getElementById('stat-completed').textContent = statusCounts?.completed ?? 0;
@@ -518,7 +562,9 @@
 
     // Update progress bar
     const completed = statusCounts?.completed ?? 0;
-    const percent = total ? Math.round((completed / total) * 100) : 0;
+    const percent = typeof percentComplete === 'number'
+      ? percentComplete
+      : (total ? Math.round((completed / total) * 100) : 0);
     document.getElementById('progress-fill').style.width = `${percent}%`;
     document.getElementById('progress-text').textContent = `${percent}%`;
     document.getElementById('progress-label').textContent = `${completed} / ${total}`;
@@ -557,15 +603,14 @@
     }
 
     // Update ETA
-    const remaining = Math.max(0, total - completed);
-    const etaSeconds = remaining * AVG_CLIP_TIME;
-    const etaHours = Math.floor(etaSeconds / 3600);
-    const etaMinutes = Math.floor((etaSeconds % 3600) / 60);
-
-    if (remaining === 0) {
-      document.getElementById('eta-value').textContent = '✅ Complete!';
+    if (eta) {
+      document.getElementById('eta-value').textContent = eta === 'Complete!' ? '✅ Complete!' : `~${eta}`;
     } else {
-      document.getElementById('eta-value').textContent = `~${etaHours}h ${etaMinutes}m`;
+      const remaining = Math.max(0, total - completed);
+      const etaSeconds = remaining * AVG_CLIP_TIME;
+      const etaHours = Math.floor(etaSeconds / 3600);
+      const etaMinutes = Math.floor((etaSeconds % 3600) / 60);
+      document.getElementById('eta-value').textContent = remaining === 0 ? '✅ Complete!' : `~${etaHours}h ${etaMinutes}m`;
     }
 
     // Update recent clips
@@ -602,6 +647,12 @@
 
     indicator.classList.remove('loading');
     indicator.textContent = '🔄 Auto-refresh: 30s';
+
+    // Soft refresh every 30s (no full page reload)
+    setInterval(async () => {
+      const next = await fetchProgress();
+      updateUI(next);
+    }, 30000);
   }
 
   init();
