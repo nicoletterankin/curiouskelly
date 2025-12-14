@@ -5632,13 +5632,21 @@
       kellyAudio.stop();
     }
 
-    async function playPhaseMedia({ dbPhase, script, videoUrl } = {}) {
-      // Video-first playback, with audio fallback.
-      stopAllMedia();
+    // De-dupe phase media triggers (updatePhaseProgress can fire twice on load)
+    const phaseMediaInflight = Object.create(null);
 
+    async function playPhaseMedia({ dbPhase, script, videoUrl } = {}) {
       const ageBucket = getEffectiveAgeBucket();
       const personaId = state.kellyId || getCurrentKelly()?.id || 'scientist';
       const phaseKey = getPhaseKeyFromDbPhase(dbPhase);
+
+      const inflightKey = `${state.currentDay || ''}|${state.currentPhase}|${personaId}|${ageBucket}|${String(dbPhase || '')}`;
+      if (phaseMediaInflight[inflightKey]) return phaseMediaInflight[inflightKey];
+
+      // Video-first playback, with audio fallback.
+      phaseMediaInflight[inflightKey] = (async () => {
+        try {
+          stopAllMedia();
 
       // Prefer atom-provided video URL (e.g. lesson_atoms.hd_video_url)
       let resolvedVideo = videoUrl || null;
@@ -5711,6 +5719,12 @@
 
       await kellyAudio.speak(dbPhase, script);
       return true;
+        } finally {
+          delete phaseMediaInflight[inflightKey];
+        }
+      })();
+
+      return phaseMediaInflight[inflightKey];
     }
     
     // ============================================
