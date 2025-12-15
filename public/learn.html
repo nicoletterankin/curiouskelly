@@ -4017,6 +4017,211 @@
     function debugWarn(...args) { if (DEBUG) console.warn(...args); }
 
     // ============================================
+    // EVENT TRACKING (Zero-Trust Audit Trail)
+    // ============================================
+    
+    // Generate a session ID for this browsing session
+    const SESSION_ID = (() => {
+      let sid = sessionStorage.getItem('kelly_session_id');
+      if (!sid) {
+        sid = 'ses_' + Date.now().toString(36) + '_' + Math.random().toString(36).substr(2, 9);
+        sessionStorage.setItem('kelly_session_id', sid);
+      }
+      return sid;
+    })();
+    
+    // Cache of purchased lessons (loaded from API on init)
+    let purchasedLessonsCache = new Set();
+    
+    /**
+     * Load purchased lessons from localStorage cache
+     */
+    function loadPurchasedLessonsFromCache() {
+      try {
+        const cached = localStorage.getItem('kelly_purchased_lessons');
+        if (cached) {
+          const parsed = JSON.parse(cached);
+          if (Array.isArray(parsed)) {
+            purchasedLessonsCache = new Set(parsed);
+            debugLog('Loaded purchased lessons from cache:', purchasedLessonsCache.size);
+          }
+        }
+      } catch (e) {
+        // Silent fail
+      }
+    }
+    
+    /**
+     * Check if a lesson is purchased (sync, uses cache)
+     */
+    function isLessonPurchased(dayNumber) {
+      return purchasedLessonsCache.has(dayNumber);
+    }
+    
+    /**
+     * Add a lesson to the purchased cache
+     */
+    function markLessonAsPurchased(dayNumber) {
+      purchasedLessonsCache.add(dayNumber);
+      try {
+        localStorage.setItem('kelly_purchased_lessons', JSON.stringify([...purchasedLessonsCache]));
+      } catch (e) {}
+    }
+    
+    // Load cache immediately
+    loadPurchasedLessonsFromCache();
+    
+    /**
+     * Track an event to the user_events table
+     * @param {string} eventType - e.g., 'lesson.started', 'lesson.completed'
+     * @param {Object} payload - additional event data
+     * @param {number} [dayNumber] - optional lesson day number
+     */
+    async function trackEvent(eventType, payload = {}, dayNumber = null) {
+      try {
+        const authToken = localStorage.getItem('supabase_access_token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (authToken) {
+          headers['Authorization'] = `Bearer ${authToken}`;
+        }
+        
+        const body = {
+          event_type: eventType,
+          payload: payload,
+          session_id: SESSION_ID
+        };
+        if (dayNumber) body.day_number = dayNumber;
+        
+        // Fire and forget - don't block UI
+        fetch('/api/events', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify(body)
+        }).catch(() => {}); // Silent fail
+        
+        debugLog('[Event]', eventType, payload);
+      } catch (e) {
+        // Never fail on event tracking
+      }
+    }
+    
+    // ============================================
+    // SINGLE LESSON PURCHASE
+    // ============================================
+    
+    /**
+     * Check if user has purchased a specific lesson
+     */
+    async function hasLessonPurchase(dayNumber) {
+      try {
+        const authToken = localStorage.getItem('supabase_access_token');
+        if (!authToken) return false;
+        
+        const response = await fetch(`/api/lesson-purchase?day=${dayNumber}`, {
+          headers: { 'Authorization': `Bearer ${authToken}` }
+        });
+        const data = await response.json();
+        return data.purchased === true;
+      } catch (e) {
+        return false;
+      }
+    }
+    
+    /**
+     * Purchase a single lesson
+     */
+    async function purchaseSingleLesson(dayNumber) {
+      debugLog('Purchasing single lesson:', dayNumber);
+      
+      const buyBtn = document.getElementById('plan-single-lesson');
+      if (buyBtn) {
+        buyBtn.disabled = true;
+        buyBtn.innerHTML = '<span class="plan-name">Processing...</span>';
+      }
+      
+      try {
+        // Track the purchase initiation
+        trackEvent('purchase.initiated', { product_type: 'single_lesson', day_number: dayNumber }, dayNumber);
+        
+        // Get user email if logged in
+        const authToken = localStorage.getItem('supabase_access_token');
+        const headers = { 'Content-Type': 'application/json' };
+        if (authToken) {
+          headers['Authorization'] = `Bearer ${authToken}`;
+        }
+        
+        const response = await fetch('/api/lesson-purchase', {
+          method: 'POST',
+          headers: headers,
+          body: JSON.stringify({ day_number: dayNumber })
+        });
+        
+        const data = await response.json();
+        
+        if (data.error === 'already_purchased') {
+          showToast('You already own this lesson!');
+          closePaywall();
+          loadDay(dayNumber); // Reload the lesson
+          return;
+        }
+        
+        if (data.url) {
+          // Redirect to Stripe checkout
+          window.location.href = data.url;
+        } else if (data.error) {
+          throw new Error(data.message || data.error);
+        }
+      } catch (error) {
+        console.error('Purchase error:', error);
+        showToast('Unable to start purchase. Please try again.');
+        trackEvent('purchase.failed', { error: error.message, day_number: dayNumber }, dayNumber);
+      } finally {
+        if (buyBtn) {
+          buyBtn.disabled = false;
+          buyBtn.innerHTML = '<span class="plan-name">Buy This Lesson</span>';
+        }
+      }
+    }
+    
+    /**
+     * Handle successful purchase return
+     */
+    function handlePurchaseReturn() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const purchaseStatus = urlParams.get('purchase');
+      const dayNumber = parseInt(urlParams.get('day')) || null;
+      
+      if (purchaseStatus === 'success' && dayNumber) {
+        // Mark lesson as purchased in cache
+        markLessonAsPurchased(dayNumber);
+        
+        // Clear the URL params
+        const newUrl = window.location.pathname + (dayNumber ? `?day=${dayNumber}` : '');
+        window.history.replaceState({}, '', newUrl);
+        
+        // Show success message
+        showToast('🎉 Lesson unlocked! Enjoy your learning.');
+        trackEvent('purchase.completed', { product_type: 'single_lesson', day_number: dayNumber }, dayNumber);
+        
+        // Confetti celebration
+        if (typeof confetti === 'function') {
+          confetti({ particleCount: 100, spread: 70, origin: { y: 0.6 } });
+        }
+        
+        // Reload the lesson now that it's unlocked
+        setTimeout(() => {
+          loadLesson(dayNumber).then(loaded => {
+            if (loaded) showScene('lesson');
+          });
+        }, 500);
+      } else if (purchaseStatus === 'cancelled') {
+        const newUrl = window.location.pathname + (dayNumber ? `?day=${dayNumber}` : '');
+        window.history.replaceState({}, '', newUrl);
+        trackEvent('paywall.dismissed', { reason: 'purchase_cancelled', day_number: dayNumber }, dayNumber);
+      }
+    }
+
+    // ============================================
     // KELLY PRESENCE SYSTEM
     // ============================================
     const KELLY_PRESENCE = {
@@ -4798,11 +5003,11 @@
         return true;
       }
       
-      // TODO: Check individual lesson purchase
-      // if (hasLessonPurchase(dayNumber)) {
-      //   debugLog(`💳 Day ${dayNumber} accessible (purchased)`);
-      //   return true;
-      // }
+      // Check individual lesson purchase (from local cache)
+      if (isLessonPurchased(dayNumber)) {
+        debugLog(`💳 Day ${dayNumber} accessible (purchased)`);
+        return true;
+      }
       
       // Not accessible - show paywall with options
       debugLog(`🔒 Day ${dayNumber} requires subscription or purchase`);
@@ -4832,6 +5037,13 @@
       
       el.classList.add('visible');
       el.setAttribute('aria-hidden', 'false');
+      
+      // Track paywall shown event
+      trackEvent('paywall.shown', {
+        requested_day: dayNumber,
+        is_today: dayNumber === getTodayDayNumber()
+      }, dayNumber);
+      
       try { checkSmartOffers('paywall_opened'); } catch (_) {}
     }
     
@@ -4845,8 +5057,12 @@
 
     function closePaywall() {
       const el = document.getElementById('paywall');
+      const requestedDay = parseInt(el.dataset.requestedDay) || null;
       el.classList.remove('visible');
       el.setAttribute('aria-hidden', 'true');
+      
+      // Track paywall dismissed
+      trackEvent('paywall.dismissed', { requested_day: requestedDay }, requestedDay);
     }
 
     function selectPlan(plan) {
@@ -5546,6 +5762,13 @@
           atomContent: atom?.content,
         };
       });
+
+      // Track lesson started event
+      trackEvent('lesson.started', {
+        topic: currentLesson.topic,
+        archetype: state.kellyId,
+        age_bucket: getEffectiveAgeBucket()
+      }, dayNumber);
 
       return currentLesson;
     }
@@ -6960,11 +7183,22 @@
     function completeLesson() {
       // Ensure media stops when moving to completion.
       stopAllMedia();
-      if (!state.completedLessons.includes(state.currentDay)) {
+      
+      const wasFirstTime = !state.completedLessons.includes(state.currentDay);
+      
+      if (wasFirstTime) {
         state.completedLessons.push(state.currentDay);
         state.streak++;
         state.totalMinutes += 5;
         haptic('celebration');
+        
+        // Track lesson completion event
+        trackEvent('lesson.completed', {
+          topic: currentLesson?.topic || 'Unknown',
+          is_first_time: true,
+          streak: state.streak,
+          total_completed: state.completedLessons.length
+        }, state.currentDay);
         
         // Check for badge unlocks
         if (state.completedLessons.length === 1 && !state.unlockedBadges.includes('first-lesson')) {
@@ -8418,6 +8652,16 @@
       document.getElementById('plan-yearly')?.addEventListener('click', () => selectPlan('yearly'));
       document.getElementById('plan-lifetime')?.addEventListener('click', () => selectPlan('lifetime'));
       document.getElementById('paywall-restore')?.addEventListener('click', restorePurchases);
+      
+      // Single lesson purchase
+      document.getElementById('plan-single-lesson')?.addEventListener('click', () => {
+        const paywallEl = document.getElementById('paywall');
+        const requestedDay = parseInt(paywallEl?.dataset.requestedDay) || state.currentDay;
+        purchaseSingleLesson(requestedDay);
+      });
+      
+      // Handle purchase return (if coming back from Stripe)
+      handlePurchaseReturn();
 
       // Parental gate buttons
       document.getElementById('gate-cancel')?.addEventListener('click', closeParentalGate);

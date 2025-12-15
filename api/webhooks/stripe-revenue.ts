@@ -459,11 +459,56 @@ export default async function handler(
         // Sync user record early (best-effort). Subscriptions will be finalized by subscription.created.
         await bestEffortSyncUserFromCheckoutSession(supabase, session);
         
-        // Only process one-time payments (gifts, lifetime)
+        // Only process one-time payments (gifts, lifetime, single lessons)
         if (session.mode === 'payment') {
           const paymentType = session.metadata?.type || 'gift';
           
-          if (paymentType === 'gift') {
+          // Handle single lesson purchases
+          if (paymentType === 'single_lesson') {
+            const dayNumber = parseInt(session.metadata?.day_number || '0');
+            const userId = session.metadata?.user_id;
+            
+            if (dayNumber > 0) {
+              // Update the pending purchase to completed
+              if (userId && userId !== 'anonymous') {
+                await supabase
+                  .from('lesson_purchases')
+                  .update({
+                    status: 'completed',
+                    stripe_payment_intent_id: session.payment_intent as string
+                  })
+                  .eq('stripe_checkout_session_id', session.id);
+              }
+              
+              // Record revenue event
+              await recordRevenueEvent(supabase, 'lesson_purchased', {
+                user_id: userId !== 'anonymous' ? userId : undefined,
+                stripe_customer_id: session.customer as string,
+                amount_cents: session.amount_total || 0,
+                plan_type: 'single_lesson',
+                metadata: {
+                  day_number: dayNumber,
+                  customer_email: session.customer_email
+                }
+              });
+              
+              // Log user event
+              if (userId && userId !== 'anonymous') {
+                await supabase.from('user_events').insert({
+                  user_id: userId,
+                  event_type: 'purchase.completed',
+                  event_category: 'learner_action',
+                  payload: {
+                    product_type: 'single_lesson',
+                    day_number: dayNumber,
+                    amount: (session.amount_total || 0) / 100,
+                    stripe_session_id: session.id
+                  },
+                  day_number: dayNumber
+                }).catch(() => {}); // Don't fail on event logging
+              }
+            }
+          } else if (paymentType === 'gift') {
             await recordRevenueEvent(supabase, 'gift_purchased', {
               stripe_customer_id: session.customer as string,
               amount_cents: session.amount_total || 0,
