@@ -1,0 +1,774 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Visual Quality Review Suite | Curious Kelly</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: #2d3748;
+      padding: 20px;
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .header {
+      background: white;
+      padding: 30px;
+      border-radius: 16px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+      margin-bottom: 30px;
+    }
+
+    .header h1 {
+      font-size: 32px;
+      color: #1a202c;
+      margin-bottom: 10px;
+    }
+
+    .header p {
+      color: #718096;
+      font-size: 16px;
+    }
+
+    .stats {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 15px;
+      margin-top: 20px;
+    }
+
+    .stat-card {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      padding: 20px;
+      border-radius: 12px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 36px;
+      font-weight: bold;
+      margin-bottom: 5px;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      opacity: 0.9;
+    }
+
+    .lesson-card {
+      background: white;
+      border-radius: 16px;
+      padding: 30px;
+      margin-bottom: 30px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.1);
+    }
+
+    .lesson-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: start;
+      margin-bottom: 20px;
+      padding-bottom: 20px;
+      border-bottom: 2px solid #e2e8f0;
+    }
+
+    .lesson-title {
+      flex: 1;
+    }
+
+    .lesson-title h2 {
+      font-size: 24px;
+      color: #1a202c;
+      margin-bottom: 8px;
+    }
+
+    .lesson-title .day-number {
+      display: inline-block;
+      background: #667eea;
+      color: white;
+      padding: 4px 12px;
+      border-radius: 20px;
+      font-size: 14px;
+      font-weight: bold;
+      margin-right: 10px;
+    }
+
+    .lesson-truth {
+      background: #f7fafc;
+      padding: 15px;
+      border-radius: 8px;
+      font-style: italic;
+      color: #4a5568;
+      margin-bottom: 20px;
+      border-left: 4px solid #667eea;
+    }
+
+    .visuals-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 20px;
+      margin-bottom: 30px;
+    }
+
+    .visual-item {
+      border: 2px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+      background: #f7fafc;
+      transition: all 0.3s ease;
+    }
+
+    .visual-item:hover {
+      transform: translateY(-4px);
+      box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+      border-color: #667eea;
+    }
+
+    .visual-item img {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      background: #edf2f7;
+      cursor: pointer;
+    }
+
+    .visual-item img.loading {
+      opacity: 0.5;
+    }
+
+    .visual-info {
+      padding: 15px;
+    }
+
+    .visual-label {
+      font-weight: 600;
+      color: #2d3748;
+      margin-bottom: 8px;
+      font-size: 14px;
+    }
+
+    .visual-phase {
+      display: inline-block;
+      background: #edf2f7;
+      color: #4a5568;
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      margin-bottom: 10px;
+    }
+
+    .visual-actions {
+      display: flex;
+      gap: 8px;
+    }
+
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: 8px;
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s;
+      text-decoration: none;
+      display: inline-block;
+      text-align: center;
+    }
+
+    .btn-primary {
+      background: #667eea;
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: #5568d3;
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: #e2e8f0;
+      color: #4a5568;
+    }
+
+    .btn-secondary:hover {
+      background: #cbd5e0;
+    }
+
+    .feedback-section {
+      background: #fff5f5;
+      border: 2px solid #feb2b2;
+      border-radius: 12px;
+      padding: 20px;
+      margin-top: 20px;
+    }
+
+    .feedback-section h3 {
+      color: #c53030;
+      margin-bottom: 15px;
+      font-size: 18px;
+    }
+
+    .rating-group {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+      gap: 15px;
+      margin-bottom: 20px;
+    }
+
+    .rating-item {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .rating-item label {
+      font-weight: 600;
+      color: #2d3748;
+      font-size: 14px;
+    }
+
+    .rating-buttons {
+      display: flex;
+      gap: 8px;
+    }
+
+    .rating-btn {
+      flex: 1;
+      padding: 10px;
+      border: 2px solid #e2e8f0;
+      background: white;
+      border-radius: 8px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: all 0.2s;
+    }
+
+    .rating-btn:hover {
+      border-color: #cbd5e0;
+    }
+
+    .rating-btn.selected {
+      border-color: #667eea;
+      background: #667eea;
+      color: white;
+    }
+
+    .rating-btn.good.selected {
+      border-color: #48bb78;
+      background: #48bb78;
+    }
+
+    .rating-btn.poor.selected {
+      border-color: #f56565;
+      background: #f56565;
+    }
+
+    .notes-area {
+      width: 100%;
+      padding: 15px;
+      border: 2px solid #e2e8f0;
+      border-radius: 8px;
+      font-family: inherit;
+      font-size: 14px;
+      resize: vertical;
+      min-height: 100px;
+    }
+
+    .notes-area:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+
+    .submit-feedback {
+      background: #48bb78;
+      color: white;
+      padding: 12px 30px;
+      border: none;
+      border-radius: 8px;
+      font-size: 16px;
+      font-weight: 600;
+      cursor: pointer;
+      margin-top: 15px;
+      transition: all 0.2s;
+    }
+
+    .submit-feedback:hover {
+      background: #38a169;
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(72, 187, 120, 0.4);
+    }
+
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0,0,0,0.9);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: 20px;
+    }
+
+    .modal.active {
+      display: flex;
+    }
+
+    .modal-content {
+      max-width: 90vw;
+      max-height: 90vh;
+      position: relative;
+    }
+
+    .modal-content img {
+      max-width: 100%;
+      max-height: 90vh;
+      border-radius: 8px;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+    }
+
+    .modal-close {
+      position: absolute;
+      top: -40px;
+      right: 0;
+      background: white;
+      color: #1a202c;
+      border: none;
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      font-size: 24px;
+      cursor: pointer;
+      font-weight: bold;
+    }
+
+    .summary-panel {
+      position: fixed;
+      bottom: 20px;
+      right: 20px;
+      background: white;
+      padding: 20px;
+      border-radius: 12px;
+      box-shadow: 0 10px 40px rgba(0,0,0,0.2);
+      min-width: 300px;
+      z-index: 100;
+    }
+
+    .summary-panel h3 {
+      margin-bottom: 15px;
+      color: #1a202c;
+    }
+
+    .summary-stat {
+      display: flex;
+      justify-content: space-between;
+      padding: 8px 0;
+      border-bottom: 1px solid #e2e8f0;
+    }
+
+    .summary-stat:last-child {
+      border-bottom: none;
+    }
+
+    .export-btn {
+      width: 100%;
+      margin-top: 15px;
+      background: #667eea;
+      color: white;
+      padding: 10px;
+      border: none;
+      border-radius: 8px;
+      font-weight: 600;
+      cursor: pointer;
+    }
+
+    .export-btn:hover {
+      background: #5568d3;
+    }
+
+    .category-badge {
+      display: inline-block;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+
+    .category-science {
+      background: #bee3f8;
+      color: #2c5282;
+    }
+
+    .category-sel {
+      background: #fbd38d;
+      color: #7c2d12;
+    }
+
+    @media (max-width: 768px) {
+      .visuals-grid {
+        grid-template-columns: 1fr;
+      }
+
+      .summary-panel {
+        position: static;
+        margin-top: 20px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <div class="header">
+      <h1>🎓 Visual Quality Review Suite</h1>
+      <p>AI-Generated Educational Visuals for Curious Kelly (Days 6-11)</p>
+      
+      <div class="stats">
+        <div class="stat-card">
+          <div class="stat-value">6</div>
+          <div class="stat-label">Lessons</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">17</div>
+          <div class="stat-label">Infographics</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">6</div>
+          <div class="stat-label">Illustrations</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">0</div>
+          <div class="stat-label" id="reviewed-count">Reviewed</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Lessons -->
+    <div id="lessons-container"></div>
+
+    <!-- Summary Panel -->
+    <div class="summary-panel">
+      <h3>📊 Review Progress</h3>
+      <div class="summary-stat">
+        <span>Reviewed:</span>
+        <strong id="summary-reviewed">0 / 6</strong>
+      </div>
+      <div class="summary-stat">
+        <span>Good Quality:</span>
+        <strong id="summary-good">0</strong>
+      </div>
+      <div class="summary-stat">
+        <span>Needs Work:</span>
+        <strong id="summary-mixed">0</strong>
+      </div>
+      <div class="summary-stat">
+        <span>Poor Quality:</span>
+        <strong id="summary-poor">0</strong>
+      </div>
+      <button class="export-btn" onclick="exportFeedback()">📥 Export Feedback</button>
+    </div>
+  </div>
+
+  <!-- Image Modal -->
+  <div class="modal" id="image-modal" onclick="closeModal()">
+    <div class="modal-content" onclick="event.stopPropagation()">
+      <button class="modal-close" onclick="closeModal()">×</button>
+      <img id="modal-image" src="" alt="">
+    </div>
+  </div>
+
+  <script>
+    const LESSONS = [
+      {
+        day: 6,
+        title: "What's Inside a Seed",
+        truth: "Every seed carries a complete blueprint for life, just waiting for the right moment.",
+        category: "science",
+        visuals: [
+          { type: "infographic-1", phase: "Hook", label: "Infographic 1" },
+          { type: "infographic-2", phase: "Fact1", label: "Infographic 2" },
+          { type: "infographic-3", phase: "Fact2", label: "Infographic 3" },
+          { type: "illustration", phase: "General", label: "Illustration" },
+        ]
+      },
+      {
+        day: 7,
+        title: "What Stars Are Made Of",
+        truth: "Stars are balls of gas so hot they fuse atoms together, releasing light and heat.",
+        category: "science",
+        visuals: [
+          { type: "infographic-1", phase: "Hook", label: "Infographic 1" },
+          { type: "infographic-2", phase: "Fact1", label: "Infographic 2" },
+          { type: "infographic-3", phase: "Fact2", label: "Infographic 3" },
+          { type: "illustration", phase: "General", label: "Illustration" },
+        ]
+      },
+      {
+        day: 8,
+        title: "What Makes a Real Friend",
+        truth: "True friendship is someone who knows your flaws and chooses to stay anyway.",
+        category: "sel",
+        visuals: [
+          { type: "infographic-1", phase: "Hook", label: "Infographic 1" },
+          { type: "infographic-2", phase: "Fact1", label: "Infographic 2" },
+          { type: "illustration", phase: "General", label: "Illustration" },
+        ]
+      },
+      {
+        day: 9,
+        title: "How Kindness Spreads",
+        truth: "Kindness is contagious—when you help someone, they become more likely to help others.",
+        category: "sel",
+        visuals: [
+          { type: "infographic-1", phase: "Hook", label: "Infographic 1" },
+          { type: "infographic-2", phase: "Fact1", label: "Infographic 2" },
+          { type: "illustration", phase: "General", label: "Illustration" },
+        ]
+      },
+      {
+        day: 10,
+        title: "The Art of Really Listening",
+        truth: "Real listening means focusing entirely on the speaker, not planning what you will say next.",
+        category: "sel",
+        visuals: [
+          { type: "infographic-1", phase: "Hook", label: "Infographic 1" },
+          { type: "infographic-2", phase: "Fact1", label: "Infographic 2" },
+          { type: "infographic-3", phase: "Fact2", label: "Infographic 3" },
+          { type: "illustration", phase: "General", label: "Illustration" },
+        ]
+      },
+      {
+        day: 11,
+        title: "Why Patience Pays Off",
+        truth: "Patience is the ability to delay gratification for a better outcome.",
+        category: "sel",
+        visuals: [
+          { type: "infographic-1", phase: "Hook", label: "Infographic 1" },
+          { type: "infographic-2", phase: "Fact1", label: "Infographic 2" },
+          { type: "infographic-3", phase: "Fact2", label: "Infographic 3" },
+          { type: "illustration", phase: "General", label: "Illustration" },
+        ]
+      },
+    ];
+
+    const feedback = {};
+
+    function getImageUrl(day, type) {
+      const paddedDay = String(day).padStart(3, '0');
+      return `https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/lesson-visuals/day-${paddedDay}/${type}.png`;
+    }
+
+    function openImage(url) {
+      document.getElementById('modal-image').src = url;
+      document.getElementById('image-modal').classList.add('active');
+    }
+
+    function closeModal() {
+      document.getElementById('image-modal').classList.remove('active');
+    }
+
+    function renderLessons() {
+      const container = document.getElementById('lessons-container');
+      
+      LESSONS.forEach(lesson => {
+        const lessonEl = document.createElement('div');
+        lessonEl.className = 'lesson-card';
+        lessonEl.id = `lesson-${lesson.day}`;
+        
+        const categoryClass = lesson.category === 'science' ? 'category-science' : 'category-sel';
+        const categoryLabel = lesson.category === 'science' ? '🔬 Science' : '🤝 Social-Emotional';
+        
+        lessonEl.innerHTML = `
+          <div class="lesson-header">
+            <div class="lesson-title">
+              <div>
+                <span class="day-number">Day ${lesson.day}</span>
+                <span class="category-badge ${categoryClass}">${categoryLabel}</span>
+              </div>
+              <h2>${lesson.title}</h2>
+            </div>
+          </div>
+          
+          <div class="lesson-truth">
+            <strong>Universal Truth:</strong> ${lesson.truth}
+          </div>
+          
+          <div class="visuals-grid">
+            ${lesson.visuals.map(visual => `
+              <div class="visual-item">
+                <img 
+                  src="${getImageUrl(lesson.day, visual.type)}" 
+                  alt="${visual.label}"
+                  onclick="openImage('${getImageUrl(lesson.day, visual.type)}')"
+                  onerror="this.src='data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%22400%22 height=%22200%22%3E%3Crect fill=%22%23e2e8f0%22 width=%22400%22 height=%22200%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%234a5568%22 font-family=%22sans-serif%22 font-size=%2216%22%3EImage not found%3C/text%3E%3C/svg%3E'"
+                >
+                <div class="visual-info">
+                  <div class="visual-label">${visual.label}</div>
+                  <span class="visual-phase">${visual.phase}</span>
+                  <div class="visual-actions">
+                    <a href="${getImageUrl(lesson.day, visual.type)}" target="_blank" class="btn btn-secondary">Open</a>
+                    <button class="btn btn-primary" onclick="openImage('${getImageUrl(lesson.day, visual.type)}')">View</button>
+                  </div>
+                </div>
+              </div>
+            `).join('')}
+          </div>
+          
+          <div class="feedback-section">
+            <h3>📝 Your Feedback for Day ${lesson.day}</h3>
+            
+            <div class="rating-group">
+              <div class="rating-item">
+                <label>Academic Quality</label>
+                <div class="rating-buttons">
+                  <button class="rating-btn good" onclick="setRating(${lesson.day}, 'academic', 'good')">✓ Good</button>
+                  <button class="rating-btn" onclick="setRating(${lesson.day}, 'academic', 'mixed')">~ Mixed</button>
+                  <button class="rating-btn poor" onclick="setRating(${lesson.day}, 'academic', 'poor')">✗ Poor</button>
+                </div>
+              </div>
+              
+              <div class="rating-item">
+                <label>Visual Design</label>
+                <div class="rating-buttons">
+                  <button class="rating-btn good" onclick="setRating(${lesson.day}, 'design', 'good')">✓ Good</button>
+                  <button class="rating-btn" onclick="setRating(${lesson.day}, 'design', 'mixed')">~ Mixed</button>
+                  <button class="rating-btn poor" onclick="setRating(${lesson.day}, 'design', 'poor')">✗ Poor</button>
+                </div>
+              </div>
+              
+              <div class="rating-item">
+                <label>Age Appropriateness</label>
+                <div class="rating-buttons">
+                  <button class="rating-btn good" onclick="setRating(${lesson.day}, 'age', 'good')">✓ Good</button>
+                  <button class="rating-btn" onclick="setRating(${lesson.day}, 'age', 'mixed')">~ Mixed</button>
+                  <button class="rating-btn poor" onclick="setRating(${lesson.day}, 'age', 'poor')">✗ Poor</button>
+                </div>
+              </div>
+              
+              <div class="rating-item">
+                <label>Overall Verdict</label>
+                <div class="rating-buttons">
+                  <button class="rating-btn good" onclick="setRating(${lesson.day}, 'overall', 'approve')">✓ Approve</button>
+                  <button class="rating-btn" onclick="setRating(${lesson.day}, 'overall', 'revise')">↻ Revise</button>
+                  <button class="rating-btn poor" onclick="setRating(${lesson.day}, 'overall', 'reject')">✗ Reject</button>
+                </div>
+              </div>
+            </div>
+            
+            <label style="display: block; margin-bottom: 8px; font-weight: 600; color: #2d3748;">Notes & Suggestions:</label>
+            <textarea 
+              class="notes-area" 
+              placeholder="What works well? What needs improvement? Any specific issues?"
+              onchange="setNotes(${lesson.day}, this.value)"
+            ></textarea>
+          </div>
+        `;
+        
+        container.appendChild(lessonEl);
+        
+        // Initialize feedback object
+        feedback[lesson.day] = {
+          title: lesson.title,
+          category: lesson.category,
+          academic: null,
+          design: null,
+          age: null,
+          overall: null,
+          notes: ''
+        };
+      });
+    }
+
+    function setRating(day, category, value) {
+      feedback[day][category] = value;
+      
+      // Update button states
+      const lessonEl = document.getElementById(`lesson-${day}`);
+      const buttons = lessonEl.querySelectorAll(`[onclick*="'${category}'"]`);
+      buttons.forEach(btn => {
+        btn.classList.remove('selected');
+        if (btn.onclick.toString().includes(`'${value}'`)) {
+          btn.classList.add('selected');
+        }
+      });
+      
+      updateSummary();
+    }
+
+    function setNotes(day, notes) {
+      feedback[day].notes = notes;
+    }
+
+    function updateSummary() {
+      let reviewed = 0;
+      let good = 0;
+      let mixed = 0;
+      let poor = 0;
+      
+      Object.values(feedback).forEach(f => {
+        if (f.overall) {
+          reviewed++;
+          if (f.overall === 'approve') good++;
+          else if (f.overall === 'revise') mixed++;
+          else if (f.overall === 'reject') poor++;
+        }
+      });
+      
+      document.getElementById('summary-reviewed').textContent = `${reviewed} / ${LESSONS.length}`;
+      document.getElementById('summary-good').textContent = good;
+      document.getElementById('summary-mixed').textContent = mixed;
+      document.getElementById('summary-poor').textContent = poor;
+      document.getElementById('reviewed-count').textContent = `${reviewed} Reviewed`;
+    }
+
+    function exportFeedback() {
+      const report = {
+        timestamp: new Date().toISOString(),
+        summary: {
+          total_lessons: LESSONS.length,
+          reviewed: Object.values(feedback).filter(f => f.overall).length,
+          approved: Object.values(feedback).filter(f => f.overall === 'approve').length,
+          needs_revision: Object.values(feedback).filter(f => f.overall === 'revise').length,
+          rejected: Object.values(feedback).filter(f => f.overall === 'reject').length,
+        },
+        lessons: feedback
+      };
+      
+      const blob = new Blob([JSON.stringify(report, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `visual-quality-feedback-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+      alert('✅ Feedback exported! Check your downloads folder.');
+    }
+
+    // Initialize
+    renderLessons();
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') closeModal();
+    });
+  </script>
+</body>
+</html>
