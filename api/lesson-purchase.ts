@@ -73,20 +73,31 @@ async function handleCheckPurchase(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ purchased: false, reason: 'invalid_token' });
     }
     
-    // Check for purchase
-    const { data: purchase } = await supabase
-      .from('lesson_purchases')
-      .select('id, purchased_at')
-      .eq('user_id', user.id)
-      .eq('day_number', dayNumber)
-      .eq('status', 'completed')
-      .single();
-    
-    if (purchase) {
-      return res.status(200).json({ 
-        purchased: true, 
-        purchased_at: purchase.purchased_at 
-      });
+    // Check for purchase (table might not exist yet)
+    try {
+      const { data: purchase, error: purchaseError } = await supabase
+        .from('lesson_purchases')
+        .select('id, purchased_at')
+        .eq('user_id', user.id)
+        .eq('day_number', dayNumber)
+        .eq('status', 'completed')
+        .single();
+      
+      if (purchaseError && purchaseError.code !== 'PGRST116') {
+        // PGRST116 = no rows found, which is fine
+        // Other errors might mean table doesn't exist
+        console.warn('Purchase check error:', purchaseError.message);
+      }
+      
+      if (purchase) {
+        return res.status(200).json({ 
+          purchased: true, 
+          purchased_at: purchase.purchased_at 
+        });
+      }
+    } catch (e) {
+      // Table might not exist yet
+      console.warn('Purchase check failed (table may not exist)');
     }
     
     return res.status(200).json({ purchased: false });
@@ -136,20 +147,24 @@ async function handleCreateCheckout(req: VercelRequest, res: VercelResponse) {
         userId = user.id;
         userEmail = user.email || userEmail;
         
-        // Check if already purchased
-        const { data: existingPurchase } = await supabase
-          .from('lesson_purchases')
-          .select('id')
-          .eq('user_id', userId)
-          .eq('day_number', body.day_number)
-          .eq('status', 'completed')
-          .single();
-        
-        if (existingPurchase) {
-          return res.status(409).json({ 
-            error: 'already_purchased',
-            message: 'You already own this lesson'
-          });
+        // Check if already purchased (table might not exist yet - that's OK)
+        try {
+          const { data: existingPurchase } = await supabase
+            .from('lesson_purchases')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('day_number', body.day_number)
+            .eq('status', 'completed')
+            .single();
+          
+          if (existingPurchase) {
+            return res.status(409).json({ 
+              error: 'already_purchased',
+              message: 'You already own this lesson'
+            });
+          }
+        } catch (e) {
+          // Table might not exist yet - proceed with purchase
         }
       }
     }
