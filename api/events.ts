@@ -95,10 +95,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
   
   if (!isSupabaseConfigured()) {
-    return res.status(503).json({ error: 'Database not configured' });
+    // Still return success - events are best-effort
+    return res.status(200).json({ 
+      success: true, 
+      warning: 'Database not configured',
+      fallback: true
+    });
   }
   
-  const supabase = getSupabaseAdmin();
+  let supabase;
+  try {
+    supabase = getSupabaseAdmin();
+  } catch (e) {
+    return res.status(200).json({ 
+      success: true, 
+      warning: 'Database init failed',
+      fallback: true
+    });
+  }
   
   try {
     const body = req.body as EventRequest;
