@@ -41,6 +41,14 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   
   // POST: Create checkout session
   if (req.method === 'POST') {
+    // DEBUG: Return immediately to check what we're receiving
+    return res.status(200).send(JSON.stringify({
+      debug: true,
+      body_type: typeof req.body,
+      body_value: req.body,
+      headers_content_type: req.headers['content-type']
+    }));
+    
     // Parse body - Vercel should auto-parse JSON, but check
     let body = req.body;
     if (typeof body === 'string') {
