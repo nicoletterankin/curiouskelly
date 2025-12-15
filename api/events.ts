@@ -10,6 +10,7 @@
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { getSupabaseAdmin, isSupabaseConfigured } from './lib/supabase';
 
 interface EventRequest {
   event_type: string;
@@ -18,18 +19,6 @@ interface EventRequest {
   day_number?: number;
   session_id?: string;
 }
-
-// Valid event types (subset - allows custom events too)
-const KNOWN_EVENTS = [
-  'lesson.started', 'lesson.completed', 'lesson.paused', 'lesson.skipped',
-  'paywall.shown', 'paywall.dismissed', 'paywall.cta_clicked',
-  'purchase.initiated', 'purchase.completed', 'purchase.failed',
-  'subscription.started', 'subscription.cancelled',
-  'nav.day_selected', 'nav.calendar_opened',
-  'settings.updated', 'profile.updated',
-  'auth.signup', 'auth.login', 'auth.logout',
-  'system.session_started', 'system.error'
-];
 
 function detectDeviceType(userAgent: string): string {
   const ua = userAgent.toLowerCase();
@@ -45,6 +34,14 @@ function detectPlatform(userAgent: string): string {
   if (/android/i.test(ua) && /wv/i.test(ua)) return 'android';
   if (/iphone|ipad/i.test(ua) && !/safari/i.test(ua)) return 'ios';
   return 'web';
+}
+
+function getClientIP(req: VercelRequest): string | null {
+  const forwarded = req.headers['x-forwarded-for'];
+  if (typeof forwarded === 'string') {
+    return forwarded.split(',')[0].trim();
+  }
+  return null;
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -65,36 +62,69 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   try {
     const body = (req.body || {}) as EventRequest;
     const eventType = body.event_type || 'unknown';
+    const userAgent = req.headers['user-agent'] || '';
     
     // Log for debugging (visible in Vercel logs)
-    const userAgent = req.headers['user-agent'] || '';
     console.log('[Event]', eventType, {
       day: body.day_number,
       device: detectDeviceType(userAgent),
       platform: detectPlatform(userAgent)
     });
     
-    // TODO: When migrations are run, insert into user_events table:
-    // const supabase = getSupabaseAdmin();
-    // await supabase.from('user_events').insert({
-    //   event_type: eventType,
-    //   event_category: body.event_category || 'learner_action',
-    //   payload: body.payload || {},
-    //   day_number: body.day_number,
-    //   session_id: body.session_id,
-    //   device_type: detectDeviceType(userAgent),
-    //   platform: detectPlatform(userAgent),
-    //   user_agent: userAgent
-    // });
+    // Try to store in database if configured
+    let stored = false;
+    if (isSupabaseConfigured()) {
+      try {
+        const supabase = getSupabaseAdmin();
+        
+        // Extract user ID from auth header if present
+        let userId: string | null = null;
+        const authHeader = req.headers['authorization'];
+        if (authHeader && authHeader.startsWith('Bearer ')) {
+          const token = authHeader.substring(7);
+          try {
+            const { data: { user } } = await supabase.auth.getUser(token);
+            userId = user?.id || null;
+          } catch {
+            // Token invalid, continue without user ID
+          }
+        }
+        
+        const { error } = await supabase.from('user_events').insert({
+          user_id: userId,
+          event_type: eventType,
+          event_category: body.event_category || 'learner_action',
+          payload: body.payload || {},
+          day_number: body.day_number,
+          session_id: body.session_id,
+          device_type: detectDeviceType(userAgent),
+          platform: detectPlatform(userAgent),
+          user_agent: userAgent.substring(0, 500), // Limit length
+          ip_address: getClientIP(req)
+        });
+        
+        if (!error) {
+          stored = true;
+        } else if (error.code === '42P01') {
+          // Table doesn't exist yet - migrations not run
+          console.log('[Event] user_events table not yet created');
+        } else {
+          console.error('[Event] Insert error:', error.message);
+        }
+      } catch (dbError) {
+        console.error('[Event] Database error:', dbError);
+      }
+    }
     
     return res.status(200).json({ 
       success: true,
-      event_type: eventType
+      event_type: eventType,
+      stored
     });
     
   } catch (error) {
     console.error('Error in events API:', error);
-    // Events should never fail - return success anyway
+    // Events should never fail the request - return success anyway
     return res.status(200).json({ 
       success: true, 
       fallback: true

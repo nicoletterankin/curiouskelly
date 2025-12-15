@@ -5,12 +5,29 @@
  * Creates a Stripe checkout session for a single lesson purchase ($1.99).
  * 
  * GET /api/lesson-purchase?day=N
- * Check if a lesson has been purchased.
+ * Check if a lesson has been purchased by the current user.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { getSupabaseAdmin, isSupabaseConfigured } from './lib/supabase';
 
 const DEFAULT_LESSON_PRICE = 199; // $1.99 in cents
+
+async function getUserFromRequest(req: VercelRequest): Promise<string | null> {
+  if (!isSupabaseConfigured()) return null;
+  
+  const authHeader = req.headers['authorization'];
+  if (!authHeader || !authHeader.startsWith('Bearer ')) return null;
+  
+  try {
+    const token = authHeader.substring(7);
+    const supabase = getSupabaseAdmin();
+    const { data: { user } } = await supabase.auth.getUser(token);
+    return user?.id || null;
+  } catch {
+    return null;
+  }
+}
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
   // CORS headers
@@ -31,10 +48,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(400).json({ error: 'Invalid day number' });
     }
     
-    // For now, return not purchased (database table pending migration)
-    // TODO: Query lesson_purchases table when migrations are run
+    // Check database for purchase
+    let purchased = false;
+    if (isSupabaseConfigured()) {
+      try {
+        const userId = await getUserFromRequest(req);
+        if (userId) {
+          const supabase = getSupabaseAdmin();
+          const { data, error } = await supabase
+            .from('lesson_purchases')
+            .select('id')
+            .eq('user_id', userId)
+            .eq('day_number', dayNumber)
+            .eq('status', 'completed')
+            .single();
+          
+          if (!error && data) {
+            purchased = true;
+          } else if (error && error.code === '42P01') {
+            // Table doesn't exist yet
+            console.log('[Purchase] lesson_purchases table not yet created');
+          }
+        }
+      } catch (dbError) {
+        console.error('[Purchase] Database error:', dbError);
+      }
+    }
+    
     return res.status(200).json({ 
-      purchased: false, 
+      purchased, 
       day_number: dayNumber
     });
   }
@@ -58,6 +100,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (dayNumber < 1 || dayNumber > 366) {
         return res.status(400).json({ error: 'Invalid day number' });
       }
+      
+      // Get user ID if authenticated
+      const userId = await getUserFromRequest(req);
       
       // Dynamic import Stripe
       const Stripe = (await import('stripe')).default;
@@ -89,9 +134,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         metadata: {
           type: 'single_lesson',
           day_number: dayNumber.toString(),
+          user_id: userId || 'anonymous',
           source: 'web'
         }
       });
+      
+      // Pre-create pending purchase record if database is ready
+      if (isSupabaseConfigured() && userId) {
+        try {
+          const supabase = getSupabaseAdmin();
+          await supabase.from('lesson_purchases').insert({
+            user_id: userId,
+            day_number: dayNumber,
+            purchase_price: DEFAULT_LESSON_PRICE / 100,
+            currency: 'USD',
+            stripe_checkout_session_id: session.id,
+            status: 'pending'
+          }).catch(() => {
+            // Table might not exist yet
+          });
+        } catch {
+          // Non-critical, continue
+        }
+      }
       
       return res.status(200).json({
         sessionId: session.id,
