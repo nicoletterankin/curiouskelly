@@ -1,3 +1,11 @@
+/**
+ * ⚠️ DEPRECATED - DO NOT USE
+ * Canonical loader: public/js/kelly-lesson-loader.js
+ * This file will be removed after 2025-01-15
+ * Last audit: 2025-12-15
+ */
+console.warn('[DEPRECATED] golden-v5-data-loader.js - Use kelly-lesson-loader.js');
+
 // golden-v5-data-loader.js
 // Loads real lesson content from Supabase for Golden V5
 

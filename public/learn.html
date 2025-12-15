@@ -4319,7 +4319,7 @@
         
         // Reload the lesson now that it's unlocked
         setTimeout(() => {
-          loadLesson(dayNumber).then(loaded => {
+          loadLessonRuntime(dayNumber).then(loaded => {
             if (loaded) showScene('lesson');
           });
         }, 500);
@@ -4644,52 +4644,19 @@
         if (data !== undefined) console.log('DATA:', data);
       }
 
-      // 1) core_lessons (day 1)
+      // 1) Lesson loader sanity (day 1) — avoids direct core_lessons/lesson_atoms queries here.
       try {
-        if (!db) {
-          report({ query: 'core_lessons for day 1', status: 'FAIL', error: 'Supabase client not initialized' });
+        if (!window.KellyLessonLoader) {
+          report({ query: 'KellyLessonLoader.loadLesson(day 1)', status: 'FAIL', error: 'KellyLessonLoader not available' });
         } else {
-          const { data, error } = await db
-            .from('core_lessons')
-            .select('*')
-            .eq('day_number', 1)
-            .limit(1);
-          if (error) report({ query: 'core_lessons for day 1', status: 'FAIL', error: error.message });
-          else if (!data || data.length === 0) report({ query: 'core_lessons for day 1', status: 'EMPTY', data });
-          else report({ query: 'core_lessons for day 1', status: 'SUCCESS', data: data[0] });
+          const archetype = PERSONA_TO_ARCHETYPE[state.kellyId] || 'The Scientist';
+          const region = getEffectiveAgeBucket();
+          const payload = await window.KellyLessonLoader.loadLesson(1, { archetype, age: state.age, region });
+          if (!payload?.lesson) report({ query: 'KellyLessonLoader.loadLesson(day 1)', status: 'EMPTY', data: payload });
+          else report({ query: 'KellyLessonLoader.loadLesson(day 1)', status: 'SUCCESS', data: { lesson: payload.lesson, atoms: (payload.atoms || []).slice(0, 5) } });
         }
       } catch (e) {
-        report({ query: 'core_lessons for day 1', status: 'FAIL', error: e.message });
-      }
-
-      // 2) lesson_atoms (day 1; archetype-specific)
-      try {
-        if (!db) {
-          report({ query: 'lesson_atoms for day 1', status: 'FAIL', error: 'Supabase client not initialized' });
-        } else {
-          const { data: lessonRow, error: lessonErr } = await db
-            .from('core_lessons')
-            .select('id')
-            .eq('day_number', 1)
-            .single();
-          if (lessonErr || !lessonRow?.id) {
-            report({ query: 'lesson_atoms for day 1', status: 'EMPTY', data: [] });
-          } else {
-            const archetype = PERSONA_TO_ARCHETYPE[state.kellyId] || 'The Scientist';
-            const { data, error } = await db
-              .from('lesson_atoms')
-              .select('phase, content')
-              .eq('core_lesson_id', lessonRow.id)
-              .eq('archetype', archetype)
-              .order('phase', { ascending: true })
-              .limit(5);
-            if (error) report({ query: 'lesson_atoms for day 1', status: 'FAIL', error: error.message });
-            else if (!data || data.length === 0) report({ query: 'lesson_atoms for day 1', status: 'EMPTY', data });
-            else report({ query: 'lesson_atoms for day 1', status: 'SUCCESS', data });
-          }
-        }
-      } catch (e) {
-        report({ query: 'lesson_atoms for day 1', status: 'FAIL', error: e.message });
+        report({ query: 'KellyLessonLoader.loadLesson(day 1)', status: 'FAIL', error: e.message });
       }
 
       // 3) kelly_video_assets (day 1 Hook audio)
@@ -5888,214 +5855,32 @@
       return currentLesson;
     }
 
-    async function loadLesson(dayNumber) {
+    async function loadLessonRuntime(dayNumber) {
       if (!canAccessDay(dayNumber)) {
         showPaywall(dayNumber);
         return null;
       }
 
-      // Deterministic local pack (Day 17) - works offline, no network required.
-      try {
-        // eslint-disable-next-line no-undef
-        const pack = window?.CURIOUS_KELLY?.DAY_17_LOCAL_PACK;
-        if (dayNumber === 17 && pack && Array.isArray(pack.atoms)) {
+      // Canonical: all lesson content is loaded via KellyLessonLoader
+      if (window.KellyLessonLoader) {
+        try {
           const archetype = PERSONA_TO_ARCHETYPE[state.kellyId] || 'The Scientist';
-          let atoms = pack.atoms;
-
-          // Prefer archetype-specific atoms if present (Day 17 pack typically contains all archetypes).
-          const byArchetype = atoms.filter(a => a && a.archetype === archetype);
-          if (byArchetype.length > 0) atoms = byArchetype;
-
-          debugLog(`✅ Lesson loaded (LocalPack): day ${dayNumber}`, {
-            atoms: atoms?.length || 0,
-            archetype
+          const ageBucket = getEffectiveAgeBucket();
+          const payload = await window.KellyLessonLoader.loadLesson(dayNumber, {
+            archetype,
+            age: state.age,
+            region: ageBucket
           });
-
-          return applyLoadedLesson(dayNumber, {
-            topic: pack.topic,
-            headline: pack.headline,
-            atoms
-          });
+          if (payload?.lesson) return applyLoadedLesson(dayNumber, payload);
+        } catch (e) {
+          debugWarn('KellyLessonLoader.loadLesson failed:', e?.message || String(e));
         }
-      } catch (e) {
-        debugWarn('Local pack load skipped:', e?.message || String(e));
       }
 
-      const db = supabase;
-      if (!db) {
-        const apiPayload = await loadLessonFromApi(dayNumber);
-        if (apiPayload) return applyLoadedLesson(dayNumber, apiPayload);
-        return loadFallbackLesson(dayNumber);
-      }
-      
-      try {
-        // Get core lesson
-        const { data: coreLesson, error: coreError } = await db
-          .from('core_lessons')
-          .select('id, topic, universal_truth, marketing_headline, marketing_tagline, marketing_pitch, quick_quiz_questions, reflection_prompts')
-          .eq('day_number', dayNumber)
-          .single();
-        
-        if (coreError || !coreLesson) {
-          debugWarn('Core lesson not found:', coreError);
-          // Fallback to local API (does not depend on Supabase)
-          const apiPayload = await loadLessonFromApi(dayNumber);
-          if (apiPayload) return applyLoadedLesson(dayNumber, apiPayload);
-          return loadFallbackLesson(dayNumber);
-        }
-        
-        // Get archetype name and age bucket for personalization
-        const archetype = PERSONA_TO_ARCHETYPE[state.kellyId] || 'The Scientist';
-        const ageBucket = getEffectiveAgeBucket();
-        
-        // Fetch atoms (dialog). Prefer archetype-specific, but gracefully fallback if schema differs.
-        let atoms = [];
-        let atomsError = null;
-        try {
-          const res = await db
-            .from('lesson_atoms')
-            .select('phase, content, hd_video_url, visual_url')
-            .eq('core_lesson_id', coreLesson.id)
-            .eq('archetype', archetype)
-            .order('phase', { ascending: true });
-          atoms = res.data || [];
-          atomsError = res.error || null;
-        } catch (e) {
-          atoms = [];
-          atomsError = e;
-        }
-
-        // If no archetype match (or column missing), retry without archetype filter.
-        if (atomsError || atoms.length === 0) {
-          try {
-            const res2 = await db
-              .from('lesson_atoms')
-              .select('phase, content, hd_video_url, visual_url')
-              .eq('core_lesson_id', coreLesson.id)
-              .order('phase', { ascending: true });
-            if (res2.data && res2.data.length > 0) atoms = res2.data;
-          } catch (_) {}
-        }
-
-        if (atomsError) {
-          debugWarn('Atoms fetch error:', atomsError);
-        }
-        
-        // Fetch shards (age-personalized content) for this lesson
-        // Schema: id, core_lesson_id, age, region, tone, birth_year, script_content
-        // Shards are best-effort; lesson still works without them.
-        let shards = [];
-        try {
-          const { data: shardsData, error: shardsError } = await db
-            .from('lesson_shards')
-            .select('*')
-            .eq('core_lesson_id', coreLesson.id)
-            .eq('region', ageBucket);
-          if (shardsError) debugWarn('Shards fetch error:', shardsError);
-          shards = shardsData || [];
-        } catch (e) {
-          debugWarn('Shards fetch skipped:', e.message);
-        }
-        
-        // Filter shards by age bucket (try exact match, then region, then any)
-        let matchedShards = shards || [];
-        if (shards && shards.length > 0) {
-          // Try to find shards matching the age bucket
-          const ageMatch = shards.filter(s => s.region === ageBucket);
-          if (ageMatch.length > 0) {
-            matchedShards = ageMatch;
-          } else {
-            // Try matching by age number (within 5 years)
-            const ageNumMatch = shards.filter(s => s.age && Math.abs(s.age - state.age) <= 5);
-            if (ageNumMatch.length > 0) {
-              matchedShards = ageNumMatch;
-            }
-          }
-        }
-        
-        debugLog(`✅ Lesson loaded (Supabase): day ${dayNumber}`, {
-          atoms: atoms?.length || 0,
-          shards: matchedShards.length,
-          archetype,
-          ageBucket
-        });
-        
-        currentLesson = {
-          dayNumber,
-          topic: coreLesson.topic,
-          headline: coreLesson.marketing_headline,
-          tagline: coreLesson.marketing_tagline,
-          pitch: coreLesson.marketing_pitch,
-          universalTruth: coreLesson.universal_truth,
-          quickQuiz: coreLesson.quick_quiz_questions || [],
-          reflectionPrompts: coreLesson.reflection_prompts || [],
-          shards: matchedShards,
-          kellyContext: null
-        };
-
-        // Backstory integration wiring (best-effort)
-        try {
-          const ctx = await getKellyContext(state.kellyId, ageBucket, dayNumber);
-          if (ctx) currentLesson.kellyContext = ctx;
-        } catch (e) {
-          // non-fatal
-        }
-        
-        // Map atoms to phases, with shard override for personalized script
-        lessonAtoms = PHASES.map(phase => {
-          const atom = atoms?.find(a => a.phase === phase.dbName);
-          
-          // Check if we have a personalized shard for this phase
-          let personalizedScript = null;
-          if (matchedShards.length > 0) {
-            // Shards might have script_content as JSONB with phase-specific content
-            const shard = matchedShards[0];
-            if (shard.script_content) {
-              const scriptObj = typeof shard.script_content === 'string' 
-                ? JSON.parse(shard.script_content) 
-                : shard.script_content;
-              
-              // Try to get phase-specific content from shard
-              if (scriptObj[phase.dbName]) {
-                personalizedScript = scriptObj[phase.dbName].script || scriptObj[phase.dbName].text || scriptObj[phase.dbName];
-              } else if (scriptObj.script) {
-                // Full script - use for first phase
-                if (phase.dbName === 'Hook') {
-                  personalizedScript = scriptObj.script;
-                }
-              }
-            }
-          }
-          
-          const content = atom?.content || {};
-          return {
-            phase: phase.name,
-            dbPhase: phase.dbName,
-            icon: phase.icon,
-            script:
-              personalizedScript ||
-              (typeof atom?.content === 'string' ? atom.content : (content.script || content.text)) ||
-              `This is ${phase.name.toLowerCase()} content for day ${dayNumber}.`,
-            videoUrl: atom?.hd_video_url,
-            visualUrl: atom?.visual_url,
-            // Keep reference to full atom content for advanced features
-            atomContent: atom?.content,
-            // Interactive choice fields (new universal choice model)
-            choice_intro: content.choice_intro,
-            option_a: content.option_a,
-            option_b: content.option_b,
-            success_response: content.success_response,
-            alt_response: content.alt_response,
-          };
-        });
-        
-        return currentLesson;
-      } catch (e) {
-        debugWarn('Lesson load error:', e);
-        const apiPayload = await loadLessonFromApi(dayNumber);
-        if (apiPayload) return applyLoadedLesson(dayNumber, apiPayload);
-        return loadFallbackLesson(dayNumber);
-      }
+      // Fallbacks (non-Supabase lesson sources)
+      const apiPayload = await loadLessonFromApi(dayNumber);
+      if (apiPayload) return applyLoadedLesson(dayNumber, apiPayload);
+      return loadFallbackLesson(dayNumber);
     }
 
     async function getKellyContext(personaId, ageBucket, dayNumber) {
@@ -6151,50 +5936,30 @@
     // LOAD WEEK LESSONS FROM SUPABASE
     // ============================================
     async function loadWeekLessons(startDay) {
-      const db = supabase;
-      if (!db) {
-        // Use local API fallback so the week view still shows real topics
-        const results = await Promise.all(
-          Array.from({ length: 7 }, async (_, i) => {
-            const dayNum = startDay + i;
-            const apiPayload = await loadLessonFromApi(dayNum);
-            const lesson = apiPayload?.lesson;
-            return {
-              day_number: dayNum,
-              topic: lesson?.topic || `Lesson for ${getDisplayDate(dayNum)}`,
-              marketing_headline: lesson?.marketing_headline || lesson?.topic || 'An amazing lesson awaits...'
-            };
-          })
-        );
-        return results;
-      }
-      
+      // Canonical: use KellyLessonLoader (it will choose local pack / Supabase / API / static / emergency)
       try {
-        const { data, error } = await db
-          .from('core_lessons')
-          .select('day_number, topic, marketing_headline')
-          .gte('day_number', startDay)
-          .lte('day_number', startDay + 6)
-          .order('day_number');
-        
-        if (error) throw error;
-        // If Supabase returns nothing (RLS / caching / transient), fallback to local API per day
-        if (data && data.length > 0) return data;
+        if (!window.KellyLessonLoader) throw new Error('KellyLessonLoader missing');
+
+        const archetype = PERSONA_TO_ARCHETYPE[state.kellyId] || 'The Scientist';
+        const region = getEffectiveAgeBucket();
+
         const results = await Promise.all(
           Array.from({ length: 7 }, async (_, i) => {
             const dayNum = startDay + i;
-            const apiPayload = await loadLessonFromApi(dayNum);
-            const lesson = apiPayload?.lesson;
+            const payload = await window.KellyLessonLoader.loadLesson(dayNum, { archetype, age: state.age, region });
+            const lesson = payload?.lesson || {};
             return {
               day_number: dayNum,
               topic: lesson?.topic || `Lesson for ${getDisplayDate(dayNum)}`,
-              marketing_headline: lesson?.marketing_headline || lesson?.topic || 'An amazing lesson awaits...'
+              marketing_headline: lesson?.marketing_headline || lesson?.headline || lesson?.topic || 'An amazing lesson awaits...'
             };
           })
         );
+
         return results;
       } catch (e) {
         debugWarn('Week lessons load failed:', e);
+        // Fallback: local API per day (non-fatal)
         const results = await Promise.all(
           Array.from({ length: 7 }, async (_, i) => {
             const dayNum = startDay + i;
@@ -7305,7 +7070,7 @@
         // Resume at exact phase
         debugLog('[SMART PLAY] Resuming at phase', state.currentPhase);
         showLoading(true);
-        await loadLesson(state.currentDay);
+        await loadLessonRuntime(state.currentDay);
         showLoading(false);
         showScene('lesson');
         goToPhase(state.currentPhase);
@@ -7318,7 +7083,7 @@
         // Start/continue current day's lesson
         debugLog('[SMART PLAY] Starting lesson for day', state.currentDay);
         showLoading(true);
-        await loadLesson(state.currentDay);
+        await loadLessonRuntime(state.currentDay);
         showLoading(false);
         showScene('lesson');
         updatePlayButtonIndicator();
@@ -7336,7 +7101,7 @@
         clearCliffTimeout();
         saveState();
         showLoading(true);
-        await loadLesson(today);
+        await loadLessonRuntime(today);
         showLoading(false);
         showScene('lesson');
         updatePlayButtonIndicator();
@@ -7522,13 +7287,15 @@
         try {
           // Only use the loader when server routes are available (avoid noisy 404s in static-only mode).
           if (window.KellyLessonLoader) {
-            const tomorrow = await window.KellyLessonLoader.getLesson(tomorrowDay, {
+            const payload = await window.KellyLessonLoader.loadLesson(tomorrowDay, {
               archetype: PERSONA_TO_ARCHETYPE[state.kellyId] || 'The Scientist',
               age: state.age,
               region: getEffectiveAgeBucket(),
               preloadAdjacent: false
             });
-            if (tomorrow?.title) return tomorrow.title;
+            const lesson = payload?.lesson || null;
+            const title = lesson?.topic || lesson?.title || lesson?.marketing_headline || lesson?.headline;
+            if (title) return title;
           }
         } catch (_) {}
       }
@@ -7543,15 +7310,15 @@
         } catch (_) {}
       }
 
-      // 3) Supabase direct fallback
+      // 3) Loader fallback (canonical data source selection)
       try {
-        if (supabase) {
-          const { data } = await supabase
-            .from('core_lessons')
-            .select('topic')
-            .eq('day_number', tomorrowDay)
-            .single();
-          if (data?.topic) return data.topic;
+        if (window.KellyLessonLoader) {
+          const payload = await window.KellyLessonLoader.loadLesson(tomorrowDay, {
+            archetype: PERSONA_TO_ARCHETYPE[state.kellyId] || 'The Scientist',
+            age: state.age,
+            region: getEffectiveAgeBucket(),
+          });
+          if (payload?.lesson?.topic) return payload.lesson.topic;
         }
       } catch (_) {}
 
@@ -7619,27 +7386,29 @@
         try {
           // Try KellyLessonLoader first (handles all fallbacks)
           if (window.KellyLessonLoader && window.KellyLessonLoader.supabase) {
-            const tomorrow = await window.KellyLessonLoader.getLesson(tomorrowDay, {
+            const payload = await window.KellyLessonLoader.loadLesson(tomorrowDay, {
               archetype: localStorage.getItem('kelly_current_persona') || 'The Scientist',
               age: parseInt(localStorage.getItem('kelly_teaching_age') || '30')
             });
             
-            if (tomorrow && tomorrow.title) {
-              tomorrowTopicEl.textContent = tomorrow.title;
+            const lesson = payload?.lesson || null;
+            const title = lesson?.topic || lesson?.title || lesson?.marketing_headline || lesson?.headline;
+            if (title) {
+              tomorrowTopicEl.textContent = title;
               return;
             }
           }
           
-          // Direct Supabase fallback
-          if (supabase) {
-            const { data } = await supabase
-              .from('core_lessons')
-              .select('topic')
-              .eq('day_number', tomorrowDay)
-              .single();
-            
-            if (data && data.topic) {
-              tomorrowTopicEl.textContent = data.topic;
+          // Loader fallback (canonical)
+          if (window.KellyLessonLoader) {
+            const payload = await window.KellyLessonLoader.loadLesson(tomorrowDay, {
+              archetype: PERSONA_TO_ARCHETYPE[state.kellyId] || 'The Scientist',
+              age: state.age,
+              region: getEffectiveAgeBucket(),
+            });
+
+            if (payload?.lesson?.topic) {
+              tomorrowTopicEl.textContent = payload.lesson.topic;
               return;
             }
           }
@@ -7734,7 +7503,7 @@
             updatePlayButtonIndicator();
             
             showLoading(true);
-            const loaded = await loadLesson(dayNum);
+            const loaded = await loadLessonRuntime(dayNum);
             showLoading(false);
 
             if (loaded) showScene('lesson');
@@ -7958,7 +7727,7 @@
           saveState();
           
           showLoading(true);
-          const loaded = await loadLesson(dayNumber);
+          const loaded = await loadLessonRuntime(dayNumber);
           showLoading(false);
           
           if (loaded) showScene('lesson');
@@ -8085,26 +7854,24 @@
       }
       
       try {
-        const { data, error } = await supabase
-          .from('core_lessons')
-          .select('day_number, topic, marketing_headline')
-          .gte('day_number', startDay)
-          .lte('day_number', endDay)
-          .order('day_number');
-        
-        if (error || !data) {
-          // Fallback to emergency lessons
-          const lessons = [];
-          for (let d = startDay; d <= endDay; d++) {
-            if (typeof window.getEmergencyLesson === 'function') {
-              const el = window.getEmergencyLesson(d);
-              lessons.push({ day_number: d, topic: el.title || el.topic });
-            }
-          }
-          return lessons;
-        }
-        
-        return data;
+        if (!window.KellyLessonLoader) throw new Error('KellyLessonLoader missing');
+        const archetype = PERSONA_TO_ARCHETYPE[state.kellyId] || 'The Scientist';
+        const region = getEffectiveAgeBucket();
+
+        const results = await Promise.all(
+          Array.from({ length: endDay - startDay + 1 }, async (_, i) => {
+            const dayNum = startDay + i;
+            const payload = await window.KellyLessonLoader.loadLesson(dayNum, { archetype, age: state.age, region });
+            const lesson = payload?.lesson || {};
+            return {
+              day_number: dayNum,
+              topic: lesson?.topic || (typeof window.getEmergencyLesson === 'function' ? (window.getEmergencyLesson(dayNum)?.title || window.getEmergencyLesson(dayNum)?.topic) : '') || `Day ${dayNum}`,
+              marketing_headline: lesson?.marketing_headline || lesson?.headline || lesson?.topic || ''
+            };
+          })
+        );
+
+        return results;
       } catch (e) {
         console.warn('Error loading lessons range:', e);
         return [];
@@ -8183,7 +7950,7 @@
           saveState();
           
           showLoading(true);
-          const loaded = await loadLesson(bookmark.dayNumber);
+          const loaded = await loadLessonRuntime(bookmark.dayNumber);
           showLoading(false);
           
           if (loaded) showScene('lesson');
@@ -8485,7 +8252,7 @@
           duration: 6000,
           onAction: async () => {
             showLoading(true);
-            const loaded = await loadLesson(state.currentDay);
+            const loaded = await loadLessonRuntime(state.currentDay);
             showLoading(false);
             if (loaded) showScene('lesson');
           }
@@ -9011,7 +8778,7 @@
         updatePlayButtonIndicator();
         
         showLoading(true);
-        const loaded = await loadLesson(state.currentDay);
+        const loaded = await loadLessonRuntime(state.currentDay);
         showLoading(false);
 
         if (loaded) {
@@ -9028,7 +8795,7 @@
         updatePlayButtonIndicator();
         
         showLoading(true);
-        const loaded = await loadLesson(state.currentDay);
+        const loaded = await loadLessonRuntime(state.currentDay);
         showLoading(false);
 
         if (loaded) {
@@ -9164,7 +8931,7 @@
         saveState();
 
         showLoading(true);
-        const loaded = await loadLesson(dayToLoad);
+      const loaded = await loadLessonRuntime(dayToLoad);
         showLoading(false);
 
         if (loaded) {
@@ -9242,7 +9009,7 @@
 
       if (scenario.startsWith('lesson')) {
         showLoading(true);
-        loadLesson(state.currentDay).then((loaded) => {
+        loadLessonRuntime(state.currentDay).then((loaded) => {
           showLoading(false);
           if (!loaded) return;
           showScene('lesson');

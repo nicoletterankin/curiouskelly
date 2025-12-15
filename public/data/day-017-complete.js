@@ -1,8 +1,18 @@
 window.CURIOUS_KELLY = window.CURIOUS_KELLY || {};
-window.CURIOUS_KELLY.DAY_17_LOCAL_PACK = {
-  "day_number": 17,
-  "topic": "Why Bodies Need to Move",
-  "headline": "Your body was built to move 10 miles a day—most of us barely move one",
+window.CURIOUS_KELLY.LOCAL_PACKS = window.CURIOUS_KELLY.LOCAL_PACKS || {};
+window.CURIOUS_KELLY.DAY_017 = {
+  "meta": {
+    "created_at": "2025-12-15T19:28:04.115Z",
+    "day_number": 17,
+    "version": "v1.0"
+  },
+  "lesson": {
+    "day_number": 17,
+    "topic": "Why Bodies Need to Move",
+    "headline": "Your body was built to move 10 miles a day—most of us barely move one",
+    "universal_truth": "Human bodies are designed for constant motion, not sitting in chairs.",
+    "thumbnail_url": "https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/lesson-visuals/thumbnails/017-why-bodies-need-to-move.png"
+  },
   "atoms": [
     {
       "id": "f06f9291-1dcc-445b-bb22-0ceeb32ea0c1",
@@ -2453,4 +2463,5 @@ window.CURIOUS_KELLY.DAY_17_LOCAL_PACK = {
     }
   ]
 };
-console.log('[LocalPack] Day 17 loaded:', window.CURIOUS_KELLY.DAY_17_LOCAL_PACK.atoms.length, 'atoms');
+window.CURIOUS_KELLY.LOCAL_PACKS['day-017'] = window.CURIOUS_KELLY.DAY_017;
+console.log('[LocalPack] Day 017 loaded:', window.CURIOUS_KELLY.DAY_017.atoms.length, 'atoms');

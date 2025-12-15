@@ -153,6 +153,55 @@ const KellyLessonLoader = {
     // Default
     return 'The Scientist';
   },
+
+  /**
+   * Canonical runtime entrypoint for lesson payloads.
+   * This is the ONLY place that should decide where lesson data comes from.
+   *
+   * Returns a simple payload shape:
+   *   { lesson, atoms, shards, source }
+   */
+  async loadLesson(dayNumber, options = {}) {
+    const {
+      archetype = 'The Scientist',
+      age = 30,
+      region = null,
+    } = options;
+
+    const normalizedArchetype = this.normalizeArchetype(archetype);
+    const targetRegion = region || this.ageToRegion(age);
+    const dayNum = Math.max(1, Math.min(365, parseInt(dayNumber) || 1));
+
+    const paddedDay = String(dayNum).padStart(3, '0');
+    const packKey = `day-${paddedDay}`;
+
+    // Priority 1: Local Pack (deterministic, offline-ready)
+    try {
+      const localPack = window?.CURIOUS_KELLY?.LOCAL_PACKS?.[packKey];
+      if (localPack && (localPack.lesson || localPack.atoms)) {
+        const rawAtoms = Array.isArray(localPack.atoms) ? localPack.atoms : [];
+        const atoms = rawAtoms.filter((a) => !a?.archetype || a.archetype === normalizedArchetype);
+        __kellyLoaderDebugLog(`[Loader] Using local pack for day ${dayNum}`);
+        return {
+          lesson: localPack.lesson || null,
+          atoms,
+          shards: [],
+          source: 'local_pack',
+        };
+      }
+    } catch (_) {
+      // Non-fatal: fall through to normal loader logic.
+    }
+
+    // Priority 2+: Existing cascading loader logic
+    const result = await this.getLesson(dayNum, { archetype: normalizedArchetype, age, region: targetRegion });
+    return {
+      lesson: result?.lesson || null,
+      atoms: result?.atoms || [],
+      shards: result?.shards || [],
+      source: result?.isEmergencyFallback ? 'emergency' : 'loader',
+    };
+  },
   
   /**
    * Get complete lesson for a day number (1-365)
