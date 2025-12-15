@@ -170,8 +170,7 @@
         border-radius: 12px;
       `;
       
-      // Add subtle animation to make static image feel alive
-      this.imageElement.style.animation = 'kellyBreathing 4s ease-in-out infinite';
+      // Kelly never floats or hovers - no animation on static images
       
       this.container.appendChild(this.imageElement);
       
@@ -409,13 +408,9 @@
     }
   }
 
-  // Add CSS animation for static image fallback
+  // Add CSS for static image fallback (no floating/breathing - Kelly is grounded)
   const style = document.createElement('style');
   style.textContent = `
-    @keyframes kellyBreathing {
-      0%, 100% { transform: scale(1); }
-      50% { transform: scale(1.01); }
-    }
     
     .kelly-fallback-container {
       position: relative;
