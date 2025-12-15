@@ -31,20 +31,22 @@ window.KELLY_CONFIG = {
     static: 2000     // 2 seconds
   },
   
-  // PRODUCTION MODE: Paywall enabled, free tier active
-  // Free tier: Day 1 is always free + first-time visitor gets 7-day trial experience
+  // PRODUCTION MODE: Paywall enabled, access tiers active
   testingMode: false,
   disablePaywall: false,
   
-  // FREE ACCESS CONFIGURATION
-  // - freeTrialDays: New visitors get this many days free before paywall
-  // - alwaysFreeDays: These specific days are always free (e.g., [1] means Day 1)
-  // - The system checks localStorage for trial start date
-  freeAccess: {
-    enabled: true,
-    freeTrialDays: 7,          // 7-day trial for new users
-    alwaysFreeDays: [1],       // Day 1 always free for everyone
-    trialStartKey: 'kelly_trial_start'
+  // ACCESS MODEL:
+  // - "Today's lesson" is ALWAYS free for everyone, forever
+  // - Pay-per-lesson for past/future lessons
+  // - Subscription unlocks all 365 + emergency lessons
+  //
+  // "Today" = the lesson for the current calendar day (Day of Year 1-365)
+  // This creates urgency: learn today or pay for it later
+  accessModel: {
+    todayIsFree: true,              // The core promise
+    enablePayPerLesson: true,       // Buy individual lessons
+    enableSubscription: true,       // Monthly/annual/lifetime access
+    emergencyLessonsCount: 40       // Bonus lessons for subscribers
   }
 };
 

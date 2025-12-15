@@ -3884,33 +3884,52 @@
         <button class="btn-close" id="paywall-close" aria-label="Close" type="button">×</button>
 
         <div class="paywall-header">
-          <span class="paywall-icon">✨</span>
-          <h2 id="paywall-title">Unlock 365 Lessons</h2>
-          <p>Continue your curiosity journey with unlimited access.</p>
+          <span class="paywall-icon">📅</span>
+          <h2 id="paywall-title">This lesson is from <span id="paywall-lesson-date">another day</span></h2>
+          <p id="paywall-subtitle">Today's lesson is always yours. Want access to this one?</p>
         </div>
 
-        <div class="paywall-options">
-          <button class="paywall-option" id="plan-monthly" type="button">
-            <span class="plan-name">Monthly</span>
-            <span class="plan-price">$7.99/mo</span>
-          </button>
+        <div class="paywall-options" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
+          <!-- Single Lesson Purchase -->
+          <div class="paywall-single-option" style="background: var(--surface-elevated); border-radius: 12px; padding: 20px; border: 1px solid var(--border-default);">
+            <h3 style="font-size: 16px; margin-bottom: 8px; color: var(--text-primary);">Own This Lesson</h3>
+            <p class="plan-price" style="font-size: 28px; font-weight: 600; color: var(--kelly-blue);" id="single-lesson-price">$1.99</p>
+            <p style="font-size: 13px; color: var(--text-secondary); margin: 8px 0 16px;">Forever access to this day</p>
+            <button class="paywall-option" id="plan-single-lesson" type="button" style="width: 100%;">
+              <span class="plan-name">Buy This Lesson</span>
+            </button>
+          </div>
 
-          <button class="paywall-option featured" id="plan-yearly" type="button">
-            <span class="plan-badge">Best value</span>
-            <span class="plan-name">Yearly</span>
-            <span class="plan-price">$49.99/yr</span>
-            <span class="plan-savings">Save vs monthly</span>
-          </button>
-
-          <button class="paywall-option" id="plan-lifetime" type="button">
-            <span class="plan-name">Lifetime</span>
-            <span class="plan-price">$199.99</span>
-            <span class="plan-note">One-time</span>
-          </button>
+          <!-- Subscription Options -->
+          <div class="paywall-subscribe-option" style="background: linear-gradient(135deg, var(--kelly-blue-dark), var(--kelly-blue)); border-radius: 12px; padding: 20px; border: 2px solid var(--kelly-blue);">
+            <span style="background: var(--gold-wisdom); color: #000; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 4px;">ALL ACCESS</span>
+            <h3 style="font-size: 16px; margin: 8px 0; color: white;">Unlock Everything</h3>
+            <p class="plan-price" style="font-size: 28px; font-weight: 600; color: white;">$9.99<span style="font-size: 14px; font-weight: 400;">/mo</span></p>
+            <ul style="font-size: 13px; color: rgba(255,255,255,0.9); margin: 12px 0 16px; padding-left: 18px; text-align: left;">
+              <li>All 365 lessons</li>
+              <li>Go back or skip ahead</li>
+              <li>40+ bonus lessons</li>
+              <li>Cancel anytime</li>
+            </ul>
+            <button class="paywall-option featured" id="plan-monthly" type="button" style="width: 100%; background: white; color: var(--kelly-blue);">
+              <span class="plan-name">Subscribe Monthly</span>
+            </button>
+            <div style="display: flex; gap: 8px; margin-top: 10px;">
+              <button class="paywall-option-mini" id="plan-yearly" type="button" style="flex: 1; background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer;">
+                Yearly $79
+              </button>
+              <button class="paywall-option-mini" id="plan-lifetime" type="button" style="flex: 1; background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer;">
+                Lifetime $199
+              </button>
+            </div>
+          </div>
         </div>
 
-        <p class="paywall-terms">
-          Cancel anytime. <button type="button" class="btn-secondary" id="paywall-restore" style="padding: 0; font-size: 12px;">Restore purchases</button>
+        <p class="paywall-footer" style="margin-top: 20px; text-align: center; font-size: 13px; color: var(--text-muted);">
+          💡 <strong>Today's lesson is always included.</strong> Come back tomorrow for the next one.
+        </p>
+        <p class="paywall-terms" style="margin-top: 8px;">
+          <button type="button" class="btn-secondary" id="paywall-restore" style="padding: 0; font-size: 12px;">Restore purchases</button>
         </p>
       </div>
     </div>
@@ -4734,6 +4753,31 @@
       return false;
     }
 
+    /**
+     * Get today's day number (1-365 based on calendar)
+     */
+    function getTodaysDayNumber() {
+      const now = new Date();
+      const start = new Date(now.getFullYear(), 0, 0);
+      const diff = now - start;
+      const oneDay = 1000 * 60 * 60 * 24;
+      return Math.floor(diff / oneDay);
+    }
+    
+    /**
+     * Check if a day number is TODAY
+     */
+    function isToday(dayNumber) {
+      return dayNumber === getTodaysDayNumber();
+    }
+
+    /**
+     * ACCESS MODEL:
+     * - TODAY's lesson is ALWAYS free for everyone, forever
+     * - Subscribers get all 365 + emergency lessons
+     * - Individual lessons can be purchased (future)
+     * - No trials, no countdowns - just "today is yours"
+     */
     function canAccessDay(dayNumber) {
       // Testing mode - all days accessible
       if (TESTING_MODE || bypassTesting) {
@@ -4741,49 +4785,27 @@
         return true;
       }
       
-      // Premium users get everything
-      if (isPremium()) {
-        debugLog(`🔓 Day ${dayNumber} accessible (premium user)`);
+      // TODAY is always free for everyone - this is the core promise
+      const accessModel = window.KELLY_CONFIG?.accessModel;
+      if (accessModel?.todayIsFree && isToday(dayNumber)) {
+        debugLog(`🆓 Day ${dayNumber} accessible (TODAY is always free)`);
         return true;
       }
       
-      // Check free access configuration
-      const freeAccess = window.KELLY_CONFIG?.freeAccess;
-      if (freeAccess?.enabled) {
-        // Always free days (e.g., Day 1)
-        if (freeAccess.alwaysFreeDays?.includes(dayNumber)) {
-          debugLog(`🔓 Day ${dayNumber} accessible (always free)`);
-          return true;
-        }
-        
-        // Free trial period for new users
-        if (freeAccess.freeTrialDays > 0) {
-          const trialKey = freeAccess.trialStartKey || 'kelly_trial_start';
-          let trialStart = localStorage.getItem(trialKey);
-          
-          if (!trialStart) {
-            // First visit - start trial now
-            trialStart = new Date().toISOString();
-            localStorage.setItem(trialKey, trialStart);
-            debugLog(`🆕 Free trial started: ${trialStart}`);
-          }
-          
-          const trialStartDate = new Date(trialStart);
-          const now = new Date();
-          const daysSinceTrialStart = Math.floor((now - trialStartDate) / (1000 * 60 * 60 * 24));
-          
-          if (daysSinceTrialStart < freeAccess.freeTrialDays) {
-            debugLog(`🔓 Day ${dayNumber} accessible (free trial: day ${daysSinceTrialStart + 1} of ${freeAccess.freeTrialDays})`);
-            return true;
-          }
-        }
+      // Subscribers get everything
+      if (isPremium()) {
+        debugLog(`⭐ Day ${dayNumber} accessible (subscriber)`);
+        return true;
       }
       
-      // Legacy: Day 1 always free
-      if (dayNumber === 1) return true;
+      // TODO: Check individual lesson purchase
+      // if (hasLessonPurchase(dayNumber)) {
+      //   debugLog(`💳 Day ${dayNumber} accessible (purchased)`);
+      //   return true;
+      // }
       
-      // Not accessible - show paywall
-      debugLog(`🔒 Day ${dayNumber} requires subscription`);
+      // Not accessible - show paywall with options
+      debugLog(`🔒 Day ${dayNumber} requires subscription or purchase`);
       return false;
     }
 
@@ -4791,12 +4813,34 @@
       return typeof window.Capacitor !== 'undefined';
     }
 
-    function showPaywall() {
+    function showPaywall(dayNumber) {
       // Paywall selection stays as overlay, but checkout happens in the right panel (in-app).
       const el = document.getElementById('paywall');
+      
+      // Update the paywall with lesson-specific info
+      const lessonDateEl = document.getElementById('paywall-lesson-date');
+      if (lessonDateEl && dayNumber) {
+        const lessonDate = getLessonDate(dayNumber);
+        lessonDateEl.textContent = lessonDate.toLocaleDateString('en-US', { 
+          month: 'long', 
+          day: 'numeric' 
+        });
+      }
+      
+      // Store the requested day for purchase flow
+      el.dataset.requestedDay = dayNumber || '';
+      
       el.classList.add('visible');
       el.setAttribute('aria-hidden', 'false');
       try { checkSmartOffers('paywall_opened'); } catch (_) {}
+    }
+    
+    function getLessonDate(dayNumber) {
+      // Convert day of year to actual date
+      const year = new Date().getFullYear();
+      const date = new Date(year, 0); // Start at Jan 1
+      date.setDate(dayNumber);
+      return date;
     }
 
     function closePaywall() {
@@ -5508,7 +5552,7 @@
 
     async function loadLesson(dayNumber) {
       if (!canAccessDay(dayNumber)) {
-        showPaywall();
+        showPaywall(dayNumber);
         return null;
       }
 
