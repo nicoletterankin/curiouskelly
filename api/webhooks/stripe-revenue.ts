@@ -9,6 +9,7 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
+import { Buffer } from 'node:buffer';
 
 const supabaseUrl = process.env.PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -216,6 +217,58 @@ async function recordRevenueEvent(
   }
 }
 
+async function bestEffortSyncUserFromSubscription(
+  supabase: ReturnType<typeof createClient>,
+  subscription: Stripe.Subscription
+): Promise<void> {
+  const userId = subscription.metadata?.user_id;
+  if (!userId) return;
+
+  try {
+    const planType = subscription.metadata?.plan_type || null;
+    const currentPeriodEndIso = subscription.current_period_end
+      ? new Date(subscription.current_period_end * 1000).toISOString()
+      : null;
+
+    await supabase
+      .from('users')
+      .update({
+        stripe_customer_id: subscription.customer as string,
+        stripe_subscription_id: subscription.id,
+        subscription_tier: planType,
+        subscription_status: subscription.status,
+        current_period_end: currentPeriodEndIso,
+        cancel_at_period_end: subscription.cancel_at_period_end,
+      })
+      .eq('id', userId);
+  } catch (e) {
+    console.warn('[stripe-revenue] Failed to sync user from subscription', e);
+  }
+}
+
+async function bestEffortSyncUserFromCheckoutSession(
+  supabase: ReturnType<typeof createClient>,
+  session: Stripe.Checkout.Session
+): Promise<void> {
+  const userId = session.metadata?.user_id;
+  if (!userId) return;
+
+  try {
+    const tier = session.metadata?.plan_type || session.metadata?.type || null;
+    const status = tier === 'lifetime' ? 'active' : 'trialing';
+    await supabase
+      .from('users')
+      .update({
+        stripe_customer_id: session.customer as string,
+        subscription_tier: tier,
+        subscription_status: status,
+      })
+      .eq('id', userId);
+  } catch (e) {
+    console.warn('[stripe-revenue] Failed to sync user from checkout session', e);
+  }
+}
+
 export default async function handler(
   req: VercelRequest,
   res: VercelResponse
@@ -232,8 +285,18 @@ export default async function handler(
   let event: Stripe.Event;
 
   try {
-    const body = typeof req.body === 'string' ? req.body : JSON.stringify(req.body);
-    event = stripe.webhooks.constructEvent(body, sig, webhookSecret);
+    // Stripe signature verification REQUIRES the exact raw request body.
+    // If we stringify a parsed object, verification can succeed/fail nondeterministically.
+    if (!sig) {
+      return res.status(400).json({ error: 'Missing stripe-signature header' });
+    }
+
+    const chunks: Buffer[] = [];
+    for await (const chunk of req) {
+      chunks.push(Buffer.isBuffer(chunk) ? chunk : Buffer.from(chunk));
+    }
+    const rawBody = Buffer.concat(chunks).toString('utf8');
+    event = stripe.webhooks.constructEvent(rawBody, sig, webhookSecret);
   } catch (err) {
     console.error('Webhook signature verification failed:', err);
     return res.status(400).json({ error: 'Invalid signature' });
@@ -262,6 +325,9 @@ export default async function handler(
             trial_end: subscription.trial_end,
           },
         });
+
+        // Keep app entitlements in sync (server-side truth)
+        await bestEffortSyncUserFromSubscription(supabase, subscription);
 
         // Also record trial start if applicable
         if (subscription.status === 'trialing') {
@@ -294,6 +360,9 @@ export default async function handler(
             mrr_impact_cents: planInfo.mrr_cents,
           });
         }
+
+        // Keep entitlements current (status/cancel_at_period_end/current_period_end)
+        await bestEffortSyncUserFromSubscription(supabase, subscription);
         break;
       }
 
@@ -310,6 +379,9 @@ export default async function handler(
           mrr_impact_cents: -planInfo.mrr_cents, // Negative impact
           metadata: { cancellation_reason: subscription.cancellation_details?.reason },
         });
+
+        // Keep entitlements current (revoked/cancelled)
+        await bestEffortSyncUserFromSubscription(supabase, subscription);
         break;
       }
 
@@ -383,6 +455,9 @@ export default async function handler(
       // ============================================
       case 'checkout.session.completed': {
         const session = event.data.object as Stripe.Checkout.Session;
+
+        // Sync user record early (best-effort). Subscriptions will be finalized by subscription.created.
+        await bestEffortSyncUserFromCheckoutSession(supabase, session);
         
         // Only process one-time payments (gifts, lifetime)
         if (session.mode === 'payment') {
@@ -474,4 +549,11 @@ export default async function handler(
     });
   }
 }
+
+// Disable body parsing - we need the raw body for Stripe signature verification
+export const config = {
+  api: {
+    bodyParser: false,
+  },
+};
 

@@ -19,3 +19,4 @@ Write-Host ""
 
 Set-Location -Path $PSScriptRoot\public
 npx serve -l 3000
+

@@ -1,6 +1,8 @@
 using UnityEngine;
+using System;
 using System.Collections;
 using System.Collections.Generic;
+using UnityEngine.Networking;
 
 /// <summary>
 /// WebGL Bridge for Kelly Avatar
@@ -19,6 +21,23 @@ public class KellyWebGLBridge : MonoBehaviour
     [Header("References")]
     public ARKitBlendshapeController blendshapes;
     public Animator animator;
+    public AudioSource audioSource;
+    public Transform headBone;
+
+    [Header("Extracted Playback (optional)")]
+    [Tooltip("If enabled, will play extracted Day 1 motion on startup (requires StreamingAssets files).")]
+    public bool autoPlayExtracted = false;
+
+    [Tooltip("StreamingAssets relative path, e.g. kelly-motion/day_001_scientist_adult_unity.json")]
+    public string extractedJsonPath = "kelly-motion/day_001_scientist_adult_unity.json";
+
+    [Tooltip("StreamingAssets relative path, e.g. kelly-motion/day_001_scientist_adult.wav")]
+    public string extractedAudioPath = "kelly-motion/day_001_scientist_adult.wav";
+
+    [Range(0f, 1f)] public float extractedVisemeStrength = 1.0f;
+    [Range(0f, 1f)] public float extractedExpressionStrength = 1.0f;
+    [Range(0f, 1f)] public float extractedHeadStrength = 1.0f;
+    [Range(0f, 1f)] public float extractedBlinkFromEyeOpenStrength = 0.9f;
     
     [Header("State")]
     public string currentExpression = "neutral";
@@ -26,6 +45,76 @@ public class KellyWebGLBridge : MonoBehaviour
     
     private Coroutine transitionCoroutine;
     private Coroutine lipSyncCoroutine;
+    private Coroutine idleBlinkCoroutine;
+
+    // =====================================================================
+    // EXTRACTED PLAYBACK DATA (from scripts/convert-to-unity.py output)
+    // =====================================================================
+    [Serializable]
+    public class ExtractedViseme
+    {
+        public float time;
+        public float duration;
+        public string viseme;
+    }
+
+    [Serializable]
+    public class ExtractedExpressionFrame
+    {
+        public int frame;
+        public float timestamp;
+        public float mouthOpen;
+        public float mouthWidth;
+        public float smile;
+        public float leftEyeOpen;
+        public float rightEyeOpen;
+        public float leftBrowRaise;
+        public float rightBrowRaise;
+        public float headYaw;
+        public float headPitch;
+        public float headRoll;
+    }
+
+    [Serializable]
+    public class ExtractedClip
+    {
+        public string clipName;
+        public float duration;
+        public float fps;
+        public List<ExtractedViseme> visemes;
+        public List<ExtractedExpressionFrame> expressions;
+    }
+
+    private ExtractedClip extracted;
+    private bool extractedPlaying = false;
+    private float extractedTime = 0f;
+    private string activeCc5Viseme = "V_None";
+
+    private readonly Dictionary<string, string> extractedVisemeToCc5 = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase)
+    {
+        { "viseme_sil", "V_None" },
+        { "viseme_aa",  "V_Open" },
+        { "viseme_PP",  "V_Explosive" },
+        { "viseme_CH",  "V_Affricate" },
+        { "viseme_DD",  "V_Dental_Lip" },
+        { "viseme_E",   "V_Wide" },
+        { "viseme_FF",  "V_Dental_Lip" },
+        { "viseme_I",   "V_Wide" },
+        { "viseme_O",   "V_Tight_O" },
+    };
+
+    private static readonly string[] AllCc5Visemes =
+    {
+        "V_None",
+        "V_Open",
+        "V_Explosive",
+        "V_Dental_Lip",
+        "V_Tight_O",
+        "V_Tight",
+        "V_Wide",
+        "V_Affricate",
+        "V_Lip_Open",
+    };
     
     void Start()
     {
@@ -35,12 +124,23 @@ public class KellyWebGLBridge : MonoBehaviour
         
         if (animator == null)
             animator = GetComponentInChildren<Animator>();
+
+        if (audioSource == null)
+            audioSource = GetComponent<AudioSource>();
+
+        if (headBone == null)
+            headBone = FindDeepChild(transform, "CC_Base_Head") ?? FindDeepChild(transform, "Head") ?? FindDeepChild(transform, "head");
         
         Debug.Log("[KellyWebGLBridge] Ready for JavaScript commands");
         Debug.Log($"[KellyWebGLBridge] GameObject name: {gameObject.name}");
         
         // Start idle behaviors
-        StartCoroutine(IdleBlink());
+        idleBlinkCoroutine = StartCoroutine(IdleBlink());
+
+        if (autoPlayExtracted)
+        {
+            PlayExtractedDay1();
+        }
     }
     
     // ═══════════════════════════════════════════════════════════════════
@@ -150,6 +250,220 @@ public class KellyWebGLBridge : MonoBehaviour
         {
             animator.SetTrigger(animationName);
         }
+    }
+
+    // =====================================================================
+    // EXTRACTED MOTION PLAYBACK (Day 1 scientist_adult)
+    // =====================================================================
+    public void PlayExtractedDay1()
+    {
+        StartCoroutine(LoadExtractedAndPlay(extractedJsonPath, extractedAudioPath));
+    }
+
+    public void StopExtracted()
+    {
+        extractedPlaying = false;
+        extractedTime = 0f;
+        extracted = null;
+        activeCc5Viseme = "V_None";
+        ResetAllVisemes();
+        if (audioSource != null) audioSource.Stop();
+        if (idleBlinkCoroutine == null) idleBlinkCoroutine = StartCoroutine(IdleBlink());
+    }
+
+    private IEnumerator LoadExtractedAndPlay(string jsonRelativePath, string audioRelativePath)
+    {
+        if (blendshapes == null)
+        {
+            Debug.LogError("[KellyWebGLBridge] Cannot play extracted: blendshapes missing.");
+            yield break;
+        }
+
+        // Stop other behaviors that would fight for face control
+        if (transitionCoroutine != null) StopCoroutine(transitionCoroutine);
+        if (lipSyncCoroutine != null) StopCoroutine(lipSyncCoroutine);
+        transitionCoroutine = null;
+        lipSyncCoroutine = null;
+        isSpeaking = true;
+
+        if (idleBlinkCoroutine != null)
+        {
+            StopCoroutine(idleBlinkCoroutine);
+            idleBlinkCoroutine = null;
+        }
+
+        // Load JSON from StreamingAssets
+        string jsonUrl = CombineStreamingAssetsUrl(jsonRelativePath);
+        using (var req = UnityWebRequest.Get(jsonUrl))
+        {
+            yield return req.SendWebRequest();
+            if (req.result != UnityWebRequest.Result.Success)
+            {
+                Debug.LogError("[KellyWebGLBridge] Failed to load extracted JSON: " + req.error + " url=" + jsonUrl);
+                yield break;
+            }
+            extracted = JsonUtility.FromJson<ExtractedClip>(req.downloadHandler.text);
+        }
+
+        if (extracted == null || extracted.expressions == null || extracted.expressions.Count == 0)
+        {
+            Debug.LogError("[KellyWebGLBridge] Extracted clip invalid (missing expressions).");
+            yield break;
+        }
+
+        // Load audio (optional)
+        if (audioSource != null && !string.IsNullOrWhiteSpace(audioRelativePath))
+        {
+            string audioUrl = CombineStreamingAssetsUrl(audioRelativePath);
+            using (var req = UnityWebRequestMultimedia.GetAudioClip(audioUrl, AudioType.WAV))
+            {
+                yield return req.SendWebRequest();
+                if (req.result == UnityWebRequest.Result.Success)
+                {
+                    audioSource.clip = DownloadHandlerAudioClip.GetContent(req);
+                }
+                else
+                {
+                    Debug.LogWarning("[KellyWebGLBridge] Failed to load extracted audio: " + req.error + " url=" + audioUrl);
+                }
+            }
+        }
+
+        extractedTime = 0f;
+        extractedPlaying = true;
+
+        if (audioSource != null && audioSource.clip != null)
+        {
+            audioSource.time = 0f;
+            audioSource.Play();
+        }
+    }
+
+    private void Update()
+    {
+        if (!extractedPlaying || extracted == null) return;
+
+        // Prefer audio time if we have it (better sync), else dt.
+        if (audioSource != null && audioSource.isPlaying)
+            extractedTime = audioSource.time;
+        else
+            extractedTime += Time.deltaTime;
+
+        if (extractedTime >= extracted.duration)
+        {
+            StopExtracted();
+            return;
+        }
+
+        ApplyExtractedAtTime(extractedTime);
+    }
+
+    private void ApplyExtractedAtTime(float t)
+    {
+        ApplyExtractedViseme(t);
+        ApplyExtractedExpression(t);
+    }
+
+    private void ApplyExtractedViseme(float time)
+    {
+        if (blendshapes == null || extracted == null || extracted.visemes == null) return;
+
+        ExtractedViseme active = null;
+        for (int i = 0; i < extracted.visemes.Count; i++)
+        {
+            var v = extracted.visemes[i];
+            if (time >= v.time && time < (v.time + v.duration))
+            {
+                active = v;
+                break;
+            }
+        }
+
+        ResetAllVisemes();
+        activeCc5Viseme = "V_None";
+        if (active == null || string.IsNullOrWhiteSpace(active.viseme)) return;
+
+        if (!extractedVisemeToCc5.TryGetValue(active.viseme, out var cc5))
+            cc5 = "V_None";
+
+        activeCc5Viseme = cc5;
+        if (string.Equals(activeCc5Viseme, "V_None", StringComparison.OrdinalIgnoreCase))
+            return;
+
+        blendshapes.SetBlendshape(activeCc5Viseme, Mathf.Clamp01(extractedVisemeStrength) * 100f);
+    }
+
+    private void ResetAllVisemes()
+    {
+        if (blendshapes == null) return;
+        for (int i = 0; i < AllCc5Visemes.Length; i++)
+            blendshapes.SetBlendshape(AllCc5Visemes[i], 0f);
+    }
+
+    private void ApplyExtractedExpression(float time)
+    {
+        if (blendshapes == null || extracted == null || extracted.expressions == null || extracted.expressions.Count == 0) return;
+
+        int idx = Mathf.Clamp(Mathf.FloorToInt(time * extracted.fps), 0, extracted.expressions.Count - 1);
+        var fr = extracted.expressions[idx];
+        float e = Mathf.Clamp01(extractedExpressionStrength);
+
+        // Smile
+        float smile = Mathf.Clamp01(fr.smile) * e * 100f;
+        blendshapes.SetBlendshape("Mouth_Smile_L", smile);
+        blendshapes.SetBlendshape("Mouth_Smile_R", smile);
+
+        // Brows
+        float browL = Mathf.Clamp01(fr.leftBrowRaise) * e * 100f;
+        float browR = Mathf.Clamp01(fr.rightBrowRaise) * e * 100f;
+        blendshapes.SetBlendshape("Brow_Raise_Inner_L", browL);
+        blendshapes.SetBlendshape("Brow_Raise_Inner_R", browR);
+
+        // Eye open -> blink (inverse)
+        float leftBlink = Mathf.Clamp01(1f - fr.leftEyeOpen) * extractedBlinkFromEyeOpenStrength * e * 100f;
+        float rightBlink = Mathf.Clamp01(1f - fr.rightEyeOpen) * extractedBlinkFromEyeOpenStrength * e * 100f;
+        blendshapes.SetBlendshape("Eye_Blink_L", leftBlink);
+        blendshapes.SetBlendshape("Eye_Blink_R", rightBlink);
+
+        // Optional mouth modifiers (avoid overriding active viseme)
+        float mouthOpen = Mathf.Clamp01(fr.mouthOpen) * 35f * e;
+        float mouthWidth = Mathf.Clamp01(fr.mouthWidth) * 20f * e;
+        if (!string.Equals(activeCc5Viseme, "V_Open", StringComparison.OrdinalIgnoreCase))
+            blendshapes.SetBlendshape("V_Open", Mathf.Max(0f, mouthOpen));
+        if (!string.Equals(activeCc5Viseme, "V_Wide", StringComparison.OrdinalIgnoreCase))
+            blendshapes.SetBlendshape("V_Wide", Mathf.Max(0f, mouthWidth));
+
+        // Head
+        if (headBone != null)
+        {
+            float h = Mathf.Clamp01(extractedHeadStrength);
+            headBone.localRotation = Quaternion.Euler(fr.headPitch * h, fr.headYaw * h, fr.headRoll * h);
+        }
+    }
+
+    private static string CombineStreamingAssetsUrl(string relativePath)
+    {
+        string basePath = Application.streamingAssetsPath;
+        if (string.IsNullOrEmpty(relativePath)) return basePath;
+        relativePath = relativePath.Replace("\\", "/").TrimStart('/');
+        if (basePath.EndsWith("/")) return basePath + relativePath;
+        return basePath + "/" + relativePath;
+    }
+
+    private static Transform FindDeepChild(Transform parent, string name)
+    {
+        if (parent == null) return null;
+        var queue = new Queue<Transform>();
+        queue.Enqueue(parent);
+        while (queue.Count > 0)
+        {
+            var t = queue.Dequeue();
+            if (string.Equals(t.name, name, StringComparison.OrdinalIgnoreCase))
+                return t;
+            for (int i = 0; i < t.childCount; i++)
+                queue.Enqueue(t.GetChild(i));
+        }
+        return null;
     }
     
     // ═══════════════════════════════════════════════════════════════════

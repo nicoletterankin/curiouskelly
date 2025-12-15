@@ -4746,6 +4746,7 @@
       const el = document.getElementById('paywall');
       el.classList.add('visible');
       el.setAttribute('aria-hidden', 'false');
+      try { checkSmartOffers('paywall_opened'); } catch (_) {}
     }
 
     function closePaywall() {
@@ -4768,6 +4769,29 @@
     function restorePurchases() {
       debugLog('Restoring purchases...');
       showToast('Checking for purchases...');
+    }
+
+    // ============================================
+    // SMART OFFERS (minimal trigger system)
+    // ============================================
+    function checkSmartOffers(eventName) {
+      if (isPremium()) return;
+
+      const shownKey = `offer_shown_${eventName}`;
+      if (sessionStorage.getItem(shownKey) === '1') return;
+
+      // Paywall hit
+      if (eventName === 'paywall_opened') {
+        sessionStorage.setItem(shownKey, '1');
+        showToast('✨ Want unlimited lessons? Upgrade without leaving Kelly.');
+        return;
+      }
+
+      // Simple streak milestone (3)
+      if (eventName === 'streak_milestone' && Number(state?.streak || 0) >= 3) {
+        sessionStorage.setItem(shownKey, '1');
+        showToast('🔥 3-day streak! Keep the momentum going with Kelly+.');
+      }
     }
 
     // ============================================

@@ -68,3 +68,4 @@
   window.__supabaseSingletonInfo = () => ({ initializedWith, hasInstance: !!supabaseInstance });
 })();
 
+

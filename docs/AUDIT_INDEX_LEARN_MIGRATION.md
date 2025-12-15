@@ -377,3 +377,4 @@
 | CSS (inline) | ~3200 lines | ~2200 lines |
 
 **Key insight:** Both files duplicate ~30% of their JavaScript logic and ~20% of their CSS. Extracting shared modules would reduce maintenance burden significantly.
+

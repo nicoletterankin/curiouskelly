@@ -387,3 +387,4 @@ window.LessonResilience = LessonResilience;
 
 console.log('🛡️ Lesson Resilience Layer ready - THE LESSON ALWAYS PLAYS');
 
+
