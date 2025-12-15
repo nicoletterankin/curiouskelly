@@ -168,5 +168,7 @@ export const EMAIL_TAGS = {
   RE_ENGAGEMENT: { name: 'type', value: 're_engagement' },
   PASSWORD_RESET: { name: 'type', value: 'password_reset' },
   SUBSCRIPTION: { name: 'type', value: 'subscription' },
+  GIFT_RECEIVED: { name: 'type', value: 'gift_received' },
+  GIFT_REDEEMED: { name: 'type', value: 'gift_redeemed' },
 } as const;
 

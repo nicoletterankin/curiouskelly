@@ -712,6 +712,163 @@ curiouskelly.com | © 2025 Lesson of the Day PBC
 // ----------------------------------------------------------------------------
 // 8. SUBSCRIPTION CONFIRMATION EMAIL
 // ----------------------------------------------------------------------------
+// ----------------------------------------------------------------------------
+// GIFT EMAIL - Sent to recipient with their gift code
+// ----------------------------------------------------------------------------
+export function giftReceivedEmail(
+  recipientName: string,
+  gifterName: string,
+  giftCode: string,
+  durationMonths: number,
+  message?: string
+): { subject: string; html: string; text: string } {
+  const displayName = recipientName || 'friend';
+  const sender = gifterName || 'Someone special';
+  const duration = durationMonths === 0 ? 'Lifetime' : `${durationMonths} Month`;
+  const formattedCode = `${giftCode.slice(0,4)}-${giftCode.slice(4,8)}-${giftCode.slice(8,12)}`;
+  const redeemUrl = `https://curiouskelly.com/redeem?code=${giftCode}`;
+  
+  const html = emailWrapper(`
+    ${emailHeader()}
+    <tr>
+      <td style="padding: 0 40px 30px; text-align: center;">
+        <p style="font-size: 64px; margin: 0 0 20px;">🎁</p>
+        <h1 style="color: ${BRAND_COLORS.text}; font-size: 28px; font-weight: 600; margin: 0 0 16px;">
+          A Gift of Curiosity!
+        </h1>
+        <p style="color: ${BRAND_COLORS.textMuted}; font-size: 18px; line-height: 1.6; margin: 0 0 30px;">
+          <strong style="color: ${BRAND_COLORS.text};">${sender}</strong> has given you ${duration} of daily learning with Curious Kelly!
+        </p>
+        
+        ${message ? `
+        <table width="100%" style="background-color: ${BRAND_COLORS.border}; border-radius: 12px; margin: 0 0 30px;">
+          <tr>
+            <td style="padding: 24px;">
+              <p style="color: ${BRAND_COLORS.textDim}; font-size: 12px; margin: 0 0 12px;">A message from ${sender}:</p>
+              <p style="color: ${BRAND_COLORS.text}; font-size: 16px; font-style: italic; line-height: 1.6; margin: 0;">
+                "${message}"
+              </p>
+            </td>
+          </tr>
+        </table>
+        ` : ''}
+        
+        <table width="100%" style="background: linear-gradient(135deg, ${BRAND_COLORS.border} 0%, #1e1e24 100%); border-radius: 16px; border: 2px solid ${BRAND_COLORS.accent}; margin: 0 0 30px;">
+          <tr>
+            <td style="padding: 32px; text-align: center;">
+              <p style="color: ${BRAND_COLORS.textDim}; font-size: 12px; text-transform: uppercase; letter-spacing: 2px; margin: 0 0 12px;">
+                Gift Code
+              </p>
+              <p style="color: ${BRAND_COLORS.gold}; font-size: 28px; font-weight: 700; font-family: monospace; letter-spacing: 3px; margin: 0 0 16px;">
+                ${formattedCode}
+              </p>
+              <p style="color: ${BRAND_COLORS.textMuted}; font-size: 14px; margin: 0;">
+                ✨ ${duration} of Curious Kelly
+              </p>
+            </td>
+          </tr>
+        </table>
+        
+        ${ctaButton('Redeem Gift →', redeemUrl, BRAND_COLORS.gold)}
+        
+        <p style="color: ${BRAND_COLORS.textMuted}; font-size: 16px; line-height: 1.6; margin: 30px 0 0;">
+          What is Curious Kelly? I'm an AI teacher who shares one fascinating lesson every day. 5 minutes. One topic. Something new every single day for a year.
+        </p>
+        
+        <p style="color: ${BRAND_COLORS.text}; font-size: 16px; line-height: 1.6; margin: 20px 0 0;">
+          ✨ Can't wait to learn together,<br><strong>Kelly</strong>
+        </p>
+      </td>
+    </tr>
+    ${emailFooter()}
+  `);
+
+  const text = `
+🎁 A Gift of Curiosity!
+
+${sender} has given you ${duration} of daily learning with Curious Kelly!
+
+${message ? `A message from ${sender}:\n"${message}"\n` : ''}
+═══════════════════════════════
+GIFT CODE: ${formattedCode}
+✨ ${duration} of Curious Kelly
+═══════════════════════════════
+
+Redeem your gift: ${redeemUrl}
+
+What is Curious Kelly? I'm an AI teacher who shares one fascinating lesson every day. 5 minutes. One topic. Something new every single day for a year.
+
+✨ Can't wait to learn together,
+Kelly
+
+---
+✨ Curious Kelly | Learn something new every day
+curiouskelly.com | © 2025 Lesson of the Day PBC
+  `.trim();
+
+  return {
+    subject: `🎁 ${sender} sent you a gift of curiosity!`,
+    html,
+    text,
+  };
+}
+
+// ----------------------------------------------------------------------------
+// GIFT REDEEMED EMAIL - Sent to gifter when recipient redeems
+// ----------------------------------------------------------------------------
+export function giftRedeemedNotifyEmail(
+  gifterName: string,
+  recipientEmail: string
+): { subject: string; html: string; text: string } {
+  const displayName = gifterName || 'friend';
+  
+  const html = emailWrapper(`
+    ${emailHeader()}
+    <tr>
+      <td style="padding: 0 40px 30px; text-align: center;">
+        <p style="font-size: 48px; margin: 0 0 20px;">✨</p>
+        <h1 style="color: ${BRAND_COLORS.text}; font-size: 28px; font-weight: 600; margin: 0 0 16px;">
+          Gift Redeemed!
+        </h1>
+        <p style="color: ${BRAND_COLORS.textMuted}; font-size: 18px; line-height: 1.6; margin: 0 0 30px;">
+          Great news, ${displayName}! Your gift to <strong style="color: ${BRAND_COLORS.text};">${recipientEmail}</strong> has been redeemed.
+        </p>
+        <p style="color: ${BRAND_COLORS.textMuted}; font-size: 16px; line-height: 1.6; margin: 0 0 30px;">
+          They're now part of the Curious Kelly family, learning something new every day. You've given them an amazing gift! 🎉
+        </p>
+        <p style="color: ${BRAND_COLORS.text}; font-size: 16px; line-height: 1.6; margin: 20px 0 0;">
+          ✨ Thank you for spreading curiosity,<br><strong>Kelly</strong>
+        </p>
+      </td>
+    </tr>
+    ${emailFooter()}
+  `);
+
+  const text = `
+✨ Gift Redeemed!
+
+Great news, ${displayName}! Your gift to ${recipientEmail} has been redeemed.
+
+They're now part of the Curious Kelly family, learning something new every day. You've given them an amazing gift! 🎉
+
+✨ Thank you for spreading curiosity,
+Kelly
+
+---
+✨ Curious Kelly | Learn something new every day
+curiouskelly.com | © 2025 Lesson of the Day PBC
+  `.trim();
+
+  return {
+    subject: `✨ Your gift has been redeemed!`,
+    html,
+    text,
+  };
+}
+
+// ----------------------------------------------------------------------------
+// 8. SUBSCRIPTION CONFIRMATION EMAIL
+// ----------------------------------------------------------------------------
 export function subscriptionConfirmEmail(
   name: string,
   plan: string,
