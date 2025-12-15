@@ -1155,6 +1155,17 @@
       background: rgba(16, 185, 129, 0.15);
     }
     
+    .cliff-visual {
+      width: 100%;
+      max-width: 260px;
+      aspect-ratio: 4 / 3;
+      border-radius: 10px;
+      margin-bottom: 12px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      background: rgba(24, 24, 27, 0.7);
+      object-fit: cover;
+    }
+
     .cliff-icon {
       font-size: 2rem;
       margin-bottom: 8px;
@@ -3557,11 +3568,13 @@
             <div id="cliff-prompt">Which path calls to you?</div>
             <div id="cliff-choices">
               <button id="cliff-choice-a" class="cliff-btn" data-choice="A" type="button">
+                <img id="cliff-visual-a" class="cliff-visual" alt="" hidden loading="eager" decoding="async" />
                 <span class="cliff-icon">🅰️</span>
                 <span class="cliff-label" id="cliff-label-a">Option A</span>
                 <span class="cliff-desc" id="cliff-desc-a"></span>
               </button>
               <button id="cliff-choice-b" class="cliff-btn" data-choice="B" type="button">
+                <img id="cliff-visual-b" class="cliff-visual" alt="" hidden loading="eager" decoding="async" />
                 <span class="cliff-icon">🅱️</span>
                 <span class="cliff-label" id="cliff-label-b">Option B</span>
                 <span class="cliff-desc" id="cliff-desc-b"></span>
@@ -7049,6 +7062,19 @@
     }
     
     // NEW: Universal choice handler for any phase with interactive content
+    function setChoiceVisual(imgEl, src) {
+      if (!imgEl) return;
+      imgEl.hidden = true;
+      imgEl.removeAttribute('src');
+      if (!src) return;
+      imgEl.onerror = () => {
+        imgEl.hidden = true;
+        try { imgEl.removeAttribute('src'); } catch (_) {}
+      };
+      imgEl.src = src;
+      imgEl.hidden = false;
+    }
+
     function enterPhaseWithChoices(atom) {
       const phase = PHASES[state.currentPhase];
       
@@ -7074,6 +7100,19 @@
       const descBEl = document.getElementById('cliff-desc-b');
       if (descAEl) descAEl.textContent = atom.option_a?.description || '';
       if (descBEl) descBEl.textContent = atom.option_b?.description || '';
+
+      // Optional choice visuals (Day 17 launch polish)
+      const isDay17 = Number(state.currentDay) === 17;
+      const imgA = document.getElementById('cliff-visual-a');
+      const imgB = document.getElementById('cliff-visual-b');
+      if (isDay17) {
+        const key = phase?.key || 'cliff';
+        setChoiceVisual(imgA, `/generated-images/day-017/${key}_option_a.svg`);
+        setChoiceVisual(imgB, `/generated-images/day-017/${key}_option_b.svg`);
+      } else {
+        setChoiceVisual(imgA, null);
+        setChoiceVisual(imgB, null);
+      }
 
       // Show container
       const container = document.getElementById('cliff-container');
@@ -7111,11 +7150,26 @@
 
       const atom = window.__currentChoiceAtom;
       const phase = PHASES[state.currentPhase];
+      const isDay17 = Number(state.currentDay) === 17;
       
       // Visual feedback
       document.getElementById('cliff-choice-a')?.classList.toggle('selected', choice === 'A');
       document.getElementById('cliff-choice-b')?.classList.toggle('selected', choice === 'B');
       document.getElementById('cliff-container')?.classList.add('choice-made');
+
+      // Swap in post-choice visuals (success vs alternate) if available.
+      if (isDay17) {
+        const key = phase?.key || 'cliff';
+        const imgA = document.getElementById('cliff-visual-a');
+        const imgB = document.getElementById('cliff-visual-b');
+        if (choice === 'A') {
+          setChoiceVisual(imgA, `/generated-images/day-017/${key}_success_a.svg`);
+          setChoiceVisual(imgB, `/generated-images/day-017/${key}_alt_b.svg`);
+        } else {
+          setChoiceVisual(imgA, `/generated-images/day-017/${key}_alt_a.svg`);
+          setChoiceVisual(imgB, `/generated-images/day-017/${key}_success_b.svg`);
+        }
+      }
 
       // Get response from atom
       const response = choice === 'A' 
