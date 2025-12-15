@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import Stripe from 'stripe';
 
 /**
  * Stripe Checkout API Handler
@@ -53,9 +54,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   }
 
-  // Use require for CommonJS compatibility with Vercel
-  // eslint-disable-next-line @typescript-eslint/no-require-imports
-  const Stripe = require('stripe');
   const stripe = new Stripe(stripeKey, {
     apiVersion: '2023-10-16' // Compatible with stripe v14
   });
