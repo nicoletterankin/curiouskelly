@@ -1,7 +1,12 @@
 # Master Backlog - Curious Kelly
 
-> **Last Updated**: December 15, 2025
+> **Last Updated**: December 15, 2025 (5:50 AM)
 > **Goal**: Keep learners for life. Track everything. Zero trust.
+>
+> **Recent Session Progress**:
+> - ✅ Removed Kelly floating animations
+> - ✅ Completed all research tasks
+> - ✅ Created 6 database migrations (10 new tables)
 
 ---
 
@@ -30,10 +35,10 @@
 ### User Tracking (Foundation)
 | ID | Feature | Status | Notes |
 |----|---------|--------|-------|
-| H5 | user_events table | 🔲 TODO | Immutable audit log |
+| H5 | user_events table | ✅ SCHEMA READY | Migration 025 - run in Supabase |
 | H6 | Event logging API | 🔲 TODO | POST /api/events |
 | H7 | Lesson completion events | 🔲 TODO | Track in frontend |
-| H8 | Extend users table | 🔲 TODO | Lifetime stats fields |
+| H8 | Extend users table | ✅ SCHEMA READY | Migration 027 - run in Supabase |
 
 ---
 
@@ -121,23 +126,27 @@
 
 ## Database Tables Status
 
-| Table | Exists | Schema Ready | Notes |
-|-------|--------|--------------|-------|
-| users | ✅ | 🔲 Needs extension | Add lifetime fields |
-| core_lessons | ✅ | ✅ | 365 lessons |
-| lesson_atoms | ✅ | ✅ | Phase content |
-| lesson_shards | ✅ | ✅ | Multilingual |
-| kelly_motion_library | ✅ | ✅ | 335 videos |
-| revenue_events | ✅ | ✅ | Stripe events |
-| user_events | 🔲 | ✅ Designed | Audit log |
-| lesson_purchases | 🔲 | ✅ Designed | Pay-per-lesson |
-| lesson_comments | 🔲 | ✅ Designed | Comments |
-| lesson_artwork_submissions | 🔲 | ✅ Designed | User art |
-| lesson_downloads | 🔲 | ✅ Designed | Offline tracking |
-| live_class_sessions | 🔲 | ✅ Designed | Live classes |
-| live_class_attendance | 🔲 | ✅ Designed | Attendance |
-| regional_prices | 🔲 | ✅ Designed | Price tiers |
-| user_pricing_tiers | 🔲 | ✅ Designed | User tier |
+| Table | Exists | Schema Ready | Migration |
+|-------|--------|--------------|-----------|
+| users | ✅ | ✅ Extended | 027 |
+| core_lessons | ✅ | ✅ | - |
+| lesson_atoms | ✅ | ✅ | - |
+| lesson_shards | ✅ | ✅ | - |
+| kelly_motion_library | ✅ | ✅ | - |
+| revenue_events | ✅ | ✅ | - |
+| user_events | 🔲 RUN | ✅ | 025 |
+| lesson_purchases | 🔲 RUN | ✅ | 026 |
+| regional_prices | 🔲 RUN | ✅ | 026 |
+| user_pricing_tiers | 🔲 RUN | ✅ | 026 |
+| lesson_comments | 🔲 RUN | ✅ | 028 |
+| lesson_artwork_submissions | 🔲 RUN | ✅ | 028 |
+| comment_reactions | 🔲 RUN | ✅ | 028 |
+| live_class_sessions | 🔲 RUN | ✅ | 029 |
+| live_class_attendance | 🔲 RUN | ✅ | 029 |
+| lesson_downloads | 🔲 RUN | ✅ | 030 |
+| offline_sync_checkpoints | 🔲 RUN | ✅ | 030 |
+
+**To deploy**: Run migrations 025-030 in Supabase SQL Editor
 
 ---
 
