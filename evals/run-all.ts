@@ -7,8 +7,13 @@
  * Or:    npm run eval
  */
 
-import { runEvals as runVoiceEvals } from './kelly-voice-eval.js';
-import { runEvals as runLifetimeEvals } from './lifetime-experience-eval.js';
+// Use CommonJS-style requires so this works reliably under ts-node on Windows.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { runEvals: runVoiceEvals } = require('./kelly-voice-eval');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { runEvals: runLifetimeEvals } = require('./lifetime-experience-eval');
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const { runEvals: runLaunchReadinessEvals } = require('./launch-readiness-eval');
 
 async function main() {
   console.log('\n');
@@ -44,6 +49,20 @@ async function main() {
   } catch (e) {
     hasFailures = true;
     console.log('Lifetime evals had failures');
+  }
+
+  // Run Launch Readiness Evals
+  console.log('\n');
+  console.log('━'.repeat(60));
+  console.log('  SUITE 3: LAUNCH READINESS');
+  console.log('━'.repeat(60));
+  
+  try {
+    await runLaunchReadinessEvals();
+  } catch (e) {
+    hasFailures = true;
+    console.log('Launch readiness evals had failures');
+    console.error(e);
   }
   
   // Final summary
