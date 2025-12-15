@@ -5616,8 +5616,8 @@
           debugWarn('Atoms fetch error:', atomsError);
         }
         
-        // Fetch shards (age-personalized content) for this archetype + age
-        // NOTE: Some environments have a simplified `lesson_shards` schema without `archetype`.
+        // Fetch shards (age-personalized content) for this lesson
+        // Schema: id, core_lesson_id, age, region, tone, birth_year, script_content
         // Shards are best-effort; lesson still works without them.
         let shards = [];
         try {
@@ -5625,7 +5625,7 @@
             .from('lesson_shards')
             .select('*')
             .eq('core_lesson_id', coreLesson.id)
-            .eq('archetype', archetype);
+            .eq('region', ageBucket);
           if (shardsError) debugWarn('Shards fetch error:', shardsError);
           shards = shardsData || [];
         } catch (e) {
@@ -5727,6 +5727,12 @@
     }
 
     async function getKellyContext(personaId, ageBucket, dayNumber) {
+      // NOTE: get_kelly_prompt_context RPC function is not yet deployed.
+      // This is a placeholder for future AI context generation.
+      // For now, return null to skip the RPC call and avoid 404 errors.
+      return null;
+      
+      /* Future implementation when RPC is deployed:
       if (!supabase) return null;
       const { data, error } = await supabase
         .rpc('get_kelly_prompt_context', {
@@ -5739,6 +5745,7 @@
         return null;
       }
       return data;
+      */
     }
     
     function loadFallbackLesson(dayNumber) {
