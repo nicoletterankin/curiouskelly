@@ -1,0 +1,170 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Supabase Debug</title>
+  <script src="/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/js/lib/supabase.js"></script>
+  <style>
+    body { font-family: system-ui; padding: 20px; background: #0a0a0b; color: #fff; }
+    .status { padding: 10px; margin: 10px 0; border-radius: 8px; }
+    .ok { background: #064e3b; }
+    .error { background: #7f1d1d; }
+    .warn { background: #78350f; }
+    pre { background: #1a1a1b; padding: 10px; overflow: auto; }
+    button { padding: 10px 20px; font-size: 16px; cursor: pointer; }
+  </style>
+</head>
+<body>
+  <h1>🔍 Supabase Connection Debug</h1>
+  
+  <div id="results"></div>
+  
+  <h2>Test Lesson Load</h2>
+  <button onclick="testLoadLesson()">Load Today's Lesson</button>
+  <pre id="lesson-output"></pre>
+
+  <script>
+    const results = document.getElementById('results');
+    
+    function log(message, status = 'ok') {
+      const div = document.createElement('div');
+      div.className = `status ${status}`;
+      div.innerHTML = message;
+      results.appendChild(div);
+    }
+    
+    // Check 1: Config loaded?
+    if (window.KELLY_CONFIG) {
+      log(`✅ <strong>KELLY_CONFIG loaded</strong><br>
+        - supabaseUrl: ${window.KELLY_CONFIG.supabaseUrl}<br>
+        - enableSupabaseClient: ${window.KELLY_CONFIG.enableSupabaseClient}<br>
+        - supabaseKey: ${window.KELLY_CONFIG.supabaseKey?.substring(0, 30)}...`);
+    } else {
+      log('❌ KELLY_CONFIG not found!', 'error');
+    }
+    
+    // Check 2: Supabase SDK loaded?
+    if (window.supabase && window.supabase.createClient) {
+      log('✅ <strong>Supabase SDK loaded</strong> - window.supabase.createClient exists');
+    } else {
+      log('❌ Supabase SDK NOT loaded! window.supabase = ' + typeof window.supabase, 'error');
+    }
+    
+    // Check 3: getSupabase function?
+    if (typeof window.getSupabase === 'function') {
+      log('✅ <strong>getSupabase function</strong> exists');
+      
+      // Try to get client
+      const client = window.getSupabase();
+      if (client) {
+        log('✅ <strong>Supabase client created successfully</strong>');
+        
+        // Check singleton info
+        const info = window.__supabaseSingletonInfo();
+        log(`✅ <strong>Singleton info:</strong><br>
+          - hasInstance: ${info.hasInstance}<br>
+          - url: ${info.initializedWith?.url}`);
+      } else {
+        log('❌ getSupabase() returned null!', 'error');
+        
+        // Debug why
+        const url = window.KELLY_CONFIG?.supabaseUrl || window.SUPABASE_URL;
+        const key = window.KELLY_CONFIG?.supabaseKey || window.SUPABASE_ANON_KEY;
+        const createClient = window.supabase?.createClient;
+        
+        log(`Debug: url=${!!url}, key=${!!key}, createClient=${!!createClient}`, 'warn');
+      }
+    } else {
+      log('❌ getSupabase function not found!', 'error');
+    }
+    
+    // Check 4: Test actual query
+    async function testQuery() {
+      const client = window.getSupabase();
+      if (!client) {
+        log('❌ Cannot test query - no client', 'error');
+        return;
+      }
+      
+      try {
+        const today = new Date();
+        const start = new Date(today.getFullYear(), 0, 0);
+        const diff = today - start;
+        const oneDay = 1000 * 60 * 60 * 24;
+        const dayNumber = Math.floor(diff / oneDay);
+        
+        log(`📅 Testing query for Day ${dayNumber}...`, 'warn');
+        
+        const { data, error } = await client
+          .from('core_lessons')
+          .select('id, day_number, topic')
+          .eq('day_number', dayNumber)
+          .single();
+          
+        if (error) {
+          log(`❌ Query failed: ${error.message}<br><pre>${JSON.stringify(error, null, 2)}</pre>`, 'error');
+        } else if (data) {
+          log(`✅ <strong>Query succeeded!</strong><br>
+            - Day ${data.day_number}: "${data.topic}"<br>
+            - ID: ${data.id}`);
+        } else {
+          log('⚠️ Query returned no data', 'warn');
+        }
+      } catch (e) {
+        log(`❌ Exception: ${e.message}`, 'error');
+      }
+    }
+    
+    async function testLoadLesson() {
+      const output = document.getElementById('lesson-output');
+      output.textContent = 'Loading...';
+      
+      const client = window.getSupabase();
+      if (!client) {
+        output.textContent = 'ERROR: No Supabase client';
+        return;
+      }
+      
+      const today = new Date();
+      const start = new Date(today.getFullYear(), 0, 0);
+      const diff = today - start;
+      const oneDay = 1000 * 60 * 60 * 24;
+      const dayNumber = Math.floor(diff / oneDay);
+      
+      try {
+        // Get core lesson
+        const { data: lesson, error: lessonError } = await client
+          .from('core_lessons')
+          .select('*')
+          .eq('day_number', dayNumber)
+          .single();
+          
+        if (lessonError) {
+          output.textContent = `Lesson Error: ${lessonError.message}`;
+          return;
+        }
+        
+        // Get atoms
+        const { data: atoms, error: atomsError } = await client
+          .from('lesson_atoms')
+          .select('*')
+          .eq('core_lesson_id', lesson.id)
+          .eq('archetype', 'The Scientist');
+          
+        output.textContent = JSON.stringify({
+          lesson: { id: lesson.id, day: lesson.day_number, topic: lesson.topic },
+          atomCount: atoms?.length || 0,
+          atoms: atoms?.map(a => ({ phase: a.phase, hasVideo: !!a.hd_video_url }))
+        }, null, 2);
+        
+      } catch (e) {
+        output.textContent = `Exception: ${e.message}`;
+      }
+    }
+    
+    // Run initial tests
+    setTimeout(testQuery, 500);
+  </script>
+</body>
+</html>
