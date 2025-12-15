@@ -1,0 +1,421 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Supabase Visuals Audit | Curious Kelly</title>
+
+  <!-- Use the same config + client as the app -->
+  <script src="/config.js"></script>
+  <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+  <script src="/js/lib/supabase.js"></script>
+
+  <style>
+    :root {
+      --bg: #0a0a0b;
+      --card: #18181b;
+      --border: #27272a;
+      --text: #f4f4f5;
+      --muted: #a1a1aa;
+      --accent: #3b82f6;
+      --good: #22c55e;
+      --warn: #f59e0b;
+      --bad: #ef4444;
+    }
+
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: ui-sans-serif, system-ui, -apple-system, Segoe UI, Roboto, Arial;
+      background: radial-gradient(1200px 800px at 20% 10%, #182036 0%, var(--bg) 55%);
+      color: var(--text);
+    }
+
+    .wrap { max-width: 1400px; margin: 0 auto; padding: 22px; }
+
+    .top {
+      display: flex;
+      gap: 14px;
+      align-items: stretch;
+      flex-wrap: wrap;
+      margin-bottom: 14px;
+    }
+
+    .card {
+      background: rgba(24,24,27,.92);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      box-shadow: 0 18px 50px rgba(0,0,0,.45);
+    }
+
+    .hero { padding: 16px; flex: 1; min-width: 320px; }
+    h1 { margin: 0 0 6px; font-size: 20px; }
+    p { margin: 0; color: var(--muted); line-height: 1.45; }
+
+    .controls { padding: 16px; min-width: 380px; }
+
+    .row { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 10px; }
+    label { font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--muted); font-weight: 800; }
+    input, select, button {
+      width: 100%;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: #0b1220;
+      color: var(--text);
+      font-weight: 700;
+    }
+
+    .btn {
+      cursor: pointer;
+      border-color: transparent;
+      background: linear-gradient(135deg, var(--accent), #4f46e5);
+    }
+
+    .btn.secondary {
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text);
+    }
+
+    .status {
+      margin-top: 10px;
+      padding: 10px 12px;
+      border-radius: 12px;
+      border: 1px solid var(--border);
+      background: rgba(10,10,11,.35);
+      color: var(--muted);
+      font-size: 13px;
+      line-height: 1.4;
+      word-break: break-word;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+      gap: 12px;
+    }
+
+    .item { overflow: hidden; }
+    .thumb {
+      width: 100%;
+      height: 200px;
+      object-fit: cover;
+      background: #0b1220;
+      display: block;
+      border-bottom: 1px solid var(--border);
+      cursor: pointer;
+    }
+
+    .meta { padding: 12px; }
+    .tag {
+      display: inline-block;
+      padding: 4px 10px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: rgba(10,10,11,.35);
+      font-size: 12px;
+      font-weight: 800;
+      color: var(--muted);
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+
+    .link {
+      color: var(--accent);
+      text-decoration: none;
+      font-weight: 800;
+    }
+
+    .url {
+      margin-top: 8px;
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      font-size: 12px;
+      color: #cbd5e1;
+      word-break: break-all;
+    }
+
+    .modal {
+      position: fixed;
+      inset: 0;
+      display: none;
+      align-items: center;
+      justify-content: center;
+      background: rgba(0,0,0,.86);
+      padding: 18px;
+      z-index: 9999;
+    }
+
+    .modal.active { display: flex; }
+    .modalInner {
+      max-width: 92vw;
+      max-height: 92vh;
+      position: relative;
+    }
+    .modalInner img {
+      max-width: 92vw;
+      max-height: 92vh;
+      border-radius: 14px;
+      border: 1px solid var(--border);
+      background: #0b1220;
+    }
+    .close {
+      position: absolute;
+      top: -44px;
+      right: 0;
+      width: 42px;
+      height: 42px;
+      border-radius: 999px;
+      border: 1px solid var(--border);
+      background: #0b1220;
+      color: var(--text);
+      font-size: 20px;
+      font-weight: 900;
+      cursor: pointer;
+    }
+
+    @media (max-width: 900px) {
+      .controls { min-width: 100%; }
+      .row { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="card hero">
+        <h1>Supabase Visuals Audit (lesson_atoms.visual_url)</h1>
+        <p>
+          This page shows <b>every</b> `lesson_atoms` row where <b>visual_url is not null</b>, straight from Supabase.
+          No generation. No writes. Just the truth.
+        </p>
+      </div>
+
+      <div class="card controls">
+        <div class="row">
+          <div>
+            <label>Day (optional)</label>
+            <input id="day" placeholder="e.g. 1" />
+          </div>
+          <div>
+            <label>Archetype (optional)</label>
+            <input id="archetype" placeholder="e.g. The Scientist" />
+          </div>
+        </div>
+
+        <div class="row">
+          <div>
+            <label>Phase (optional)</label>
+            <select id="phase">
+              <option value="">(any)</option>
+              <option>Hook</option>
+              <option>Fact1</option>
+              <option>Fact2</option>
+              <option>Fact3</option>
+              <option>Wisdom</option>
+            </select>
+          </div>
+          <div>
+            <label>Limit</label>
+            <select id="limit">
+              <option value="200">200</option>
+              <option value="500">500</option>
+              <option value="1000">1000</option>
+              <option value="3000">3000</option>
+              <option value="8000">8000</option>
+            </select>
+          </div>
+        </div>
+
+        <div class="row">
+          <button class="btn" id="btn-load">Load visuals</button>
+          <button class="btn secondary" id="btn-export">Export JSON</button>
+        </div>
+
+        <div class="status" id="status">Status: idle</div>
+      </div>
+    </div>
+
+    <div class="grid" id="grid"></div>
+  </div>
+
+  <div class="modal" id="modal">
+    <div class="modalInner" onclick="event.stopPropagation()">
+      <button class="close" id="btn-close">×</button>
+      <img id="modalImg" alt="Visual" />
+    </div>
+  </div>
+
+  <script>
+    const statusEl = document.getElementById('status');
+    const gridEl = document.getElementById('grid');
+
+    const modal = document.getElementById('modal');
+    const modalImg = document.getElementById('modalImg');
+    document.getElementById('btn-close').addEventListener('click', () => modal.classList.remove('active'));
+    modal.addEventListener('click', () => modal.classList.remove('active'));
+
+    let lastResults = [];
+
+    function setStatus(html) {
+      statusEl.innerHTML = html;
+    }
+
+    function openImage(url) {
+      modalImg.src = url;
+      modal.classList.add('active');
+    }
+
+    function downloadJson(filename, obj) {
+      const blob = new Blob([JSON.stringify(obj, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = filename;
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+
+    async function loadVisuals() {
+      gridEl.innerHTML = '';
+      lastResults = [];
+
+      const supabase = window.getSupabase?.();
+      if (!supabase) {
+        setStatus('<span style="color: var(--bad)">ERROR</span>: Supabase client not available (check /config.js + SDK load).');
+        return;
+      }
+
+      const day = document.getElementById('day').value.trim();
+      const archetype = document.getElementById('archetype').value.trim();
+      const phase = document.getElementById('phase').value;
+      const limit = Number(document.getElementById('limit').value || '200');
+
+      setStatus('Status: querying Supabase…');
+
+      // 1) Load atoms with visual_url
+      let q = supabase
+        .from('lesson_atoms')
+        .select('id, core_lesson_id, archetype, phase, visual_url, created_at')
+        .not('visual_url', 'is', null)
+        .limit(limit);
+
+      if (archetype) q = q.eq('archetype', archetype);
+      if (phase) q = q.eq('phase', phase);
+
+      const { data: atoms, error: atomsError } = await q;
+      if (atomsError) {
+        setStatus(`<span style="color: var(--bad)">ERROR</span>: ${atomsError.message}`);
+        return;
+      }
+
+      const atomList = atoms || [];
+      const lessonIds = [...new Set(atomList.map(a => a.core_lesson_id).filter(Boolean))];
+
+      // 2) Map core lesson IDs to day/topic
+      let lessonMap = new Map();
+      if (lessonIds.length) {
+        const { data: lessons, error: lessonsError } = await supabase
+          .from('core_lessons')
+          .select('id, day_number, topic')
+          .in('id', lessonIds);
+
+        if (lessonsError) {
+          setStatus(`<span style="color: var(--warn)">WARN</span>: Could not fetch core_lessons metadata (${lessonsError.message}). Showing without day/topic.`);
+        } else {
+          (lessons || []).forEach(l => lessonMap.set(l.id, l));
+        }
+      }
+
+      // Optional: filter by day
+      let rows = atomList.map(a => {
+        const lesson = lessonMap.get(a.core_lesson_id);
+        return {
+          ...a,
+          day_number: lesson?.day_number ?? null,
+          topic: lesson?.topic ?? null,
+        };
+      });
+
+      if (day) {
+        const dn = Number(day);
+        rows = rows.filter(r => r.day_number === dn);
+      }
+
+      // Sort for stable review
+      rows.sort((a, b) => {
+        const da = a.day_number ?? 9999;
+        const db = b.day_number ?? 9999;
+        if (da !== db) return da - db;
+        const pa = String(a.phase || '');
+        const pb = String(b.phase || '');
+        if (pa !== pb) return pa.localeCompare(pb);
+        return String(a.archetype || '').localeCompare(String(b.archetype || ''));
+      });
+
+      lastResults = rows;
+
+      setStatus(`Status: loaded <b>${rows.length}</b> visuals (from ${atomList.length} atoms queried).`);
+
+      // Render
+      const frag = document.createDocumentFragment();
+      rows.forEach(r => {
+        const div = document.createElement('div');
+        div.className = 'card item';
+
+        const url = r.visual_url;
+        const safeDay = r.day_number != null ? `Day ${r.day_number}` : 'Day ?';
+        const topic = r.topic ? r.topic : '(topic unavailable)';
+
+        div.innerHTML = `
+          <img class="thumb" src="${url}" alt="visual" loading="lazy" />
+          <div class="meta">
+            <div>
+              <span class="tag">${safeDay}</span>
+              <span class="tag">${r.phase}</span>
+              <span class="tag">${r.archetype}</span>
+            </div>
+            <div style="color: var(--text); font-weight: 900; margin-top: 2px;">${topic}</div>
+            <div style="margin-top: 8px; display:flex; gap: 10px; flex-wrap: wrap;">
+              <a class="link" href="${url}" target="_blank" rel="noopener">Open image</a>
+              <a class="link" href="/learn.html?day=${r.day_number || ''}" target="_blank" rel="noopener">Open lesson</a>
+            </div>
+            <div class="url">${url}</div>
+          </div>
+        `;
+
+        const img = div.querySelector('img');
+        img.addEventListener('click', () => openImage(url));
+        img.addEventListener('error', () => {
+          img.style.objectFit = 'contain';
+          img.style.padding = '18px';
+          img.src = 'data:image/svg+xml,%3Csvg xmlns=%22http://www.w3.org/2000/svg%22 width=%221344%22 height=%22768%22%3E%3Crect fill=%22%2318181b%22 width=%221344%22 height=%22768%22/%3E%3Ctext x=%2250%25%22 y=%2250%25%22 text-anchor=%22middle%22 fill=%22%23a1a1aa%22 font-family=%22sans-serif%22 font-size=%2230%22%3EImage failed to load%3C/text%3E%3C/svg%3E';
+        });
+
+        frag.appendChild(div);
+      });
+
+      gridEl.appendChild(frag);
+    }
+
+    document.getElementById('btn-load').addEventListener('click', loadVisuals);
+    document.getElementById('btn-export').addEventListener('click', () => {
+      const payload = {
+        exported_at: new Date().toISOString(),
+        supabase_url: window.KELLY_CONFIG?.supabaseUrl || window.SUPABASE_URL || null,
+        filters: {
+          day: document.getElementById('day').value.trim() || null,
+          archetype: document.getElementById('archetype').value.trim() || null,
+          phase: document.getElementById('phase').value || null,
+          limit: Number(document.getElementById('limit').value || '200'),
+        },
+        rows: lastResults,
+      };
+      downloadJson(`supabase-visuals-audit-${new Date().toISOString().slice(0,10)}.json`, payload);
+    });
+
+    // Auto-load on open
+    loadVisuals();
+  </script>
+</body>
+</html>
