@@ -1,4 +1,66 @@
 name: Template Guard
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+    branches: [main]
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    name: Prevent Lesson Runtime Drift
+
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Block new lesson runtimes
+        run: |
+          echo "🔍 Checking for template drift..."
+
+          # Get changed/added files
+          CHANGED=$(git diff --name-only --diff-filter=A HEAD~1 2>/dev/null || echo "")
+
+          # Check for new lesson-like HTML files
+          NEW_RUNTIMES=$(echo "$CHANGED" | grep -E 'public/.*lesson.*\.html|public/.*learn.*\.html' | grep -v 'public/learn.html' || true)
+
+          if [ ! -z "$NEW_RUNTIMES" ]; then
+            echo "❌ BLOCKED: New lesson runtime detected!"
+            echo ""
+            echo "Files:"
+            echo "$NEW_RUNTIMES"
+            echo ""
+            echo "═══════════════════════════════════════════════"
+            echo "POLICY: Only public/learn.html renders lessons"
+            echo "ACTION: Modify public/learn.html instead"
+            echo "═══════════════════════════════════════════════"
+            exit 1
+          fi
+
+          echo "✅ No template drift detected"
+
+      - name: Verify canonical files exist
+        run: |
+          FAIL=0
+
+          [ ! -f "public/learn.html" ] && echo "❌ Missing: public/learn.html" && FAIL=1
+          [ ! -f "public/js/kelly-lesson-loader.js" ] && echo "❌ Missing: public/js/kelly-lesson-loader.js" && FAIL=1
+
+          [ $FAIL -eq 1 ] && exit 1
+
+          echo "✅ Canonical files present"
+          echo "  - public/learn.html"
+          echo "  - public/js/kelly-lesson-loader.js"
+
+      - name: Summary
+        run: |
+          echo ""
+          echo "╔═══════════════════════════════════════════╗"
+          echo "║     TEMPLATE GUARD - ALL CHECKS PASSED    ║"
+          echo "╚═══════════════════════════════════════════╝"
+
+name: Template Guard
 on: [push, pull_request]
 
 jobs:
