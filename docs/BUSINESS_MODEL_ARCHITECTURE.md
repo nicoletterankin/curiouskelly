@@ -47,6 +47,10 @@ This is not charity. This is strategy:
 - All 365 core lessons
 - 40+ emergency/bonus lessons
 - Calendar navigation (go back, skip ahead)
+- **Download all lessons** (take them with you offline)
+- **Live class access** (every hour on the hour)
+- **Comment on lessons** (be part of the community)
+- **Submit lesson artwork** (contribute to the experience)
 - Future: On-demand AI lesson generator
 - Future: Personalized learning paths
 
@@ -62,6 +66,79 @@ This is not charity. This is strategy:
 - Brazil: R$19.90/mo (~$4)
 - EU: €8.99/mo
 - And so on...
+
+---
+
+## 🎥 LIVE CLASSES
+
+**Kelly offers live online classes every hour on the hour.**
+
+| Feature | Free Users | Subscribers |
+|---------|------------|-------------|
+| Today's lesson live class | ✅ Guaranteed seat | ✅ Priority seating |
+| Past lesson live classes | ❌ | ✅ |
+| Ask questions in class | ✅ | ✅ |
+| Class recordings | ❌ | ✅ |
+
+**Schedule**: 24 classes per day, one for each hour. Each class teaches today's lesson.
+**Capacity**: Everyone gets a seat. Kelly scales infinitely.
+**Recording**: All classes recorded for subscriber replay.
+
+---
+
+## 📥 DOWNLOAD & OFFLINE
+
+**Subscribers can download all lessons and take them offline.**
+
+- Full 365-lesson bundle available
+- Works on mobile (iOS/Android) and desktop
+- Syncs progress when back online
+- Access verification checks subscription status periodically
+
+---
+
+## 💬 COMMUNITY FEATURES
+
+### Comments on Lessons
+- Post comments on any lesson
+- Thread discussions
+- Kelly may respond (AI-generated in her voice)
+- Moderated for safety (AI + human review)
+
+### User-Contributed Artwork
+- Submit artwork for any lesson
+- Approved art may be featured in the lesson
+- Credit always given to the artist
+- Builds ownership and community
+
+---
+
+## 📊 ZERO-TRUST AUDIT TRAIL
+
+**Every interaction is tracked. Both directions.**
+
+### What We Track (Learner → Kelly)
+- Lesson starts, completions, skips
+- Comments posted, edited, deleted
+- Artwork submitted
+- Purchases and subscriptions
+- Live class attendance
+- Support interactions
+- Settings changes
+
+### What We Track (Kelly → Learner)
+- Emails sent (welcome, reminders, re-engagement)
+- Push notifications sent
+- Streak celebrations
+- Birthday messages
+- Gift deliveries
+- Moderation actions
+
+### Why This Matters
+- Pull any user_id → see complete relationship history
+- Enables "Kelly remembers you" personalization
+- GDPR-compliant (user can export/delete all data)
+- Builds trust through transparency
 
 ---
 
