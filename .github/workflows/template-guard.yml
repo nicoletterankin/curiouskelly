@@ -1,0 +1,30 @@
+name: Template Guard
+on: [push, pull_request]
+
+jobs:
+  guard:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          fetch-depth: 2
+
+      - name: Block new lesson runtimes
+        run: |
+          # Check for new lesson-like HTML (excluding learn.html)
+          NEW=$(git diff --name-only --diff-filter=A HEAD~1 2>/dev/null | \
+            grep -E 'public/.*lesson.*\.html|public/.*learn.*\.html' | \
+            grep -v 'public/learn.html' || true)
+
+          if [ ! -z "$NEW" ]; then
+            echo "❌ BLOCKED: New lesson runtime detected: $NEW"
+            echo "Only public/learn.html is allowed."
+            exit 1
+          fi
+          echo "✅ No template drift"
+
+      - name: Verify canonical files
+        run: |
+          [ -f "public/learn.html" ] || { echo "❌ Missing learn.html"; exit 1; }
+          [ -f "public/js/kelly-lesson-loader.js" ] || { echo "❌ Missing loader"; exit 1; }
+          echo "✅ Canonical files present"
