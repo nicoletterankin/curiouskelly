@@ -31,10 +31,21 @@ window.KELLY_CONFIG = {
     static: 2000     // 2 seconds
   },
   
-  // TESTING MODE: Disable paywall to test the core lesson experience
-  // TODO: Set to false before production launch!
-  testingMode: true,
-  disablePaywall: true
+  // PRODUCTION MODE: Paywall enabled, free tier active
+  // Free tier: Day 1 is always free + first-time visitor gets 7-day trial experience
+  testingMode: false,
+  disablePaywall: false,
+  
+  // FREE ACCESS CONFIGURATION
+  // - freeTrialDays: New visitors get this many days free before paywall
+  // - alwaysFreeDays: These specific days are always free (e.g., [1] means Day 1)
+  // - The system checks localStorage for trial start date
+  freeAccess: {
+    enabled: true,
+    freeTrialDays: 7,          // 7-day trial for new users
+    alwaysFreeDays: [1],       // Day 1 always free for everyone
+    trialStartKey: 'kelly_trial_start'
+  }
 };
 
 // Expose as global variables for legacy compatibility (learn.html, index.html, etc.)

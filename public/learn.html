@@ -52,6 +52,9 @@
   <!-- Emergency fallback data - always available -->
   <script src="/data/emergency-lessons.js"></script>
   
+  <!-- Kelly Fallback Engine - bulletproof media delivery -->
+  <script src="/js/kelly-fallback-engine.js"></script>
+  
   <!-- Lesson loader with fallback support -->
   <script src="/js/kelly-lesson-loader.js"></script>
   
@@ -4738,8 +4741,50 @@
         return true;
       }
       
+      // Premium users get everything
+      if (isPremium()) {
+        debugLog(`🔓 Day ${dayNumber} accessible (premium user)`);
+        return true;
+      }
+      
+      // Check free access configuration
+      const freeAccess = window.KELLY_CONFIG?.freeAccess;
+      if (freeAccess?.enabled) {
+        // Always free days (e.g., Day 1)
+        if (freeAccess.alwaysFreeDays?.includes(dayNumber)) {
+          debugLog(`🔓 Day ${dayNumber} accessible (always free)`);
+          return true;
+        }
+        
+        // Free trial period for new users
+        if (freeAccess.freeTrialDays > 0) {
+          const trialKey = freeAccess.trialStartKey || 'kelly_trial_start';
+          let trialStart = localStorage.getItem(trialKey);
+          
+          if (!trialStart) {
+            // First visit - start trial now
+            trialStart = new Date().toISOString();
+            localStorage.setItem(trialKey, trialStart);
+            debugLog(`🆕 Free trial started: ${trialStart}`);
+          }
+          
+          const trialStartDate = new Date(trialStart);
+          const now = new Date();
+          const daysSinceTrialStart = Math.floor((now - trialStartDate) / (1000 * 60 * 60 * 24));
+          
+          if (daysSinceTrialStart < freeAccess.freeTrialDays) {
+            debugLog(`🔓 Day ${dayNumber} accessible (free trial: day ${daysSinceTrialStart + 1} of ${freeAccess.freeTrialDays})`);
+            return true;
+          }
+        }
+      }
+      
+      // Legacy: Day 1 always free
       if (dayNumber === 1) return true;
-      return isPremium();
+      
+      // Not accessible - show paywall
+      debugLog(`🔒 Day ${dayNumber} requires subscription`);
+      return false;
     }
 
     function isNativeApp() {
