@@ -1,5 +1,4 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
-import Stripe from 'stripe';
 
 /**
  * Stripe Checkout API Handler
@@ -33,73 +32,77 @@ function isValidEmail(email: string): boolean {
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // CORS headers
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  const stripeKey = process.env.STRIPE_SECRET_KEY;
-  if (!stripeKey) {
-    return res.status(503).json({ 
-      error: 'stripe_not_configured',
-      message: 'Stripe is not configured. Please add STRIPE_SECRET_KEY to environment variables.'
-    });
-  }
-
-  const stripe = new Stripe(stripeKey, {
-    apiVersion: '2023-10-16' // Compatible with stripe v14
-  });
-
-  const body = req.body as CheckoutRequest;
-
-  // Validate email
-  if (!body.customerEmail || !isValidEmail(body.customerEmail)) {
-    return res.status(422).json({ error: 'invalid_email' });
-  }
-
-  // Validate plan type - LOCKED PRICING
-  const validPlanTypes = ['monthly', 'annual', 'lifetime', 'family', 'gift_3mo', 'gift_6mo', 'gift_12mo', 'gift_lifetime'];
-  if (!validPlanTypes.includes(body.planType)) {
-    return res.status(422).json({ error: 'invalid_plan_type' });
-  }
-
-  // Get price IDs from environment
-  // 🔒 LOCKED PRICING - See PRICING_LOCKED.md
-  // Monthly: $7.99, Annual: $49.99, Family: $99.99, Lifetime: $199.99
-  // Gifts: $24.99 (3mo), $39.99 (6mo), $49.99 (12mo), $149.99 (lifetime)
-  const priceIds: Record<string, string | undefined> = {
-    monthly: process.env.STRIPE_PRICE_MONTHLY,
-    annual: process.env.STRIPE_PRICE_ANNUAL,
-    lifetime: process.env.STRIPE_PRICE_LIFETIME,
-    family: process.env.STRIPE_PRICE_FAMILY,
-    gift_3mo: process.env.STRIPE_PRICE_GIFT_3MO,
-    gift_6mo: process.env.STRIPE_PRICE_GIFT_6MO,
-    gift_12mo: process.env.STRIPE_PRICE_GIFT_12MO,
-    gift_lifetime: process.env.STRIPE_PRICE_GIFT_LIFETIME,
-  };
-
-  const siteUrl = process.env.PUBLIC_SITE_URL || 'https://curiouskelly.com';
-  const isGiftPlan = body.planType.startsWith('gift_');
-
-  // Build metadata
-  const commonMetadata = {
-    source: 'web',
-    utm_source: body.utmSource || 'direct',
-    utm_medium: body.utmMedium || 'none',
-    utm_campaign: body.utmCampaign || 'none',
-    affiliate_code: body.affiliateCode || '',
-    promo_code: body.promoCode || ''
-  };
-
+  // Wrap entire handler in try-catch to capture any errors
   try {
+    // CORS headers
+    res.setHeader('Access-Control-Allow-Origin', '*');
+    res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
+    res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+
+    if (req.method === 'OPTIONS') {
+      return res.status(200).end();
+    }
+
+    if (req.method !== 'POST') {
+      return res.status(405).json({ error: 'Method not allowed' });
+    }
+
+    const stripeKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeKey) {
+      return res.status(503).json({ 
+        error: 'stripe_not_configured',
+        message: 'Stripe is not configured. Please add STRIPE_SECRET_KEY to environment variables.'
+      });
+    }
+
+    // Dynamic import to ensure proper module resolution
+    const Stripe = (await import('stripe')).default;
+    const stripe = new Stripe(stripeKey, {
+      apiVersion: '2023-10-16' // Compatible with stripe v14
+    });
+
+    const body = req.body as CheckoutRequest;
+
+    // Validate email
+    if (!body.customerEmail || !isValidEmail(body.customerEmail)) {
+      return res.status(422).json({ error: 'invalid_email' });
+    }
+
+    // Validate plan type - LOCKED PRICING
+    const validPlanTypes = ['monthly', 'annual', 'lifetime', 'family', 'gift_3mo', 'gift_6mo', 'gift_12mo', 'gift_lifetime'];
+    if (!validPlanTypes.includes(body.planType)) {
+      return res.status(422).json({ error: 'invalid_plan_type' });
+    }
+
+    // Get price IDs from environment
+    // 🔒 LOCKED PRICING - See PRICING_LOCKED.md
+    // Monthly: $7.99, Annual: $49.99, Family: $99.99, Lifetime: $199.99
+    // Gifts: $24.99 (3mo), $39.99 (6mo), $49.99 (12mo), $149.99 (lifetime)
+    const priceIds: Record<string, string | undefined> = {
+      monthly: process.env.STRIPE_PRICE_MONTHLY,
+      annual: process.env.STRIPE_PRICE_ANNUAL,
+      lifetime: process.env.STRIPE_PRICE_LIFETIME,
+      family: process.env.STRIPE_PRICE_FAMILY,
+      gift_3mo: process.env.STRIPE_PRICE_GIFT_3MO,
+      gift_6mo: process.env.STRIPE_PRICE_GIFT_6MO,
+      gift_12mo: process.env.STRIPE_PRICE_GIFT_12MO,
+      gift_lifetime: process.env.STRIPE_PRICE_GIFT_LIFETIME,
+    };
+
+    const siteUrl = process.env.PUBLIC_SITE_URL || 'https://curiouskelly.com';
+    const isGiftPlan = body.planType.startsWith('gift_');
+
+    // Build metadata
+    const commonMetadata = {
+      source: 'web',
+      utm_source: body.utmSource || 'direct',
+      utm_medium: body.utmMedium || 'none',
+      utm_campaign: body.utmCampaign || 'none',
+      affiliate_code: body.affiliateCode || '',
+      promo_code: body.promoCode || ''
+    };
+
+    // eslint-disable-next-line @typescript-eslint/no-explicit-any
     let sessionConfig: any; // Stripe.Checkout.SessionCreateParams
 
     if (isGiftPlan) {
@@ -191,7 +194,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     console.error('Stripe checkout error:', error);
     return res.status(500).json({
       error: 'checkout_failed',
-      message: error instanceof Error ? error.message : 'Unknown error'
+      message: error instanceof Error ? error.message : 'Unknown error',
+      stack: error instanceof Error ? error.stack : undefined
     });
   }
 }
