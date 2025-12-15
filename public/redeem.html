@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta name="description" content="Redeem a Curious Kelly gift subscription and start daily learning.">
+    <title>Redeem Gift — Curious Kelly</title>
+    
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png">
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,wght@0,400;0,500;0,600;1,400&display=swap" rel="stylesheet">
+    
+    <style>
+        :root {
+            --bg-color: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-elevated: #18181b;
+            --text-primary: #fafafa;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --accent-primary: #3b82f6;
+            --accent-hover: #2563eb;
+            --success: #22c55e;
+            --error: #ef4444;
+            --border-color: #27272a;
+        }
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+        
+        .container {
+            max-width: 480px;
+            width: 100%;
+            animation: fadeIn 0.4s ease-out;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .logo {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .logo-text {
+            font-size: 1.5rem;
+            font-weight: 500;
+        }
+        
+        .card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 40px;
+        }
+        
+        .gift-icon {
+            font-size: 4rem;
+            text-align: center;
+            margin-bottom: 24px;
+        }
+        
+        h1 {
+            font-family: 'Newsreader', Georgia, serif;
+            font-size: 2rem;
+            font-weight: 400;
+            text-align: center;
+            margin-bottom: 12px;
+        }
+        
+        .subtitle {
+            color: var(--text-secondary);
+            text-align: center;
+            margin-bottom: 32px;
+        }
+        
+        .form-group {
+            margin-bottom: 20px;
+        }
+        
+        label {
+            display: block;
+            font-size: 0.9rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+            color: var(--text-secondary);
+        }
+        
+        input {
+            width: 100%;
+            padding: 14px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 10px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            transition: all 0.2s;
+        }
+        
+        input:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+        
+        input::placeholder {
+            color: var(--text-muted);
+        }
+        
+        .gift-code-input {
+            font-family: 'Courier New', monospace;
+            font-size: 1.2rem;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            text-align: center;
+        }
+        
+        .btn {
+            display: block;
+            width: 100%;
+            padding: 16px;
+            border: none;
+            border-radius: 12px;
+            font-size: 1rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: var(--text-primary);
+            color: var(--bg-color);
+        }
+        
+        .btn-primary:hover {
+            opacity: 0.9;
+        }
+        
+        .btn-primary:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        .error-message {
+            background: rgba(239, 68, 68, 0.1);
+            border: 1px solid rgba(239, 68, 68, 0.3);
+            color: var(--error);
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        .success-message {
+            background: rgba(34, 197, 94, 0.1);
+            border: 1px solid rgba(34, 197, 94, 0.3);
+            color: var(--success);
+            padding: 12px 16px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            font-size: 0.9rem;
+            display: none;
+        }
+        
+        .footer-note {
+            text-align: center;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            margin-top: 24px;
+        }
+        
+        .footer-note a {
+            color: var(--accent-primary);
+            text-decoration: none;
+        }
+        
+        /* Success state */
+        .success-state {
+            display: none;
+            text-align: center;
+        }
+        
+        .success-state .checkmark {
+            font-size: 5rem;
+            margin-bottom: 24px;
+        }
+        
+        .success-state h2 {
+            font-family: 'Newsreader', serif;
+            font-size: 1.8rem;
+            font-weight: 400;
+            margin-bottom: 16px;
+        }
+        
+        .success-state p {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+        
+        .gift-details {
+            background: var(--bg-secondary);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 24px;
+            text-align: left;
+        }
+        
+        .gift-details .detail {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px 0;
+            border-bottom: 1px solid var(--border-color);
+        }
+        
+        .gift-details .detail:last-child {
+            border-bottom: none;
+        }
+        
+        .gift-details .label {
+            color: var(--text-muted);
+        }
+        
+        .gift-details .value {
+            font-weight: 500;
+        }
+        
+        .gift-message {
+            background: var(--bg-secondary);
+            border-left: 3px solid var(--accent-primary);
+            padding: 16px;
+            border-radius: 0 12px 12px 0;
+            margin-bottom: 24px;
+            font-style: italic;
+            color: var(--text-secondary);
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo">
+            <span class="logo-text">✨ Curious Kelly</span>
+        </div>
+        
+        <div class="card">
+            <!-- Redeem Form -->
+            <div id="redeem-form">
+                <div class="gift-icon">🎁</div>
+                <h1>Redeem a Gift</h1>
+                <p class="subtitle">Enter the gift code to unlock daily learning</p>
+                
+                <div class="error-message" id="error-message"></div>
+                <div class="success-message" id="success-message"></div>
+                
+                <form id="gift-form" onsubmit="redeemGift(event)">
+                    <div class="form-group">
+                        <label for="gift-code">Gift Code</label>
+                        <input 
+                            type="text" 
+                            id="gift-code" 
+                            class="gift-code-input"
+                            placeholder="XXXX-XXXX-XXXX"
+                            maxlength="14"
+                            required
+                            autocomplete="off"
+                        >
+                    </div>
+                    
+                    <div class="form-group">
+                        <label for="email">Email Address</label>
+                        <input 
+                            type="email" 
+                            id="email" 
+                            placeholder="Where should we send login details?"
+                            required
+                        >
+                    </div>
+                    
+                    <button type="submit" class="btn btn-primary" id="submit-btn">
+                        Redeem Gift
+                    </button>
+                </form>
+            </div>
+            
+            <!-- Success State -->
+            <div id="success-state" class="success-state">
+                <div class="checkmark">✨</div>
+                <h2>Gift Redeemed!</h2>
+                <p>The learning journey begins now</p>
+                
+                <div class="gift-details" id="gift-details">
+                    <div class="detail">
+                        <span class="label">Plan</span>
+                        <span class="value" id="plan-name">12 Month Access</span>
+                    </div>
+                    <div class="detail">
+                        <span class="label">From</span>
+                        <span class="value" id="gifter-name">A friend</span>
+                    </div>
+                    <div class="detail">
+                        <span class="label">Expires</span>
+                        <span class="value" id="expires-date">Dec 14, 2026</span>
+                    </div>
+                </div>
+                
+                <div class="gift-message" id="gift-message" style="display: none;">
+                    <span id="message-text"></span>
+                </div>
+                
+                <a href="/learn.html" class="btn btn-primary">Start Learning</a>
+            </div>
+        </div>
+        
+        <p class="footer-note">
+            Need help? <a href="mailto:hello@curiouskelly.com">hello@curiouskelly.com</a>
+        </p>
+    </div>
+    
+    <script>
+        // Auto-format gift code as XXXX-XXXX-XXXX
+        const codeInput = document.getElementById('gift-code');
+        codeInput.addEventListener('input', (e) => {
+            let value = e.target.value.replace(/[^A-Za-z0-9]/g, '').toUpperCase();
+            if (value.length > 12) value = value.slice(0, 12);
+            
+            // Insert dashes
+            if (value.length > 8) {
+                value = value.slice(0, 4) + '-' + value.slice(4, 8) + '-' + value.slice(8);
+            } else if (value.length > 4) {
+                value = value.slice(0, 4) + '-' + value.slice(4);
+            }
+            
+            e.target.value = value;
+        });
+        
+        // Check for code in URL
+        const params = new URLSearchParams(window.location.search);
+        const urlCode = params.get('code');
+        if (urlCode) {
+            codeInput.value = urlCode.toUpperCase();
+        }
+        
+        async function redeemGift(event) {
+            event.preventDefault();
+            
+            const code = document.getElementById('gift-code').value.replace(/-/g, '');
+            const email = document.getElementById('email').value.trim();
+            const submitBtn = document.getElementById('submit-btn');
+            const errorEl = document.getElementById('error-message');
+            const successEl = document.getElementById('success-message');
+            
+            // Reset messages
+            errorEl.style.display = 'none';
+            successEl.style.display = 'none';
+            
+            if (code.length !== 12) {
+                errorEl.textContent = 'Please enter a valid 12-character gift code.';
+                errorEl.style.display = 'block';
+                return;
+            }
+            
+            submitBtn.disabled = true;
+            submitBtn.textContent = 'Redeeming...';
+            
+            try {
+                const response = await fetch('/api/gift-redeem', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({ code, email })
+                });
+                
+                const data = await response.json();
+                
+                if (!response.ok) {
+                    throw new Error(data.error || 'Failed to redeem gift');
+                }
+                
+                // Show success state
+                document.getElementById('redeem-form').style.display = 'none';
+                document.getElementById('success-state').style.display = 'block';
+                
+                // Update details
+                document.getElementById('plan-name').textContent = data.planName || '12 Month Access';
+                document.getElementById('gifter-name').textContent = data.gifterName || 'A friend';
+                document.getElementById('expires-date').textContent = data.expiresAt || 'Never';
+                
+                if (data.message) {
+                    document.getElementById('gift-message').style.display = 'block';
+                    document.getElementById('message-text').textContent = `"${data.message}"`;
+                }
+                
+            } catch (error) {
+                errorEl.textContent = error.message === 'gift_not_found' 
+                    ? 'Gift code not found. Please check and try again.'
+                    : error.message === 'gift_already_redeemed'
+                    ? 'This gift has already been redeemed.'
+                    : error.message || 'Something went wrong. Please try again.';
+                errorEl.style.display = 'block';
+            } finally {
+                submitBtn.disabled = false;
+                submitBtn.textContent = 'Redeem Gift';
+            }
+        }
+    </script>
+</body>
+</html>

@@ -27,6 +27,19 @@ const PLAN_PRICES: Record<string, { price_cents: number; mrr_cents: number }> = 
 };
 
 /**
+ * Generate a random 12-character gift code
+ * Uses characters that are easy to read (no 0, O, I, 1)
+ */
+function generateGiftCode(): string {
+  const chars = 'ABCDEFGHJKLMNPQRSTUVWXYZ23456789';
+  let code = '';
+  for (let i = 0; i < 12; i++) {
+    code += chars.charAt(Math.floor(Math.random() * chars.length));
+  }
+  return code;
+}
+
+/**
  * Record commission for referrer when a referred user pays
  * EARN TO LEARN: Commission rates based on referrer's learning progress
  */
@@ -508,15 +521,52 @@ export default async function handler(
                 }).catch(() => {}); // Don't fail on event logging
               }
             }
-          } else if (paymentType === 'gift') {
+          } else if (paymentType.startsWith('gift_')) {
+            // Determine duration from plan type
+            const durationMap: Record<string, number> = {
+              'gift_3mo': 3,
+              'gift_6mo': 6,
+              'gift_12mo': 12,
+              'gift_lifetime': 0 // 0 = lifetime
+            };
+            const durationMonths = durationMap[paymentType] ?? 12;
+            
+            // Generate gift code
+            const giftCode = generateGiftCode();
+            
+            // Store gift code in database
+            try {
+              await supabase.from('gift_codes').insert({
+                code: giftCode,
+                stripe_checkout_session_id: session.id,
+                stripe_payment_intent_id: session.payment_intent as string,
+                purchase_price: (session.amount_total || 0) / 100,
+                currency: session.currency?.toUpperCase() || 'USD',
+                duration_months: durationMonths,
+                plan_type: paymentType,
+                gifter_email: session.customer_email,
+                gifter_name: session.metadata?.gifter_name || null,
+                message: session.metadata?.gift_message || null,
+                recipient_email: session.metadata?.recipient_email || null,
+                delivery_date: session.metadata?.delivery_date ? new Date(session.metadata.delivery_date) : null,
+                status: 'active'
+              });
+              console.log(`Gift code created: ${giftCode.slice(0,4)}****`);
+            } catch (giftErr) {
+              console.error('Failed to create gift code:', giftErr);
+              // Continue - don't fail the webhook
+            }
+            
             await recordRevenueEvent(supabase, 'gift_purchased', {
               stripe_customer_id: session.customer as string,
               amount_cents: session.amount_total || 0,
-              plan_type: `gift_${session.metadata?.duration || '12mo'}`,
+              plan_type: paymentType,
               metadata: {
+                gift_code: giftCode,
                 recipient_email: session.metadata?.recipient_email,
                 gifter_name: session.metadata?.gifter_name,
                 gift_message: session.metadata?.gift_message,
+                duration_months: durationMonths
               },
             });
 
@@ -531,6 +581,9 @@ export default async function handler(
                 session.payment_intent as string || undefined
               );
             }
+            
+            // TODO: Send email to recipient with gift code
+            // await sendGiftEmail(recipientEmail, giftCode, session.metadata);
           } else if (paymentType === 'lifetime') {
             await recordRevenueEvent(supabase, 'payment_succeeded', {
               stripe_customer_id: session.customer as string,
