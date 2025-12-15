@@ -1,15 +1,36 @@
 <!DOCTYPE html>
-<html lang="en" style="--kelly-color: #3b82f6; --kelly-color-rgb: 59, 130, 246;">
+<html lang="en" style="--kelly-color: #2563eb; --kelly-color-rgb: 37, 99, 235;">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+  <meta name="description" content="Learn with Kelly — your AI-powered teacher. Explore today’s 5-minute lesson and build a daily learning habit.">
+  <meta name="robots" content="index, follow">
+  <link rel="canonical" href="https://www.curiouskelly.com/learn">
   <meta name="apple-mobile-web-app-capable" content="yes">
   <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
-  <meta name="theme-color" content="#3b82f6">
+  <meta name="theme-color" content="#2563eb">
   <meta name="apple-mobile-web-app-title" content="Curious Kelly">
   <link rel="manifest" href="/manifest.json">
   <link rel="apple-touch-icon" href="/icons/apple-touch-icon.png">
-  <title>Curious Kelly</title>
+  <title>Learn with Kelly | Curious Kelly</title>
+
+  <!-- Social sharing -->
+  <meta property="og:type" content="website">
+  <meta property="og:site_name" content="Curious Kelly">
+  <meta property="og:url" content="https://www.curiouskelly.com/learn">
+  <meta property="og:title" content="Learn with Kelly | Curious Kelly">
+  <meta property="og:description" content="Learn with Kelly — your AI-powered teacher. Explore today’s 5-minute lesson and build a daily learning habit.">
+  <meta property="og:image" content="https://www.curiouskelly.com/images/kelly-og-image.png">
+  <meta property="og:image:width" content="1200">
+  <meta property="og:image:height" content="630">
+
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:site" content="@curiouskelly">
+  <meta name="twitter:creator" content="@curiouskelly">
+  <meta name="twitter:url" content="https://www.curiouskelly.com/learn">
+  <meta name="twitter:title" content="Learn with Kelly | Curious Kelly">
+  <meta name="twitter:description" content="Learn with Kelly — your AI-powered teacher. Explore today’s 5-minute lesson and build a daily learning habit.">
+  <meta name="twitter:image" content="https://www.curiouskelly.com/images/kelly-og-image.png">
   
   <script src="/config.js"></script>
   <!-- Note: Vercel Insights scripts removed to avoid console MIME errors
@@ -36,14 +57,45 @@
   
   <style>
     :root {
-      --kelly-color: #3b82f6;
-      --kelly-color-rgb: 59, 130, 246;
-      --bg-dark: #0f0f1a;
-      --bg-card: #1a1a2a;
-      --bg-card-hover: #252538;
-      --text-primary: #ffffff;
-      --text-muted: rgba(255,255,255,0.6);
-      --text-dim: rgba(255,255,255,0.3);
+      /* Kelly Blue (Primary) */
+      --kelly-blue: #2563eb;
+      --kelly-blue-light: #3b82f6;
+      --kelly-blue-dark: #1d4ed8;
+      
+      /* Surfaces */
+      --surface-deepest: #09090b;
+      --surface-deep: #0f0f13;
+      --surface-base: #18181b;
+      --surface-elevated: #1c1c24;
+      --surface-raised: #252530;
+      
+      /* Text */
+      --text-primary: #fafafa;
+      --text-secondary: #a1a1aa;
+      --text-muted: #71717a;
+      --border-default: #3f3f46;
+      
+      /* Meaning (one at a time, sparingly) */
+      --gold-wisdom: #f59e0b;
+      --success: #10b981;
+      --error: #ef4444;
+      
+      /* Typography */
+      --font-display: Georgia, "Times New Roman", serif;
+      --font-body: system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+      
+      /* Spacing */
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --nav-height: 64px;
+
+      /* Compatibility aliases (existing code relies on these) */
+      --kelly-color: var(--kelly-blue);
+      --kelly-color-rgb: 37, 99, 235;
+      --bg-dark: var(--surface-deepest);
+      --bg-card: var(--surface-base);
+      --bg-card-hover: var(--surface-raised);
       --safe-bottom: env(safe-area-inset-bottom, 20px);
       --safe-top: env(safe-area-inset-top, 20px);
     }
@@ -61,8 +113,8 @@
     html, body {
       height: 100%;
       overflow: hidden;
-      font-family: system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
-      background: var(--bg-dark);
+      font-family: var(--font-body);
+      background: var(--surface-deepest);
       color: var(--text-primary);
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
@@ -109,7 +161,7 @@
       padding: calc(0.75rem + var(--safe-top)) 1rem 0.75rem;
       display: flex;
       align-items: center;
-      background: rgba(0, 0, 0, 0.9);
+      background: rgba(9, 9, 11, 0.9);
       z-index: 1000;
       -webkit-backdrop-filter: blur(10px);
       backdrop-filter: blur(10px);
@@ -119,7 +171,7 @@
       display: flex;
       align-items: center;
       gap: 0.5rem;
-      color: white;
+      color: var(--text-primary);
       text-decoration: none;
       font-weight: 600;
       letter-spacing: 0.2px;
@@ -131,7 +183,7 @@
     }
 
     .kelly-home-link:hover {
-      color: var(--kelly-color, #3b82f6);
+      color: var(--kelly-color, var(--kelly-blue));
     }
 
     .kelly-logo {
@@ -590,10 +642,23 @@
       grid-template-areas:
         "left center right"
         "bottom bottom bottom";
-      position: relative;
+      position: absolute;
+      inset: 0;
       overflow: hidden;
       /* Prevent tall panel content from expanding the whole page */
       min-height: 0;
+    }
+
+    /* Lesson header becomes a floating control cluster (does not push layout) */
+    #scene-lesson .scene-header {
+      position: absolute;
+      top: 78px;
+      left: 16px;
+      right: 16px;
+      z-index: 40;
+      padding: 0;
+      background: transparent;
+      pointer-events: auto;
     }
     
     .lesson-kelly-container {
@@ -614,16 +679,25 @@
       justify-content: center;
     }
 
-    /* Sacred side panels */
-    .left-panel {
-      grid-area: left;
-      transform: translateX(-100%);
-      transition: transform 0.3s ease;
-      z-index: 10;
+    /* Sacred side panels (glass overlays; Kelly stays visible behind) */
+    .left-panel,
+    .right-panel {
+      position: absolute;
+      top: 0;
+      bottom: 0;
+      width: 320px;
+      max-width: 85vw;
+      transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      z-index: 100;
       pointer-events: none;
       display: flex;
       flex-direction: column;
       min-height: 0;
+    }
+
+    .left-panel {
+      left: 0;
+      transform: translateX(-100%);
     }
     .left-panel.open {
       transform: translateX(0);
@@ -631,14 +705,8 @@
     }
 
     .right-panel {
-      grid-area: right;
+      right: 0;
       transform: translateX(100%);
-      transition: transform 0.3s ease;
-      z-index: 10;
-      pointer-events: none;
-      display: flex;
-      flex-direction: column;
-      min-height: 0;
     }
     .right-panel.open {
       transform: translateX(0);
@@ -649,13 +717,13 @@
       height: 100%;
       display: flex;
       flex-direction: column;
-      background: rgba(15, 15, 25, 0.95);
-      border: 1px solid rgba(255,255,255,0.08);
-      border-radius: 16px;
+      background: rgba(15, 15, 19, 0.92);
+      border: 1px solid rgba(63, 63, 70, 0.75);
+      border-radius: var(--radius-lg);
       margin: 16px;
       overflow: hidden;
-      -webkit-backdrop-filter: blur(14px);
-      backdrop-filter: blur(14px);
+      -webkit-backdrop-filter: blur(24px);
+      backdrop-filter: blur(24px);
       min-height: 0;
     }
 
@@ -665,7 +733,7 @@
       justify-content: space-between;
       gap: 10px;
       padding: 14px 14px;
-      border-bottom: 1px solid rgba(255,255,255,0.08);
+      border-bottom: 1px solid rgba(63, 63, 70, 0.55);
       font-weight: 700;
       font-size: 13px;
       letter-spacing: 0.3px;
@@ -675,9 +743,9 @@
       width: 34px;
       height: 34px;
       border-radius: 10px;
-      border: 1px solid rgba(255,255,255,0.10);
-      background: rgba(255,255,255,0.06);
-      color: white;
+      border: 1px solid rgba(63, 63, 70, 0.75);
+      background: rgba(24, 24, 27, 0.60);
+      color: var(--text-primary);
       cursor: pointer;
       font-size: 16px;
       display: flex;
@@ -765,7 +833,7 @@
         rgba(9,9,11,0.90) 100%
       );
       border-top: none;
-      padding-bottom: calc(80px + var(--safe-bottom)); /* leave room for fixed nav */
+      padding-bottom: calc(var(--nav-height) + 20px + var(--safe-bottom)); /* leave room for fixed nav */
       /* Sacred rule: captions + phase bar must remain visible */
       position: relative;
       z-index: 20;
@@ -822,19 +890,7 @@
         border-radius: 0;
       }
 
-      /* Mobile panels overlay edges but we keep Kelly visible by shrinking stage */
-      html[data-panel-open] .lesson-kelly {
-        transform: scale(0.90);
-        transform-origin: center;
-      }
-
-      html[data-panel-open="left"] #scene-lesson .lesson-viewport {
-        grid-template-columns: minmax(260px, 70vw) minmax(0, 1fr) 0;
-      }
-      html[data-panel-open="journey"] #scene-lesson .lesson-viewport,
-      html[data-panel-open="settings"] #scene-lesson .lesson-viewport {
-        grid-template-columns: 0 minmax(0, 1fr) minmax(260px, 70vw);
-      }
+      /* Panels are overlays (glass) and do not resize the wallpaper. */
     }
 
     /* Note: Kelly visibility/size is controlled by the presence system (data-kelly-presence). */
@@ -864,8 +920,7 @@
       border-radius: 0;
       background: #09090b;
       overflow: hidden;
-      /* Override presence scaling (wallpaper should always fill) */
-      transform: none !important;
+      /* Presence scaling is handled via [data-kelly-presence] rules (zoom/crop only). */
     }
 
     #scene-lesson #lesson-kelly-img,
@@ -906,14 +961,31 @@
       left: 0;
       right: 0;
       z-index: 30;
-      padding-top: max(10px, env(safe-area-inset-top));
-      pointer-events: none; /* allow only the bar to be clickable */
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 16px;
+      padding: 20px;
+      padding-top: max(20px, env(safe-area-inset-top));
+      background: linear-gradient(to bottom, rgba(9,9,11,0.70), transparent);
+      pointer-events: none; /* allow only the dots to be clickable */
     }
     .phase-bar-top .phase-bar {
       pointer-events: auto;
-      background: linear-gradient(to bottom, rgba(9,9,11,0.80), rgba(9,9,11,0));
-      padding: 14px 16px 12px;
+      background: transparent;
+      padding: 0;
       border-bottom: none;
+    }
+
+    .phase-label {
+      font-family: var(--font-body);
+      font-size: 0.8rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.12em;
+      color: var(--text-secondary);
+      pointer-events: none;
+      user-select: none;
     }
 
     /* ============================================
@@ -986,8 +1058,8 @@
     }
 
     .start-lesson-btn {
-      background: #6366f1;
-      color: white;
+      background: var(--kelly-blue);
+      color: var(--text-primary);
       border: none;
       padding: 14px 28px;
       border-radius: 30px;
@@ -998,7 +1070,7 @@
     }
 
     .start-lesson-btn:hover {
-      background: #5558e3;
+      background: var(--kelly-blue-dark);
       transform: scale(1.02);
     }
     
@@ -1088,7 +1160,7 @@
     .caption-text {
       font-size: 1.25rem;
       line-height: 1.6;
-      color: white;
+      color: var(--text-primary);
       text-align: center;
       max-width: 600px;
       margin: 0 auto;
@@ -1111,64 +1183,57 @@
       display: flex;
       align-items: center;
       justify-content: center;
+      gap: 8px;
       position: relative;
       z-index: 30;
-      padding: 1rem 2rem;
-      gap: 0;
-      background: rgba(0,0,0,0.3);
+    }
+
+    .phase-connector {
+      display: none; /* Netflix-meets-Duolingo: dots only */
     }
 
     .phase-segment {
-      display: flex;
-      flex-direction: column;
+      display: inline-flex;
       align-items: center;
-      gap: 0.25rem;
+      justify-content: center;
       background: none;
       border: none;
       cursor: pointer;
-      padding: 0.5rem 1rem;
-      transition: transform 0.2s;
-      color: inherit;
+      padding: 0;
+      transition: transform 0.2s ease;
     }
 
-    .phase-segment:hover { transform: scale(1.1); }
+    .phase-segment:hover { transform: scale(1.06); }
+
+    .phase-name {
+      display: none; /* label lives in #phase-label */
+    }
 
     .phase-dot {
-      width: 12px;
-      height: 12px;
+      width: 36px;
+      height: 36px;
       border-radius: 50%;
-      background: rgba(255,255,255,0.3);
-      transition: all 0.3s;
+      border: 2px solid var(--border-default);
+      background: rgba(9, 9, 11, 0.55);
+      transition: all 0.25s ease;
     }
 
     .phase-segment.active .phase-dot {
-      background: var(--kelly-color, #3b82f6);
-      box-shadow: 0 0 10px var(--kelly-color, #3b82f6);
+      background: var(--kelly-color, var(--kelly-blue));
+      border-color: var(--kelly-color, var(--kelly-blue));
+      transform: scale(1.12);
+      box-shadow: 0 0 20px rgba(37, 99, 235, 0.40);
     }
 
-    .phase-segment.completed .phase-dot { background: rgba(255,255,255,0.7); }
-
-    .phase-name {
-      font-size: 0.625rem;
-      color: rgba(255,255,255,0.5);
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
+    .phase-segment.completed .phase-dot {
+      background: var(--success);
+      border-color: var(--success);
     }
-
-    .phase-segment.active .phase-name { color: white; }
-
-    .phase-connector {
-      width: 30px;
-      height: 2px;
-      background: rgba(255,255,255,0.2);
-    }
-
-    .phase-segment.completed + .phase-connector { background: rgba(255,255,255,0.5); }
 
     @media (max-width: 600px) {
-      .phase-name { display: none; }
-      .phase-segment { padding: 0.5rem; }
-      .phase-connector { width: 20px; }
+      .phase-dot { width: 28px; height: 28px; }
+      .phase-bar-top { padding-left: 12px; padding-right: 12px; gap: 12px; }
+      .phase-label { font-size: 0.75rem; }
     }
     
     .caption-phase {
@@ -1206,9 +1271,9 @@
     }
     
     .reaction-btn {
-      background: rgba(255,255,255,0.1);
-      border: none;
-      color: white;
+      background: rgba(37, 99, 235, 0.12);
+      border: 1px solid rgba(37, 99, 235, 0.20);
+      color: var(--text-primary);
       padding: 10px 16px;
       border-radius: 20px;
       font-size: 13px;
@@ -2130,7 +2195,7 @@
     .change-kelly-btn {
       background: rgba(255, 255, 255, 0.10);
       border: 1px solid rgba(255, 255, 255, 0.20);
-      color: #fff;
+      color: var(--text-primary);
       padding: 0.5rem 0.9rem;
       border-radius: 0.6rem;
       cursor: pointer;
@@ -2197,7 +2262,7 @@
     .age-pill {
       background: rgba(255, 255, 255, 0.10);
       border: 1px solid rgba(255, 255, 255, 0.20);
-      color: #fff;
+      color: var(--text-primary);
       padding: 0.45rem 0.7rem;
       border-radius: 2rem;
       font-size: 0.75rem;
@@ -2639,9 +2704,10 @@
       bottom: 0;
       left: 0;
       right: 0;
-      height: calc(70px + var(--safe-bottom));
+      height: calc(var(--nav-height) + var(--safe-bottom));
       padding-bottom: var(--safe-bottom);
-      background: linear-gradient(to top, var(--bg-dark) 70%, transparent);
+      background: var(--surface-deep);
+      border-top: 1px solid var(--border-default);
       display: flex;
       align-items: center;
       justify-content: space-around;
@@ -2672,7 +2738,12 @@
     }
     
     .nav-item.active {
-      color: white;
+      color: var(--kelly-blue);
+    }
+
+    /* Center play button stays white even when "active" */
+    .nav-item.nav-play-btn.active {
+      color: var(--text-primary);
     }
     
     .nav-item.active .nav-icon,
@@ -2709,7 +2780,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      color: #000;
+      color: var(--surface-deepest);
       border: 2px solid var(--bg);
       box-shadow: 0 2px 6px rgba(0,0,0,0.3);
     }
@@ -2740,7 +2811,7 @@
     .overlay {
       position: fixed;
       inset: 0;
-      background: rgba(0,0,0,0.9);
+      background: rgba(9,9,11,0.9);
       display: flex;
       flex-direction: column;
       align-items: center;
@@ -3108,14 +3179,15 @@
     }
 
     /* SACRED LAYOUT: Kelly presence scales only (never repositions) */
+    /* Presence = zoom/crop only (never reveals empty background) */
     [data-kelly-presence="0"] #scene-lesson .lesson-kelly {
-      transform: scale(0.70);
+      transform: scale(1.00);
       transform-origin: center;
-      opacity: 0.95;
+      opacity: 0.98;
     }
 
     [data-kelly-presence="50"] #scene-lesson .lesson-kelly {
-      transform: scale(1);
+      transform: scale(1.06);
       transform-origin: center;
     }
 
@@ -3234,6 +3306,7 @@
               <span class="phase-name">Outro</span>
             </button>
           </div>
+          <span class="phase-label" id="phase-label">HOOK</span>
         </header>
 
         <!-- LEFT PANEL (social/chat) -->
@@ -3252,16 +3325,17 @@
         </aside>
 
         <!-- SACRED CENTER (Kelly) -->
-        <div class="lesson-kelly-container" id="kelly-stage">
+        <div class="lesson-kelly-container kelly-wallpaper" id="kelly-stage">
           <div class="lesson-kelly idle" id="lesson-kelly">
-            <img id="lesson-kelly-img" class="kelly-img" src="" alt="Kelly">
-            <video id="kelly-video" class="hidden" hidden playsinline muted preload="auto" style="width:100%;height:100%;object-fit:cover;"></video>
+            <img id="lesson-kelly-img" class="kelly-img kelly-bg" src="/images/kelly-placeholder-16x9.jpg" alt="Kelly">
+            <video id="kelly-video" class="hidden kelly-bg" hidden playsinline muted preload="auto"></video>
           </div>
-          <div class="kelly-overlay" aria-hidden="true"></div>
+          <!-- Gradient overlay for text readability (sacred wallpaper) -->
+          <div class="kelly-overlay kelly-gradient" aria-hidden="true"></div>
           
           <div class="tap-zones">
             <div class="tap-zone" id="tap-prev"></div>
-            <div class="tap-zone"></div>
+            <div class="tap-zone" id="tap-center" aria-label="Tap Kelly"></div>
             <div class="tap-zone" id="tap-next"></div>
           </div>
           
@@ -4257,7 +4331,7 @@
       { id: 'mystic', name: 'The Mystic', tagline: 'Profound serenity', color: '#a855f7', icon: '✨', stats: { curiosity: 80, warmth: 85, energy: 40, structure: 60 }, quote: "Wisdom flows through us." },
       { id: 'provider', name: 'The Provider', tagline: 'Reassuring strength', color: '#14b8a6', icon: '🛡️', stats: { curiosity: 65, warmth: 95, energy: 55, structure: 80 }, quote: "I've got you." },
       { id: 'storyteller', name: 'The Storyteller', tagline: 'Theatrical captivation', color: '#f472b6', icon: '📖', stats: { curiosity: 85, warmth: 85, energy: 80, structure: 45 }, quote: "Let me tell you a story..." },
-      { id: 'strategist', name: 'The Strategist', tagline: 'Sharp tactical mind', color: '#6366f1', icon: '🎯', stats: { curiosity: 80, warmth: 55, energy: 65, structure: 95 }, quote: "Here's the plan." },
+      { id: 'strategist', name: 'The Strategist', tagline: 'Sharp tactical mind', color: '#1d4ed8', icon: '🎯', stats: { curiosity: 80, warmth: 55, energy: 65, structure: 95 }, quote: "Here's the plan." },
       { id: 'survivor', name: 'The Survivor', tagline: 'Grounded resilience', color: '#84cc16', icon: '🏕️', stats: { curiosity: 75, warmth: 80, energy: 70, structure: 75 }, quote: "We'll get through this." }
     ];
     
@@ -6149,6 +6223,8 @@
       updatePhaseBar();
       
       const phase = PHASES[state.currentPhase];
+      const phaseLabel = document.getElementById('phase-label');
+      if (phaseLabel) phaseLabel.textContent = String(phase?.name || '').toUpperCase();
       document.getElementById('caption-phase').innerHTML = `
         <span class="phase-icon">${phase.icon}</span>
         <span class="phase-name">${phase.name}</span>
@@ -7582,7 +7658,7 @@
     function triggerConfetti() {
       const container = document.getElementById('confetti-container');
       const kelly = getCurrentKelly();
-      const colors = [kelly.color, '#fff', '#ffd700', '#ec4899'];
+      const colors = [kelly.color, '#fafafa', '#f59e0b', '#ec4899'];
       
       for (let i = 0; i < 60; i++) {
         const confetti = document.createElement('div');
@@ -7625,6 +7701,12 @@
       // Phase navigation
       document.getElementById('tap-next').addEventListener('click', advancePhase);
       document.getElementById('tap-prev').addEventListener('click', prevPhase);
+      // Tap Kelly (center) closes any open panel (sacred rule: Kelly remains visible)
+      document.getElementById('tap-center')?.addEventListener('click', () => {
+        if (document.documentElement.hasAttribute('data-panel-open')) {
+          closePanel();
+        }
+      });
 
       // Cliff choice buttons
       document.getElementById('cliff-choice-a')?.addEventListener('click', () => handleCliffChoice('A'));
