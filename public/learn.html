@@ -687,7 +687,8 @@
     .right-panel {
       position: absolute;
       top: 0;
-      bottom: 0;
+      /* Keep panel content above fixed bottom nav (so chat input stays reachable) */
+      bottom: calc(var(--nav-height) + var(--safe-bottom));
       width: 320px;
       max-width: 85vw;
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
@@ -1093,6 +1094,97 @@
     html[data-ui-mode="home"] .reactions,
     html[data-ui-mode="home"] #cliff-container {
       display: none !important;
+    }
+
+    /* Interactive Choice Panel */
+    #cliff-container {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      width: 90%;
+      max-width: 600px;
+      z-index: 100;
+      background: rgba(9, 9, 11, 0.95);
+      border-radius: 16px;
+      padding: 24px;
+      -webkit-backdrop-filter: blur(8px);
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(37, 99, 235, 0.3);
+    }
+    
+    #cliff-prompt {
+      text-align: center;
+      font-size: 1.25rem;
+      color: var(--text-primary);
+      margin-bottom: 24px;
+      font-weight: 500;
+      line-height: 1.5;
+    }
+    
+    #cliff-choices {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    
+    .cliff-btn {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px;
+      background: rgba(24, 24, 27, 0.8);
+      border: 2px solid rgba(37, 99, 235, 0.3);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      color: var(--text-primary);
+    }
+    
+    .cliff-btn:hover {
+      transform: translateY(-4px);
+      border-color: var(--kelly-blue);
+      background: rgba(37, 99, 235, 0.15);
+      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.3);
+    }
+    
+    .cliff-btn.selected {
+      border-color: var(--success);
+      background: rgba(16, 185, 129, 0.15);
+    }
+    
+    .cliff-icon {
+      font-size: 2rem;
+      margin-bottom: 8px;
+    }
+    
+    .cliff-label {
+      font-size: 1.125rem;
+      font-weight: 600;
+      color: var(--kelly-blue);
+      margin-bottom: 4px;
+    }
+    
+    .cliff-desc {
+      font-size: 0.875rem;
+      color: var(--text-secondary);
+      text-align: center;
+    }
+    
+    #cliff-container.choice-made .cliff-btn:not(.selected) {
+      opacity: 0.4;
+      pointer-events: none;
+    }
+    
+    @media (max-width: 480px) {
+      #cliff-choices {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      
+      .cliff-btn {
+        padding: 16px 12px;
+      }
     }
 
     .home-state {
@@ -3458,17 +3550,19 @@
         <!-- Home overlay (rendered by JS; hidden during lessons) -->
         <div id="home-overlay" aria-hidden="true"></div>
           
-          <!-- CLIFF MECHANIC (hidden except during Cliff phase) -->
+          <!-- INTERACTIVE CHOICE PANEL (works for all phases) -->
           <div id="cliff-container" class="hidden" hidden>
             <div id="cliff-prompt">Which path calls to you?</div>
             <div id="cliff-choices">
               <button id="cliff-choice-a" class="cliff-btn" data-choice="A" type="button">
-                <span class="cliff-icon">🌊</span>
-                <span class="cliff-label" id="cliff-label-a">Path A</span>
+                <span class="cliff-icon">🅰️</span>
+                <span class="cliff-label" id="cliff-label-a">Option A</span>
+                <span class="cliff-desc" id="cliff-desc-a"></span>
               </button>
               <button id="cliff-choice-b" class="cliff-btn" data-choice="B" type="button">
-                <span class="cliff-icon">🔥</span>
-                <span class="cliff-label" id="cliff-label-b">Path B</span>
+                <span class="cliff-icon">🅱️</span>
+                <span class="cliff-label" id="cliff-label-b">Option B</span>
+                <span class="cliff-desc" id="cliff-desc-b"></span>
               </button>
             </div>
             <div id="cliff-timer" class="hidden" hidden style="width:100%;max-width:520px;">
@@ -5760,6 +5854,12 @@
           videoUrl: atom?.hd_video_url,
           visualUrl: atom?.visual_url,
           atomContent: atom?.content,
+          // Interactive choice fields (new universal choice model)
+          choice_intro: content.choice_intro,
+          option_a: content.option_a,
+          option_b: content.option_b,
+          success_response: content.success_response,
+          alt_response: content.alt_response,
         };
       });
 
@@ -5925,18 +6025,25 @@
             }
           }
           
+          const content = atom?.content || {};
           return {
             phase: phase.name,
             dbPhase: phase.dbName,
             icon: phase.icon,
             script:
               personalizedScript ||
-              (typeof atom?.content === 'string' ? atom.content : (atom?.content?.script || atom?.content?.text)) ||
+              (typeof atom?.content === 'string' ? atom.content : (content.script || content.text)) ||
               `This is ${phase.name.toLowerCase()} content for day ${dayNumber}.`,
             videoUrl: atom?.hd_video_url,
             visualUrl: atom?.visual_url,
             // Keep reference to full atom content for advanced features
-            atomContent: atom?.content
+            atomContent: atom?.content,
+            // Interactive choice fields (new universal choice model)
+            choice_intro: content.choice_intro,
+            option_a: content.option_a,
+            option_b: content.option_b,
+            success_response: content.success_response,
+            alt_response: content.alt_response,
           };
         });
         
@@ -6873,13 +6980,24 @@
       syncSimulatedCommentsForPhase();
 
       // Phase-specific mechanics
+      
+      // Check if current atom has interactive choices (new universal choice model)
+      const currentAtom = lessonAtoms[state.currentPhase];
+      const hasChoices = currentAtom?.choice_intro || currentAtom?.option_a;
+      
+      if (hasChoices) {
+        // Universal choice UI for ANY phase with choice content
+        enterPhaseWithChoices(currentAtom);
+        return;
+      }
+      
+      // Legacy: Cliff phase fallback (if no new choice content)
       if (isCliffPhase()) {
-        // Cliff owns the UI + pacing.
         enterCliffPhase(currentLesson);
         return;
       }
 
-      // Leaving cliff (or any non-cliff phase) should reset cliff wait state/UI.
+      // Leaving choice phase should reset wait state/UI
       if (state.waitingForChoice) state.waitingForChoice = false;
       clearCliffTimeout();
       hideCliffUI({ resetSelection: true });
@@ -6899,6 +7017,97 @@
           videoUrl: lessonAtoms[state.currentPhase].videoUrl,
         }).catch(() => {});
       }
+    }
+    
+    // NEW: Universal choice handler for any phase with interactive content
+    function enterPhaseWithChoices(atom) {
+      const phase = PHASES[state.currentPhase];
+      
+      // Reset UI + state
+      clearCliffTimeout();
+      state.waitingForChoice = true;
+      state.manualAdvancePending = false;
+      hideCliffUI({ resetSelection: true });
+
+      // Update UI labels from atom content
+      const promptEl = document.getElementById('cliff-prompt');
+      const labelAEl = document.getElementById('cliff-label-a');
+      const labelBEl = document.getElementById('cliff-label-b');
+      const btnA = document.getElementById('cliff-choice-a');
+      const btnB = document.getElementById('cliff-choice-b');
+      
+      if (promptEl) promptEl.textContent = atom.choice_intro || 'Choose your path:';
+      if (labelAEl) labelAEl.textContent = atom.option_a?.title || 'Option A';
+      if (labelBEl) labelBEl.textContent = atom.option_b?.title || 'Option B';
+      
+      // Update descriptions
+      const descAEl = document.getElementById('cliff-desc-a');
+      const descBEl = document.getElementById('cliff-desc-b');
+      if (descAEl) descAEl.textContent = atom.option_a?.description || '';
+      if (descBEl) descBEl.textContent = atom.option_b?.description || '';
+
+      // Show container
+      const container = document.getElementById('cliff-container');
+      if (container) {
+        container.hidden = false;
+        container.classList.remove('hidden');
+      }
+
+      // Store atom for choice handler
+      window.__currentChoiceAtom = atom;
+
+      // Kelly speaks the intro
+      typewriterEffect(document.getElementById('caption-text'), atom.choice_intro || 'Make your choice...');
+      playPhaseMedia({
+        dbPhase: phase?.dbName || phase?.name,
+        script: atom.script || atom.choice_intro,
+      }).catch(() => {});
+
+      // Start timeout for auto-select
+      state.cliffTimeout = setTimeout(() => {
+        if (state.waitingForChoice) handleUniversalChoice('A');
+      }, CLIFF_WAIT_TIME);
+
+      animateCliffTimer();
+      saveState();
+    }
+    
+    // NEW: Universal choice handler
+    function handleUniversalChoice(choice) {
+      if (!state.waitingForChoice) return;
+      clearCliffTimeout();
+      state.waitingForChoice = false;
+      state.cliffChoice = choice;
+      state.manualAdvancePending = true;
+
+      const atom = window.__currentChoiceAtom;
+      const phase = PHASES[state.currentPhase];
+      
+      // Visual feedback
+      document.getElementById('cliff-choice-a')?.classList.toggle('selected', choice === 'A');
+      document.getElementById('cliff-choice-b')?.classList.toggle('selected', choice === 'B');
+      document.getElementById('cliff-container')?.classList.add('choice-made');
+
+      // Get response from atom
+      const response = choice === 'A' 
+        ? (atom?.success_response || atom?.option_a?.kelly_script || "Great choice!")
+        : (atom?.alt_response || atom?.option_b?.kelly_script || "Interesting choice!");
+      
+      // Kelly acknowledges
+      typewriterEffect(document.getElementById('caption-text'), response);
+      playPhaseMedia({ 
+        dbPhase: phase?.dbName || phase?.name, 
+        script: response 
+      }).catch(() => {});
+
+      // Advance after acknowledgment
+      setTimeout(() => {
+        hideCliffUI({ resetSelection: false });
+        state.manualAdvancePending = false;
+        window.__currentChoiceAtom = null;
+        saveState();
+        advancePhase();
+      }, 3000);
     }
     
     function updateLessonUI() {
@@ -8358,9 +8567,21 @@
         }
       });
 
-      // Cliff choice buttons
-      document.getElementById('cliff-choice-a')?.addEventListener('click', () => handleCliffChoice('A'));
-      document.getElementById('cliff-choice-b')?.addEventListener('click', () => handleCliffChoice('B'));
+      // Cliff/Choice buttons - use universal handler if atom has choice content
+      document.getElementById('cliff-choice-a')?.addEventListener('click', () => {
+        if (window.__currentChoiceAtom) {
+          handleUniversalChoice('A');
+        } else {
+          handleCliffChoice('A');
+        }
+      });
+      document.getElementById('cliff-choice-b')?.addEventListener('click', () => {
+        if (window.__currentChoiceAtom) {
+          handleUniversalChoice('B');
+        } else {
+          handleCliffChoice('B');
+        }
+      });
 
       // Lesson control bar
       document.getElementById('btn-play-pause')?.addEventListener('click', () => {
