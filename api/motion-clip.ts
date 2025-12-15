@@ -66,7 +66,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(200).json({ videoUrl: null, duration: data?.duration ?? null, fallback: true });
     }
 
-    res.setHeader('Cache-Control', 'public, s-maxage=3600, stale-while-revalidate=86400');
+    // Reduced cache time after video migration to Supabase (was 3600s)
+    res.setHeader('Cache-Control', 'public, s-maxage=300, stale-while-revalidate=600');
     return res.status(200).json({ videoUrl: data.video_url, duration: data.duration ?? null, fallback: false });
   } catch (e) {
     const message = e instanceof Error ? e.message : 'Unknown error';
