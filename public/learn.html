@@ -4675,10 +4675,15 @@
     // TESTING MODE - Set to false for production
     // ============================================
     // Production default: OFF.
-    // Opt-in for local QA: `?testing=true&bypass=testing`
+    // Opt-in for local QA: `?testing=true&bypass=testing` or set in config.js
     const urlParams = new URLSearchParams(window.location.search);
-    const TESTING_MODE = urlParams.get('testing') === 'true' || localStorage.getItem('kellyTesting') === '1';
-    const bypassTesting = TESTING_MODE && urlParams.get('bypass') === 'testing';
+    const TESTING_MODE = 
+      urlParams.get('testing') === 'true' || 
+      localStorage.getItem('kellyTesting') === '1' ||
+      window.KELLY_CONFIG?.testingMode === true;
+    const bypassTesting = 
+      (TESTING_MODE && urlParams.get('bypass') === 'testing') ||
+      window.KELLY_CONFIG?.disablePaywall === true;
     
     // ============================================
     // SUBSCRIPTION (IAP READY STUB)

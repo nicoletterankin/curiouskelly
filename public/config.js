@@ -15,6 +15,11 @@ window.KELLY_CONFIG = {
   // (If this is wrong, the frontend will 401 with "Invalid API key")
   supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI',
   
+  // CRITICAL: Enable browser-direct Supabase reads
+  // The /api/ serverless fallback was failing because SUPABASE_SERVICE_ROLE_KEY
+  // might not be set in Vercel. Browser-direct uses the anon key (above) which is safer.
+  enableSupabaseClient: true,
+  
   // Fallback endpoints
   d1ApiUrl: '/api/lessons',           // Cloudflare D1 mirror (or local API fallback)
   staticLessonsUrl: '/generated/lessons',  // Pre-exported static JSON
@@ -24,7 +29,12 @@ window.KELLY_CONFIG = {
     supabase: 5000,  // 5 seconds
     d1: 3000,        // 3 seconds  
     static: 2000     // 2 seconds
-  }
+  },
+  
+  // TESTING MODE: Disable paywall to test the core lesson experience
+  // TODO: Set to false before production launch!
+  testingMode: true,
+  disablePaywall: true
 };
 
 // Expose as global variables for legacy compatibility (learn.html, index.html, etc.)
