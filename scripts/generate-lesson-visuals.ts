@@ -57,14 +57,19 @@ class LessonVisualGenerator {
   private genAI: GoogleGenerativeAI;
   private delayMs: number;
   private uploadEnabled: boolean;
+  private dbWriteEnabled: boolean;
 
-  constructor(opts?: { delayMs?: number; uploadEnabled?: boolean }) {
+  constructor(opts?: { delayMs?: number; uploadEnabled?: boolean; dbWriteEnabled?: boolean }) {
     if (!CONFIG.GEMINI_API_KEY) {
       throw new Error('Missing GEMINI_API_KEY (or GOOGLE_AI_API_KEY / GOOGLE_API_KEY)');
     }
     this.genAI = new GoogleGenerativeAI(CONFIG.GEMINI_API_KEY);
     this.delayMs = opts?.delayMs ?? CONFIG.DEFAULT_DELAY_MS;
-    this.uploadEnabled = opts?.uploadEnabled ?? true;
+    // SAFETY DEFAULTS:
+    // - Upload is OFF by default (must be explicitly enabled via CLI/env)
+    // - DB writes are OFF by default (table may not exist; avoids accidental mutations)
+    this.uploadEnabled = opts?.uploadEnabled ?? false;
+    this.dbWriteEnabled = opts?.dbWriteEnabled ?? false;
   }
 
   private sleep(ms: number) {
@@ -245,8 +250,12 @@ Output JSON only in this exact format:
               parts: [
                 {
                   text: [
-                    'Generate one image plus a short descriptive caption.',
-                    'Constraints: 16:9 widescreen composition. No text, no captions, no logos, no watermarks inside the image.',
+                    'Generate ONE image only.',
+                    'HARD CONSTRAINTS (must follow):',
+                    '- 16:9 widescreen composition.',
+                    '- ABSOLUTELY NO TEXT of any kind (no letters, no numbers, no labels, no symbols that look like text).',
+                    '- No logos, no watermarks, no UI, no screenshots.',
+                    '- Clean, modern, educational, infographic-style (vector-like).',
                     'Prompt:',
                     prompt,
                   ].join('\n'),
@@ -364,15 +373,6 @@ Output JSON only in this exact format:
     }
   }
 
-  private async upsertLessonVisuals(dayNumber: number, patch: Record<string, any>) {
-    if (!supabase) return;
-    try {
-      await supabase.from('lesson_visuals').upsert({ day_number: dayNumber, ...patch }, { onConflict: 'day_number' });
-    } catch (err) {
-      console.error(`  ❌ Failed to upsert lesson_visuals for Day ${dayNumber}: ${this.safeString(err)}`);
-    }
-  }
-
   async processDay(dayNumber: number) {
     const lesson = (await this.getLessonFromDatabase(dayNumber)) || this.getLessonFromFile(dayNumber);
 
@@ -384,21 +384,8 @@ Output JSON only in this exact format:
     const coreLessonId = lesson._core_lesson_id;
     const dayStr = String(dayNumber).padStart(3, '0');
 
-    await this.upsertLessonVisuals(dayNumber, {
-      core_lesson_id: coreLessonId,
-      topic: lesson.title,
-      status: 'generating',
-      error: null,
-    });
-
     const plan = await this.generateVisualPlan(lesson);
     if (!plan) {
-      await this.upsertLessonVisuals(dayNumber, {
-        core_lesson_id: coreLessonId,
-        topic: lesson.title,
-        status: 'failed',
-        error: 'Failed to generate visual plan',
-      });
       return;
     }
     
@@ -446,18 +433,31 @@ Output JSON only in this exact format:
 
     const status = results.thumbnail || results.illustration || results.infographics.length > 0 ? 'completed' : 'failed';
 
-    await this.upsertLessonVisuals(dayNumber, {
-      core_lesson_id: coreLessonId,
-      topic: lesson.title,
-      thumbnail_url: results.thumbnail,
-      thumbnail_path: thumbPath,
-      illustration_url: results.illustration,
-      illustration_path: illustrationPath,
-      infographic_url: results.infographics[0] || null,
-      infographic_urls: results.infographics,
-      status,
-      error: status === 'failed' ? 'No assets generated' : null,
-    });
+    // Optional DB write hook (disabled by default).
+    // We intentionally do NOT write to a lesson_visuals table here because it may not exist,
+    // and we do not want accidental mutations during quality iteration.
+    if (this.dbWriteEnabled && supabase && coreLessonId) {
+      try {
+        await supabase.from('lesson_visuals').upsert(
+          {
+            day_number: dayNumber,
+            core_lesson_id: coreLessonId,
+            topic: lesson.title,
+            thumbnail_url: results.thumbnail,
+            thumbnail_path: thumbPath,
+            illustration_url: results.illustration,
+            illustration_path: illustrationPath,
+            infographic_url: results.infographics[0] || null,
+            infographic_urls: results.infographics,
+            status,
+            error: status === 'failed' ? 'No assets generated' : null,
+          },
+          { onConflict: 'day_number' }
+        );
+      } catch (err) {
+        console.error(`  ❌ lesson_visuals upsert failed (ignored): ${this.safeString(err)}`);
+      }
+    }
   }
 }
 
@@ -466,6 +466,8 @@ async function main() {
 
   const help = args.includes('--help') || args.includes('-h');
   const noUpload = args.includes('--no-upload') || args.includes('--skip-upload');
+  const allowUpload = args.includes('--allow-upload') || process.env.CK_ALLOW_SUPABASE_UPLOADS === '1';
+  const allowDbWrites = args.includes('--allow-db-writes') || process.env.CK_ALLOW_DB_WRITES === '1';
   const dryRun = args.includes('--dry-run');
   const delayArg = args.find((a) => a.startsWith('--delay-ms='));
   const delayMs = delayArg ? Number(delayArg.split('=')[1]) : CONFIG.DEFAULT_DELAY_MS;
@@ -479,7 +481,9 @@ Usage:
   npx tsx scripts/generate-lesson-visuals.ts --day 1
 
 Options:
-  --no-upload           Generate locally only (skip Supabase Storage upload)
+  --allow-upload        Enable Supabase Storage upload (OFF by default)
+  --no-upload           Explicitly disable upload (legacy; upload is OFF by default)
+  --allow-db-writes     Enable optional DB writes to lesson_visuals (OFF by default)
   --delay-ms=2000       Delay between image calls (default: ${CONFIG.DEFAULT_DELAY_MS})
   --dry-run             Validate env + show settings (no API calls)
 
@@ -516,7 +520,8 @@ Env:
     console.log('🔍 DRY RUN MODE');
     console.log(`Days: ${startDay} - ${endDay}`);
     console.log(`Gemini key: ${CONFIG.GEMINI_API_KEY ? 'present' : 'missing'}`);
-    console.log(`Upload: ${noUpload ? 'disabled' : supabase ? 'enabled' : 'not configured'}`);
+    console.log(`Upload: ${allowUpload && !noUpload && supabase ? 'enabled' : 'disabled (safety default)'}`);
+    console.log(`DB writes: ${allowDbWrites ? 'enabled' : 'disabled (safety default)'}`);
     console.log(`Image backend: ${CONFIG.IMAGE_BACKEND}`);
     console.log(`Gemini image model: ${CONFIG.GEMINI_IMAGE_MODEL}`);
     console.log(`Imagen model: ${CONFIG.IMAGEN_MODEL}`);
@@ -529,11 +534,16 @@ Env:
     process.exit(1);
   }
 
-  const generator = new LessonVisualGenerator({ delayMs, uploadEnabled: !noUpload });
+  const generator = new LessonVisualGenerator({
+    delayMs,
+    uploadEnabled: allowUpload && !noUpload,
+    dbWriteEnabled: allowDbWrites,
+  });
 
   console.log('🎨 GEMINI VISUAL PIPELINE');
   console.log(`Days: ${startDay} - ${endDay}`);
-  console.log(`Upload: ${noUpload ? 'disabled' : supabase ? 'enabled' : 'not configured'}`);
+  console.log(`Upload: ${allowUpload && !noUpload && supabase ? 'enabled' : 'disabled (safety default)'}`);
+  console.log(`DB writes: ${allowDbWrites ? 'enabled' : 'disabled (safety default)'}`);
   console.log(`Image backend: ${CONFIG.IMAGE_BACKEND}`);
   console.log(`Gemini image model: ${CONFIG.GEMINI_IMAGE_MODEL}`);
   console.log(`Imagen model: ${CONFIG.IMAGEN_MODEL}`);

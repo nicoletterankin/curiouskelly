@@ -192,10 +192,18 @@ async function processRange(start: number, end: number, dryRun: boolean) {
 async function main() {
   const args = process.argv.slice(2);
   const dryRun = args.includes('--dry-run');
+  const allowDbMutation = args.includes('--allow-db-mutation') || process.env.CK_ALLOW_DB_MUTATIONS === '1';
   
   const dayArg = args.find(a => a.startsWith('--day='));
   const rangeArg = args.find(a => a.startsWith('--range='));
   const allArg = args.includes('--all');
+
+  if (!dryRun && !allowDbMutation) {
+    console.error('\n❌ Refusing to mutate production DB (safety lock).');
+    console.error('   Re-run with --allow-db-mutation or set CK_ALLOW_DB_MUTATIONS=1');
+    console.error('   Tip: use --dry-run to preview without changes.\n');
+    process.exit(1);
+  }
   
   if (dayArg) {
     const day = parseInt(dayArg.split('=')[1]);
@@ -217,6 +225,7 @@ Usage:
   npx tsx scripts/link-visuals-to-atoms.ts --range=1-50   # Day range
   npx tsx scripts/link-visuals-to-atoms.ts --day=1        # Single day
   npx tsx scripts/link-visuals-to-atoms.ts --dry-run      # Preview
+  npx tsx scripts/link-visuals-to-atoms.ts --allow-db-mutation
 
 Environment Required:
   SUPABASE_URL (or PUBLIC_SUPABASE_URL)

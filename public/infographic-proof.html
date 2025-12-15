@@ -1,0 +1,225 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <title>Infographic Proof Suite | Curious Kelly</title>
+  <style>
+    :root{
+      --bg:#0a0a0b; --card:#18181b; --border:#27272a;
+      --text:#f4f4f5; --muted:#a1a1aa; --dim:#71717a;
+      --accent:#3b82f6; --gold:#fbbf24;
+      --ok:#22c55e; --warn:#f59e0b; --bad:#ef4444;
+    }
+    *{box-sizing:border-box}
+    body{margin:0;background:radial-gradient(1200px 800px at 20% 10%, #182036 0%, var(--bg) 55%);color:var(--text);font-family:ui-sans-serif,system-ui,-apple-system,Segoe UI,Roboto,Arial}
+    .wrap{max-width:1180px;margin:0 auto;padding:28px}
+    .top{display:flex;gap:18px;align-items:flex-start;justify-content:space-between;flex-wrap:wrap}
+    .card{background:rgba(24,24,27,.92);border:1px solid var(--border);border-radius:16px;box-shadow:0 18px 50px rgba(0,0,0,.45)}
+    .hero{padding:18px 18px}
+    h1{margin:0 0 6px;font-size:22px}
+    p{margin:0;color:var(--muted);line-height:1.45}
+    .actions{display:flex;gap:10px;flex-wrap:wrap;margin-top:12px}
+    .btn{appearance:none;border:1px solid var(--border);background:#0f172a;color:var(--text);padding:10px 12px;border-radius:12px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:8px}
+    .btn.primary{background:linear-gradient(135deg,var(--accent),#4f46e5);border-color:transparent}
+    .btn.ghost{background:transparent}
+    .btn:hover{transform:translateY(-1px)}
+    .grid{display:grid;grid-template-columns:1fr 360px;gap:18px;margin-top:18px}
+    @media (max-width:980px){.grid{grid-template-columns:1fr}}
+    .panel{padding:14px}
+    .viewer{padding:12px}
+    .frame{width:100%;aspect-ratio:16/9;border:1px solid var(--border);border-radius:14px;overflow:hidden;background:#0b1220}
+    .frame iframe{width:100%;height:100%;border:0;background:#0b1220}
+    .meta{margin-top:12px;display:grid;gap:10px}
+    .kv{padding:10px 12px;border:1px solid var(--border);border-radius:12px;background:rgba(10,10,11,.35)}
+    .kv b{display:block;font-size:12px;color:var(--dim);margin-bottom:6px;text-transform:uppercase;letter-spacing:.08em}
+    .kv code{color:var(--text);word-break:break-word}
+
+    .field{display:grid;gap:8px;margin-top:10px}
+    label{font-weight:800;font-size:12px;color:var(--muted);text-transform:uppercase;letter-spacing:.08em}
+    textarea,input,select{width:100%;padding:10px 12px;border-radius:12px;border:1px solid var(--border);background:#0b1220;color:var(--text)}
+    textarea{min-height:110px;resize:vertical}
+
+    .rating{display:grid;gap:10px}
+    .row{display:grid;grid-template-columns:1fr;gap:8px;padding:10px;border:1px solid var(--border);border-radius:12px;background:rgba(10,10,11,.35)}
+    .row .title{display:flex;justify-content:space-between;gap:8px;align-items:center}
+    .chips{display:flex;gap:8px;flex-wrap:wrap}
+    .chip{padding:8px 10px;border-radius:999px;border:1px solid var(--border);background:#0b1220;cursor:pointer;font-weight:800;font-size:12px}
+    .chip.ok.sel{border-color:var(--ok);background:rgba(34,197,94,.16)}
+    .chip.warn.sel{border-color:var(--warn);background:rgba(245,158,11,.16)}
+    .chip.bad.sel{border-color:var(--bad);background:rgba(239,68,68,.16)}
+
+    .save{margin-top:12px;display:flex;gap:10px;flex-wrap:wrap}
+    .small{font-size:12px;color:var(--muted)}
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <div class="top">
+      <div class="card hero" style="flex:1;min-width:320px">
+        <h1>Infographic Proof Suite (Gemini → Brand SVG)</h1>
+        <p>
+          This suite is the new plan: Gemini outputs a structured infographic brief, then we render a <b>locked</b> on-brand SVG with crisp text and consistent style.
+          Nothing uploads until you approve.
+        </p>
+        <div class="actions">
+          <button class="btn primary" id="btn-load">Load Day 7 proof</button>
+          <a class="btn ghost" href="/visual-quality-review.html" target="_blank" rel="noopener">Old review suite</a>
+        </div>
+        <div class="small" style="margin-top:10px">Tip: run <code>npx tsx scripts/gemini-infographic-proof.ts --day=7</code> then refresh.</div>
+      </div>
+
+      <div class="card panel" style="width:360px">
+        <div class="rating">
+          <div class="row">
+            <div class="title"><b>Production readiness</b><span class="small" id="status">Not rated</span></div>
+            <div class="chips" data-key="overall">
+              <button class="chip ok" data-val="approve">Approve</button>
+              <button class="chip warn" data-val="revise">Revise</button>
+              <button class="chip bad" data-val="reject">Reject</button>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="title"><b>Brand match</b><span class="small">palette, typography, vibe</span></div>
+            <div class="chips" data-key="brand">
+              <button class="chip ok" data-val="good">Good</button>
+              <button class="chip warn" data-val="mixed">Mixed</button>
+              <button class="chip bad" data-val="poor">Poor</button>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="title"><b>Academic quality</b><span class="small">accuracy + clarity</span></div>
+            <div class="chips" data-key="academic">
+              <button class="chip ok" data-val="good">Good</button>
+              <button class="chip warn" data-val="mixed">Mixed</button>
+              <button class="chip bad" data-val="poor">Poor</button>
+            </div>
+          </div>
+
+          <div class="row">
+            <div class="title"><b>Kid-fit</b><span class="small">5–12 clarity</span></div>
+            <div class="chips" data-key="age">
+              <button class="chip ok" data-val="good">Good</button>
+              <button class="chip warn" data-val="mixed">Mixed</button>
+              <button class="chip bad" data-val="poor">Poor</button>
+            </div>
+          </div>
+
+          <div class="field">
+            <label for="notes">Notes</label>
+            <textarea id="notes" placeholder="What is off-brand? What should change? What should stay?"></textarea>
+          </div>
+
+          <div class="save">
+            <button class="btn primary" id="btn-export">Export feedback JSON</button>
+            <button class="btn" id="btn-copy">Copy JSON</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid">
+      <div class="card viewer">
+        <div class="frame">
+          <iframe id="svgFrame" title="Infographic preview"></iframe>
+        </div>
+        <div class="meta">
+          <div class="kv"><b>SVG</b><code id="svgPath">(not loaded)</code></div>
+          <div class="kv"><b>Brief JSON</b><code id="jsonPath">(not loaded)</code></div>
+        </div>
+      </div>
+
+      <div class="card panel">
+        <h1 style="font-size:16px;margin:0 0 10px">What to check</h1>
+        <ul style="margin:0;padding-left:18px;color:var(--muted);line-height:1.6">
+          <li><b>Zero gibberish text</b> (all text is ours, crisp)</li>
+          <li><b>Palette match</b> (dark premium + blue accent + gold)</li>
+          <li><b>Diagram clarity</b> in 3 seconds</li>
+          <li><b>Accuracy</b> (no misconceptions)</li>
+          <li><b>Reusable template</b> for 365 days</li>
+        </ul>
+        <div style="margin-top:12px" class="small">
+          This proof is local-only. Uploads stay locked until you approve.
+        </div>
+      </div>
+    </div>
+  </div>
+
+<script>
+  const state = {
+    overall: null,
+    brand: null,
+    academic: null,
+    age: null,
+    notes: ''
+  };
+
+  function setChip(groupEl, val){
+    const key = groupEl.dataset.key;
+    state[key] = val;
+    groupEl.querySelectorAll('.chip').forEach(btn => btn.classList.remove('sel'));
+    const chosen = groupEl.querySelector(`[data-val="${val}"]`);
+    if (chosen) chosen.classList.add('sel');
+
+    const status = document.getElementById('status');
+    if (state.overall) status.textContent = state.overall.toUpperCase();
+    else status.textContent = 'Not rated';
+  }
+
+  document.querySelectorAll('.chips').forEach(group => {
+    group.addEventListener('click', (e) => {
+      const btn = e.target.closest('.chip');
+      if (!btn) return;
+      setChip(group, btn.dataset.val);
+    });
+  });
+
+  document.getElementById('notes').addEventListener('input', (e) => {
+    state.notes = e.target.value;
+  });
+
+  function payload(){
+    return {
+      timestamp: new Date().toISOString(),
+      artifact: {
+        day: 7,
+        svg: document.getElementById('svgPath').textContent,
+        brief: document.getElementById('jsonPath').textContent,
+      },
+      ratings: {
+        overall: state.overall,
+        brand: state.brand,
+        academic: state.academic,
+        age: state.age,
+      },
+      notes: state.notes
+    };
+  }
+
+  document.getElementById('btn-export').addEventListener('click', () => {
+    const blob = new Blob([JSON.stringify(payload(), null, 2)], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `infographic-proof-feedback-${new Date().toISOString().slice(0,10)}.json`;
+    a.click();
+    URL.revokeObjectURL(url);
+  });
+
+  document.getElementById('btn-copy').addEventListener('click', async () => {
+    await navigator.clipboard.writeText(JSON.stringify(payload(), null, 2));
+    alert('Copied feedback JSON to clipboard');
+  });
+
+  document.getElementById('btn-load').addEventListener('click', () => {
+    const svg = '/infographic-proof/day-007-cross_section.svg';
+    const json = '/infographic-proof/day-007-cross_section.brief.json';
+    document.getElementById('svgFrame').src = svg;
+    document.getElementById('svgPath').textContent = svg;
+    document.getElementById('jsonPath').textContent = json;
+  });
+</script>
+</body>
+</html>

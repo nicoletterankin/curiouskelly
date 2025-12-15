@@ -34,9 +34,14 @@ window.KELLY_CONFIG = {
   // PRODUCTION MODE: Paywall enabled, access tiers active
   testingMode: false,
   disablePaywall: false,
+
+  // VISUALS (INFOGRAPHIC POPUPS)
+  // Disabled until the on-brand infographic pipeline passes QA.
+  // Prevents low-quality/incorrect visuals from showing in production.
+  visualsEnabled: false,
   
   // ACCESS MODEL:
-  // - "Today's lesson" is ALWAYS free for everyone, forever
+  // - "Today's lesson" is ALWAYS included for everyone, forever
   // - Pay-per-lesson for past/future lessons
   // - Subscription unlocks all 365 + emergency lessons
   //
