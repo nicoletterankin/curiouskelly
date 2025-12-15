@@ -761,6 +761,87 @@
       padding: 12px;
     }
 
+    /* ============================================
+       CHECKOUT PANEL (Invisible Commerce)
+       ============================================ */
+    .checkout-panel {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 6px 2px;
+      min-height: 0;
+    }
+    .checkout-title {
+      font-weight: 800;
+      font-size: 16px;
+      color: rgba(255,255,255,0.95);
+    }
+    .checkout-subtitle {
+      font-size: 12px;
+      opacity: 0.75;
+      margin-top: 6px;
+      line-height: 1.4;
+    }
+    .checkout-plans { display: flex; flex-direction: column; gap: 10px; }
+    .checkout-plan {
+      width: 100%;
+      text-align: left;
+      border-radius: 16px;
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(255,255,255,0.06);
+      color: rgba(255,255,255,0.92);
+      padding: 14px 14px;
+      cursor: pointer;
+    }
+    .checkout-plan.selected {
+      border-color: rgba(var(--kelly-color-rgb), 0.55);
+      background: rgba(var(--kelly-color-rgb), 0.12);
+    }
+    .checkout-plan .row {
+      display: flex;
+      align-items: baseline;
+      justify-content: space-between;
+      gap: 10px;
+      font-weight: 750;
+    }
+    .checkout-plan .note {
+      margin-top: 6px;
+      font-size: 12px;
+      opacity: 0.70;
+    }
+    .checkout-cta {
+      width: 100%;
+      border: none;
+      border-radius: 16px;
+      padding: 14px 16px;
+      font-weight: 800;
+      cursor: pointer;
+      background: var(--kelly-color);
+      color: #fff;
+      margin-top: 6px;
+    }
+    .checkout-cta:disabled { opacity: 0.75; cursor: not-allowed; }
+    .checkout-terms {
+      font-size: 11px;
+      opacity: 0.65;
+      line-height: 1.35;
+    }
+    .checkout-embedded.hidden,
+    .checkout-plans.hidden { display: none; }
+    .checkout-back {
+      background: transparent;
+      border: none;
+      color: rgba(255,255,255,0.75);
+      cursor: pointer;
+      padding: 6px 0;
+      font-weight: 700;
+    }
+    #stripe-embedded-checkout {
+      min-height: 420px;
+      border-radius: 16px;
+      overflow: hidden;
+    }
+
     /* Left panel chat UI */
     .comments-feed {
       flex: 1;
@@ -3356,6 +3437,7 @@
             <div class="panel-body scrollable">
               <div id="panel-journey-slot"></div>
               <div id="panel-settings-slot" style="display:none;"></div>
+              <div id="panel-checkout-slot" style="display:none;"></div>
             </div>
           </div>
         </aside>
@@ -3807,14 +3889,14 @@
         <div class="paywall-options">
           <button class="paywall-option" id="plan-monthly" type="button">
             <span class="plan-name">Monthly</span>
-            <span class="plan-price">$9.99/mo</span>
+            <span class="plan-price">$7.99/mo</span>
           </button>
 
           <button class="paywall-option featured" id="plan-yearly" type="button">
             <span class="plan-badge">Best value</span>
             <span class="plan-name">Yearly</span>
-            <span class="plan-price">$79.99/yr</span>
-            <span class="plan-savings">Save 33%</span>
+            <span class="plan-price">$49.99/yr</span>
+            <span class="plan-savings">Save vs monthly</span>
           </button>
 
           <button class="paywall-option" id="plan-lifetime" type="button">
@@ -3836,6 +3918,9 @@
   <button id="kelly-presence-toggle" class="kelly-presence-toggle" onclick="cycleKellyPresence()">
     <span id="kelly-presence-label">50%</span>
   </button>
+
+  <!-- Stripe.js for embedded checkout -->
+  <script src="https://js.stripe.com/v3/"></script>
 
   <script>
     // ============================================
@@ -3971,9 +4056,10 @@
       const rightTitle = document.getElementById('right-panel-title');
       const journeySlot = document.getElementById('panel-journey-slot');
       const settingsSlot = document.getElementById('panel-settings-slot');
+      const checkoutSlot = document.getElementById('panel-checkout-slot');
 
       const leftOpen = open === 'left';
-      const rightOpen = open === 'journey' || open === 'settings';
+      const rightOpen = open === 'journey' || open === 'settings' || open === 'checkout';
 
       if (left) {
         left.classList.toggle('open', leftOpen);
@@ -3985,12 +4071,16 @@
       }
 
       if (rightTitle) {
-        rightTitle.textContent = open === 'settings' ? '⚙️ Settings' : '📅 Journey';
+        rightTitle.textContent =
+          open === 'settings' ? '⚙️ Settings' :
+          open === 'checkout' ? '💳 Upgrade' :
+          '📅 Journey';
       }
 
-      if (journeySlot && settingsSlot) {
+      if (journeySlot && settingsSlot && checkoutSlot) {
         journeySlot.style.display = open === 'journey' ? '' : 'none';
         settingsSlot.style.display = open === 'settings' ? '' : 'none';
+        checkoutSlot.style.display = open === 'checkout' ? '' : 'none';
       }
 
       // Nav highlight: when a panel is open, highlight that tab; otherwise defer to scene management.
@@ -4584,25 +4674,22 @@
     // ============================================
     // TESTING MODE - Set to false for production
     // ============================================
-    const TESTING_MODE = true; // ⚠️ DISABLE PAYWALL FOR TESTING - Set to false before launch
-    
-    // Check URL param or localStorage for testing bypass
+    // Production default: OFF.
+    // Opt-in for local QA: `?testing=true&bypass=testing`
     const urlParams = new URLSearchParams(window.location.search);
-    const bypassTesting = urlParams.get('bypass') === 'testing' || 
-                          localStorage.getItem('kelly_bypass_paywall') === 'true' ||
-                          localStorage.getItem('kelly_subscription_status') === 'lifetime';
-    
-    if (urlParams.get('bypass') === 'testing') {
-      localStorage.setItem('kelly_bypass_paywall', 'true');
-      debugLog('🔓 Testing bypass enabled via URL param');
-    }
+    const TESTING_MODE = urlParams.get('testing') === 'true' || localStorage.getItem('kellyTesting') === '1';
+    const bypassTesting = TESTING_MODE && urlParams.get('bypass') === 'testing';
     
     // ============================================
     // SUBSCRIPTION (IAP READY STUB)
     // ============================================
     const DEFAULT_SUBSCRIPTION = {
-      tier: 'included', // included | monthly | yearly | lifetime
-      expiresAt: null
+      tier: 'included', // included | monthly | annual | lifetime
+      status: 'inactive',
+      expiresAt: null,
+      cancelAtPeriodEnd: false,
+      checkedAt: null,
+      source: 'local'
     };
 
     let subscription = { ...DEFAULT_SUBSCRIPTION };
@@ -4627,11 +4714,13 @@
     }
 
     function isPremium() {
-      // Testing mode bypass
-      if (TESTING_MODE || bypassTesting) return true;
+      // Testing bypass ONLY when explicitly enabled.
+      if (TESTING_MODE && bypassTesting) return true;
       
       if (subscription.tier === 'lifetime') return true;
-      if (subscription.tier === 'monthly' || subscription.tier === 'yearly') {
+      if (subscription.tier === 'monthly' || subscription.tier === 'annual') {
+        // Server-verified status is authoritative when present.
+        if (subscription.status === 'active' || subscription.status === 'trialing') return true;
         return !!subscription.expiresAt && new Date(subscription.expiresAt) > new Date();
       }
       return false;
@@ -4653,6 +4742,7 @@
     }
 
     function showPaywall() {
+      // Paywall selection stays as overlay, but checkout happens in the right panel (in-app).
       const el = document.getElementById('paywall');
       el.classList.add('visible');
       el.setAttribute('aria-hidden', 'false');
@@ -4666,13 +4756,214 @@
 
     function selectPlan(plan) {
       debugLog('Selected plan:', plan);
-      showToast('Purchases are coming soon.');
-      // Stub only: do not grant entitlements here.
+      // Web: use embedded Stripe checkout inside the right panel.
+      // Native app: defer to IAP (future).
+      if (isNativeApp()) {
+        showToast('In-app purchases coming soon.');
+        return;
+      }
+      openCheckoutPanel(plan === 'yearly' ? 'annual' : plan);
     }
 
     function restorePurchases() {
       debugLog('Restoring purchases...');
       showToast('Checking for purchases...');
+    }
+
+    // ============================================
+    // INVISIBLE COMMERCE (RIGHT PANEL CHECKOUT)
+    // ============================================
+    let __stripePublishableKey = null;
+    let __embeddedCheckout = null;
+    let __selectedPlanType = 'annual'; // monthly | annual | lifetime
+
+    async function getSupabaseSession() {
+      try {
+        if (!supabase?.auth?.getSession) return null;
+        const { data: { session } } = await supabase.auth.getSession();
+        return session || null;
+      } catch (_) {
+        return null;
+      }
+    }
+
+    async function fetchStripePublicKey() {
+      if (__stripePublishableKey) return __stripePublishableKey;
+      const res = await fetch('/api/stripe-public');
+      const json = await res.json();
+      if (!res.ok || !json?.publishableKey) throw new Error(json?.message || 'stripe_public_key_unavailable');
+      __stripePublishableKey = json.publishableKey;
+      return __stripePublishableKey;
+    }
+
+    function renderCheckoutPanel() {
+      const slot = document.getElementById('panel-checkout-slot');
+      if (!slot) return;
+
+      slot.innerHTML = `
+        <div class="checkout-panel">
+          <div class="checkout-header">
+            <div class="checkout-title">Unlock Kelly+</div>
+            <div class="checkout-subtitle">Seamless, secure checkout—without leaving Kelly.</div>
+          </div>
+
+          <div class="checkout-plans" id="checkout-plans">
+            <button class="checkout-plan ${__selectedPlanType === 'annual' ? 'selected' : ''}" data-plan="annual" type="button">
+              <div class="row">
+                <div class="name">Yearly</div>
+                <div class="price">$49.99/yr</div>
+              </div>
+              <div class="note">Best value</div>
+            </button>
+            <button class="checkout-plan ${__selectedPlanType === 'monthly' ? 'selected' : ''}" data-plan="monthly" type="button">
+              <div class="row">
+                <div class="name">Monthly</div>
+                <div class="price">$7.99/mo</div>
+              </div>
+              <div class="note">Cancel anytime</div>
+            </button>
+            <button class="checkout-plan ${__selectedPlanType === 'lifetime' ? 'selected' : ''}" data-plan="lifetime" type="button">
+              <div class="row">
+                <div class="name">Lifetime</div>
+                <div class="price">$199.99</div>
+              </div>
+              <div class="note">One-time</div>
+            </button>
+
+            <button class="checkout-cta" id="checkout-cta" type="button">Continue</button>
+            <div class="checkout-terms">Trial applies to subscriptions. No card numbers are stored by Curious Kelly.</div>
+          </div>
+
+          <div class="checkout-embedded hidden" id="checkout-embedded">
+            <button class="checkout-back" id="checkout-back" type="button">← Back</button>
+            <div id="stripe-embedded-checkout"></div>
+          </div>
+        </div>
+      `;
+
+      slot.querySelectorAll('.checkout-plan').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          __selectedPlanType = btn.getAttribute('data-plan') || 'annual';
+          renderCheckoutPanel();
+        });
+      });
+
+      slot.querySelector('#checkout-cta')?.addEventListener('click', startEmbeddedCheckoutFlow);
+      slot.querySelector('#checkout-back')?.addEventListener('click', () => {
+        destroyEmbeddedCheckout();
+        slot.querySelector('#checkout-plans')?.classList.remove('hidden');
+        slot.querySelector('#checkout-embedded')?.classList.add('hidden');
+      });
+    }
+
+    function destroyEmbeddedCheckout() {
+      try {
+        if (__embeddedCheckout && typeof __embeddedCheckout.destroy === 'function') {
+          __embeddedCheckout.destroy();
+        }
+      } catch (_) {}
+      __embeddedCheckout = null;
+    }
+
+    async function openCheckoutPanel(defaultPlanType = 'annual') {
+      __selectedPlanType = (defaultPlanType === 'yearly' ? 'annual' : defaultPlanType) || 'annual';
+      openPanel('checkout');
+      renderCheckoutPanel();
+      // Also close the legacy paywall overlay if it’s open.
+      try { closePaywall(); } catch (_) {}
+    }
+
+    async function startEmbeddedCheckoutFlow() {
+      const slot = document.getElementById('panel-checkout-slot');
+      const cta = slot?.querySelector('#checkout-cta');
+      if (cta) { cta.textContent = 'Loading…'; cta.disabled = true; }
+
+      try {
+        const publishableKey = await fetchStripePublicKey();
+        const stripe = window.Stripe(publishableKey);
+        if (!stripe?.initEmbeddedCheckout) throw new Error('stripe_embedded_checkout_unavailable');
+
+        const session = await getSupabaseSession();
+        const userId = session?.user?.id || '';
+        const email = session?.user?.email || localStorage.getItem('kelly_user_email') || '';
+
+        if (!email) {
+          throw new Error('missing_email');
+        }
+
+        const referralCode =
+          (typeof window.getReferralCode === 'function' ? window.getReferralCode() : null) ||
+          (localStorage.getItem('kelly_referrer') || null);
+
+        const resp = await fetch('/api/create-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            planType: __selectedPlanType,
+            customerEmail: email,
+            userId: userId,
+            referralCode: referralCode || undefined,
+          }),
+        });
+        const json = await resp.json();
+        if (!resp.ok || !json?.clientSecret) throw new Error(json?.message || json?.error || 'checkout_failed');
+
+        // Swap UI
+        slot?.querySelector('#checkout-plans')?.classList.add('hidden');
+        slot?.querySelector('#checkout-embedded')?.classList.remove('hidden');
+
+        destroyEmbeddedCheckout();
+        __embeddedCheckout = await stripe.initEmbeddedCheckout({ clientSecret: json.clientSecret });
+        __embeddedCheckout.mount('#stripe-embedded-checkout');
+      } catch (e) {
+        console.error('[checkout] failed:', e);
+        showToast('Could not start checkout. Please try again.');
+      } finally {
+        if (cta) { cta.textContent = 'Continue'; cta.disabled = false; }
+      }
+    }
+
+    async function refreshSubscriptionFromServer() {
+      try {
+        if (STATIC_ONLY_MODE) return;
+        const session = await getSupabaseSession();
+        if (!session?.access_token) return;
+
+        const res = await fetch('/api/subscription-status', {
+          headers: { 'Authorization': `Bearer ${session.access_token}` }
+        });
+        const json = await res.json();
+        if (!res.ok || !json?.subscription) return;
+
+        subscription = {
+          ...DEFAULT_SUBSCRIPTION,
+          tier: json.subscription.tier || 'included',
+          status: json.subscription.status || 'inactive',
+          expiresAt: json.subscription.expiresAt || null,
+          cancelAtPeriodEnd: !!json.subscription.cancelAtPeriodEnd,
+          checkedAt: json.subscription.checkedAt || new Date().toISOString(),
+          source: json.subscription.source || 'server'
+        };
+        saveSubscription();
+
+        // Update UI label
+        const subValue = document.getElementById('subscription-value');
+        if (subValue) subValue.textContent = isPremium() ? 'Premium' : 'Included';
+      } catch (_) {
+        // ignore
+      }
+    }
+
+    // Auto-refresh subscription on load if signed in
+    setTimeout(() => {
+      try { refreshSubscriptionFromServer(); } catch (_) {}
+    }, 400);
+
+    // If Stripe redirected back after embedded checkout completion, refresh status.
+    if (urlParams.get('checkout') === 'success') {
+      setTimeout(() => {
+        try { refreshSubscriptionFromServer(); } catch (_) {}
+      }, 800);
     }
     
     // Lesson cache
