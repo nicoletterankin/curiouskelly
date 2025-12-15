@@ -42,7 +42,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const body = req.body as RedeemRequest;
+  // Parse body (defensive: Vercel may throw on invalid JSON)
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  let body: any = {};
+  try {
+    body = req.body as RedeemRequest;
+  } catch {
+    return res.status(400).json({ error: 'invalid_json' });
+  }
   
   // Validate inputs
   if (!body.code || body.code.length !== 12) {

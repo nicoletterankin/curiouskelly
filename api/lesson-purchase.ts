@@ -94,8 +94,15 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
     
     try {
-      // Parse body
-      const body = req.body || {};
+      // Parse body (defensive: Vercel may throw on invalid JSON)
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+      let body: any = {};
+      try {
+        body = req.body || {};
+      } catch {
+        body = {};
+      }
+
       const dayNumber = parseInt(body.day_number) || 0;
       
       if (dayNumber < 1 || dayNumber > 366) {
