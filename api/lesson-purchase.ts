@@ -41,21 +41,34 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
   
   // POST: Create checkout session
   if (req.method === 'POST') {
-    const stripeKey = process.env.STRIPE_SECRET_KEY;
+    // Parse body - Vercel should auto-parse JSON, but check
+    let body = req.body;
+    if (typeof body === 'string') {
+      try {
+        body = JSON.parse(body);
+      } catch (e) {
+        body = {};
+      }
+    }
+    body = body || {};
     
-    if (!stripeKey) {
-      return res.status(503).send(JSON.stringify({ 
-        error: 'stripe_not_configured',
-        message: 'Stripe is not configured'
+    const dayNumber = parseInt(body.day_number) || 0;
+    
+    if (dayNumber < 1 || dayNumber > 366) {
+      return res.status(400).send(JSON.stringify({ 
+        error: 'Invalid day number',
+        received: body,
+        day_parsed: dayNumber
       }));
     }
     
-    // For now, return a placeholder (full Stripe integration pending)
-    const body = req.body || {};
-    const dayNumber = body.day_number;
-    
-    if (!dayNumber || dayNumber < 1 || dayNumber > 366) {
-      return res.status(400).send(JSON.stringify({ error: 'Invalid day number' }));
+    const stripeKey = process.env.STRIPE_SECRET_KEY;
+    if (!stripeKey) {
+      return res.status(200).send(JSON.stringify({ 
+        message: 'Single lesson purchase endpoint ready (Stripe pending)',
+        day_number: dayNumber,
+        price: '$1.99'
+      }));
     }
     
     // Return info about how to purchase (Stripe checkout will be added)
@@ -63,7 +76,7 @@ export default function handler(req: VercelRequest, res: VercelResponse) {
       message: 'Single lesson purchase endpoint ready',
       day_number: dayNumber,
       price: '$1.99',
-      note: 'Full Stripe integration coming soon'
+      stripe_configured: true
     }));
   }
   
