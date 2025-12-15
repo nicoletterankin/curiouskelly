@@ -6,6 +6,8 @@
  * 
  * GET /api/lesson-purchase?day=N
  * Check if a lesson has been purchased.
+ * 
+ * Updated: Dec 15, 2025 - Simplified for initial deployment
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
