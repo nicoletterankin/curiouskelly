@@ -63,10 +63,15 @@
           Nothing uploads until you approve.
         </p>
         <div class="actions">
-          <button class="btn primary" id="btn-load">Load Day 7 proof</button>
+          <select id="sel-proof" aria-label="Select proof"></select>
+          <button class="btn primary" id="btn-load">Load selected</button>
           <a class="btn ghost" href="/visual-quality-review.html" target="_blank" rel="noopener">Old review suite</a>
         </div>
-        <div class="small" style="margin-top:10px">Tip: run <code>npx tsx scripts/gemini-infographic-proof.ts --day=7</code> then refresh.</div>
+        <div class="small" style="margin-top:10px">
+          Tip: generate more locally with
+          <code>npx tsx scripts/gemini-infographic-proof.ts --day=6 --template=process_flow</code>
+          then refresh.
+        </div>
       </div>
 
       <div class="card panel" style="width:360px">
@@ -184,7 +189,7 @@
     return {
       timestamp: new Date().toISOString(),
       artifact: {
-        day: 7,
+        proof: document.getElementById('sel-proof')?.value || null,
         svg: document.getElementById('svgPath').textContent,
         brief: document.getElementById('jsonPath').textContent,
       },
@@ -213,12 +218,36 @@
     alert('Copied feedback JSON to clipboard');
   });
 
+  const PROOFS = [
+    { id: 'day-006-process_flow', label: 'Day 6 • Process flow (Seeds)', svg: '/infographic-proof/day-006-process_flow.svg', json: '/infographic-proof/day-006-process_flow.brief.json' },
+    { id: 'day-007-cross_section', label: 'Day 7 • Cross section (Stars)', svg: '/infographic-proof/day-007-cross_section.svg', json: '/infographic-proof/day-007-cross_section.brief.json' },
+    { id: 'day-010-compare', label: 'Day 10 • Compare (Listening)', svg: '/infographic-proof/day-010-compare.svg', json: '/infographic-proof/day-010-compare.brief.json' },
+    { id: 'day-033-cross_section', label: 'Day 33 • Cross section (Gravity)', svg: '/infographic-proof/day-033-cross_section.svg', json: '/infographic-proof/day-033-cross_section.brief.json' },
+  ];
+
+  function loadProofById(id){
+    const p = PROOFS.find(x => x.id === id) || PROOFS[0];
+    if (!p) return;
+    document.getElementById('svgFrame').src = p.svg;
+    document.getElementById('svgPath').textContent = p.svg;
+    document.getElementById('jsonPath').textContent = p.json;
+  }
+
+  (function init(){
+    const sel = document.getElementById('sel-proof');
+    PROOFS.forEach(p => {
+      const o = document.createElement('option');
+      o.value = p.id;
+      o.textContent = p.label;
+      sel.appendChild(o);
+    });
+    sel.value = 'day-007-cross_section';
+    loadProofById(sel.value);
+  })();
+
   document.getElementById('btn-load').addEventListener('click', () => {
-    const svg = '/infographic-proof/day-007-cross_section.svg';
-    const json = '/infographic-proof/day-007-cross_section.brief.json';
-    document.getElementById('svgFrame').src = svg;
-    document.getElementById('svgPath').textContent = svg;
-    document.getElementById('jsonPath').textContent = json;
+    const sel = document.getElementById('sel-proof');
+    loadProofById(sel.value);
   });
 </script>
 </body>
