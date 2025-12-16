@@ -59,6 +59,30 @@
   
   <!-- Lesson loader with fallback support -->
   <script src="/js/kelly-lesson-loader.js"></script>
+  <script>
+    // Compatibility shim: some deployments exposed `getLesson()` but not `loadLesson()`.
+    // The curriculum view (and other flows) call `window.KellyLessonLoader.loadLesson(...)`.
+    (function () {
+      try {
+        const loader = window.KellyLessonLoader;
+        if (!loader) return;
+        if (typeof loader.loadLesson === 'function') return;
+        if (typeof loader.getLesson !== 'function') return;
+
+        loader.loadLesson = async function (dayNumber, options = {}) {
+          const result = await loader.getLesson(dayNumber, options);
+          return {
+            lesson: result?.lesson || null,
+            atoms: Array.isArray(result?.atoms) ? result.atoms : [],
+            shards: Array.isArray(result?.shards) ? result.shards : [],
+            source: result?.source || result?._source || 'loader',
+          };
+        };
+      } catch (_) {
+        // Non-fatal: fall back to existing behavior.
+      }
+    })();
+  </script>
   
   <style>
     :root {
