@@ -269,3 +269,5 @@ window.getEmergencyLesson = getEmergencyLesson;
 console.log('🆘 Emergency lessons loaded (7 lessons + generic fallback)');
 
 
+
+

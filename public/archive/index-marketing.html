@@ -1,0 +1,5189 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+
+    <!-- Primary Meta Tags -->
+    <meta name="title" content="Curious Kelly - Learn Something New Every Day">
+    <meta name="description" content="Meet Kelly, an AI-powered teacher. 365 personalized lessons for learners ages 2-102. Emotional intelligence, critical thinking, creativity, and life skills.">
+    <meta name="keywords" content="AI education, personalized learning, digital human teacher, emotional intelligence, kids education, adult learning, daily lessons">
+    <meta name="author" content="Curious Kelly">
+    <meta name="robots" content="index, follow">
+    <meta name="language" content="English">
+    <meta name="theme-color" content="#2563eb" />
+    <!-- Deploy trigger: 2025-12-10-font-fix-v2 -->
+    <meta name="apple-mobile-web-app-capable" content="yes" />
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent" />
+    <title>Curious Kelly - Learn Something New Every Day</title>
+
+    <!-- Kelly OS shared foundation -->
+    <script src="/config.js"></script>
+    <script src="/js/kelly-time.js"></script>
+    <script src="/js/kelly-calendar.js"></script>
+    <script src="/js/kelly-calendar-export.js"></script>
+    <script src="/js/kelly-lesson.js"></script>
+    <script src="/js/kelly-presence.js"></script>
+    <script>
+      // Persist Kelly presence across pages (learn.html + index.html)
+      (function () {
+        try {
+          // Route returning learners directly to the lesson player.
+          // learn.html sets these flags the first time the learner hits play.
+          const started = localStorage.getItem('kelly-started') || localStorage.getItem('kellyOnboarded');
+          const hasState = !!localStorage.getItem('kellyState') || !!localStorage.getItem('kelly_progress');
+          if (started || hasState) {
+            window.location.replace('/learn.html');
+            return;
+          }
+
+          const kellyPresence = localStorage.getItem('kellyPresence') || '50';
+          document.documentElement.setAttribute('data-kelly-presence', kellyPresence);
+        } catch (e) {}
+      })();
+    </script>
+
+    <!-- Canonical -->
+    <link rel="canonical" href="https://www.curiouskelly.com/">
+
+    <!-- Favicons -->
+    <link rel="icon" type="image/png" sizes="16x16" href="/images/brand/favicon-16.png" />
+    <link rel="icon" type="image/png" sizes="32x32" href="/images/brand/favicon-32.png" />
+    <link rel="icon" type="image/png" sizes="48x48" href="/images/brand/favicon-48.png" />
+    <link rel="apple-touch-icon" sizes="180x180" href="/images/brand/apple-touch-icon.png" />
+    <link rel="shortcut icon" href="/images/brand/favicon.ico" />
+    <!-- Generic favicon fallbacks -->
+    <link rel="icon" type="image/png" href="/favicon.png">
+    <link rel="apple-touch-icon" href="/apple-touch-icon.png">
+
+    <!-- PWA Manifest -->
+    <link rel="manifest" href="/manifest.json" />
+
+    <!-- Open Graph / Facebook -->
+    <meta property="og:type" content="website">
+    <meta property="og:url" content="https://www.curiouskelly.com/">
+    <meta property="og:title" content="Curious Kelly - Learn Something New Every Day">
+    <meta property="og:description" content="Meet Kelly, an AI-powered teacher. 365 personalized lessons for learners ages 2-102.">
+    <meta property="og:image" content="https://www.curiouskelly.com/images/kelly-og-image.png">
+    <meta property="og:image:width" content="1200">
+    <meta property="og:image:height" content="630">
+    <meta property="og:site_name" content="Curious Kelly">
+    <meta property="og:locale" content="en_US">
+
+    <!-- Twitter -->
+    <meta property="twitter:card" content="summary_large_image">
+    <meta property="twitter:url" content="https://www.curiouskelly.com/">
+    <meta property="twitter:title" content="Curious Kelly - Learn Something New Every Day">
+    <meta property="twitter:description" content="Meet Kelly, an AI-powered teacher. 365 personalized lessons for learners ages 2-102.">
+    <meta property="twitter:image" content="https://www.curiouskelly.com/images/kelly-og-image.png">
+    <meta name="twitter:site" content="@CuriousKelly">
+    <meta name="twitter:creator" content="@CuriousKelly">
+
+    <!-- Schema.org Structured Data -->
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "EducationalOrganization",
+      "name": "Curious Kelly",
+      "url": "https://www.curiouskelly.com",
+      "logo": "https://www.curiouskelly.com/images/kelly-logo.png",
+      "description": "AI-powered educational platform with a photorealistic digital human teacher delivering 365 personalized daily lessons.",
+      "sameAs": [],
+      "founder": {
+        "@type": "Person",
+        "name": "Nicolette"
+      },
+      "foundingDate": "2025",
+      "areaServed": "Worldwide",
+      "audience": {
+        "@type": "EducationalAudience",
+        "educationalRole": "student",
+        "audienceType": "Learners ages 2-102"
+      }
+    }
+    </script>
+
+    <script src="/config.js"></script>
+
+    <script type="application/ld+json">
+    {
+      "@context": "https://schema.org",
+      "@type": "WebSite",
+      "name": "Curious Kelly",
+      "url": "https://www.curiouskelly.com",
+      "potentialAction": {
+        "@type": "SearchAction",
+        "target": "https://www.curiouskelly.com/search?q={search_term_string}",
+        "query-input": "required name=search_term_string"
+      }
+    }
+    </script>
+
+    <!-- Brand CSS (brand-tokens.css MUST come before components.css) -->
+    <link rel="stylesheet" href="/css/brand-tokens.css" />
+    <link rel="stylesheet" href="/css/brand-colors.css" />
+    <link rel="stylesheet" href="/css/components.css" />
+    <!-- ✨ Kelly Animation System -->
+    <link rel="stylesheet" href="/css/kelly-animations.css" />
+    <!-- Kelly Time Authority -->
+    <link rel="stylesheet" href="/styles/kelly-time-authority.css" />
+
+    <!-- Fonts - BULLETPROOF LOADING (fixed 2025-12-10) -->
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <!-- Primary: System fonts that ALWAYS work -->
+    <style>
+        /* System font stack - guaranteed to have all characters */
+        :root {
+            --font-system: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            --font-serif: Georgia, 'Times New Roman', Times, serif;
+        }
+    </style>
+    <!-- Google Fonts with cache-busting -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Newsreader:ital,opsz,wght@0,6..72,400;0,6..72,500;0,6..72,600;1,6..72,400&display=swap&v=20251210" rel="stylesheet" />
+
+    <style>
+        :root {
+            --bg-color: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-elevated: #18181b;
+            --text-primary: #fafafa;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --accent-primary: #3b82f6;
+            --accent-hover: #2563eb;
+            --accent-glow: rgba(59, 130, 246, 0.15);
+            --input-bg: #18181b;
+            --border-color: #27272a;
+            --border-hover: #3f3f46;
+            --success: #22c55e;
+            --error: #ef4444;
+            --max-width: 1200px;
+            --header-height: 72px;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html {
+            scroll-behavior: smooth;
+        }
+
+        body {
+            /* BULLETPROOF: System fonts first, then Inter if loaded */
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, 'Inter', sans-serif;
+            background-color: var(--bg-color);
+            color: var(--text-primary);
+            min-height: 100vh;
+            line-height: 1.6;
+            overflow-x: hidden;
+        }
+        
+        /* Apply Inter when loaded via Google Fonts */
+        @supports (font-variation-settings: normal) {
+            body {
+                font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            }
+        }
+
+        /* ========================================
+           HEADER - Fixed Navigation
+           ======================================== */
+        header {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: var(--header-height);
+            background: rgba(10, 10, 11, 0.95);
+            backdrop-filter: blur(12px);
+            border-bottom: 1px solid var(--border-color);
+            z-index: 1000;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 48px;
+        }
+
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            font-weight: 600;
+            font-size: 1.1rem;
+            text-decoration: none;
+            color: var(--text-primary);
+            letter-spacing: -0.02em;
+        }
+
+        .logo-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+        }
+
+        .nav-links {
+            display: flex;
+            align-items: center;
+            gap: 32px;
+        }
+
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+
+        .nav-link:hover {
+            color: var(--text-primary);
+        }
+
+        .btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 24px;
+            border-radius: 12px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: none;
+            text-decoration: none;
+        }
+
+        .btn-primary {
+            background: var(--accent-hover);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-primary);
+            box-shadow: 0 0 20px var(--accent-glow);
+        }
+
+        .btn-ghost {
+            background: transparent;
+            color: var(--text-secondary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-ghost:hover {
+            color: var(--text-primary);
+            background: rgba(255, 255, 255, 0.03);
+            border-color: var(--border-hover);
+        }
+
+        .btn:active {
+            transform: scale(0.98);
+        }
+
+        /* ============================================
+           HERO: Kelly Full-Bleed Design
+           Kelly gets 60% of viewport width
+           ============================================ */
+
+        .hero {
+            display: grid;
+            grid-template-columns: 40% 60%;
+            min-height: 100vh;
+            min-height: 100dvh;
+            padding-top: var(--header-height);
+            background: var(--bg-color);
+            overflow: hidden;
+        }
+
+        /* ----- LEFT COLUMN: Content (40%) ----- */
+        .hero-content {
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            padding: 48px 48px 48px 64px;
+            max-width: 580px;
+            margin-left: auto;
+        }
+
+        /* Today's Date Badge with Live Indicator */
+        .hero-date-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            background: var(--bg-card);
+            color: var(--text-primary);
+            padding: 8px 16px;
+            border-radius: 24px;
+            font-size: 0.95rem;
+            font-weight: 500;
+            margin-bottom: 16px;
+            border: 1px solid var(--border-color);
+        }
+
+        .live-indicator {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            color: #ef4444;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            animation: pulse-live 2s ease-in-out infinite;
+        }
+
+        .live-indicator.hidden {
+            display: none;
+        }
+
+        @keyframes pulse-live {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .date-text {
+            letter-spacing: 0.02em;
+            color: var(--text-secondary);
+        }
+
+        .hero-eyebrow {
+            font-size: 0.9rem;
+            color: var(--accent-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.15em;
+            margin-bottom: 24px;
+            font-weight: 600;
+        }
+
+        .hero-headline {
+            font-family: 'Newsreader', Georgia, serif;
+            font-size: 3.5rem;
+            font-weight: 400;
+            line-height: 1.15;
+            letter-spacing: -0.02em;
+            margin-bottom: 40px;
+            color: var(--text-primary);
+        }
+
+        /* Today's Question - The Hook */
+        .todays-question {
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-left: 4px solid var(--accent-primary);
+            border-radius: 0 16px 16px 0;
+            padding: 24px 32px;
+            margin-bottom: 40px;
+        }
+
+        .question-label {
+            display: block;
+            font-size: 0.75rem;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .question-text {
+            font-family: 'Newsreader', Georgia, serif;
+            font-size: 1.5rem;
+            font-style: italic;
+            color: var(--text-primary);
+            margin: 0;
+            line-height: 1.4;
+        }
+
+        /* The CTA */
+        .hero-cta {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 20px 48px;
+            background: var(--text-primary);
+            color: var(--bg-color);
+            font-size: 1.2rem;
+            font-weight: 600;
+            text-decoration: none;
+            border-radius: 60px;
+            transition: all 0.3s ease;
+            margin-bottom: 16px;
+        }
+
+        .hero-cta:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 12px 40px rgba(255, 255, 255, 0.2);
+        }
+
+        .hero-note {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* Mini Auth Module */
+        .hero-auth-hook {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .auth-hook-divider {
+            display: block;
+            text-align: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 16px;
+        }
+
+        .auth-hook-buttons {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+
+        .auth-btn {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            border: 1px solid var(--border-color);
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .auth-btn:hover {
+            border-color: var(--accent-primary);
+            background: var(--bg-elevated);
+            transform: translateY(-1px);
+        }
+
+        .auth-btn-google {
+            background: var(--text-primary);
+            color: var(--bg-color);
+            border-color: var(--text-primary);
+        }
+
+        .auth-btn-google:hover {
+            background: #e4e4e7;
+            border-color: #e4e4e7;
+        }
+
+        .auth-hook-note {
+            margin-top: 12px;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        /* Trust/Proof Strip */
+        .hero-proof-strip {
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .proof-strip-toggle {
+            display: none; /* Hidden on desktop */
+            width: 100%;
+            background: transparent;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 12px 16px;
+            color: var(--text-muted);
+            font-size: 0.85rem;
+            cursor: pointer;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .proof-strip-toggle:hover {
+            border-color: var(--text-muted);
+        }
+
+        .proof-toggle-icon {
+            transition: transform 0.2s ease;
+        }
+
+        .proof-strip-toggle[aria-expanded="true"] .proof-toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .proof-strip-content {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+        }
+
+        .proof-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .proof-icon {
+            font-size: 1rem;
+        }
+
+        .proof-text {
+            opacity: 0.9;
+        }
+
+        @media (max-width: 768px) {
+            .hero-auth-hook {
+                margin-top: 24px;
+                padding-top: 20px;
+            }
+            .auth-hook-buttons {
+                flex-direction: column;
+            }
+            .auth-btn {
+                width: 100%;
+            }
+            /* Proof strip accordion on mobile */
+            .hero-proof-strip {
+                margin-top: 24px;
+                padding-top: 20px;
+            }
+            .proof-strip-toggle {
+                display: flex;
+            }
+            .proof-strip-content {
+                display: none;
+                flex-direction: column;
+                gap: 12px;
+                margin-top: 12px;
+                padding: 12px;
+                background: var(--bg-secondary);
+                border-radius: 8px;
+            }
+            .proof-strip-content.open {
+                display: flex;
+            }
+            .hero-streak-badge {
+                font-size: 0.75rem;
+                padding: 4px 10px;
+            }
+        }
+
+        /* ----- RIGHT COLUMN: KELLY DOMINATES (60%) ----- */
+        .hero-kelly {
+            position: relative;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: flex-end;
+            background: linear-gradient(
+                180deg,
+                var(--bg-secondary) 0%,
+                var(--bg-elevated) 40%,
+                var(--bg-color) 100%
+            );
+            padding: 0;
+            overflow: hidden;
+        }
+
+        /* Subtle glow behind Kelly */
+        .hero-kelly::before {
+            content: '';
+            position: absolute;
+            top: 15%;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 90%;
+            height: 70%;
+            background: radial-gradient(
+                ellipse at center,
+                rgba(59, 130, 246, 0.12) 0%,
+                transparent 70%
+            );
+            pointer-events: none;
+            z-index: 0;
+        }
+
+        .kelly-image-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            min-width: 50vw; /* Kelly always takes at least 50% of viewport width */
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+            padding-top: 24px;
+        }
+
+        /* KELLY: Fill the space - FULL BLEED - DOMINATE THE HERO */
+        .kelly-image {
+            width: auto;
+            height: 90vh; /* Increased from 85vh - Kelly owns the screen */
+            max-height: calc(100vh - var(--header-height) - 20px); /* Reduced gap - let Kelly breathe */
+            min-height: 70vh; /* Never shrink Kelly below this */
+            max-width: 100%;
+            object-fit: contain;
+            object-position: center bottom;
+            filter: drop-shadow(0 20px 60px rgba(0, 0, 0, 0.4));
+        }
+
+        /* Video container for hero */
+        .hero-video-container {
+            position: relative;
+            z-index: 1;
+            width: 100%;
+            height: 100%;
+            min-width: 50vw; /* Video container also 50%+ */
+            display: flex;
+            align-items: flex-end;
+            justify-content: center;
+        }
+
+        .hero-video {
+            width: auto;
+            height: 90vh; /* Increased from 80vh - Kelly dominates */
+            max-height: calc(100vh - var(--header-height) - 20px); /* Reduced gap */
+            min-height: 70vh; /* Never too small */
+            max-width: 100%;
+            object-fit: contain;
+            border-radius: 0;
+            filter: drop-shadow(0 20px 60px rgba(0, 0, 0, 0.4));
+        }
+
+        /* Controls at bottom of Kelly's space */
+        .kelly-controls,
+        .persona-controls {
+            position: absolute;
+            bottom: 24px;
+            left: 50%;
+            transform: translateX(-50%);
+            z-index: 10;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 12px;
+            background: rgba(0, 0, 0, 0.75);
+            backdrop-filter: blur(16px);
+            -webkit-backdrop-filter: blur(16px);
+            padding: 16px 24px;
+            border-radius: 20px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+
+        .kelly-age-pills,
+        .age-pills {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+            justify-content: center;
+        }
+
+        .age-pill {
+            padding: 8px 14px;
+            font-size: 0.8rem;
+            font-weight: 500;
+            color: var(--text-secondary);
+            background: transparent;
+            border: 1px solid rgba(255, 255, 255, 0.15);
+            border-radius: 999px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+
+        .age-pill:hover {
+            color: var(--text-primary);
+            border-color: var(--accent-primary);
+        }
+
+        .age-pill.active {
+            color: white;
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+        }
+
+        .kelly-persona-select,
+        .tone-select-wrap {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .kelly-persona-select label,
+        .tone-label {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+
+        .persona-dropdown,
+        .tone-select {
+            background: rgba(255, 255, 255, 0.1);
+            border: 1px solid rgba(255, 255, 255, 0.2);
+            border-radius: 10px;
+            padding: 8px 16px;
+            color: white;
+            font-size: 0.875rem;
+            cursor: pointer;
+            min-width: 180px;
+        }
+
+        .tone-select:focus {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+        }
+
+        .kelly-personas-strip,
+        .personas-strip-compact {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            flex-wrap: wrap;
+            max-width: 320px;
+        }
+
+        .kelly-personas-strip img,
+        .personas-strip-compact .persona-thumb {
+            width: 44px;
+            height: 44px;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            background: var(--bg-elevated);
+        }
+
+        .kelly-personas-strip img:hover,
+        .kelly-personas-strip img.active,
+        .personas-strip-compact .persona-thumb:hover,
+        .personas-strip-compact .persona-thumb.active {
+            border-color: var(--accent-primary);
+            transform: scale(1.1);
+            box-shadow: 0 0 16px rgba(59, 130, 246, 0.4);
+        }
+
+        .personas-strip-compact .persona-thumb-img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+
+        /* Legacy support */
+        .hero-video-fallback,
+        .hero-kelly-showcase,
+        .kelly-intro {
+            display: none;
+        }
+
+        .hero-cta-secondary {
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+            padding: 12px 20px;
+            border-radius: 10px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            border: 1px solid var(--border-color);
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: all 0.2s ease;
+        }
+
+        .hero-cta-secondary:hover {
+            color: var(--text-primary);
+            background: var(--bg-elevated);
+            border-color: var(--accent-primary);
+        }
+
+        /* ========================================
+           VALUE STRIP - What makes this different
+           ======================================== */
+        .value-strip {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 48px;
+            padding: 48px 24px;
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .value-item {
+            text-align: center;
+        }
+
+        .value-number {
+            display: block;
+            font-family: 'Newsreader', Georgia, serif;
+            font-size: 3rem;
+            font-weight: 400;
+            color: var(--text-primary);
+            line-height: 1;
+        }
+
+        .value-text {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .value-divider {
+            width: 1px;
+            height: 48px;
+            background: var(--border-color);
+        }
+
+        @media (max-width: 768px) {
+            .value-strip {
+                gap: 24px;
+                padding: 32px 16px;
+            }
+            .value-number {
+                font-size: 2rem;
+            }
+            .value-text {
+                font-size: 0.7rem;
+            }
+        }
+
+        /* ========================================
+           PLATFORM DEPTH - Built for Lifelong Learning
+           ======================================== */
+        .platform-depth {
+            padding: 80px 48px;
+            background: var(--bg-secondary);
+        }
+
+        .platform-depth .section-inner {
+            max-width: var(--max-width);
+            margin: 0 auto;
+        }
+
+        .platform-depth h2 {
+            text-align: center;
+            font-family: 'Newsreader', Georgia, serif;
+            font-size: 2.5rem;
+            font-weight: 400;
+            margin-bottom: 48px;
+            color: var(--text-primary);
+        }
+
+        .depth-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+        }
+
+        .depth-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px;
+            transition: border-color 0.2s ease;
+        }
+
+        .depth-card:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .depth-icon {
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+
+        .depth-card h3 {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+            color: var(--text-primary);
+        }
+
+        .depth-card p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+            line-height: 1.5;
+        }
+
+        .depth-link {
+            font-size: 0.85rem;
+            color: var(--accent-primary);
+            text-decoration: none;
+        }
+
+        .depth-link:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 768px) {
+            .platform-depth {
+                padding: 48px 24px;
+            }
+            
+            .platform-depth h2 {
+                font-size: 1.75rem;
+                margin-bottom: 32px;
+            }
+        }
+
+        /* Legacy personas showcase styles removed - using compact strip now */
+
+        /* ========================================
+           SOCIAL PROOF
+           ======================================== */
+        .social-proof {
+            background: linear-gradient(180deg, var(--bg-secondary) 0%, var(--bg-color) 100%);
+            padding: 40px 48px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .trust-signals {
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            gap: 48px;
+            flex-wrap: wrap;
+            max-width: var(--max-width);
+            margin: 0 auto;
+        }
+
+        .trust-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            font-weight: 500;
+        }
+
+        .trust-icon {
+            font-size: 1.3rem;
+        }
+
+        .trust-text {
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            font-size: 0.8rem;
+        }
+
+        @media (max-width: 768px) {
+            .trust-signals {
+                gap: 24px;
+            }
+            .trust-item {
+                font-size: 0.85rem;
+            }
+            .social-proof {
+                padding: 32px 24px;
+            }
+        }
+
+        h1 {
+            font-family: 'Newsreader', Georgia, serif;
+            font-size: 3.5rem;
+            font-weight: 400;
+            line-height: 1.15;
+            margin-bottom: 20px;
+            letter-spacing: -0.02em;
+        }
+
+        .subtitle {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            margin-bottom: 40px;
+            font-weight: 400;
+        }
+
+        /* Hero Primary CTA */
+        .hero-cta-primary {
+            margin-bottom: 32px;
+        }
+
+        .btn-hero-primary {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 18px 32px;
+            background: linear-gradient(135deg, var(--accent-primary) 0%, var(--accent-hover) 100%);
+            color: white;
+            border: none;
+            border-radius: 16px;
+            font-size: 1.15rem;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            text-decoration: none;
+            box-shadow: 0 4px 24px rgba(59, 130, 246, 0.4);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .btn-hero-primary::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: -100%;
+            width: 100%;
+            height: 100%;
+            background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
+            transition: left 0.5s ease;
+        }
+
+        .btn-hero-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 32px rgba(59, 130, 246, 0.5);
+        }
+
+        .btn-hero-primary:hover::before {
+            left: 100%;
+        }
+
+        .btn-icon-emoji {
+            font-size: 1.3rem;
+        }
+
+        .btn-badge {
+            background: rgba(255,255,255,0.2);
+            padding: 4px 10px;
+            border-radius: 100px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .cta-subtext {
+            margin-top: 12px;
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* Auth Expand (collapsible) */
+        .auth-expand {
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .auth-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 14px 20px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            cursor: pointer;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            transition: all 0.2s;
+            list-style: none;
+        }
+
+        .auth-toggle::-webkit-details-marker {
+            display: none;
+        }
+
+        .auth-toggle:hover {
+            border-color: var(--border-hover);
+            color: var(--text-primary);
+        }
+
+        .toggle-icon {
+            transition: transform 0.2s;
+            font-size: 0.8rem;
+        }
+
+        .auth-expand[open] .toggle-icon {
+            transform: rotate(180deg);
+        }
+
+        .auth-expand[open] .auth-container {
+            margin-top: 16px;
+            animation: slideDown 0.3s ease;
+        }
+
+        @keyframes slideDown {
+            from { opacity: 0; transform: translateY(-10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .auth-container {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+            width: 100%;
+            max-width: 420px;
+        }
+
+        .btn-google, .btn-apple {
+            background: var(--text-primary);
+            color: #18181b;
+            border: none;
+        }
+
+        .btn-google:hover, .btn-apple:hover {
+            background: #e4e4e7;
+            box-shadow: 0 0 30px rgba(255, 255, 255, 0.1);
+        }
+
+        .btn-icon {
+            width: 20px;
+            height: 20px;
+            flex-shrink: 0;
+        }
+
+        .divider {
+            display: flex;
+            align-items: center;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            margin: 20px 0;
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+
+        .divider::before,
+        .divider::after {
+            content: '';
+            flex: 1;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .divider span {
+            padding: 0 16px;
+        }
+
+        .input-field {
+            width: 100%;
+            padding: 16px;
+            background: var(--input-bg);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-family: inherit;
+            transition: all 0.2s;
+        }
+
+        .input-field:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 3px var(--accent-glow);
+        }
+
+        .skip-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            text-align: center;
+            margin-top: 16px;
+            display: block;
+        }
+
+        .skip-link:hover {
+            color: var(--text-primary);
+        }
+
+        .skip-link span {
+            text-decoration: underline;
+            text-underline-offset: 3px;
+        }
+
+        .terms {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            margin-top: 32px;
+            line-height: 1.6;
+        }
+
+        .terms a {
+            color: var(--text-secondary);
+            text-decoration: underline;
+            text-underline-offset: 2px;
+        }
+
+        .terms a:hover {
+            color: var(--text-primary);
+        }
+
+        /* ========================================
+           SECTIONS - Common Styles
+           ======================================== */
+        section {
+            padding: 100px 48px;
+            max-width: var(--max-width);
+            margin: 0 auto;
+        }
+
+        .section-header {
+            text-align: center;
+            margin-bottom: 60px;
+        }
+
+        .section-label {
+            display: inline-block;
+            padding: 6px 16px;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 100px;
+            font-size: 0.85rem;
+            color: var(--accent-primary);
+            margin-bottom: 16px;
+            font-weight: 600;
+        }
+
+        h2 {
+            font-family: 'Newsreader', Georgia, serif;
+            font-size: 3rem;
+            font-weight: 400;
+            letter-spacing: -0.03em;
+            margin-bottom: 16px;
+        }
+
+        .section-header p {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        /* ========================================
+           TODAY'S LESSON
+           ======================================== */
+        .today-lesson {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .lesson-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 40px;
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 40px;
+            align-items: center;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+            overflow: visible;
+        }
+        
+        /* QUICK WIN 4: Hover effect for clickable card */
+        .lesson-card-link:hover .lesson-card {
+            transform: translateY(-4px);
+            box-shadow: 0 12px 32px rgba(59, 130, 246, 0.2);
+            border-color: var(--accent-primary);
+        }
+
+        .lesson-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-primary);
+        }
+
+        .lesson-thumbnail {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            border-radius: 16px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .lesson-thumbnail-text {
+            font-family: 'Newsreader', serif;
+            font-size: 2rem;
+            font-weight: 500;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            z-index: 2;
+        }
+
+        .lesson-day-badge {
+            position: absolute;
+            top: 16px;
+            left: 16px;
+            background: rgba(0, 0, 0, 0.6);
+            backdrop-filter: blur(10px);
+            padding: 8px 16px;
+            border-radius: 100px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            z-index: 3;
+        }
+
+        .lesson-info h3 {
+            font-family: 'Newsreader', serif;
+            font-size: 2rem;
+            margin-bottom: 16px;
+        }
+
+        .lesson-hook {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+            font-style: italic;
+        }
+
+        .lesson-meta {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .meta-item {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        /* ========================================
+           TODAY'S LESSON - Calendar-First Experience
+           ======================================== */
+        .todays-lesson {
+            background: var(--bg-color);
+        }
+
+        .daily-lesson-container {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 32px;
+            max-width: 900px;
+            margin: 0 auto;
+            align-items: start;
+        }
+
+        /* Mini Calendar */
+        .mini-calendar-wrapper {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 24px;
+        }
+
+        .mini-calendar {
+            width: 100%;
+        }
+
+        .calendar-nav {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 16px;
+        }
+
+        .cal-nav-btn {
+            width: 36px;
+            height: 36px;
+            border: none;
+            background: var(--bg-secondary);
+            border-radius: 10px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.2s;
+        }
+
+        .cal-nav-btn:hover {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .cal-month-title {
+            font-family: 'Newsreader', Georgia, serif;
+            font-size: 1.1rem;
+            font-weight: 500;
+            color: var(--text-primary);
+        }
+
+        .calendar-weekdays {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            text-align: center;
+            margin-bottom: 8px;
+        }
+
+        .calendar-weekdays span {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            font-weight: 600;
+            padding: 8px 0;
+        }
+
+        .calendar-days {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 4px;
+        }
+
+        .cal-day {
+            aspect-ratio: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.85rem;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            color: var(--text-secondary);
+            position: relative;
+            text-decoration: none;
+        }
+
+        .cal-day:hover {
+            background: var(--bg-secondary);
+            color: var(--text-primary);
+        }
+
+        .cal-day.past {
+            color: var(--text-muted);
+        }
+
+        .cal-day.past::after {
+            content: '';
+            position: absolute;
+            bottom: 4px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 4px;
+            height: 4px;
+            background: var(--success);
+            border-radius: 50%;
+        }
+
+        .cal-day.today {
+            background: var(--accent-primary);
+            color: white;
+            font-weight: 700;
+            box-shadow: 0 4px 16px rgba(59, 130, 246, 0.4);
+        }
+
+        .cal-day.future {
+            color: var(--text-secondary);
+        }
+
+        .cal-day.empty {
+            visibility: hidden;
+        }
+
+        .calendar-legend {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 16px;
+            padding-top: 16px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+        }
+
+        .legend-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .legend-dot.past { background: var(--success); }
+        .legend-dot.today { background: var(--accent-primary); }
+        .legend-dot.future { background: var(--border-color); }
+
+        /* Today's Lesson Card */
+        .today-card {
+            background: linear-gradient(145deg, var(--bg-elevated) 0%, var(--bg-secondary) 100%);
+            border: 1px solid var(--border-color);
+            border-radius: 24px;
+            padding: 32px;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .today-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--accent-primary), #60a5fa, var(--accent-primary));
+            background-size: 200% 100%;
+            animation: shimmer-bar 3s ease-in-out infinite;
+        }
+
+        @keyframes shimmer-bar {
+            0%, 100% { background-position: 0% 0; }
+            50% { background-position: 100% 0; }
+        }
+
+        .today-badge {
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            padding: 8px 16px;
+            background: rgba(59, 130, 246, 0.15);
+            border: 1px solid rgba(59, 130, 246, 0.3);
+            border-radius: 100px;
+            font-size: 0.8rem;
+            font-weight: 700;
+            color: var(--accent-primary);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 16px;
+        }
+
+        .today-icon {
+            font-size: 1rem;
+        }
+
+        .today-date {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+
+        .today-topic {
+            font-family: 'Newsreader', Georgia, serif;
+            font-size: 1.75rem;
+            font-weight: 500;
+            line-height: 1.3;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .today-truth {
+            font-size: 1rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+            margin-bottom: 24px;
+        }
+
+        .today-thumbnail {
+            position: relative;
+            width: 80px;
+            height: 80px;
+            margin-bottom: 24px;
+        }
+
+        .kelly-preview {
+            width: 100%;
+            height: 100%;
+            border-radius: 50%;
+            object-fit: cover;
+            border: 3px solid var(--accent-primary);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.3);
+        }
+
+        .today-cta {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 12px;
+            width: 100%;
+            padding: 18px 32px;
+            background: var(--accent-primary);
+            border: none;
+            border-radius: 14px;
+            color: white;
+            font-size: 1.05rem;
+            font-weight: 600;
+            text-decoration: none;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .today-cta:hover {
+            background: var(--accent-hover);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(59, 130, 246, 0.4);
+        }
+
+        .today-meta {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 16px;
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        /* Curriculum CTA */
+        .curriculum-cta {
+            text-align: center;
+            margin-top: 48px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 16px;
+        }
+
+        .view-all-btn {
+            display: inline-flex;
+            align-items: center;
+            gap: 12px;
+            padding: 16px 32px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 14px;
+            color: var(--text-primary);
+            font-size: 1rem;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+
+        .view-all-btn:hover {
+            background: var(--bg-secondary);
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+
+        .calendar-link {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            text-decoration: none;
+            transition: color 0.2s;
+        }
+
+        .calendar-link:hover {
+            color: var(--accent-primary);
+        }
+
+        /* Responsive for Today's Lesson */
+        @media (max-width: 768px) {
+            .daily-lesson-container {
+                grid-template-columns: 1fr;
+                gap: 24px;
+            }
+            
+            .mini-calendar-wrapper {
+                order: 2;
+            }
+            
+            .today-card {
+                order: 1;
+            }
+            
+            .today-topic {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Loading States */
+        .loading-skeleton {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 24px;
+        }
+
+        .skeleton-card {
+            height: 200px;
+            background: linear-gradient(90deg, #18181b 0%, #27272a 50%, #18181b 100%);
+            background-size: 200% 100%;
+            animation: shimmer 1.5s infinite;
+            border-radius: 16px;
+        }
+
+        @keyframes shimmer {
+            0% { background-position: 200% 0; }
+            100% { background-position: -200% 0; }
+        }
+
+        .month-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            overflow: hidden;
+            transition: all 0.3s;
+        }
+
+        .month-header {
+            padding: 24px;
+            background: var(--bg-secondary);
+            border-bottom: 1px solid var(--border-color);
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            user-select: none;
+            transition: background 0.2s;
+        }
+
+        .month-header:hover {
+            background: var(--bg-elevated);
+        }
+
+        .month-header h3 {
+            font-family: 'Newsreader', serif;
+            font-size: 1.5rem;
+            font-weight: 500;
+        }
+
+        .month-count {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+        }
+
+        .month-lessons {
+            max-height: 2000px;
+            overflow: hidden;
+            transition: max-height 0.3s ease;
+        }
+
+        .month-card.collapsed .month-lessons {
+            max-height: 0;
+        }
+
+        .lesson-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 16px;
+            padding: 24px;
+        }
+
+        .lesson-item {
+            background: var(--bg-color);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 16px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .lesson-item:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+
+        .lesson-item-day {
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+            margin-bottom: 8px;
+        }
+
+        .lesson-item-title {
+            font-size: 1rem;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .lesson-item-thumbnail {
+            width: 100%;
+            aspect-ratio: 16/9;
+            background: linear-gradient(135deg, #1e3a8a, #3b82f6);
+            border-radius: 8px;
+            margin-top: 12px;
+        }
+
+        /* ========================================
+           WATCH KELLY TEACH - Video Demo
+           ======================================== */
+        .video-demo-section {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .video-demo {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .demo-topic {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 32px;
+            padding: 20px 32px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+        }
+
+        .demo-topic-emoji {
+            font-size: 2.5rem;
+        }
+
+        .demo-topic-title {
+            font-family: 'Newsreader', Georgia, serif;
+            font-size: 1.75rem;
+            font-weight: 400;
+        }
+
+        .archetype-toggle {
+            display: flex;
+            justify-content: center;
+            gap: 16px;
+            margin-bottom: 32px;
+            flex-wrap: wrap;
+        }
+
+        .archetype-btn {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 6px;
+            padding: 20px 24px;
+            background: var(--bg-elevated);
+            border: 2px solid var(--border-color);
+            border-radius: 16px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            min-width: 160px;
+            font-family: inherit;
+            color: var(--text-primary);
+        }
+
+        .archetype-btn:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+
+        .archetype-btn.active {
+            border-color: var(--accent-hover);
+            background: linear-gradient(180deg, rgba(37, 99, 235, 0.15) 0%, var(--bg-elevated) 100%);
+            box-shadow: 0 4px 24px rgba(37, 99, 235, 0.25);
+        }
+
+        .archetype-icon {
+            font-size: 2rem;
+        }
+
+        .archetype-name {
+            font-size: 1rem;
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .archetype-desc {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .archetype-btn.active .archetype-desc {
+            color: var(--text-secondary);
+        }
+
+        .video-container {
+            position: relative;
+            min-height: 500px;
+        }
+
+        .video-wrapper {
+            display: none;
+            animation: fadeInVideo 0.4s ease;
+        }
+
+        .video-wrapper.active {
+            display: block;
+        }
+
+        @keyframes fadeInVideo {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        /* KELLY LARGE in video demo section */
+        .kelly-video {
+            width: 100%;
+            max-width: 800px;
+            aspect-ratio: 1 / 1;
+            margin: 0 auto;
+            display: block;
+            border-radius: 28px;
+            background: var(--bg-color);
+            box-shadow: 
+                0 0 0 1px rgba(59, 130, 246, 0.1),
+                0 20px 60px rgba(0, 0, 0, 0.5),
+                0 0 100px -30px rgba(59, 130, 246, 0.25);
+        }
+
+        .video-caption {
+            text-align: center;
+            margin-top: 16px;
+            font-size: 0.95rem;
+            color: var(--text-secondary);
+            font-style: italic;
+        }
+
+        .archetype-hint {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 10px;
+            margin-top: 32px;
+            padding: 16px 24px;
+            background: rgba(59, 130, 246, 0.08);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 12px;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+
+        .hint-icon {
+            font-size: 1.2rem;
+        }
+
+        @media (max-width: 768px) {
+            .demo-topic {
+                flex-direction: column;
+                text-align: center;
+                gap: 12px;
+            }
+            .demo-topic-title {
+                font-size: 1.4rem;
+            }
+            .archetype-toggle {
+                gap: 10px;
+            }
+            .archetype-btn {
+                padding: 14px 16px;
+                min-width: 130px;
+            }
+            .archetype-icon {
+                font-size: 1.6rem;
+            }
+            .archetype-name {
+                font-size: 0.9rem;
+            }
+            .archetype-desc {
+                font-size: 0.75rem;
+            }
+            .kelly-video {
+                border-radius: 12px;
+            }
+            .archetype-hint {
+                flex-direction: column;
+                text-align: center;
+                gap: 8px;
+            }
+        }
+
+        /* ========================================
+           PRICING
+           ======================================== */
+        .pricing {
+            background: var(--bg-color);
+        }
+
+        .pricing-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 60px;
+        }
+
+        .price-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 40px;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .price-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-primary);
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+
+        .price-card.featured {
+            border-color: var(--accent-hover);
+            background: linear-gradient(180deg, rgba(37, 99, 235, 0.1) 0%, var(--bg-elevated) 100%);
+        }
+
+        .price-card.featured::before {
+            content: '';
+            position: absolute;
+            top: -1px;
+            left: -1px;
+            right: -1px;
+            height: 4px;
+            background: var(--accent-primary);
+            border-radius: 20px 20px 0 0;
+        }
+
+        .price-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            padding: 6px 16px;
+            background: var(--accent-hover);
+            color: white;
+            font-size: 0.75rem;
+            font-weight: 700;
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+            border-radius: 100px;
+        }
+
+        .price-name {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .price-amount {
+            font-family: 'Newsreader', serif;
+            font-size: 3.5rem;
+            font-weight: 500;
+            letter-spacing: -0.03em;
+            line-height: 1;
+            margin-bottom: 8px;
+        }
+
+        .price-amount span {
+            font-size: 1rem;
+            color: var(--text-muted);
+            margin-left: 4px;
+        }
+
+        .price-desc {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        .price-features {
+            list-style: none;
+            margin-bottom: 32px;
+        }
+
+        .price-features li {
+            padding: 10px 0;
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+            display: flex;
+            gap: 12px;
+        }
+
+        .price-features li::before {
+            content: "✓";
+            color: var(--success);
+            font-weight: 700;
+            flex-shrink: 0;
+        }
+
+        /* ========================================
+           GIFTS (Collapsible)
+           ======================================== */
+        .gifts {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+        }
+
+        /* QUICK WIN 2: Enhanced collapsible with better affordance */
+        .collapsible-header {
+            cursor: pointer;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 24px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            margin-bottom: 8px;
+            user-select: none;
+            transition: all 0.2s ease;
+            -webkit-tap-highlight-color: transparent;
+        }
+
+        .collapsible-header:hover {
+            background: var(--bg-secondary);
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+        
+        .collapsible-header:active {
+            transform: translateY(0);
+        }
+
+        .collapsible-header h3 {
+            font-family: 'Newsreader', serif;
+            font-size: 1.5rem;
+            font-weight: 500;
+            margin: 0;
+        }
+
+        .collapse-icon {
+            font-size: 1.5rem;
+            transition: transform 0.3s ease;
+            color: var(--text-secondary);
+        }
+
+        .collapsible.open .collapse-icon {
+            transform: rotate(180deg);
+            color: var(--accent-primary);
+        }
+
+        .collapsible-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.4s ease-out, opacity 0.3s ease;
+            opacity: 0;
+        }
+
+        .collapsible.open .collapsible-content {
+            max-height: 3000px;
+            opacity: 1;
+            padding-top: 16px;
+        }
+
+        .gift-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            padding: 40px 0;
+        }
+
+        .gift-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 28px 24px;
+            text-align: center;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .gift-card:hover {
+            border-color: var(--accent-primary);
+            transform: translateY(-2px);
+        }
+
+        .gift-icon {
+            font-size: 2.5rem;
+            margin-bottom: 16px;
+        }
+
+        .gift-card h4 {
+            font-size: 1rem;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+
+        .gift-price {
+            font-family: 'Newsreader', serif;
+            font-size: 1.75rem;
+            font-weight: 500;
+            margin-bottom: 4px;
+        }
+
+        .gift-value {
+            color: var(--text-muted);
+            font-size: 0.8rem;
+        }
+
+        /* ========================================
+           CAREERS
+           ======================================== */
+        .careers {
+            background: var(--bg-color);
+        }
+
+        .earnings-calculator {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 20px;
+            padding: 40px;
+            margin-bottom: 40px;
+        }
+
+        .earnings-calculator h3 {
+            font-family: 'Newsreader', serif;
+            font-size: 1.5rem;
+            margin-bottom: 24px;
+            text-align: center;
+        }
+
+        .calc-slider-group {
+            margin-bottom: 32px;
+        }
+
+        .calc-slider-group label {
+            display: block;
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 12px;
+        }
+
+        .calc-slider-group input[type="range"] {
+            width: 100%;
+            height: 8px;
+            background: var(--bg-color);
+            border-radius: 4px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .calc-slider-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 24px;
+            height: 24px;
+            background: var(--accent-hover);
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .calc-value {
+            text-align: center;
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-top: 12px;
+        }
+
+        .calc-results {
+            display: flex;
+            flex-direction: column;
+            gap: 16px;
+            padding-top: 24px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .calc-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 1rem;
+        }
+
+        .calc-row span {
+            color: var(--text-secondary);
+        }
+
+        .calc-row strong {
+            font-size: 1.25rem;
+            color: var(--success);
+        }
+
+        .tier-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .tier-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 32px;
+            position: relative;
+            transition: all 0.3s;
+        }
+
+        .tier-card:hover {
+            transform: translateY(-4px);
+            border-color: var(--accent-primary);
+        }
+
+        .tier-card.featured {
+            border-color: var(--accent-hover);
+            background: linear-gradient(180deg, rgba(37, 99, 235, 0.1) 0%, var(--bg-elevated) 100%);
+        }
+
+        .tier-badge {
+            position: absolute;
+            top: -12px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--accent-hover);
+            color: white;
+            padding: 4px 12px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .tier-card h4 {
+            font-size: 1.25rem;
+            margin-bottom: 12px;
+        }
+
+        .tier-rate {
+            font-family: 'Newsreader', serif;
+            font-size: 2.5rem;
+            font-weight: 300;
+            color: var(--accent-primary);
+            margin-bottom: 8px;
+        }
+
+        .tier-card p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        .tier-card ul {
+            list-style: none;
+        }
+
+        .tier-card ul li {
+            padding: 8px 0;
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+            display: flex;
+            gap: 8px;
+        }
+
+        .tier-card ul li::before {
+            content: "✓";
+            color: var(--success);
+            font-weight: 700;
+        }
+
+        .cta-box {
+            background: linear-gradient(135deg, rgba(37, 99, 235, 0.1), rgba(37, 99, 235, 0.05));
+            border: 1px solid var(--accent-hover);
+            border-radius: 20px;
+            padding: 48px;
+            text-align: center;
+        }
+
+        .cta-box h3 {
+            font-family: 'Newsreader', serif;
+            font-size: 2rem;
+            margin-bottom: 12px;
+        }
+
+        .cta-box p {
+            color: var(--text-secondary);
+            margin-bottom: 24px;
+        }
+
+        /* ========================================
+           ENTERPRISE (Collapsible)
+           ======================================== */
+        .enterprise {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .enterprise-content {
+            padding: 40px 0;
+        }
+
+        .enterprise-features {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 24px;
+            margin-bottom: 40px;
+        }
+
+        .enterprise-feature {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+        }
+
+        .enterprise-feature h4 {
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .enterprise-feature p {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* ========================================
+           ABOUT KELLY
+           ======================================== */
+        .about {
+            background: var(--bg-color);
+        }
+
+        .about-content {
+            max-width: 800px;
+            margin: 0 auto;
+            text-align: center;
+        }
+
+        .about-content p {
+            font-size: 1.15rem;
+            color: var(--text-secondary);
+            line-height: 1.8;
+            margin-bottom: 24px;
+        }
+
+        /* Kelly LARGER in About section */
+        .kelly-avatar-large {
+            width: 280px;
+            height: 280px;
+            border-radius: 28px;
+            margin: 0 auto 40px;
+            object-fit: cover;
+            box-shadow: 
+                0 0 0 4px var(--bg-surface, #18181b),
+                0 0 0 8px rgba(59, 130, 246, 0.15),
+                0 20px 50px rgba(0, 0, 0, 0.4),
+                0 0 80px -20px rgba(59, 130, 246, 0.2);
+        }
+
+        .mission-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 32px;
+            margin-top: 60px;
+        }
+
+        .mission-item {
+            text-align: center;
+        }
+
+        .mission-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+
+        .mission-item h4 {
+            font-size: 1.25rem;
+            margin-bottom: 12px;
+        }
+
+        .mission-item p {
+            color: var(--text-secondary);
+            font-size: 0.95rem;
+        }
+
+        /* ========================================
+           NEWSROOM (Collapsible)
+           ======================================== */
+        .newsroom {
+            background: var(--bg-secondary);
+            border-top: 1px solid var(--border-color);
+        }
+
+        .newsroom-content {
+            padding: 40px 0;
+        }
+
+        .press-releases {
+            display: grid;
+            gap: 20px;
+            margin-bottom: 40px;
+        }
+
+        .press-item {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 24px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .press-item h4 {
+            font-size: 1.1rem;
+            margin-bottom: 4px;
+        }
+
+        .press-date {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+        }
+
+        .press-link {
+            color: var(--accent-primary);
+            text-decoration: none;
+            font-weight: 600;
+        }
+
+        .press-link:hover {
+            text-decoration: underline;
+        }
+
+        /* ========================================
+           FOOTER - Premium Supabase/Claude Level
+           ======================================== */
+        .site-footer {
+            background: #050507;
+            padding: 80px 48px 40px;
+            border-top: 1px solid var(--border-color);
+        }
+
+        .footer-inner {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        /* Brand section at top */
+        .footer-brand {
+            margin-bottom: 48px;
+            padding-bottom: 32px;
+            border-bottom: 1px solid rgba(255,255,255,0.06);
+        }
+
+        .footer-logo {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            text-decoration: none;
+            color: var(--text-primary);
+            font-weight: 600;
+            font-size: 1.1rem;
+            margin-bottom: 8px;
+        }
+
+        .footer-logo img {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+        }
+
+        .footer-tagline {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-bottom: 20px;
+        }
+
+        .footer-social {
+            display: flex;
+            gap: 16px;
+        }
+
+        .footer-social a {
+            color: var(--text-muted);
+            transition: color 0.2s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            width: 36px;
+            height: 36px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.03);
+        }
+
+        .footer-social a:hover {
+            color: var(--text-primary);
+            background: rgba(255,255,255,0.08);
+        }
+
+        /* 6-column grid */
+        .footer-grid {
+            display: grid;
+            grid-template-columns: repeat(6, 1fr);
+            gap: 32px;
+            margin-bottom: 48px;
+        }
+
+        .footer-col h4 {
+            color: var(--text-primary);
+            font-size: 0.75rem;
+            margin-bottom: 16px;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 0.08em;
+        }
+
+        .footer-links {
+            list-style: none;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .footer-links a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.875rem;
+            transition: color 0.2s;
+            padding: 4px 0;
+        }
+
+        .footer-links a:hover {
+            color: var(--text-primary);
+        }
+
+        .footer-more {
+            display: block;
+            color: var(--text-muted);
+            font-size: 0.75rem;
+            font-style: italic;
+            margin-top: 8px;
+        }
+
+        .app-badges {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .app-badge {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            padding: 10px 14px;
+            color: var(--text-primary);
+            text-decoration: none;
+            width: 160px;
+            transition: all 0.2s;
+        }
+
+        .app-badge:hover {
+            border-color: var(--text-secondary);
+            background: var(--bg-secondary);
+        }
+
+        .app-badge svg {
+            height: 20px;
+            width: auto;
+            margin-right: 10px;
+            fill: currentColor;
+        }
+
+        .app-badge span {
+            font-size: 0.7rem;
+            text-align: left;
+            line-height: 1.2;
+            color: var(--text-secondary);
+        }
+
+        .app-badge b {
+            display: block;
+            font-size: 0.85rem;
+            color: var(--text-primary);
+        }
+
+        .footer-bottom {
+            border-top: 1px solid rgba(255,255,255,0.06);
+            padding-top: 32px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .footer-bottom-left {
+            display: flex;
+            gap: 24px;
+            align-items: center;
+        }
+
+        .footer-bottom-left a {
+            color: var(--text-secondary);
+            text-decoration: none;
+        }
+
+        .footer-bottom-left a:hover {
+            color: var(--accent-primary);
+        }
+
+        .footer-bottom-right {
+            display: flex;
+            gap: 16px;
+        }
+
+        .footer-badge {
+            font-size: 0.75rem;
+            color: var(--text-secondary);
+            background: rgba(255,255,255,0.04);
+            padding: 6px 12px;
+            border-radius: 20px;
+            border: 1px solid rgba(255,255,255,0.08);
+        }
+
+        .footer-language {
+            text-align: center;
+            margin-top: 32px;
+            padding-top: 24px;
+            border-top: 1px solid rgba(255,255,255,0.04);
+        }
+
+        .footer-language p {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .footer-language a {
+            color: var(--accent-primary);
+            text-decoration: none;
+        }
+
+        .footer-language a:hover {
+            text-decoration: underline;
+        }
+
+        /* ========================================
+           MOBILE HAMBURGER MENU
+           ======================================== */
+        .mobile-menu-btn {
+            display: none;
+            flex-direction: column;
+            justify-content: center;
+            gap: 5px;
+            width: 44px;
+            height: 44px;
+            background: transparent;
+            border: none;
+            cursor: pointer;
+            padding: 10px;
+            z-index: 1001;
+        }
+
+        .hamburger-line {
+            width: 24px;
+            height: 2px;
+            background: var(--text-primary);
+            transition: all 0.3s ease;
+            border-radius: 2px;
+        }
+
+        .mobile-menu-btn.open .hamburger-line:nth-child(1) {
+            transform: rotate(45deg) translate(5px, 5px);
+        }
+
+        .mobile-menu-btn.open .hamburger-line:nth-child(2) {
+            opacity: 0;
+        }
+
+        .mobile-menu-btn.open .hamburger-line:nth-child(3) {
+            transform: rotate(-45deg) translate(5px, -5px);
+        }
+
+        /* ========================================
+           RESPONSIVE - MOBILE OPTIMIZED
+           ======================================== */
+        @media (max-width: 1024px) {
+            header {
+                padding: 0 24px;
+            }
+
+            .mobile-menu-btn {
+                display: flex;
+            }
+
+            .nav-links {
+                display: none;
+                position: fixed;
+                top: var(--header-height);
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: var(--bg-color);
+                flex-direction: column;
+                align-items: center;
+                justify-content: flex-start;
+                padding: 40px 24px;
+                gap: 24px;
+                z-index: 999;
+            }
+
+            .nav-links.open {
+                display: flex;
+            }
+
+            .nav-links .nav-link {
+                font-size: 1.2rem;
+            }
+
+            .nav-links .btn {
+                width: 100%;
+                max-width: 280px;
+            }
+
+            .hero {
+                grid-template-columns: 1fr;
+                grid-template-rows: 55vh auto;
+                min-height: auto;
+            }
+
+            .hero-content {
+                padding: 32px 24px 48px;
+                max-width: none;
+                margin: 0;
+                text-align: center;
+                order: 1;
+            }
+            
+            .hero-headline {
+                font-size: 2rem;
+                margin-bottom: 24px;
+            }
+            
+            .hero-eyebrow {
+                font-size: 0.75rem;
+                margin-bottom: 16px;
+            }
+            
+            .todays-question {
+                padding: 20px 24px;
+                margin-bottom: 32px;
+            }
+            
+            .question-text {
+                font-size: 1.25rem;
+            }
+            
+            .hero-cta {
+                width: 100%;
+                justify-content: center;
+                padding: 18px 32px;
+                font-size: 1.1rem;
+            }
+
+            .hero-kelly {
+                order: -1; /* Kelly comes FIRST on mobile */
+                min-height: 55vh;
+            }
+            
+            .kelly-image {
+                height: 55vh; /* Increased from 50vh - Kelly dominates mobile too */
+                max-height: none;
+                min-height: 50vh;
+            }
+            
+            .hero-video {
+                height: 55vh; /* Increased from 50vh - Kelly owns the top half */
+                max-height: none;
+                min-height: 50vh;
+            }
+            
+            .hero-badge {
+                margin-left: auto;
+                margin-right: auto;
+            }
+            
+            .hero-cta-group {
+                justify-content: center;
+            }
+            
+            .auth-buttons {
+                justify-content: center;
+            }
+            
+            .hero-trust {
+                justify-content: center;
+            }
+            
+            .kelly-controls,
+            .persona-controls {
+                bottom: 16px;
+                padding: 12px 16px;
+            }
+            
+            .kelly-intro {
+                margin-top: 16px;
+            }
+            
+            .kelly-name {
+                font-size: 1.25rem;
+            }
+            
+            .personas-strip-compact {
+                max-width: 100%;
+            }
+            
+            .personas-strip-compact .persona-thumb {
+                width: 40px;
+                height: 40px;
+            }
+
+            section {
+                padding: 40px 24px; /* Reduced from 60px */
+            }
+
+            .footer-grid {
+                grid-template-columns: repeat(3, 1fr);
+                gap: 24px;
+            }
+            
+            .footer-brand {
+                text-align: center;
+            }
+            
+            .footer-social {
+                justify-content: center;
+            }
+
+            .lesson-card {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        @media (max-width: 768px) {
+            /* QUICK WIN 1: Reduce mobile padding */
+            section {
+                padding: 32px 20px !important; /* Reduced from 60px */
+            }
+            
+            .section-header {
+                margin-bottom: 24px !important; /* Reduced from 40px */
+            }
+            
+            /* QUICK WIN 5: Fix oversized typography */
+            h1 {
+                font-size: 2rem !important; /* Reduced from 3rem (48px → 32px) */
+                line-height: 1.2;
+            }
+
+            h2 {
+                font-size: 1.5rem !important; /* Reduced from 2rem (32px → 24px) */
+                line-height: 1.3;
+            }
+            
+            h3 {
+                font-size: 1.25rem;
+            }
+
+            .year-big {
+                font-size: 2.5rem; /* Reduced from 3.5rem */
+            }
+
+            .footer-bottom {
+                flex-direction: column;
+                gap: 16px;
+                text-align: center;
+            }
+            
+            .footer-bottom-left,
+            .footer-bottom-right {
+                justify-content: center;
+                flex-wrap: wrap;
+            }
+            
+            .footer-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+            
+            /* Tighter card padding */
+            .price-card, .tier-card, .gift-card {
+                padding: 20px !important; /* Reduced from 32px */
+            }
+            
+            /* QUICK WIN 6: Touch target optimization */
+            button, .btn, a.btn {
+                min-height: 44px;
+                min-width: 44px;
+                padding: 12px 20px;
+            }
+            
+            .age-btn, .gen-btn {
+                min-height: 44px;
+                padding: 10px 16px;
+                font-size: 0.9rem;
+            }
+            
+            /* Better collapsible headers */
+            .collapsible-header {
+                padding: 20px;
+                min-height: 60px;
+            }
+        }
+
+        /* ========================================
+           LOADING & ANIMATIONS
+           ======================================== */
+        .spinner {
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-left-color: currentColor;
+            border-radius: 50%;
+            width: 16px;
+            height: 16px;
+            animation: spin 0.8s linear infinite;
+            display: none;
+        }
+
+        @keyframes spin {
+            to {
+                transform: rotate(360deg);
+            }
+        }
+
+        .btn.loading .spinner {
+            display: block;
+        }
+
+        .btn.loading span,
+        .btn.loading svg {
+            display: none;
+        }
+
+        .hidden {
+            display: none;
+        }
+
+        /* ========================================
+           ACCESSIBILITY - Universal Welcome
+           ======================================== */
+        
+        /* Skip Link for keyboard/screen reader users */
+        .skip-link {
+            position: absolute;
+            top: -100px;
+            left: 0;
+            background: var(--accent-primary);
+            color: white;
+            padding: 12px 24px;
+            z-index: 10000;
+            text-decoration: none;
+            border-radius: 0 0 8px 0;
+            font-weight: 600;
+            transition: top 0.2s ease;
+        }
+
+        .skip-link:focus {
+            top: 0;
+        }
+
+        /* Enhanced focus states for all interactive elements */
+        a:focus-visible,
+        button:focus-visible,
+        input:focus-visible,
+        select:focus-visible,
+        [tabindex]:focus-visible {
+            outline: 2px solid var(--accent-primary);
+            outline-offset: 2px;
+        }
+
+        :focus:not(:focus-visible) {
+            outline: none;
+        }
+
+        /* Reduced motion preferences - respect user choice */
+        @media (prefers-reduced-motion: reduce) {
+            *,
+            *::before,
+            *::after {
+                animation-duration: 0.01ms !important;
+                animation-iteration-count: 1 !important;
+                transition-duration: 0.01ms !important;
+                scroll-behavior: auto !important;
+            }
+            
+            .hero-video {
+                animation: none;
+            }
+        }
+
+        /* Touch targets - minimum 44x44px for motor accessibility */
+        .btn,
+        .nav-link,
+        .depth-link,
+        .cal-nav-btn {
+            min-height: 44px;
+            min-width: 44px;
+        }
+
+        .footer-links a {
+            min-height: 44px;
+            display: inline-flex;
+            align-items: center;
+        }
+
+        @media (max-width: 768px) {
+            .nav-link,
+            .footer-links a {
+                padding: 12px 16px;
+            }
+        }
+
+        /* Welcome note - warm emotional tone */
+        .welcome-note {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            font-style: italic;
+            max-width: 500px;
+            margin: 24px auto;
+            text-align: center;
+            line-height: 1.6;
+        }
+
+        /* Caregiver section */
+        .caregiver-note {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 16px;
+            padding: 24px 32px;
+            margin-top: 48px;
+            text-align: center;
+        }
+
+        .caregiver-note h3 {
+            font-size: 1.1rem;
+            font-weight: 600;
+            margin-bottom: 12px;
+            color: var(--text-primary);
+        }
+
+        .caregiver-note p {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            line-height: 1.6;
+        }
+
+        .caregiver-note a {
+            color: var(--accent-primary);
+            text-decoration: none;
+        }
+
+        .caregiver-note a:hover {
+            text-decoration: underline;
+        }
+
+        /* Proof link - COPPA clickable */
+        .proof-link {
+            color: inherit;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .proof-link:hover {
+            text-decoration: underline;
+        }
+
+        /* Gentle loading animation */
+        @keyframes gentle-pulse {
+            0%, 100% { opacity: 0.4; }
+            50% { opacity: 0.7; }
+        }
+
+        .loading-skeleton {
+            animation: gentle-pulse 2s ease-in-out infinite;
+        }
+
+        /* Language note */
+        .language-note {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+            margin-top: 16px;
+        }
+
+        .language-note a {
+            color: var(--accent-primary);
+        }
+
+        /* Currency marker */
+        .currency {
+            font-size: 0.6em;
+            color: var(--text-muted);
+            font-weight: 400;
+            margin-right: 4px;
+        }
+
+        /* Kelly on homepage (unified navigation/presence) */
+        .kelly-home-presence {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            overflow: hidden;
+            border: 3px solid var(--kelly-color, #3b82f6);
+            box-shadow: 0 0 30px rgba(59, 130, 246, 0.3);
+            z-index: 100;
+            cursor: pointer;
+            transition: transform 0.3s;
+            background: rgba(0,0,0,0.35);
+            -webkit-backdrop-filter: blur(10px);
+            backdrop-filter: blur(10px);
+        }
+
+        .kelly-home-presence:hover {
+            transform: scale(1.06);
+        }
+
+        .kelly-home-presence img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            display: block;
+        }
+    </style>
+    <!-- Affiliate Tracking -->
+    <script src="/js/affiliate-tracking.js?v=2"></script>
+    
+    <!-- COPPA Age Gate -->
+    <script src="/js/age-gate.js"></script>
+    
+    <!-- Kelly Message System (replaces ugly browser alerts) -->
+    <script src="/js/kelly-messages.js"></script>
+
+    <!-- Kelly OS shared foundation (Phase 1) -->
+    <link rel="stylesheet" href="/styles/kelly-foundation.css">
+    <script src="/js/kelly-time.js"></script>
+    <script src="/js/kelly-calendar.js"></script>
+    <script src="/js/kelly-lesson.js"></script>
+    <script src="/js/kelly-presence.js"></script>
+</head>
+<body>
+    <!-- Skip link for keyboard/screen reader users -->
+    <a href="#main-content" class="skip-link">Skip to main content</a>
+
+    <!-- ========================================
+         HEADER
+         ======================================== -->
+    <header>
+        <a href="/" class="logo">
+            <img src="/images/brand/kelly-mark-circle-64.png" alt="Curious Kelly" class="logo-icon" onerror="this.style.display='none'" />
+            Curious Kelly
+        </a>
+        
+        <!-- Mobile hamburger button -->
+        <button class="mobile-menu-btn" onclick="toggleMobileMenu()" aria-label="Menu">
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+            <span class="hamburger-line"></span>
+        </button>
+        
+        <nav class="nav-links" id="nav-links">
+            <a href="/curriculum.html" class="nav-link" onclick="closeMobileMenu()">Curriculum</a>
+            <a href="#pricing" class="nav-link" onclick="closeMobileMenu()">Pricing</a>
+            <a href="/calendar.html" class="nav-link" onclick="closeMobileMenu()">Calendar</a>
+            <a href="#about" class="nav-link" onclick="closeMobileMenu()">About</a>
+            <button class="btn btn-primary" onclick="closeMobileMenu(); scrollToHero()">Start Learning</button>
+        </nav>
+    </header>
+
+    <!-- Mobile menu functions - must be synchronous for onclick to work -->
+    <script>
+        function toggleMobileMenu() {
+            var btn = document.querySelector('.mobile-menu-btn');
+            var nav = document.getElementById('nav-links');
+            btn.classList.toggle('open');
+            nav.classList.toggle('open');
+            document.body.style.overflow = nav.classList.contains('open') ? 'hidden' : '';
+        }
+        function closeMobileMenu() {
+            var btn = document.querySelector('.mobile-menu-btn');
+            var nav = document.getElementById('nav-links');
+            btn.classList.remove('open');
+            nav.classList.remove('open');
+            document.body.style.overflow = '';
+        }
+
+        // Email signup modal
+        function showEmailSignup() {
+            // Create modal
+            var overlay = document.createElement('div');
+            overlay.id = 'email-signup-modal';
+            overlay.style.cssText = 'position:fixed;inset:0;background:rgba(0,0,0,0.85);display:flex;align-items:center;justify-content:center;z-index:10000;padding:20px;';
+            overlay.innerHTML = '<div style="background:#18181b;border:1px solid #27272a;border-radius:16px;padding:32px;max-width:400px;width:100%;text-align:center;">' +
+                '<h3 style="font-family:Georgia,serif;font-size:1.5rem;color:#fafafa;margin:0 0 8px;">Create an account</h3>' +
+                '<p style="color:#a1a1aa;font-size:0.9rem;margin:0 0 24px;">Track the 365-day learning journey</p>' +
+                '<input type="email" id="modal-email-input" placeholder="Email address" style="width:100%;padding:14px 16px;background:#27272a;border:1px solid #3f3f46;border-radius:10px;color:#fafafa;font-size:1rem;margin-bottom:12px;box-sizing:border-box;" />' +
+                '<button onclick="submitEmailSignup()" style="width:100%;padding:14px;background:#3b82f6;color:white;border:none;border-radius:10px;font-size:1rem;font-weight:600;cursor:pointer;">Continue with Email</button>' +
+                '<button onclick="closeEmailSignup()" style="width:100%;padding:12px;background:transparent;color:#a1a1aa;border:none;font-size:0.9rem;cursor:pointer;margin-top:12px;">Cancel</button>' +
+                '</div>';
+            document.body.appendChild(overlay);
+            overlay.onclick = function(e) { if (e.target === overlay) closeEmailSignup(); };
+            setTimeout(function() { document.getElementById('modal-email-input').focus(); }, 100);
+        }
+
+        function closeEmailSignup() {
+            var modal = document.getElementById('email-signup-modal');
+            if (modal) modal.remove();
+        }
+
+        // Proof strip accordion toggle (mobile)
+        function toggleProofStrip() {
+            var btn = document.querySelector('.proof-strip-toggle');
+            var content = document.getElementById('proof-strip-content');
+            var expanded = btn.getAttribute('aria-expanded') === 'true';
+            btn.setAttribute('aria-expanded', !expanded);
+            content.classList.toggle('open', !expanded);
+        }
+
+        function submitEmailSignup() {
+            var email = document.getElementById('modal-email-input').value.trim();
+            if (!email || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+                alert('Please enter a valid email address');
+                return;
+            }
+            closeEmailSignup();
+            // Trigger the main handleLogin flow with email
+            if (typeof handleLogin === 'function') {
+                var fakeBtn = document.createElement('button');
+                window._pendingEmail = email;
+                handleLogin(fakeBtn, 'email');
+            }
+        }
+    </script>
+
+    <!-- Main content wrapper for skip link target -->
+    <main id="main-content">
+
+    <!-- ========================================
+         HERO - The Transformation Promise
+         ======================================== -->
+    <section class="hero" id="hero">
+        <!-- LEFT: Content (40%) -->
+        <div class="hero-content">
+            <!-- Date Badge -->
+            <div class="hero-badge" id="hero-date-badge">
+                <span class="live-dot"></span>
+                <span id="today-full-date">Loading...</span>
+            </div>
+            
+            <p class="hero-eyebrow">365 DAYS. 365 LESSONS. ONE TEACHER.</p>
+            
+            <h1 class="hero-headline">
+                A year from now, you'll know 365 things you don't know today.
+            </h1>
+            
+            <div class="hero-question" id="todays-question">
+                <span class="question-label">TODAY'S QUESTION</span>
+                <p class="question-text" id="hero-question">Why do leaves change color?</p>
+            </div>
+            
+            <div class="hero-cta-group">
+                <a href="/learn.html" 
+                   class="btn btn-primary btn-lg"
+                   data-analytics-action="start-learning"
+                   data-analytics-location="hero"
+                   data-analytics-day="today">
+                    Start today's lesson →
+                </a>
+                <a href="/curriculum.html" 
+                   class="hero-cta-secondary"
+                   data-analytics-action="view-curriculum"
+                   data-analytics-location="hero">
+                    View all 365 lessons
+                </a>
+            </div>
+            
+            <p class="hero-subtext">5 minutes. No signup. Just learning.</p>
+            
+            <p class="hero-welcome">
+                <em>Whether you have 5 minutes or 50, whether you're wide awake or half asleep—Kelly meets you where you are.</em>
+            </p>
+            
+            <div class="hero-auth" data-analytics-section="hero-auth">
+                <span class="auth-divider">OR</span>
+                <div class="auth-buttons">
+                    <button class="btn-google" 
+                            onclick="handleLogin(this, 'google')" 
+                            id="hero-btn-google"
+                            data-analytics-action="signup"
+                            data-analytics-provider="google"
+                            data-analytics-location="hero">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="none">
+                            <path d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z" fill="#4285F4"/>
+                            <path d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z" fill="#34A853"/>
+                            <path d="M5.84 14.09c-.22-.66-.35-1.36-.35-2.09s.13-1.43.35-2.09V7.07H2.18C1.43 8.55 1 10.22 1 12s.43 3.45 1.18 4.93l2.85-2.22.81-.62z" fill="#FBBC05"/>
+                            <path d="M12 5.38c1.62 0 3.06.56 4.21 1.64l3.15-3.15C17.45 2.09 14.97 1 12 1 7.7 1 3.99 3.47 2.18 7.07l3.66 2.84c.87-2.6 3.3-4.53 6.16-4.53z" fill="#EA4335"/>
+                        </svg>
+                        Continue with Google
+                    </button>
+                    <button class="btn-secondary" 
+                            onclick="showEmailSignup()" 
+                            id="hero-btn-email"
+                            data-analytics-action="signup"
+                            data-analytics-provider="email"
+                            data-analytics-location="hero">
+                        ✉️ Email signup
+                    </button>
+                </div>
+                <p class="auth-note">Create an account to track the 365-day journey</p>
+            </div>
+            
+            <div class="hero-trust">
+                <a href="/trust.html" class="trust-badge">🔒 COPPA compliant</a>
+                <a href="/trust.html" class="trust-badge">👨‍👩‍👧‍👦 Family safe</a>
+                <span class="trust-badge">📱 Works offline</span>
+            </div>
+        </div>
+        
+        <!-- RIGHT: KELLY OWNS THIS SPACE (60%) -->
+        <div class="hero-kelly">
+            <div class="kelly-image-container">
+                <video 
+                    id="hero-kelly-video"
+                    autoplay 
+                    muted 
+                    loop 
+                    playsinline
+                    preload="metadata"
+                    poster="https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/kelly_explorer_head.png"
+                    class="kelly-image"
+                    aria-label="Kelly, a friendly AI teacher, ready to guide you through today's lesson"
+                >
+                    <source src="https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-videos/production/day_001_final/day_001_hook_scientist_dynamic.mp4" type="video/mp4">
+                </video>
+            </div>
+            
+            <!-- Controls anchored to bottom of Kelly's space -->
+            <div class="kelly-controls">
+                <div class="kelly-age-pills" id="persona-age-pills" role="tablist" aria-label="Age preview">
+                    <!-- Rendered by JS -->
+                </div>
+                
+                <div class="kelly-persona-select">
+                    <label for="persona-tone-select">Teaching style</label>
+                    <select id="persona-tone-select" class="persona-dropdown" aria-label="Teaching style (persona)">
+                        <!-- Rendered by JS -->
+                    </select>
+                </div>
+                
+                <div class="kelly-personas-strip" id="personas-strip">
+                    <!-- Persona thumbnails load via JS -->
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- ========================================
+         VALUE STRIP - What makes this different
+         ======================================== -->
+    <section class="value-strip">
+        <div class="value-item">
+            <span class="value-number">365</span>
+            <span class="value-text">Daily Lessons</span>
+        </div>
+        <div class="value-divider"></div>
+        <div class="value-item">
+            <span class="value-number">12</span>
+            <span class="value-text">Teaching Personas</span>
+        </div>
+        <div class="value-divider"></div>
+        <div class="value-item">
+            <span class="value-number">2+</span>
+            <span class="value-text">Every Age Welcome</span>
+        </div>
+        <div class="value-divider"></div>
+        <div class="value-item">
+            <span class="value-number">5 min</span>
+            <span class="value-text">Per Day</span>
+        </div>
+    </section>
+
+    <!-- ========================================
+         PLATFORM DEPTH - Built for Lifelong Learning
+         ======================================== -->
+    <section class="platform-depth" id="how-it-works">
+        <div class="section-inner">
+            <h2>Built for Lifelong Learning</h2>
+            
+            <div class="depth-grid">
+                <div class="depth-card">
+                    <div class="depth-icon" aria-hidden="true">📚</div>
+                    <h3>365 Lessons</h3>
+                    <p>A new topic every day, for an entire year.</p>
+                    <a href="/curriculum.html" class="depth-link">Browse curriculum →</a>
+                </div>
+                
+                <div class="depth-card">
+                    <div class="depth-icon" aria-hidden="true">🎭</div>
+                    <h3>12 Teaching Styles</h3>
+                    <p>From The Scientist to The Storyteller.</p>
+                </div>
+                
+                <div class="depth-card">
+                    <div class="depth-icon" aria-hidden="true">👶👧👩👵</div>
+                    <h3>Every Learner</h3>
+                    <p>Content adapts to where you are in life—toddler to elder, and everyone between.</p>
+                </div>
+                
+                <div class="depth-card">
+                    <div class="depth-icon" aria-hidden="true">📅</div>
+                    <h3>Calendar Sync</h3>
+                    <p>Add lessons to Google, Apple, or Outlook.</p>
+                    <a href="/calendar.html" class="depth-link">Set up calendar →</a>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <!-- Duplicate Today's Lesson section REMOVED - using Calendar-First version only -->
+
+    <!-- ========================================
+         TODAY'S LESSON - Calendar-First Experience
+         ======================================== -->
+    <section class="todays-lesson" id="curriculum">
+        <div class="section-header">
+            <span class="section-label">Today's Lesson</span>
+            <h2>One topic, every day</h2>
+            <p>365 lessons. Adapts to how you learn. Today's is yours.</p>
+        </div>
+
+        <div class="daily-lesson-container">
+            <!-- Mini Calendar -->
+            <div class="mini-calendar-wrapper">
+                <div class="mini-calendar">
+                    <div class="calendar-nav">
+                        <button class="cal-nav-btn" onclick="navigateMonth(-1)" aria-label="Previous month">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M15 18l-6-6 6-6"/></svg>
+                        </button>
+                        <span class="cal-month-title" id="cal-month-title">December 2025</span>
+                        <button class="cal-nav-btn" onclick="navigateMonth(1)" aria-label="Next month">
+                            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M9 18l6-6-6-6"/></svg>
+                        </button>
+                    </div>
+                    <div class="calendar-weekdays">
+                        <span>S</span><span>M</span><span>T</span><span>W</span><span>T</span><span>F</span><span>S</span>
+                    </div>
+                    <div class="calendar-days" id="calendar-days">
+                        <!-- Generated by JavaScript -->
+                    </div>
+                </div>
+                <div class="calendar-legend">
+                    <span class="legend-item"><span class="legend-dot past"></span> Completed</span>
+                    <span class="legend-item"><span class="legend-dot today"></span> Today</span>
+                    <span class="legend-item"><span class="legend-dot future"></span> Coming</span>
+                </div>
+            </div>
+
+            <!-- Today's Lesson Card -->
+            <div class="today-card" id="today-card">
+                <div class="today-badge">
+                    <span class="today-icon">🎯</span>
+                    <span>TODAY</span>
+                </div>
+                <div class="today-date" id="today-date"></div>
+                <h3 class="today-topic" id="today-topic">Discover something new</h3>
+                <p class="today-truth" id="today-truth">Every day brings a new opportunity to learn something wonderful.</p>
+                
+                <div class="today-thumbnail" id="today-thumbnail">
+                    <img src="/images/brand/kelly-mark-circle-512.png" alt="Kelly, an AI learning companion" class="kelly-preview" loading="lazy">
+                </div>
+
+                <a href="/learn.html" class="today-cta">
+                    <span>Begin Today's Lesson</span>
+                    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+                </a>
+
+                <div class="today-meta">
+                    <span>⏱️ ~5 minutes</span>
+                    <span>🎓 Personalized learning</span>
+                </div>
+            </div>
+        </div>
+
+        <div class="curriculum-cta">
+            <a href="/curriculum.html" class="view-all-btn">
+                <span>View All 365 Days</span>
+                <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2" ry="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+            </a>
+            <a href="/calendar.html" class="calendar-link">
+                Or explore by month →
+            </a>
+        </div>
+    </section>
+
+    <!-- ========================================
+         WATCH KELLY TEACH - Real Video Demo
+         ======================================== -->
+    <section class="video-demo-section" id="perspectives">
+        <div class="section-header">
+            <span class="section-label">Watch Kelly teach</span>
+            <h2>One lesson. Many ways to learn it.</h2>
+            <p>Kelly adapts her style to match how you think. Try each one.</p>
+        </div>
+
+        <div class="video-demo">
+            <div class="demo-topic">
+                <span class="demo-topic-emoji">🌅</span>
+                <span class="demo-topic-title">Starting Fresh</span>
+            </div>
+            
+            <div class="archetype-toggle">
+                <button class="archetype-btn active" data-archetype="explorer" onclick="showArchetype('explorer')">
+                    <span class="archetype-icon">🧭</span>
+                    <span class="archetype-name">The Explorer</span>
+                    <span class="archetype-desc">Curious & adventurous</span>
+                </button>
+                <button class="archetype-btn" data-archetype="scientist" onclick="showArchetype('scientist')">
+                    <span class="archetype-icon">🔬</span>
+                    <span class="archetype-name">The Scientist</span>
+                    <span class="archetype-desc">Analytical & precise</span>
+                </button>
+                <button class="archetype-btn" data-archetype="storyteller" onclick="showArchetype('storyteller')">
+                    <span class="archetype-icon">📖</span>
+                    <span class="archetype-name">The Storyteller</span>
+                    <span class="archetype-desc">Narrative & imaginative</span>
+                </button>
+            </div>
+
+            <div class="video-container">
+                <div class="video-wrapper active" data-archetype="explorer">
+                    <video 
+                        class="kelly-video" 
+                        poster="/images/brand/kelly-mark-circle-512.png"
+                        controls
+                        playsinline
+                        preload="metadata">
+                        <source src="https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-videos/production/day_001_final/day_001_hook_explorer_dynamic.mp4" type="video/mp4">
+                    </video>
+                    <div class="video-caption">Kelly teaches as The Explorer — curious, adventurous, wonder-filled</div>
+                </div>
+                
+                <div class="video-wrapper" data-archetype="scientist">
+                    <video 
+                        class="kelly-video" 
+                        poster="/images/brand/kelly-mark-circle-512.png"
+                        controls
+                        playsinline
+                        preload="metadata">
+                        <source src="https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-videos/production/day_001_final/day_001_hook_scientist_dynamic.mp4" type="video/mp4">
+                    </video>
+                    <div class="video-caption">Kelly teaches as The Scientist — precise, logical, evidence-based</div>
+                </div>
+                
+                <div class="video-wrapper" data-archetype="storyteller">
+                    <video 
+                        class="kelly-video" 
+                        poster="/images/brand/kelly-mark-circle-512.png"
+                        controls
+                        playsinline
+                        preload="metadata">
+                        <source src="https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-videos/day-001/storyteller/hook.mp4" type="video/mp4">
+                    </video>
+                    <div class="video-caption">Kelly teaches as The Storyteller — narrative, imaginative, memorable</div>
+                </div>
+            </div>
+
+            <div class="archetype-hint">
+                <span class="hint-icon">💡</span>
+                <span>Kelly learns which style works best over time</span>
+            </div>
+        </div>
+    </section>
+
+    <!-- Archetype toggle script - must be inline for immediate availability -->
+    <script>
+        function showArchetype(archetype) {
+            // Pause all videos first
+            document.querySelectorAll('.kelly-video').forEach(function(video) {
+                video.pause();
+            });
+            
+            // Update buttons
+            document.querySelectorAll('.archetype-btn').forEach(function(btn) {
+                btn.classList.toggle('active', btn.dataset.archetype === archetype);
+            });
+            
+            // Update video wrappers
+            document.querySelectorAll('.video-wrapper').forEach(function(wrapper) {
+                wrapper.classList.toggle('active', wrapper.dataset.archetype === archetype);
+            });
+        }
+    </script>
+
+    <!-- ========================================
+         PRICING
+         ======================================== -->
+    <section class="pricing" id="pricing">
+        <div class="section-header">
+            <span class="section-label">Pricing</span>
+            <h2>Simple pricing</h2>
+            <p>Access all lessons. Share with family.</p>
+        </div>
+
+        <div class="pricing-grid">
+            <!-- Today's Lesson -->
+            <div class="price-card">
+                <div class="price-name">Today</div>
+                <div class="price-amount">$0</div>
+                <div class="price-desc">Today's lesson is always yours</div>
+                <ul class="price-features">
+                    <li>Today's daily lesson</li>
+                    <li>Basic personalization</li>
+                    <li>Community access</li>
+                </ul>
+                <button class="btn btn-ghost" onclick="startAsGuest(event)">Start Learning</button>
+            </div>
+
+            <!-- Monthly -->
+            <div class="price-card">
+                <div class="price-name">Monthly</div>
+                <div class="price-amount">$7.99 <span class="currency">USD</span><span>/mo</span></div>
+                <div class="price-desc">All 365 lessons, anytime</div>
+                <ul class="price-features">
+                    <li>Access every lesson</li>
+                    <li>Learn at any pace</li>
+                    <li>Full personalization</li>
+                    <li>Progress tracking</li>
+                    <li>Cancel anytime</li>
+                </ul>
+                <a href="https://buy.stripe.com/9B600jgfj2mqbIP0t49Zm02" class="btn btn-primary" target="_blank" rel="noopener">Subscribe</a>
+            </div>
+
+            <!-- Annual (Featured) -->
+            <div class="price-card featured">
+                <div class="price-badge">Most Popular</div>
+                <div class="price-name">Annual</div>
+                <div class="price-amount">$49.99 <span class="currency">USD</span><span>/year</span></div>
+                <div class="price-desc">Save 48% — $4.17/month</div>
+                <ul class="price-features">
+                    <li>Everything in Monthly</li>
+                    <li>Save $10</li>
+                    <li>Dedicated support</li>
+                </ul>
+                <a href="https://buy.stripe.com/fZu7sL7IN0ei007cbM9Zm00" class="btn btn-primary" target="_blank" rel="noopener">Subscribe</a>
+            </div>
+
+            <!-- Lifetime -->
+            <div class="price-card">
+                <div class="price-name">Lifetime</div>
+                <div class="price-amount">$199.99 <span class="currency">USD</span><span>one-time</span></div>
+                <div class="price-desc">Forever access</div>
+                <ul class="price-features">
+                    <li>All features, always</li>
+                    <li>All future content</li>
+                    <li>Personal support</li>
+                </ul>
+                <a href="https://buy.stripe.com/eVq9AT5AF2mqeV1a3E9Zm05" class="btn btn-ghost" target="_blank" rel="noopener">Get Lifetime</a>
+            </div>
+        </div>
+    </section>
+
+    <!-- Gifts & Enterprise sections moved to dedicated pages: /gifts.html and /enterprise.html -->
+
+    <!-- ========================================
+         ABOUT KELLY
+         ======================================== -->
+    <section class="about" id="about">
+        <div class="section-header">
+            <span class="section-label">About</span>
+            <h2>Meet Kelly</h2>
+        </div>
+
+        <div class="about-content">
+            <img src="https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/kelly_explorer_head.png" alt="Kelly, an AI learning companion, smiling warmly" class="kelly-avatar-large" loading="lazy" onerror="this.src='/images/brand/kelly-mark-circle-64.png'" />
+            
+            <p>Kelly is your AI teacher—a curious, warm guide who adapts to how you learn. She teaches one topic a day, the same for everyone around the world, but explained differently based on your age, mood, and thinking style.</p>
+            
+            <p>Built by educators who believe the best learning happens when you feel understood. Kelly meets you where you are—whether you're 5 or 95, whether you learn best through stories or experiments.</p>
+            
+            <p style="font-style: italic; color: var(--text-muted); margin-top: 16px;">Lesson of the Day PBC · hello@curiouskelly.com</p>
+        </div>
+
+        <div class="mission-grid">
+            <div class="mission-item">
+                <div class="mission-icon">📅</div>
+                <h4>Daily</h4>
+                <p>One lesson, every day, forever</p>
+            </div>
+            <div class="mission-item">
+                <div class="mission-icon">🎭</div>
+                <h4>12 Teaching Styles</h4>
+                <p>Scientist, Explorer, Storyteller & more</p>
+            </div>
+            <div class="mission-item">
+                <div class="mission-icon">🌍</div>
+                <h4>For Everyone</h4>
+                <p>Every age, every learner</p>
+            </div>
+        </div>
+
+        <!-- Caregiver section -->
+        <div class="caregiver-note">
+            <h3>For Parents, Teachers & Caregivers</h3>
+            <p>
+                Kelly is designed with young learners' safety as the foundation. 
+                <a href="/trust.html">Learn about our safety practices</a> or 
+                <a href="/enterprise.html">explore options for schools</a>.
+            </p>
+        </div>
+    </section>
+
+    <!-- Newsroom section moved to /newsroom.html -->
+
+    <!-- ========================================
+         CALENDAR SUBSCRIBE - Kelly Time Authority
+         ======================================== -->
+    <section class="calendar-section" id="calendar-subscribe" style="padding: 60px 48px; background: var(--bg-secondary); text-align: center;">
+        <div style="max-width: 600px; margin: 0 auto;">
+            <h2 style="font-family: 'Newsreader', Georgia, serif; font-size: 2rem; margin-bottom: 1rem;">Never miss a lesson</h2>
+            <p style="color: var(--text-secondary); margin-bottom: 2rem;">Add Kelly's daily lessons to your calendar. Get reminders at 9:00 AM your time.</p>
+            <div id="calendar-subscribe-buttons"></div>
+        </div>
+        <script>
+            // Initialize calendar subscribe buttons
+            if (typeof KellyCalendarSubscribe !== 'undefined') {
+                document.addEventListener('DOMContentLoaded', function() {
+                    if (typeof KellyCalendarSubscribe !== 'undefined' && typeof KellyCalendarSubscribe.createSubscribeButtons === 'function') {
+                        KellyCalendarSubscribe.createSubscribeButtons('calendar-subscribe-buttons', {
+                            type: 'lessons',
+                            title: ''
+                        });
+                    }
+                });
+            }
+        </script>
+    </section>
+
+    </main>
+
+    <!-- Add Kelly presence layer to index.html -->
+    <div class="kelly-home-presence" id="kelly-home" title="Go to Today's Lesson">
+      <img src="/images/brand/kelly-mark-circle-256.png" alt="Kelly" id="kelly-home-img">
+    </div>
+    <!-- End main content wrapper -->
+
+    <!-- ========================================
+         FOOTER
+         ======================================== -->
+    <footer class="site-footer">
+        <div class="footer-inner">
+            
+            <!-- Brand section at top -->
+            <div class="footer-brand">
+                <a href="/" class="footer-logo">
+                    <img src="/images/brand/kelly-mark-circle-64.png" alt="" width="36" height="36">
+                    <span>Curious Kelly</span>
+                </a>
+                <p class="footer-tagline">Learn something new every day</p>
+                <div class="footer-social">
+                    <a href="https://twitter.com/curiouskelly" aria-label="Twitter" target="_blank" rel="noopener">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg>
+                    </a>
+                    <a href="https://instagram.com/curiouskelly" aria-label="Instagram" target="_blank" rel="noopener">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M12 2.163c3.204 0 3.584.012 4.85.07 3.252.148 4.771 1.691 4.919 4.919.058 1.265.069 1.645.069 4.849 0 3.205-.012 3.584-.069 4.849-.149 3.225-1.664 4.771-4.919 4.919-1.266.058-1.644.07-4.85.07-3.204 0-3.584-.012-4.849-.07-3.26-.149-4.771-1.699-4.919-4.92-.058-1.265-.07-1.644-.07-4.849 0-3.204.013-3.583.07-4.849.149-3.227 1.664-4.771 4.919-4.919 1.266-.057 1.645-.069 4.849-.069zm0-2.163c-3.259 0-3.667.014-4.947.072-4.358.2-6.78 2.618-6.98 6.98-.059 1.281-.073 1.689-.073 4.948 0 3.259.014 3.668.072 4.948.2 4.358 2.618 6.78 6.98 6.98 1.281.058 1.689.072 4.948.072 3.259 0 3.668-.014 4.948-.072 4.354-.2 6.782-2.618 6.979-6.98.059-1.28.073-1.689.073-4.948 0-3.259-.014-3.667-.072-4.947-.196-4.354-2.617-6.78-6.979-6.98-1.281-.059-1.69-.073-4.949-.073zm0 5.838c-3.403 0-6.162 2.759-6.162 6.162s2.759 6.163 6.162 6.163 6.162-2.759 6.162-6.163c0-3.403-2.759-6.162-6.162-6.162zm0 10.162c-2.209 0-4-1.79-4-4 0-2.209 1.791-4 4-4s4 1.791 4 4c0 2.21-1.791 4-4 4zm6.406-11.845c-.796 0-1.441.645-1.441 1.44s.645 1.44 1.441 1.44c.795 0 1.439-.645 1.439-1.44s-.644-1.44-1.439-1.44z"/></svg>
+                    </a>
+                    <a href="https://tiktok.com/@curiouskelly" aria-label="TikTok" target="_blank" rel="noopener">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M19.59 6.69a4.83 4.83 0 0 1-3.77-4.25V2h-3.45v13.67a2.89 2.89 0 0 1-5.2 1.74 2.89 2.89 0 0 1 2.31-4.64 2.93 2.93 0 0 1 .88.13V9.4a6.84 6.84 0 0 0-1-.05A6.33 6.33 0 0 0 5 20.1a6.34 6.34 0 0 0 10.86-4.43v-7a8.16 8.16 0 0 0 4.77 1.52v-3.4a4.85 4.85 0 0 1-1-.1z"/></svg>
+                    </a>
+                    <a href="https://youtube.com/@curiouskelly" aria-label="YouTube" target="_blank" rel="noopener">
+                        <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+                    </a>
+                </div>
+            </div>
+            
+            <!-- 6-column footer grid -->
+            <div class="footer-grid">
+                
+                <!-- Column 1: Learn -->
+                <div class="footer-col">
+                    <h4>Learn</h4>
+                    <ul class="footer-links">
+                        <li><a href="/learn.html">Today's Lesson</a></li>
+                        <li><a href="/curriculum.html">365 Lessons</a></li>
+                        <li><a href="/calendar.html">Calendar</a></li>
+                        <li><a href="/perspectives.html">Perspectives</a></li>
+                        <li><a href="/player.html">Lesson Player</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Column 2: Teaching Styles -->
+                <div class="footer-col">
+                    <h4>Teaching Styles</h4>
+                    <ul class="footer-links">
+                        <li><a href="/learn.html?persona=scientist">The Scientist 🔬</a></li>
+                        <li><a href="/learn.html?persona=explorer">The Explorer 🧭</a></li>
+                        <li><a href="/learn.html?persona=storyteller">The Storyteller 📖</a></li>
+                        <li><a href="/learn.html?persona=rebel">The Rebel ⚡</a></li>
+                        <li><a href="/learn.html?persona=empath">The Empath 💗</a></li>
+                        <li><a href="/learn.html?persona=architect">The Architect 🏛️</a></li>
+                    </ul>
+                    <span class="footer-more">+ 6 more styles</span>
+                </div>
+                
+                <!-- Column 3: Organizations -->
+                <div class="footer-col">
+                    <h4>Organizations</h4>
+                    <ul class="footer-links">
+                        <li><a href="/enterprise.html">Schools & Districts</a></li>
+                        <li><a href="/affiliates.html">Affiliate Program</a></li>
+                        <li><a href="/ambassador.html">Ambassadors</a></li>
+                        <li><a href="/partner.html">Partners</a></li>
+                        <li><a href="/gifts.html">Gift Cards</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Column 4: Company -->
+                <div class="footer-col">
+                    <h4>Company</h4>
+                    <ul class="footer-links">
+                        <li><a href="/about.html">About</a></li>
+                        <li><a href="/impact.html">Impact</a></li>
+                        <li><a href="/newsroom.html">Newsroom</a></li>
+                        <li><a href="/careers.html">Careers</a></li>
+                        <li><a href="/compare-us.html">Why Curious Kelly</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Column 5: Support -->
+                <div class="footer-col">
+                    <h4>Support</h4>
+                    <ul class="footer-links">
+                        <li><a href="/help.html">Help Center</a></li>
+                        <li><a href="/contact.html">Contact</a></li>
+                        <li><a href="/trust.html">Trust & Safety</a></li>
+                        <li><a href="/accessibility.html">Accessibility</a></li>
+                        <li><a href="/status.html">System Status</a></li>
+                    </ul>
+                </div>
+                
+                <!-- Column 6: Legal -->
+                <div class="footer-col">
+                    <h4>Legal</h4>
+                    <ul class="footer-links">
+                        <li><a href="/privacy.html">Privacy Policy</a></li>
+                        <li><a href="/terms.html">Terms of Service</a></li>
+                        <li><a href="/trust.html#coppa">COPPA Policy</a></li>
+                        <li><a href="/api.html">API</a></li>
+                    </ul>
+                </div>
+                
+            </div>
+            
+            <!-- Bottom bar -->
+            <div class="footer-bottom">
+                <div class="footer-bottom-left">
+                    <span>© 2025 Lesson of the Day PBC</span>
+                    <a href="mailto:hello@curiouskelly.com">hello@curiouskelly.com</a>
+                </div>
+                <div class="footer-bottom-right">
+                    <span class="footer-badge">🔒 COPPA Compliant</span>
+                    <span class="footer-badge">👨‍👩‍👧‍👦 Family Safe</span>
+                </div>
+            </div>
+            
+            <!-- Language note -->
+            <div class="footer-language">
+                <p>More languages coming soon. <a href="/contact.html">Request a language</a></p>
+            </div>
+            
+        </div>
+    </footer>
+
+    <!-- Supabase UMD bundle - more reliable than ESM import -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.47.10/dist/umd/supabase.min.js"></script>
+    <!-- Supabase singleton to prevent multiple GoTrue clients -->
+    <script src="/js/lib/supabase.js"></script>
+
+    <!-- Accessibility: Respect reduced motion preferences -->
+    <script>
+        (function() {
+            const prefersReducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            const heroVideo = document.getElementById('hero-kelly-video');
+            
+            if (heroVideo && prefersReducedMotion) {
+                heroVideo.removeAttribute('autoplay');
+                heroVideo.pause();
+                // Show poster image instead for users who prefer reduced motion
+            }
+        })();
+    </script>
+
+    <!-- ========================================
+         JAVASCRIPT
+         ======================================== -->
+    <script type="module">
+        // Supabase initialization with UMD fallback
+        let supabase = null;
+        const SUPABASE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co';
+        const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI';
+
+        // Initialize from singleton (prevents Multiple GoTrueClient warning)
+        try {
+            // Ensure singleton can resolve config even if config.js didn't populate globals
+            window.SUPABASE_URL = window.SUPABASE_URL || SUPABASE_URL;
+            window.SUPABASE_ANON_KEY = window.SUPABASE_ANON_KEY || SUPABASE_ANON_KEY;
+
+            if (typeof window.getSupabase === 'function') {
+                supabase = window.getSupabase({
+                    auth: {
+                        // Landing page is public: avoid session persistence + avoid GoTrue storage collisions.
+                        autoRefreshToken: false,
+                        persistSession: false,
+                        detectSessionInUrl: false,
+                        storageKey: 'curious-kelly-public',
+                        flowType: 'pkce',
+                    }
+                });
+            }
+
+            if (supabase) {
+                console.log('[Auth] ✅ Supabase client initialized (singleton)');
+            } else {
+                console.warn('[Auth] ⚠️ Supabase client unavailable (missing SDK or config)');
+            }
+        } catch (e) {
+            console.warn('[Auth] ⚠️ Supabase client failed to load:', e.message);
+        }
+
+        // Handle login - with COPPA age gate
+        window.handleLogin = async function (btn, provider) {
+            // COPPA COMPLIANCE: Require age verification before login
+            if (window.AgeGate && !window.AgeGate.isVerified()) {
+                window.AgeGate.show(() => {
+                    // After verification, proceed with login
+                    performLogin(btn, provider);
+                });
+                return;
+            }
+            performLogin(btn, provider);
+        };
+
+        // Actual login logic (called after age verification)
+        async function performLogin(btn, provider) {
+            document.querySelectorAll('.btn').forEach((b) => b.classList.remove('loading'));
+            btn.classList.add('loading');
+            btn.disabled = true;
+
+            try {
+                // Check if Supabase is available
+                if (!supabase) {
+                    if (window.KellyMessages) {
+                        KellyMessages.somethingWrong();
+                    } else {
+                        alert('Authentication is temporarily unavailable. Please try again.');
+                    }
+                    resetButton(btn);
+                    return;
+                }
+
+                if (provider === 'email') {
+                    // Use pending email from modal, or fall back to input field
+                    const email = window._pendingEmail || (document.getElementById('email-input')?.value || '').trim();
+                    window._pendingEmail = null; // Clear after use
+                    
+                    if (!email || !isValidEmail(email)) {
+                        // Kelly's voice
+                        if (window.KellyMessages) {
+                            KellyMessages.invalidEmail();
+                        } else {
+                            alert('Please enter a valid email address');
+                        }
+                        resetButton(btn);
+                        return;
+                    }
+
+                    const { data, error } = await supabase.auth.signInWithOtp({
+                        email: email,
+                        options: {
+                            emailRedirectTo: `${window.location.origin}/learn.html`
+                        }
+                    });
+
+                    if (error) throw error;
+
+                    btn.classList.remove('loading');
+                    btn.innerHTML = '<span>✓ Check email for magic link!</span>';
+                    btn.style.background = 'var(--success)';
+                    
+                    // Kelly's voice - not an ugly alert
+                    if (window.KellyMessages) {
+                        KellyMessages.emailSent(email);
+                    }
+                    return;
+                }
+
+                // OAuth
+                const { data, error } = await supabase.auth.signInWithOAuth({
+                    provider: provider,
+                    options: {
+                        redirectTo: `${window.location.origin}/learn.html`
+                    }
+                });
+
+                if (error) throw error;
+            } catch (error) {
+                console.error('Login error:', error);
+                
+                // Kelly's voice - not an ugly alert
+                if (window.KellyMessages) {
+                    if (error.message?.includes('email') || error.message?.includes('magic link')) {
+                        KellyMessages.emailError();
+                    } else {
+                        KellyMessages.somethingWrong();
+                    }
+                } else {
+                    alert(error.message || 'Something went wrong. Please try again.');
+                }
+                
+                resetButton(btn);
+            }
+        }
+
+        // Guest mode - with COPPA age gate
+        window.startAsGuest = function (e) {
+            e.preventDefault();
+            // COPPA COMPLIANCE: Require age verification for guest mode too
+            if (window.AgeGate && !window.AgeGate.isVerified()) {
+                window.AgeGate.show(() => {
+                    localStorage.setItem('guestMode', 'true');
+                    window.location.href = '/learn.html';
+                });
+                return;
+            }
+            localStorage.setItem('guestMode', 'true');
+            window.location.href = '/learn.html';
+        };
+
+        // Helpers
+        function isValidEmail(email) {
+            return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+        }
+
+        function resetButton(btn) {
+            btn.classList.remove('loading');
+            btn.disabled = false;
+        }
+
+        // Helper: Convert day number to formatted date
+        function dayNumberToDate(dayNumber, year = 2025) {
+            if (window.KellyTime?.dayNumberToDate && window.KellyTime?.fullDate) {
+                const date = window.KellyTime.dayNumberToDate(dayNumber, year);
+                return window.KellyTime.fullDate(date);
+            }
+            const date = new Date(year, 0, dayNumber);
+            const options = { month: 'long', day: 'numeric', year: 'numeric' };
+            return date.toLocaleDateString('en-US', options);
+        }
+
+        // ═══════════════════════════════════════════════════════════════
+        // SPEED OPTIMIZATION: Cache + Parallel Loading
+        // ═══════════════════════════════════════════════════════════════
+        const CACHE_KEY = 'ck_lessons_cache';
+        const CACHE_TTL = 5 * 60 * 1000; // 5 minutes
+        
+        function getCachedLessons() {
+            try {
+                const cached = localStorage.getItem(CACHE_KEY);
+                if (cached) {
+                    const { data, timestamp } = JSON.parse(cached);
+                    if (Date.now() - timestamp < CACHE_TTL) {
+                        console.log('[Index] ⚡ Using cached lessons');
+                        return data;
+                    }
+                }
+            } catch (e) {}
+            return null;
+        }
+        
+        function cacheLessons(data) {
+            try {
+                localStorage.setItem(CACHE_KEY, JSON.stringify({ data, timestamp: Date.now() }));
+            } catch (e) {}
+        }
+
+        // Generate lesson thumbnail gradient based on topic
+        function generateLessonThumbnail(topic) {
+            const categories = {
+                science: ['#1e3a8a', '#3b82f6'],
+                history: ['#7c2d12', '#ea580c'],
+                art: ['#9f1239', '#fb7185'],
+                math: ['#065f46', '#10b981'],
+                nature: ['#14532d', '#22c55e'],
+                tech: ['#1e40af', '#60a5fa'],
+                culture: ['#7c2d12', '#f97316']
+            };
+
+            const lowerTopic = topic.toLowerCase();
+            let gradient = categories.science; // default
+
+            if (lowerTopic.includes('art') || lowerTopic.includes('music') || lowerTopic.includes('paint')) gradient = categories.art;
+            else if (lowerTopic.includes('history') || lowerTopic.includes('war') || lowerTopic.includes('ancient')) gradient = categories.history;
+            else if (lowerTopic.includes('math') || lowerTopic.includes('number') || lowerTopic.includes('count')) gradient = categories.math;
+            else if (lowerTopic.includes('nature') || lowerTopic.includes('plant') || lowerTopic.includes('animal') || lowerTopic.includes('tree') || lowerTopic.includes('leaf') || lowerTopic.includes('flower')) gradient = categories.nature;
+            else if (lowerTopic.includes('tech') || lowerTopic.includes('computer') || lowerTopic.includes('digital')) gradient = categories.tech;
+            else if (lowerTopic.includes('culture') || lowerTopic.includes('language') || lowerTopic.includes('people')) gradient = categories.culture;
+
+            return `linear-gradient(135deg, ${gradient[0]}, ${gradient[1]})`;
+        }
+
+        // ========================================
+        // TODAY'S LESSON - Mini Calendar System
+        // ========================================
+        let calendarMonth = (window.KellyTime?.month?.() || new Date().getMonth() + 1) - 1; // 0-indexed
+        let calendarYear = window.KellyTime?.year?.() || new Date().getFullYear();
+        const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+        const MONTH_DAYS = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+
+        // Convert date to canonical lesson dayNumber (1–365) via KellyTime
+        function dateToDayNumber(date) {
+            if (window.KellyTime?.dateToDayNumber) return window.KellyTime.dateToDayNumber(date);
+            // Fallback (should not be used if KellyTime is loaded)
+            const start = new Date(date.getFullYear(), 0, 0);
+            const diff = date - start;
+            const oneDay = 1000 * 60 * 60 * 24;
+            return Math.floor(diff / oneDay);
+        }
+
+        // Convert day number to Date object
+        function dayNumberToDateObj(dayNum, year = (window.KellyTime?.year?.() || new Date().getFullYear())) {
+            if (window.KellyTime?.dayNumberToDate) return window.KellyTime.dayNumberToDate(dayNum, year);
+            const date = new Date(year, 0);
+            date.setDate(dayNum);
+            return date;
+        }
+
+        // Get today's day number
+        function getTodayDayNumber() {
+            if (window.KellyTime?.getLessonDayForTimeZone && window.KellyTime?.getUserTimeZone) {
+                return window.KellyTime.getLessonDayForTimeZone(Date.now(), window.KellyTime.getUserTimeZone());
+            }
+            const now = window.KellyTime?.now?.() || new Date();
+            return dateToDayNumber(now);
+        }
+
+        // Fetch today's topic from Supabase
+        async function fetchTodaysTopic(dayNumber) {
+            const heroQuestion = document.getElementById('hero-question');
+            if (!heroQuestion) return;
+            
+            try {
+                // Get Supabase client from KellyLesson or config
+                const supabase = window.KellyLesson?.getSupabase?.();
+                if (!supabase) {
+                    console.log('Supabase not available, using fallback topic');
+                    return; // Keep the static fallback question
+                }
+                
+                // Fetch today's lesson from core_lessons table
+                const { data, error } = await supabase
+                    .from('core_lessons')
+                    .select('topic')
+                    .eq('day_number', dayNumber)
+                    .single();
+                
+                if (error) {
+                    console.log('Could not fetch topic:', error.message);
+                    return; // Keep fallback
+                }
+                
+                if (data?.topic) {
+                    heroQuestion.textContent = data.topic;
+                }
+            } catch (err) {
+                console.log('Error fetching topic:', err);
+                // Keep fallback question
+            }
+        }
+
+        // Navigate calendar months
+        function navigateMonth(direction) {
+            calendarMonth += direction;
+            if (calendarMonth < 0) {
+                calendarMonth = 0;
+            } else if (calendarMonth > 11) {
+                calendarMonth = 11;
+            }
+            renderMiniCalendar();
+        }
+
+        // Render the mini calendar
+        function renderMiniCalendar() {
+            const titleEl = document.getElementById('cal-month-title');
+            const daysEl = document.getElementById('calendar-days');
+            
+            if (!titleEl || !daysEl) return;
+
+            titleEl.textContent = `${MONTHS[calendarMonth]} ${calendarYear}`;
+
+            // Calculate the first day of the month (0 = Sunday)
+            const firstDay = new Date(calendarYear, calendarMonth, 1).getDay();
+            const daysInMonth = MONTH_DAYS[calendarMonth];
+            
+            // Calculate day number offset for this month
+            let dayOffset = 0;
+            for (let i = 0; i < calendarMonth; i++) {
+                dayOffset += MONTH_DAYS[i];
+            }
+
+            const today = getTodayDayNumber();
+            
+            let html = '';
+            
+            // Empty cells for days before the 1st
+            for (let i = 0; i < firstDay; i++) {
+                html += '<div class="cal-day empty"></div>';
+            }
+            
+            // Calendar days
+            for (let day = 1; day <= daysInMonth; day++) {
+                const dayNum = dayOffset + day;
+                let className = 'cal-day';
+                
+                if (dayNum < today) {
+                    className += ' past';
+                } else if (dayNum === today) {
+                    className += ' today';
+                } else {
+                    className += ' future';
+                }
+                
+                const dayTitle = (window.KellyTime?.formatDayNumber)
+                  ? window.KellyTime.formatDayNumber(dayNum, { includeYear: true })
+                  : `Lesson ${dayNum}`;
+                html += `<a href="/day/${dayNum}" class="${className}" title="${dayTitle}">${day}</a>`;
+            }
+            
+            daysEl.innerHTML = html;
+        }
+
+        // ========================================
+        // IMMEDIATE DATE/DAY INITIALIZATION (NO LOADING STATE)
+        // ========================================
+        function initImmediateUI() {
+            const todayNum = getTodayDayNumber();
+            const today = window.KellyTime?.now?.() || new Date();
+            
+            // Full date with weekday: "Thursday, December 12, 2025"
+            const fullDateWithWeekday = today.toLocaleDateString('en-US', { 
+                weekday: 'long', 
+                month: 'long', 
+                day: 'numeric', 
+                year: 'numeric' 
+            });
+            const formattedDate = window.KellyTime?.fullDate?.(today) || today.toLocaleDateString('en-US', { month: 'long', day: 'numeric', year: 'numeric' });
+            
+            // Update hero date badge with full date including weekday
+            const fullDateEl = document.getElementById('today-full-date');
+            if (fullDateEl) fullDateEl.textContent = fullDateWithWeekday;
+            
+            // Update ALL date elements immediately (no "Loading...")
+            const dateEl = document.getElementById('today-date');
+            if (dateEl) dateEl.textContent = formattedDate;
+            
+            const dateMeta = document.getElementById('today-date-meta');
+            if (dateMeta) dateMeta.textContent = formattedDate;
+            
+            const dayBadge = document.getElementById('today-day-badge-hero');
+            // Use month/day format instead of Day X of 365 - humble, timeless
+            const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            if (dayBadge) dayBadge.textContent = `${monthNames[today.getMonth()]} ${today.getDate()}`;
+            
+            // Update hero CTA to point to today's lesson (no day param - use today)
+            const heroCta = document.querySelector('.hero-cta');
+            if (heroCta) {
+                heroCta.href = `/learn.html`;
+                heroCta.textContent = `Start today's lesson →`;
+                heroCta.dataset.analyticsDay = todayNum;
+            }
+            
+            // Fetch today's topic from Supabase
+            fetchTodaysTopic(todayNum);
+        }
+
+        // Hero video initialization with fallback
+        function initHeroVideo() {
+            const video = document.getElementById('hero-kelly-video');
+            if (!video) return;
+            
+            // On successful load, show video and hide image
+            video.addEventListener('canplay', () => {
+                video.classList.add('loaded');
+                console.log('[Hero] ✅ Kelly video loaded');
+            });
+            
+            // On error, keep showing image fallback
+            video.addEventListener('error', () => {
+                console.log('[Hero] ⚠️ Video failed, showing image fallback');
+                video.style.display = 'none';
+            });
+            
+            // Force play (some browsers need this)
+            video.play().catch(() => {
+                console.log('[Hero] ⚠️ Autoplay blocked, showing image');
+            });
+        }
+
+        // Load today's lesson
+        async function loadTodaysLesson() {
+            const todayNum = getTodayDayNumber();
+            
+            try {
+                // First try cache
+                const cached = getCachedLessons();
+                if (cached) {
+                    const todayLesson = cached.find(l => l.day_number === todayNum);
+                    if (todayLesson) {
+                        displayTodaysLesson(todayLesson);
+                        return;
+                    }
+                }
+                
+                // Fetch from Supabase
+                const { data: lesson, error } = await supabase
+                    .from('core_lessons')
+                    .select('id, day_number, topic, universal_truth, hero_image_url')
+                    .eq('day_number', todayNum)
+                    .single();
+
+                if (error) throw error;
+                if (lesson) {
+                    // Fetch visual atom if hero_image_url is missing
+                    if (!lesson.hero_image_url) {
+                         const { data: atom } = await supabase
+                            .from('lesson_atoms')
+                            .select('visual_url')
+                            .eq('core_lesson_id', lesson.id)
+                            .eq('phase', 'hook') // Use hook visual for thumbnail
+                            .maybeSingle();
+                         if (atom) lesson.visual_url = atom.visual_url;
+                    }
+                    displayTodaysLesson(lesson);
+                }
+            } catch (error) {
+                console.error('Error loading today\'s lesson:', error);
+                // Fallback already shows "Discover something new" - no action needed
+            }
+        }
+
+        // Display today's lesson in the card AND the hero
+        function displayTodaysLesson(lesson) {
+            // Main calendar card
+            const topicEl = document.getElementById('today-topic');
+            const truthEl = document.getElementById('today-truth');
+            
+            if (topicEl && lesson.topic) {
+                topicEl.textContent = lesson.topic;
+                topicEl.classList.remove('topic-skeleton');
+            }
+            
+            if (truthEl && lesson.universal_truth) {
+                truthEl.textContent = lesson.universal_truth;
+            }
+            
+            // ✨ NEW: Update hero question with today's topic
+            const heroQuestionEl = document.getElementById('hero-question');
+            if (heroQuestionEl && lesson.topic) {
+                // Transform topic into a question format
+                const topic = lesson.topic;
+                let question = topic;
+                
+                // If it's not already a question, make it one
+                if (!topic.includes('?')) {
+                    // Common patterns
+                    if (topic.toLowerCase().startsWith('why') || 
+                        topic.toLowerCase().startsWith('how') || 
+                        topic.toLowerCase().startsWith('what')) {
+                        question = topic + '?';
+                    } else {
+                        question = `What is ${topic.toLowerCase()}?`;
+                    }
+                }
+                
+                heroQuestionEl.textContent = question;
+            }
+
+            // Update thumbnail image
+            const thumbEl = document.querySelector('.lesson-thumbnail');
+            if (thumbEl) {
+                const imageUrl = lesson.hero_image_url || lesson.visual_url;
+                if (imageUrl) {
+                    thumbEl.style.backgroundImage = `url('${imageUrl}')`;
+                    thumbEl.style.backgroundSize = 'cover';
+                    thumbEl.style.backgroundPosition = 'center';
+                    
+                    // Hide generic text if we have a real image
+                    const thumbText = document.getElementById('today-thumbnail-text');
+                    if (thumbText) thumbText.style.display = 'none';
+                } else if (lesson.topic) {
+                    // Fallback to gradient
+                    thumbEl.style.background = generateLessonThumbnail(lesson.topic);
+                }
+            }
+        }
+
+        // Initialize calendar and today's lesson
+        async function initDailyLesson() {
+            // IMMEDIATE: Set dates and day numbers right away
+            initImmediateUI();
+            
+            // IMMEDIATE: Try to play hero video
+            initHeroVideo();
+            
+            // Render calendar
+            renderMiniCalendar();
+            
+            // Then load lesson content (async)
+            await loadTodaysLesson();
+        }
+
+        // Legacy functions kept for compatibility
+        async function fetchAndCacheLessons() {
+            try {
+                const { data: lessons, error } = await supabase
+                    .from('core_lessons')
+                    .select('day_number, topic, universal_truth')
+                    .order('day_number');
+
+                if (error) throw error;
+                if (lessons) cacheLessons(lessons);
+                return lessons;
+            } catch (error) {
+                console.error('Error fetching lessons:', error);
+                return null;
+            }
+        }
+
+        // Collapsible sections
+        window.toggleCollapsible = function(header) {
+            header.parentElement.classList.toggle('open');
+        };
+
+        // Age selector
+        window.selectAge = function(btn, age) {
+            document.querySelectorAll('.age-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            // Could filter curriculum here
+        };
+
+        // Scroll to hero
+        window.scrollToHero = function() {
+            document.getElementById('hero').scrollIntoView({ behavior: 'smooth' });
+        };
+
+        // Mobile menu toggle
+        window.toggleMobileMenu = function() {
+            const btn = document.querySelector('.mobile-menu-btn');
+            const nav = document.getElementById('nav-links');
+            btn.classList.toggle('open');
+            nav.classList.toggle('open');
+            document.body.style.overflow = nav.classList.contains('open') ? 'hidden' : '';
+        };
+
+        window.closeMobileMenu = function() {
+            const btn = document.querySelector('.mobile-menu-btn');
+            const nav = document.getElementById('nav-links');
+            btn.classList.remove('open');
+            nav.classList.remove('open');
+            document.body.style.overflow = '';
+        };
+
+        // Checkout
+        window.handleCheckout = function(plan) {
+            sessionStorage.setItem('selectedPlan', plan);
+            window.location.href = '/pricing.html';
+        };
+
+        // Gift - direct to Stripe payment links
+        window.handleGift = function(duration) {
+            const giftLinks = {
+                '3-month': 'https://buy.stripe.com/cNifZhd370ei8wD8ZA9Zm03',
+                '6-month': 'https://buy.stripe.com/5kQcN55AF6CG7sz1x89Zm04',
+                '12-month': 'https://buy.stripe.com/eVq7sLd37f9c7szgs29Zm07',
+                'lifetime': 'https://buy.stripe.com/eVq9AT5AF2mqeV1a3E9Zm05'
+            };
+            const link = giftLinks[duration];
+            if (link) {
+                window.open(link, '_blank');
+            } else {
+                window.location.href = '/gifts.html?duration=' + duration;
+            }
+        };
+
+        // Email validation
+        const emailInput = document.getElementById('email-input');
+        emailInput?.addEventListener('input', function(e) {
+            const email = e.target.value;
+            const isValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+            
+            if (email && !isValid) {
+                emailInput.style.borderColor = 'var(--error)';
+            } else if (isValid) {
+                emailInput.style.borderColor = 'var(--success)';
+            } else {
+                emailInput.style.borderColor = 'var(--border-color)';
+            }
+        });
+
+        // Make lesson card clickable
+        document.querySelector('.lesson-card')?.addEventListener('click', function() {
+            window.location.href = '/learn.html';
+        });
+
+        // Initialize
+        // ========================================
+        // ENHANCEMENTS
+        // ========================================
+        
+        // Add micro-interaction styles
+        const enhancementStyles = document.createElement('style');
+        enhancementStyles.textContent = `
+            /* Shimmer animation for loading */
+            @keyframes shimmer {
+                0% { background-position: -200% 0; }
+                100% { background-position: 200% 0; }
+            }
+            
+            /* Button press feedback */
+            button:active:not(:disabled), .btn:active:not(:disabled) {
+                transform: scale(0.98) !important;
+                transition: transform 0.1s ease !important;
+            }
+            
+            /* Card hover enhancements */
+            .price-card, .tier-card, .gift-card, .mission-item, .month-card {
+                transition: all 0.3s ease;
+                cursor: pointer;
+            }
+            
+            .price-card:hover, .tier-card:hover, .gift-card:hover, .mission-item:hover, .month-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 12px 32px rgba(59, 130, 246, 0.2);
+            }
+            
+            /* Skeleton loading */
+            .skeleton-card {
+                background: linear-gradient(90deg, #18181b 25%, #27272a 50%, #18181b 75%);
+                background-size: 200% 100%;
+                animation: shimmer 1.5s infinite;
+                border-radius: 12px;
+                height: 120px;
+                margin-bottom: 16px;
+            }
+            
+            /* Modal fade in */
+            @keyframes fadeIn {
+                from { opacity: 0; }
+                to { opacity: 1; }
+            }
+        `;
+        document.head.appendChild(enhancementStyles);
+        
+        // ENHANCEMENT 3: Dynamic Curriculum Month Preview (loads from Supabase)
+        const monthStartDays = {
+            'January': 1, 'February': 32, 'March': 60, 'April': 91,
+            'May': 121, 'June': 152, 'July': 182, 'August': 213,
+            'September': 244, 'October': 274, 'November': 305, 'December': 335
+        };
+        const monthDayCount = {
+            'January': 31, 'February': 28, 'March': 31, 'April': 30,
+            'May': 31, 'June': 30, 'July': 31, 'August': 31,
+            'September': 30, 'October': 31, 'November': 30, 'December': 31
+        };
+        
+        // Topic emoji mapping
+        const topicEmojis = {
+            'Leaves': '🍃', 'Water': '💧', 'Clouds': '☁️', 'Light': '💡',
+            'Sound': '🔊', 'Seeds': '🌱', 'Stars': '⭐', 'Energy': '⚡',
+            'Growth': '🌿', 'Colors': '🎨', 'Patterns': '🔷', 'Friendship': '🤝',
+            'Kindness': '💝', 'Listening': '👂', 'Patience': '⏳', 'Gratitude': '🙏',
+            'Courage': '🦁', 'Curiosity': '🔍', 'Balance': '⚖️', 'Rest': '😴',
+            'Memory': '🧠', 'Time': '⏰', 'Change': '🔄', 'Questions': '❓'
+        };
+        
+        window.showMonthPreview = async function(month) {
+            const startDay = monthStartDays[month];
+            const endDay = startDay + monthDayCount[month] - 1;
+            
+            // Create modal immediately with loading state
+            const modal = document.createElement('div');
+            modal.style.cssText = `
+                position: fixed;
+                top: 0;
+                left: 0;
+                right: 0;
+                bottom: 0;
+                background: rgba(0, 0, 0, 0.9);
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                z-index: 10000;
+                animation: fadeIn 0.2s ease;
+                padding: 20px;
+            `;
+            
+            modal.innerHTML = `
+                <div style="
+                    background: var(--bg-elevated);
+                    border: 1px solid var(--border-color);
+                    border-radius: 20px;
+                    padding: 40px;
+                    max-width: 700px;
+                    width: 100%;
+                    max-height: 85vh;
+                    overflow-y: auto;
+                " id="month-preview-content">
+                    <div style="text-align: center; padding: 40px;">
+                        <div style="width: 40px; height: 40px; border: 3px solid var(--border-color); border-top-color: var(--accent-primary); border-radius: 50%; animation: spin 1s linear infinite; margin: 0 auto 16px;"></div>
+                        <p style="color: var(--text-secondary);">Loading ${month} lessons...</p>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(modal);
+            modal.addEventListener('click', (e) => {
+                if (e.target === modal) modal.remove();
+            });
+            
+            try {
+                // Fetch lessons for this month
+                const { data: lessons, error } = await supabase
+                    .from('core_lessons')
+                    .select('day_number, topic, universal_truth, marketing_headline')
+                    .gte('day_number', startDay)
+                    .lte('day_number', endDay)
+                    .order('day_number');
+                
+                if (error) throw error;
+                
+                // Count atoms for these lessons
+                const { data: atomCounts } = await supabase
+                    .from('lesson_atoms')
+                    .select('core_lesson_id')
+                    .in('core_lesson_id', (await supabase.from('core_lessons').select('id').gte('day_number', startDay).lte('day_number', endDay)).data?.map(l => l.id) || []);
+                
+                const totalAtoms = atomCounts?.length || 0;
+                const avgPerspectives = Math.round(totalAtoms / Math.max(lessons?.length || 1, 1) / 5);
+                
+                const contentEl = document.getElementById('month-preview-content');
+                contentEl.innerHTML = `
+                    <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 24px;">
+                        <div>
+                            <h2 style="font-family: 'Newsreader', serif; font-size: 1.75rem; margin: 0 0 8px 0;">${month} Curriculum</h2>
+                            <p style="color: var(--text-secondary); font-size: 0.9rem; margin: 0;">
+                                ${lessons?.length || 0} lessons • ~${avgPerspectives} perspectives each • ${(lessons?.length || 0) * avgPerspectives * 9} total variants
+                            </p>
+                        </div>
+                        <button onclick="this.closest('div[style*=fixed]').remove()" style="
+                            background: var(--bg-secondary);
+                            border: 1px solid var(--border-color);
+                            color: var(--text-secondary);
+                            font-size: 1.25rem;
+                            cursor: pointer;
+                            padding: 8px 12px;
+                            border-radius: 8px;
+                            line-height: 1;
+                        ">✕</button>
+                    </div>
+                    
+                    <div style="display: grid; grid-template-columns: repeat(auto-fill, minmax(280px, 1fr)); gap: 12px; margin-bottom: 24px;">
+                        ${(lessons || []).map(lesson => `
+                            <div onclick="window.location.href='/lesson-detail.html?day=${lesson.day_number}'" style="
+                                background: var(--bg-secondary);
+                                border: 1px solid var(--border-color);
+                                border-radius: 12px;
+                                padding: 16px;
+                                cursor: pointer;
+                                transition: all 0.2s;
+                            " onmouseover="this.style.borderColor='var(--accent-primary)';this.style.transform='translateY(-2px)'" onmouseout="this.style.borderColor='var(--border-color)';this.style.transform='none'">
+                                <div style="display: flex; align-items: center; gap: 10px; margin-bottom: 8px;">
+                                    <span style="font-size: 1.5rem;">${topicEmojis[lesson.topic] || '📚'}</span>
+                                    <div>
+                                        <div style="color: var(--accent-primary); font-size: 0.75rem; font-weight: 600;">
+                                            ${(window.KellyTime?.formatDayNumber) ? window.KellyTime.formatDayNumber(lesson.day_number, { includeYear: false }) : lesson.day_number}
+                                        </div>
+                                        <div style="font-weight: 600; font-size: 0.95rem;">${lesson.topic}</div>
+                                    </div>
+                                </div>
+                                <p style="color: var(--text-secondary); font-size: 0.8rem; margin: 0; line-height: 1.4; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden;">
+                                    ${lesson.universal_truth || lesson.marketing_headline || 'Discover something new'}
+                                </p>
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div style="display: flex; gap: 12px;">
+                        <a href="/calendar.html" style="
+                            flex: 1;
+                            padding: 14px 20px;
+                            background: var(--bg-secondary);
+                            border: 1px solid var(--border-color);
+                            border-radius: 10px;
+                            color: var(--text-primary);
+                            text-decoration: none;
+                            font-weight: 600;
+                            text-align: center;
+                            transition: all 0.2s;
+                        " onmouseover="this.style.background='var(--bg-card)'" onmouseout="this.style.background='var(--bg-secondary)'">
+                            📅 View Full Calendar
+                        </a>
+                        <a href="/curriculum.html" style="
+                            flex: 1;
+                            padding: 14px 20px;
+                            background: var(--accent-primary);
+                            border: none;
+                            border-radius: 10px;
+                            color: white;
+                            text-decoration: none;
+                            font-weight: 600;
+                            text-align: center;
+                            transition: all 0.2s;
+                        " onmouseover="this.style.opacity='0.9'" onmouseout="this.style.opacity='1'">
+                            ✨ Explore All 365 Days
+                        </a>
+                    </div>
+                `;
+            } catch (err) {
+                console.error('Error loading month preview:', err);
+                document.getElementById('month-preview-content').innerHTML = `
+                    <div style="text-align: center; padding: 40px;">
+                        <p style="color: var(--text-secondary);">Unable to load lessons. Please try again.</p>
+                        <button onclick="this.closest('div[style*=fixed]').remove()" class="btn btn-secondary" style="margin-top: 16px;">Close</button>
+                    </div>
+                `;
+            }
+        };
+        
+        // Make month cards clickable after they load
+        setTimeout(() => {
+            document.querySelectorAll('.month-card').forEach(card => {
+                card.addEventListener('click', function() {
+                    const month = this.querySelector('h3')?.textContent;
+                    if (month) showMonthPreview(month);
+                });
+            });
+        }, 2000);
+
+        // ⚡ PARALLEL LOADING for Spotify-speed
+        Promise.all([
+            initDailyLesson()
+        ]).then(() => console.log('[Index] ⚡ All content loaded'));
+
+        // Check session (only if supabase loaded)
+        if (supabase) {
+            try {
+                const { data: { session } } = await supabase.auth.getSession();
+                if (session) {
+                    const fromApp = document.referrer.includes('/learn.html');
+                    if (!fromApp) {
+                        window.location.href = '/learn.html';
+                    }
+                }
+            } catch (e) {
+                console.log('[Auth] Session check skipped:', e.message);
+            }
+        }
+    </script>
+
+    <!-- Kelly Avatar Controller - DISABLED: Widget not functional on homepage -->
+    <!-- <script src="/js/kelly-avatar-controller.js"></script> -->
+    
+    <!-- Affiliate Checkout Integration -->
+    <script src="/js/checkout-affiliate.js"></script>
+    
+    <!-- ✨ Kelly Animation System - Making the site ALIVE -->
+    <script src="/js/kelly-animations.js?v=2"></script>
+
+    <!-- 12 PERSONAS SHOWCASE - Hero section interactivity -->
+    <script>
+    (function() {
+        'use strict';
+
+        const MANIFEST_URL = '/assets/kelly/kelly-personas-manifest.json?v=2.0.0';
+        const AGE_VARIANTS = ['kid', 'teen', 'adult', 'elder', 'super_elder'];
+        const AGE_LABELS = {
+            kid: 'Kid',
+            teen: 'Teen',
+            adult: 'Adult',
+            elder: 'Elder',
+            super_elder: 'Super'
+        };
+
+        const FALLBACK_CDN_BASE = 'https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates';
+        const FALLBACK_DEFAULT = `${FALLBACK_CDN_BASE}/heygen/archetypes-head-only/kelly_scientist_head.png`;
+
+        let manifest = null;
+        let personas = [];
+        let selectedAge = 'adult';
+        let currentPersonaIndex = 0;
+        let cycleInterval = null;
+        const CYCLE_DURATION = 5000; // 5 seconds per persona
+
+        function safeJsonParse(text) {
+            try { return JSON.parse(text); } catch { return null; }
+        }
+
+        async function loadManifest() {
+            const resp = await fetch(MANIFEST_URL, { cache: 'force-cache' });
+            if (!resp.ok) throw new Error(`manifest fetch failed: ${resp.status}`);
+            const text = await resp.text();
+            const json = safeJsonParse(text);
+            if (!json || !json.personas || !json.cdnBase) throw new Error('manifest invalid');
+            return json;
+        }
+
+        function buildPersonasFromManifest(m) {
+            const order = Array.isArray(m.personaOrder) && m.personaOrder.length
+                ? m.personaOrder
+                : Object.keys(m.personas);
+
+            return order
+                .filter(id => m.personas[id])
+                .map(id => {
+                    const p = m.personas[id];
+                    return {
+                        id,
+                        name: p.name || id,
+                        icon: p.icon || '✨',
+                        tagline: p.tagline || '',
+                        images: p.images || {}
+                    };
+                });
+        }
+
+        function getHeadUrl(personaId, age) {
+            const p = manifest && manifest.personas && manifest.personas[personaId];
+            if (!p || !p.images) return FALLBACK_DEFAULT;
+            const headByAge = p.images.headByAge || {};
+            const rel = headByAge[age] || p.images.head;
+            if (!rel) return FALLBACK_DEFAULT;
+            return `${manifest.cdnBase}/${rel}`;
+        }
+
+        function setSelectedAge(age) {
+            if (!AGE_VARIANTS.includes(age)) return;
+            selectedAge = age;
+            localStorage.setItem('ck_home_age', age);
+            renderAgePills();
+            renderStrip();
+            updateFeaturedPersona(currentPersonaIndex);
+        }
+
+        function setSelectedPersonaId(personaId) {
+            const idx = personas.findIndex(p => p.id === personaId);
+            if (idx >= 0) {
+                selectPersona(idx, { userInitiated: true });
+                const selectEl = document.getElementById('persona-tone-select');
+                if (selectEl && selectEl.value !== personaId) selectEl.value = personaId;
+            }
+        }
+
+        function renderAgePills() {
+            const container = document.getElementById('persona-age-pills');
+            if (!container) return;
+            container.innerHTML = AGE_VARIANTS.map(age => {
+                const active = age === selectedAge ? 'active' : '';
+                const label = AGE_LABELS[age] || age;
+                return `<button class="age-pill ${active}" type="button" data-age="${age}" role="tab" aria-selected="${age === selectedAge}">${label}</button>`;
+            }).join('');
+
+            container.querySelectorAll('.age-pill').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    stopCycle();
+                    setSelectedAge(btn.getAttribute('data-age'));
+                    startCycle();
+                });
+            });
+        }
+
+        function renderToneSelect() {
+            const select = document.getElementById('persona-tone-select');
+            if (!select) return;
+            select.innerHTML = personas.map(p => {
+                const label = `${p.icon} ${p.name}`;
+                return `<option value="${p.id}">${label}</option>`;
+            }).join('');
+
+            select.addEventListener('change', () => {
+                stopCycle();
+                setSelectedPersonaId(select.value);
+                startCycle();
+            });
+        }
+
+        function renderStrip() {
+            const strip = document.getElementById('personas-strip');
+            if (!strip) return;
+
+            strip.innerHTML = personas.map((persona, index) => {
+                const isActive = index === currentPersonaIndex;
+                const imgUrl = getHeadUrl(persona.id, selectedAge);
+                return `
+                    <div class="persona-thumb ${isActive ? 'active' : ''}"
+                         data-index="${index}"
+                         data-id="${persona.id}"
+                         title="${persona.name}">
+                        <img
+                            src="${imgUrl}"
+                            alt="${persona.name}"
+                            class="persona-thumb-img"
+                            loading="${index < 6 ? 'eager' : 'lazy'}"
+                            onerror="this.src='${FALLBACK_DEFAULT}'"
+                        />
+                    </div>
+                `;
+            }).join('');
+
+            strip.querySelectorAll('.persona-thumb').forEach(thumb => {
+                thumb.addEventListener('click', () => {
+                    const index = parseInt(thumb.getAttribute('data-index') || '0', 10);
+                    selectPersona(index, { userInitiated: true });
+                    stopCycle();
+                    startCycle();
+                });
+            });
+
+            // Pause cycling on hover over the strip
+            strip.addEventListener('mouseenter', stopCycle);
+            strip.addEventListener('mouseleave', startCycle);
+        }
+
+        function updateFeaturedPersona(index) {
+            const persona = personas[index];
+            const featuredImage = document.getElementById('featured-persona-image');
+            const kellyName = document.querySelector('.kelly-name');
+
+            if (!persona || !featuredImage) return;
+
+            const url = getHeadUrl(persona.id, selectedAge);
+
+            // Smooth transition
+            featuredImage.style.opacity = '0.7';
+            featuredImage.style.transform = 'scale(0.98)';
+
+            setTimeout(() => {
+                featuredImage.src = url;
+                featuredImage.alt = `Kelly - ${persona.name}`;
+                featuredImage.style.opacity = '1';
+                featuredImage.style.transform = 'scale(1)';
+                if (kellyName) kellyName.textContent = `Meet ${persona.name.replace('The ', '')} Kelly`;
+            }, 140);
+
+            document.querySelectorAll('.persona-thumb').forEach((thumb, i) => {
+                thumb.classList.toggle('active', i === index);
+            });
+
+            const select = document.getElementById('persona-tone-select');
+            if (select && select.value !== persona.id) select.value = persona.id;
+
+            currentPersonaIndex = index;
+            localStorage.setItem('ck_home_persona', persona.id);
+        }
+
+        function selectPersona(index, opts) {
+            updateFeaturedPersona(index);
+            if (opts && opts.userInitiated) {
+                // User action wins; keep cycling but don't immediately jump back.
+            }
+        }
+
+        function nextPersona() {
+            const nextIndex = (currentPersonaIndex + 1) % personas.length;
+            updateFeaturedPersona(nextIndex);
+        }
+
+        function startCycle() {
+            if (cycleInterval || !personas.length) return;
+            cycleInterval = setInterval(nextPersona, CYCLE_DURATION);
+        }
+
+        function stopCycle() {
+            if (cycleInterval) {
+                clearInterval(cycleInterval);
+                cycleInterval = null;
+            }
+        }
+
+        function preloadFirstImages() {
+            try {
+                const ids = personas.slice(0, 6).map(p => p.id);
+                ids.forEach(id => {
+                    const img = new Image();
+                    img.src = getHeadUrl(id, selectedAge);
+                });
+            } catch (e) {}
+        }
+
+        async function init() {
+            const strip = document.getElementById('personas-strip');
+            if (!strip) return;
+
+            try {
+                manifest = await loadManifest();
+            } catch (e) {
+                // If manifest ever fails, keep the page functional with the existing featured image.
+                console.warn('[Personas] manifest unavailable:', e && e.message ? e.message : e);
+                return;
+            }
+
+            personas = buildPersonasFromManifest(manifest);
+            if (!personas.length) return;
+
+            // Restore last selection (or use manifest default)
+            const savedAge = localStorage.getItem('ck_home_age');
+            if (savedAge && AGE_VARIANTS.includes(savedAge)) selectedAge = savedAge;
+
+            const savedPersona = localStorage.getItem('ck_home_persona');
+            const defaultPersona = manifest.defaultPersona || (manifest.personaOrder && manifest.personaOrder[0]) || personas[0].id;
+            const initialPersonaId = savedPersona || defaultPersona;
+            const initialIndex = Math.max(0, personas.findIndex(p => p.id === initialPersonaId));
+            currentPersonaIndex = initialIndex;
+
+            renderAgePills();
+            renderToneSelect();
+            renderStrip();
+            preloadFirstImages();
+            updateFeaturedPersona(currentPersonaIndex);
+            startCycle();
+
+            // Expose for debugging
+            window.personasShowcase = {
+                manifest,
+                personas,
+                setSelectedAge,
+                setSelectedPersonaId,
+                nextPersona
+            };
+        }
+
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', init);
+        } else {
+            init();
+        }
+    })();
+    </script>
+
+    <script>
+      document.addEventListener('DOMContentLoaded', async () => {
+        if (window.KellyTimeSync) {
+          await KellyTimeSync.init();
+        }
+        if (window.KellyClock) {
+          new KellyClock('kelly-clock').start();
+        }
+        if (window.KellyCountdown && document.getElementById('kelly-countdown')) {
+          new KellyCountdown('kelly-countdown').start();
+        }
+
+        // Clicking Kelly on homepage goes to learn
+        document.getElementById('kelly-home')?.addEventListener('click', () => {
+          window.location.href = '/learn.html';
+        });
+      });
+    </script>
+</body>
+
+<script>
+  // Hidden SEO-friendly links so crawlers can discover all static lesson summaries
+  (function () {
+    try {
+      var container = document.createElement('div');
+      container.id = 'seo-lesson-summaries';
+      container.style.display = 'none';
+      for (var day = 1; day <= 365; day++) {
+        var link = document.createElement('a');
+        link.href = '/crawlable/lesson-' + day + '.html';
+        link.textContent = 'Day ' + day + ' lesson summary';
+        container.appendChild(link);
+      }
+      document.body.appendChild(container);
+    } catch (e) {
+      console.warn('SEO links init failed', e);
+    }
+  })();
+</script>
+
+</html>
+

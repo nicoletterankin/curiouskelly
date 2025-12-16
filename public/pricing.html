@@ -744,7 +744,7 @@
             <li>Whole family access</li>
             <li>Cancel anytime</li>
           </ul>
-          <button class="btn-primary btn-outline" onclick="handleCheckout('monthly')">
+          <button class="btn-primary btn-outline" onclick="handleCheckout('monthly', this)">
             <span>Start Learning</span>
             <div class="spinner"></div>
           </button>
@@ -770,7 +770,7 @@
             <li><strong>Best value — under $50/year!</strong></li>
             <li>Priority support</li>
           </ul>
-          <button class="btn-primary btn-featured" onclick="handleCheckout('annual')">
+          <button class="btn-primary btn-featured" onclick="handleCheckout('annual', this)">
             <span>Start Learning</span>
             <div class="spinner"></div>
           </button>
@@ -794,7 +794,7 @@
             <li>Founding member badge</li>
             <li>VIP support</li>
           </ul>
-          <button class="btn-primary btn-outline" onclick="handleCheckout('lifetime')">
+          <button class="btn-primary btn-outline" onclick="handleCheckout('lifetime', this)">
             <span>Get Lifetime Access</span>
             <div class="spinner"></div>
           </button>
@@ -977,65 +977,34 @@
       </div>
     </footer>
 
-    <script type="module">
-      import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/+esm';
+    <script>
+      (function () {
+        // Route all plan purchases through the in-app embedded checkout flow.
+        // This avoids reliance on auth on the marketing page and prevents regressions where
+        // `event` is undefined (common with inline handlers + module scripts).
+        window.handleCheckout = function (plan, btnEl) {
+          try { if (btnEl) btnEl.classList.add('loading'); } catch (_) {}
+          try { sessionStorage.setItem('selectedPlan', plan); } catch (_) {}
+          window.location.href = '/learn.html?checkout=' + encodeURIComponent(plan);
+        };
 
-      const SUPABASE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co';
-      const SUPABASE_ANON_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI';
-      const supabase = createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-
-      // Checkout handler
-      window.handleCheckout = async function(plan) {
-        const btn = event.target.closest('button');
-        btn.classList.add('loading');
-        
-        try {
-          // Check if user is logged in
-          const { data: { session } } = await supabase.auth.getSession();
-          
-          if (!session) {
-            // Redirect to login with plan info
-            sessionStorage.setItem('selectedPlan', plan);
-            window.location.href = '/?plan=' + plan;
+        // Gift handler - direct to Stripe payment links
+        window.handleGift = function (duration) {
+          const giftLinks = {
+            '3-month': 'https://buy.stripe.com/cNifZhd370ei8wD8ZA9Zm03',
+            '6-month': 'https://buy.stripe.com/5kQcN55AF6CG7sz1x89Zm04',
+            '12-month': 'https://buy.stripe.com/eVq7sLd37f9c7szgs29Zm07',
+            lifetime: 'https://buy.stripe.com/eVq9AT5AF2mqeV1a3E9Zm05',
+          };
+          const link = giftLinks[duration];
+          if (link) {
+            const enhanced = window.getCheckoutUrl ? window.getCheckoutUrl(link) : link;
+            window.open(enhanced, '_blank');
             return;
           }
-
-          // Create checkout session
-          const response = await fetch('/api/stripe-checkout', {
-            method: 'POST',
-            headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-              planType: plan,
-              customerEmail: session.user.email
-            })
-          });
-
-          const data = await response.json();
-
-          if (data.error) throw new Error(data.error);
-          if (data.url) window.location.href = data.url;
-        } catch (error) {
-          console.error('Checkout error:', error);
-          alert('Failed to start checkout. Please try again.');
-          btn.classList.remove('loading');
-        }
-      };
-
-      // Gift handler - direct to Stripe payment links
-      window.handleGift = function(duration) {
-        const giftLinks = {
-          '3-month': 'https://buy.stripe.com/cNifZhd370ei8wD8ZA9Zm03',
-          '6-month': 'https://buy.stripe.com/5kQcN55AF6CG7sz1x89Zm04',
-          '12-month': 'https://buy.stripe.com/eVq7sLd37f9c7szgs29Zm07',
-          'lifetime': 'https://buy.stripe.com/eVq9AT5AF2mqeV1a3E9Zm05'
+          window.location.href = '/gifts.html?duration=' + encodeURIComponent(duration);
         };
-        const link = giftLinks[duration];
-        if (link) {
-          window.open(link, '_blank');
-        } else {
-          window.location.href = '/gifts.html?duration=' + duration;
-        }
-      };
+      })();
     </script>
     
     <!-- Affiliate Checkout Integration -->

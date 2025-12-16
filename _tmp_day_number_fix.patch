@@ -1,0 +1,69 @@
+diff --git a/public/learn.html b/public/learn.html
+index 9645e9c9..482e7d5e 100644
+--- a/public/learn.html
++++ b/public/learn.html
+@@ -4806,15 +4879,29 @@
+     }
+ 
+     function getTodayDayNumber() {
+-      if (window.KellyLesson?.getTodayLessonKey) {
+-        return window.KellyLesson.getTodayLessonKey({
+-          utcMillis: NOW_CTX.utcMillis,
+-          timeZone: NOW_CTX.timeZone
+-        }).dayNumber;
+-      }
+-      return 1;
++      // Prefer the canonical time authority (KellyTime/KellyLesson) when present.
++      try {
++        if (window.KellyLesson?.getTodayLessonKey) {
++          return window.KellyLesson.getTodayLessonKey({
++            utcMillis: NOW_CTX.utcMillis,
++            timeZone: NOW_CTX.timeZone
++          }).dayNumber;
++        }
++      } catch (_) {}
++
++      // Fallback: compute day-of-year using UTC midnight math (DST-safe).
++      const now = new Date();
++      const y = now.getFullYear();
++      const m = now.getMonth();
++      const d = now.getDate();
++      const day =
++        Math.floor((Date.UTC(y, m, d) - Date.UTC(y, 0, 1)) / 86400000) + 1;
++      return Math.max(1, Math.min(365, day || 1));
+     }
+ 
++    // Debug helper (console): window.getCurrentDayNumber()
++    window.getCurrentDayNumber = getTodayDayNumber;
++
+     // ============================================
+     // THUMBNAILS (LESSON DAY -> THUMB URL)
+     // ============================================
+@@ -5062,11 +5149,8 @@
+      * Get today's day number (1-365 based on calendar)
+      */
+     function getTodaysDayNumber() {
+-      const now = new Date();
+-      const start = new Date(now.getFullYear(), 0, 0);
+-      const diff = now - start;
+-      const oneDay = 1000 * 60 * 60 * 24;
+-      return Math.floor(diff / oneDay);
++      // Single source of truth: use the same calculation as the app state.
++      return getTodayDayNumber();
+     }
+     
+     /**
+@@ -8949,7 +9112,12 @@
+         // Never land on the carousel by default for returning users.
+         if (state.scene === 'character') state.scene = 'lesson';
+ 
+-        const dayToLoad = state.currentDay || getTodayDayNumber();
++        const todayDay = getTodayDayNumber();
++        const shouldResumeInProgress =
++          !!state.currentDay &&
++          state.currentPhase > 0 &&
++          state.currentPhase < PHASES.length;
++        const dayToLoad = shouldResumeInProgress ? state.currentDay : todayDay;
+         state.currentDay = dayToLoad;
+         if (!state.ageBucket) state.ageBucket = getAgeBucket(state.age);
+         saveState();
