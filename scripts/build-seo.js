@@ -35,8 +35,8 @@ async function generateSitemapsAndLlms() {
     .order('day_number');
 
   if (lessonsError) {
-    console.error('Error fetching lessons:', lessonsError);
-    process.exitCode = 1;
+    console.warn('[build-seo] Error fetching lessons (non-fatal, skipping SEO enrichment):', lessonsError.message || lessonsError);
+    // Don't fail the build - SEO enrichment is optional
     return;
   }
 
