@@ -4186,7 +4186,7 @@
           <div class="paywall-subscribe-option" style="background: linear-gradient(135deg, var(--kelly-blue-dark), var(--kelly-blue)); border-radius: 12px; padding: 20px; border: 2px solid var(--kelly-blue);">
             <span style="background: var(--gold-wisdom); color: #000; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 4px;">ALL ACCESS</span>
             <h3 style="font-size: 16px; margin: 8px 0; color: white;">Unlock Everything</h3>
-            <p class="plan-price" style="font-size: 28px; font-weight: 600; color: white;">$9.99<span style="font-size: 14px; font-weight: 400;">/mo</span></p>
+            <p class="plan-price" style="font-size: 28px; font-weight: 600; color: white;">$7.99<span style="font-size: 14px; font-weight: 400;">/mo</span></p>
             <ul style="font-size: 13px; color: rgba(255,255,255,0.9); margin: 12px 0 16px; padding-left: 18px; text-align: left;">
               <li>All 365 lessons</li>
               <li>Go back or skip ahead</li>
@@ -4198,7 +4198,7 @@
             </button>
             <div style="display: flex; gap: 8px; margin-top: 10px;">
               <button class="paywall-option-mini" id="plan-yearly" type="button" style="flex: 1; background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer;">
-                Yearly $79
+                Yearly $49.99
               </button>
               <button class="paywall-option-mini" id="plan-lifetime" type="button" style="flex: 1; background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer;">
                 Lifetime $199
@@ -5489,11 +5489,164 @@
     }
 
     async function openCheckoutPanel(defaultPlanType = 'annual') {
+      // Handle gift purchases with dedicated panel
+      if (defaultPlanType.startsWith('gift-')) {
+        __selectedGiftDuration = defaultPlanType.replace('gift-', '');
+        openPanel('checkout');
+        renderGiftCheckoutPanel();
+        try { closePaywall(); } catch (_) {}
+        return;
+      }
+      
       __selectedPlanType = (defaultPlanType === 'yearly' ? 'annual' : defaultPlanType) || 'annual';
       openPanel('checkout');
       renderCheckoutPanel();
-      // Also close the legacy paywall overlay if it’s open.
+      // Also close the legacy paywall overlay if it's open.
       try { closePaywall(); } catch (_) {}
+    }
+
+    // ============================================
+    // GIFT CHECKOUT
+    // ============================================
+    let __selectedGiftDuration = '12-month';
+    let __giftEmbeddedCheckout = null;
+
+    function renderGiftCheckoutPanel() {
+      const slot = document.getElementById('panel-checkout-slot');
+      if (!slot) return;
+
+      slot.innerHTML = `
+        <div class="checkout-panel">
+          <div class="checkout-header">
+            <div class="checkout-title">🎁 Give the Gift of Learning</div>
+            <div class="checkout-subtitle">Share Kelly with someone you love.</div>
+          </div>
+
+          <div class="checkout-plans" id="gift-plans">
+            <button class="checkout-plan ${__selectedGiftDuration === '3-month' ? 'selected' : ''}" data-gift="3-month" type="button">
+              <div class="row">
+                <div class="name">3 Months</div>
+                <div class="price">$24.99</div>
+              </div>
+              <div class="note">90 lessons</div>
+            </button>
+            <button class="checkout-plan ${__selectedGiftDuration === '6-month' ? 'selected' : ''}" data-gift="6-month" type="button">
+              <div class="row">
+                <div class="name">6 Months</div>
+                <div class="price">$39.99</div>
+              </div>
+              <div class="note">180 lessons</div>
+            </button>
+            <button class="checkout-plan ${__selectedGiftDuration === '12-month' ? 'selected' : ''}" data-gift="12-month" type="button">
+              <div class="row">
+                <div class="name">12 Months</div>
+                <div class="price">$49.99</div>
+              </div>
+              <div class="note">Best value</div>
+            </button>
+            <button class="checkout-plan ${__selectedGiftDuration === 'lifetime' ? 'selected' : ''}" data-gift="lifetime" type="button">
+              <div class="row">
+                <div class="name">Lifetime</div>
+                <div class="price">$149.99</div>
+              </div>
+              <div class="note">Forever</div>
+            </button>
+
+            <div class="gift-form" style="margin-top: 16px;">
+              <input type="email" id="gift-sender-email" placeholder="Your email" class="gift-input" style="width:100%; padding:12px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-elevated); color:var(--text-primary); margin-bottom:8px;">
+              <input type="email" id="gift-recipient-email" placeholder="Recipient's email" class="gift-input" style="width:100%; padding:12px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-elevated); color:var(--text-primary); margin-bottom:8px;">
+              <input type="text" id="gift-recipient-name" placeholder="Recipient's name (optional)" class="gift-input" style="width:100%; padding:12px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-elevated); color:var(--text-primary); margin-bottom:8px;">
+              <textarea id="gift-message" placeholder="Add a personal message (optional)" class="gift-input" style="width:100%; padding:12px; border-radius:8px; border:1px solid var(--border-color); background:var(--bg-elevated); color:var(--text-primary); resize:none; height:60px;"></textarea>
+            </div>
+
+            <button class="checkout-cta" id="gift-checkout-cta" type="button" style="margin-top:16px;">Purchase Gift</button>
+            <div class="checkout-terms">Gift will be emailed to recipient. They'll get a code to redeem.</div>
+          </div>
+
+          <div class="checkout-embedded hidden" id="gift-checkout-embedded">
+            <button class="checkout-back" id="gift-checkout-back" type="button">← Back</button>
+            <div id="stripe-gift-checkout"></div>
+          </div>
+        </div>
+      `;
+
+      slot.querySelectorAll('[data-gift]').forEach((btn) => {
+        btn.addEventListener('click', () => {
+          __selectedGiftDuration = btn.getAttribute('data-gift') || '12-month';
+          renderGiftCheckoutPanel();
+        });
+      });
+
+      slot.querySelector('#gift-checkout-cta')?.addEventListener('click', startGiftCheckoutFlow);
+      slot.querySelector('#gift-checkout-back')?.addEventListener('click', () => {
+        destroyGiftEmbeddedCheckout();
+        slot.querySelector('#gift-plans')?.classList.remove('hidden');
+        slot.querySelector('#gift-checkout-embedded')?.classList.add('hidden');
+      });
+      
+      // Pre-fill sender email if known
+      const knownEmail = localStorage.getItem('kelly_user_email') || '';
+      const senderInput = slot.querySelector('#gift-sender-email');
+      if (senderInput && knownEmail) senderInput.value = knownEmail;
+    }
+
+    function destroyGiftEmbeddedCheckout() {
+      try {
+        if (__giftEmbeddedCheckout && typeof __giftEmbeddedCheckout.destroy === 'function') {
+          __giftEmbeddedCheckout.destroy();
+        }
+      } catch (_) {}
+      __giftEmbeddedCheckout = null;
+    }
+
+    async function startGiftCheckoutFlow() {
+      const slot = document.getElementById('panel-checkout-slot');
+      const cta = slot?.querySelector('#gift-checkout-cta');
+      if (cta) { cta.textContent = 'Loading…'; cta.disabled = true; }
+
+      const senderEmail = slot?.querySelector('#gift-sender-email')?.value?.trim() || '';
+      const recipientEmail = slot?.querySelector('#gift-recipient-email')?.value?.trim() || '';
+      const recipientName = slot?.querySelector('#gift-recipient-name')?.value?.trim() || '';
+      const giftMessage = slot?.querySelector('#gift-message')?.value?.trim() || '';
+
+      if (!senderEmail || !recipientEmail) {
+        showToast('Please enter both your email and the recipient\'s email.');
+        if (cta) { cta.textContent = 'Purchase Gift'; cta.disabled = false; }
+        return;
+      }
+
+      try {
+        const publishableKey = await fetchStripePublicKey();
+        const stripe = window.Stripe(publishableKey);
+        if (!stripe?.initEmbeddedCheckout) throw new Error('stripe_embedded_checkout_unavailable');
+
+        const resp = await fetch('/api/create-gift-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            giftDuration: __selectedGiftDuration,
+            senderEmail,
+            recipientEmail,
+            recipientName,
+            giftMessage,
+          }),
+        });
+        const json = await resp.json();
+        if (!resp.ok || !json?.clientSecret) throw new Error(json?.message || json?.error || 'gift_checkout_failed');
+
+        // Swap UI
+        slot?.querySelector('#gift-plans')?.classList.add('hidden');
+        slot?.querySelector('#gift-checkout-embedded')?.classList.remove('hidden');
+
+        destroyGiftEmbeddedCheckout();
+        __giftEmbeddedCheckout = await stripe.initEmbeddedCheckout({ clientSecret: json.clientSecret });
+        __giftEmbeddedCheckout.mount('#stripe-gift-checkout');
+      } catch (e) {
+        console.error('[gift-checkout] failed:', e);
+        showToast('Could not start gift checkout. Please try again.');
+      } finally {
+        if (cta) { cta.textContent = 'Purchase Gift'; cta.disabled = false; }
+      }
     }
 
     async function startEmbeddedCheckoutFlow() {
@@ -5599,19 +5752,15 @@
 
     // Handle gift purchases - never leave Kelly!
     const giftDuration = urlParams.get('gift');
-    if (giftDuration) {
+    if (giftDuration && giftDuration !== 'success') {
       setTimeout(() => {
-        // For now, redirect to embedded checkout with gift context
-        // TODO: Create dedicated gift checkout panel with recipient email field
-        const giftToPlanMap = {
-          '3-month': 'gift-3mo',
-          '6-month': 'gift-6mo', 
-          '12-month': 'gift-12mo',
-          'lifetime': 'gift-lifetime'
-        };
-        const giftPlan = giftToPlanMap[giftDuration] || 'gift-12mo';
-        openCheckoutPanel(giftPlan);
+        openCheckoutPanel('gift-' + giftDuration);
       }, 500);
+    }
+    
+    // Handle gift success
+    if (giftDuration === 'success') {
+      showToast('🎁 Gift purchased! The recipient will receive an email with their gift code.');
     }
     
     // Lesson cache
