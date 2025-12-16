@@ -1,0 +1,1044 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>✨ Kelly's Payment Setup Wizard</title>
+  <link rel="icon" href="/images/kelly-favicon.png">
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;500;600;700&display=swap');
+    
+    :root {
+      --kelly-blue: #3b82f6;
+      --kelly-blue-dark: #1e40af;
+      --kelly-gold: #fbbf24;
+      --bg-dark: #0a0a0b;
+      --bg-card: #18181b;
+      --bg-elevated: #27272a;
+      --text-primary: #f4f4f5;
+      --text-secondary: #a1a1aa;
+      --text-dim: #71717a;
+      --border: #3f3f46;
+      --success: #22c55e;
+      --confetti-1: #3b82f6;
+      --confetti-2: #fbbf24;
+      --confetti-3: #ec4899;
+      --confetti-4: #22c55e;
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+    
+    body {
+      font-family: 'Space Grotesk', sans-serif;
+      background: var(--bg-dark);
+      color: var(--text-primary);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    
+    /* Animated background */
+    .bg-animation {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+      z-index: 0;
+      overflow: hidden;
+    }
+    
+    .bg-animation::before {
+      content: '';
+      position: absolute;
+      width: 150%;
+      height: 150%;
+      top: -25%;
+      left: -25%;
+      background: radial-gradient(circle at 30% 30%, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+                  radial-gradient(circle at 70% 70%, rgba(251, 191, 36, 0.08) 0%, transparent 50%);
+      animation: pulse 8s ease-in-out infinite alternate;
+    }
+    
+    @keyframes pulse {
+      0% { transform: scale(1) rotate(0deg); }
+      100% { transform: scale(1.1) rotate(5deg); }
+    }
+    
+    /* Header */
+    .header {
+      position: relative;
+      z-index: 10;
+      text-align: center;
+      padding: 60px 20px 40px;
+    }
+    
+    .kelly-avatar {
+      width: 120px;
+      height: 120px;
+      border-radius: 50%;
+      border: 4px solid var(--kelly-blue);
+      margin-bottom: 24px;
+      animation: float 3s ease-in-out infinite;
+      box-shadow: 0 0 40px rgba(59, 130, 246, 0.3);
+    }
+    
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-10px); }
+    }
+    
+    h1 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--kelly-blue) 0%, var(--kelly-gold) 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 12px;
+    }
+    
+    .subtitle {
+      color: var(--text-secondary);
+      font-size: 1.1rem;
+    }
+    
+    /* Progress bar */
+    .progress-container {
+      position: relative;
+      z-index: 10;
+      max-width: 600px;
+      margin: 0 auto 40px;
+      padding: 0 20px;
+    }
+    
+    .progress-bar {
+      height: 8px;
+      background: var(--bg-elevated);
+      border-radius: 4px;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--kelly-blue), var(--kelly-gold));
+      border-radius: 4px;
+      transition: width 0.5s ease;
+      width: 0%;
+    }
+    
+    .progress-text {
+      text-align: center;
+      margin-top: 12px;
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+    
+    /* Main content */
+    .container {
+      position: relative;
+      z-index: 10;
+      max-width: 700px;
+      margin: 0 auto;
+      padding: 0 20px 60px;
+    }
+    
+    /* Step cards */
+    .step {
+      background: var(--bg-card);
+      border-radius: 20px;
+      padding: 32px;
+      margin-bottom: 24px;
+      border: 1px solid var(--border);
+      transition: all 0.3s ease;
+      opacity: 0.5;
+      pointer-events: none;
+    }
+    
+    .step.active {
+      opacity: 1;
+      pointer-events: auto;
+      border-color: var(--kelly-blue);
+      box-shadow: 0 0 30px rgba(59, 130, 246, 0.15);
+    }
+    
+    .step.completed {
+      opacity: 1;
+      pointer-events: auto;
+      border-color: var(--success);
+    }
+    
+    .step-header {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      margin-bottom: 20px;
+    }
+    
+    .step-number {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: var(--bg-elevated);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.2rem;
+      font-weight: 700;
+      color: var(--text-dim);
+      transition: all 0.3s ease;
+    }
+    
+    .step.active .step-number {
+      background: var(--kelly-blue);
+      color: white;
+    }
+    
+    .step.completed .step-number {
+      background: var(--success);
+      color: white;
+    }
+    
+    .step.completed .step-number::after {
+      content: '✓';
+    }
+    
+    .step.completed .step-number span {
+      display: none;
+    }
+    
+    .step-title {
+      font-size: 1.3rem;
+      font-weight: 600;
+    }
+    
+    .step-subtitle {
+      color: var(--text-secondary);
+      font-size: 0.9rem;
+    }
+    
+    /* Product card inside step */
+    .product-card {
+      background: var(--bg-elevated);
+      border-radius: 12px;
+      padding: 20px;
+      margin-bottom: 16px;
+    }
+    
+    .product-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 12px;
+    }
+    
+    .product-name {
+      font-weight: 600;
+      font-size: 1.1rem;
+    }
+    
+    .product-price {
+      color: var(--kelly-gold);
+      font-weight: 700;
+      font-size: 1.2rem;
+    }
+    
+    .product-desc {
+      color: var(--text-secondary);
+      font-size: 0.85rem;
+      margin-bottom: 16px;
+    }
+    
+    /* Input styling */
+    .input-group {
+      display: flex;
+      gap: 12px;
+    }
+    
+    .input-group input {
+      flex: 1;
+      background: var(--bg-dark);
+      border: 2px solid var(--border);
+      border-radius: 8px;
+      padding: 14px 16px;
+      color: var(--text-primary);
+      font-family: 'Space Grotesk', monospace;
+      font-size: 0.95rem;
+      transition: all 0.2s ease;
+    }
+    
+    .input-group input:focus {
+      outline: none;
+      border-color: var(--kelly-blue);
+      box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+    }
+    
+    .input-group input.valid {
+      border-color: var(--success);
+    }
+    
+    .input-group button {
+      padding: 14px 24px;
+      background: var(--kelly-blue);
+      color: white;
+      border: none;
+      border-radius: 8px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .input-group button:hover {
+      background: var(--kelly-blue-dark);
+      transform: translateY(-2px);
+    }
+    
+    .input-group button:disabled {
+      background: var(--bg-elevated);
+      color: var(--text-dim);
+      cursor: not-allowed;
+      transform: none;
+    }
+    
+    /* Tips */
+    .tip {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      background: rgba(59, 130, 246, 0.1);
+      border-radius: 8px;
+      padding: 14px;
+      margin-top: 16px;
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+    }
+    
+    .tip-icon {
+      font-size: 1.2rem;
+    }
+    
+    /* Link button */
+    .open-stripe-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: linear-gradient(135deg, #635bff, #7a73ff);
+      color: white;
+      padding: 12px 24px;
+      border-radius: 8px;
+      text-decoration: none;
+      font-weight: 600;
+      margin-bottom: 20px;
+      transition: all 0.2s ease;
+    }
+    
+    .open-stripe-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(99, 91, 255, 0.3);
+    }
+    
+    /* Final section */
+    .final-section {
+      background: linear-gradient(135deg, var(--bg-card), var(--bg-elevated));
+      border-radius: 20px;
+      padding: 40px;
+      text-align: center;
+      border: 2px solid var(--kelly-gold);
+      display: none;
+    }
+    
+    .final-section.visible {
+      display: block;
+      animation: celebrate 0.5s ease;
+    }
+    
+    @keyframes celebrate {
+      0% { transform: scale(0.9); opacity: 0; }
+      50% { transform: scale(1.02); }
+      100% { transform: scale(1); opacity: 1; }
+    }
+    
+    .final-section h2 {
+      font-size: 2rem;
+      margin-bottom: 16px;
+    }
+    
+    .final-section p {
+      color: var(--text-secondary);
+      margin-bottom: 24px;
+    }
+    
+    /* Env vars output */
+    .env-output {
+      background: var(--bg-dark);
+      border-radius: 12px;
+      padding: 20px;
+      text-align: left;
+      font-family: 'SF Mono', Monaco, monospace;
+      font-size: 0.85rem;
+      overflow-x: auto;
+      margin-bottom: 24px;
+      border: 1px solid var(--border);
+    }
+    
+    .env-line {
+      display: flex;
+      margin-bottom: 8px;
+    }
+    
+    .env-key {
+      color: var(--kelly-blue);
+    }
+    
+    .env-value {
+      color: var(--success);
+    }
+    
+    .copy-all-btn {
+      background: var(--success);
+      color: white;
+      border: none;
+      padding: 16px 32px;
+      border-radius: 10px;
+      font-size: 1.1rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-family: 'Space Grotesk', sans-serif;
+    }
+    
+    .copy-all-btn:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(34, 197, 94, 0.3);
+    }
+    
+    .copy-success {
+      color: var(--success);
+      margin-top: 12px;
+      font-weight: 600;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .copy-success.visible {
+      opacity: 1;
+    }
+    
+    /* Confetti */
+    .confetti {
+      position: fixed;
+      width: 10px;
+      height: 10px;
+      border-radius: 2px;
+      pointer-events: none;
+      animation: confettiFall 3s ease-out forwards;
+    }
+    
+    @keyframes confettiFall {
+      0% { opacity: 1; transform: translateY(0) rotate(0deg); }
+      100% { opacity: 0; transform: translateY(100vh) rotate(720deg); }
+    }
+    
+    /* Kelly speech bubble */
+    .kelly-says {
+      background: var(--bg-card);
+      border-radius: 16px;
+      padding: 20px 24px;
+      margin: 20px 0;
+      position: relative;
+      border: 1px solid var(--border);
+    }
+    
+    .kelly-says::before {
+      content: '';
+      position: absolute;
+      top: -10px;
+      left: 40px;
+      width: 0;
+      height: 0;
+      border-left: 10px solid transparent;
+      border-right: 10px solid transparent;
+      border-bottom: 10px solid var(--bg-card);
+    }
+    
+    .kelly-says p {
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+    
+    .kelly-says strong {
+      color: var(--kelly-gold);
+    }
+    
+    /* Vercel link */
+    .vercel-link {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: white;
+      color: black;
+      padding: 16px 32px;
+      border-radius: 10px;
+      text-decoration: none;
+      font-weight: 600;
+      margin-top: 16px;
+      transition: all 0.2s ease;
+    }
+    
+    .vercel-link:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 20px rgba(255, 255, 255, 0.2);
+    }
+  </style>
+</head>
+<body>
+  <div class="bg-animation"></div>
+  
+  <header class="header">
+    <img src="/images/kelly-core/kelly-core-neutral.png" alt="Kelly" class="kelly-avatar" onerror="this.src='https://api.dicebear.com/7.x/bottts/svg?seed=kelly&backgroundColor=3b82f6'">
+    <h1>✨ Payment Setup Wizard</h1>
+    <p class="subtitle">Let's get Stripe ready for launch! This will only take 5 minutes.</p>
+  </header>
+  
+  <div class="progress-container">
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill"></div>
+    </div>
+    <p class="progress-text"><span id="progress-count">0</span> of <span id="total-steps">10</span> steps completed</p>
+  </div>
+  
+  <main class="container">
+    
+    <!-- Step 0: Open Stripe -->
+    <div class="step active" data-step="0">
+      <div class="step-header">
+        <div class="step-number"><span>🚀</span></div>
+        <div>
+          <div class="step-title">Open Stripe Dashboard</div>
+          <div class="step-subtitle">Make sure you're in LIVE mode!</div>
+        </div>
+      </div>
+      
+      <a href="https://dashboard.stripe.com/products" target="_blank" class="open-stripe-btn">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><path d="M12 0C5.383 0 0 5.383 0 12s5.383 12 12 12 12-5.383 12-12S18.617 0 12 0zm-1.2 17.4h2.4v-2.4h-2.4v2.4zm1.2-14.4c-2.651 0-4.8 2.149-4.8 4.8h2.4c0-1.325 1.075-2.4 2.4-2.4s2.4 1.075 2.4 2.4c0 2.4-3.6 2.1-3.6 6h2.4c0-2.7 3.6-3 3.6-6 0-2.651-2.149-4.8-4.8-4.8z"/></svg>
+        Open Stripe Products →
+      </a>
+      
+      <div class="kelly-says">
+        <p>👋 Hey! I'm here to help. Click the button above to open Stripe. Make sure the toggle in the top-left says <strong>"Live"</strong> (not "Test"). Then click the button below when you're ready!</p>
+      </div>
+      
+      <button class="input-group" style="width: 100%;" onclick="nextStep(0)">
+        <button style="width: 100%; padding: 16px; font-size: 1.1rem;">I'm in Stripe Dashboard (Live Mode) ✓</button>
+      </button>
+    </div>
+    
+    <!-- Step 1: Monthly -->
+    <div class="step" data-step="1">
+      <div class="step-header">
+        <div class="step-number"><span>1</span></div>
+        <div>
+          <div class="step-title">Create Monthly Plan</div>
+          <div class="step-subtitle">Click "+ Add product" in Stripe</div>
+        </div>
+      </div>
+      
+      <div class="product-card">
+        <div class="product-header">
+          <span class="product-name">Kelly+ Monthly</span>
+          <span class="product-price">$7.99/mo</span>
+        </div>
+        <p class="product-desc">Monthly subscription to Curious Kelly</p>
+        <div class="input-group">
+          <input type="text" id="price-monthly" placeholder="Paste price_... ID here" oninput="validatePrice(this, 1)">
+          <button onclick="nextStep(1)" id="btn-1" disabled>Next →</button>
+        </div>
+      </div>
+      
+      <div class="tip">
+        <span class="tip-icon">💡</span>
+        <span>After creating the product, copy the <strong>Price ID</strong> (starts with price_) from Stripe and paste it above.</span>
+      </div>
+    </div>
+    
+    <!-- Step 2: Annual -->
+    <div class="step" data-step="2">
+      <div class="step-header">
+        <div class="step-number"><span>2</span></div>
+        <div>
+          <div class="step-title">Create Annual Plan</div>
+          <div class="step-subtitle">Our most popular plan!</div>
+        </div>
+      </div>
+      
+      <div class="product-card">
+        <div class="product-header">
+          <span class="product-name">Kelly+ Annual</span>
+          <span class="product-price">$49.99/yr</span>
+        </div>
+        <p class="product-desc">Annual subscription - Best Value</p>
+        <div class="input-group">
+          <input type="text" id="price-annual" placeholder="Paste price_... ID here" oninput="validatePrice(this, 2)">
+          <button onclick="nextStep(2)" id="btn-2" disabled>Next →</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Step 3: Family -->
+    <div class="step" data-step="3">
+      <div class="step-header">
+        <div class="step-number"><span>3</span></div>
+        <div>
+          <div class="step-title">Create Family Plan</div>
+          <div class="step-subtitle">For households with multiple learners</div>
+        </div>
+      </div>
+      
+      <div class="product-card">
+        <div class="product-header">
+          <span class="product-name">Kelly+ Family</span>
+          <span class="product-price">$99.99/yr</span>
+        </div>
+        <p class="product-desc">Family subscription - up to 6 members</p>
+        <div class="input-group">
+          <input type="text" id="price-family" placeholder="Paste price_... ID here" oninput="validatePrice(this, 3)">
+          <button onclick="nextStep(3)" id="btn-3" disabled>Next →</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Step 4: Lifetime -->
+    <div class="step" data-step="4">
+      <div class="step-header">
+        <div class="step-number"><span>4</span></div>
+        <div>
+          <div class="step-title">Create Lifetime Access</div>
+          <div class="step-subtitle">One-time purchase, forever access</div>
+        </div>
+      </div>
+      
+      <div class="product-card">
+        <div class="product-header">
+          <span class="product-name">Kelly+ Lifetime</span>
+          <span class="product-price">$199.99</span>
+        </div>
+        <p class="product-desc">Lifetime access - One time payment</p>
+        <div class="input-group">
+          <input type="text" id="price-lifetime" placeholder="Paste price_... ID here" oninput="validatePrice(this, 4)">
+          <button onclick="nextStep(4)" id="btn-4" disabled>Next →</button>
+        </div>
+      </div>
+      
+      <div class="tip">
+        <span class="tip-icon">⚠️</span>
+        <span>This should be a <strong>one-time payment</strong>, not recurring!</span>
+      </div>
+    </div>
+    
+    <!-- Step 5: Gift 3-month -->
+    <div class="step" data-step="5">
+      <div class="step-header">
+        <div class="step-number"><span>5</span></div>
+        <div>
+          <div class="step-title">Create 3-Month Gift</div>
+          <div class="step-subtitle">First gift option</div>
+        </div>
+      </div>
+      
+      <div class="product-card">
+        <div class="product-header">
+          <span class="product-name">🎁 Kelly Gift - 3 Months</span>
+          <span class="product-price">$24.99</span>
+        </div>
+        <p class="product-desc">Gift 3 months of learning (one-time payment)</p>
+        <div class="input-group">
+          <input type="text" id="price-gift-3mo" placeholder="Paste price_... ID here" oninput="validatePrice(this, 5)">
+          <button onclick="nextStep(5)" id="btn-5" disabled>Next →</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Step 6: Gift 6-month -->
+    <div class="step" data-step="6">
+      <div class="step-header">
+        <div class="step-number"><span>6</span></div>
+        <div>
+          <div class="step-title">Create 6-Month Gift</div>
+          <div class="step-subtitle">Half year of curiosity!</div>
+        </div>
+      </div>
+      
+      <div class="product-card">
+        <div class="product-header">
+          <span class="product-name">🎁 Kelly Gift - 6 Months</span>
+          <span class="product-price">$39.99</span>
+        </div>
+        <p class="product-desc">Gift 6 months of learning (one-time payment)</p>
+        <div class="input-group">
+          <input type="text" id="price-gift-6mo" placeholder="Paste price_... ID here" oninput="validatePrice(this, 6)">
+          <button onclick="nextStep(6)" id="btn-6" disabled>Next →</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Step 7: Gift 12-month -->
+    <div class="step" data-step="7">
+      <div class="step-header">
+        <div class="step-number"><span>7</span></div>
+        <div>
+          <div class="step-title">Create 12-Month Gift</div>
+          <div class="step-subtitle">A full year of wonder!</div>
+        </div>
+      </div>
+      
+      <div class="product-card">
+        <div class="product-header">
+          <span class="product-name">🎁 Kelly Gift - 12 Months</span>
+          <span class="product-price">$49.99</span>
+        </div>
+        <p class="product-desc">Gift a full year of learning (one-time payment)</p>
+        <div class="input-group">
+          <input type="text" id="price-gift-12mo" placeholder="Paste price_... ID here" oninput="validatePrice(this, 7)">
+          <button onclick="nextStep(7)" id="btn-7" disabled>Next →</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Step 8: Gift Lifetime -->
+    <div class="step" data-step="8">
+      <div class="step-header">
+        <div class="step-number"><span>8</span></div>
+        <div>
+          <div class="step-title">Create Lifetime Gift</div>
+          <div class="step-subtitle">The ultimate gift!</div>
+        </div>
+      </div>
+      
+      <div class="product-card">
+        <div class="product-header">
+          <span class="product-name">🎁 Kelly Gift - Lifetime</span>
+          <span class="product-price">$149.99</span>
+        </div>
+        <p class="product-desc">Gift forever access (one-time payment)</p>
+        <div class="input-group">
+          <input type="text" id="price-gift-lifetime" placeholder="Paste price_... ID here" oninput="validatePrice(this, 8)">
+          <button onclick="nextStep(8)" id="btn-8" disabled>Next →</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Step 9: Webhook -->
+    <div class="step" data-step="9">
+      <div class="step-header">
+        <div class="step-number"><span>9</span></div>
+        <div>
+          <div class="step-title">Set Up Webhook</div>
+          <div class="step-subtitle">So we know when payments happen</div>
+        </div>
+      </div>
+      
+      <a href="https://dashboard.stripe.com/webhooks" target="_blank" class="open-stripe-btn">
+        Open Stripe Webhooks →
+      </a>
+      
+      <div class="kelly-says">
+        <p>1️⃣ Click <strong>"+ Add endpoint"</strong><br>
+        2️⃣ Endpoint URL: <code style="background: var(--bg-dark); padding: 4px 8px; border-radius: 4px;">https://www.curiouskelly.com/api/webhooks/stripe-revenue</code><br>
+        3️⃣ Select events: <strong>checkout.session.completed, customer.subscription.created, customer.subscription.deleted, invoice.paid</strong><br>
+        4️⃣ Click <strong>"Add endpoint"</strong>, then <strong>"Reveal"</strong> under Signing secret</p>
+      </div>
+      
+      <div class="product-card">
+        <div class="product-header">
+          <span class="product-name">Webhook Signing Secret</span>
+        </div>
+        <div class="input-group">
+          <input type="text" id="webhook-secret" placeholder="Paste whsec_... here" oninput="validateWebhook(this)">
+          <button onclick="nextStep(9)" id="btn-9" disabled>Next →</button>
+        </div>
+      </div>
+    </div>
+    
+    <!-- Step 10: Keys -->
+    <div class="step" data-step="10">
+      <div class="step-header">
+        <div class="step-number"><span>10</span></div>
+        <div>
+          <div class="step-title">Get API Keys</div>
+          <div class="step-subtitle">The final step!</div>
+        </div>
+      </div>
+      
+      <a href="https://dashboard.stripe.com/apikeys" target="_blank" class="open-stripe-btn">
+        Open Stripe API Keys →
+      </a>
+      
+      <div class="product-card">
+        <div class="product-header">
+          <span class="product-name">Publishable Key</span>
+        </div>
+        <div class="input-group" style="margin-bottom: 16px;">
+          <input type="text" id="pk-key" placeholder="Paste pk_live_... here" oninput="validateKeys()">
+        </div>
+        <div class="product-header">
+          <span class="product-name">Secret Key</span>
+        </div>
+        <div class="input-group">
+          <input type="password" id="sk-key" placeholder="Paste sk_live_... here" oninput="validateKeys()">
+          <button onclick="completeSetup()" id="btn-10" disabled>🎉 Complete Setup!</button>
+        </div>
+      </div>
+      
+      <div class="tip">
+        <span class="tip-icon">🔐</span>
+        <span>Your secret key is hidden for security. Make sure it starts with <strong>sk_live_</strong></span>
+      </div>
+    </div>
+    
+    <!-- Final Section -->
+    <div class="final-section" id="final-section">
+      <h2>🎉 You Did It!</h2>
+      <p>Here are your environment variables. Copy them all and add to Vercel!</p>
+      
+      <div class="env-output" id="env-output"></div>
+      
+      <button class="copy-all-btn" onclick="copyEnvVars()">📋 Copy All to Clipboard</button>
+      <p class="copy-success" id="copy-success">✓ Copied! Now paste into Vercel.</p>
+      
+      <a href="https://vercel.com/lotd/curiouskelly/settings/environment-variables" target="_blank" class="vercel-link">
+        <svg width="20" height="20" viewBox="0 0 76 65" fill="currentColor"><path d="M37.5274 0L75.0548 65H0L37.5274 0Z"/></svg>
+        Open Vercel Environment Variables →
+      </a>
+      
+      <div class="kelly-says" style="margin-top: 24px; text-align: left;">
+        <p>🎄 <strong>Almost there!</strong> Paste these into Vercel, click "Save", then hit <strong>"Redeploy"</strong> on your latest deployment. Then you're ready to launch! 🚀</p>
+      </div>
+    </div>
+    
+  </main>
+  
+  <script>
+    let currentStep = 0;
+    const totalSteps = 11;
+    const prices = {};
+    
+    function updateProgress() {
+      const completed = Object.keys(prices).length;
+      const pct = Math.round((completed / totalSteps) * 100);
+      document.getElementById('progress-fill').style.width = pct + '%';
+      document.getElementById('progress-count').textContent = completed;
+      document.getElementById('total-steps').textContent = totalSteps;
+    }
+    
+    function validatePrice(input, step) {
+      const value = input.value.trim();
+      const isValid = value.startsWith('price_') && value.length > 10;
+      const btn = document.getElementById('btn-' + step);
+      
+      if (isValid) {
+        input.classList.add('valid');
+        btn.disabled = false;
+      } else {
+        input.classList.remove('valid');
+        btn.disabled = true;
+      }
+    }
+    
+    function validateWebhook(input) {
+      const value = input.value.trim();
+      const isValid = value.startsWith('whsec_') && value.length > 10;
+      const btn = document.getElementById('btn-9');
+      
+      if (isValid) {
+        input.classList.add('valid');
+        btn.disabled = false;
+      } else {
+        input.classList.remove('valid');
+        btn.disabled = true;
+      }
+    }
+    
+    function validateKeys() {
+      const pk = document.getElementById('pk-key').value.trim();
+      const sk = document.getElementById('sk-key').value.trim();
+      const btn = document.getElementById('btn-10');
+      
+      const isValid = pk.startsWith('pk_live_') && sk.startsWith('sk_live_') && pk.length > 20 && sk.length > 20;
+      
+      if (isValid) {
+        document.getElementById('pk-key').classList.add('valid');
+        document.getElementById('sk-key').classList.add('valid');
+        btn.disabled = false;
+      } else {
+        btn.disabled = true;
+      }
+    }
+    
+    function nextStep(step) {
+      // Save the value
+      const mapping = {
+        1: ['STRIPE_PRICE_MONTHLY', 'price-monthly'],
+        2: ['STRIPE_PRICE_ANNUAL', 'price-annual'],
+        3: ['STRIPE_PRICE_FAMILY', 'price-family'],
+        4: ['STRIPE_PRICE_LIFETIME', 'price-lifetime'],
+        5: ['STRIPE_PRICE_GIFT_3MO', 'price-gift-3mo'],
+        6: ['STRIPE_PRICE_GIFT_6MO', 'price-gift-6mo'],
+        7: ['STRIPE_PRICE_GIFT_12MO', 'price-gift-12mo'],
+        8: ['STRIPE_PRICE_GIFT_LIFETIME', 'price-gift-lifetime'],
+        9: ['STRIPE_WEBHOOK_SECRET', 'webhook-secret'],
+      };
+      
+      if (mapping[step]) {
+        const [key, inputId] = mapping[step];
+        prices[key] = document.getElementById(inputId).value.trim();
+      } else if (step === 0) {
+        prices['STARTED'] = 'true';
+      }
+      
+      // Mark current as completed
+      document.querySelector(`[data-step="${step}"]`).classList.remove('active');
+      document.querySelector(`[data-step="${step}"]`).classList.add('completed');
+      
+      // Activate next
+      const nextEl = document.querySelector(`[data-step="${step + 1}"]`);
+      if (nextEl) {
+        nextEl.classList.add('active');
+        nextEl.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      }
+      
+      currentStep = step + 1;
+      updateProgress();
+      
+      // Little celebration
+      for (let i = 0; i < 5; i++) {
+        setTimeout(() => createConfetti(), i * 50);
+      }
+    }
+    
+    function completeSetup() {
+      prices['STRIPE_PUBLISHABLE_KEY'] = document.getElementById('pk-key').value.trim();
+      prices['STRIPE_SECRET_KEY'] = document.getElementById('sk-key').value.trim();
+      
+      // Mark completed
+      document.querySelector('[data-step="10"]').classList.remove('active');
+      document.querySelector('[data-step="10"]').classList.add('completed');
+      
+      // Show final section
+      const finalSection = document.getElementById('final-section');
+      finalSection.classList.add('visible');
+      finalSection.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      
+      // Build env output
+      const envOutput = document.getElementById('env-output');
+      const vars = [
+        'STRIPE_SECRET_KEY',
+        'STRIPE_PUBLISHABLE_KEY',
+        'STRIPE_WEBHOOK_SECRET',
+        'STRIPE_PRICE_MONTHLY',
+        'STRIPE_PRICE_ANNUAL',
+        'STRIPE_PRICE_FAMILY',
+        'STRIPE_PRICE_LIFETIME',
+        'STRIPE_PRICE_GIFT_3MO',
+        'STRIPE_PRICE_GIFT_6MO',
+        'STRIPE_PRICE_GIFT_12MO',
+        'STRIPE_PRICE_GIFT_LIFETIME',
+      ];
+      
+      envOutput.innerHTML = vars.map(key => {
+        const val = prices[key] || '';
+        return `<div class="env-line"><span class="env-key">${key}</span>=<span class="env-value">${val}</span></div>`;
+      }).join('');
+      
+      updateProgress();
+      
+      // Big celebration!
+      for (let i = 0; i < 50; i++) {
+        setTimeout(() => createConfetti(), i * 30);
+      }
+    }
+    
+    function copyEnvVars() {
+      const vars = [
+        'STRIPE_SECRET_KEY',
+        'STRIPE_PUBLISHABLE_KEY',
+        'STRIPE_WEBHOOK_SECRET',
+        'STRIPE_PRICE_MONTHLY',
+        'STRIPE_PRICE_ANNUAL',
+        'STRIPE_PRICE_FAMILY',
+        'STRIPE_PRICE_LIFETIME',
+        'STRIPE_PRICE_GIFT_3MO',
+        'STRIPE_PRICE_GIFT_6MO',
+        'STRIPE_PRICE_GIFT_12MO',
+        'STRIPE_PRICE_GIFT_LIFETIME',
+      ];
+      
+      const text = vars.map(key => `${key}=${prices[key] || ''}`).join('\n');
+      
+      navigator.clipboard.writeText(text).then(() => {
+        document.getElementById('copy-success').classList.add('visible');
+        setTimeout(() => {
+          document.getElementById('copy-success').classList.remove('visible');
+        }, 3000);
+      });
+    }
+    
+    function createConfetti() {
+      const colors = ['var(--confetti-1)', 'var(--confetti-2)', 'var(--confetti-3)', 'var(--confetti-4)'];
+      const confetti = document.createElement('div');
+      confetti.className = 'confetti';
+      confetti.style.left = Math.random() * 100 + 'vw';
+      confetti.style.top = '-10px';
+      confetti.style.background = colors[Math.floor(Math.random() * colors.length)];
+      confetti.style.transform = `rotate(${Math.random() * 360}deg)`;
+      document.body.appendChild(confetti);
+      
+      setTimeout(() => confetti.remove(), 3000);
+    }
+    
+    // Save progress to localStorage
+    window.addEventListener('beforeunload', () => {
+      if (Object.keys(prices).length > 1) {
+        localStorage.setItem('stripe-wizard-progress', JSON.stringify(prices));
+      }
+    });
+    
+    // Restore progress
+    window.addEventListener('load', () => {
+      const saved = localStorage.getItem('stripe-wizard-progress');
+      if (saved) {
+        try {
+          const data = JSON.parse(saved);
+          Object.assign(prices, data);
+          // Restore inputs
+          const mapping = {
+            'STRIPE_PRICE_MONTHLY': 'price-monthly',
+            'STRIPE_PRICE_ANNUAL': 'price-annual',
+            'STRIPE_PRICE_FAMILY': 'price-family',
+            'STRIPE_PRICE_LIFETIME': 'price-lifetime',
+            'STRIPE_PRICE_GIFT_3MO': 'price-gift-3mo',
+            'STRIPE_PRICE_GIFT_6MO': 'price-gift-6mo',
+            'STRIPE_PRICE_GIFT_12MO': 'price-gift-12mo',
+            'STRIPE_PRICE_GIFT_LIFETIME': 'price-gift-lifetime',
+            'STRIPE_WEBHOOK_SECRET': 'webhook-secret',
+          };
+          Object.entries(mapping).forEach(([key, inputId]) => {
+            if (prices[key]) {
+              const input = document.getElementById(inputId);
+              if (input) {
+                input.value = prices[key];
+                input.classList.add('valid');
+              }
+            }
+          });
+        } catch (e) {}
+      }
+    });
+  </script>
+</body>
+</html>
+

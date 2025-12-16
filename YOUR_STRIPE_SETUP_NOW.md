@@ -5,7 +5,17 @@
 
 ---
 
-## 📍 WHERE TO GO
+## 🎮 USE THE FUN WIZARD!
+
+**Open this page and follow the steps:**
+
+### 👉 https://www.curiouskelly.com/stripe-wizard.html
+
+It will guide you through everything and generate your environment variables automatically!
+
+---
+
+## 📍 OR DO IT MANUALLY
 
 1. Open **Stripe Dashboard**: https://dashboard.stripe.com
 2. Make sure you're in **LIVE MODE** (toggle in top-left, should say "Live")
