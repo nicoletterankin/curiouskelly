@@ -452,5 +452,7 @@
     PERSONAS
   };
 
-  console.log('🛡️ Kelly Fallback Engine initialized - bulletproof media delivery ready');
+  if (typeof location !== 'undefined' && location.search.includes('debug')) {
+    console.log('🛡️ Kelly Fallback Engine initialized - bulletproof media delivery ready');
+  }
 })();

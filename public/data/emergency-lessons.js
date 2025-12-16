@@ -266,7 +266,11 @@ window.EMERGENCY_LESSONS = EMERGENCY_LESSONS;
 window.GENERIC_FALLBACK = GENERIC_FALLBACK;
 window.getEmergencyLesson = getEmergencyLesson;
 
-console.log('🆘 Emergency lessons loaded (7 lessons + generic fallback)');
+if (typeof location !== 'undefined' && location.search.includes('debug')) {
+  console.log('🆘 Emergency lessons loaded (7 lessons + generic fallback)');
+}
+
+
 
 
 

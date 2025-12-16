@@ -2464,4 +2464,6 @@ window.CURIOUS_KELLY.DAY_017 = {
   ]
 };
 window.CURIOUS_KELLY.LOCAL_PACKS['day-017'] = window.CURIOUS_KELLY.DAY_017;
-console.log('[LocalPack] Day 017 loaded:', window.CURIOUS_KELLY.DAY_017.atoms.length, 'atoms');
+if (typeof location !== 'undefined' && location.search.includes('debug')) {
+  console.log('[LocalPack] Day 017 loaded:', window.CURIOUS_KELLY.DAY_017.atoms.length, 'atoms');
+}

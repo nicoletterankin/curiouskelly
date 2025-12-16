@@ -215,9 +215,11 @@
       color: var(--kelly-color, var(--kelly-blue));
     }
 
-    .kelly-logo {
-      font-size: 1.3rem;
-      line-height: 1;
+    .kelly-logo-img {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      object-fit: cover;
     }
     
     /* ============================================
@@ -2994,6 +2996,19 @@
       transition: transform 0.2s ease;
     }
     
+    .nav-logo-img {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid transparent;
+      transition: border-color 0.2s ease;
+    }
+    
+    .nav-item.active .nav-logo-img {
+      border-color: var(--kelly-blue);
+    }
+    
     .nav-item.active {
       color: var(--kelly-blue);
     }
@@ -3480,7 +3495,7 @@
   <!-- Unified top navigation -->
   <nav class="kelly-top-nav">
     <button type="button" class="kelly-home-link" title="Home" onclick="handleHomeButton()">
-      <span class="kelly-logo">🏠</span>
+      <img src="/images/brand/kelly-mark-circle-64.png" alt="Kelly" class="kelly-logo-img">
       <span class="kelly-logo-text">Curious Kelly</span>
     </button>
   </nav>
@@ -3520,18 +3535,27 @@
     <section class="scene" id="scene-lesson">
       <div class="scene-header">
         <div class="day-badge" id="day-badge" data-scene="journey">
-          <span class="live-indicator" id="live-indicator-lesson">📅 TODAY</span>
+          <span class="live-indicator" id="live-indicator-lesson">TODAY</span>
           <span class="date-text" id="lesson-date-text">Loading...</span>
           <span class="topic" id="lesson-topic">Loading topic...</span>
         </div>
 
-        <!-- Playback controls (moved to header; right side) -->
+        <!-- Unified playback controls -->
         <div class="header-playback-controls">
-          <button id="btn-prev-phase" class="header-btn" title="Previous" aria-label="Previous phase" type="button">⏮️</button>
-          <button id="btn-play-pause" class="header-btn header-btn-primary" title="Play/Pause" aria-label="Play or pause" type="button">
-            <span id="play-pause-icon" aria-hidden="true">⏸️</span>
+          <button id="btn-mute" class="header-btn" title="Mute/Unmute" aria-label="Toggle sound" type="button">
+            <span id="mute-icon">🔊</span>
           </button>
-          <button id="btn-next-phase" class="header-btn" title="Next" aria-label="Next phase" type="button">⏭️</button>
+          <button id="btn-prev-phase" class="header-btn" title="Previous" aria-label="Previous phase" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+          </button>
+          <button id="btn-play-pause" class="header-btn header-btn-primary" title="Play/Pause" aria-label="Play or pause" type="button">
+            <span id="play-pause-icon" aria-hidden="true">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>
+            </span>
+          </button>
+          <button id="btn-next-phase" class="header-btn" title="Next" aria-label="Next phase" type="button">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+          </button>
           <label class="auto-toggle" title="Auto-advance">
             <input type="checkbox" id="auto-advance-toggle" checked>
             <span>Auto</span>
@@ -3999,10 +4023,7 @@
          ========================================== -->
     <nav class="bottom-nav">
       <button class="nav-item" id="nav-home-btn" type="button" onclick="handleHomeButton()">
-        <svg class="nav-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M3 9l9-7 9 7v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/>
-          <polyline points="9 22 9 12 15 12 15 22"/>
-        </svg>
+        <img src="/images/brand/kelly-mark-circle-64.png" alt="Kelly" class="nav-logo-img">
         <span class="nav-label">Home</span>
       </button>
       <button class="nav-item" id="nav-journey-btn" data-scene="journey" onclick="toggleRightPanel('journey')" type="button">
@@ -4281,16 +4302,16 @@
       __URL_PARAMS.get('supabaseClient') === 'true' ||
       window.KELLY_CONFIG?.enableSupabaseClient === true;
     
-    if (!DEV_AUTOPLAY) {
-      console.log('⏸️ DEV MODE: Auto-advance DISABLED. Use Next button to advance phases.');
-    }
-    if (DEV_START_PHASE > 0) {
-      console.log(`🎯 DEV MODE: Starting at phase ${DEV_START_PHASE}`);
-    }
-    if (DEV_START_DAY) {
-      console.log(`📅 DEV MODE: Loading day ${DEV_START_DAY}`);
-    }
     if (DEBUG) {
+      if (!DEV_AUTOPLAY) {
+        console.log('⏸️ DEV MODE: Auto-advance DISABLED. Use Next button to advance phases.');
+      }
+      if (DEV_START_PHASE > 0) {
+        console.log(`🎯 DEV MODE: Starting at phase ${DEV_START_PHASE}`);
+      }
+      if (DEV_START_DAY) {
+        console.log(`📅 DEV MODE: Loading day ${DEV_START_DAY}`);
+      }
       console.log('🐛 DEBUG MODE: Verbose logging enabled');
     }
 
@@ -6245,7 +6266,7 @@
       // Auto-advance if enabled (respects both state.autoAdvance AND DEV_AUTOPLAY URL param)
       if (DEV_AUTOPLAY && state.autoAdvance && state.scene === 'lesson') {
         setTimeout(() => advancePhase(), 800);
-      } else if (!DEV_AUTOPLAY) {
+      } else if (!DEV_AUTOPLAY && DEBUG) {
         console.log('⏸️ Auto-advance disabled via URL. Click Next to continue.');
       }
     }
@@ -6528,7 +6549,7 @@
         v.classList.remove('hidden');
         if (img) img.style.display = 'none';
 
-        console.log(`▶️ Playing: ${personaId}_${ageBucket}_${phaseKey}`);
+        if (DEBUG) console.log(`▶️ Playing: ${personaId}_${ageBucket}_${phaseKey}`);
 
         // Autoplay hardening: HeyGen clips should play muted + inline.
         // Audio is handled separately (kellyAudio), so we keep videos muted.
@@ -7355,24 +7376,35 @@
     function buildHomeOverlayHtml() {
       const streak = Number.isFinite(state.streak) ? state.streak : 0;
       const day = state.currentDay || getTodayDayNumber();
+      const completed = state.completedLessons?.length || 0;
       const topic = (currentLesson && currentLesson.topic) ||
         (document.getElementById('lesson-topic')?.textContent || '').trim() ||
         'Ready to learn';
+      const displayDate = getDisplayDate(day) || '';
 
       return `
         <div class="home-state">
-          <div class="streak-display">
-            <span class="streak-icon">🔥</span>
-            <span class="streak-count">${streak}</span>
-            <span class="streak-label">Day Streak</span>
+          <div class="home-stats">
+            <div class="home-stat">
+              <span class="home-stat-icon">🔥</span>
+              <span class="home-stat-value">${streak}</span>
+              <span class="home-stat-label">Streak</span>
+            </div>
+            <div class="home-stat">
+              <span class="home-stat-icon">✅</span>
+              <span class="home-stat-value">${completed}</span>
+              <span class="home-stat-label">Done</span>
+            </div>
+            <div class="home-stat">
+              <span class="home-stat-icon">📚</span>
+              <span class="home-stat-value">${day}</span>
+              <span class="home-stat-label">Today</span>
+            </div>
           </div>
-          <div class="today-info">
-            <div class="today-day">Day ${day}</div>
-            <div class="today-topic">${escapeHtml(topic)}</div>
+          <div class="home-today-card">
+            <div class="home-today-date">${escapeHtml(displayDate)}</div>
+            <div class="home-today-topic">${escapeHtml(topic)}</div>
           </div>
-          <button class="start-lesson-btn" type="button" onclick="handlePlayButton()">
-            ▶️ Start Today's Lesson
-          </button>
         </div>
       `;
     }
@@ -9146,15 +9178,15 @@
         // Disable auto-advance for manual testing
         state.autoAdvance = false;
         syncAutoAdvanceUI();
-        console.log('⏸️ DEV: Auto-advance disabled. Use controls to navigate phases.');
+        if (DEBUG) console.log('⏸️ DEV: Auto-advance disabled. Use controls to navigate phases.');
       }
       if (DEV_START_DAY && DEV_START_DAY > 0 && DEV_START_DAY <= 365) {
         state.currentDay = DEV_START_DAY;
-        console.log(`📅 DEV: Loaded day ${DEV_START_DAY}`);
+        if (DEBUG) console.log(`📅 DEV: Loaded day ${DEV_START_DAY}`);
       }
       if (DEV_START_PHASE > 0) {
         state.currentPhase = DEV_START_PHASE;
-        console.log(`🎯 DEV: Starting at phase ${DEV_START_PHASE}`);
+        if (DEBUG) console.log(`🎯 DEV: Starting at phase ${DEV_START_PHASE}`);
       }
       
       // Hide known broken / not-yet-shipped controls
@@ -9168,7 +9200,7 @@
         window.KellyLessonLoader.init(supabase);
       }
       
-      console.log('✅ Kelly Learn initialized');
+      if (DEBUG) console.log('✅ Kelly Learn initialized');
       debugLog('Kelly Learn init details', {
         day: state.currentDay,
         phase: state.currentPhase,
