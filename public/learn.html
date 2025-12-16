@@ -519,11 +519,7 @@
       50% { transform: translateY(-8px) rotate(1deg); }
     }
     
-    @keyframes bounce {
-      0%, 100% { transform: scale(1); }
-      40% { transform: scale(1.15) rotate(5deg); }
-      70% { transform: scale(0.95); }
-    }
+    /* REMOVED: @keyframes bounce - no bouncing of Kelly images allowed */
     
     .kelly-card .info .name {
       font-size: 24px;
@@ -1336,13 +1332,11 @@
     }
     
     .lesson-kelly.speaking {
-      animation: speaking 0.5s ease-in-out infinite;
+      /* DISABLED: No bouncing/scaling of Kelly images or videos.
+         Previous animation caused wacky expand/contract effect. */
     }
     
-    @keyframes speaking {
-      0%, 100% { transform: scale(1) translateY(0); }
-      50% { transform: scale(1.02) translateY(-2px); }
-    }
+    /* REMOVED: @keyframes speaking - no bouncing allowed */
     
     .tap-zones {
       position: absolute;
@@ -3449,22 +3443,8 @@
        Kelly is always visible; user can toggle modes.
        ============================================ */
 
-    /* Toggle button */
-    .kelly-presence-toggle {
-      position: fixed;
-      bottom: 100px;
-      right: 20px;
-      z-index: 2000;
-      background: rgba(0,0,0,0.8);
-      border: 2px solid rgba(255,255,255,0.2);
-      border-radius: 50%;
-      width: 50px;
-      height: 50px;
-      color: white;
-      font-size: 0.75rem;
-      font-weight: bold;
-      cursor: pointer;
-    }
+    /* Toggle button REMOVED - Kelly size is now only in Settings
+       (The floating 50% button was confusing and redundant) */
 
     /* SACRED LAYOUT: Kelly presence scales only (never repositions) */
     /* Presence = zoom/crop only (never reveals empty background) */
@@ -3624,7 +3604,7 @@
         <!-- SACRED CENTER (Kelly) -->
         <div class="lesson-kelly-container kelly-wallpaper" id="kelly-stage">
           <div class="lesson-kelly idle" id="lesson-kelly">
-            <img id="lesson-kelly-img" class="kelly-img kelly-bg" src="/images/kelly-placeholder-16x9.jpg" alt="Kelly">
+            <img id="lesson-kelly-img" class="kelly-img kelly-bg" src="/images/kelly-hero-4k.png" alt="Kelly">
             <video id="kelly-video" class="hidden kelly-bg" hidden playsinline muted preload="auto"></video>
           </div>
           <!-- Gradient overlay for text readability (sacred wallpaper) -->
@@ -4239,9 +4219,7 @@
     <div class="confetti-container" id="confetti-container"></div>
   </div>
 
-  <button id="kelly-presence-toggle" class="kelly-presence-toggle" onclick="cycleKellyPresence()">
-    <span id="kelly-presence-label">50%</span>
-  </button>
+  <!-- Kelly size toggle REMOVED - now only in Settings -->
 
   <!-- Stripe.js for embedded checkout -->
   <script src="https://js.stripe.com/v3/"></script>
@@ -4288,7 +4266,7 @@
     const DEV_START_DAY = parseInt(__URL_PARAMS.get('day'), 10) || null;
 
     // Production polish: stable local fallback media
-    const KELLY_PLACEHOLDER = '/images/kelly-placeholder-16x9.jpg';
+    const KELLY_PLACEHOLDER = '/images/kelly-hero-4k.png';
     // Disable runtime TTS by default (opt-in via ?tts=true) to avoid noisy 400/500s when keys are not configured.
     const ENABLE_RUNTIME_TTS = __URL_PARAMS.get('tts') === 'true';
     // Remote persona head images can be opt-in (otherwise keep the app fully local/quiet).
@@ -4831,18 +4809,19 @@
     // - We use ONE singleton client per browser context to avoid:
     //   "Multiple GoTrueClient instances detected in the same browser context"
     // - Lesson reads + auth/progress share the same instance.
-    let supabase = null;
+    // - Named `_db` to avoid conflict with global `window.supabase` from CDN.
+    let _db = null;
     function ensureSupabaseClient() {
       try {
         if (!ENABLE_SUPABASE_CLIENT) return false;
         // Prefer shared singleton. Falls back to a direct createClient if needed.
         if (typeof window.getSupabase === 'function') {
-          supabase = window.getSupabase();
+          _db = window.getSupabase();
         } else if (CONFIG.SUPABASE_URL && CONFIG.SUPABASE_ANON_KEY && window.supabase?.createClient) {
-          supabase = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
-          window.supabaseClient = supabase;
+          _db = window.supabase.createClient(CONFIG.SUPABASE_URL, CONFIG.SUPABASE_ANON_KEY);
+          window.supabaseClient = _db;
         }
-        return !!supabase;
+        return !!_db;
       } catch (e) {
         // fall through to false
       }
@@ -4858,7 +4837,7 @@
     // AUDIT MODE (console-only; run with ?audit=1)
     // ============================================
     async function auditSupabaseQueries() {
-      const db = supabase;
+      const db = _db;
 
       function report({ query, status, error, data }) {
         console.log(`QUERY: ${query}`);
@@ -4884,11 +4863,11 @@
 
       // 3) kelly_video_assets (day 1 Hook audio)
       try {
-        if (!supabase) {
+        if (!_db) {
           report({ query: 'kelly_video_assets for day 1 (Hook audio)', status: 'FAIL', error: 'Supabase auth client not initialized' });
         } else {
           const ageBucket = getEffectiveAgeBucket();
-          const { data, error } = await supabase
+          const { data, error } = await _db
             .from('kelly_video_assets')
             .select('public_url, status, phase, template, age_bucket, language')
             .eq('day_number', 1)
@@ -4908,14 +4887,14 @@
 
       // 4) user_progress (current user)
       try {
-        if (!supabase) {
+        if (!_db) {
           report({ query: 'user_progress for current user', status: 'FAIL', error: 'Supabase auth client not initialized' });
         } else {
-          const { data: { session } } = await supabase.auth.getSession();
+          const { data: { session } } = await _db.auth.getSession();
           if (!session) {
             report({ query: 'user_progress for current user', status: 'EMPTY', data: 'SKIPPED (no session)' });
           } else {
-            const { data, error } = await supabase
+            const { data, error } = await _db
               .from('user_progress')
               .select('day_number, status')
               .eq('user_id', session.user.id)
@@ -5423,8 +5402,8 @@
 
     async function getSupabaseSession() {
       try {
-        if (!supabase?.auth?.getSession) return null;
-        const { data: { session } } = await supabase.auth.getSession();
+        if (!_db?.auth?.getSession) return null;
+        const { data: { session } } = await _db.auth.getSession();
         return session || null;
       } catch (_) {
         return null;
@@ -5609,6 +5588,31 @@
         try { refreshSubscriptionFromServer(); } catch (_) {}
       }, 800);
     }
+
+    // Auto-open checkout panel if ?checkout=plan param is present
+    const autoCheckoutPlan = urlParams.get('checkout');
+    if (autoCheckoutPlan && autoCheckoutPlan !== 'success') {
+      setTimeout(() => {
+        openCheckoutPanel(autoCheckoutPlan);
+      }, 500);
+    }
+
+    // Handle gift purchases - never leave Kelly!
+    const giftDuration = urlParams.get('gift');
+    if (giftDuration) {
+      setTimeout(() => {
+        // For now, redirect to embedded checkout with gift context
+        // TODO: Create dedicated gift checkout panel with recipient email field
+        const giftToPlanMap = {
+          '3-month': 'gift-3mo',
+          '6-month': 'gift-6mo', 
+          '12-month': 'gift-12mo',
+          'lifetime': 'gift-lifetime'
+        };
+        const giftPlan = giftToPlanMap[giftDuration] || 'gift-12mo';
+        openCheckoutPanel(giftPlan);
+      }, 500);
+    }
     
     // Lesson cache
     let currentLesson = null;
@@ -5648,23 +5652,23 @@
      * Load progress from Supabase and merge with local state
      */
     async function loadProgressFromSupabase() {
-      if (!supabase) return;
+      if (!_db) return;
       
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await _db.auth.getSession();
         if (!session) return; // Not logged in
         
         const userId = session.user.id;
         
         // Load user profile
-        const { data: profile } = await supabase
+        const { data: profile } = await _db
           .from('users')
           .select('streak_days, total_lessons_completed')
           .eq('id', userId)
           .single();
         
         // Load completed lessons
-        const { data: progress } = await supabase
+        const { data: progress } = await _db
           .from('user_progress')
           .select('day_number')
           .eq('user_id', userId)
@@ -5723,7 +5727,7 @@
     }
 
     function scheduleSupabaseProgressSync() {
-      if (!supabase) return;
+      if (!_db) return;
       if (__supabaseSyncTimer) return;
       __supabaseSyncTimer = setTimeout(() => {
         __supabaseSyncTimer = null;
@@ -5732,19 +5736,19 @@
     }
 
     async function syncProgressToSupabaseNow() {
-      if (!supabase) return;
+      if (!_db) return;
       
       try {
         const hash = __getProgressHashForSync();
         if (hash === __lastSupabaseProgressHash) return;
 
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session } } = await _db.auth.getSession();
         if (!session) return; // Not logged in
         
         const userId = session.user.id;
         
         // Upsert user progress
-        const { error: userError } = await supabase
+        const { error: userError } = await _db
           .from('users')
           .upsert({
             id: userId,
@@ -5768,7 +5772,7 @@
           }));
           
           // Upsert each completion (ignore conflicts)
-          const { error: progressError } = await supabase
+          const { error: progressError } = await _db
             .from('user_progress')
             .upsert(progressRecords, { 
               onConflict: 'user_id,day_number',
@@ -6124,8 +6128,8 @@
       return null;
       
       /* Future implementation when RPC is deployed:
-      if (!supabase) return null;
-      const { data, error } = await supabase
+      if (!_db) return null;
+      const { data, error } = await _db
         .rpc('get_kelly_prompt_context', {
           p_persona_id: personaId,
           p_age_bucket: ageBucket,
@@ -6386,8 +6390,8 @@
     }
 
     async function getAudioUrl(dayNumber, phase, personaId, ageBucket, language = 'en') {
-      if (!supabase) return null;
-      const { data } = await supabase
+      if (!_db) return null;
+      const { data } = await _db
         .from('kelly_video_assets')
         .select('public_url')
         .eq('day_number', dayNumber)
@@ -6403,9 +6407,9 @@
     }
 
     async function getVideoUrl(dayNumber, phase, personaId, ageBucket, language = 'en') {
-      if (!supabase) return null;
+      if (!_db) return null;
       try {
-        const { data } = await supabase
+        const { data } = await _db
           .from('kelly_video_assets')
           .select('public_url')
           .eq('day_number', dayNumber)
@@ -6458,7 +6462,7 @@
             // Local static serving (e.g. `npx serve public`) won't have /api routes.
             // Fallback to a direct Supabase query if available.
             try {
-              const db = supabase;
+              const db = _db;
               if (!db) throw new Error('No supabase client');
               const { data: row, error } = await db
                 .from('kelly_motion_library')
@@ -6754,14 +6758,10 @@
         `;
         
         card.addEventListener('click', () => {
-          if (i === state.carouselIndex) {
-            const avatar = card.querySelector('.avatar');
-            avatar.style.animation = 'none';
-            avatar.offsetHeight;
-            avatar.style.animation = 'bounce 0.4s ease';
-          } else {
+          if (i !== state.carouselIndex) {
             goToCarouselIndex(i);
           }
+          // No bounce animation - Kelly images should never bounce
         });
         
         track.appendChild(card);
@@ -8165,7 +8165,7 @@
     
     // Helper: Load lessons in a range
     async function loadLessonsRange(startDay, endDay) {
-      if (!supabase) {
+      if (!_db) {
         // Use emergency lessons as fallback
         const lessons = [];
         for (let d = startDay; d <= endDay; d++) {
@@ -9196,8 +9196,8 @@
       });
       
       // Initialize KellyLessonLoader with lesson-read client (anon-only)
-      if (window.KellyLessonLoader && supabase) {
-        window.KellyLessonLoader.init(supabase);
+      if (window.KellyLessonLoader && _db) {
+        window.KellyLessonLoader.init(_db);
       }
       
       if (DEBUG) console.log('✅ Kelly Learn initialized');
