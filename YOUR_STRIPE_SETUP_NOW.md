@@ -9,7 +9,7 @@
 
 **Open this page and follow the steps:**
 
-### 👉 https://www.curiouskelly.com/stripe-wizard.html
+### 👉 [https://www.curiouskelly.com/stripe-wizard.html](https://www.curiouskelly.com/stripe-wizard.html)
 
 It will guide you through everything and generate your environment variables automatically!
 
