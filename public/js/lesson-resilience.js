@@ -10,6 +10,12 @@
  * THE LESSON ALWAYS PLAYS.
  */
 
+// Debug mode - only log when ?debug=true or localStorage.kellyDebug=1
+const __RESILIENCE_DEBUG = (
+  (typeof location !== 'undefined' && location.search.includes('debug')) ||
+  (typeof localStorage !== 'undefined' && localStorage.getItem('kellyDebug') === '1')
+);
+
 const LessonResilience = {
   // Configuration
   SUPABASE_TIMEOUT: 5000,   // 5 seconds
@@ -49,7 +55,7 @@ const LessonResilience = {
       return result;
     } catch (error) {
       clearTimeout(timeoutId);
-      console.warn(`⏱️ ${label} failed:`, error.message);
+      if (__RESILIENCE_DEBUG) console.warn(`⏱️ ${label} failed:`, error.message);
       throw error;
     }
   },
@@ -64,7 +70,7 @@ const LessonResilience = {
       throw new Error('Supabase not initialized');
     }
     
-    console.log(`🔍 [L1] Supabase: Day ${dayNumber}`);
+    if (__RESILIENCE_DEBUG) console.log(`🔍 [L1] Supabase: Day ${dayNumber}`);
     
     const fetchPromise = (async () => {
       // Fetch core lesson
@@ -116,7 +122,7 @@ const LessonResilience = {
   async fromD1(dayNumber, options = {}) {
     const { archetype = 'The Scientist', ageBucket = 'adult' } = options;
     
-    console.log(`🔍 [L2] D1 Mirror: Day ${dayNumber}`);
+    if (__RESILIENCE_DEBUG) console.log(`🔍 [L2] D1 Mirror: Day ${dayNumber}`);
     
     const fetchPromise = (async () => {
       const response = await fetch(`${this.D1_ENDPOINT}/${dayNumber}?archetype=${encodeURIComponent(archetype)}&ageBucket=${encodeURIComponent(ageBucket)}`);
@@ -149,7 +155,7 @@ const LessonResilience = {
   async fromStaticJSON(dayNumber, options = {}) {
     const { ageBucket = '18-35' } = options;
     
-    console.log(`🔍 [L3] Static JSON: Day ${dayNumber}`);
+    if (__RESILIENCE_DEBUG) console.log(`🔍 [L3] Static JSON: Day ${dayNumber}`);
     
     const paddedDay = String(dayNumber).padStart(3, '0');
     const jsonUrl = `/generated/lessons/day-${paddedDay}.json`;
@@ -217,7 +223,7 @@ const LessonResilience = {
    * Layer 4: Emergency Fallback (Hardcoded)
    */
   fromEmergency(dayNumber) {
-    console.log(`🔍 [L4] Emergency Fallback: Day ${dayNumber}`);
+    if (__RESILIENCE_DEBUG) console.log(`🔍 [L4] Emergency Fallback: Day ${dayNumber}`);
     
     // Use window.EMERGENCY_LESSONS if available (loaded from emergency-lessons.js)
     const emergency = window.EMERGENCY_LESSONS?.[dayNumber] || this.HARDCODED_LESSONS[dayNumber % 7 + 1] || this.HARDCODED_LESSONS[1];
@@ -314,40 +320,40 @@ const LessonResilience = {
     if (options.supabase) {
       try {
         const result = await this.fromSupabase(dayNumber, options);
-        console.log(`✅ [L1] Supabase success in ${Date.now() - startTime}ms`);
+        if (__RESILIENCE_DEBUG) console.log(`✅ [L1] Supabase success in ${Date.now() - startTime}ms`);
         return result;
       } catch (error) {
         this.metrics.supabaseTimeouts++;
         lastError = error;
-        console.warn(`⚠️ [L1] Supabase failed, trying D1...`);
+        if (__RESILIENCE_DEBUG) console.warn(`⚠️ [L1] Supabase failed, trying D1...`);
       }
     }
     
     // Layer 2: D1 Mirror
     try {
       const result = await this.fromD1(dayNumber, options);
-      console.log(`✅ [L2] D1 success in ${Date.now() - startTime}ms`);
+      if (__RESILIENCE_DEBUG) console.log(`✅ [L2] D1 success in ${Date.now() - startTime}ms`);
       return result;
     } catch (error) {
       this.metrics.d1Timeouts++;
       lastError = error;
-      console.warn(`⚠️ [L2] D1 failed, trying Static JSON...`);
+      if (__RESILIENCE_DEBUG) console.warn(`⚠️ [L2] D1 failed, trying Static JSON...`);
     }
     
     // Layer 3: Static JSON
     try {
       const result = await this.fromStaticJSON(dayNumber, options);
-      console.log(`✅ [L3] Static JSON success in ${Date.now() - startTime}ms`);
+      if (__RESILIENCE_DEBUG) console.log(`✅ [L3] Static JSON success in ${Date.now() - startTime}ms`);
       return result;
     } catch (error) {
       this.metrics.staticTimeouts++;
       lastError = error;
-      console.warn(`⚠️ [L3] Static JSON failed, using Emergency Fallback...`);
+      if (__RESILIENCE_DEBUG) console.warn(`⚠️ [L3] Static JSON failed, using Emergency Fallback...`);
     }
     
     // Layer 4: Emergency Fallback (NEVER FAILS)
     const result = this.fromEmergency(dayNumber);
-    console.log(`✅ [L4] Emergency Fallback in ${Date.now() - startTime}ms`);
+    if (__RESILIENCE_DEBUG) console.log(`✅ [L4] Emergency Fallback in ${Date.now() - startTime}ms`);
     return result;
   },
   
@@ -385,7 +391,8 @@ const LessonResilience = {
 // Make available globally
 window.LessonResilience = LessonResilience;
 
-console.log('🛡️ Lesson Resilience Layer ready - THE LESSON ALWAYS PLAYS');
+if (__RESILIENCE_DEBUG) console.log('🛡️ Lesson Resilience Layer ready - THE LESSON ALWAYS PLAYS');
+
 
 
 

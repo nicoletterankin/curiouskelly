@@ -3,6 +3,21 @@
 <head>
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    
+    <!-- FAST REDIRECT: Returning users go straight to learn.html (no flash) -->
+    <script>
+      (function() {
+        try {
+          var s = localStorage.getItem('kelly-started') || localStorage.getItem('kellyOnboarded');
+          var h = localStorage.getItem('kellyState') || localStorage.getItem('kelly_progress');
+          if (s || h) { window.location.replace('/learn.html'); }
+        } catch(e) {}
+      })();
+    </script>
+    <style>
+      /* Hide body until we know user should stay on this page */
+      html.checking-redirect body { visibility: hidden; }
+    </style>
 
     <!-- Primary Meta Tags -->
     <meta name="title" content="Curious Kelly - Learn Something New Every Day">
@@ -25,18 +40,9 @@
     <script src="/js/kelly-lesson.js"></script>
     <script src="/js/kelly-presence.js"></script>
     <script>
-      // Persist Kelly presence across pages (learn.html + index.html)
+      // Apply Kelly presence setting (redirect already handled at top of head)
       (function () {
         try {
-          // Route returning learners directly to the lesson player.
-          // learn.html sets these flags the first time the learner hits play.
-          const started = localStorage.getItem('kelly-started') || localStorage.getItem('kellyOnboarded');
-          const hasState = !!localStorage.getItem('kellyState') || !!localStorage.getItem('kelly_progress');
-          if (started || hasState) {
-            window.location.replace('/learn.html');
-            return;
-          }
-
           const kellyPresence = localStorage.getItem('kellyPresence') || '50';
           document.documentElement.setAttribute('data-kelly-presence', kellyPresence);
         } catch (e) {}
@@ -622,6 +628,15 @@
             align-items: flex-end;
             justify-content: center;
             padding-top: 24px;
+        }
+        
+        /* Video overlay positioning */
+        .kelly-video-overlay {
+            position: absolute !important;
+            top: 0 !important;
+            left: 50% !important;
+            transform: translateX(-50%) !important;
+            z-index: 2 !important;
         }
 
         /* KELLY: Fill the space - FULL BLEED - DOMINATE THE HERO */
@@ -3420,16 +3435,26 @@
         <!-- RIGHT: KELLY OWNS THIS SPACE (60%) -->
         <div class="hero-kelly">
             <div class="kelly-image-container">
+                <!-- Kelly Image - ALWAYS visible, LOCAL, BULLETPROOF -->
+                <img 
+                    id="hero-kelly-image"
+                    src="/images/kelly-homepage-hero.jpeg"
+                    alt="Kelly, a friendly AI teacher, ready to guide you through today's lesson"
+                    class="kelly-image"
+                    loading="eager"
+                    fetchpriority="high"
+                />
+                <!-- Video overlay - loads on top if available -->
                 <video 
                     id="hero-kelly-video"
                     autoplay 
                     muted 
                     loop 
                     playsinline
-                    preload="metadata"
-                    poster="https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates/heygen/archetypes-head-only/kelly_explorer_head.png"
-                    class="kelly-image"
-                    aria-label="Kelly, a friendly AI teacher, ready to guide you through today's lesson"
+                    preload="none"
+                    class="kelly-image kelly-video-overlay"
+                    style="display: none; position: absolute; top: 0; left: 0;"
+                    aria-hidden="true"
                 >
                     <source src="https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-videos/production/day_001_final/day_001_hook_scientist_dynamic.mp4" type="video/mp4">
                 </video>
@@ -4385,23 +4410,32 @@
         // Hero video initialization with fallback
         function initHeroVideo() {
             const video = document.getElementById('hero-kelly-video');
+            const image = document.getElementById('hero-kelly-image');
             if (!video) return;
             
-            // On successful load, show video and hide image
-            video.addEventListener('canplay', () => {
-                video.classList.add('loaded');
-                console.log('[Hero] ✅ Kelly video loaded');
+            // Only try to load video after image is visible
+            setTimeout(() => {
+                video.preload = 'auto';
+                video.load();
+            }, 1000);
+            
+            // On successful load, show video overlay
+            video.addEventListener('canplaythrough', () => {
+                video.style.display = 'block';
+                video.style.position = 'absolute';
+                video.style.top = '0';
+                video.style.left = '50%';
+                video.style.transform = 'translateX(-50%)';
+                video.style.zIndex = '2';
+                video.play().catch(() => {});
+                if (window.location.search.includes('debug')) {
+                    console.log('[Hero] ✅ Kelly video loaded and playing');
+                }
             });
             
-            // On error, keep showing image fallback
+            // On error, keep showing image fallback (already visible)
             video.addEventListener('error', () => {
-                console.log('[Hero] ⚠️ Video failed, showing image fallback');
                 video.style.display = 'none';
-            });
-            
-            // Force play (some browsers need this)
-            video.play().catch(() => {
-                console.log('[Hero] ⚠️ Autoplay blocked, showing image');
             });
         }
 

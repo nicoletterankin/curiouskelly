@@ -4,7 +4,14 @@
  * This file will be removed after 2025-01-15
  * Last audit: 2025-12-15
  */
-console.warn('[DEPRECATED] golden-v5-data-loader.js - Use kelly-lesson-loader.js');
+
+// Debug mode
+const __GOLDEN_DEBUG = (
+  (typeof location !== 'undefined' && location.search.includes('debug')) ||
+  (typeof localStorage !== 'undefined' && localStorage.getItem('kellyDebug') === '1')
+);
+
+if (__GOLDEN_DEBUG) console.warn('[DEPRECATED] golden-v5-data-loader.js - Use kelly-lesson-loader.js');
 
 // golden-v5-data-loader.js
 // Loads real lesson content from Supabase for Golden V5
@@ -25,11 +32,11 @@ class GoldenV5DataLoader {
     const cacheKey = `${dayNumber}-${archetype}`;
     
     if (this.cache[cacheKey]) {
-      console.log(`[GoldenV5DataLoader] Using cached data for Day ${dayNumber}`);
+      if (__GOLDEN_DEBUG) console.log(`[GoldenV5DataLoader] Using cached data for Day ${dayNumber}`);
       return this.cache[cacheKey];
     }
 
-    console.log(`[GoldenV5DataLoader] Loading Day ${dayNumber} (${archetype})...`);
+    if (__GOLDEN_DEBUG) console.log(`[GoldenV5DataLoader] Loading Day ${dayNumber} (${archetype})...`);
 
     try {
       // Step 1: Load core lesson data
@@ -85,7 +92,7 @@ class GoldenV5DataLoader {
       // Cache the result
       this.cache[cacheKey] = lesson;
 
-      console.log(`[GoldenV5DataLoader] ✅ Loaded Day ${dayNumber}:`, lesson);
+      if (__GOLDEN_DEBUG) console.log(`[GoldenV5DataLoader] ✅ Loaded Day ${dayNumber}:`, lesson);
       return lesson;
 
     } catch (error) {
@@ -101,7 +108,7 @@ class GoldenV5DataLoader {
    * @returns {Promise<Object>} Video asset data
    */
   async loadVideoAsset(dayNumber, phase) {
-    console.log(`[GoldenV5DataLoader] Loading video for Day ${dayNumber}, Phase ${phase}...`);
+    if (__GOLDEN_DEBUG) console.log(`[GoldenV5DataLoader] Loading video for Day ${dayNumber}, Phase ${phase}...`);
 
     try {
       const { data: asset, error } = await this.supabase
@@ -117,7 +124,7 @@ class GoldenV5DataLoader {
 
       if (error) throw error;
 
-      console.log(`[GoldenV5DataLoader] ✅ Loaded video asset:`, asset);
+      if (__GOLDEN_DEBUG) console.log(`[GoldenV5DataLoader] ✅ Loaded video asset:`, asset);
       return {
         videoUrl: asset.public_url,
         manifestUrl: asset.public_url.replace('.mp4', '-safe-zones.json'),
@@ -127,7 +134,7 @@ class GoldenV5DataLoader {
       };
 
     } catch (error) {
-      console.warn(`[GoldenV5DataLoader] ⚠️ No video found for Day ${dayNumber}, Phase ${phase}. Using fallback.`);
+      if (__GOLDEN_DEBUG) console.warn(`[GoldenV5DataLoader] ⚠️ No video found for Day ${dayNumber}, Phase ${phase}. Using fallback.`);
       return this.getFallbackVideo(dayNumber, phase);
     }
   }
@@ -198,7 +205,7 @@ class GoldenV5DataLoader {
    */
   clearCache() {
     this.cache = {};
-    console.log('[GoldenV5DataLoader] Cache cleared');
+    if (__GOLDEN_DEBUG) console.log('[GoldenV5DataLoader] Cache cleared');
   }
 }
 

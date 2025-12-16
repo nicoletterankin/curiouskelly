@@ -3,6 +3,12 @@
  * Handles the "Power Up Kelly" connections (Meta, OpenAI, etc.)
  */
 
+// Debug mode
+const __NEURAL_DEBUG = (
+  (typeof location !== 'undefined' && location.search.includes('debug')) ||
+  (typeof localStorage !== 'undefined' && localStorage.getItem('kellyDebug') === '1')
+);
+
 import { supabase } from './auth.js';
 
 // Configuration
@@ -41,7 +47,7 @@ export class NeuralLink {
         // const { data } = await supabase.from('users').select('connectedProviders').single();
         // this.connectedProviders = data?.connectedProviders || {};
         
-        console.log('Neural Link Initialized');
+        if (__NEURAL_DEBUG) console.log('Neural Link Initialized');
         this.renderUI();
     }
 
@@ -87,7 +93,7 @@ export class NeuralLink {
     }
 
     async handleConnect(providerId) {
-        console.log(`Attempting to connect ${providerId}...`);
+        if (__NEURAL_DEBUG) console.log(`Attempting to connect ${providerId}...`);
         
         if (providerId === 'meta') {
             // Meta / Facebook OAuth Flow for Data Access
@@ -118,12 +124,13 @@ export class NeuralLink {
         if (container) this.renderUI(container);
 
         // Persist to DB (Mock)
-        console.log(`Updated ${providerId} status to: ${this.connectedProviders[providerId]}`);
+        if (__NEURAL_DEBUG) console.log(`Updated ${providerId} status to: ${this.connectedProviders[providerId]}`);
         // await supabase.from('users').update({ connectedProviders: this.connectedProviders }).eq('id', user.id);
     }
 }
 
 export const neuralLink = new NeuralLink();
+
 
 
 

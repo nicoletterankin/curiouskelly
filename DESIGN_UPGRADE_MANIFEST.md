@@ -228,12 +228,26 @@ Delay paywall by 2 seconds OR wait until user tries to advance past first phase.
 
 ## SUCCESS CRITERIA
 
-- [ ] New visitor sees landing page with Kelly (not instant redirect)
-- [ ] All pages use Newsreader for headlines, Inter for body
-- [ ] All pages use kelly-blue accent (no orange)
-- [ ] Console is quiet in production (no debug spam)
-- [ ] Navigation feels cohesive across marketing pages
-- [ ] Kelly's face appears on at least one marketing page
+- [x] New visitor sees landing page with Kelly (not instant redirect) — FIXED: Hero uses LOCAL image
+- [x] All pages use Newsreader for headlines, Inter for body — DONE: brand-tokens.css already unified
+- [x] All pages use kelly-blue accent (no orange) — DONE: pricing.html now uses brand-tokens.css
+- [x] Console is quiet in production (no debug spam) — DONE: All JS files have DEBUG guards
+- [ ] Navigation feels cohesive across marketing pages — TODO: Needs shared header/footer partials
+- [x] Kelly's face appears on at least one marketing page — DONE: Hero shows local Kelly image
+
+## PROGRESS LOG (2025-12-16)
+
+### Completed:
+1. ✅ Hero now uses LOCAL image (`/images/kelly-homepage-hero.jpeg`) - loads instantly
+2. ✅ Video loads as overlay after image is visible
+3. ✅ `pricing.html` imports brand-tokens.css
+4. ✅ Console logging quieted in: lesson-resilience.js, public-os.js, kelly-fallback-engine.js, emergency-lessons-extended.js
+5. ✅ All data files (day-017-complete.js, emergency-lessons.js) already had DEBUG guards
+
+### Still TODO:
+1. Shared header/footer partials across marketing pages
+2. Add Kelly image to pricing.html sidebar
+3. Delay paywall dialog in learn.html
 
 ---
 

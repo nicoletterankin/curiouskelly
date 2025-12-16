@@ -15,6 +15,12 @@
 (function() {
   'use strict';
 
+  // Debug mode
+  const __FALLBACK_DEBUG = (
+    (typeof location !== 'undefined' && location.search.includes('debug')) ||
+    (typeof localStorage !== 'undefined' && localStorage.getItem('kellyDebug') === '1')
+  );
+
   // CDN Base URLs
   const SUPABASE_STORAGE = 'https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public';
   const KELLY_VIDEOS_BUCKET = `${SUPABASE_STORAGE}/kelly-videos`;
@@ -188,7 +194,7 @@
         });
         
         this.audioElement.addEventListener('error', (e) => {
-          console.warn('[FallbackPlayer] Audio error:', e);
+          if (__FALLBACK_DEBUG) console.warn('[FallbackPlayer] Audio error:', e);
           // Continue without audio
           this.onEnded?.();
         });
@@ -203,7 +209,7 @@
           await this.audioElement.play();
           this.isPlaying = true;
         } catch (e) {
-          console.warn('[FallbackPlayer] Audio play failed:', e);
+          if (__FALLBACK_DEBUG) console.warn('[FallbackPlayer] Audio play failed:', e);
           // Autoplay might be blocked - continue silently
         }
       }
@@ -332,7 +338,7 @@
         try {
           await this.videoElement.play();
         } catch (e) {
-          console.warn('[PlaybackController] Video play failed:', e);
+          if (__FALLBACK_DEBUG) console.warn('[PlaybackController] Video play failed:', e);
         }
       } else if (this.currentPlayer === 'fallback' && this.fallbackPlayer) {
         await this.fallbackPlayer.play();
@@ -452,7 +458,7 @@
     PERSONAS
   };
 
-  if (typeof location !== 'undefined' && location.search.includes('debug')) {
+  if (__FALLBACK_DEBUG) {
     console.log('🛡️ Kelly Fallback Engine initialized - bulletproof media delivery ready');
   }
 })();

@@ -270,7 +270,10 @@ if (window.EMERGENCY_LESSONS) {
   window.EMERGENCY_LESSONS = window.EMERGENCY_LESSONS_EXTENDED;
 }
 
-console.log('🚨 Emergency Lessons Extended loaded (30 days coverage)');
+if (typeof location !== 'undefined' && location.search.includes('debug')) {
+  console.log('🚨 Emergency Lessons Extended loaded (30 days coverage)');
+}
+
 
 
 

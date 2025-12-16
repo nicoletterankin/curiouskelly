@@ -12,6 +12,12 @@
  *   PERSONAS.forEach(p => console.log(p.name, p.icon));
  */
 
+// Debug mode
+const __PERSONA_DEBUG = (
+  (typeof location !== 'undefined' && location.search.includes('debug')) ||
+  (typeof localStorage !== 'undefined' && localStorage.getItem('kellyDebug') === '1')
+);
+
 // Supabase CDN base URL for Kelly assets
 export const SUPABASE_CDN = 'https://tvjalxxsyryjphkforjv.supabase.co/storage/v1/object/public/kelly-templates';
 
@@ -194,7 +200,7 @@ export const AGE_VARIANTS = ['kid', 'teen', 'adult', 'elder', 'super_elder'];
 export function getPersonaImage(personaId, variant = 'head', ageVariant = 'adult') {
     const persona = PERSONAS_MAP[personaId];
     if (!persona) {
-        console.warn(`Unknown persona: ${personaId}`);
+        if (__PERSONA_DEBUG) console.warn(`Unknown persona: ${personaId}`);
         return `${SUPABASE_CDN}/heygen/archetypes-head-only/kelly_scientist_head.png`;
     }
 
@@ -202,7 +208,7 @@ export function getPersonaImage(personaId, variant = 'head', ageVariant = 'adult
     // For clean/prop (and unknown ages), we intentionally fall back to the adult/base set.
     if (variant === 'head' && ageVariant && ageVariant !== 'adult') {
         if (!AGE_VARIANTS.includes(ageVariant)) {
-            console.warn(`Unknown ageVariant: ${ageVariant} (falling back to adult)`);
+            if (__PERSONA_DEBUG) console.warn(`Unknown ageVariant: ${ageVariant} (falling back to adult)`);
         } else {
             return `${SUPABASE_CDN}/heygen/archetypes-head-only/age/${ageVariant}/kelly_${personaId}_head.png`;
         }

@@ -3,6 +3,12 @@
  * Handles the window management for the marketing site.
  */
 
+// Debug mode - only log when ?debug=true or localStorage.kellyDebug=1
+const __PUBLIC_OS_DEBUG = (
+  (typeof location !== 'undefined' && location.search.includes('debug')) ||
+  (typeof localStorage !== 'undefined' && localStorage.getItem('kellyDebug') === '1')
+);
+
 class PublicOS {
     constructor() {
         this.activeWindow = null;
@@ -40,7 +46,7 @@ class PublicOS {
             }
         });
 
-        console.log('✨ Curious Kelly OS (Public) Initialized');
+        if (__PUBLIC_OS_DEBUG) console.log('✨ Curious Kelly OS (Public) Initialized');
     }
 
     openWindow(id) {
@@ -78,6 +84,7 @@ class PublicOS {
 document.addEventListener('DOMContentLoaded', () => {
     window.os = new PublicOS();
 });
+
 
 
 

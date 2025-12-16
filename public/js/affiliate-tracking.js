@@ -12,6 +12,12 @@
 (function() {
     'use strict';
     
+    // Debug mode
+    const __AFFILIATE_DEBUG = (
+      (typeof location !== 'undefined' && location.search.includes('debug')) ||
+      (typeof localStorage !== 'undefined' && localStorage.getItem('kellyDebug') === '1')
+    );
+    
     // ============================================================
     // CONFIGURATION
     // ============================================================
@@ -50,7 +56,7 @@
             localStorage.setItem(STORAGE_KEY, JSON.stringify(data));
             return true;
         } catch (e) {
-            console.warn('[Referral] Failed to store data:', e);
+            if (__AFFILIATE_DEBUG) console.warn('[Referral] Failed to store data:', e);
             return false;
         }
     }
@@ -65,7 +71,7 @@
             if (!stored) return null;
             return JSON.parse(stored);
         } catch (e) {
-            console.warn('[Referral] Failed to read stored data:', e);
+            if (__AFFILIATE_DEBUG) console.warn('[Referral] Failed to read stored data:', e);
             return null;
         }
     }
@@ -137,10 +143,10 @@
             const data = await response.json();
             
             if (data.success) {
-                console.log('[Referral] Click tracked:', code, '-> Click ID:', data.clickId);
+                if (__AFFILIATE_DEBUG) console.log('[Referral] Click tracked:', code, '-> Click ID:', data.clickId);
                 return data.clickId;
             } else {
-                console.warn('[Referral] Track failed:', data.message);
+                if (__AFFILIATE_DEBUG) console.warn('[Referral] Track failed:', data.message);
                 return null;
             }
         } catch (error) {
@@ -206,7 +212,7 @@
      */
     window.clearReferralAttribution = function() {
         localStorage.removeItem(STORAGE_KEY);
-        console.log('[Referral] Attribution cleared');
+        if (__AFFILIATE_DEBUG) console.log('[Referral] Attribution cleared');
     };
     
     /**
@@ -215,7 +221,7 @@
     window.setReferralCode = function(code) {
         if (code) {
             storeReferralData(code, 'manual', null);
-            console.log('[Referral] Manually set code:', code);
+            if (__AFFILIATE_DEBUG) console.log('[Referral] Manually set code:', code);
         }
     };
     
@@ -265,7 +271,7 @@
                 // Clean URL (cosmetic)
                 cleanUrl();
                 
-                console.log('[Referral] Tracked:', refCode, 'with LIFETIME attribution');
+                if (__AFFILIATE_DEBUG) console.log('[Referral] Tracked:', refCode, 'with LIFETIME attribution');
                 
                 // Fire analytics event if available
                 if (typeof gtag !== 'undefined') {
@@ -275,14 +281,14 @@
                     });
                 }
             } else {
-                console.warn('[Referral] Invalid code format:', refCode);
+                if (__AFFILIATE_DEBUG) console.warn('[Referral] Invalid code format:', refCode);
             }
         }
         
         // Log current attribution status
         const currentCode = window.getReferralCode();
         if (currentCode) {
-            console.log('[Referral] Active LIFETIME attribution:', currentCode);
+            if (__AFFILIATE_DEBUG) console.log('[Referral] Active LIFETIME attribution:', currentCode);
         }
     }
     

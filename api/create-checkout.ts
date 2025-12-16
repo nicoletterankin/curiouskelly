@@ -10,7 +10,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
  * - Returns a client_secret for Stripe Embedded Checkout.
  */
 
-type PlanType = 'monthly' | 'annual' | 'lifetime';
+type PlanType = 'monthly' | 'annual' | 'family' | 'lifetime';
 
 interface CreateCheckoutRequest {
   planType: PlanType;
@@ -56,7 +56,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const body = (req.body || {}) as CreateCheckoutRequest;
 
     const planType = body.planType;
-    if (!planType || !(['monthly', 'annual', 'lifetime'] as const).includes(planType)) {
+    if (!planType || !(['monthly', 'annual', 'family', 'lifetime'] as const).includes(planType)) {
       return res.status(422).json({ error: 'invalid_plan_type' });
     }
 
@@ -64,6 +64,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const priceIds: Record<PlanType, string | undefined> = {
       monthly: process.env.STRIPE_PRICE_MONTHLY,
       annual: process.env.STRIPE_PRICE_ANNUAL,
+      family: process.env.STRIPE_PRICE_FAMILY,
       lifetime: process.env.STRIPE_PRICE_LIFETIME,
     };
     const priceId = priceIds[planType];

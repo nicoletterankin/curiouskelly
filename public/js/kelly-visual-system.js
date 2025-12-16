@@ -9,6 +9,12 @@
  * @module KellyVisualSystem
  */
 
+// Debug mode
+const __VISUAL_DEBUG = (
+  (typeof location !== 'undefined' && location.search.includes('debug')) ||
+  (typeof localStorage !== 'undefined' && localStorage.getItem('kellyDebug') === '1')
+);
+
 class KellyVisualSystem {
   constructor(container, options = {}) {
     this.container = typeof container === 'string' 
@@ -69,7 +75,7 @@ class KellyVisualSystem {
     // Initialize visual layer
     this._initVisualLayer();
     
-    console.log('[KellyVisualSystem] ✅ Initialized with choreography:', this.options.enableChoreography);
+    if (__VISUAL_DEBUG) console.log('[KellyVisualSystem] ✅ Initialized with choreography:', this.options.enableChoreography);
   }
   
   /**
@@ -167,7 +173,7 @@ class KellyVisualSystem {
         if (response.ok) {
           this.visualPlan = await response.json();
           this.lessonVisuals = this.visualPlan;
-          console.log(`[KellyVisualSystem] ✅ Loaded visual plan from ${url}`);
+          if (__VISUAL_DEBUG) console.log(`[KellyVisualSystem] ✅ Loaded visual plan from ${url}`);
           return;
         }
       } catch (e) {
@@ -177,7 +183,7 @@ class KellyVisualSystem {
     
     this.visualPlan = null;
     this.lessonVisuals = null;
-    console.log(`[KellyVisualSystem] No visual plan found for day ${dayNumber}`);
+    if (__VISUAL_DEBUG) console.log(`[KellyVisualSystem] No visual plan found for day ${dayNumber}`);
   }
   
   /**
@@ -193,7 +199,7 @@ class KellyVisualSystem {
       const response = await fetch(safeZoneUrl);
       if (response.ok) {
         this.safeZones = await response.json();
-        console.log(`[KellyVisualSystem] ✅ Loaded safe zones for day ${dayNumber}`);
+        if (__VISUAL_DEBUG) console.log(`[KellyVisualSystem] ✅ Loaded safe zones for day ${dayNumber}`);
         
         // Set initial safe zone (first segment)
         if (this.safeZones?.safe_zones?.length > 0) {
@@ -202,7 +208,7 @@ class KellyVisualSystem {
       }
     } catch (e) {
       this.safeZones = null;
-      console.log(`[KellyVisualSystem] No safe zones found for day ${dayNumber}`);
+      if (__VISUAL_DEBUG) console.log(`[KellyVisualSystem] No safe zones found for day ${dayNumber}`);
     }
   }
   
@@ -376,7 +382,7 @@ class KellyVisualSystem {
       }
     }
     
-    console.log(`[KellyVisualSystem] Phase set to: ${normalizedPhase}`);
+    if (__VISUAL_DEBUG) console.log(`[KellyVisualSystem] Phase set to: ${normalizedPhase}`);
     return Promise.resolve();
   }
   
@@ -403,7 +409,7 @@ class KellyVisualSystem {
     
     setTimeout(() => flash.remove(), 800);
     
-    console.log('[KellyVisualSystem] ✨ Correct feedback shown');
+    if (__VISUAL_DEBUG) console.log('[KellyVisualSystem] ✨ Correct feedback shown');
   }
   
   /**
@@ -437,7 +443,7 @@ class KellyVisualSystem {
   destroy() {
     if (this.bgLayer) this.bgLayer.remove();
     if (this.particleLayer) this.particleLayer.remove();
-    console.log('[KellyVisualSystem] Destroyed');
+    if (__VISUAL_DEBUG) console.log('[KellyVisualSystem] Destroyed');
   }
 }
 
@@ -483,4 +489,4 @@ document.head.appendChild(visualSystemStyles);
 // Export globally
 window.KellyVisualSystem = KellyVisualSystem;
 
-console.log('[KellyVisualSystem] ✅ Module loaded');
+if (__VISUAL_DEBUG) console.log('[KellyVisualSystem] ✅ Module loaded');
