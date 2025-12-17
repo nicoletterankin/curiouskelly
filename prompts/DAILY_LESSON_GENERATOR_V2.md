@@ -131,6 +131,40 @@ For *every* age variant, you must provide:
 3.  **Expression Timing:** `timestamp` is in seconds relative to the start of the phase audio. Distribute cues naturally (every 5-10 seconds).
 4.  **Safety:** Content must be rated G/PG. No controversial or frightening metaphors for children.
 
+---
+
+## 4.5 THE TRANSFORMATION PATTERN (MANDATORY)
+
+**Every lesson must follow this structure. No exceptions.**
+
+| Step | Purpose | Required Element |
+|------|---------|------------------|
+| **HOOK** | Stop them | An unexpected, specific fact that makes them go "wait, what?" |
+| **BRIDGE** | Show Kelly's curiosity | "I learned this and it made me think..." — Kelly is WITH them |
+| **MIRROR** | Answer "so what?"  | Connect the fact to the LEARNER'S life. What does this mean for ME? |
+| **SHIFT** | Change how they see | This isn't trivia — this changes perspective |
+| **ACCUMULATION** | The compound promise | Tie to transformation: "The world gets more interesting. And so do you." |
+
+### Wisdom Phase Requirements
+
+Every `wisdomMoment` MUST include:
+1. **The Shift:** How this lesson changes how you see [the topic / the world / yourself]
+2. **The Accumulation:** Implied or explicit reminder that this is one of 365
+
+**BAD Wisdom:** "Remember: The Sun gives life to everything on Earth."
+**GOOD Wisdom:** "That star up there powers every heartbeat, every thought. We're not separate from the universe — we're made of it. And tomorrow? There's another wonder waiting."
+
+### Validation Before Output
+
+Before generating, verify:
+- [ ] Does the hook make someone stop?
+- [ ] Does Kelly show curiosity, not authority?
+- [ ] Is there a "what does this mean for ME?" moment?
+- [ ] Does it shift how the learner sees?
+- [ ] Does wisdom connect to transformation, not just information?
+
+**If ANY answer is NO — rewrite before outputting.**
+
 ## 5. Task
 Generate the **COMPLETE JSON file** for the topic below. Do not truncate.
 

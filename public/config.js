@@ -34,6 +34,10 @@ window.KELLY_CONFIG = {
   // PRODUCTION MODE: Paywall enabled, access tiers active
   testingMode: false,
   disablePaywall: false,
+  
+  // PAYWALL DELAY: Seconds to wait before showing paywall (let users preview)
+  // Set to 0 for instant paywall (old behavior)
+  paywallDelayMs: 5000,
 
   // VISUALS (INFOGRAPHIC POPUPS)
   // Disabled until the on-brand infographic pipeline passes QA.

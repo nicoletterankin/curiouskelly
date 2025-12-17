@@ -1140,6 +1140,230 @@
     }
 
     /* ============================================
+       LESSON DETAIL PANEL (Connected to Phase Bar)
+       ============================================ */
+    .lesson-detail-panel {
+      position: absolute;
+      top: 80px;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 90%;
+      max-width: 600px;
+      background: rgba(15, 15, 20, 0.98);
+      border-radius: 16px;
+      padding: 0;
+      z-index: 45;
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(37, 99, 235, 0.3);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4), 0 0 60px rgba(37, 99, 235, 0.1);
+      opacity: 0;
+      visibility: hidden;
+      transform: translateX(-50%) translateY(-10px);
+      transition: opacity 0.25s ease, transform 0.25s ease, visibility 0.25s;
+      overflow: hidden;
+    }
+
+    .lesson-detail-panel.visible {
+      opacity: 1;
+      visibility: visible;
+      transform: translateX(-50%) translateY(0);
+    }
+
+    .lesson-detail-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 20px;
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.15), rgba(139, 92, 246, 0.1));
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+    }
+
+    .lesson-detail-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .lesson-detail-emoji {
+      font-size: 1.5rem;
+    }
+
+    .lesson-detail-topic {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .lesson-detail-day {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+
+    .lesson-detail-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.25rem;
+      transition: background 0.2s, color 0.2s;
+    }
+
+    .lesson-detail-close:hover {
+      background: rgba(255, 255, 255, 0.2);
+      color: var(--text-primary);
+    }
+
+    .lesson-detail-phases {
+      display: flex;
+      flex-direction: column;
+      max-height: 320px;
+      overflow-y: auto;
+    }
+
+    .lesson-phase-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      padding: 14px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+
+    .lesson-phase-item:last-child {
+      border-bottom: none;
+    }
+
+    .lesson-phase-item:hover {
+      background: rgba(37, 99, 235, 0.1);
+    }
+
+    .lesson-phase-item.active {
+      background: rgba(37, 99, 235, 0.15);
+      border-left: 3px solid var(--kelly-blue);
+    }
+
+    .lesson-phase-item.completed .phase-item-icon {
+      background: var(--success);
+      color: white;
+    }
+
+    .phase-item-icon {
+      width: 36px;
+      height: 36px;
+      min-width: 36px;
+      border-radius: 50%;
+      background: var(--surface-raised);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1rem;
+      transition: background 0.2s, transform 0.2s;
+    }
+
+    .lesson-phase-item.active .phase-item-icon {
+      background: var(--kelly-blue);
+      transform: scale(1.1);
+      box-shadow: 0 0 12px rgba(37, 99, 235, 0.5);
+    }
+
+    .phase-item-content {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .phase-item-name {
+      font-weight: 600;
+      font-size: 0.95rem;
+      color: var(--text-primary);
+      margin-bottom: 3px;
+    }
+
+    .phase-item-desc {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .phase-item-duration {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      margin-top: 4px;
+    }
+
+    .lesson-detail-footer {
+      padding: 12px 20px;
+      background: rgba(0, 0, 0, 0.2);
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+    }
+
+    .lesson-detail-progress {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .lesson-detail-progress-bar {
+      width: 100px;
+      height: 4px;
+      background: var(--surface-raised);
+      border-radius: 2px;
+      overflow: hidden;
+    }
+
+    .lesson-detail-progress-fill {
+      height: 100%;
+      background: var(--kelly-blue);
+      border-radius: 2px;
+      transition: width 0.3s ease;
+    }
+
+    .lesson-detail-progress-text {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+
+    .lesson-detail-wisdom {
+      font-size: 0.8rem;
+      color: var(--gold-wisdom);
+      font-style: italic;
+      max-width: 200px;
+      text-align: right;
+      line-height: 1.3;
+    }
+
+    @media (max-width: 600px) {
+      .lesson-detail-panel {
+        width: 95%;
+        top: 70px;
+      }
+      .lesson-detail-phases {
+        max-height: 250px;
+      }
+      .lesson-detail-wisdom {
+        display: none;
+      }
+    }
+
+    /* ============================================
        HOME MODE (in-app hub inside learn.html)
        ============================================ */
     #home-overlay {
@@ -3586,6 +3810,87 @@
           <span class="phase-label" id="phase-label">HOOK</span>
         </header>
 
+        <!-- LESSON DETAIL PANEL (Connected to Phase Bar) -->
+        <div class="lesson-detail-panel" id="lesson-detail-panel">
+          <div class="lesson-detail-header">
+            <div class="lesson-detail-title">
+              <span class="lesson-detail-emoji" id="lesson-detail-emoji">🌙</span>
+              <div>
+                <div class="lesson-detail-topic" id="lesson-detail-topic">Why We Dream</div>
+                <div class="lesson-detail-day" id="lesson-detail-day">Day 17 • December 17, 2025</div>
+              </div>
+            </div>
+            <button class="lesson-detail-close" id="lesson-detail-close" aria-label="Close">×</button>
+          </div>
+          <div class="lesson-detail-phases" id="lesson-detail-phases">
+            <div class="lesson-phase-item active" data-phase="0">
+              <div class="phase-item-icon">🪝</div>
+              <div class="phase-item-content">
+                <div class="phase-item-name">Hook</div>
+                <div class="phase-item-desc">Have you ever woken up from a dream and wondered what just happened?</div>
+                <div class="phase-item-duration">⏱️ ~10 sec</div>
+              </div>
+            </div>
+            <div class="lesson-phase-item" data-phase="1">
+              <div class="phase-item-icon">🧗</div>
+              <div class="phase-item-content">
+                <div class="phase-item-name">Cliff</div>
+                <div class="phase-item-desc">Is your brain just making random noise, or is something real going on?</div>
+                <div class="phase-item-duration">⏱️ ~6 sec</div>
+              </div>
+            </div>
+            <div class="lesson-phase-item" data-phase="2">
+              <div class="phase-item-icon">💡</div>
+              <div class="phase-item-content">
+                <div class="phase-item-name">Fact 1: REM Sleep</div>
+                <div class="phase-item-desc">During REM sleep, your brain becomes incredibly active</div>
+                <div class="phase-item-duration">⏱️ ~14 sec</div>
+              </div>
+            </div>
+            <div class="lesson-phase-item" data-phase="3">
+              <div class="phase-item-icon">🧠</div>
+              <div class="phase-item-content">
+                <div class="phase-item-name">Fact 2: Memory Workers</div>
+                <div class="phase-item-desc">Dreams help process emotions and consolidate memories</div>
+                <div class="phase-item-duration">⏱️ ~13 sec</div>
+              </div>
+            </div>
+            <div class="lesson-phase-item" data-phase="4">
+              <div class="phase-item-icon">✨</div>
+              <div class="phase-item-content">
+                <div class="phase-item-name">Fact 3: Dream Discoveries</div>
+                <div class="phase-item-desc">Some of history's greatest breakthroughs came from dreams</div>
+                <div class="phase-item-duration">⏱️ ~12 sec</div>
+              </div>
+            </div>
+            <div class="lesson-phase-item" data-phase="5">
+              <div class="phase-item-icon">🦉</div>
+              <div class="phase-item-content">
+                <div class="phase-item-name">Wisdom</div>
+                <div class="phase-item-desc">Dreams are your brain's way of making sense of your life</div>
+                <div class="phase-item-duration">⏱️ ~12 sec</div>
+              </div>
+            </div>
+            <div class="lesson-phase-item" data-phase="6">
+              <div class="phase-item-icon">👋</div>
+              <div class="phase-item-content">
+                <div class="phase-item-name">Outro</div>
+                <div class="phase-item-desc">Warm goodbye and see you tomorrow!</div>
+                <div class="phase-item-duration">⏱️ ~5 sec</div>
+              </div>
+            </div>
+          </div>
+          <div class="lesson-detail-footer">
+            <div class="lesson-detail-progress">
+              <div class="lesson-detail-progress-bar">
+                <div class="lesson-detail-progress-fill" id="lesson-detail-progress-fill" style="width: 0%"></div>
+              </div>
+              <span class="lesson-detail-progress-text" id="lesson-detail-progress-text">0/7 phases</span>
+            </div>
+            <div class="lesson-detail-wisdom" id="lesson-detail-wisdom">"Our sleeping mind weaves memories into meaning"</div>
+          </div>
+        </div>
+
         <!-- LEFT PANEL (social/chat) -->
         <aside class="left-panel" id="left-panel" aria-hidden="true">
           <div class="panel-content">
@@ -5309,6 +5614,9 @@
       return typeof window.Capacitor !== 'undefined';
     }
 
+    // Track pending paywall timeout for cleanup
+    let __paywallTimeout = null;
+    
     function showPaywall(dayNumber) {
       // Paywall selection stays as overlay, but checkout happens in the right panel (in-app).
       const el = document.getElementById('paywall');
@@ -5338,6 +5646,48 @@
       try { checkSmartOffers('paywall_opened'); } catch (_) {}
     }
     
+    /**
+     * Shows paywall after a configurable delay, allowing users to preview the lesson first.
+     * Delay is configured via KELLY_CONFIG.paywallDelayMs (default 5000ms, 0 = instant).
+     */
+    function showPaywallDelayed(dayNumber) {
+      // Clear any existing pending paywall
+      if (__paywallTimeout) {
+        clearTimeout(__paywallTimeout);
+        __paywallTimeout = null;
+      }
+      
+      const delayMs = window.KELLY_CONFIG?.paywallDelayMs ?? 5000;
+      
+      // Instant paywall if delay is 0 or disabled
+      if (delayMs <= 0) {
+        showPaywall(dayNumber);
+        return;
+      }
+      
+      // Show paywall after delay
+      __paywallTimeout = setTimeout(() => {
+        __paywallTimeout = null;
+        // Only show if user hasn't navigated away or already purchased
+        if (!canAccessDay(dayNumber)) {
+          showPaywall(dayNumber);
+        }
+      }, delayMs);
+      
+      debugLog(`⏳ Paywall will appear in ${delayMs / 1000} seconds (preview mode)`);
+    }
+    
+    /**
+     * Cancel any pending paywall (e.g., when user navigates away)
+     */
+    function cancelPendingPaywall() {
+      if (__paywallTimeout) {
+        clearTimeout(__paywallTimeout);
+        __paywallTimeout = null;
+        debugLog('🚫 Pending paywall cancelled');
+      }
+    }
+    
     function getLessonDate(dayNumber) {
       // Convert day of year to actual date
       const year = new Date().getFullYear();
@@ -5347,6 +5697,9 @@
     }
 
     function closePaywall() {
+      // Cancel any pending delayed paywall
+      cancelPendingPaywall();
+      
       const el = document.getElementById('paywall');
       const requestedDay = parseInt(el.dataset.requestedDay) || null;
       el.classList.remove('visible');
@@ -6252,9 +6605,15 @@
     }
 
     async function loadLessonRuntime(dayNumber) {
-      if (!canAccessDay(dayNumber)) {
-        showPaywall(dayNumber);
-        return null;
+      // Cancel any pending paywall from previous lesson
+      cancelPendingPaywall();
+      
+      const hasAccess = canAccessDay(dayNumber);
+      
+      // If no access, schedule delayed paywall but still try to load lesson preview
+      if (!hasAccess) {
+        showPaywallDelayed(dayNumber);
+        // Note: We still load the lesson content for preview, paywall shows after delay
       }
 
       // Canonical: all lesson content is loaded via KellyLessonLoader
@@ -7166,6 +7525,11 @@
         atomScript: lessonAtoms[state.currentPhase]?.script?.substring(0, 50)
       });
       updatePhaseBar();
+      
+      // Update lesson detail panel if it's visible
+      if (typeof updateLessonDetailPanel === 'function') {
+        try { updateLessonDetailPanel(); } catch(e) {}
+      }
       
       const phase = PHASES[state.currentPhase];
       const phaseLabel = document.getElementById('phase-label');
@@ -8948,6 +9312,98 @@
           goToPhase(phase);
         });
       });
+
+      // Lesson Detail Panel functionality
+      const lessonDetailPanel = document.getElementById('lesson-detail-panel');
+      const phaseLabel = document.getElementById('phase-label');
+      
+      // Toggle detail panel on phase label click
+      phaseLabel?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        lessonDetailPanel?.classList.toggle('visible');
+        updateLessonDetailPanel();
+      });
+
+      // Allow clicking phase-bar-top to toggle panel
+      document.querySelector('.phase-bar-top')?.addEventListener('click', (e) => {
+        if (e.target.closest('.phase-segment')) return; // Don't toggle if clicking a phase dot
+        lessonDetailPanel?.classList.toggle('visible');
+        updateLessonDetailPanel();
+      });
+
+      // Close button
+      document.getElementById('lesson-detail-close')?.addEventListener('click', (e) => {
+        e.stopPropagation();
+        lessonDetailPanel?.classList.remove('visible');
+      });
+
+      // Click outside to close
+      document.addEventListener('click', (e) => {
+        if (lessonDetailPanel?.classList.contains('visible')) {
+          if (!e.target.closest('.lesson-detail-panel') && !e.target.closest('.phase-bar-top')) {
+            lessonDetailPanel.classList.remove('visible');
+          }
+        }
+      });
+
+      // Phase item click handlers in detail panel
+      document.querySelectorAll('.lesson-phase-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const phase = parseInt(item.dataset.phase, 10);
+          goToPhase(phase);
+          lessonDetailPanel?.classList.remove('visible');
+        });
+      });
+
+      // Update lesson detail panel with current lesson info
+      function updateLessonDetailPanel() {
+        const dayNum = state.currentDay || getTodayDayNumber();
+        const lesson = lessonsCache[dayNum] || window.CURIOUS_KELLY?.DAY_017?.lesson;
+        
+        if (lesson) {
+          const emoji = lesson.emoji || '📚';
+          const topic = lesson.topic || 'Today\'s Lesson';
+          const truth = lesson.universal_truth || lesson.universalTruth || '';
+          
+          document.getElementById('lesson-detail-emoji').textContent = emoji;
+          document.getElementById('lesson-detail-topic').textContent = topic;
+          document.getElementById('lesson-detail-day').textContent = `Day ${dayNum} • ${formatDate(getDayDate(dayNum))}`;
+          
+          if (truth) {
+            document.getElementById('lesson-detail-wisdom').textContent = `"${truth}"`;
+          }
+        }
+
+        // Update phase items active state
+        document.querySelectorAll('.lesson-phase-item').forEach((item, index) => {
+          item.classList.remove('active', 'completed');
+          if (index === state.currentPhase) {
+            item.classList.add('active');
+          } else if (index < state.currentPhase) {
+            item.classList.add('completed');
+          }
+        });
+
+        // Update progress
+        const progress = Math.round((state.currentPhase / 6) * 100);
+        const progressFill = document.getElementById('lesson-detail-progress-fill');
+        const progressText = document.getElementById('lesson-detail-progress-text');
+        if (progressFill) progressFill.style.width = `${progress}%`;
+        if (progressText) progressText.textContent = `${state.currentPhase}/7 phases`;
+      }
+
+      // Helper to format dates
+      function formatDate(date) {
+        if (!date) return '';
+        const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+        return `${months[date.getMonth()]} ${date.getDate()}, ${date.getFullYear()}`;
+      }
+
+      // Make phase label clickable (add pointer style)
+      if (phaseLabel) {
+        phaseLabel.style.cursor = 'pointer';
+        phaseLabel.style.pointerEvents = 'auto';
+      }
       
       // Reactions
       document.querySelectorAll('.reaction-btn').forEach(btn => {

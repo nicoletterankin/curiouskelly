@@ -108,6 +108,7 @@
 | B2 | Social media accounts | ⏸️ BACKLOG | Create @CuriousKelly |
 | B3 | Roku app | ⏸️ BACKLOG | Low priority |
 | B4 | Apple Watch app | ⏸️ BACKLOG | Nice to have |
+| B5 | 365 Kelly "hook" scripts | ⏸️ BACKLOG | Octopus-style intros that SHOW the product - one per day |
 
 ---
 

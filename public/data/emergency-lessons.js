@@ -218,6 +218,38 @@ Most people who start things don't make it to day 7. You did. That says somethin
     marketing_tagline: "Looking back to move forward",
     universal_truth: "Reflection turns experience into wisdom.",
     hero_image_url: "/images/fallback-lesson.png"
+  },
+
+  17: {
+    day_number: 17,
+    title: "Why We Dream",
+    subtitle: "The science of your sleeping mind",
+    marketing_hook: "Every night your brain creates movies just for you—here's why",
+    greeting: "Welcome to today's lesson! Have you ever woken up from a dream and wondered what just happened? Dreams are some of the strangest and most wonderful experiences we have—and they happen every single night.",
+    content: `**Fact 1: The REM Stage**
+
+Every night, you cycle through different stages of sleep. The magic happens during REM sleep—that's Rapid Eye Movement. During REM, your brain becomes incredibly active. Your eyes dart around behind closed lids, your brain waves look almost like you're awake, but your body is temporarily paralyzed. That's when the most vivid dreams occur.
+
+**Fact 2: Memory Workers**
+
+Dreams aren't just entertainment—they're workers. While you dream, your brain is doing something called memory consolidation. It takes everything you experienced during the day—the things you learned, the emotions you felt, the problems you faced—and processes them.
+
+**Fact 3: Dream Discoveries**
+
+Some of history's greatest breakthroughs came from dreams. The chemist August Kekulé discovered the ring structure of benzene after dreaming of a snake eating its own tail. Mary Shelley conceived Frankenstein in a dream. Paul McCartney heard the melody for 'Yesterday' while sleeping.
+
+**The Wisdom**
+
+Dreams are your brain's way of making sense of your life. Every night, while you rest, your mind is working—sorting memories, processing emotions, and sometimes showing you things you couldn't see while awake.`,
+    category: "mind-brain",
+    difficulty: "beginner",
+    duration_estimate: 5,
+    topic: "Why We Dream",
+    emoji: "🌙",
+    marketing_headline: "Every night your brain creates movies just for you—here's why",
+    marketing_tagline: "The science of your sleeping mind",
+    universal_truth: "Our sleeping mind weaves memories into meaning.",
+    hero_image_url: "/generated-visuals/day-017/thumbnail.png"
   }
 };
 

@@ -171,6 +171,24 @@ Any communication scoring below 4 on ANY criterion must be rewritten.
 
 ---
 
+## The Transformation Pattern
+
+Every lesson follows this structure. No exceptions.
+
+| Step | What It Does | Example |
+|------|--------------|---------|
+| **HOOK** | Unexpected fact that stops them | "Octopuses have three hearts..." |
+| **BRIDGE** | Kelly's personal reflection | "I learned that yesterday. And it made me think..." |
+| **MIRROR** | What this means for YOU | "...if an octopus can stop its heart to move forward, what's my excuse?" |
+| **SHIFT** | How this changes how you see | "I find things that make me see the world differently" |
+| **ACCUMULATION** | The compound promise | "Do that for a year? The world gets more interesting. And so do you." |
+
+**The product is NOT 365 facts. The product is TRANSFORMATION.**
+
+See `docs/brand/KELLY_TRANSFORMATION_PATTERN.md` for full specification.
+
+---
+
 ## Sacred Commitment
 
 Kelly exists to make every learner feel:
@@ -179,6 +197,7 @@ Kelly exists to make every learner feel:
 - **Respected** — not talked down to  
 - **Curious** — not obligated
 - **Together** — not alone
+- **Transformed** — not just informed
 
 This voice is Kelly's soul. Protect it.
 
