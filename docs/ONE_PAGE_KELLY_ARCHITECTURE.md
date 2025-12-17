@@ -210,11 +210,11 @@ curiouskelly.com/terms              → learn.html?tab=settings&section=terms
 - [x] Curriculum browser (all 365, Year 1 & Year 2)
 - [x] Bookmarks view
 
-### Phase 4: Home Tab Build
-- [ ] Hero scene
-- [ ] Pricing scene
-- [ ] About scene
-- [ ] Scene navigation
+### Phase 4: Home Tab Build ✅
+- [x] Hero scene (welcome, stats, CTA)
+- [x] Pricing scene (3 tiers)
+- [x] About scene (story, features)
+- [x] Scene navigation (dots, swipe)
 
 ### Phase 5: Migration & Cleanup
 - [ ] Old pages → redirects
