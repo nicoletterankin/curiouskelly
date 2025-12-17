@@ -5583,6 +5583,121 @@
     }
     
     /* ============================================
+       PLAYBACK CONTROLS POPOVER
+       ============================================ */
+    .playback-popover {
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%) translateY(10px);
+      background: rgba(24, 24, 27, 0.95);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 16px;
+      padding: 8px 12px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.2s ease, transform 0.2s ease;
+      z-index: 100;
+      white-space: nowrap;
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+    }
+    
+    .playback-popover::after {
+      content: '';
+      position: absolute;
+      bottom: -8px;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 8px solid transparent;
+      border-top-color: rgba(24, 24, 27, 0.95);
+    }
+    
+    .nav-play-wrapper:hover .playback-popover,
+    .nav-play-wrapper:focus-within .playback-popover,
+    .playback-popover.visible {
+      opacity: 1;
+      pointer-events: auto;
+      transform: translateX(-50%) translateY(0);
+    }
+    
+    .playback-popover .pop-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: background 0.15s, transform 0.1s;
+    }
+    
+    .playback-popover .pop-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+      transform: scale(1.1);
+    }
+    
+    .playback-popover .pop-btn.primary {
+      background: var(--kelly-color, #3b82f6);
+      width: 44px;
+      height: 44px;
+    }
+    
+    .playback-popover .pop-btn.primary:hover {
+      background: var(--kelly-blue-light, #60a5fa);
+    }
+    
+    .playback-popover .pop-divider {
+      width: 1px;
+      height: 24px;
+      background: rgba(255, 255, 255, 0.15);
+      margin: 0 4px;
+    }
+    
+    .playback-popover .pop-toggle {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      border-radius: 8px;
+      background: rgba(255, 255, 255, 0.05);
+      font-size: 12px;
+      color: rgba(255, 255, 255, 0.7);
+      cursor: pointer;
+      border: none;
+    }
+    
+    .playback-popover .pop-toggle:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .playback-popover .pop-toggle input[type="checkbox"] {
+      width: 14px;
+      height: 14px;
+      accent-color: var(--kelly-color, #3b82f6);
+    }
+    
+    /* Wrapper for play button + popover positioning */
+    .nav-play-wrapper {
+      position: relative;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    
+    /* Hide header playback controls (moved to popover) */
+    .header-playback-controls {
+      display: none !important;
+    }
+    
+    /* ============================================
        OVERLAYS
        ============================================ */
     .overlay {
@@ -6631,14 +6746,40 @@
         </svg>
         <span class="nav-label">Journey</span>
       </button>
-      <button class="nav-item nav-play-btn" id="nav-play-btn" data-scene="lesson" onclick="handlePlayButton()" type="button" aria-label="Play">
-        <div class="play-btn-inner">
-          <svg viewBox="0 0 24 24" fill="currentColor">
-            <polygon points="5 3 19 12 5 21 5 3"/>
-          </svg>
+      <div class="nav-play-wrapper">
+        <!-- Playback Controls Popover -->
+        <div class="playback-popover" id="playback-popover">
+          <button class="pop-btn" id="pop-mute" title="Mute/Unmute" aria-label="Toggle sound">
+            <span id="pop-mute-icon">🔊</span>
+          </button>
+          <div class="pop-divider"></div>
+          <button class="pop-btn" id="pop-prev" title="Previous phase" aria-label="Previous">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
+          </button>
+          <button class="pop-btn primary" id="pop-play-pause" title="Play/Pause" aria-label="Play or pause">
+            <span id="pop-play-icon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            </span>
+          </button>
+          <button class="pop-btn" id="pop-next" title="Next phase" aria-label="Next">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+          </button>
+          <div class="pop-divider"></div>
+          <label class="pop-toggle" title="Auto-advance between phases">
+            <input type="checkbox" id="pop-auto-toggle" checked>
+            <span>Auto</span>
+          </label>
         </div>
-        <span class="phase-indicator" id="play-phase-indicator">1</span>
-      </button>
+        
+        <button class="nav-item nav-play-btn" id="nav-play-btn" data-scene="lesson" onclick="handlePlayButton()" type="button" aria-label="Play">
+          <div class="play-btn-inner">
+            <svg viewBox="0 0 24 24" fill="currentColor">
+              <polygon points="5 3 19 12 5 21 5 3"/>
+            </svg>
+          </div>
+          <span class="phase-indicator" id="play-phase-indicator">1</span>
+        </button>
+      </div>
       <button class="nav-item" id="nav-settings-btn" data-scene="settings" onclick="showSettingsMode()" type="button">
         <svg class="nav-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"/>
@@ -9592,20 +9733,35 @@
         v.classList.remove('hidden');
         if (img) img.style.display = 'none';
 
-        if (DEBUG) console.log(`▶️ Playing: ${personaId}_${ageBucket}_${phaseKey}`);
+        // Determine if video has baked-in audio (HeyGen talking heads) or needs separate TTS (motion clips)
+        const videoHasAudio = resolvedSource === 'atom' || resolvedSource === 'kelly_video_assets';
+        const needsSeparateTTS = resolvedSource === 'kelly_motion_library';
+        
+        if (DEBUG) console.log(`▶️ Playing: ${personaId}_${ageBucket}_${phaseKey} | source: ${resolvedSource} | hasAudio: ${videoHasAudio}`);
 
-        // Autoplay hardening: HeyGen clips should play muted + inline.
-        // Audio is handled separately (kellyAudio), so we keep videos muted.
+        // Configure video playback
         try {
-          v.muted = true;
-          v.defaultMuted = true;
           v.playsInline = true;
           v.autoplay = true;
           v.controls = false;
           v.loop = false;
-          v.setAttribute('muted', '');
           v.setAttribute('playsinline', '');
           v.preload = 'auto';
+          
+          // AUDIO DECISION: Unmute HeyGen videos (they have audio), mute motion clips
+          if (videoHasAudio) {
+            // HeyGen talking head - UNMUTE to hear the baked-in audio
+            v.muted = false;
+            v.defaultMuted = false;
+            v.removeAttribute('muted');
+            if (DEBUG) console.log('🔊 Video UNMUTED (HeyGen talking head with audio)');
+          } else {
+            // Motion clip - MUTE (no audio in video, will use TTS)
+            v.muted = true;
+            v.defaultMuted = true;
+            v.setAttribute('muted', '');
+            if (DEBUG) console.log('🔇 Video MUTED (motion clip, will use TTS)');
+          }
         } catch (_) {}
 
         v.onplay = () => {
@@ -9625,14 +9781,29 @@
         v.src = resolvedVideo;
         try {
           await v.play();
-          // VIDEO IS MUTED - Start audio playback alongside video!
-          // The video provides the visual, kellyAudio provides the sound.
-          kellyAudio.speak(dbPhase, script).catch(() => {});
+          // Only use separate TTS for motion clips (no baked-in audio)
+          if (needsSeparateTTS) {
+            if (DEBUG) console.log('🎤 Starting TTS for motion clip...');
+            kellyAudio.speak(dbPhase, script).catch(() => {});
+          }
           return true;
         } catch (e) {
-          stopVideo();
-          await kellyAudio.speak(dbPhase, script);
-          return false;
+          // Autoplay blocked? Try muted first, then add TTS
+          if (DEBUG) console.log('⚠️ Autoplay blocked, retrying muted...');
+          try {
+            v.muted = true;
+            v.setAttribute('muted', '');
+            await v.play();
+            // If we had to mute a video that had audio, now we need TTS
+            if (videoHasAudio || needsSeparateTTS) {
+              kellyAudio.speak(dbPhase, script).catch(() => {});
+            }
+            return true;
+          } catch (e2) {
+            stopVideo();
+            await kellyAudio.speak(dbPhase, script);
+            return false;
+          }
         }
       }
 
@@ -13628,7 +13799,83 @@ Style requirements:
       document.getElementById('auto-advance-toggle')?.addEventListener('change', (e) => {
         state.autoAdvance = !!e.target.checked;
         saveState();
+        // Sync with popover toggle
+        const popToggle = document.getElementById('pop-auto-toggle');
+        if (popToggle) popToggle.checked = state.autoAdvance;
       });
+
+      // ============================================
+      // POPOVER PLAYBACK CONTROLS
+      // ============================================
+      
+      // Mute/unmute (controls both video and audio)
+      function toggleMute() {
+        const v = getKellyVideoEl();
+        const isMuted = v?.muted ?? true;
+        
+        if (v) v.muted = !isMuted;
+        if (kellyAudio.audio) kellyAudio.audio.muted = !isMuted;
+        
+        // Update both icons
+        const newIcon = isMuted ? '🔊' : '🔇';
+        const muteIcon = document.getElementById('mute-icon');
+        const popMuteIcon = document.getElementById('pop-mute-icon');
+        if (muteIcon) muteIcon.textContent = newIcon;
+        if (popMuteIcon) popMuteIcon.textContent = newIcon;
+      }
+      
+      document.getElementById('btn-mute')?.addEventListener('click', toggleMute);
+      document.getElementById('pop-mute')?.addEventListener('click', toggleMute);
+      
+      // Play/Pause from popover
+      document.getElementById('pop-play-pause')?.addEventListener('click', () => {
+        if (isVideoActive()) {
+          if (isVideoPlaying()) {
+            pauseVideo();
+            window.__lessonObserver?.onPause();
+          } else {
+            resumeVideo();
+          }
+        } else {
+          if (kellyAudio.isPlaying) {
+            kellyAudio.pause();
+            window.__lessonObserver?.onPause();
+          } else {
+            kellyAudio.resume();
+          }
+        }
+        syncPlayPauseUI();
+      });
+      
+      // Prev/Next from popover
+      document.getElementById('pop-prev')?.addEventListener('click', () => prevPhase());
+      document.getElementById('pop-next')?.addEventListener('click', () => advancePhase());
+      
+      // Auto-advance toggle from popover
+      document.getElementById('pop-auto-toggle')?.addEventListener('change', (e) => {
+        state.autoAdvance = !!e.target.checked;
+        saveState();
+        // Sync with header toggle
+        const headerToggle = document.getElementById('auto-advance-toggle');
+        if (headerToggle) headerToggle.checked = state.autoAdvance;
+      });
+      
+      // Update popover play icon when playback state changes
+      function syncPopoverPlayIcon() {
+        const icon = document.getElementById('pop-play-icon');
+        if (!icon) return;
+        const isPlaying = isVideoPlaying() || kellyAudio.isPlaying;
+        icon.innerHTML = isPlaying
+          ? '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/></svg>'
+          : '<svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>';
+      }
+      
+      // Hook into existing syncPlayPauseUI
+      const originalSyncPlayPauseUI = syncPlayPauseUI;
+      syncPlayPauseUI = function() {
+        originalSyncPlayPauseUI();
+        syncPopoverPlayIcon();
+      };
 
       // Phase bar click handlers
       document.querySelectorAll('.phase-segment').forEach(segment => {
