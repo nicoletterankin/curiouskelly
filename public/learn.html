@@ -7024,6 +7024,7 @@
           </div>
           
           <div class="side-actions">
+            <button class="side-action" id="btn-guide" title="Lesson Guide">📖</button>
             <button class="side-action" id="btn-bookmark">🔖</button>
             <button class="side-action" id="btn-infographic">📊</button>
             <button class="side-action" id="btn-ask">💬</button>
@@ -8261,7 +8262,7 @@
       
       // Sync lesson guide with current phase when lesson panel is open
       if (open === 'lesson') {
-        syncLessonGuide();
+        if (typeof updateLessonGuide === 'function') updateLessonGuide();
       }
       
       // Ensure content is in the panel slots (fallback if mount failed)
@@ -8309,96 +8310,6 @@
       }
     }
     
-    // ============================================
-    // LESSON GUIDE PANEL SYNC
-    // ============================================
-    const GUIDE_PHASE_INFO = [
-      { icon: '🎬', name: 'Hook', desc: 'A surprising question to spark curiosity' },
-      { icon: '🔀', name: 'The Cliff', desc: 'Choose your learning path' },
-      { icon: '💡', name: 'Fact 1', desc: 'Your first key insight' },
-      { icon: '💡', name: 'Fact 2', desc: 'Going deeper with evidence' },
-      { icon: '💡', name: 'Fact 3', desc: 'Real-world application' },
-      { icon: '✨', name: 'Wisdom', desc: 'The essential takeaway' },
-      { icon: '🎉', name: 'Outro', desc: 'Celebrate and look ahead' },
-    ];
-    
-    function syncLessonGuide() {
-      const phaseIdx = state.currentPhase || 0;
-      const lesson = lessonsCache[state.dayNumber];
-      const phaseInfo = GUIDE_PHASE_INFO[phaseIdx] || GUIDE_PHASE_INFO[0];
-      
-      // Update progress steps
-      document.querySelectorAll('.guide-step').forEach((step, idx) => {
-        step.classList.toggle('active', idx === phaseIdx);
-        step.classList.toggle('completed', idx < phaseIdx);
-      });
-      
-      // Update phase info
-      const iconEl = document.getElementById('guide-phase-icon');
-      const nameEl = document.getElementById('guide-phase-name');
-      const descEl = document.getElementById('guide-phase-desc');
-      if (iconEl) iconEl.textContent = phaseInfo.icon;
-      if (nameEl) nameEl.textContent = phaseInfo.name;
-      if (descEl) descEl.textContent = phaseInfo.desc;
-      
-      // Update caption from lesson data
-      const captionEl = document.getElementById('guide-caption-text');
-      if (captionEl && lesson) {
-        const phaseKey = ['hook', 'cliff', 'q1', 'q2', 'q3', 'wisdom', 'outro'][phaseIdx];
-        const phaseData = lesson.phases?.[phaseKey];
-        captionEl.textContent = phaseData?.talk?.script || phaseData?.audio?.text || 'Listen to Kelly...';
-      }
-      
-      // Show/hide choice buttons based on phase
-      const choicesEl = document.getElementById('guide-choices');
-      if (choicesEl) {
-        const isCliffPhase = phaseIdx === 1;
-        choicesEl.style.display = isCliffPhase ? '' : 'none';
-        
-        if (isCliffPhase && lesson?.phases?.cliff?.options) {
-          const opts = lesson.phases.cliff.options;
-          const optA = document.getElementById('guide-choice-a-text');
-          const optB = document.getElementById('guide-choice-b-text');
-          if (optA && opts[0]) optA.textContent = opts[0].label || 'Option A';
-          if (optB && opts[1]) optB.textContent = opts[1].label || 'Option B';
-        }
-      }
-      
-      // Update prev/next button states
-      const prevBtn = document.getElementById('guide-prev-btn');
-      const nextBtn = document.getElementById('guide-next-btn');
-      if (prevBtn) prevBtn.disabled = phaseIdx === 0;
-      if (nextBtn) {
-        nextBtn.textContent = phaseIdx === 6 ? 'Complete ✓' : 'Continue →';
-      }
-      
-      // Update lesson meta
-      const dayEl = document.getElementById('guide-lesson-day');
-      const topicEl = document.getElementById('guide-lesson-topic');
-      if (dayEl) dayEl.textContent = `Day ${state.dayNumber || '—'}`;
-      if (topicEl && lesson) topicEl.textContent = lesson.topic || 'Today\'s Lesson';
-    }
-    
-    function handleGuideChoice(choice) {
-      const btnA = document.getElementById('guide-choice-a');
-      const btnB = document.getElementById('guide-choice-b');
-      
-      // Visual feedback
-      if (btnA) btnA.classList.toggle('selected', choice === 'A');
-      if (btnB) btnB.classList.toggle('selected', choice === 'B');
-      
-      // Save choice to state
-      state.selectedPath = choice;
-      saveState();
-      
-      // Also trigger the main lesson choice if available
-      if (typeof selectChoice === 'function') {
-        selectChoice(choice === 'A' ? 0 : 1);
-      }
-      
-      showToast(`Path ${choice} selected!`);
-    }
-
     /**
      * Toggle right panel - if already open, close it; otherwise open it
      */
@@ -10877,6 +10788,9 @@
       
       if (name === 'lesson') {
         updateLessonUI();
+        // Auto-open lesson guide panel so users can interact through the phases
+        openPanel('lesson');
+        if (typeof updateLessonGuide === 'function') updateLessonGuide();
         // Show lesson metadata displays
         if (typeof onLessonStart === 'function') {
           try { onLessonStart(); } catch(e) {}
@@ -11271,6 +11185,10 @@
         choiceB?.classList.remove('selected');
         state.cliffChoice = 'A';
         saveState();
+        // Trigger the actual choice in the lesson
+        if (state.waitingForChoice && typeof handleUniversalChoice === 'function') {
+          handleUniversalChoice('A');
+        }
       });
       
       choiceB?.addEventListener('click', () => {
@@ -11278,6 +11196,10 @@
         choiceA?.classList.remove('selected');
         state.cliffChoice = 'B';
         saveState();
+        // Trigger the actual choice in the lesson
+        if (state.waitingForChoice && typeof handleUniversalChoice === 'function') {
+          handleUniversalChoice('B');
+        }
       });
     }
     
@@ -15803,6 +15725,16 @@ Style requirements:
       });
       
       // Side actions
+      document.getElementById('btn-guide')?.addEventListener('click', function() {
+        const currentPanel = document.documentElement.getAttribute('data-panel-open');
+        if (currentPanel === 'lesson') {
+          closePanel();
+        } else {
+          openPanel('lesson');
+          updateLessonGuide();
+        }
+      });
+      
       document.getElementById('btn-bookmark')?.addEventListener('click', function() {
         this.classList.toggle('bookmarked');
         if (this.classList.contains('bookmarked')) {
