@@ -55,7 +55,7 @@ async function generateMultiSceneVideo(): Promise<string | null> {
         voice: {
           type: 'text',
           input_text: SCRIPT_PART_1,
-          voice_id: '2aceb41e9a6b4b77a36be5eb72f56a59', // HeyGen English female
+          voice_id: '0015ce4f932b405b9fc3a5e2f5e92c46', // Kelly voice (audio-kelly2.mp3)
           speed: 1.0,
         },
         background: {
@@ -72,7 +72,7 @@ async function generateMultiSceneVideo(): Promise<string | null> {
         voice: {
           type: 'text',
           input_text: SCRIPT_PART_2,
-          voice_id: '2aceb41e9a6b4b77a36be5eb72f56a59',
+          voice_id: '0015ce4f932b405b9fc3a5e2f5e92c46', // Kelly voice
           speed: 1.0,
         },
         background: {

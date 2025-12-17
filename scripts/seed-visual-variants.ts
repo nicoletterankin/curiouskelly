@@ -364,30 +364,36 @@ async function uploadAndRegister(
 
   const publicUrl = urlData.publicUrl;
 
+  // Build insert object - only include columns that exist
+  const insertData: Record<string, any> = {
+    content_hash: contentHash,
+    day_number: dayNumber,
+    phase,
+    topic,
+    visual_type: 'scene',
+    age_group: 'all',
+    style: style,
+    storage_path: storagePath,
+    public_url: publicUrl,
+    format: 'png',
+    prompt_used: prompt.substring(0, 5000),
+    model_used: CONFIG.MODEL,
+    generation_params: { 
+      aspectRatio: CONFIG.ASPECT_RATIO, 
+      style,
+      complexity: styleConfig.complexity,
+      includesText: styleConfig.includesText 
+    },
+    estimated_cost: CONFIG.COST_PER_IMAGE,
+    generated_by: null,
+    generated_by_display_name: 'Curious Kelly Team',
+    generation_source: 'seed',
+    status: 'active'
+  };
+
   const { error: insertError } = await supabase
     .from('visual_commons')
-    .upsert({
-      content_hash: contentHash,
-      day_number: dayNumber,
-      phase,
-      topic,
-      visual_type: 'scene',
-      age_group: 'all',
-      style: style,
-      complexity: styleConfig.complexity,
-      includes_text: styleConfig.includesText,
-      storage_path: storagePath,
-      public_url: publicUrl,
-      format: 'png',
-      prompt_used: prompt.substring(0, 5000),
-      model_used: CONFIG.MODEL,
-      generation_params: { aspectRatio: CONFIG.ASPECT_RATIO, style },
-      estimated_cost: CONFIG.COST_PER_IMAGE,
-      generated_by: null,
-      generated_by_display_name: 'Curious Kelly Team',
-      generation_source: 'seed',
-      status: 'active'
-    }, { onConflict: 'content_hash' });
+    .upsert(insertData, { onConflict: 'content_hash' });
 
   if (insertError) {
     console.error('Insert error:', insertError.message);
