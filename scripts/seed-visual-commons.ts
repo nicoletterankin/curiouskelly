@@ -206,46 +206,42 @@ DO NOT include any text.
 `,
 
   fact3: (lesson) => `
-Create a WOW MOMENT scene for: "${lesson.topic}"
+Create a stunning educational scene about: "${lesson.topic}"
 
-This is the SURPRISING detail that makes the lesson memorable.
-
-Wow factor: ${lesson.wow_moment || lesson.fun_facts?.[2] || lesson.universal_truth}
+This captures the most surprising aspect of the topic.
 
 STYLE:
-- Ultra photorealistic, dramatic "reveal" lighting
-- Maximum visual impact
+- Ultra photorealistic, dramatic lighting
+- Maximum visual impact and wonder
 - 16:9 aspect ratio, 4K quality
 - Bold, memorable composition
 
 COMPOSITION:
-- Capture the "mind-blown" moment
-- Show the unexpected truth
-- Create an image worth sharing
+- Capture a moment of discovery
+- Show something unexpected and beautiful
+- Create an image that inspires curiosity
 
-DO NOT include any text. Pure visual impact.
+DO NOT include any text.
 `,
 
   wisdom: (lesson) => `
-Create an inspiring, LIFE APPLICATION scene for: "${lesson.topic}"
+Create an inspiring scene about: "${lesson.topic}"
 
-Universal truth: ${lesson.universal_truth}
-
-This visual should feel like a POSTER ON THE WALL - wisdom worth remembering.
+This visual captures timeless wisdom and new possibilities.
 
 STYLE:
-- Ultra photorealistic, warm golden hour or inspirational lighting
+- Ultra photorealistic, warm golden hour lighting
 - Timeless, universal appeal
 - 16:9 aspect ratio, 4K quality
-- Emotionally resonant
+- Peaceful and inspiring
 
 COMPOSITION:
-- Connect the concept to everyday life
-- Show human element or relatable context
-- Create a feeling of insight and growth
-- Suitable for sharing on social media
+- Beautiful natural or everyday setting
+- Sense of possibility and hope
+- Create a feeling of growth and renewal
+- Suitable for sharing
 
-DO NOT include any text. Let the image speak wisdom.
+DO NOT include any text.
 `,
 
   outro: (lesson) => `
