@@ -370,7 +370,17 @@ async function main() {
   const dryRun = args.includes('--dry-run');
   const singleDay = args.find(a => a.startsWith('--day='))?.split('=')[1];
   
-  const days = singleDay ? [parseInt(singleDay)] : Array.from({ length: 13 }, (_, i) => 353 + i);
+  // Parse day range from args
+  let days: number[];
+  const rangeArg = args.find(a => a.startsWith('--range='))?.split('=')[1];
+  if (singleDay) {
+    days = [parseInt(singleDay)];
+  } else if (rangeArg) {
+    const [start, end] = rangeArg.split('-').map(Number);
+    days = Array.from({ length: end - start + 1 }, (_, i) => start + i);
+  } else {
+    days = Array.from({ length: 13 }, (_, i) => 353 + i);
+  }
   
   console.log(`\n🗓️  Processing days: ${days.join(', ')}`);
   if (dryRun) console.log('⚠️  DRY RUN - no files will be created');
