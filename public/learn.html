@@ -45,11 +45,13 @@
   <!-- Kelly OS shared foundation (Phase 1) -->
   <link rel="stylesheet" href="/styles/kelly-foundation.css">
   <link rel="stylesheet" href="/styles/kelly-time-authority.css">
+  <link rel="stylesheet" href="/styles/kelly-curriculum-browser.css">
   <script src="/js/kelly-time.js"></script>
   <script src="/js/kelly-calendar.js"></script>
   <script src="/js/kelly-calendar-export.js"></script>
   <script src="/js/kelly-lesson.js"></script>
   <script src="/js/kelly-presence.js"></script>
+  <script src="/js/kelly-curriculum-browser.js"></script>
   
   <!-- Emergency fallback data - always available -->
   <script src="/data/emergency-lessons.js"></script>
@@ -9463,6 +9465,13 @@
     
     // Build curriculum view
     async function buildCurriculumView() {
+      // Use the new Year-based Curriculum Browser
+      if (typeof KellyCurriculumBrowser !== 'undefined') {
+        KellyCurriculumBrowser.init('curriculum-categories');
+        return;
+      }
+      
+      // Fallback to old category-based view if browser not loaded
       const container = document.getElementById('curriculum-categories');
       container.innerHTML = '<div style="text-align: center; padding: 40px; opacity: 0.5;">Loading curriculum...</div>';
       
