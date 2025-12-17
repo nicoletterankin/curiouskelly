@@ -192,21 +192,23 @@ curiouskelly.com/terms              → learn.html?tab=settings&section=terms
 - [x] Tab system exists (Home, Journey, Learn)
 - [x] 16:9 lesson player works
 
-### Phase 1: Four-Tab Structure
-- [ ] Add Settings tab
-- [ ] Refine tab navigation
-- [ ] Ensure Kelly sidebars work for all tabs
+### Phase 1: Four-Tab Structure ✅
+- [x] Add Settings tab (full-screen mode)
+- [x] Add Journey tab (full-screen mode)
+- [x] Refine tab navigation (setUiMode system)
+- [x] Ensure Kelly sidebars work for all tabs
 
-### Phase 2: Settings Tab Build
-- [ ] Master-detail layout
-- [ ] Help Center content
-- [ ] Contact form
-- [ ] Legal sections with styled scroll
+### Phase 2: Settings Tab Build ✅
+- [x] Master-detail layout
+- [x] Help Center content
+- [x] Contact section
+- [x] Legal sections with styled scroll
 
-### Phase 3: Journey Tab Enhancement
-- [ ] Curriculum browser (all 365)
-- [ ] Weekly mission view
-- [ ] Commons placeholder
+### Phase 3: Journey Tab Enhancement ✅
+- [x] Calendar view (month grid)
+- [x] Week view (7-day grid)
+- [x] Curriculum browser (all 365, Year 1 & Year 2)
+- [x] Bookmarks view
 
 ### Phase 4: Home Tab Build
 - [ ] Hero scene
@@ -223,10 +225,10 @@ curiouskelly.com/terms              → learn.html?tab=settings&section=terms
 
 ## Success Criteria
 
-- [ ] User can navigate entire site without leaving learn.html
-- [ ] 16:9 frame is consistent across all tabs
-- [ ] Kelly is always visible (desktop)
-- [ ] All legal content is accessible and readable
+- [x] User can navigate entire site without leaving learn.html
+- [x] 16:9 frame is consistent across all tabs
+- [x] Kelly is always visible (desktop)
+- [x] All legal content is accessible and readable
 - [ ] Deep links work for sharing
 - [ ] SEO maintains or improves
 
