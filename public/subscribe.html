@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Get Daily Lessons — Curious Kelly</title>
+  <link rel="icon" href="/favicon.ico">
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: Georgia, serif;
+      background: #fafaf9;
+      color: #1c1917;
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px;
+    }
+    
+    .container {
+      max-width: 480px;
+      text-align: center;
+    }
+    
+    .kelly-avatar {
+      width: 100px;
+      height: 100px;
+      border-radius: 50%;
+      border: 4px solid #3b82f6;
+      margin-bottom: 24px;
+    }
+    
+    h1 {
+      font-size: 28px;
+      font-weight: 500;
+      margin-bottom: 12px;
+    }
+    
+    .subtitle {
+      font-size: 18px;
+      color: #57534e;
+      line-height: 1.7;
+      margin-bottom: 32px;
+    }
+    
+    .form-group {
+      margin-bottom: 16px;
+    }
+    
+    input[type="email"],
+    input[type="text"] {
+      width: 100%;
+      padding: 16px 20px;
+      font-size: 17px;
+      border: 2px solid #e7e5e4;
+      border-radius: 12px;
+      font-family: inherit;
+      transition: border-color 0.2s;
+    }
+    
+    input:focus {
+      outline: none;
+      border-color: #3b82f6;
+    }
+    
+    .btn-subscribe {
+      width: 100%;
+      padding: 16px;
+      background: #3b82f6;
+      color: white;
+      font-size: 17px;
+      font-weight: 600;
+      border: none;
+      border-radius: 12px;
+      cursor: pointer;
+      font-family: -apple-system, sans-serif;
+      transition: background 0.2s;
+    }
+    
+    .btn-subscribe:hover {
+      background: #2563eb;
+    }
+    
+    .btn-subscribe:disabled {
+      background: #9ca3af;
+      cursor: not-allowed;
+    }
+    
+    .features {
+      margin-top: 32px;
+      text-align: left;
+      background: #f5f5f4;
+      border-radius: 12px;
+      padding: 20px 24px;
+    }
+    
+    .feature {
+      display: flex;
+      align-items: flex-start;
+      gap: 12px;
+      margin-bottom: 12px;
+    }
+    
+    .feature:last-child {
+      margin-bottom: 0;
+    }
+    
+    .feature-icon {
+      font-size: 20px;
+    }
+    
+    .feature-text {
+      font-size: 15px;
+      color: #57534e;
+      line-height: 1.5;
+    }
+    
+    .footer {
+      margin-top: 32px;
+      font-size: 13px;
+      color: #a8a29e;
+    }
+    
+    .footer a {
+      color: #a8a29e;
+    }
+    
+    .success-message {
+      display: none;
+      padding: 24px;
+      background: #ecfdf5;
+      border-radius: 12px;
+      color: #065f46;
+      margin-bottom: 24px;
+    }
+    
+    .success-message h2 {
+      font-size: 20px;
+      margin-bottom: 8px;
+    }
+    
+    .error-message {
+      display: none;
+      padding: 16px;
+      background: #fef2f2;
+      border-radius: 8px;
+      color: #991b1b;
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <img src="/images/brand/kelly-mark-circle-128.png" alt="Kelly" class="kelly-avatar">
+    
+    <div id="success-message" class="success-message">
+      <h2>🎉 You're in!</h2>
+      <p>Check your inbox for a welcome email from Kelly. Your first daily lesson arrives tomorrow morning.</p>
+    </div>
+    
+    <div id="error-message" class="error-message"></div>
+    
+    <form id="subscribe-form">
+      <h1>Get daily lessons from Kelly</h1>
+      <p class="subtitle">
+        5 minutes a day. 365 topics a year.<br>
+        No spam, just learning.
+      </p>
+      
+      <div class="form-group">
+        <input type="text" id="name" name="name" placeholder="Your first name" required>
+      </div>
+      
+      <div class="form-group">
+        <input type="email" id="email" name="email" placeholder="Your email address" required>
+      </div>
+      
+      <button type="submit" class="btn-subscribe" id="submit-btn">
+        Start learning →
+      </button>
+    </form>
+    
+    <div class="features">
+      <div class="feature">
+        <span class="feature-icon">📧</span>
+        <span class="feature-text">One email every morning with today's lesson</span>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">🎬</span>
+        <span class="feature-text">100-second video summary you can watch in your inbox</span>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">🎯</span>
+        <span class="feature-text">Daily growth challenge to build real skills</span>
+      </div>
+      <div class="feature">
+        <span class="feature-icon">🚫</span>
+        <span class="feature-text">Unsubscribe anytime with one click</span>
+      </div>
+    </div>
+    
+    <div class="footer">
+      <p>✨ Curious Kelly · <a href="https://curiouskelly.com">curiouskelly.com</a></p>
+      <p>Lesson of the Day PBC · hello@curiouskelly.com</p>
+    </div>
+  </div>
+  
+  <script>
+    const form = document.getElementById('subscribe-form');
+    const submitBtn = document.getElementById('submit-btn');
+    const successMessage = document.getElementById('success-message');
+    const errorMessage = document.getElementById('error-message');
+    
+    form.addEventListener('submit', async (e) => {
+      e.preventDefault();
+      
+      const name = document.getElementById('name').value.trim();
+      const email = document.getElementById('email').value.trim();
+      
+      if (!name || !email) {
+        showError('Please fill in all fields');
+        return;
+      }
+      
+      submitBtn.disabled = true;
+      submitBtn.textContent = 'Subscribing...';
+      errorMessage.style.display = 'none';
+      
+      try {
+        const response = await fetch('/api/subscribe-email', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ name, email })
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          form.style.display = 'none';
+          successMessage.style.display = 'block';
+        } else {
+          showError(data.error || 'Something went wrong. Please try again.');
+          submitBtn.disabled = false;
+          submitBtn.textContent = 'Start learning →';
+        }
+      } catch (err) {
+        showError('Network error. Please check your connection and try again.');
+        submitBtn.disabled = false;
+        submitBtn.textContent = 'Start learning →';
+      }
+    });
+    
+    function showError(message) {
+      errorMessage.textContent = message;
+      errorMessage.style.display = 'block';
+    }
+  </script>
+</body>
+</html>
