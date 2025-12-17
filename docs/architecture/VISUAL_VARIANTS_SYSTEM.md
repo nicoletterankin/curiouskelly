@@ -469,3 +469,4 @@ Not every generation makes it to the commons:
 | Learning | Passive | Every learner contributes |
 
 **The Visual Commons is a living library that grows smarter and richer with every learner who passes through.**
+

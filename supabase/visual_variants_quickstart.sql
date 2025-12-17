@@ -17,3 +17,4 @@ CREATE INDEX IF NOT EXISTS idx_vc_variants
 
 -- Done!
 SELECT 'Variant columns added!' as status;
+
