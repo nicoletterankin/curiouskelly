@@ -64,6 +64,37 @@ export interface StaticLessonPack {
 const lessonCache = new Map<number, StaticLessonPack>();
 
 /**
+ * Convert phases format (v5.0) to atoms format for compatibility
+ */
+function convertPhasesToAtoms(phases: Record<string, any>, dayNumber: number): LessonAtom[] {
+  const atoms: LessonAtom[] = [];
+  
+  for (const [phaseName, phase] of Object.entries(phases)) {
+    if (!phase || typeof phase !== 'object') continue;
+    
+    atoms.push({
+      id: `static-${dayNumber}-${phaseName}`,
+      core_lesson_id: `static-${dayNumber}`,
+      archetype: 'The Explorer',
+      phase: phaseName,
+      content: {
+        script: phase.talk?.script || phase.script || '',
+        options: phase.options?.map((opt: any) => ({
+          text: opt.text,
+          letter: opt.letter,
+          quality: opt.quality || 'good',
+          response: phase.responses?.[opt.letter]?.script || ''
+        })),
+        kellyPose: phase.talk?.kellyPose,
+        kellyEmotion: phase.talk?.kellyEmotion,
+      }
+    });
+  }
+  
+  return atoms;
+}
+
+/**
  * Get the path to a static lesson file
  */
 function getLessonFilePath(dayNumber: number): string {
@@ -90,11 +121,17 @@ function parseLessonFile(content: string, dayNumber: number): StaticLessonPack |
     // Execute the JS to populate the sandbox
     vm.runInNewContext(content, sandbox);
     
-    // Try to find the lesson data
-    const dayKey = `DAY_${dayNumber.toString().padStart(3, '0')}`;
-    const lessonData = (sandbox.window.CURIOUS_KELLY as any)[dayKey];
+    // Try to find the lesson data (check both padded and unpadded keys)
+    const paddedKey = `DAY_${dayNumber.toString().padStart(3, '0')}`;
+    const unPaddedKey = `DAY_${dayNumber}`;
+    const lessonData = (sandbox.window.CURIOUS_KELLY as any)[paddedKey] 
+                    || (sandbox.window.CURIOUS_KELLY as any)[unPaddedKey];
     
-    if (lessonData && lessonData.lesson && lessonData.atoms) {
+    if (lessonData && lessonData.lesson) {
+      // Convert phases format to atoms format if needed
+      if (lessonData.phases && !lessonData.atoms) {
+        lessonData.atoms = convertPhasesToAtoms(lessonData.phases, dayNumber);
+      }
       return lessonData as StaticLessonPack;
     }
     
