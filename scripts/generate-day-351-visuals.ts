@@ -336,7 +336,7 @@ async function generateKellyImage(
           hf_lora: CONFIG.KELLY_LORA.loraUrl,
           lora_scale: CONFIG.KELLY_LORA.loraScale,
           num_outputs: 1,
-          aspect_ratio: "3:4",
+          aspect_ratio: "16:9",
           output_format: "png",
           guidance_scale: 3.5,
           output_quality: 100,

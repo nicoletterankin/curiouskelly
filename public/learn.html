@@ -63,6 +63,9 @@
   <!-- Stealth Learner Observation (invisible assessment) -->
   <script src="/js/learner-observer.js"></script>
   
+  <!-- Visual Commons - On-demand educational visuals -->
+  <script src="/js/visual-commons.js"></script>
+  
   <!-- Lesson loader with fallback support -->
   <script src="/js/kelly-lesson-loader.js"></script>
   <script>
@@ -222,9 +225,9 @@
     }
 
     .kelly-logo-img {
-      width: 32px;
-      height: 32px;
-      border-radius: 50%;
+      width: 36px;
+      height: 20px; /* 16:9 aspect */
+      border-radius: 6px;
       object-fit: cover;
     }
     
@@ -373,34 +376,112 @@
     }
     
     /* ============================================
-       SCENE: CHARACTER SELECT
+       SCENE: WELCOME HOME (Simple Hero)
        ============================================ */
-    #scene-character {
+    #scene-home {
       justify-content: center;
+      align-items: center;
+      text-align: center;
+      padding: 40px 20px;
     }
     
-    #scene-character .scene-header {
-      position: absolute;
-      top: 0;
-      left: 0;
-      right: 0;
-    }
-    
-    .carousel-stage {
-      flex: 1;
+    .home-hero {
       display: flex;
       flex-direction: column;
-      justify-content: center;
-      position: relative;
-      overflow: hidden;
-      padding: 0 20px;
+      align-items: center;
+      gap: 24px;
+      max-width: 400px;
     }
     
-    .carousel-track {
-      position: relative;
-      height: 420px;
-      perspective: 1000px;
+    .home-kelly-container {
+      width: 200px;
+      height: 112px; /* 16:9 aspect */
+      border-radius: 16px;
+      overflow: hidden;
+      background: var(--bg-card);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
     }
+    
+    .home-kelly-img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    
+    .home-welcome {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .home-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 0;
+    }
+    
+    .home-tagline {
+      font-size: 16px;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+    
+    .home-today-preview {
+      background: rgba(37, 99, 235, 0.1);
+      border: 1px solid rgba(37, 99, 235, 0.2);
+      border-radius: 12px;
+      padding: 12px 20px;
+      margin-top: 16px;
+    }
+    
+    .today-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--kelly-blue);
+      margin-bottom: 4px;
+    }
+    
+    .today-topic {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .home-actions {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 16px;
+      margin-top: 8px;
+    }
+    
+    .btn-large {
+      padding: 16px 40px;
+      font-size: 18px;
+    }
+    
+    .home-stats {
+      display: flex;
+      gap: 24px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+    
+    .home-stat {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    
+    .stat-icon {
+      font-size: 16px;
+    }
+    
+    /* DEPRECATED: Old carousel styles - kept for reference, remove later */
+    .carousel-stage { display: none; }
+    .carousel-track { display: none; }
     
     .kelly-card {
       position: absolute;
@@ -3420,51 +3501,55 @@
       }
     }
 
-    /* Interactive Choice Panel */
+    /* Interactive Choice Panel - MUST show both options fully */
     #cliff-container {
       position: absolute;
-      top: 50%;
+      /* Position higher to avoid bottom nav clipping */
+      top: 40%;
       left: 50%;
       transform: translate(-50%, -50%);
       width: 90%;
-      max-width: 600px;
+      max-width: 560px;
       z-index: 100;
       background: rgba(9, 9, 11, 0.95);
-      border-radius: 16px;
-      padding: 24px;
+      border-radius: 12px;
+      padding: 16px 20px;
       -webkit-backdrop-filter: blur(8px);
       backdrop-filter: blur(8px);
       border: 1px solid rgba(37, 99, 235, 0.3);
+      /* Ensure it doesn't overflow viewport */
+      max-height: calc(100vh - 180px);
+      overflow-y: auto;
     }
     
     #cliff-prompt {
       text-align: center;
-      font-size: 1.25rem;
+      font-size: 1.1rem;
       color: var(--text-primary);
-      margin-bottom: 24px;
+      margin-bottom: 16px;
       font-weight: 500;
-      line-height: 1.5;
+      line-height: 1.4;
     }
     
     #cliff-choices {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 16px;
+      gap: 12px;
     }
     
     .cliff-btn {
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: flex-start;
-      padding: 16px 12px;
+      justify-content: center;
+      padding: 12px 10px;
       background: rgba(24, 24, 27, 0.8);
       border: 2px solid rgba(37, 99, 235, 0.3);
-      border-radius: 12px;
+      border-radius: 10px;
       cursor: pointer;
       transition: all 0.3s ease;
       color: var(--text-primary);
-      min-height: 100px;
+      min-height: 80px;
     }
     
     .cliff-btn:hover {
@@ -3491,27 +3576,29 @@
     }
 
     .cliff-icon {
-      font-size: 2rem;
-      margin-bottom: 8px;
+      font-size: 1.5rem;
+      margin-bottom: 6px;
     }
     
     .cliff-label {
-      font-size: 1rem;
+      font-size: 0.85rem;
       font-weight: 600;
       color: var(--kelly-blue);
-      margin-bottom: 4px;
+      margin-bottom: 2px;
       text-align: center;
-      line-height: 1.4;
-      /* Allow text to wrap for long options */
+      line-height: 1.3;
+      /* Ensure full text shows */
       max-width: 100%;
       word-wrap: break-word;
+      overflow-wrap: break-word;
     }
     
     .cliff-desc {
-      font-size: 0.875rem;
+      font-size: 0.75rem;
       color: var(--text-secondary);
       text-align: center;
-      line-height: 1.3;
+      line-height: 1.2;
+      display: none; /* Hide descriptions to save space */
     }
     
     #cliff-container.choice-made .cliff-btn:not(.selected) {
@@ -3790,6 +3877,17 @@
       font-size: 10px;
       color: var(--text-secondary);
       line-height: 1.4;
+    }
+    
+    /* Phase Visual Thumbnail */
+    .phase-tooltip-thumb {
+      width: 100%;
+      aspect-ratio: 16 / 9;
+      border-radius: 6px;
+      margin-bottom: 8px;
+      background: var(--bg-card);
+      object-fit: cover;
+      border: 1px solid rgba(255, 255, 255, 0.1);
     }
 
     @media (max-width: 600px) {
@@ -4719,6 +4817,45 @@
       padding: 1.25rem;
       margin-bottom: 1.5rem;
       border: 1px solid rgba(59, 130, 246, 0.18);
+    }
+    
+    .kelly-info-card {
+      display: flex;
+      gap: 16px;
+      align-items: flex-start;
+    }
+    
+    .kelly-info-card .settings-kelly-img {
+      width: 80px;
+      height: 45px;
+      border-radius: 8px;
+      object-fit: cover;
+      flex-shrink: 0;
+    }
+    
+    .kelly-info-text {
+      flex: 1;
+    }
+    
+    .kelly-info-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin: 0 0 12px 0;
+      line-height: 1.4;
+    }
+    
+    .kelly-phases-preview {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+    
+    .phase-preview {
+      background: rgba(255, 255, 255, 0.1);
+      padding: 4px 10px;
+      border-radius: 12px;
+      font-size: 12px;
+      color: var(--text-secondary);
     }
 
     .current-kelly-card {
@@ -5837,28 +5974,34 @@
     <div class="bg-atmosphere" id="bg-atmosphere"></div>
     
     <!-- ==========================================
-         SCENE: CHARACTER SELECT
+         SCENE: WELCOME HOME (Simplified - No Kelly Selector)
+         Kelly adapts to context, not learner choice
          ========================================== -->
-    <section class="scene active" id="scene-character">
-      <div class="scene-header">
-        <div class="scene-title">Select a Kelly Style</div>
-        <div id="kelly-clock" class="kelly-clock compact" data-kelly-clock data-seconds="true"></div>
-      </div>
-      
-      <div class="carousel-stage">
-        <div class="carousel-track" id="carousel-track"></div>
-        
-        <div class="carousel-nav">
-          <button class="carousel-arrow" id="carousel-prev">←</button>
-          <button class="carousel-arrow" id="carousel-next">→</button>
+    <section class="scene active" id="scene-home">
+      <div class="home-hero">
+        <div class="home-kelly-container">
+          <img id="home-kelly-img" class="home-kelly-img" src="/images/kelly-hero-4k.png" alt="Kelly">
         </div>
         
-        <div class="carousel-dots" id="carousel-dots"></div>
-      </div>
-      
-      <div class="character-actions">
-        <button class="btn-primary" id="btn-start">Let's Learn →</button>
-        <button class="btn-secondary">Take the Match Quiz</button>
+        <div class="home-welcome">
+          <h1 class="home-title">Welcome to Curious Kelly</h1>
+          <p class="home-tagline">Your daily 5-minute learning adventure</p>
+          
+          <div class="home-today-preview" id="home-today-preview">
+            <div class="today-label">Today's Lesson</div>
+            <div class="today-topic" id="home-today-topic">Loading...</div>
+          </div>
+        </div>
+        
+        <div class="home-actions">
+          <button class="btn-primary btn-large" id="btn-start-learning">
+            Start Learning →
+          </button>
+          <div class="home-stats" id="home-stats">
+            <span class="home-stat"><span class="stat-icon">🔥</span> <span id="home-streak">0</span> day streak</span>
+            <span class="home-stat"><span class="stat-icon">📚</span> <span id="home-completed">0</span> lessons</span>
+          </div>
+        </div>
       </div>
     </section>
     
@@ -5905,8 +6048,9 @@
               <span class="phase-dot"></span>
               <span class="phase-name">Hook</span>
               <div class="phase-tooltip">
+                <img class="phase-tooltip-thumb" data-phase-thumb="0" src="" alt="">
                 <div class="phase-tooltip-title">🎬 Hook</div>
-                <div class="phase-tooltip-desc">Grab your attention with a surprising question</div>
+                <div class="phase-tooltip-desc">A surprising question to spark curiosity</div>
               </div>
             </button>
             <div class="phase-connector"></div>
@@ -5914,8 +6058,9 @@
               <span class="phase-dot"></span>
               <span class="phase-name">Cliff</span>
               <div class="phase-tooltip">
+                <img class="phase-tooltip-thumb" data-phase-thumb="1" src="" alt="">
                 <div class="phase-tooltip-title">🔀 The Cliff</div>
-                <div class="phase-tooltip-desc">Make a choice that shapes your learning path</div>
+                <div class="phase-tooltip-desc">Make a choice that personalizes your path</div>
               </div>
             </button>
             <div class="phase-connector"></div>
@@ -5923,8 +6068,9 @@
               <span class="phase-dot"></span>
               <span class="phase-name">Fact 1</span>
               <div class="phase-tooltip">
+                <img class="phase-tooltip-thumb" data-phase-thumb="2" src="" alt="">
                 <div class="phase-tooltip-title">💡 Fact 1</div>
-                <div class="phase-tooltip-desc">Discover the first key insight</div>
+                <div class="phase-tooltip-desc">The foundation - your first key insight</div>
               </div>
             </button>
             <div class="phase-connector"></div>
@@ -5932,8 +6078,9 @@
               <span class="phase-dot"></span>
               <span class="phase-name">Fact 2</span>
               <div class="phase-tooltip">
+                <img class="phase-tooltip-thumb" data-phase-thumb="3" src="" alt="">
                 <div class="phase-tooltip-title">💡 Fact 2</div>
-                <div class="phase-tooltip-desc">Build on the evidence with more depth</div>
+                <div class="phase-tooltip-desc">Going deeper - evidence and examples</div>
               </div>
             </button>
             <div class="phase-connector"></div>
@@ -5941,8 +6088,9 @@
               <span class="phase-dot"></span>
               <span class="phase-name">Fact 3</span>
               <div class="phase-tooltip">
+                <img class="phase-tooltip-thumb" data-phase-thumb="4" src="" alt="">
                 <div class="phase-tooltip-title">💡 Fact 3</div>
-                <div class="phase-tooltip-desc">Apply the concept to real-world examples</div>
+                <div class="phase-tooltip-desc">Real-world application you can use</div>
               </div>
             </button>
             <div class="phase-connector"></div>
@@ -5950,8 +6098,9 @@
               <span class="phase-dot"></span>
               <span class="phase-name">Wisdom</span>
               <div class="phase-tooltip">
+                <img class="phase-tooltip-thumb" data-phase-thumb="5" src="" alt="">
                 <div class="phase-tooltip-title">✨ Wisdom</div>
-                <div class="phase-tooltip-desc">The essential takeaway to remember</div>
+                <div class="phase-tooltip-desc">The essential takeaway to remember forever</div>
               </div>
             </button>
             <div class="phase-connector"></div>
@@ -5959,8 +6108,9 @@
               <span class="phase-dot"></span>
               <span class="phase-name">Outro</span>
               <div class="phase-tooltip">
+                <img class="phase-tooltip-thumb" data-phase-thumb="6" src="" alt="">
                 <div class="phase-tooltip-title">🎉 Outro</div>
-                <div class="phase-tooltip-desc">Wrap up and prepare for tomorrow</div>
+                <div class="phase-tooltip-desc">Celebrate and preview tomorrow</div>
               </div>
             </button>
           </div>
@@ -6323,51 +6473,21 @@
       <div class="settings-scroll scrollable">
         <div class="scene-title" style="margin-bottom: 24px;">Settings</div>
         
-        <!-- YOUR KELLY section in Settings -->
+        <!-- KELLY INFO section in Settings (no selector - Kelly adapts to context) -->
         <div class="settings-section your-kelly-section">
-          <h3 class="settings-section-title">Kelly Style</h3>
+          <h3 class="settings-section-title">About Kelly</h3>
           
-          <div class="current-kelly-card">
-            <img id="settings-kelly-avatar" class="settings-kelly-img kelly-img" src="" alt="Kelly">
-            <div class="current-kelly-info">
-              <div class="current-kelly-name" id="current-kelly-name">The Scientist</div>
-              <div class="current-kelly-trait" id="current-kelly-trait">Data-driven precision</div>
-              <div class="current-kelly-age" id="current-kelly-age">Adult (18-45)</div>
-            </div>
-            <button class="change-kelly-btn" id="btn-change-kelly" type="button">
-              Change
-            </button>
-          </div>
-          
-          <!-- Expandable Kelly Selector (hidden by default) -->
-          <div class="kelly-selector-panel" id="kelly-selector-panel" style="display: none;">
-            <div class="kelly-selector-header">
-              <h4>Select a Kelly Style</h4>
-              <button class="kelly-selector-close" id="btn-kelly-selector-close" type="button" aria-label="Close">✕</button>
-            </div>
-            
-            <!-- Age Bucket Selector -->
-            <div class="age-selector">
-              <span class="age-label">Teaching for:</span>
-              <div class="age-pills">
-                <button class="age-pill" type="button" data-age="kid">Kid (2-7)</button>
-                <button class="age-pill" type="button" data-age="teen">Teen (8-17)</button>
-                <button class="age-pill active" type="button" data-age="adult">Adult (18-45)</button>
-                <button class="age-pill" type="button" data-age="elder">Elder (46-70)</button>
-                <button class="age-pill" type="button" data-age="super_elder">Super (71+)</button>
+          <div class="kelly-info-card">
+            <img id="settings-kelly-avatar" class="settings-kelly-img kelly-img" src="/images/kelly-hero-4k.png" alt="Kelly">
+            <div class="kelly-info-text">
+              <p class="kelly-info-desc">Kelly adapts her teaching style to match each phase of your lesson.</p>
+              <div class="kelly-phases-preview">
+                <span class="phase-preview">🧭 Explorer</span>
+                <span class="phase-preview">🎯 Strategist</span>
+                <span class="phase-preview">🔬 Scientist</span>
+                <span class="phase-preview">+4 more</span>
               </div>
             </div>
-            
-            <!-- Persona Grid -->
-            <div class="persona-grid" id="settings-persona-grid"></div>
-            
-            <button class="apply-kelly-btn" id="btn-apply-kelly" type="button">
-              Apply Changes
-            </button>
-
-            <button class="take-quiz-btn" id="btn-take-quiz-again" type="button">
-              Take Quiz Again
-            </button>
           </div>
         </div>
         
@@ -7403,7 +7523,8 @@
         if (!window.KellyLessonLoader) {
           report({ query: 'KellyLessonLoader.loadLesson(day 1)', status: 'FAIL', error: 'KellyLessonLoader not available' });
         } else {
-          const archetype = PERSONA_TO_ARCHETYPE[state.kellyId] || 'The Scientist';
+          // Use default archetype (contextual Kelly - no user selection)
+          const archetype = 'The Scientist';
           const region = getEffectiveAgeBucket();
           const payload = await window.KellyLessonLoader.loadLesson(1, { archetype, age: state.age, region });
           if (!payload?.lesson) report({ query: 'KellyLessonLoader.loadLesson(day 1)', status: 'EMPTY', data: payload });
@@ -7499,6 +7620,39 @@
 
     const PHASE_ORDER = ['hook', 'cliff', 'fact1', 'fact2', 'fact3', 'wisdom', 'outro'];
     const PHASES = PHASE_ORDER.map((key) => ({ key, ...PHASE_CONFIG[key] }));
+    
+    // ============================================
+    // CONTEXTUAL KELLY ARCHITECTURE
+    // Each section/phase uses a specific Kelly archetype
+    // This eliminates "choose your Kelly" - Kelly adapts to context
+    // ============================================
+    const SECTION_ARCHETYPES = {
+      home: 'empath',       // Nurturing welcome
+      journey: 'survivor',  // Resilience for progress tracking
+      help: 'provider',     // Reassuring support
+      payment: 'diplomat',  // Trust for transactions
+      love: 'rebel'         // Bold passion
+    };
+
+    const PHASE_ARCHETYPES = {
+      hook: 'explorer',     // Wonder sparks curiosity
+      cliff: 'strategist',  // Tactical mind for choices
+      fact1: 'scientist',   // Data-driven facts
+      fact2: 'architect',   // Building structure
+      fact3: 'macgyver',    // Practical application
+      wisdom: 'mystic',     // Profound insight
+      outro: 'storyteller'  // Theatrical wrap-up
+    };
+    
+    // Get archetype for current phase
+    function getPhaseArchetype(phaseKey) {
+      return PHASE_ARCHETYPES[phaseKey] || 'scientist';
+    }
+    
+    // Get archetype for current section
+    function getSectionArchetype(sectionName) {
+      return SECTION_ARCHETYPES[sectionName] || 'empath';
+    }
     
     const BADGES = [
       { id: 'first-lesson', icon: '🌟', name: 'First Light', desc: 'Complete a first lesson' },
@@ -8826,7 +8980,8 @@
     async function loadLessonFromApi(dayNumber, { archetype, ageBucket } = {}) {
       try {
         if (STATIC_ONLY_MODE) return null;
-        const a = archetype || PERSONA_TO_ARCHETYPE[state.kellyId] || 'The Scientist';
+        // Use default archetype (contextual Kelly - no user selection)
+        const a = archetype || 'The Scientist';
         const bucket = ageBucket || getEffectiveAgeBucket();
         const res = await fetch(`/api/lessons/${dayNumber}?archetype=${encodeURIComponent(a)}&ageBucket=${encodeURIComponent(bucket)}`, {
           cache: 'no-store'
@@ -8895,12 +9050,15 @@
         window.__lessonObserver.startLesson(
           dayNumber,
           lesson?.id || null,
-          PERSONA_TO_ARCHETYPE[state.kellyId] || 'The Scientist',
+          'The Scientist', // Default archetype (contextual Kelly)
           getEffectiveAgeBucket()
         );
         // Reset saved flag for new lesson
         if (typeof __observationSaved !== 'undefined') __observationSaved = false;
       }
+      
+      // Populate phase bar thumbnails with lesson visuals
+      updatePhaseThumbnails();
 
       return currentLesson;
     }
@@ -8920,7 +9078,8 @@
       // Canonical: all lesson content is loaded via KellyLessonLoader
       if (window.KellyLessonLoader) {
         try {
-          const archetype = PERSONA_TO_ARCHETYPE[state.kellyId] || 'The Scientist';
+          // Use default archetype (contextual Kelly - no user selection)
+          const archetype = 'The Scientist';
           const ageBucket = getEffectiveAgeBucket();
           const payload = await window.KellyLessonLoader.loadLesson(dayNumber, {
             archetype,
@@ -8996,7 +9155,8 @@
       try {
         if (!window.KellyLessonLoader) throw new Error('KellyLessonLoader missing');
 
-        const archetype = PERSONA_TO_ARCHETYPE[state.kellyId] || 'The Scientist';
+        // Use default archetype (contextual Kelly - no user selection)
+        const archetype = 'The Scientist';
         const region = getEffectiveAgeBucket();
 
         const results = await Promise.all(
@@ -9338,8 +9498,9 @@
 
     async function playPhaseMedia({ dbPhase, script, videoUrl } = {}) {
       const ageBucket = getEffectiveAgeBucket();
-      const personaId = state.kellyId || getCurrentKelly()?.id || 'scientist';
       const phaseKey = getPhaseKeyFromDbPhase(dbPhase);
+      // Use PHASE-SPECIFIC archetype (contextual Kelly architecture)
+      const personaId = getPhaseArchetype(phaseKey) || 'scientist';
 
       const requestKey = `${state.currentDay || ''}|${state.currentPhase}|${personaId}|${ageBucket}|${phaseKey}`;
       // If the exact same phase media is already active, don't restart it.
@@ -9514,7 +9675,21 @@
         item.classList.toggle('active', item.dataset.scene === name);
       });
       
+      // Apply section-specific Kelly archetype (contextual Kelly architecture)
+      const sectionArchetype = getSectionArchetype(name);
+      if (sectionArchetype) {
+        const kelly = KELLYS.find(k => k.id === sectionArchetype) || 
+                      FALLBACK_KELLYS.find(k => k.id === sectionArchetype);
+        if (kelly?.color) {
+          updateBackground(kelly.color);
+        }
+      }
+      
       // Scene-specific updates
+      if (name === 'home') {
+        initHomeScene().catch(() => {});
+      }
+      
       if (name === 'lesson') {
         updateLessonUI();
         // Show lesson metadata displays
@@ -9550,110 +9725,76 @@
     }
     
     // ============================================
-    // CAROUSEL
+    // HOME SCENE (Simplified - No Kelly Selector)
     // ============================================
-    function buildCarousel() {
-      const track = document.getElementById('carousel-track');
-      const dots = document.getElementById('carousel-dots');
-      
-      track.innerHTML = '';
-      dots.innerHTML = '';
-      
+    async function initHomeScene() {
+      // Set the home archetype (Empath for welcoming)
+      const homeArchetype = getSectionArchetype('home');
       const ageBucket = getEffectiveAgeBucket();
       
-      KELLYS.forEach((kelly, i) => {
-        const card = document.createElement('div');
-        card.className = 'kelly-card';
-        card.dataset.index = i;
-        
-        const imgUrl = getKellyImageUrl(kelly.id, ageBucket);
-        const imgHtml = imgUrl 
-          ? `<img class="kelly-img" src="${imgUrl}" alt="${kelly.name}" data-fallback="${kelly.icon}">`
-          : kelly.icon;
-        
-        card.innerHTML = `
-          <div class="speech-bubble">${kelly.quote}</div>
-          <div class="avatar-container">
-            <div class="avatar-glow"></div>
-            <div class="avatar">${imgHtml}</div>
-          </div>
-          <div class="info">
-            <div class="name">${kelly.name}</div>
-            <div class="tagline">${kelly.tagline}</div>
-            <div class="personality-stats">
-              <div class="stat">
-                <span class="stat-icon">🔍</span>
-                <div class="stat-bar"><div class="stat-fill" style="width: ${kelly.stats.curiosity}%; background: #3b82f6;"></div></div>
-              </div>
-              <div class="stat">
-                <span class="stat-icon">💗</span>
-                <div class="stat-bar"><div class="stat-fill" style="width: ${kelly.stats.warmth}%; background: #ec4899;"></div></div>
-              </div>
-              <div class="stat">
-                <span class="stat-icon">⚡</span>
-                <div class="stat-bar"><div class="stat-fill" style="width: ${kelly.stats.energy}%; background: #f59e0b;"></div></div>
-              </div>
-              <div class="stat">
-                <span class="stat-icon">🏛️</span>
-                <div class="stat-bar"><div class="stat-fill" style="width: ${kelly.stats.structure}%; background: #22c55e;"></div></div>
-              </div>
-            </div>
-          </div>
-        `;
-        
-        card.addEventListener('click', () => {
-          if (i !== state.carouselIndex) {
-            goToCarouselIndex(i);
-          }
-          // No bounce animation - Kelly images should never bounce
-        });
-        
-        track.appendChild(card);
-        
-        const dot = document.createElement('div');
-        dot.className = 'carousel-dot';
-        dot.addEventListener('click', () => goToCarouselIndex(i));
-        dots.appendChild(dot);
-      });
-      
-      // Set initial index based on saved kelly
-      const savedIndex = KELLYS.findIndex(k => k.id === state.kellyId);
-      if (savedIndex >= 0) {
-        state.carouselIndex = savedIndex;
+      // Load Kelly image for home
+      const homeKellyImg = document.getElementById('home-kelly-img');
+      if (homeKellyImg) {
+        const imgUrl = getKellyImageUrl(homeArchetype, ageBucket);
+        if (imgUrl) {
+          homeKellyImg.src = imgUrl;
+          homeKellyImg.onerror = () => {
+            homeKellyImg.src = '/images/kelly-hero-4k.png';
+          };
+        }
       }
       
-      updateCarousel();
-      addImageLoadHandlers(track);
+      // Update home stats
+      const streakEl = document.getElementById('home-streak');
+      const completedEl = document.getElementById('home-completed');
+      if (streakEl) streakEl.textContent = state.streak || 0;
+      if (completedEl) completedEl.textContent = state.completedLessons?.length || 0;
+      
+      // Load today's topic
+      const topicEl = document.getElementById('home-today-topic');
+      if (topicEl) {
+        try {
+          const day = getTodayDayNumber();
+          if (window.KellyLessonLoader) {
+            const payload = await window.KellyLessonLoader.loadLesson(day, {
+              archetype: 'The Scientist',
+              age: state.age || 30
+            });
+            if (payload?.lesson?.topic) {
+              topicEl.textContent = payload.lesson.topic;
+            } else {
+              topicEl.textContent = `Day ${day} Adventure`;
+            }
+          } else if (typeof window.getEmergencyLesson === 'function') {
+            const emergency = window.getEmergencyLesson(day);
+            topicEl.textContent = emergency?.title || `Day ${day} Adventure`;
+          } else {
+            topicEl.textContent = `Day ${day} Adventure`;
+          }
+        } catch (e) {
+          topicEl.textContent = 'A new adventure awaits!';
+        }
+      }
+      
+      // Set background color for home (Empath = pink)
+      const empath = KELLYS.find(k => k.id === homeArchetype) || FALLBACK_KELLYS.find(k => k.id === homeArchetype);
+      if (empath?.color) {
+        updateBackground(empath.color);
+      }
+    }
+    
+    // DEPRECATED: Old carousel functions - kept as no-ops for compatibility
+    function buildCarousel() {
+      // Replaced by initHomeScene() - no-op for backwards compatibility
+      initHomeScene().catch(() => {});
     }
     
     function goToCarouselIndex(index) {
-      state.carouselIndex = (index + KELLYS.length) % KELLYS.length;
-      updateCarousel();
+      // DEPRECATED - no-op
     }
     
     function updateCarousel() {
-      const cards = document.querySelectorAll('.kelly-card');
-      const dots = document.querySelectorAll('.carousel-dot');
-      
-      cards.forEach((card, i) => {
-        card.classList.remove('center', 'left', 'right', 'far');
-        
-        const diff = i - state.carouselIndex;
-        const wrapped = ((diff + KELLYS.length + 6) % KELLYS.length) - 6;
-        
-        if (wrapped === 0) card.classList.add('center');
-        else if (wrapped === -1) card.classList.add('left');
-        else if (wrapped === 1) card.classList.add('right');
-        else card.classList.add('far');
-      });
-      
-      dots.forEach((dot, i) => dot.classList.toggle('active', i === state.carouselIndex));
-      
-      const kelly = KELLYS[state.carouselIndex];
-      state.kellyId = kelly.id;
-      saveState();
-      
-      updateBackground(kelly.color);
+      // DEPRECATED - no-op
     }
     
     // ============================================
@@ -9841,6 +9982,31 @@
         seg.classList.remove('active', 'completed');
         if (i === state.currentPhase) seg.classList.add('active');
         else if (i < state.currentPhase) seg.classList.add('completed');
+      });
+    }
+    
+    // Populate phase tooltip thumbnails with lesson visuals
+    function updatePhaseThumbnails() {
+      if (!lessonAtoms || lessonAtoms.length === 0) return;
+      
+      // Get default Kelly image as fallback
+      const kelly = getCurrentKelly();
+      const ageBucket = getEffectiveAgeBucket();
+      const defaultImg = getKellyImageUrl(kelly?.id, ageBucket) || '/images/kelly-hero-4k.png';
+      
+      lessonAtoms.forEach((atom, i) => {
+        const thumb = document.querySelector(`[data-phase-thumb="${i}"]`);
+        if (thumb) {
+          // Use atom's visual URL if available, else default Kelly
+          const visualUrl = atom.visualUrl || defaultImg;
+          thumb.src = visualUrl;
+          thumb.alt = atom.phase || PHASES[i]?.name || 'Phase';
+          
+          // Hide broken images gracefully
+          thumb.onerror = () => {
+            thumb.src = defaultImg;
+          };
+        }
       });
     }
     
@@ -10156,12 +10322,7 @@
     async function handlePlayButton() {
       // Enter lesson mode (ensures phase UI is visible and home overlay is hidden).
       setUiMode('lesson');
-      // First-time users must choose a Kelly via the carousel onboarding.
-      if (!state.kellyId) {
-        showScene('character');
-        showToast('Select a Kelly style first.');
-        return;
-      }
+      // NOTE: Kelly selection removed - Kelly adapts to context now
       // Used by index.html to route returning learners straight to /learn.html
       try {
         localStorage.setItem('kelly-started', '1');
@@ -11929,16 +12090,8 @@
       try { if (document.documentElement.hasAttribute('data-panel-open')) closePanel(); } catch (_) {}
       try { stopAllMedia(); } catch (_) {}
 
-      // If no Kelly yet, "Home" is onboarding (choose your Kelly).
-      if (!state.kellyId) {
-        setUiMode('lesson');
-        showScene('character');
-        return;
-      }
-
-      setUiMode('home');
-      // Keep the sacred lesson shell visible (Kelly stays centered).
-      showScene('lesson');
+      // NOTE: Kelly selection removed - go directly to home scene
+      showScene('home');
       // Refresh background + avatar with local placeholder.
       try { updateLessonUI(); } catch (_) {}
       setHomeNavActive();
@@ -13721,21 +13874,33 @@
         const currentAtom = lessonAtoms[state.currentPhase];
         const visualUrl = currentAtom?.visualUrl;
         const phaseName = PHASES[state.currentPhase]?.name || 'Lesson';
+        const phaseKey = PHASES[state.currentPhase]?.dbPhase?.toLowerCase() || 'hook';
         const topic = currentLesson?.topic || 'Today\'s Topic';
         
         if (visualUrl) {
-          // We have an infographic - show it
+          // We have an existing infographic - show it
           imageEl.innerHTML = `<img src="${visualUrl}" alt="${phaseName} infographic" style="max-width: 100%; max-height: 60vh; border-radius: 12px;">`;
           titleEl.textContent = `${phaseName}: ${topic}`;
           descEl.textContent = currentAtom?.script?.substring(0, 150) + '...' || 'Visual representation of this phase';
+          overlay.classList.add('visible');
+        } else if (typeof createVisualSlot === 'function') {
+          // Use Visual Commons to generate on-demand
+          const dayNumber = state.currentDay || 1;
+          imageEl.innerHTML = '';
+          const slot = createVisualSlot(dayNumber, phaseKey);
+          imageEl.appendChild(slot);
+          titleEl.textContent = `${phaseName}: ${topic}`;
+          descEl.textContent = 'Generate a visual to illuminate this lesson!';
+          overlay.classList.add('visible');
+          // Initialize the controller
+          initializeVisualSlot(slot);
         } else {
-          // No infographic for this phase - show helpful message
+          // Fallback: no Visual Commons available
           imageEl.innerHTML = '📊';
           titleEl.textContent = 'Infographic Coming Soon';
           descEl.textContent = `Visual content for "${phaseName}" is being generated. Check back soon!`;
+          overlay.classList.add('visible');
         }
-        
-        overlay.classList.add('visible');
       });
 
       // Sacred left panel (chat)
@@ -13982,21 +14147,18 @@
         el.addEventListener('click', () => showScene(el.dataset.scene));
       });
 
-      // Settings → Your Kelly selector
-      document.getElementById('btn-change-kelly')?.addEventListener('click', showKellySelector);
-      document.getElementById('btn-kelly-selector-close')?.addEventListener('click', hideKellySelector);
-      document.getElementById('btn-apply-kelly')?.addEventListener('click', applyKellySelection);
-      document.getElementById('btn-take-quiz-again')?.addEventListener('click', () => {
-        hideKellySelector();
-        showScene('character');
-      });
+      // DEPRECATED: Kelly selector removed - Kelly now adapts to context
+      // document.getElementById('btn-change-kelly')?.addEventListener('click', showKellySelector);
+      // document.getElementById('btn-kelly-selector-close')?.addEventListener('click', hideKellySelector);
+      // document.getElementById('btn-apply-kelly')?.addEventListener('click', applyKellySelection);
+      // document.getElementById('btn-take-quiz-again')?.addEventListener('click', () => { ... });
 
       document.querySelectorAll('.age-pill').forEach(pill => {
         pill.addEventListener('click', () => selectAgeBucket(pill.dataset.age));
       });
       
-      // Start button
-      document.getElementById('btn-start').addEventListener('click', async () => {
+      // Start Learning button (new simplified home)
+      document.getElementById('btn-start-learning')?.addEventListener('click', async () => {
         state.currentPhase = 0;
         saveState();
         updatePlayButtonIndicator();
@@ -14140,11 +14302,12 @@
       syncSacredPanels();
 
       // Initial route:
-      // - First-time users (no saved state yet): show the carousel onboarding
-      // - Returning users: skip carousel and go straight into the lesson flow
+      // - First-time users: show simple home welcome
+      // - Returning users: show home or resume lesson
+      // NOTE: Kelly selection removed - Kelly adapts to context
       const isFirstTimeUser = !__hasSavedState;
-      if (isFirstTimeUser || !state.kellyId) {
-        showScene('character');
+      if (isFirstTimeUser) {
+        showScene('home');
       } else {
         // Never land on the carousel by default for returning users.
         if (state.scene === 'character') state.scene = 'lesson';
