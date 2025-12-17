@@ -65,6 +65,7 @@
   
   <!-- Visual Commons - On-demand educational visuals -->
   <script src="/js/visual-commons.js"></script>
+  <script src="/js/lesson-visual-display.js"></script>
   
   <!-- Lesson loader with fallback support -->
   <script src="/js/kelly-lesson-loader.js"></script>
@@ -1352,7 +1353,7 @@
     .lesson-detail-phases {
       display: flex;
       flex-direction: column;
-      max-height: 320px;
+      max-height: 55vh;
       overflow-y: auto;
     }
 
@@ -1364,6 +1365,27 @@
       border-bottom: 1px solid rgba(255, 255, 255, 0.05);
       cursor: pointer;
       transition: background 0.2s;
+    }
+    
+    /* Phase visual thumbnail */
+    .phase-item-visual {
+      width: 80px;
+      height: 45px;
+      min-width: 80px;
+      border-radius: 6px;
+      overflow: hidden;
+      background: rgba(255,255,255,0.05);
+      display: none;
+    }
+    
+    .phase-item-visual.has-visual {
+      display: block;
+    }
+    
+    .phase-item-visual img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
     }
 
     .lesson-phase-item:last-child {
@@ -1420,9 +1442,14 @@
       color: var(--text-secondary);
       line-height: 1.4;
       display: -webkit-box;
-      -webkit-line-clamp: 2;
+      -webkit-line-clamp: 3;
       -webkit-box-orient: vertical;
       overflow: hidden;
+    }
+    
+    .lesson-phase-item.active .phase-item-desc {
+      -webkit-line-clamp: unset;
+      overflow: visible;
     }
 
     .phase-item-duration {
@@ -1482,12 +1509,18 @@
       .lesson-detail-panel {
         width: 95%;
         top: 70px;
+        max-height: 75vh;
       }
       .lesson-detail-phases {
-        max-height: 250px;
+        max-height: 50vh;
       }
       .lesson-detail-wisdom {
         display: none;
+      }
+      .phase-item-visual {
+        width: 60px;
+        height: 34px;
+        min-width: 60px;
       }
     }
 
@@ -6447,7 +6480,7 @@
         
         <!-- KELLY INFO - explains contextual archetypes -->
         <div class="settings-section your-kelly-section">
-          <h3 class="settings-section-title">About Kelly</h3>
+          <h3 class="settings-section-title">Your Teacher</h3>
           
           <div class="kelly-info-card">
             <img id="settings-kelly-avatar" class="settings-kelly-img kelly-img" src="/images/kelly-hero-4k.png" alt="Kelly">
@@ -6463,17 +6496,54 @@
           </div>
         </div>
         
+        <!-- ACCOUNT -->
+        <div class="settings-section">
+          <div class="settings-section-title">Account</div>
+          <div class="settings-item" id="btn-profile">
+            <div class="icon">👤</div>
+            <div class="label">Profile</div>
+            <div class="value" id="profile-value">Guest</div>
+            <div class="arrow">›</div>
+          </div>
+          <div class="settings-item" id="btn-notifications">
+            <div class="icon">🔔</div>
+            <div class="label">Notifications</div>
+            <div class="value" id="notifications-value">Off</div>
+            <div class="arrow">›</div>
+          </div>
+        </div>
+        
+        <!-- PREFERENCES -->
+        <div class="settings-section">
+          <div class="settings-section-title">Preferences</div>
+          <div class="settings-item" id="btn-playback">
+            <div class="icon">▶️</div>
+            <div class="label">Auto-Play</div>
+            <div class="toggle-switch active" id="toggle-autoplay"></div>
+          </div>
+          <div class="settings-item" id="btn-captions">
+            <div class="icon">💬</div>
+            <div class="label">Captions</div>
+            <div class="toggle-switch active" id="toggle-captions"></div>
+          </div>
+        </div>
+        
         <!-- SUPPORT -->
         <div class="settings-section">
           <div class="settings-section-title">Support</div>
-          <div class="settings-item" id="btn-about">
-            <div class="icon">💜</div>
-            <div class="label">About Curious Kelly</div>
+          <div class="settings-item" id="btn-help">
+            <div class="icon">❓</div>
+            <div class="label">Help & FAQ</div>
             <div class="arrow">›</div>
           </div>
           <div class="settings-item" id="btn-feedback">
             <div class="icon">💬</div>
             <div class="label">Send Feedback</div>
+            <div class="arrow">›</div>
+          </div>
+          <div class="settings-item" id="btn-about">
+            <div class="icon">💜</div>
+            <div class="label">About Curious Kelly</div>
             <div class="arrow">›</div>
           </div>
         </div>
@@ -6685,6 +6755,45 @@
       </div>
     </div>
 
+    <!-- BYOK (Bring Your Own Key) Modal -->
+    <div class="overlay" id="overlay-byok" aria-hidden="true">
+      <button class="overlay-close" data-close-overlay>✕</button>
+      <div style="width: 100%; max-width: 480px; text-align: center;">
+        <h3 class="infographic-title" style="margin-bottom: 6px;">🔑 Use Your API Key</h3>
+        <p class="infographic-desc" style="margin-top: 0; margin-bottom: 18px;">
+          Generate unique visuals using your own Google AI API key.<br>
+          <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--kelly-blue-light);">Get yours free →</a>
+        </p>
+        
+        <div style="background: var(--surface-elevated); border: 1px solid var(--border-default); border-radius: 14px; padding: 20px; text-align: left;">
+          <label style="display: block; font-weight: 600; margin-bottom: 8px;">Google AI API Key</label>
+          <input type="password" id="byok-api-key" placeholder="AIza..." 
+            style="width: 100%; padding: 12px; border-radius: 8px; border: 1px solid var(--border-default); 
+                   background: var(--surface-base); color: var(--text-primary); font-size: 14px; box-sizing: border-box;">
+          
+          <div style="margin-top: 12px; font-size: 12px; opacity: 0.7;">
+            <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+              <input type="checkbox" id="byok-save" checked style="width: 16px; height: 16px;">
+              Save key locally (encrypted)
+            </label>
+          </div>
+          
+          <div style="margin-top: 8px; font-size: 11px; opacity: 0.6;">
+            🔒 Your key is stored only in your browser and never sent to our servers.
+          </div>
+        </div>
+        
+        <div style="margin-top: 16px; display: flex; gap: 12px;">
+          <button class="btn-secondary" type="button" style="flex: 1;" onclick="closeAllOverlays()">Cancel</button>
+          <button class="btn-primary" type="button" style="flex: 1;" onclick="saveBYOKAndGenerate()">
+            🎨 Generate Visual
+          </button>
+        </div>
+        
+        <div id="byok-status" style="margin-top: 12px; font-size: 13px; min-height: 20px;"></div>
+      </div>
+    </div>
+
     <!-- COPPA Parental Gate Overlay -->
     <div class="overlay" id="parental-gate" aria-hidden="true">
       <div class="parental-gate-content" role="dialog" aria-modal="true" aria-labelledby="parental-gate-title">
@@ -6813,14 +6922,15 @@
 
     // Production polish: stable local fallback media
     const KELLY_PLACEHOLDER = '/images/kelly-hero-4k.png';
-    // Disable runtime TTS by default (opt-in via ?tts=true) to avoid noisy 400/500s when keys are not configured.
-    const ENABLE_RUNTIME_TTS = __URL_PARAMS.get('tts') === 'true';
-    // Remote persona head images can be opt-in (otherwise keep the app fully local/quiet).
-    const ENABLE_REMOTE_KELLY_HEADS = __URL_PARAMS.get('remoteHeads') === 'true';
     // Static-only mode (e.g. `npx serve public -l 3000`): no Vercel `/api/*` routes available.
     const STATIC_ONLY_MODE =
       (location.hostname === 'localhost' || location.hostname === '127.0.0.1') &&
       String(location.port || '') === '3000';
+    // Enable runtime TTS by default in production (when /api/tts is available).
+    // Disable in static-only mode or via ?tts=false URL param.
+    const ENABLE_RUNTIME_TTS = __URL_PARAMS.get('tts') !== 'false' && !STATIC_ONLY_MODE;
+    // Remote persona head images can be opt-in (otherwise keep the app fully local/quiet).
+    const ENABLE_REMOTE_KELLY_HEADS = __URL_PARAMS.get('remoteHeads') === 'true';
     // Disable browser-direct Supabase reads by default; prefer serverless /api for production stability.
     const ENABLE_SUPABASE_CLIENT =
       __URL_PARAMS.get('supabaseClient') === 'true' ||
@@ -8961,6 +9071,11 @@
       
       // Populate phase bar thumbnails with lesson visuals
       updatePhaseThumbnails();
+      
+      // Show phase-appropriate visual from Visual Commons (starts with hook)
+      if (window.LessonVisualDisplay) {
+        window.LessonVisualDisplay.show(dayNumber, 'hook');
+      }
 
       return currentLesson;
     }
@@ -9195,21 +9310,33 @@
         // 1) Pre-generated audio from `kelly_video_assets`
         // 2) Real-time TTS via /api/tts
         // 3) Text-only (no audio)
+        if (DEBUG) console.log(`🔊 KellyAudio.speak() called for phase "${phaseDbName}", text length: ${fallbackText?.length || 0}`);
+        
         try {
           const ageBucket = getEffectiveAgeBucket();
           const pregen = await getAudioUrl(state.currentDay, phaseDbName, state.kellyId, ageBucket, state.language);
-          if (pregen && await this.play(pregen)) return true;
+          if (DEBUG) console.log(`🔊 Pre-generated audio lookup: ${pregen ? pregen : 'none found'}`);
+          if (pregen && await this.play(pregen)) {
+            if (DEBUG) console.log('🔊 ✅ Playing pre-generated audio');
+            return true;
+          }
         } catch (e) {
           debugWarn('Pre-generated audio lookup failed:', e);
         }
 
+        if (DEBUG) console.log(`🔊 TTS enabled: ${ENABLE_RUNTIME_TTS}, static-only mode: ${STATIC_ONLY_MODE}`);
         try {
           const ttsUrl = await generateTTS(fallbackText);
-          if (ttsUrl && await this.play(ttsUrl)) return true;
+          if (DEBUG) console.log(`🔊 TTS result: ${ttsUrl ? 'generated blob URL' : 'null (TTS disabled or failed)'}`);
+          if (ttsUrl && await this.play(ttsUrl)) {
+            if (DEBUG) console.log('🔊 ✅ Playing TTS audio');
+            return true;
+          }
         } catch (e) {
           debugWarn('TTS fallback failed:', e);
         }
 
+        if (DEBUG) console.log('🔊 ❌ No audio available - Kelly will be silent');
         return false;
       }
       
@@ -9253,20 +9380,37 @@
     }
 
     async function generateTTS(text) {
-      if (!ENABLE_RUNTIME_TTS) return null;
-      if (!text) return null;
-      const response = await fetch('/api/tts', {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          text,
-          voiceId: CONFIG.ELEVENLABS_VOICE_ID
-        })
-      });
+      if (!ENABLE_RUNTIME_TTS) {
+        if (DEBUG) console.log('🔇 TTS disabled (ENABLE_RUNTIME_TTS=false)');
+        return null;
+      }
+      if (!text) {
+        if (DEBUG) console.log('🔇 TTS skipped: no text provided');
+        return null;
+      }
+      if (DEBUG) console.log(`🎤 Calling /api/tts with ${text.length} chars...`);
+      try {
+        const response = await fetch('/api/tts', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            text,
+            voiceId: CONFIG.ELEVENLABS_VOICE_ID
+          })
+        });
 
-      if (!response.ok) return null;
-      const blob = await response.blob();
-      return URL.createObjectURL(blob);
+        if (!response.ok) {
+          const errorText = await response.text();
+          console.error(`🔇 TTS API error ${response.status}:`, errorText);
+          return null;
+        }
+        const blob = await response.blob();
+        if (DEBUG) console.log(`🎤 TTS success: ${blob.size} bytes`);
+        return URL.createObjectURL(blob);
+      } catch (e) {
+        console.error('🔇 TTS fetch failed:', e);
+        return null;
+      }
     }
 
     async function getAudioUrl(dayNumber, phase, personaId, ageBucket, language = 'en') {
@@ -10183,6 +10327,13 @@
         saveState();
         updatePhaseProgress();
         updatePlayButtonIndicator();
+        
+        // Show phase-appropriate visual from Visual Commons
+        if (window.LessonVisualDisplay) {
+          const phaseNames = ['hook', 'cliff', 'fact1', 'fact2', 'fact3', 'wisdom', 'outro', 'complete'];
+          const phaseName = phaseNames[index] || 'hook';
+          window.LessonVisualDisplay.show(state.currentDay, phaseName);
+        }
       }
     }
     
@@ -10200,6 +10351,13 @@
         updatePhaseProgress();
         updatePlayButtonIndicator();
         createRipple('right');
+        
+        // Show phase-appropriate visual from Visual Commons
+        if (window.LessonVisualDisplay) {
+          const phaseNames = ['hook', 'cliff', 'fact1', 'fact2', 'fact3', 'wisdom', 'outro', 'complete'];
+          const phaseName = phaseNames[state.currentPhase] || 'hook';
+          window.LessonVisualDisplay.show(state.currentDay, phaseName);
+        }
       } else {
         completeLesson();
       }
@@ -10215,6 +10373,13 @@
         updatePhaseProgress();
         updatePlayButtonIndicator();
         createRipple('left');
+        
+        // Show phase-appropriate visual from Visual Commons
+        if (window.LessonVisualDisplay) {
+          const phaseNames = ['hook', 'cliff', 'fact1', 'fact2', 'fact3', 'wisdom', 'outro', 'complete'];
+          const phaseName = phaseNames[state.currentPhase] || 'hook';
+          window.LessonVisualDisplay.show(state.currentDay, phaseName);
+        }
       }
     }
     
@@ -12024,6 +12189,132 @@
       openOverlay('overlay-pricing');
     }
 
+    // BYOK (Bring Your Own Key) for Visual Generation
+    function showBYOKModal() {
+      // Check if we have a saved key
+      const savedKey = localStorage.getItem('byok_google_ai_key');
+      if (savedKey) {
+        document.getElementById('byok-api-key').value = savedKey;
+      }
+      openOverlay('overlay-byok');
+    }
+
+    async function saveBYOKAndGenerate() {
+      const keyInput = document.getElementById('byok-api-key');
+      const saveCheckbox = document.getElementById('byok-save');
+      const statusEl = document.getElementById('byok-status');
+      
+      const apiKey = keyInput?.value?.trim();
+      if (!apiKey || !apiKey.startsWith('AIza')) {
+        statusEl.innerHTML = '<span style="color: #ef4444;">⚠️ Please enter a valid Google AI API key (starts with AIza...)</span>';
+        return;
+      }
+      
+      // Save if requested
+      if (saveCheckbox?.checked) {
+        localStorage.setItem('byok_google_ai_key', apiKey);
+      }
+      
+      statusEl.innerHTML = '<span style="color: var(--kelly-blue-light);">🎨 Generating visual...</span>';
+      
+      // Get current context
+      const dayNumber = state.currentDay || 1;
+      const phaseKey = PHASES[state.currentPhase]?.dbName?.toLowerCase() || 'hook';
+      const topic = currentLesson?.topic || 'Today\'s Lesson';
+      const script = lessonAtoms[state.currentPhase]?.script || '';
+      
+      try {
+        // Generate using the user's key via Gemini
+        const prompt = buildVisualPrompt(dayNumber, phaseKey, topic, script);
+        const imageUrl = await generateWithUserKey(apiKey, prompt);
+        
+        if (imageUrl) {
+          statusEl.innerHTML = '<span style="color: #22c55e;">✅ Visual generated! Saving to commons...</span>';
+          
+          // Show the generated image
+          const imageEl = document.getElementById('infographic-image');
+          if (imageEl) {
+            imageEl.innerHTML = `<img src="${imageUrl}" alt="Generated visual" style="max-width: 100%; max-height: 50vh; border-radius: 12px;">`;
+          }
+          
+          // Close BYOK modal
+          setTimeout(() => closeOverlay('overlay-byok'), 1500);
+        } else {
+          statusEl.innerHTML = '<span style="color: #ef4444;">❌ Generation failed. Check your API key.</span>';
+        }
+      } catch (e) {
+        console.error('BYOK generation error:', e);
+        statusEl.innerHTML = `<span style="color: #ef4444;">❌ Error: ${e.message}</span>`;
+      }
+    }
+
+    function buildVisualPrompt(dayNumber, phase, topic, script) {
+      const phaseDescriptions = {
+        hook: 'an engaging opening that captures attention',
+        cliff: 'a thought-provoking question or mystery',
+        fact1: 'an educational diagram with clear labels',
+        fact2: 'a detailed scientific illustration',
+        fact3: 'a wow-moment revelation',
+        wisdom: 'an inspirational, contemplative scene',
+        outro: 'a warm, concluding image',
+        complete: 'a celebratory achievement visual'
+      };
+      
+      return `Create a beautiful, educational illustration for a lesson about "${topic}".
+This is the ${phase} phase: ${phaseDescriptions[phase] || 'educational content'}.
+
+Context from the lesson:
+${script.substring(0, 300)}
+
+Style requirements:
+- Clean, modern educational illustration
+- Suitable for all ages
+- No text overlays (purely visual)
+- Rich colors, professional quality
+- 16:9 aspect ratio`;
+    }
+
+    async function generateWithUserKey(apiKey, prompt) {
+      try {
+        // Use Gemini 2.0 Flash for image generation
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash-exp-image-generation:generateContent?key=${apiKey}`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            contents: [{ parts: [{ text: prompt }] }],
+            generationConfig: {
+              responseModalities: ['image', 'text'],
+              imageSafety: 'block_low_and_above'
+            }
+          })
+        });
+
+        if (!response.ok) {
+          const error = await response.json();
+          throw new Error(error.error?.message || 'API request failed');
+        }
+
+        const data = await response.json();
+        const imagePart = data.candidates?.[0]?.content?.parts?.find(p => p.inlineData);
+        
+        if (imagePart?.inlineData?.data) {
+          // Convert base64 to blob URL
+          const binary = atob(imagePart.inlineData.data);
+          const bytes = new Uint8Array(binary.length);
+          for (let i = 0; i < binary.length; i++) {
+            bytes[i] = binary.charCodeAt(i);
+          }
+          const blob = new Blob([bytes], { type: imagePart.inlineData.mimeType || 'image/png' });
+          return URL.createObjectURL(blob);
+        }
+        
+        return null;
+      } catch (e) {
+        console.error('Gemini generation error:', e);
+        throw e;
+      }
+    }
+
     function openSubscriptionFromDeepLink() {
       const action = () => {
         showScene('settings');
@@ -13408,13 +13699,62 @@
           }
         }
 
-        // Update phase items active state
-        document.querySelectorAll('.lesson-phase-item').forEach((item, index) => {
+        // DYNAMIC: Update phase items with actual lesson content
+        const phaseItems = document.querySelectorAll('.lesson-phase-item');
+        const phaseNames = ['hook', 'cliff', 'fact1', 'fact2', 'fact3', 'wisdom', 'outro'];
+        const phaseIcons = ['🪝', '🧗', '💡', '🧠', '✨', '🦉', '👋'];
+        const phaseTitles = ['Hook', 'Cliff', 'Fact 1', 'Fact 2', 'Fact 3', 'Wisdom', 'Outro'];
+        
+        phaseItems.forEach((item, index) => {
           item.classList.remove('active', 'completed');
           if (index === state.currentPhase) {
             item.classList.add('active');
           } else if (index < state.currentPhase) {
             item.classList.add('completed');
+          }
+          
+          // Update with actual lesson atom content
+          if (lessonAtoms && lessonAtoms[index]) {
+            const atom = lessonAtoms[index];
+            const descEl = item.querySelector('.phase-item-desc');
+            const nameEl = item.querySelector('.phase-item-name');
+            const iconEl = item.querySelector('.phase-item-icon');
+            
+            // Update description with script preview
+            if (descEl && atom.script) {
+              const preview = atom.script.substring(0, 150) + (atom.script.length > 150 ? '...' : '');
+              descEl.textContent = preview;
+            }
+            
+            // Update icon
+            if (iconEl) {
+              iconEl.textContent = phaseIcons[index] || '📖';
+            }
+            
+            // Update name with phase title
+            if (nameEl) {
+              nameEl.textContent = phaseTitles[index] || atom.phase;
+            }
+            
+            // Add visual thumbnail if available
+            let visualEl = item.querySelector('.phase-item-visual');
+            if (!visualEl) {
+              visualEl = document.createElement('div');
+              visualEl.className = 'phase-item-visual';
+              visualEl.innerHTML = '<img alt="Phase visual" />';
+              item.appendChild(visualEl);
+            }
+            
+            // Check for visual from Visual Commons
+            const phaseName = phaseNames[index];
+            fetchPhaseVisualThumbnail(dayNum, phaseName).then(url => {
+              if (url) {
+                visualEl.classList.add('has-visual');
+                visualEl.querySelector('img').src = url;
+              } else {
+                visualEl.classList.remove('has-visual');
+              }
+            });
           }
         });
 
@@ -13424,6 +13764,37 @@
         const progressText = document.getElementById('lesson-detail-progress-text');
         if (progressFill) progressFill.style.width = `${progress}%`;
         if (progressText) progressText.textContent = `${state.currentPhase}/7 phases`;
+      }
+      
+      // Fetch visual thumbnail from Visual Commons
+      const visualThumbnailCache = new Map();
+      async function fetchPhaseVisualThumbnail(dayNumber, phase) {
+        const cacheKey = `${dayNumber}-${phase}`;
+        if (visualThumbnailCache.has(cacheKey)) {
+          return visualThumbnailCache.get(cacheKey);
+        }
+        
+        try {
+          const SUPABASE_URL = window.SUPABASE_URL || 'https://tvjalxxsyryjphkforjv.supabase.co';
+          const ANON_KEY = window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI';
+          
+          const url = `${SUPABASE_URL}/rest/v1/visual_commons?day_number=eq.${dayNumber}&phase=eq.${phase}&status=eq.active&select=public_url&limit=1`;
+          const response = await fetch(url, {
+            headers: { 'apikey': ANON_KEY }
+          });
+          
+          if (response.ok) {
+            const data = await response.json();
+            const visualUrl = data?.[0]?.public_url || null;
+            visualThumbnailCache.set(cacheKey, visualUrl);
+            return visualUrl;
+          }
+        } catch (e) {
+          console.warn('Failed to fetch phase visual:', e);
+        }
+        
+        visualThumbnailCache.set(cacheKey, null);
+        return null;
       }
 
       // Helper to format dates
@@ -13685,7 +14056,7 @@
         saveState();
       });
       
-      document.getElementById('btn-infographic').addEventListener('click', () => {
+      document.getElementById('btn-infographic').addEventListener('click', async () => {
         const overlay = document.getElementById('overlay-infographic');
         const imageEl = document.getElementById('infographic-image');
         const titleEl = document.getElementById('infographic-title');
@@ -13695,33 +14066,66 @@
         const currentAtom = lessonAtoms[state.currentPhase];
         const visualUrl = currentAtom?.visualUrl;
         const phaseName = PHASES[state.currentPhase]?.name || 'Lesson';
-        const phaseKey = PHASES[state.currentPhase]?.dbPhase?.toLowerCase() || 'hook';
+        const phaseKey = PHASES[state.currentPhase]?.dbName?.toLowerCase() || 'hook';
         const topic = currentLesson?.topic || 'Today\'s Topic';
+        const dayNumber = state.currentDay || 1;
         
-        if (visualUrl) {
-          // We have an existing infographic - show it
-          imageEl.innerHTML = `<img src="${visualUrl}" alt="${phaseName} infographic" style="max-width: 100%; max-height: 60vh; border-radius: 12px;">`;
-          titleEl.textContent = `${phaseName}: ${topic}`;
-          descEl.textContent = currentAtom?.script?.substring(0, 150) + '...' || 'Visual representation of this phase';
-          overlay.classList.add('visible');
-        } else if (typeof createVisualSlot === 'function') {
-          // Use Visual Commons to generate on-demand
-          const dayNumber = state.currentDay || 1;
-          imageEl.innerHTML = '';
-          const slot = createVisualSlot(dayNumber, phaseKey);
-          imageEl.appendChild(slot);
-          titleEl.textContent = `${phaseName}: ${topic}`;
-          descEl.textContent = 'Generate a visual to illuminate this lesson!';
-          overlay.classList.add('visible');
-          // Initialize the controller
-          initializeVisualSlot(slot);
-        } else {
-          // Fallback: no Visual Commons available
-          imageEl.innerHTML = '📊';
-          titleEl.textContent = 'Infographic Coming Soon';
-          descEl.textContent = `Visual content for "${phaseName}" is being generated. Check back soon!`;
-          overlay.classList.add('visible');
+        // Show loading state
+        imageEl.innerHTML = '<div style="font-size: 48px; animation: pulse 1s infinite;">🎨</div>';
+        titleEl.textContent = `${phaseName}: ${topic}`;
+        descEl.textContent = 'Loading visual...';
+        overlay.classList.add('visible');
+        
+        // Try to fetch from Visual Commons
+        try {
+          const SUPABASE_URL = window.SUPABASE_URL || 'https://tvjalxxsyryjphkforjv.supabase.co';
+          const ANON_KEY = window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI';
+          
+          const url = `${SUPABASE_URL}/rest/v1/visual_commons?day_number=eq.${dayNumber}&phase=eq.${phaseKey}&status=eq.active&select=public_url,style&limit=5`;
+          const response = await fetch(url, { headers: { 'apikey': ANON_KEY } });
+          
+          if (response.ok) {
+            const visuals = await response.json();
+            if (visuals && visuals.length > 0) {
+              // Show the visual with variant selector
+              const preferredStyle = localStorage.getItem('preferred_visual_style') || 'artistic';
+              const best = visuals.find(v => v.style === preferredStyle) || visuals[0];
+              
+              imageEl.innerHTML = `
+                <img src="${best.public_url}" alt="${phaseName} visual" 
+                     style="max-width: 100%; max-height: 50vh; border-radius: 12px; cursor: pointer;"
+                     onclick="window.LessonVisualDisplay?.showVariants()" />
+                ${visuals.length > 1 ? `<div style="margin-top: 8px; font-size: 12px; opacity: 0.7;">
+                  🎨 ${visuals.length} styles available - click image to change
+                </div>` : ''}
+              `;
+              descEl.textContent = currentAtom?.script?.substring(0, 150) + '...' || 'Visual representation of this phase';
+              return;
+            }
+          }
+        } catch (e) {
+          console.warn('Visual Commons fetch failed:', e);
         }
+        
+        // Fallback: offer BYOK generation
+        imageEl.innerHTML = `
+          <div style="text-align: center; padding: 24px;">
+            <div style="font-size: 64px; margin-bottom: 16px;">🎨</div>
+            <p style="margin-bottom: 16px; opacity: 0.8;">No visual yet for this phase.</p>
+            <button onclick="showBYOKModal()" style="
+              background: linear-gradient(135deg, #3b82f6, #8b5cf6);
+              color: white;
+              border: none;
+              padding: 12px 24px;
+              border-radius: 12px;
+              font-weight: 600;
+              cursor: pointer;
+            ">
+              🔑 Generate with Your API Key
+            </button>
+          </div>
+        `;
+        descEl.textContent = 'Use your own Google AI API key to generate visuals!';
       });
 
       // Sacred left panel (chat)
@@ -13964,8 +14368,12 @@
         showLoading(false);
 
         if (loaded) {
+          // CRITICAL: Exit home mode so lesson UI becomes active and media plays
+          setUiMode('lesson');
           showScene('lesson');
           startSession();
+          // Trigger phase media playback (home mode was blocking this)
+          updatePhaseProgress();
         }
       });
       
@@ -13981,8 +14389,12 @@
         showLoading(false);
 
         if (loaded) {
+          // CRITICAL: Exit home mode so lesson UI becomes active and media plays
+          setUiMode('lesson');
           showScene('lesson');
           haptic('success');
+          // Trigger phase media playback
+          updatePhaseProgress();
         }
       });
 
