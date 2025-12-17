@@ -9219,6 +9219,8 @@
         if (m === 'home') {
           homeOverlay.setAttribute('aria-hidden', 'false');
           homeOverlay.innerHTML = buildHomeOverlayHtml();
+          // Initialize swipe navigation
+          try { initHomeSwipe(); } catch (_) {}
         } else {
           homeOverlay.setAttribute('aria-hidden', 'true');
           homeOverlay.innerHTML = '';
@@ -9568,6 +9570,8 @@
     }
 
     function goToHomeScene(index) {
+      // Clamp to valid range
+      index = Math.max(0, Math.min(index, HOME_SCENES.length - 1));
       currentHomeScene = index;
       const container = document.getElementById('home-scenes-container');
       if (!container) return;
@@ -9583,6 +9587,69 @@
         dot.classList.toggle('active', i === index);
       });
     }
+
+    // Touch/swipe navigation for Home scenes
+    let homeTouchStartX = 0;
+    let homeTouchEndX = 0;
+    const HOME_SWIPE_THRESHOLD = 50;
+
+    function initHomeSwipe() {
+      const container = document.getElementById('home-scenes-container');
+      if (!container) return;
+      
+      container.addEventListener('touchstart', handleHomeTouchStart, { passive: true });
+      container.addEventListener('touchend', handleHomeTouchEnd, { passive: true });
+    }
+
+    function handleHomeTouchStart(e) {
+      homeTouchStartX = e.changedTouches[0].screenX;
+    }
+
+    function handleHomeTouchEnd(e) {
+      homeTouchEndX = e.changedTouches[0].screenX;
+      handleHomeSwipe();
+    }
+
+    function handleHomeSwipe() {
+      const diff = homeTouchStartX - homeTouchEndX;
+      
+      if (Math.abs(diff) < HOME_SWIPE_THRESHOLD) return;
+      
+      if (diff > 0) {
+        // Swipe left → next scene
+        goToHomeScene(currentHomeScene + 1);
+      } else {
+        // Swipe right → previous scene
+        goToHomeScene(currentHomeScene - 1);
+      }
+    }
+
+    // Keyboard navigation for Home scenes
+    function handleHomeKeyboard(e) {
+      if (document.documentElement.getAttribute('data-ui-mode') !== 'home') return;
+      
+      switch(e.key) {
+        case 'ArrowLeft':
+          goToHomeScene(currentHomeScene - 1);
+          e.preventDefault();
+          break;
+        case 'ArrowRight':
+          goToHomeScene(currentHomeScene + 1);
+          e.preventDefault();
+          break;
+        case 'Home':
+          goToHomeScene(0);
+          e.preventDefault();
+          break;
+        case 'End':
+          goToHomeScene(HOME_SCENES.length - 1);
+          e.preventDefault();
+          break;
+      }
+    }
+
+    // Initialize keyboard listener once
+    document.addEventListener('keydown', handleHomeKeyboard);
 
     function startTodaysLesson() {
       const today = getTodayDayNumber();
@@ -9878,9 +9945,41 @@
       `;
     }
 
+    const SETTINGS_SECTIONS = ['account', 'preferences', 'subscription', 'help', 'contact', 'terms', 'privacy', 'trust', 'accessibility'];
+
     function initSettingsMode() {
       currentSettingsSection = 'account';
     }
+
+    // Keyboard navigation for Settings
+    function handleSettingsKeyboard(e) {
+      if (document.documentElement.getAttribute('data-ui-mode') !== 'settings') return;
+      
+      const currentIndex = SETTINGS_SECTIONS.indexOf(currentSettingsSection);
+      
+      switch(e.key) {
+        case 'ArrowUp':
+          if (currentIndex > 0) {
+            showSettingsSection(SETTINGS_SECTIONS[currentIndex - 1]);
+          }
+          e.preventDefault();
+          break;
+        case 'ArrowDown':
+          if (currentIndex < SETTINGS_SECTIONS.length - 1) {
+            showSettingsSection(SETTINGS_SECTIONS[currentIndex + 1]);
+          }
+          e.preventDefault();
+          break;
+        case 'Escape':
+          // Close settings, go to lesson
+          setUiMode('lesson');
+          showScene('lesson');
+          e.preventDefault();
+          break;
+      }
+    }
+
+    document.addEventListener('keydown', handleSettingsKeyboard);
 
     function showSettingsSection(section) {
       currentSettingsSection = section;
