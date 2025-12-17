@@ -1,19 +1,33 @@
+#!/usr/bin/env npx tsx
 /**
- * Email Subscription API
+ * Test Subscribe Flow
  * 
- * Subscribes a user to daily lesson emails.
- * Creates/updates user record and sends welcome email.
- * 
- * POST /api/subscribe-email
- * Body: { name: string, email: string }
+ * Simulates a user subscribing via the subscribe page
+ * Usage: npx tsx scripts/test-subscribe.ts nicoletterankin@gmail.com "Nicolette"
  */
 
-import type { VercelRequest, VercelResponse } from '@vercel/node';
+import 'dotenv/config';
 
 const RESEND_API_URL = 'https://api.resend.com/emails';
 
-function generateWelcomeHTML(name: string): string {
-  return `
+async function testSubscribe(email: string, name: string) {
+  const resendApiKey = process.env.RESEND_API_KEY;
+  
+  if (!resendApiKey) {
+    console.error('❌ RESEND_API_KEY not found');
+    process.exit(1);
+  }
+
+  console.log('');
+  console.log('╔════════════════════════════════════════════════════════════════╗');
+  console.log('║  🎯 TESTING SUBSCRIPTION FLOW                                  ║');
+  console.log('╚════════════════════════════════════════════════════════════════╝');
+  console.log('');
+  console.log(`   Name: ${name}`);
+  console.log(`   Email: ${email}`);
+  console.log('');
+
+  const html = `
 <!DOCTYPE html>
 <html>
 <head>
@@ -80,10 +94,8 @@ function generateWelcomeHTML(name: string): string {
 </body>
 </html>
   `.trim();
-}
 
-function generateWelcomeText(name: string): string {
-  return `
+  const text = `
 Hi ${name} — I'm Kelly.
 
 I don't have all the answers. But I love finding them. And I think learning is better together.
@@ -102,53 +114,8 @@ But why wait? Today's lesson is ready now:
 ✨ Curious Kelly · curiouskelly.com
 Lesson of the Day PBC · hello@curiouskelly.com
   `.trim();
-}
-
-interface SubscribeRequest {
-  name: string;
-  email: string;
-}
-
-export default async function handler(req: VercelRequest, res: VercelResponse) {
-  // Handle CORS
-  res.setHeader('Access-Control-Allow-Origin', '*');
-  res.setHeader('Access-Control-Allow-Methods', 'POST, OPTIONS');
-  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
-  
-  if (req.method === 'OPTIONS') {
-    return res.status(200).end();
-  }
-  
-  if (req.method !== 'POST') {
-    return res.status(405).json({ error: 'Method not allowed' });
-  }
-
-  const resendApiKey = process.env.RESEND_API_KEY;
-  if (!resendApiKey) {
-    console.error('RESEND_API_KEY not configured');
-    return res.status(500).json({ error: 'Email service not configured' });
-  }
 
   try {
-    const body = req.body as SubscribeRequest;
-    const { name, email } = body;
-    
-    if (!name || !email) {
-      return res.status(400).json({ error: 'Name and email are required' });
-    }
-    
-    // Validate email format
-    const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
-    if (!emailRegex.test(email)) {
-      return res.status(400).json({ error: 'Invalid email address' });
-    }
-    
-    // TODO: Add to Supabase users table with email_daily_lesson = true
-    // For now, just send the welcome email
-    
-    console.log(`[subscribe-email] New subscriber: ${name} <${email}>`);
-    
-    // Send welcome email
     const response = await fetch(RESEND_API_URL, {
       method: 'POST',
       headers: {
@@ -159,31 +126,45 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         from: 'Kelly <hello@curiouskelly.com>',
         to: email,
         subject: "Welcome! Your daily lessons start tomorrow ✨",
-        html: generateWelcomeHTML(name),
-        text: generateWelcomeText(name),
+        html,
+        text,
         reply_to: 'hello@curiouskelly.com',
       }),
     });
 
     const data = await response.json();
     
+    console.log('📤 Resend Response:');
+    console.log(JSON.stringify(data, null, 2));
+    console.log('');
+    
     if (!response.ok) {
-      console.error('Resend error:', data);
-      return res.status(500).json({ error: 'Failed to send welcome email' });
+      console.error('❌ Failed to send email');
+      console.error('   Status:', response.status);
+      process.exit(1);
     }
 
-    console.log(`[subscribe-email] Welcome email sent: ${data.id}`);
-    
-    return res.status(200).json({ 
-      success: true,
-      message: 'Subscribed successfully',
-      id: data.id,
-    });
+    console.log('✅ WELCOME EMAIL SENT!');
+    console.log('');
+    console.log(`   Resend ID: ${data.id}`);
+    console.log('');
+    console.log('   📬 Check your inbox!');
+    console.log('   📁 Also check spam/promotions folder');
+    console.log('');
 
   } catch (error) {
-    console.error('Error subscribing:', error);
-    return res.status(500).json({ 
-      error: 'Failed to subscribe',
-    });
+    console.error('❌ Error:', error);
+    process.exit(1);
   }
 }
+
+// Get args
+const email = process.argv[2];
+const name = process.argv[3] || 'Friend';
+
+if (!email || !email.includes('@')) {
+  console.log('Usage: npx tsx scripts/test-subscribe.ts your@email.com "Your Name"');
+  process.exit(1);
+}
+
+testSubscribe(email, name);
