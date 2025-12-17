@@ -3,10 +3,12 @@ import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 
 /**
- * Cancel Subscription (schedule at period end)
- * POST /api/cancel-subscription
+ * Resume Subscription (unpause a paused subscription)
+ * POST /api/resume-subscription
  *
  * Auth: Supabase access token (Authorization: Bearer <token>)
+ * 
+ * Removes the pause_collection setting to resume billing.
  */
 
 interface ApiResponse {
@@ -16,7 +18,6 @@ interface ApiResponse {
   subscription?: {
     id: string;
     status: string;
-    cancelAtPeriodEnd: boolean;
     currentPeriodEnd?: string;
   };
 }
@@ -83,49 +84,84 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       } satisfies ApiResponse);
     }
 
+    // Find subscription if not stored
     if (!stripeSubscriptionId && stripeCustomerId) {
       const subs = await stripe.subscriptions.list({ customer: stripeCustomerId, status: 'all', limit: 10 });
-      const activeLike = subs.data.find((s) => s.status === 'active' || s.status === 'trialing' || s.status === 'past_due');
-      stripeSubscriptionId = (activeLike || subs.data[0])?.id || null;
+      // Look for paused subscription
+      const pausedSub = subs.data.find((s) => s.pause_collection);
+      stripeSubscriptionId = pausedSub?.id || null;
     }
 
     if (!stripeSubscriptionId) {
       return res.status(404).json({ ok: false, error: 'subscription_not_found' } satisfies ApiResponse);
     }
 
-    const updated = await stripe.subscriptions.update(stripeSubscriptionId, { cancel_at_period_end: true });
+    // Get current subscription
+    const currentSub = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+    
+    // Check if actually paused
+    if (!currentSub.pause_collection) {
+      return res.status(400).json({
+        ok: false,
+        error: 'not_paused',
+        message: 'Subscription is not currently paused',
+      } satisfies ApiResponse);
+    }
 
-    // Best-effort persist
+    // Resume the subscription by removing pause_collection
+    const updated = await stripe.subscriptions.update(stripeSubscriptionId, {
+      pause_collection: null as unknown as Stripe.SubscriptionUpdateParams.PauseCollection, // Remove pause
+    });
+
+    // Record event (best effort)
+    try {
+      const supabaseForEvents = createClient(supabaseUrl, supabaseServiceKey);
+      await supabaseForEvents.from('revenue_events').insert({
+        event_type: 'subscription_resumed',
+        user_id: userId,
+        stripe_customer_id: stripeCustomerId,
+        stripe_subscription_id: stripeSubscriptionId,
+        amount_cents: 0,
+        mrr_impact_cents: 0,
+        metadata: {
+          resumed_at: new Date().toISOString(),
+        },
+      });
+    } catch (_) {
+      // Don't fail on event logging
+    }
+
+    // Update user record (best effort)
     try {
       await supabaseAdmin
         .from('users')
         .update({
           subscription_status: updated.status,
-          cancel_at_period_end: Boolean(updated.cancel_at_period_end),
-          stripe_subscription_id: updated.id,
-          current_period_end: new Date(updated.current_period_end * 1000).toISOString(),
+          paused_until: null,
         })
         .eq('id', userId);
     } catch (_) {
-      // ignore
+      // Ignore
     }
 
     return res.status(200).json({
       ok: true,
+      message: 'Subscription resumed successfully',
       subscription: {
         id: updated.id,
         status: updated.status,
-        cancelAtPeriodEnd: Boolean(updated.cancel_at_period_end),
         currentPeriodEnd: new Date(updated.current_period_end * 1000).toISOString(),
       },
     } satisfies ApiResponse);
+
   } catch (e) {
-    console.error('cancel-subscription error:', e);
+    console.error('resume-subscription error:', e);
     return res.status(500).json({
       ok: false,
       error: 'internal_error',
-      message: e instanceof Error ? e.message : 'Unknown error',
+      message: process.env.NODE_ENV === 'development' && e instanceof Error 
+        ? e.message 
+        : 'An error occurred. Please try again.',
     } satisfies ApiResponse);
   }
 }
-

@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS, getClientIdentifier } from './lib/rate-limit';
 
 /**
  * Gift Checkout Session Creator
@@ -34,6 +35,29 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method === 'OPTIONS') return res.status(200).end();
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
+    const body = (req.body || {}) as CreateGiftCheckoutRequest;
+
+    // Rate limiting: use sender email
+    const identifier = getClientIdentifier(
+      req as unknown as { headers: Record<string, string | string[] | undefined> },
+      body.senderEmail
+    );
+    const rateLimitResult = checkRateLimit(identifier, RATE_LIMITS.giftCheckout);
+    
+    // Set rate limit headers
+    const rateLimitHeaders = getRateLimitHeaders(rateLimitResult, RATE_LIMITS.giftCheckout.limit);
+    Object.entries(rateLimitHeaders).forEach(([key, value]) => {
+      res.setHeader(key, value);
+    });
+    
+    if (!rateLimitResult.allowed) {
+      return res.status(429).json({
+        error: 'rate_limited',
+        message: `Too many gift checkout attempts. Please try again in ${rateLimitResult.retryAfterSecs} seconds.`,
+        retryAfter: rateLimitResult.retryAfterSecs,
+      });
+    }
+
     const stripeKey = process.env.STRIPE_SECRET_KEY;
     if (!stripeKey) {
       return res.status(503).json({
@@ -43,10 +67,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     }
 
     const Stripe = (await import('stripe')).default;
-    const stripe = new Stripe(stripeKey, { apiVersion: '2023-10-16' });
+    const stripe = new Stripe(stripeKey, { apiVersion: '2024-11-20.acacia' as const });
 
     const siteUrl = process.env.PUBLIC_SITE_URL || 'https://curiouskelly.com';
-    const body = (req.body || {}) as CreateGiftCheckoutRequest;
 
     // Validate gift duration
     const validDurations: GiftDuration[] = ['3-month', '6-month', '12-month', 'lifetime'];
@@ -88,7 +111,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       referral_code: body.referralCode || '',
     };
 
-    const returnUrl = `${siteUrl}/learn.html?gift=success`;
+    // Redirect to gift success page with session ID for confirmation display
+    const returnUrl = `${siteUrl}/gift-success.html?session_id={CHECKOUT_SESSION_ID}`;
+
+    // Generate idempotency key to prevent duplicate charges on retries
+    // Uses sender email + recipient + duration + 5-minute window
+    const timeWindow = Math.floor(Date.now() / (5 * 60 * 1000)); // 5-minute buckets
+    const idempotencyKey = `gift_${body.senderEmail}_${body.recipientEmail}_${body.giftDuration}_${timeWindow}`;
 
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
@@ -107,6 +136,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       billing_address_collection: 'auto',
       automatic_tax: { enabled: true },
+    }, {
+      idempotencyKey,
     });
 
     return res.status(200).json({

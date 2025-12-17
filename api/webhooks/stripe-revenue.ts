@@ -10,6 +10,7 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 import { Buffer } from 'node:buffer';
+import { sendGiftEmail, sendRenewalReminderEmail } from '../lib/email';
 
 const supabaseUrl = process.env.PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -17,13 +18,16 @@ const stripeKey = process.env.STRIPE_SECRET_KEY!;
 const webhookSecret = process.env.STRIPE_WEBHOOK_SECRET!;
 
 // Plan prices in cents for MRR calculation
+// 🔒 LOCKED PRICING - Canonical source: docs/billing/PRICING_STRATEGY_BIBLE.md
 const PLAN_PRICES: Record<string, { price_cents: number; mrr_cents: number }> = {
-  'monthly': { price_cents: 999, mrr_cents: 999 },
-  'annual': { price_cents: 9999, mrr_cents: 833 }, // $99.99/12 = ~$8.33/mo
-  'lifetime': { price_cents: 29999, mrr_cents: 0 }, // One-time, no MRR
-  'gift_3mo': { price_cents: 3499, mrr_cents: 0 },
-  'gift_6mo': { price_cents: 5999, mrr_cents: 0 },
-  'gift_12mo': { price_cents: 9999, mrr_cents: 0 },
+  'monthly': { price_cents: 799, mrr_cents: 799 },           // $7.99/mo
+  'annual': { price_cents: 4999, mrr_cents: 417 },           // $49.99/yr = ~$4.17/mo
+  'family': { price_cents: 9999, mrr_cents: 833 },           // $99.99/yr = ~$8.33/mo
+  'lifetime': { price_cents: 19999, mrr_cents: 0 },          // $199.99 one-time, no MRR
+  'gift_3mo': { price_cents: 2499, mrr_cents: 0 },           // $24.99 one-time
+  'gift_6mo': { price_cents: 3999, mrr_cents: 0 },           // $39.99 one-time
+  'gift_12mo': { price_cents: 4999, mrr_cents: 0 },          // $49.99 one-time
+  'gift_lifetime': { price_cents: 14999, mrr_cents: 0 },     // $149.99 one-time
 };
 
 /**
@@ -290,7 +294,7 @@ export default async function handler(
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const stripe = new Stripe(stripeKey, { apiVersion: '2023-10-16' });
+  const stripe = new Stripe(stripeKey, { apiVersion: '2024-11-20.acacia' as const });
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   // Verify webhook signature
@@ -582,8 +586,22 @@ export default async function handler(
               );
             }
             
-            // TODO: Send email to recipient with gift code
-            // await sendGiftEmail(recipientEmail, giftCode, session.metadata);
+            // Send gift email to recipient
+            if (recipientEmail) {
+              const emailResult = await sendGiftEmail({
+                recipientEmail,
+                giftCode,
+                gifterName: session.metadata?.gifter_name || undefined,
+                giftMessage: session.metadata?.gift_message || undefined,
+                durationMonths: durationMonths,
+                purchaseAmount: (session.amount_total || 0) / 100,
+              });
+              
+              if (!emailResult.success) {
+                console.error('[Gift Email] Failed to send:', emailResult.error);
+                // Don't fail the webhook - gift code is still stored
+              }
+            }
           } else if (paymentType === 'lifetime') {
             await recordRevenueEvent(supabase, 'payment_succeeded', {
               stripe_customer_id: session.customer as string,
@@ -630,6 +648,109 @@ export default async function handler(
             charge.amount_refunded
           );
         }
+        break;
+      }
+
+      // ============================================
+      // UPCOMING INVOICE (RENEWAL REMINDERS)
+      // ============================================
+      case 'invoice.upcoming': {
+        const invoice = event.data.object as Stripe.Invoice;
+        
+        // Only log for renewal reminders (not initial invoices)
+        if (invoice.billing_reason === 'subscription_cycle') {
+          const daysUntilDue = invoice.due_date 
+            ? Math.ceil((invoice.due_date * 1000 - Date.now()) / (1000 * 60 * 60 * 24))
+            : null;
+          
+          await recordRevenueEvent(supabase, 'renewal_reminder_due', {
+            stripe_customer_id: invoice.customer as string,
+            stripe_subscription_id: invoice.subscription as string,
+            amount_cents: invoice.amount_due,
+            metadata: {
+              days_until_due: daysUntilDue,
+              customer_email: invoice.customer_email,
+              billing_reason: invoice.billing_reason,
+            },
+          });
+          
+          console.log(`[Renewal Reminder] Customer ${invoice.customer_email} - due in ${daysUntilDue} days`);
+          
+          // Send renewal reminder email
+          if (invoice.customer_email && daysUntilDue !== null) {
+            const emailResult = await sendRenewalReminderEmail({
+              customerEmail: invoice.customer_email,
+              daysUntilDue,
+              amountDue: invoice.amount_due,
+              planType: invoice.subscription_details?.metadata?.plan_type,
+            });
+            
+            if (!emailResult.success) {
+              console.error('[Renewal Reminder Email] Failed to send:', emailResult.error);
+            }
+          }
+        }
+        break;
+      }
+
+      // ============================================
+      // CUSTOMER UPDATES (SYNC DATA)
+      // ============================================
+      case 'customer.updated': {
+        const customer = event.data.object as Stripe.Customer;
+        const previousAttributes = event.data.previous_attributes as Record<string, unknown> | undefined;
+        
+        // Sync email changes to our users table
+        if (previousAttributes?.email && customer.email) {
+          console.log(`[Customer Updated] Email changed from ${previousAttributes.email} to ${customer.email}`);
+          
+          // Find and update user by old email or stripe_customer_id
+          const { error } = await supabase
+            .from('users')
+            .update({ 
+              email: customer.email,
+              display_name: customer.name || undefined,
+            })
+            .eq('stripe_customer_id', customer.id);
+            
+          if (error) {
+            console.warn('[Customer Updated] Failed to sync email change:', error);
+          }
+        }
+        
+        await recordRevenueEvent(supabase, 'customer_updated', {
+          stripe_customer_id: customer.id,
+          amount_cents: 0,
+          metadata: {
+            email: customer.email,
+            name: customer.name,
+            changed_fields: previousAttributes ? Object.keys(previousAttributes) : [],
+          },
+        });
+        break;
+      }
+
+      // ============================================
+      // DISPUTE ALERTS
+      // ============================================
+      case 'charge.dispute.created': {
+        const dispute = event.data.object as Stripe.Dispute;
+        
+        console.error(`[ALERT] Dispute created: ${dispute.id} - Amount: ${dispute.amount} - Reason: ${dispute.reason}`);
+        
+        await recordRevenueEvent(supabase, 'dispute_created', {
+          stripe_customer_id: typeof dispute.charge === 'string' ? undefined : undefined,
+          amount_cents: dispute.amount,
+          metadata: {
+            dispute_id: dispute.id,
+            reason: dispute.reason,
+            status: dispute.status,
+            charge_id: typeof dispute.charge === 'string' ? dispute.charge : dispute.charge?.id,
+          },
+        });
+        
+        // TODO: Send immediate Slack/email alert to team
+        // await sendDisputeAlert(dispute);
         break;
       }
 

@@ -1,8 +1,11 @@
 /**
- * Simple In-Memory Rate Limiter
+ * Simple Rate Limiter for Checkout Endpoints
  * 
- * For serverless functions. Not perfect (resets on cold start) but helps.
- * For production scale, use Redis or Vercel's built-in rate limiting.
+ * Uses in-memory storage. For production scale, upgrade to Redis.
+ * This prevents abuse like:
+ * - Brute force price/plan enumeration
+ * - Spam checkout attempts
+ * - Card testing attacks
  */
 
 interface RateLimitEntry {
@@ -10,89 +13,153 @@ interface RateLimitEntry {
   resetAt: number;
 }
 
+// In-memory store (resets on serverless cold start, which is acceptable)
 const store = new Map<string, RateLimitEntry>();
 
-export interface RateLimitConfig {
-  windowMs?: number;  // Time window in milliseconds
-  maxRequests?: number;  // Max requests per window
-}
+// Cleanup old entries every 5 minutes
+const CLEANUP_INTERVAL = 5 * 60 * 1000;
+let lastCleanup = Date.now();
 
-const DEFAULT_CONFIG: Required<RateLimitConfig> = {
-  windowMs: 60 * 1000,  // 1 minute
-  maxRequests: 60,       // 60 requests per minute
-};
-
-/**
- * Check if a request should be rate limited
- * @returns { allowed: boolean, remaining: number, resetIn: number }
- */
-export function checkRateLimit(
-  identifier: string,
-  config: RateLimitConfig = {}
-): { allowed: boolean; remaining: number; resetIn: number } {
-  const { windowMs, maxRequests } = { ...DEFAULT_CONFIG, ...config };
+function cleanup() {
   const now = Date.now();
+  if (now - lastCleanup < CLEANUP_INTERVAL) return;
   
-  // Clean up expired entries
+  lastCleanup = now;
   for (const [key, entry] of store.entries()) {
     if (entry.resetAt < now) {
       store.delete(key);
     }
   }
+}
+
+export interface RateLimitConfig {
+  /** Max requests allowed in the window */
+  limit: number;
+  /** Window size in seconds */
+  windowSecs: number;
+  /** Identifier for this limiter (e.g., 'checkout', 'gift') */
+  prefix?: string;
+}
+
+export interface RateLimitResult {
+  allowed: boolean;
+  remaining: number;
+  resetAt: Date;
+  retryAfterSecs?: number;
+}
+
+/**
+ * Check and consume rate limit for a given identifier
+ * 
+ * @param identifier - Unique key (e.g., IP address, email, or composite)
+ * @param config - Rate limit configuration
+ * @returns Whether the request is allowed
+ */
+export function checkRateLimit(
+  identifier: string,
+  config: RateLimitConfig
+): RateLimitResult {
+  cleanup();
   
-  const entry = store.get(identifier);
+  const { limit, windowSecs, prefix = 'rl' } = config;
+  const key = `${prefix}:${identifier}`;
+  const now = Date.now();
+  const windowMs = windowSecs * 1000;
   
+  let entry = store.get(key);
+  
+  // If no entry or window expired, create new entry
   if (!entry || entry.resetAt < now) {
-    // New window
-    store.set(identifier, {
+    entry = {
       count: 1,
       resetAt: now + windowMs,
-    });
-    return { allowed: true, remaining: maxRequests - 1, resetIn: windowMs };
-  }
-  
-  if (entry.count >= maxRequests) {
-    return { 
-      allowed: false, 
-      remaining: 0, 
-      resetIn: entry.resetAt - now 
+    };
+    store.set(key, entry);
+    
+    return {
+      allowed: true,
+      remaining: limit - 1,
+      resetAt: new Date(entry.resetAt),
     };
   }
   
-  entry.count++;
-  return { 
-    allowed: true, 
-    remaining: maxRequests - entry.count, 
-    resetIn: entry.resetAt - now 
+  // Increment count
+  entry.count += 1;
+  
+  if (entry.count > limit) {
+    const retryAfterSecs = Math.ceil((entry.resetAt - now) / 1000);
+    return {
+      allowed: false,
+      remaining: 0,
+      resetAt: new Date(entry.resetAt),
+      retryAfterSecs,
+    };
+  }
+  
+  return {
+    allowed: true,
+    remaining: limit - entry.count,
+    resetAt: new Date(entry.resetAt),
   };
 }
 
 /**
- * Get client identifier from request
+ * Get rate limit headers for response
  */
-export function getClientId(req: any): string {
-  return (
-    req.headers['x-forwarded-for']?.split(',')[0]?.trim() ||
-    req.headers['x-real-ip'] ||
-    req.socket?.remoteAddress ||
-    'unknown'
-  );
-}
-
-/**
- * Create rate limit headers for response
- */
-export function rateLimitHeaders(
-  remaining: number,
-  resetIn: number,
-  limit: number = DEFAULT_CONFIG.maxRequests
-): Record<string, string> {
+export function getRateLimitHeaders(result: RateLimitResult, limit: number): Record<string, string> {
   return {
     'X-RateLimit-Limit': String(limit),
-    'X-RateLimit-Remaining': String(Math.max(0, remaining)),
-    'X-RateLimit-Reset': String(Math.ceil((Date.now() + resetIn) / 1000)),
+    'X-RateLimit-Remaining': String(result.remaining),
+    'X-RateLimit-Reset': String(Math.floor(result.resetAt.getTime() / 1000)),
+    ...(result.retryAfterSecs ? { 'Retry-After': String(result.retryAfterSecs) } : {}),
   };
 }
 
+/**
+ * Default rate limit configurations
+ */
+export const RATE_LIMITS = {
+  // Checkout: 10 attempts per email per 15 minutes
+  checkout: { limit: 10, windowSecs: 15 * 60, prefix: 'checkout' } as RateLimitConfig,
+  
+  // Gift checkout: 5 attempts per sender email per 15 minutes
+  giftCheckout: { limit: 5, windowSecs: 15 * 60, prefix: 'gift' } as RateLimitConfig,
+  
+  // Portal session: 20 attempts per user per 15 minutes
+  portal: { limit: 20, windowSecs: 15 * 60, prefix: 'portal' } as RateLimitConfig,
+  
+  // Cancel: 5 attempts per user per hour
+  cancel: { limit: 5, windowSecs: 60 * 60, prefix: 'cancel' } as RateLimitConfig,
+};
 
-
+/**
+ * Extract client identifier from request
+ * Prioritizes: email > user ID > IP address
+ */
+export function getClientIdentifier(
+  req: { headers: Record<string, string | string[] | undefined> },
+  email?: string,
+  userId?: string
+): string {
+  if (email) return email.toLowerCase().trim();
+  if (userId) return userId;
+  
+  // Try to get real IP from various headers
+  const forwarded = req.headers['x-forwarded-for'];
+  if (forwarded) {
+    const ips = Array.isArray(forwarded) ? forwarded[0] : forwarded.split(',')[0];
+    return ips.trim();
+  }
+  
+  const realIp = req.headers['x-real-ip'];
+  if (realIp) {
+    return Array.isArray(realIp) ? realIp[0] : realIp;
+  }
+  
+  const cfIp = req.headers['cf-connecting-ip'];
+  if (cfIp) {
+    return Array.isArray(cfIp) ? cfIp[0] : cfIp;
+  }
+  
+  return 'unknown';
+}

@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS, getClientIdentifier } from './lib/rate-limit';
 
 /**
  * Stripe Checkout API Handler
@@ -47,6 +48,31 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(405).json({ error: 'Method not allowed' });
     }
 
+    const body = req.body as CheckoutRequest;
+
+    // Rate limiting: use email if provided, otherwise IP
+    const identifier = getClientIdentifier(
+      req as unknown as { headers: Record<string, string | string[] | undefined> },
+      body.customerEmail
+    );
+    const isGift = body.planType?.startsWith('gift_');
+    const rateLimitConfig = isGift ? RATE_LIMITS.giftCheckout : RATE_LIMITS.checkout;
+    const rateLimitResult = checkRateLimit(identifier, rateLimitConfig);
+    
+    // Set rate limit headers
+    const rateLimitHeaders = getRateLimitHeaders(rateLimitResult, rateLimitConfig.limit);
+    Object.entries(rateLimitHeaders).forEach(([key, value]) => {
+      res.setHeader(key, value);
+    });
+    
+    if (!rateLimitResult.allowed) {
+      return res.status(429).json({
+        error: 'rate_limited',
+        message: `Too many checkout attempts. Please try again in ${rateLimitResult.retryAfterSecs} seconds.`,
+        retryAfter: rateLimitResult.retryAfterSecs,
+      });
+    }
+
     const stripeKey = process.env.STRIPE_SECRET_KEY;
     if (!stripeKey) {
       return res.status(503).json({ 
@@ -58,10 +84,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     // Dynamic import to ensure proper module resolution
     const Stripe = (await import('stripe')).default;
     const stripe = new Stripe(stripeKey, {
-      apiVersion: '2023-10-16' // Compatible with stripe v14
+      apiVersion: '2024-11-20.acacia' as const, // Latest stable API version
     });
-
-    const body = req.body as CheckoutRequest;
 
     // Validate email
     if (!body.customerEmail || !isValidEmail(body.customerEmail)) {
@@ -138,18 +162,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           delivery_date: giftMeta.deliveryDate || new Date().toISOString()
         }
       };
-    } else if (body.planType === 'lifetime' || body.planType === 'family') {
-      const oneTimePriceId = priceIds[body.planType];
-      if (!oneTimePriceId) {
+    } else if (body.planType === 'lifetime') {
+      // Lifetime is a one-time payment
+      const lifetimePriceId = priceIds[body.planType];
+      if (!lifetimePriceId) {
         return res.status(503).json({ 
           error: 'price_not_configured',
-          message: `${body.planType} price ID not configured. Add STRIPE_PRICE_${body.planType.toUpperCase()} to environment.`
+          message: `Lifetime price ID not configured. Add STRIPE_PRICE_LIFETIME to environment.`
         });
       }
 
       sessionConfig = {
         payment_method_types: ['card'],
-        line_items: [{ price: oneTimePriceId, quantity: 1 }],
+        line_items: [{ price: lifetimePriceId, quantity: 1 }],
         mode: 'payment',
         customer_email: body.customerEmail,
         success_url: `${siteUrl}/welcome.html?session_id={CHECKOUT_SESSION_ID}&plan=${body.planType}`,
@@ -158,7 +183,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         metadata: { ...commonMetadata, type: body.planType }
       };
     } else {
-      // Subscription plans (monthly, annual)
+      // Subscription plans: monthly, annual, family
+      // Family is a recurring annual subscription (up to 6 members)
       const priceId = priceIds[body.planType];
       if (!priceId) {
         return res.status(503).json({ 
@@ -184,7 +210,14 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       };
     }
 
-    const session = await stripe.checkout.sessions.create(sessionConfig);
+    // Generate idempotency key to prevent duplicate charges on retries
+    // Uses email + plan + 5-minute window to allow retries within same session
+    const timeWindow = Math.floor(Date.now() / (5 * 60 * 1000)); // 5-minute buckets
+    const idempotencyKey = `checkout_${body.customerEmail}_${body.planType}_${timeWindow}`;
+
+    const session = await stripe.checkout.sessions.create(sessionConfig, {
+      idempotencyKey,
+    });
 
     return res.status(200).json({
       sessionId: session.id,
@@ -192,10 +225,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (error) {
     console.error('Stripe checkout error:', error);
+    // Never expose stack traces in production
     return res.status(500).json({
       error: 'checkout_failed',
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined
+      message: process.env.NODE_ENV === 'development' && error instanceof Error 
+        ? error.message 
+        : 'An error occurred during checkout. Please try again.'
     });
   }
 }

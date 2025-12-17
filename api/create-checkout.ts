@@ -1,4 +1,5 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
+import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS, getClientIdentifier } from './lib/rate-limit';
 
 /**
  * Embedded Checkout Session Creator (in-app)
@@ -40,6 +41,30 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     if (req.method === 'OPTIONS') return res.status(200).end();
     if (req.method !== 'POST') return res.status(405).json({ error: 'Method not allowed' });
 
+    const body = (req.body || {}) as CreateCheckoutRequest;
+
+    // Rate limiting: use email or userId if provided, otherwise IP
+    const identifier = getClientIdentifier(
+      req as unknown as { headers: Record<string, string | string[] | undefined> },
+      body.customerEmail,
+      body.userId
+    );
+    const rateLimitResult = checkRateLimit(identifier, RATE_LIMITS.checkout);
+    
+    // Set rate limit headers
+    const rateLimitHeaders = getRateLimitHeaders(rateLimitResult, RATE_LIMITS.checkout.limit);
+    Object.entries(rateLimitHeaders).forEach(([key, value]) => {
+      res.setHeader(key, value);
+    });
+    
+    if (!rateLimitResult.allowed) {
+      return res.status(429).json({
+        error: 'rate_limited',
+        message: `Too many checkout attempts. Please try again in ${rateLimitResult.retryAfterSecs} seconds.`,
+        retryAfter: rateLimitResult.retryAfterSecs,
+      });
+    }
+
     const stripeKey = process.env.STRIPE_SECRET_KEY;
     if (!stripeKey) {
       return res.status(503).json({
@@ -50,10 +75,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     // Dynamic import to ensure proper module resolution
     const Stripe = (await import('stripe')).default;
-    const stripe = new Stripe(stripeKey, { apiVersion: '2023-10-16' });
+    const stripe = new Stripe(stripeKey, { apiVersion: '2024-11-20.acacia' as const });
 
     const siteUrl = process.env.PUBLIC_SITE_URL || 'https://curiouskelly.com';
-    const body = (req.body || {}) as CreateCheckoutRequest;
 
     const planType = body.planType;
     if (!planType || !(['monthly', 'annual', 'family', 'lifetime'] as const).includes(planType)) {
@@ -95,6 +119,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const mode = planType === 'lifetime' ? 'payment' : 'subscription';
 
+    // Generate idempotency key to prevent duplicate charges on retries
+    // Uses email/userId + plan + 5-minute window
+    const timeWindow = Math.floor(Date.now() / (5 * 60 * 1000)); // 5-minute buckets
+    const userKey = body.userId || customerEmail || 'anonymous';
+    const idempotencyKey = `embedded_${userKey}_${planType}_${timeWindow}`;
+
     const session = await stripe.checkout.sessions.create({
       mode,
       ui_mode: 'embedded',
@@ -124,6 +154,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // If Stripe decides taxes apply, calculate automatically
       automatic_tax: { enabled: true },
+    }, {
+      idempotencyKey,
     });
 
     return res.status(200).json({
@@ -132,10 +164,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     });
   } catch (error) {
     console.error('Embedded checkout error:', error);
+    // Never expose stack traces in production
     return res.status(500).json({
       error: 'checkout_failed',
-      message: error instanceof Error ? error.message : 'Unknown error',
-      stack: error instanceof Error ? error.stack : undefined,
+      message: process.env.NODE_ENV === 'development' && error instanceof Error 
+        ? error.message 
+        : 'An error occurred during checkout. Please try again.'
     });
   }
 }

@@ -3,11 +3,18 @@ import { createClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 
 /**
- * Cancel Subscription (schedule at period end)
- * POST /api/cancel-subscription
+ * Pause Subscription (schedule pause at period end)
+ * POST /api/pause-subscription
  *
  * Auth: Supabase access token (Authorization: Bearer <token>)
+ * 
+ * Pauses subscription for up to 3 months using Stripe's pause_collection.
+ * User retains access until current period ends, then paused.
  */
+
+interface PauseRequest {
+  pauseMonths: 1 | 2 | 3; // Max 3 months pause
+}
 
 interface ApiResponse {
   ok: boolean;
@@ -16,7 +23,7 @@ interface ApiResponse {
   subscription?: {
     id: string;
     status: string;
-    cancelAtPeriodEnd: boolean;
+    pausedUntil?: string;
     currentPeriodEnd?: string;
   };
 }
@@ -40,6 +47,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const token = getBearerToken(req);
   if (!token) return res.status(401).json({ ok: false, error: 'unauthorized' } satisfies ApiResponse);
+
+  const body = (req.body || {}) as PauseRequest;
+  const pauseMonths = body.pauseMonths;
+
+  // Validate pause duration
+  if (!pauseMonths || ![1, 2, 3].includes(pauseMonths)) {
+    return res.status(422).json({
+      ok: false,
+      error: 'invalid_pause_duration',
+      message: 'pauseMonths must be 1, 2, or 3',
+    } satisfies ApiResponse);
+  }
 
   const supabaseUrl =
     process.env.PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL || process.env.SUPABASE_URL;
@@ -83,49 +102,102 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       } satisfies ApiResponse);
     }
 
+    // Find active subscription if not stored
     if (!stripeSubscriptionId && stripeCustomerId) {
       const subs = await stripe.subscriptions.list({ customer: stripeCustomerId, status: 'all', limit: 10 });
-      const activeLike = subs.data.find((s) => s.status === 'active' || s.status === 'trialing' || s.status === 'past_due');
-      stripeSubscriptionId = (activeLike || subs.data[0])?.id || null;
+      const activeLike = subs.data.find((s) => s.status === 'active' || s.status === 'trialing');
+      stripeSubscriptionId = activeLike?.id || null;
     }
 
     if (!stripeSubscriptionId) {
       return res.status(404).json({ ok: false, error: 'subscription_not_found' } satisfies ApiResponse);
     }
 
-    const updated = await stripe.subscriptions.update(stripeSubscriptionId, { cancel_at_period_end: true });
+    // Get current subscription to check status
+    const currentSub = await stripe.subscriptions.retrieve(stripeSubscriptionId);
+    
+    if (currentSub.status !== 'active' && currentSub.status !== 'trialing') {
+      return res.status(400).json({
+        ok: false,
+        error: 'cannot_pause',
+        message: `Cannot pause subscription with status: ${currentSub.status}`,
+      } satisfies ApiResponse);
+    }
 
-    // Best-effort persist
+    // Check if already paused
+    if (currentSub.pause_collection) {
+      return res.status(400).json({
+        ok: false,
+        error: 'already_paused',
+        message: 'Subscription is already paused',
+      } satisfies ApiResponse);
+    }
+
+    // Calculate resume date (pause for X months from current period end)
+    const currentPeriodEnd = new Date(currentSub.current_period_end * 1000);
+    const resumeDate = new Date(currentPeriodEnd);
+    resumeDate.setMonth(resumeDate.getMonth() + pauseMonths);
+
+    // Pause the subscription
+    const updated = await stripe.subscriptions.update(stripeSubscriptionId, {
+      pause_collection: {
+        behavior: 'void', // Don't charge during pause
+        resumes_at: Math.floor(resumeDate.getTime() / 1000),
+      },
+    });
+
+    // Record event (best effort)
+    try {
+      const supabaseForEvents = createClient(supabaseUrl, supabaseServiceKey);
+      await supabaseForEvents.from('revenue_events').insert({
+        event_type: 'subscription_paused',
+        user_id: userId,
+        stripe_customer_id: stripeCustomerId,
+        stripe_subscription_id: stripeSubscriptionId,
+        amount_cents: 0,
+        mrr_impact_cents: 0, // Pause doesn't immediately affect MRR
+        metadata: {
+          pause_months: pauseMonths,
+          resumes_at: resumeDate.toISOString(),
+          current_period_end: currentPeriodEnd.toISOString(),
+        },
+      });
+    } catch (_) {
+      // Don't fail on event logging
+    }
+
+    // Update user record (best effort)
     try {
       await supabaseAdmin
         .from('users')
         .update({
-          subscription_status: updated.status,
-          cancel_at_period_end: Boolean(updated.cancel_at_period_end),
-          stripe_subscription_id: updated.id,
-          current_period_end: new Date(updated.current_period_end * 1000).toISOString(),
+          subscription_status: 'paused',
+          paused_until: resumeDate.toISOString(),
         })
         .eq('id', userId);
     } catch (_) {
-      // ignore
+      // Ignore
     }
 
     return res.status(200).json({
       ok: true,
+      message: `Subscription paused for ${pauseMonths} month${pauseMonths > 1 ? 's' : ''}`,
       subscription: {
         id: updated.id,
         status: updated.status,
-        cancelAtPeriodEnd: Boolean(updated.cancel_at_period_end),
-        currentPeriodEnd: new Date(updated.current_period_end * 1000).toISOString(),
+        pausedUntil: resumeDate.toISOString(),
+        currentPeriodEnd: currentPeriodEnd.toISOString(),
       },
     } satisfies ApiResponse);
+
   } catch (e) {
-    console.error('cancel-subscription error:', e);
+    console.error('pause-subscription error:', e);
     return res.status(500).json({
       ok: false,
       error: 'internal_error',
-      message: e instanceof Error ? e.message : 'Unknown error',
+      message: process.env.NODE_ENV === 'development' && e instanceof Error 
+        ? e.message 
+        : 'An error occurred. Please try again.',
     } satisfies ApiResponse);
   }
 }
-
