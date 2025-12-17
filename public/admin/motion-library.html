@@ -1,0 +1,457 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Kelly Motion Library Manager</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: #fff;
+      padding: 20px;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+    }
+    
+    h1 {
+      text-align: center;
+      font-size: 2rem;
+      margin-bottom: 10px;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    
+    .subtitle {
+      text-align: center;
+      color: #888;
+      margin-bottom: 30px;
+    }
+    
+    .progress-bar {
+      background: #2a2a4a;
+      border-radius: 10px;
+      height: 24px;
+      margin-bottom: 30px;
+      overflow: hidden;
+      position: relative;
+    }
+    
+    .progress-fill {
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      height: 100%;
+      transition: width 0.3s ease;
+    }
+    
+    .progress-text {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-weight: bold;
+      font-size: 12px;
+    }
+    
+    .legend {
+      display: flex;
+      justify-content: center;
+      gap: 30px;
+      margin-bottom: 20px;
+      flex-wrap: wrap;
+    }
+    
+    .legend-item {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+    }
+    
+    .legend-dot {
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+    }
+    
+    .legend-dot.a { background: #4ade80; }
+    .legend-dot.b { background: #60a5fa; }
+    .legend-dot.c { background: #f472b6; }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 20px;
+    }
+    
+    .card {
+      background: rgba(255,255,255,0.05);
+      border-radius: 12px;
+      padding: 20px;
+      border: 1px solid rgba(255,255,255,0.1);
+    }
+    
+    .card-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 15px;
+    }
+    
+    .card-title {
+      font-size: 1.1rem;
+      font-weight: 600;
+      text-transform: capitalize;
+    }
+    
+    .card-status {
+      font-size: 12px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      background: rgba(255,255,255,0.1);
+    }
+    
+    .card-status.complete {
+      background: rgba(74, 222, 128, 0.2);
+      color: #4ade80;
+    }
+    
+    .input-group {
+      margin-bottom: 12px;
+    }
+    
+    .input-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 12px;
+      color: #888;
+      margin-bottom: 6px;
+    }
+    
+    .input-label .dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+    }
+    
+    .input-label .dot.a { background: #4ade80; }
+    .input-label .dot.b { background: #60a5fa; }
+    .input-label .dot.c { background: #f472b6; }
+    
+    input[type="text"] {
+      width: 100%;
+      padding: 10px 12px;
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      background: rgba(0,0,0,0.3);
+      color: #fff;
+      font-family: monospace;
+      font-size: 13px;
+      transition: border-color 0.2s;
+    }
+    
+    input[type="text"]:focus {
+      outline: none;
+      border-color: #667eea;
+    }
+    
+    input[type="text"].filled {
+      border-color: rgba(74, 222, 128, 0.5);
+      background: rgba(74, 222, 128, 0.1);
+    }
+    
+    .actions {
+      display: flex;
+      justify-content: center;
+      gap: 15px;
+      margin-top: 30px;
+      flex-wrap: wrap;
+    }
+    
+    button {
+      padding: 12px 30px;
+      border: none;
+      border-radius: 8px;
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: transform 0.1s, opacity 0.2s;
+    }
+    
+    button:hover {
+      transform: translateY(-1px);
+    }
+    
+    button:active {
+      transform: translateY(0);
+    }
+    
+    .btn-primary {
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      color: #fff;
+    }
+    
+    .btn-secondary {
+      background: rgba(255,255,255,0.1);
+      color: #fff;
+    }
+    
+    .btn-success {
+      background: #4ade80;
+      color: #000;
+    }
+    
+    .toast {
+      position: fixed;
+      bottom: 20px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: #333;
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 8px;
+      opacity: 0;
+      transition: opacity 0.3s;
+      z-index: 1000;
+    }
+    
+    .toast.show {
+      opacity: 1;
+    }
+    
+    .json-output {
+      margin-top: 30px;
+      background: rgba(0,0,0,0.3);
+      border-radius: 12px;
+      padding: 20px;
+      display: none;
+    }
+    
+    .json-output.show {
+      display: block;
+    }
+    
+    .json-output pre {
+      font-family: monospace;
+      font-size: 12px;
+      color: #4ade80;
+      white-space: pre-wrap;
+      word-break: break-all;
+    }
+    
+    .json-output textarea {
+      width: 100%;
+      height: 200px;
+      background: rgba(0,0,0,0.5);
+      border: 1px solid rgba(255,255,255,0.2);
+      border-radius: 8px;
+      color: #4ade80;
+      font-family: monospace;
+      font-size: 12px;
+      padding: 15px;
+      margin-top: 10px;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎬 Kelly Motion Library</h1>
+    <p class="subtitle">12 Archetypes × 3 Motions = 36 Avatar IDs</p>
+    
+    <div class="progress-bar">
+      <div class="progress-fill" id="progressFill" style="width: 0%"></div>
+      <span class="progress-text" id="progressText">0/36 configured</span>
+    </div>
+    
+    <div class="legend">
+      <div class="legend-item">
+        <div class="legend-dot a"></div>
+        <span>A: Warm Welcoming</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot b"></div>
+        <span>B: Talk Talk Talk</span>
+      </div>
+      <div class="legend-item">
+        <div class="legend-dot c"></div>
+        <span>C: Filler</span>
+      </div>
+    </div>
+    
+    <div class="grid" id="grid"></div>
+    
+    <div class="actions">
+      <button class="btn-secondary" onclick="clearAll()">Clear All</button>
+      <button class="btn-primary" onclick="showJSON()">Export JSON</button>
+      <button class="btn-success" onclick="copyJSON()">📋 Copy to Clipboard</button>
+    </div>
+    
+    <div class="json-output" id="jsonOutput">
+      <h3 style="margin-bottom: 10px;">📄 JSON Output</h3>
+      <p style="font-size: 12px; color: #888; margin-bottom: 10px;">
+        Copy this and save to: <code>generated-images/kelly-motion-library.json</code>
+      </p>
+      <textarea id="jsonTextarea" readonly></textarea>
+    </div>
+  </div>
+  
+  <div class="toast" id="toast"></div>
+  
+  <script>
+    const ARCHETYPES = [
+      'scientist', 'explorer', 'rebel', 'architect',
+      'diplomat', 'empath', 'macgyver', 'mystic',
+      'provider', 'storyteller', 'strategist', 'survivor'
+    ];
+    
+    const MOTIONS = ['A', 'B', 'C'];
+    const MOTION_LABELS = {
+      A: 'Warm Welcoming',
+      B: 'Talk Talk Talk',
+      C: 'Filler'
+    };
+    
+    // Load from localStorage or start fresh
+    let library = JSON.parse(localStorage.getItem('kellyMotionLibrary') || '{}');
+    
+    // Initialize missing archetypes
+    ARCHETYPES.forEach(arch => {
+      if (!library[arch]) {
+        library[arch] = { A: '', B: '', C: '' };
+      }
+    });
+    
+    function renderCards() {
+      const grid = document.getElementById('grid');
+      grid.innerHTML = '';
+      
+      ARCHETYPES.forEach(arch => {
+        const data = library[arch] || { A: '', B: '', C: '' };
+        const filled = MOTIONS.filter(m => data[m]).length;
+        
+        const card = document.createElement('div');
+        card.className = 'card';
+        card.innerHTML = `
+          <div class="card-header">
+            <span class="card-title">${arch}</span>
+            <span class="card-status ${filled === 3 ? 'complete' : ''}">${filled}/3</span>
+          </div>
+          ${MOTIONS.map(m => `
+            <div class="input-group">
+              <div class="input-label">
+                <div class="dot ${m.toLowerCase()}"></div>
+                <span>${m}: ${MOTION_LABELS[m]}</span>
+              </div>
+              <input 
+                type="text" 
+                id="${arch}_${m}"
+                value="${data[m] || ''}"
+                placeholder="Paste avatar ID here..."
+                class="${data[m] ? 'filled' : ''}"
+                oninput="updateId('${arch}', '${m}', this.value)"
+              />
+            </div>
+          `).join('')}
+        `;
+        grid.appendChild(card);
+      });
+      
+      updateProgress();
+    }
+    
+    function updateId(arch, motion, value) {
+      library[arch][motion] = value.trim();
+      localStorage.setItem('kellyMotionLibrary', JSON.stringify(library));
+      
+      const input = document.getElementById(`${arch}_${motion}`);
+      input.className = value.trim() ? 'filled' : '';
+      
+      // Update card status
+      const filled = MOTIONS.filter(m => library[arch][m]).length;
+      const card = input.closest('.card');
+      const status = card.querySelector('.card-status');
+      status.textContent = `${filled}/3`;
+      status.className = `card-status ${filled === 3 ? 'complete' : ''}`;
+      
+      updateProgress();
+    }
+    
+    function updateProgress() {
+      let filled = 0;
+      const total = ARCHETYPES.length * 3;
+      
+      ARCHETYPES.forEach(arch => {
+        MOTIONS.forEach(m => {
+          if (library[arch]?.[m]) filled++;
+        });
+      });
+      
+      const pct = Math.round(filled / total * 100);
+      document.getElementById('progressFill').style.width = `${pct}%`;
+      document.getElementById('progressText').textContent = `${filled}/${total} configured (${pct}%)`;
+    }
+    
+    function getExportJSON() {
+      const output = {
+        version: "1.0",
+        updated: new Date().toISOString().split('T')[0],
+        description: "Kelly Motion Library - 12 archetypes × 3 motions",
+        motions: {
+          A: "Warm welcoming (hooks, intros)",
+          B: "Talk talk talk (main teaching)",
+          C: "Filler (transitions, outros)"
+        }
+      };
+      
+      ARCHETYPES.forEach(arch => {
+        output[arch] = library[arch] || { A: '', B: '', C: '' };
+      });
+      
+      return JSON.stringify(output, null, 2);
+    }
+    
+    function showJSON() {
+      const output = document.getElementById('jsonOutput');
+      const textarea = document.getElementById('jsonTextarea');
+      textarea.value = getExportJSON();
+      output.classList.toggle('show');
+    }
+    
+    function copyJSON() {
+      const json = getExportJSON();
+      navigator.clipboard.writeText(json).then(() => {
+        showToast('✅ Copied to clipboard!');
+      });
+    }
+    
+    function clearAll() {
+      if (confirm('Clear all IDs? This cannot be undone.')) {
+        library = {};
+        ARCHETYPES.forEach(arch => {
+          library[arch] = { A: '', B: '', C: '' };
+        });
+        localStorage.setItem('kellyMotionLibrary', JSON.stringify(library));
+        renderCards();
+        showToast('Cleared all IDs');
+      }
+    }
+    
+    function showToast(message) {
+      const toast = document.getElementById('toast');
+      toast.textContent = message;
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+    
+    // Initial render
+    renderCards();
+  </script>
+</body>
+</html>
