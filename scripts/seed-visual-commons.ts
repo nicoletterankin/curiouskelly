@@ -33,7 +33,7 @@ const CONFIG = {
   COST_PER_IMAGE: 0.06,
   
   // Output settings
-  ASPECT_RATIO: '16:9',
+  ASPECT_RATIO: '1:1',
   
   // Rate limiting
   DELAY_BETWEEN_IMAGES_MS: 2000,
@@ -130,7 +130,7 @@ Key insight to hint at: ${lesson.universal_truth}
 STYLE:
 - Ultra photorealistic, professional photography aesthetic
 - Dramatic lighting, cinematic composition
-- 16:9 aspect ratio, 4K quality
+- 1:1 square aspect ratio, high quality
 - Warm, inviting color palette with a sense of wonder
 - Leave right 35% of frame with simpler background (for overlay content)
 
@@ -154,7 +154,7 @@ Universal truth: ${lesson.universal_truth}
 STYLE:
 - Ultra photorealistic, slightly dramatic lighting
 - Sense of revelation or "plot twist" moment
-- 16:9 aspect ratio, 4K quality
+- 1:1 square aspect ratio, high quality
 - Visual contrast between expectation and reality
 
 COMPOSITION:
@@ -175,7 +175,7 @@ Core concept: ${lesson.fun_facts?.[0] || lesson.universal_truth}
 STYLE:
 - Ultra photorealistic, bright and clear lighting
 - Educational but beautiful - think museum exhibit quality
-- 16:9 aspect ratio, 4K quality
+- 1:1 square aspect ratio, high quality
 - Clean, organized composition
 
 COMPOSITION:
@@ -195,7 +195,7 @@ Building on foundational knowledge with: ${lesson.fun_facts?.[1] || 'deeper unde
 STYLE:
 - Ultra photorealistic, layered lighting showing depth
 - More detailed than fact1 - reveals complexity
-- 16:9 aspect ratio, 4K quality
+- 1:1 square aspect ratio, high quality
 
 COMPOSITION:
 - Show relationships and connections
@@ -213,7 +213,7 @@ This captures the most surprising aspect of the topic.
 STYLE:
 - Ultra photorealistic, dramatic lighting
 - Maximum visual impact and wonder
-- 16:9 aspect ratio, 4K quality
+- 1:1 square aspect ratio, high quality
 - Bold, memorable composition
 
 COMPOSITION:
@@ -232,7 +232,7 @@ This visual captures timeless wisdom and new possibilities.
 STYLE:
 - Ultra photorealistic, warm golden hour lighting
 - Timeless, universal appeal
-- 16:9 aspect ratio, 4K quality
+- 1:1 square aspect ratio, high quality
 - Peaceful and inspiring
 
 COMPOSITION:
@@ -250,7 +250,7 @@ Create a CELEBRATORY scene marking completion of learning about: "${lesson.topic
 STYLE:
 - Ultra photorealistic, bright and uplifting
 - Sense of achievement and forward momentum
-- 16:9 aspect ratio, 4K quality
+- 1:1 square aspect ratio, high quality
 - Energetic, positive vibes
 
 COMPOSITION:
@@ -271,7 +271,7 @@ This is the ONE IMAGE that captures everything - shareable, memorable, complete.
 STYLE:
 - Ultra photorealistic, rich and detailed
 - Museum-quality educational art
-- 16:9 aspect ratio, 4K quality
+- 1:1 square aspect ratio, high quality
 - Multiple layers of detail that reward closer inspection
 
 COMPOSITION:

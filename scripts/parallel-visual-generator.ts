@@ -53,7 +53,7 @@ const MODELS = {
 type ModelKey = keyof typeof MODELS;
 
 const CONFIG = {
-  ASPECT_RATIO: '16:9',
+  ASPECT_RATIO: '1:1',
   DELAY_BETWEEN_CALLS_MS: 1000,
   
   ALL_PHASES: ['hook', 'cliff', 'fact1', 'fact2', 'fact3', 'wisdom', 'outro', 'complete'] as const,

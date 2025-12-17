@@ -61,7 +61,7 @@ STYLE: Modern Educational Illustration
 
 const COMPOSITION_RULES = `
 COMPOSITION:
-- 16:9 aspect ratio exactly
+- 1:1 square aspect ratio
 - Main subject takes 50-70% of frame
 - LEFT 70% contains primary visual content
 - RIGHT 30% is simpler (reserved for UI overlay)
@@ -147,7 +147,7 @@ ${UNIVERSAL_CONSTRAINTS}
       prompt,
       phase,
       contentHash,
-      expectedDimensions: { width: 1920, height: 1080 }
+      expectedDimensions: { width: 1024, height: 1024 }
     };
   });
 }
@@ -322,7 +322,7 @@ async function generateImage(
             instances: [{ prompt }],
             parameters: {
               sampleCount: 1,
-              aspectRatio: '16:9',
+              aspectRatio: '1:1',
               safetySetting: 'block_low_and_above'
             }
           })
