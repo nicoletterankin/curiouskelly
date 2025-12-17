@@ -1,5 +1,11 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS, getClientIdentifier } from './lib/rate-limit';
+import {
+  getCurrencyForCountry,
+  getPaymentMethodsForCountry,
+  getEffectiveCurrency,
+  PRICE_IDS,
+} from './lib/pricing-config';
 
 /**
  * Gift Checkout Session Creator
@@ -7,6 +13,11 @@ import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS, getClientIdentifier }
  *
  * Creates a Stripe checkout session for gift purchases.
  * Gift purchaser stays on Kelly's site - embedded checkout.
+ * 
+ * 🌍 MULTI-CURRENCY SUPPORT:
+ * - Detects sender's country from Vercel geo headers
+ * - Uses localized price IDs when available
+ * - Falls back to USD if currency not configured
  */
 
 type GiftDuration = '3-month' | '6-month' | '12-month' | 'lifetime';
@@ -17,6 +28,7 @@ interface CreateGiftCheckoutRequest {
   recipientEmail: string;
   recipientName?: string;
   giftMessage?: string;
+  currency?: string; // Optional: 'EUR', 'GBP', 'INR', etc.
   // Optional attribution
   referralCode?: string;
 }
@@ -85,15 +97,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(422).json({ error: 'invalid_recipient_email' });
     }
 
-    // Map gift duration -> price id
-    const giftPriceIds: Record<GiftDuration, string | undefined> = {
-      '3-month': process.env.STRIPE_PRICE_GIFT_3MO,
-      '6-month': process.env.STRIPE_PRICE_GIFT_6MO,
-      '12-month': process.env.STRIPE_PRICE_GIFT_12MO,
-      'lifetime': process.env.STRIPE_PRICE_GIFT_LIFETIME,
+    // Multi-currency: detect country and get appropriate currency
+    const detectedCountry = (req.headers['x-vercel-ip-country'] as string) || 'US';
+    const requestedCurrency = body.currency?.toUpperCase() || getCurrencyForCountry(detectedCountry);
+    
+    // Map gift duration to plan key
+    const giftPlanKey = body.giftDuration === 'lifetime' 
+      ? 'gift_lifetime' 
+      : `gift_${body.giftDuration.replace('-', '')}` as string;
+    
+    // Get effective currency (falls back to USD if price not available)
+    const currency = getEffectiveCurrency(giftPlanKey, requestedCurrency);
+    
+    // Get price IDs for the effective currency
+    const currencyPrices = PRICE_IDS[currency] || PRICE_IDS.USD;
+    const fallbackPrices = PRICE_IDS.USD;
+    
+    // Map gift duration -> price id with fallback
+    const durationToKey: Record<GiftDuration, string> = {
+      '3-month': 'gift_3mo',
+      '6-month': 'gift_6mo',
+      '12-month': 'gift_12mo',
+      'lifetime': 'gift_lifetime',
     };
-
-    const priceId = giftPriceIds[body.giftDuration];
+    
+    const priceKey = durationToKey[body.giftDuration];
+    const priceId = currencyPrices[priceKey] || fallbackPrices[priceKey];
+    
     if (!priceId) {
       return res.status(503).json({
         error: 'gift_price_not_configured',
@@ -104,6 +134,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const metadata: Record<string, string> = {
       source: 'kelly_gift',
       gift_duration: body.giftDuration,
+      currency: currency,
+      detected_country: detectedCountry,
       sender_email: body.senderEmail.trim().toLowerCase(),
       recipient_email: body.recipientEmail.trim().toLowerCase(),
       recipient_name: body.recipientName || '',

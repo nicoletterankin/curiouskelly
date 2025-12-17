@@ -1,8 +1,14 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS, getClientIdentifier } from './lib/rate-limit';
+import {
+  getCurrencyForCountry,
+  getPaymentMethodsForCountry,
+  getEffectiveCurrency,
+  PRICE_IDS,
+} from './lib/pricing-config';
 
 /**
- * Stripe Checkout API Handler
+ * Stripe Checkout API Handler (Redirect-based)
  * 
  * 🔒 LOCKED PRICING (See PRICING_LOCKED.md):
  * - Monthly: $7.99/month
@@ -10,11 +16,17 @@ import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS, getClientIdentifier }
  * - Family: $99.99/year
  * - Lifetime: $199.99 one-time
  * - Gifts: $24.99 (3mo), $39.99 (6mo), $49.99 (12mo), $149.99 (lifetime)
+ * 
+ * 🌍 MULTI-CURRENCY SUPPORT:
+ * - Detects country from Vercel geo headers
+ * - Uses localized price IDs when available
+ * - Falls back to USD if currency not configured
  */
 
 interface CheckoutRequest {
   planType: 'monthly' | 'annual' | 'lifetime' | 'family' | 'gift_3mo' | 'gift_6mo' | 'gift_12mo' | 'gift_lifetime';
   customerEmail: string;
+  currency?: string; // Optional: 'EUR', 'GBP', 'INR', etc.
   promoCode?: string;
   affiliateCode?: string;
   giftData?: {
@@ -98,27 +110,33 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(422).json({ error: 'invalid_plan_type' });
     }
 
-    // Get price IDs from environment
-    // 🔒 LOCKED PRICING - See PRICING_LOCKED.md
-    // Monthly: $7.99, Annual: $49.99, Family: $99.99, Lifetime: $199.99
-    // Gifts: $24.99 (3mo), $39.99 (6mo), $49.99 (12mo), $149.99 (lifetime)
-    const priceIds: Record<string, string | undefined> = {
-      monthly: process.env.STRIPE_PRICE_MONTHLY,
-      annual: process.env.STRIPE_PRICE_ANNUAL,
-      lifetime: process.env.STRIPE_PRICE_LIFETIME,
-      family: process.env.STRIPE_PRICE_FAMILY,
-      gift_3mo: process.env.STRIPE_PRICE_GIFT_3MO,
-      gift_6mo: process.env.STRIPE_PRICE_GIFT_6MO,
-      gift_12mo: process.env.STRIPE_PRICE_GIFT_12MO,
-      gift_lifetime: process.env.STRIPE_PRICE_GIFT_LIFETIME,
+    // Multi-currency: detect country and get appropriate currency
+    const detectedCountry = (req.headers['x-vercel-ip-country'] as string) || 'US';
+    const requestedCurrency = body.currency?.toUpperCase() || getCurrencyForCountry(detectedCountry);
+    
+    // Get effective currency (falls back to USD if price not available)
+    const currency = getEffectiveCurrency(body.planType, requestedCurrency);
+    
+    // Get price IDs for the effective currency
+    const currencyPrices = PRICE_IDS[currency] || PRICE_IDS.USD;
+    const fallbackPrices = PRICE_IDS.USD;
+
+    // Build price lookup with fallback
+    const getPriceId = (planType: string): string | undefined => {
+      return currencyPrices[planType] || fallbackPrices[planType];
     };
 
     const siteUrl = process.env.PUBLIC_SITE_URL || 'https://curiouskelly.com';
     const isGiftPlan = body.planType.startsWith('gift_');
+    
+    // Get payment methods for this country
+    const paymentMethods = getPaymentMethodsForCountry(detectedCountry);
 
     // Build metadata
     const commonMetadata = {
       source: 'web',
+      currency: currency,
+      detected_country: detectedCountry,
       utm_source: body.utmSource || 'direct',
       utm_medium: body.utmMedium || 'none',
       utm_campaign: body.utmCampaign || 'none',
@@ -131,7 +149,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     if (isGiftPlan) {
       // Gift plans: gift_3mo, gift_6mo, gift_12mo, gift_lifetime
-      const giftPriceId = priceIds[body.planType];
+      const giftPriceId = getPriceId(body.planType);
       if (!giftPriceId) {
         return res.status(503).json({ 
           error: `price_not_configured`,
@@ -146,13 +164,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         deliveryDate: ''
       };
       sessionConfig = {
-        payment_method_types: ['card'],
+        // Use dynamic payment methods based on country
+        payment_method_types: paymentMethods.filter(m => 
+          // Filter to payment-compatible methods (no subscriptions)
+          ['card', 'ideal', 'bancontact', 'giropay', 'sofort', 'eps', 'p24', 
+           'boleto', 'pix', 'oxxo', 'konbini', 'cashapp', 'link'].includes(m)
+        ),
         line_items: [{ price: giftPriceId, quantity: 1 }],
         mode: 'payment',
         customer_email: body.customerEmail,
         success_url: `${siteUrl}/gift-success.html?session_id={CHECKOUT_SESSION_ID}`,
         cancel_url: `${siteUrl}/payment-cancelled.html`,
         allow_promotion_codes: true,
+        automatic_tax: { enabled: true },
         metadata: {
           ...commonMetadata,
           type: body.planType,
@@ -164,7 +188,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       };
     } else if (body.planType === 'lifetime') {
       // Lifetime is a one-time payment
-      const lifetimePriceId = priceIds[body.planType];
+      const lifetimePriceId = getPriceId(body.planType);
       if (!lifetimePriceId) {
         return res.status(503).json({ 
           error: 'price_not_configured',
@@ -173,19 +197,24 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       }
 
       sessionConfig = {
-        payment_method_types: ['card'],
+        // Use dynamic payment methods based on country
+        payment_method_types: paymentMethods.filter(m => 
+          ['card', 'ideal', 'bancontact', 'giropay', 'sofort', 'eps', 'p24', 
+           'boleto', 'pix', 'oxxo', 'konbini', 'cashapp', 'affirm', 'link'].includes(m)
+        ),
         line_items: [{ price: lifetimePriceId, quantity: 1 }],
         mode: 'payment',
         customer_email: body.customerEmail,
         success_url: `${siteUrl}/welcome.html?session_id={CHECKOUT_SESSION_ID}&plan=${body.planType}`,
         cancel_url: `${siteUrl}/payment-cancelled.html`,
         allow_promotion_codes: true,
+        automatic_tax: { enabled: true },
         metadata: { ...commonMetadata, type: body.planType }
       };
     } else {
       // Subscription plans: monthly, annual, family
       // Family is a recurring annual subscription (up to 6 members)
-      const priceId = priceIds[body.planType];
+      const priceId = getPriceId(body.planType);
       if (!priceId) {
         return res.status(503).json({ 
           error: 'price_not_configured',
@@ -193,8 +222,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         });
       }
 
+      // Subscription-compatible payment methods
+      const subscriptionPaymentMethods = paymentMethods.filter(m => 
+        ['card', 'sepa_debit', 'bacs_debit', 'us_bank_account', 'link'].includes(m)
+      );
+
       sessionConfig = {
-        payment_method_types: ['card'],
+        payment_method_types: subscriptionPaymentMethods.length > 0 ? subscriptionPaymentMethods : ['card'],
         line_items: [{ price: priceId, quantity: 1 }],
         mode: 'subscription',
         customer_email: body.customerEmail,
@@ -206,7 +240,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           trial_period_days: 7
         },
         allow_promotion_codes: true,
-        billing_address_collection: 'auto'
+        billing_address_collection: 'auto',
+        automatic_tax: { enabled: true }
       };
     }
 

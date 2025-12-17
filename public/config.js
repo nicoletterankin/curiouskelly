@@ -31,10 +31,10 @@ window.KELLY_CONFIG = {
     static: 2000     // 2 seconds
   },
   
-  // DEVELOPMENT MODE: Paywall disabled for testing
-  // TODO: Set back to false before production deploy
-  testingMode: true,
-  disablePaywall: true,
+  // PRODUCTION MODE: Paywall enabled
+  // Set to true only for local development/testing
+  testingMode: false,
+  disablePaywall: false,
   
   // PAYWALL DELAY: Seconds to wait before showing paywall (let users preview)
   // Set to 0 for instant paywall (old behavior)

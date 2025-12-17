@@ -36,6 +36,16 @@
   <script src="/data/day-017-complete.js"></script>
   <script src="/data/day-351-complete.js"></script>
   <script src="/config.js"></script>
+  
+  <!-- 🌍 INTERNATIONALIZATION SYSTEM -->
+  <!-- i18n Core: Translation engine with lazy loading and caching -->
+  <script src="/js/i18n/i18n-core.js"></script>
+  <!-- Kelly Personality: Context-aware greetings and messages -->
+  <script src="/js/i18n/i18n-kelly.js"></script>
+  <!-- Language Selector: Dropdown component for language switching -->
+  <script src="/js/i18n/language-selector.js"></script>
+  <!-- Geo-pricing: Loads localized prices based on user's country -->
+  <script src="/js/geo-pricing.js"></script>
   <!-- Note: Vercel Insights scripts removed to avoid console MIME errors
        when deployed outside Vercel (those endpoints return HTML/404). -->
   <!-- Supabase SDK -->
@@ -7827,6 +7837,7 @@
     </div>
 
     <!-- Paywall Overlay (IAP-ready UI stub) -->
+    <!-- 🌍 INTERNATIONAL: Uses geo-pricing.js to show localized prices -->
     <div class="overlay" id="paywall" aria-hidden="true">
       <div class="paywall-content" role="dialog" aria-modal="true" aria-labelledby="paywall-title">
         <button class="btn-close" id="paywall-close" aria-label="Close" type="button">×</button>
@@ -7835,6 +7846,8 @@
           <span class="paywall-icon">📅</span>
           <h2 id="paywall-title">This lesson is from <span id="paywall-lesson-date">another day</span></h2>
           <p id="paywall-subtitle">Today's lesson is always yours. Want access to this one?</p>
+          <!-- PPP badge (hidden by default, shown via geo-pricing.js) -->
+          <span data-ppp-badge style="display: none; background: linear-gradient(135deg, #10b981, #059669); color: white; font-size: 11px; font-weight: 600; padding: 4px 10px; border-radius: 100px; margin-top: 8px;"></span>
         </div>
 
         <div class="paywall-options" style="display: grid; grid-template-columns: 1fr 1fr; gap: 16px;">
@@ -7852,7 +7865,7 @@
           <div class="paywall-subscribe-option" style="background: linear-gradient(135deg, var(--kelly-blue-dark), var(--kelly-blue)); border-radius: 12px; padding: 20px; border: 2px solid var(--kelly-blue);">
             <span style="background: var(--gold-wisdom); color: #000; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 4px;">ALL ACCESS</span>
             <h3 style="font-size: 16px; margin: 8px 0; color: white;">Unlock Everything</h3>
-            <p class="plan-price" style="font-size: 28px; font-weight: 600; color: white;">$7.99<span style="font-size: 14px; font-weight: 400;">/mo</span></p>
+            <p class="plan-price" style="font-size: 28px; font-weight: 600; color: white;"><span data-price="monthly">$7.99</span><span style="font-size: 14px; font-weight: 400;">/mo</span></p>
             <ul style="font-size: 13px; color: rgba(255,255,255,0.9); margin: 12px 0 16px; padding-left: 18px; text-align: left;">
               <li>All 365 lessons</li>
               <li>Go back or skip ahead</li>
@@ -7864,10 +7877,10 @@
             </button>
             <div style="display: flex; gap: 8px; margin-top: 10px;">
               <button class="paywall-option-mini" id="plan-yearly" type="button" style="flex: 1; background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer;">
-                Yearly $49.99
+                Yearly <span data-price="annual">$49.99</span>
               </button>
               <button class="paywall-option-mini" id="plan-lifetime" type="button" style="flex: 1; background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer;">
-                Lifetime $199
+                Lifetime <span data-price="lifetime">$199</span>
               </button>
             </div>
           </div>

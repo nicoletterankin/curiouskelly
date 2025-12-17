@@ -1,5 +1,12 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS, getClientIdentifier } from './lib/rate-limit';
+import {
+  getCurrencyForCountry,
+  getPriceIdForPlan,
+  getPaymentMethodsForCountry,
+  getEffectiveCurrency,
+  PRICE_IDS,
+} from './lib/pricing-config';
 
 /**
  * Embedded Checkout Session Creator (in-app)
@@ -9,6 +16,11 @@ import { checkRateLimit, getRateLimitHeaders, RATE_LIMITS, getClientIdentifier }
  * - Client sends a planType (NOT a Stripe price id).
  * - Server maps planType -> env-configured price ids (allow-list).
  * - Returns a client_secret for Stripe Embedded Checkout.
+ * 
+ * Multi-currency support:
+ * - Client sends optional `currency` param
+ * - Server detects country from Vercel geo headers
+ * - Uses appropriate price ID and payment methods
  */
 
 type PlanType = 'monthly' | 'annual' | 'family' | 'lifetime';
@@ -16,6 +28,8 @@ type PlanType = 'monthly' | 'annual' | 'family' | 'lifetime';
 interface CreateCheckoutRequest {
   planType: PlanType;
   customerEmail?: string;
+  // Multi-currency support
+  currency?: string; // e.g., 'EUR', 'GBP', 'INR'
   // Optional attribution metadata
   referralCode?: string;
   affiliateCode?: string;
@@ -84,20 +98,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(422).json({ error: 'invalid_plan_type' });
     }
 
-    // Map planType -> configured price ids
-    const priceIds: Record<PlanType, string | undefined> = {
-      monthly: process.env.STRIPE_PRICE_MONTHLY,
-      annual: process.env.STRIPE_PRICE_ANNUAL,
-      family: process.env.STRIPE_PRICE_FAMILY,
-      lifetime: process.env.STRIPE_PRICE_LIFETIME,
-    };
-    const priceId = priceIds[planType];
+    // Multi-currency: detect country and get appropriate currency
+    const detectedCountry = (req.headers['x-vercel-ip-country'] as string) || 'US';
+    const requestedCurrency = body.currency?.toUpperCase() || getCurrencyForCountry(detectedCountry);
+    
+    // Get effective currency (falls back to USD if price not available)
+    const currency = getEffectiveCurrency(planType, requestedCurrency);
+    
+    // Get price ID for this plan and currency
+    const currencyPrices = PRICE_IDS[currency] || PRICE_IDS.USD;
+    const priceId = currencyPrices[planType];
+    
     if (!priceId) {
-      return res.status(503).json({
-        error: 'price_not_configured',
-        message: `Missing STRIPE_PRICE_${planType.toUpperCase()} in environment`,
-      });
+      // Fall back to USD pricing
+      const fallbackPrices = PRICE_IDS.USD;
+      const fallbackPriceId = fallbackPrices[planType];
+      if (!fallbackPriceId) {
+        return res.status(503).json({
+          error: 'price_not_configured',
+          message: `Missing STRIPE_PRICE_${planType.toUpperCase()} in environment`,
+        });
+      }
+      // Use fallback
+      console.log(`[checkout] No ${currency} price for ${planType}, using USD fallback`);
     }
+    
+    const effectivePriceId = priceId || PRICE_IDS.USD[planType];
+    
+    // Get payment methods for this country
+    const paymentMethods = getPaymentMethodsForCountry(detectedCountry);
 
     const customerEmail = body.customerEmail?.trim();
     if (customerEmail && !isValidEmail(customerEmail)) {
@@ -111,6 +140,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const metadata: Record<string, string> = {
       source: 'kelly_in_app',
       plan_type: planType,
+      currency: currency,
+      detected_country: detectedCountry,
       user_id: body.userId || '',
       referral_code: body.referralCode || '',
       affiliate_code: body.affiliateCode || '',
@@ -131,7 +162,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return_url: returnUrl,
 
       // Core purchase
-      line_items: [{ price: priceId, quantity: 1 }],
+      line_items: [{ price: effectivePriceId, quantity: 1 }],
 
       // Email helps attribution + linking even before userId is known
       ...(customerEmail ? { customer_email: customerEmail } : {}),
@@ -154,6 +185,11 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
       // If Stripe decides taxes apply, calculate automatically
       automatic_tax: { enabled: true },
+      
+      // Dynamic payment methods based on country
+      // Note: Embedded checkout handles payment methods automatically,
+      // but we can hint at preferred methods
+      payment_method_configuration: undefined, // Let Stripe auto-detect
     }, {
       idempotencyKey,
     });
