@@ -1,8 +1,25 @@
 # Commons-Governed Content Architecture
 
 **Created:** December 17, 2025  
-**Status:** Ultra-Think Design Document  
+**Status:** ✅ Phase 1 IMPLEMENTED  
 **Goal:** All post-launch content changes flow through Learner Commons
+
+---
+
+## Implementation Status
+
+| Component | Status | Location |
+|-----------|--------|----------|
+| Phase Commons UI | ✅ Done | `/public/css/phase-commons.css`, `/public/js/phase-commons.js` |
+| Proposals API | ✅ Done | `/api/commons/proposals.ts` |
+| Votes API | ✅ Done | `/api/commons/votes.ts` |
+| Notes API | ✅ Done | `/api/commons/notes.ts` |
+| History API | ✅ Done | `/api/commons/history.ts` |
+| Learn.html Integration | ✅ Done | Phase context updates on each phase change |
+| content_atoms Table | 📋 Migration Ready | `/docs/backend/migrations/002_content_atoms.sql` |
+| commons_notes Table | 📋 Migration Ready | `/docs/backend/migrations/003_commons_notes_votes.sql` |
+| commons_votes Table | 📋 Migration Ready | `/docs/backend/migrations/003_commons_notes_votes.sql` |
+| Content Seeding Script | ⏳ Pending | Need to create `scripts/migrate-to-content-atoms.ts` |
 
 ---
 
@@ -395,40 +412,43 @@ Each phase shows a Commons icon that opens phase-specific discussions:
 
 ## Implementation Phases
 
-### Phase 1: Content Migration (Week 1)
+### Phase 1: UI & API Layer ✅ COMPLETE
 
-1. Create `content_atoms` and `content_history` tables
-2. Write migration script to seed from static files
-3. Generate unique IDs for all existing content
-4. Verify data integrity
+1. ✅ Build Phase Commons UI component (CSS + JS)
+2. ✅ Integrate with lesson player (shows on each phase)
+3. ✅ Build `/api/commons/proposals` endpoint
+4. ✅ Build `/api/commons/votes` endpoint
+5. ✅ Build `/api/commons/notes` endpoint
+6. ✅ Build `/api/commons/history` endpoint
+7. ✅ Create SQL migration files
 
-### Phase 2: API Layer (Week 2)
+### Phase 2: Database Setup (Day 1 Post-Launch)
 
-1. Build `/api/content/:address` endpoint
-2. Build `/api/content/:day/full` endpoint
-3. Update lesson loader to try API before static files
-4. Add fallback to static files if API fails
+1. ⏳ Run `002_content_atoms.sql` migration in Supabase
+2. ⏳ Run `003_commons_notes_votes.sql` migration
+3. ⏳ Create content seeding script
+4. ⏳ Seed `content_atoms` from static files
 
-### Phase 3: Proposal Enhancement (Week 3)
+### Phase 3: Content API (Week 1 Post-Launch)
 
-1. Add `target_atoms` to proposals
-2. Build UI for targeting specific phases
-3. Show current content alongside proposed changes
-4. Diff view for reviewers
+1. ⏳ Build `/api/content/:address` endpoint
+2. ⏳ Build `/api/content/:day/full` endpoint
+3. ⏳ Update lesson loader to try content API
+4. ⏳ Add fallback to static files if API fails
 
-### Phase 4: Implementation Pipeline (Week 4)
+### Phase 4: Implementation Pipeline (Week 2)
 
-1. Automated content update on approval
-2. Audio regeneration queue
-3. Static file rebuild job
-4. Notification to affected users
+1. ⏳ Automated content update on proposal approval
+2. ⏳ Audio regeneration queue trigger
+3. ⏳ Static file rebuild job
+4. ⏳ Notification to affected users
 
-### Phase 5: Per-Phase UI (Week 5-6)
+### Phase 5: Enhanced Governance (Week 3+)
 
-1. Commons icon per phase in lesson player
-2. Phase-specific proposal modal
-3. Version history view
-4. Community notes per phase
+1. ⏳ Expert verification system
+2. ⏳ Auto-moderation for proposals
+3. ⏳ Diff view for reviewers
+4. ⏳ Rollback capability UI
 
 ---
 
