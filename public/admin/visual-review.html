@@ -1,0 +1,470 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visual Review - Curious Kelly</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+        }
+        
+        .header {
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            padding: 20px 24px;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+            border-bottom: 1px solid #333;
+        }
+        
+        .header h1 { font-size: 24px; margin-bottom: 12px; }
+        .header h1 span { color: #f0c674; }
+        
+        .stats-row {
+            display: flex;
+            gap: 16px;
+            flex-wrap: wrap;
+            margin-bottom: 16px;
+        }
+        
+        .stat {
+            background: rgba(255,255,255,0.1);
+            padding: 8px 16px;
+            border-radius: 8px;
+        }
+        
+        .stat-value { font-size: 20px; font-weight: bold; }
+        .stat-value.good { color: #27ae60; }
+        .stat-value.bad { color: #e74c3c; }
+        .stat-value.pending { color: #f39c12; }
+        .stat-label { font-size: 11px; opacity: 0.7; }
+        
+        .controls {
+            display: flex;
+            gap: 12px;
+            flex-wrap: wrap;
+        }
+        
+        .btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            padding: 10px 20px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover { background: rgba(255,255,255,0.2); }
+        .btn.primary { background: #4ecdc4; color: #000; }
+        .btn.danger { background: #e74c3c; }
+        .btn.success { background: #27ae60; }
+        
+        .filter-btn {
+            background: rgba(255,255,255,0.1);
+            border: none;
+            color: #fff;
+            padding: 8px 16px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 13px;
+        }
+        
+        .filter-btn.active { background: #4ecdc4; color: #000; }
+        
+        /* Review Grid */
+        .review-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 20px;
+            padding: 24px;
+        }
+        
+        .review-card {
+            background: #1a1a1a;
+            border-radius: 12px;
+            overflow: hidden;
+            position: relative;
+        }
+        
+        .review-card.approved { border: 3px solid #27ae60; }
+        .review-card.rejected { border: 3px solid #e74c3c; opacity: 0.6; }
+        
+        .review-card img {
+            width: 100%;
+            aspect-ratio: 16/9;
+            object-fit: cover;
+            cursor: pointer;
+        }
+        
+        .review-meta {
+            padding: 12px 16px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .review-info {
+            font-size: 13px;
+        }
+        
+        .review-info .day { font-weight: bold; color: #4ecdc4; }
+        .review-info .phase { opacity: 0.7; }
+        .review-info .model { font-size: 11px; opacity: 0.5; margin-top: 4px; }
+        
+        .review-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .review-btn {
+            width: 36px;
+            height: 36px;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+            font-size: 18px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: transform 0.2s;
+        }
+        
+        .review-btn:hover { transform: scale(1.1); }
+        .review-btn.approve { background: #27ae60; color: #fff; }
+        .review-btn.reject { background: #e74c3c; color: #fff; }
+        .review-btn.reset { background: #555; color: #fff; }
+        
+        .status-badge {
+            position: absolute;
+            top: 8px;
+            right: 8px;
+            padding: 4px 10px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        
+        .status-badge.approved { background: #27ae60; }
+        .status-badge.rejected { background: #e74c3c; }
+        
+        /* Lightbox */
+        .lightbox {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.95);
+            z-index: 1000;
+            padding: 40px;
+        }
+        
+        .lightbox.active { display: flex; flex-direction: column; align-items: center; justify-content: center; }
+        
+        .lightbox img {
+            max-width: 90vw;
+            max-height: 70vh;
+            border-radius: 8px;
+        }
+        
+        .lightbox-actions {
+            margin-top: 20px;
+            display: flex;
+            gap: 16px;
+        }
+        
+        .lightbox-close {
+            position: absolute;
+            top: 20px;
+            right: 20px;
+            background: none;
+            border: none;
+            color: #fff;
+            font-size: 32px;
+            cursor: pointer;
+        }
+        
+        .lightbox-nav {
+            position: absolute;
+            top: 50%;
+            transform: translateY(-50%);
+            background: rgba(255,255,255,0.2);
+            border: none;
+            color: #fff;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            font-size: 24px;
+            cursor: pointer;
+        }
+        
+        .lightbox-nav.prev { left: 20px; }
+        .lightbox-nav.next { right: 20px; }
+        
+        .empty-state {
+            text-align: center;
+            padding: 60px;
+            opacity: 0.5;
+        }
+        
+        .keyboard-hint {
+            position: fixed;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.8);
+            padding: 8px 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            opacity: 0.7;
+        }
+        
+        .keyboard-hint kbd {
+            background: #333;
+            padding: 2px 6px;
+            border-radius: 3px;
+            margin: 0 2px;
+        }
+    </style>
+</head>
+<body>
+    <header class="header">
+        <h1>🔍 Visual <span>Review</span></h1>
+        
+        <div class="stats-row">
+            <div class="stat">
+                <div class="stat-value" id="stat-total">-</div>
+                <div class="stat-label">Total</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value good" id="stat-approved">-</div>
+                <div class="stat-label">Approved ✓</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value bad" id="stat-rejected">-</div>
+                <div class="stat-label">Rejected ✗</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value pending" id="stat-pending">-</div>
+                <div class="stat-label">Pending Review</div>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button class="filter-btn active" data-filter="pending">Pending</button>
+            <button class="filter-btn" data-filter="approved">Approved</button>
+            <button class="filter-btn" data-filter="rejected">Rejected</button>
+            <button class="filter-btn" data-filter="all">All</button>
+            
+            <span style="flex-grow: 1"></span>
+            
+            <button class="btn danger" onclick="bulkReject()">Reject All Visible</button>
+            <button class="btn success" onclick="bulkApprove()">Approve All Visible</button>
+            <button class="btn primary" onclick="saveReviews()">💾 Save Reviews</button>
+        </div>
+    </header>
+    
+    <main class="review-grid" id="grid"></main>
+    
+    <div class="lightbox" id="lightbox">
+        <button class="lightbox-close" onclick="closeLightbox()">×</button>
+        <button class="lightbox-nav prev" onclick="navLightbox(-1)">←</button>
+        <button class="lightbox-nav next" onclick="navLightbox(1)">→</button>
+        <img id="lightbox-img" src="" alt="">
+        <div class="lightbox-actions">
+            <button class="btn success" onclick="approveAndNext()">✓ Approve (A)</button>
+            <button class="btn danger" onclick="rejectAndNext()">✗ Reject (R)</button>
+            <button class="btn" onclick="skipToNext()">Skip (→)</button>
+        </div>
+    </div>
+    
+    <div class="keyboard-hint">
+        <kbd>A</kbd> Approve &nbsp; <kbd>R</kbd> Reject &nbsp; <kbd>←</kbd><kbd>→</kbd> Navigate &nbsp; <kbd>ESC</kbd> Close
+    </div>
+    
+    <script>
+        const SUPABASE_URL = 'https://tvjalxxsyryjphkforjv.supabase.co';
+        const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI';
+        
+        let allVisuals = [];
+        let filteredVisuals = [];
+        let reviews = {}; // id -> 'approved' | 'rejected' | null
+        let currentFilter = 'pending';
+        let lightboxIndex = 0;
+        
+        // Load saved reviews from localStorage
+        const savedReviews = localStorage.getItem('visual-reviews');
+        if (savedReviews) {
+            reviews = JSON.parse(savedReviews);
+        }
+        
+        async function fetchVisuals() {
+            const response = await fetch(
+                `${SUPABASE_URL}/rest/v1/visual_commons?status=eq.active&select=*&order=day_number.asc,phase.asc`,
+                { headers: { 'apikey': SUPABASE_KEY, 'Authorization': `Bearer ${SUPABASE_KEY}` } }
+            );
+            return response.json();
+        }
+        
+        function updateStats() {
+            const approved = Object.values(reviews).filter(r => r === 'approved').length;
+            const rejected = Object.values(reviews).filter(r => r === 'rejected').length;
+            const pending = allVisuals.length - approved - rejected;
+            
+            document.getElementById('stat-total').textContent = allVisuals.length;
+            document.getElementById('stat-approved').textContent = approved;
+            document.getElementById('stat-rejected').textContent = rejected;
+            document.getElementById('stat-pending').textContent = pending;
+        }
+        
+        function applyFilter() {
+            if (currentFilter === 'all') {
+                filteredVisuals = [...allVisuals];
+            } else if (currentFilter === 'approved') {
+                filteredVisuals = allVisuals.filter(v => reviews[v.id] === 'approved');
+            } else if (currentFilter === 'rejected') {
+                filteredVisuals = allVisuals.filter(v => reviews[v.id] === 'rejected');
+            } else {
+                // pending
+                filteredVisuals = allVisuals.filter(v => !reviews[v.id]);
+            }
+            renderGrid();
+        }
+        
+        function renderGrid() {
+            const grid = document.getElementById('grid');
+            
+            if (filteredVisuals.length === 0) {
+                grid.innerHTML = '<div class="empty-state">No visuals match this filter</div>';
+                return;
+            }
+            
+            grid.innerHTML = filteredVisuals.map((v, idx) => {
+                const status = reviews[v.id];
+                const modelShort = (v.model_used || '').replace('imagen-4.0-', '').replace('-generate-001', '').replace('gemini-2.0-flash-exp-image-generation', 'gemini');
+                
+                return `
+                    <div class="review-card ${status || ''}" data-id="${v.id}">
+                        ${status ? `<span class="status-badge ${status}">${status === 'approved' ? '✓' : '✗'}</span>` : ''}
+                        <img src="${v.public_url}" alt="Day ${v.day_number} ${v.phase}" onclick="openLightbox(${idx})">
+                        <div class="review-meta">
+                            <div class="review-info">
+                                <div><span class="day">Day ${v.day_number}</span> <span class="phase">• ${v.phase}</span></div>
+                                <div class="model">${modelShort} • ${v.style || 'default'}</div>
+                            </div>
+                            <div class="review-actions">
+                                <button class="review-btn approve" onclick="setReview('${v.id}', 'approved')" title="Approve">✓</button>
+                                <button class="review-btn reject" onclick="setReview('${v.id}', 'rejected')" title="Reject">✗</button>
+                                ${status ? `<button class="review-btn reset" onclick="setReview('${v.id}', null)" title="Reset">↺</button>` : ''}
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function setReview(id, status) {
+            if (status) {
+                reviews[id] = status;
+            } else {
+                delete reviews[id];
+            }
+            localStorage.setItem('visual-reviews', JSON.stringify(reviews));
+            updateStats();
+            applyFilter();
+        }
+        
+        function bulkApprove() {
+            filteredVisuals.forEach(v => { reviews[v.id] = 'approved'; });
+            localStorage.setItem('visual-reviews', JSON.stringify(reviews));
+            updateStats();
+            applyFilter();
+        }
+        
+        function bulkReject() {
+            filteredVisuals.forEach(v => { reviews[v.id] = 'rejected'; });
+            localStorage.setItem('visual-reviews', JSON.stringify(reviews));
+            updateStats();
+            applyFilter();
+        }
+        
+        async function saveReviews() {
+            // This would update the database - for now just shows summary
+            const approved = Object.entries(reviews).filter(([k, v]) => v === 'approved');
+            const rejected = Object.entries(reviews).filter(([k, v]) => v === 'rejected');
+            
+            alert(`Reviews saved locally!\n\n✓ ${approved.length} approved\n✗ ${rejected.length} rejected\n\nTo update database, export this data.`);
+            
+            // Log the rejected IDs for potential deletion
+            console.log('Rejected visual IDs:', rejected.map(([id]) => id));
+        }
+        
+        // Lightbox
+        function openLightbox(idx) {
+            lightboxIndex = idx;
+            const v = filteredVisuals[idx];
+            document.getElementById('lightbox-img').src = v.public_url;
+            document.getElementById('lightbox').classList.add('active');
+        }
+        
+        function closeLightbox() {
+            document.getElementById('lightbox').classList.remove('active');
+        }
+        
+        function navLightbox(dir) {
+            lightboxIndex = (lightboxIndex + dir + filteredVisuals.length) % filteredVisuals.length;
+            document.getElementById('lightbox-img').src = filteredVisuals[lightboxIndex].public_url;
+        }
+        
+        function approveAndNext() {
+            setReview(filteredVisuals[lightboxIndex].id, 'approved');
+            navLightbox(1);
+        }
+        
+        function rejectAndNext() {
+            setReview(filteredVisuals[lightboxIndex].id, 'rejected');
+            navLightbox(1);
+        }
+        
+        function skipToNext() {
+            navLightbox(1);
+        }
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (!document.getElementById('lightbox').classList.contains('active')) return;
+            
+            if (e.key === 'Escape') closeLightbox();
+            if (e.key === 'ArrowLeft') navLightbox(-1);
+            if (e.key === 'ArrowRight') navLightbox(1);
+            if (e.key.toLowerCase() === 'a') approveAndNext();
+            if (e.key.toLowerCase() === 'r') rejectAndNext();
+        });
+        
+        // Filter buttons
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                currentFilter = btn.dataset.filter;
+                applyFilter();
+            });
+        });
+        
+        // Init
+        async function init() {
+            allVisuals = await fetchVisuals();
+            updateStats();
+            applyFilter();
+        }
+        
+        init();
+    </script>
+</body>
+</html>
