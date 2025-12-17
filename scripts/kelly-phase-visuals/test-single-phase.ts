@@ -28,8 +28,8 @@ const replicate = new Replicate({ auth: REPLICATE_TOKEN });
 // Kelly LoRA configuration
 const KELLY_LORA = {
   model: "lucataco/flux-dev-lora:a22c463f11808638ad5e2ebd582e07a469031f48dd567366fb4c6fdab91d614d" as const,
-  loraUrl: "https://civitai.com/api/download/models/2455956",
-  loraScale: 0.85
+  loraUrl: "https://huggingface.co/CuriousKellycom/curious-kelly-lora/resolve/main/curious_kelly.safetensors",
+  loraScale: 0.90
 };
 
 // Kelly's trained appearance
