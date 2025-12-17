@@ -1,8 +1,8 @@
 /**
- * Send Daily Duo Email
+ * Send Daily Duo Email — V2 Template
  * 
- * Sends the full LEARN + GROW email to a subscriber
- * Uses the content extraction API to get lesson content
+ * Kelly DELIVERS the lesson IN the email.
+ * Full content, real images, no need to click.
  * 
  * POST /api/email/send-daily-duo
  * Body: { email: string, day?: number, name?: string }
@@ -12,6 +12,17 @@ import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { Resend } from 'resend';
 
 const resend = new Resend(process.env.RESEND_API_KEY);
+
+const BASE_URL = 'https://www.curiouskelly.com';
+
+// Kelly images for email
+const KELLY_IMAGES = {
+  hero: `${BASE_URL}/images/kelly-og-image.png`,
+  avatar: `${BASE_URL}/images/kelly/kelly-chair-curious.png`,
+  explaining: `${BASE_URL}/images/kelly/kelly-chair-explaining.png`,
+  wisdom: `${BASE_URL}/images/kelly/kelly-chair-wisdom.png`,
+  celebrating: `${BASE_URL}/images/kelly/kelly-chair-celebrating.png`,
+};
 
 interface DailyDuoRequest {
   email: string;
@@ -36,16 +47,11 @@ export default async function handler(
       return;
     }
 
-    // Get today's day number if not provided
     const dayNumber = day || getTodayDayNumber();
     const learnerName = name || 'Curious Learner';
 
-    // Fetch content from our extraction API
-    const baseUrl = process.env.VERCEL_URL 
-      ? `https://${process.env.VERCEL_URL}` 
-      : 'https://www.curiouskelly.com';
-    
-    const contentResponse = await fetch(`${baseUrl}/api/email/daily-content?day=${dayNumber}`);
+    // Fetch content
+    const contentResponse = await fetch(`${BASE_URL}/api/email/daily-content?day=${dayNumber}`);
     
     if (!contentResponse.ok) {
       throw new Error('Failed to fetch lesson content');
@@ -53,8 +59,8 @@ export default async function handler(
 
     const content = await contentResponse.json();
 
-    // Generate HTML email
-    const htmlEmail = generateDailyDuoHtml(content, learnerName);
+    // Generate V2 emails
+    const htmlEmail = generateDailyDuoHtmlV2(content, learnerName);
     const textEmail = generateDailyDuoText(content, learnerName);
 
     // Send via Resend
@@ -76,6 +82,7 @@ export default async function handler(
       success: true, 
       messageId: data?.id,
       day: dayNumber,
+      version: 'v2',
       topics: {
         learn: content.learn.topic,
         grow: content.grow.topic
@@ -95,7 +102,10 @@ function getTodayDayNumber(): number {
   return Math.floor(diff / oneDay);
 }
 
-function generateDailyDuoHtml(content: any, name: string): string {
+/**
+ * V2 Email Template — Kelly Delivers IN the Email
+ */
+function generateDailyDuoHtmlV2(content: any, name: string): string {
   const { day, date, learn, grow, combined_wisdom } = content;
 
   return `
@@ -105,214 +115,219 @@ function generateDailyDuoHtml(content: any, name: string): string {
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Day ${day}: ${learn.topic}</title>
-  <style>
-    body { 
-      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
-      line-height: 1.6;
-      color: #1a1a1a;
-      max-width: 600px;
-      margin: 0 auto;
-      padding: 20px;
-      background: #f5f5f5;
-    }
-    .container {
-      background: white;
-      border-radius: 16px;
-      padding: 32px;
-      box-shadow: 0 2px 8px rgba(0,0,0,0.08);
-    }
-    .header {
-      text-align: center;
-      border-bottom: 2px solid #f0f0f0;
-      padding-bottom: 20px;
-      margin-bottom: 24px;
-    }
-    .logo { font-size: 28px; margin-bottom: 8px; }
-    .day-badge {
-      display: inline-block;
-      background: linear-gradient(135deg, #f59e0b, #8b5cf6);
-      color: white;
-      padding: 8px 16px;
-      border-radius: 20px;
-      font-weight: 600;
-      font-size: 14px;
-    }
-    .section {
-      margin: 28px 0;
-      padding: 20px;
-      border-radius: 12px;
-    }
-    .learn-section {
-      background: linear-gradient(135deg, rgba(245, 158, 11, 0.08), rgba(245, 158, 11, 0.04));
-      border-left: 4px solid #f59e0b;
-    }
-    .grow-section {
-      background: linear-gradient(135deg, rgba(139, 92, 246, 0.08), rgba(139, 92, 246, 0.04));
-      border-left: 4px solid #8b5cf6;
-    }
-    .section-header {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      margin-bottom: 12px;
-    }
-    .section-icon { font-size: 24px; }
-    .section-label {
-      font-size: 12px;
-      font-weight: 700;
-      text-transform: uppercase;
-      letter-spacing: 1px;
-    }
-    .learn-label { color: #f59e0b; }
-    .grow-label { color: #8b5cf6; }
-    .section-title {
-      font-size: 20px;
-      font-weight: 600;
-      margin: 0 0 12px 0;
-      color: #1a1a1a;
-    }
-    .section-content {
-      font-size: 16px;
-      color: #444;
-    }
-    .universal-truth {
-      font-style: italic;
-      color: #666;
-      margin-top: 16px;
-      padding: 12px;
-      background: rgba(255,255,255,0.6);
-      border-radius: 8px;
-    }
-    .question-box {
-      background: #fffbeb;
-      border: 1px solid #fcd34d;
-      border-radius: 8px;
-      padding: 16px;
-      margin-top: 16px;
-    }
-    .question-label {
-      font-size: 12px;
-      font-weight: 600;
-      color: #92400e;
-      margin-bottom: 4px;
-    }
-    .wisdom-section {
-      text-align: center;
-      padding: 24px;
-      background: linear-gradient(135deg, #fef3c7, #e0e7ff);
-      border-radius: 12px;
-      margin: 28px 0;
-    }
-    .wisdom-icon { font-size: 32px; margin-bottom: 12px; }
-    .wisdom-text {
-      font-size: 18px;
-      font-weight: 500;
-      color: #1a1a1a;
-      font-style: italic;
-    }
-    .cta-section {
-      text-align: center;
-      margin: 28px 0;
-    }
-    .cta-button {
-      display: inline-block;
-      background: linear-gradient(135deg, #3b82f6, #8b5cf6);
-      color: white;
-      text-decoration: none;
-      padding: 14px 28px;
-      border-radius: 8px;
-      font-weight: 600;
-      font-size: 16px;
-    }
-    .cta-subtitle {
-      font-size: 13px;
-      color: #666;
-      margin-top: 8px;
-    }
-    .footer {
-      text-align: center;
-      padding-top: 20px;
-      border-top: 1px solid #eee;
-      margin-top: 28px;
-      font-size: 13px;
-      color: #888;
-    }
-    .footer a { color: #666; }
-  </style>
+  <!--[if mso]>
+  <noscript>
+    <xml>
+      <o:OfficeDocumentSettings>
+        <o:PixelsPerInch>96</o:PixelsPerInch>
+      </o:OfficeDocumentSettings>
+    </xml>
+  </noscript>
+  <![endif]-->
 </head>
-<body>
-  <div class="container">
-    <div class="header">
-      <div class="logo">✨ Curious Kelly</div>
-      <div class="day-badge">Day ${day} — ${date}</div>
-    </div>
+<body style="margin: 0; padding: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background-color: #f5f5f5;">
+  <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background-color: #f5f5f5;">
+    <tr>
+      <td align="center" style="padding: 20px;">
+        <table role="presentation" width="600" cellpadding="0" cellspacing="0" style="background-color: #ffffff; border-radius: 0; overflow: hidden;">
+          
+          <!-- Hero with Kelly -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%); text-align: center; padding: 0;">
+              <img src="${KELLY_IMAGES.hero}" alt="Kelly" width="600" style="width: 100%; max-width: 600px; height: auto; display: block;" />
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td style="padding: 20px 24px 24px; text-align: center;">
+                    <span style="display: inline-block; background: linear-gradient(135deg, #f59e0b, #8b5cf6); color: white; padding: 6px 16px; border-radius: 20px; font-size: 12px; font-weight: 700;">Day ${day} — ${date}</span>
+                    <h1 style="color: white; font-size: 22px; font-weight: 600; margin: 12px 0 8px;">Good morning, ${name}!</h1>
+                    <p style="color: rgba(255,255,255,0.8); font-size: 14px; margin: 0;">Your Daily Duo is ready ✨</p>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-    <p>Good morning, ${name}! ☀️</p>
-    <p>Here's your Daily Duo — two lessons to make today count.</p>
+          <!-- Kelly Says Hello -->
+          <tr>
+            <td style="background: #f8fafc; padding: 24px; border-bottom: 1px solid #e2e8f0;">
+              <table role="presentation" width="100%" cellpadding="0" cellspacing="0">
+                <tr>
+                  <td width="70" valign="top">
+                    <img src="${KELLY_IMAGES.avatar}" alt="Kelly" width="56" height="56" style="border-radius: 50%; border: 3px solid #3b82f6;" />
+                  </td>
+                  <td valign="top" style="padding-left: 14px;">
+                    <div style="background: white; border-radius: 16px; border-top-left-radius: 4px; padding: 16px; box-shadow: 0 2px 8px rgba(0,0,0,0.06);">
+                      <div style="font-size: 12px; font-weight: 700; color: #3b82f6; margin-bottom: 6px;">Kelly ✨</div>
+                      <div style="font-size: 15px; color: #334155; line-height: 1.5;">
+                        Today we're exploring something amazing — ${learn.topic.toLowerCase()}. Plus, I'll share a skill that will help you learn anything faster. Let's dive in!
+                      </div>
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
+          </tr>
 
-    <!-- LEARN Section -->
-    <div class="section learn-section">
-      <div class="section-header">
-        <span class="section-icon">🌟</span>
-        <span class="section-label learn-label">LEARN</span>
-      </div>
-      <h2 class="section-title">${learn.topic}</h2>
-      <div class="section-content">
-        ${learn.hook ? `<p>${learn.hook}</p>` : ''}
-        ${learn.facts.map((fact: string) => `<p>${fact}</p>`).join('')}
-        ${learn.universal_truth ? `
-          <div class="universal-truth">
-            💡 ${learn.universal_truth}
-          </div>
-        ` : ''}
-        ${learn.question ? `
-          <div class="question-box">
-            <div class="question-label">🤔 Think about it:</div>
-            <div>${learn.question}</div>
-          </div>
-        ` : ''}
-      </div>
-    </div>
+          <!-- LEARN Section -->
+          <tr>
+            <td style="padding: 28px 24px;">
+              <span style="display: inline-block; background: #fef3c7; color: #92400e; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">🌟 LEARN</span>
+              <h2 style="font-size: 24px; font-weight: 700; color: #0f172a; margin: 0 0 16px; line-height: 1.2;">${learn.topic}</h2>
+              
+              <!-- Lesson Image -->
+              <img src="${KELLY_IMAGES.explaining}" alt="Kelly explaining" width="552" style="width: 100%; max-width: 552px; height: auto; border-radius: 12px; margin-bottom: 20px;" />
+              
+              <!-- Lesson Content -->
+              <div style="font-size: 16px; color: #334155; line-height: 1.7;">
+                ${learn.hook ? `<p style="margin: 0 0 16px;">${learn.hook}</p>` : ''}
+                
+                <!-- Kelly Explains -->
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0;">
+                  <tr>
+                    <td style="background: #f0f9ff; border-left: 4px solid #3b82f6; padding: 16px; border-radius: 0 8px 8px 0;">
+                      <table role="presentation" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td width="36" valign="top">
+                            <img src="${KELLY_IMAGES.avatar}" alt="Kelly" width="28" height="28" style="border-radius: 50%; border: 2px solid #3b82f6;" />
+                          </td>
+                          <td valign="top" style="padding-left: 8px;">
+                            <div style="font-size: 11px; font-weight: 700; color: #3b82f6; text-transform: uppercase; margin-bottom: 4px;">Kelly explains</div>
+                            <div style="font-size: 15px; color: #1e40af; font-style: italic;">
+                              "${learn.facts[0] || 'This is one of the most fascinating things I\'ve learned!'}"
+                            </div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+                
+                ${learn.facts.slice(1).map((fact: string) => `<p style="margin: 0 0 16px;">${fact}</p>`).join('')}
+                
+                <!-- Universal Truth -->
+                ${learn.universal_truth ? `
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0;">
+                  <tr>
+                    <td style="background: linear-gradient(135deg, #fef3c7, #fde68a); padding: 20px; border-radius: 12px; text-align: center;">
+                      <div style="font-size: 28px; margin-bottom: 8px;">💡</div>
+                      <div style="font-size: 18px; font-weight: 600; color: #78350f; line-height: 1.4;">${learn.universal_truth}</div>
+                    </td>
+                  </tr>
+                </table>
+                ` : ''}
+                
+                <!-- Question -->
+                ${learn.question ? `
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0;">
+                  <tr>
+                    <td style="background: #fffbeb; border: 2px solid #fcd34d; border-radius: 12px; padding: 20px;">
+                      <div style="font-size: 12px; font-weight: 700; color: #92400e; text-transform: uppercase; margin-bottom: 8px;">🤔 Think about it</div>
+                      <div style="font-size: 16px; color: #78350f; font-weight: 500;">${learn.question}</div>
+                    </td>
+                  </tr>
+                </table>
+                ` : ''}
+              </div>
+            </td>
+          </tr>
 
-    <!-- GROW Section -->
-    <div class="section grow-section">
-      <div class="section-header">
-        <span class="section-icon">🧠</span>
-        <span class="section-label grow-label">GROW</span>
-      </div>
-      <h2 class="section-title">${grow.topic}</h2>
-      <div class="section-content">
-        <p><strong>Today's skill:</strong> ${grow.objective}</p>
-        ${grow.content ? `<p>${grow.content}</p>` : ''}
-      </div>
-    </div>
+          <!-- Divider -->
+          <tr>
+            <td style="padding: 0 24px;">
+              <div style="height: 1px; background: linear-gradient(to right, transparent, #e2e8f0, transparent);"></div>
+            </td>
+          </tr>
 
-    <!-- Wisdom -->
-    <div class="wisdom-section">
-      <div class="wisdom-icon">✨</div>
-      <div class="wisdom-text">"${combined_wisdom}"</div>
-    </div>
+          <!-- GROW Section -->
+          <tr>
+            <td style="padding: 28px 24px; background: #faf5ff;">
+              <span style="display: inline-block; background: #ede9fe; color: #5b21b6; padding: 6px 12px; border-radius: 6px; font-size: 11px; font-weight: 700; text-transform: uppercase; letter-spacing: 1px; margin-bottom: 12px;">🧠 GROW</span>
+              <h2 style="font-size: 24px; font-weight: 700; color: #0f172a; margin: 0 0 16px; line-height: 1.2;">${grow.topic}</h2>
+              
+              <!-- Skill Image -->
+              <img src="${KELLY_IMAGES.wisdom}" alt="Kelly teaching" width="552" style="width: 100%; max-width: 552px; height: auto; border-radius: 12px; margin-bottom: 20px;" />
+              
+              <div style="font-size: 16px; color: #334155; line-height: 1.7;">
+                <p style="margin: 0 0 16px;"><strong>Today's skill:</strong> ${grow.objective}</p>
+                
+                <!-- Kelly's Tip -->
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0;">
+                  <tr>
+                    <td style="background: #faf5ff; border-left: 4px solid #8b5cf6; padding: 16px; border-radius: 0 8px 8px 0;">
+                      <table role="presentation" cellpadding="0" cellspacing="0">
+                        <tr>
+                          <td width="36" valign="top">
+                            <img src="${KELLY_IMAGES.avatar}" alt="Kelly" width="28" height="28" style="border-radius: 50%; border: 2px solid #8b5cf6;" />
+                          </td>
+                          <td valign="top" style="padding-left: 8px;">
+                            <div style="font-size: 11px; font-weight: 700; color: #7c3aed; text-transform: uppercase; margin-bottom: 4px;">Kelly's tip</div>
+                            <div style="font-size: 15px; color: #5b21b6; font-style: italic;">
+                              "The best learners don't just practice — they reflect. After each attempt, ask: What worked? What didn't? What will I try differently?"
+                            </div>
+                          </td>
+                        </tr>
+                      </table>
+                    </td>
+                  </tr>
+                </table>
+                
+                ${grow.content ? `<p style="margin: 0 0 16px;">${grow.content}</p>` : ''}
+                
+                <!-- Try This -->
+                <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="margin: 20px 0;">
+                  <tr>
+                    <td style="background: #f3e8ff; border: 2px solid #c4b5fd; border-radius: 12px; padding: 20px;">
+                      <div style="font-size: 12px; font-weight: 700; color: #6b21a8; text-transform: uppercase; margin-bottom: 8px;">⚡ Try this today</div>
+                      <div style="font-size: 16px; color: #581c87; font-weight: 500;">After learning something new, take 60 seconds to write down one thing you understood well and one thing that's still fuzzy.</div>
+                    </td>
+                  </tr>
+                </table>
+              </div>
+            </td>
+          </tr>
 
-    <!-- CTA -->
-    <div class="cta-section">
-      <a href="https://www.curiouskelly.com/learn.html?day=${day}" class="cta-button">
-        Experience with Kelly →
-      </a>
-      <div class="cta-subtitle">Watch today's lesson with voice &amp; video</div>
-    </div>
+          <!-- Daily Wisdom -->
+          <tr>
+            <td style="background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%); padding: 32px 24px; text-align: center;">
+              <img src="${KELLY_IMAGES.celebrating}" alt="Kelly" width="64" height="64" style="border-radius: 50%; border: 3px solid #fbbf24; margin-bottom: 16px;" />
+              <div style="font-size: 11px; font-weight: 700; color: #fbbf24; text-transform: uppercase; letter-spacing: 1.5px; margin-bottom: 12px;">✨ Today's Wisdom</div>
+              <div style="font-size: 20px; font-weight: 500; color: white; line-height: 1.5; font-style: italic;">
+                "${combined_wisdom}"
+              </div>
+              <div style="margin-top: 16px; font-size: 14px; color: rgba(255,255,255,0.7);">— Kelly 💙</div>
+            </td>
+          </tr>
 
-    <div class="footer">
-      <p>Stay curious! ✨<br>— Kelly</p>
-      <p>
-        <a href="https://www.curiouskelly.com/unsubscribe">Unsubscribe</a> · 
-        <a href="https://www.curiouskelly.com/preferences">Preferences</a> · 
-        <a href="https://www.curiouskelly.com">curiouskelly.com</a>
-      </p>
-      <p style="color: #aaa; font-size: 11px;">
-        Lesson of the Day PBC · hello@curiouskelly.com
-      </p>
-    </div>
-  </div>
+          <!-- Optional CTA (soft) -->
+          <tr>
+            <td style="padding: 24px; background: #f8fafc; text-align: center; border-top: 1px solid #e2e8f0;">
+              <div style="font-size: 13px; color: #64748b; margin-bottom: 12px;">Want to hear me explain this with voice and video?</div>
+              <a href="${BASE_URL}/learn.html?day=${day}" style="display: inline-block; background: #e2e8f0; color: #475569; text-decoration: none; padding: 10px 20px; border-radius: 6px; font-size: 13px; font-weight: 500;">
+                Watch Today's Lesson →
+              </a>
+            </td>
+          </tr>
+
+          <!-- Footer -->
+          <tr>
+            <td style="padding: 24px; text-align: center; font-size: 12px; color: #94a3b8;">
+              <div style="font-size: 16px; margin-bottom: 8px;">✨ Curious Kelly</div>
+              <p style="margin: 0 0 12px;">You received your complete lesson. No need to click anything.</p>
+              <p style="margin: 0;">
+                <a href="${BASE_URL}/preferences" style="color: #64748b; text-decoration: none;">Preferences</a> · 
+                <a href="${BASE_URL}/unsubscribe" style="color: #64748b; text-decoration: none;">Unsubscribe</a> · 
+                <a href="${BASE_URL}" style="color: #64748b; text-decoration: none;">curiouskelly.com</a>
+              </p>
+              <p style="margin: 12px 0 0; color: #cbd5e1;">
+                Lesson of the Day PBC · hello@curiouskelly.com
+              </p>
+            </td>
+          </tr>
+
+        </table>
+      </td>
+    </tr>
+  </table>
 </body>
 </html>
 `;
@@ -350,24 +365,30 @@ Today's skill: ${grow.objective}
 
 ${grow.content || ''}
 
+⚡ Try this: After learning something new, take 60 seconds to write down one thing you understood well and one thing that's still fuzzy.
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
-✨ DAILY WISDOM
+✨ TODAY'S WISDOM
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 "${combined_wisdom}"
 
+— Kelly 💙
+
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
-Experience with Kelly (voice & video):
-https://www.curiouskelly.com/learn.html?day=${day}
+You received your complete lesson. No need to click anything.
+
+But if you want voice & video:
+${BASE_URL}/learn.html?day=${day}
 
 ━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
 
 Stay curious! ✨
 — Kelly
 
-Unsubscribe: https://www.curiouskelly.com/unsubscribe
-Preferences: https://www.curiouskelly.com/preferences
+Preferences: ${BASE_URL}/preferences
+Unsubscribe: ${BASE_URL}/unsubscribe
 
 Lesson of the Day PBC · hello@curiouskelly.com
 `.trim();
