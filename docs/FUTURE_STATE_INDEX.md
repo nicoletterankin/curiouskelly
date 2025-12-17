@@ -100,6 +100,7 @@
 ## Related Documents
 
 - [CLAUDE.md](../CLAUDE.md) — Operating rules (updated with future state references)
+- [ONE_PAGE_KELLY_ARCHITECTURE.md](./ONE_PAGE_KELLY_ARCHITECTURE.md) — 🔒 The unified 16:9 experience (LOCKED DIRECTION)
 - [TRUST_AND_SAFETY_INDEX.md](./trust-safety/TRUST_AND_SAFETY_INDEX.md) — Trust & Safety principles
 - [SOCIAL_MEDIA_STRATEGY.md](./social-media/SOCIAL_MEDIA_STRATEGY.md) — Brand and marketing
 
