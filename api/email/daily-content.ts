@@ -117,10 +117,14 @@ async function getLearnContent(dayNumber: number) {
       .order('phase');
 
     const hook = atoms?.find(a => a.phase === 'Hook')?.content?.script || '';
-    const facts = atoms
+    
+    // Only take first 3 facts for email (not all 30!)
+    const allFacts = atoms
       ?.filter(a => a.phase?.startsWith('Fact'))
       ?.map(a => a.content?.script)
       ?.filter(Boolean) || [];
+    const facts = allFacts.slice(0, 3);
+    
     const wisdom = atoms?.find(a => a.phase === 'Wisdom')?.content?.script || '';
     const cliff = atoms?.find(a => a.phase === 'Cliff')?.content;
     const question = cliff?.cliffPrompt || '';

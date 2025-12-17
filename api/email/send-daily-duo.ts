@@ -202,7 +202,7 @@ function generateDailyDuoHtmlV2(content: any, name: string): string {
                   </tr>
                 </table>
                 
-                ${learn.facts.slice(1).map((fact: string) => `<p style="margin: 0 0 16px;">${fact}</p>`).join('')}
+                ${learn.facts[1] ? `<p style="margin: 0 0 16px;">${learn.facts[1]}</p>` : ''}
                 
                 <!-- Universal Truth -->
                 ${learn.universal_truth ? `
