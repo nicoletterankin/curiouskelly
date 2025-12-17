@@ -389,6 +389,92 @@ const KellyCurriculumBrowser = (function() {
     return text.substring(0, maxLength) + '...';
   }
 
+  /**
+   * Search lessons across all months and tracks
+   */
+  function search(query) {
+    searchQuery = (query || '').toLowerCase().trim();
+    
+    const container = document.getElementById('curriculum-months');
+    if (!container) return;
+    
+    if (!searchQuery) {
+      // Reset to normal view
+      render(document.getElementById('curriculum-categories') || container.parentElement);
+      loadAllTracks(container.parentElement);
+      return;
+    }
+    
+    // Search through cache
+    const results = [];
+    
+    for (const [trackId, months] of Object.entries(curriculumCache)) {
+      for (const [monthKey, monthData] of Object.entries(months)) {
+        if (!monthData?.days) continue;
+        
+        for (const day of monthData.days) {
+          const titleMatch = (day.title || '').toLowerCase().includes(searchQuery);
+          const descMatch = (day.description || '').toLowerCase().includes(searchQuery);
+          const tagMatch = (day.tags || []).some(t => t.toLowerCase().includes(searchQuery));
+          
+          if (titleMatch || descMatch || tagMatch) {
+            results.push({
+              ...day,
+              track: trackId,
+              trackInfo: TRACKS[trackId]
+            });
+          }
+        }
+      }
+    }
+    
+    // Render search results
+    renderSearchResults(container.parentElement, results);
+  }
+  
+  /**
+   * Render search results
+   */
+  function renderSearchResults(container, results) {
+    if (results.length === 0) {
+      container.innerHTML = `
+        <div class="curriculum-browser">
+          <div class="search-empty">
+            <div class="search-empty-icon">🔍</div>
+            <h3>No lessons found for "${searchQuery}"</h3>
+            <p>Try different keywords or browse by month</p>
+            <button class="clear-search-btn" onclick="KellyCurriculumBrowser.search('')">Clear Search</button>
+          </div>
+        </div>
+      `;
+      return;
+    }
+    
+    container.innerHTML = `
+      <div class="curriculum-browser">
+        <div class="search-header">
+          <h3>Found ${results.length} lesson${results.length !== 1 ? 's' : ''} for "${searchQuery}"</h3>
+          <button class="clear-search-btn" onclick="KellyCurriculumBrowser.search('')">Clear</button>
+        </div>
+        <div class="search-results">
+          ${results.slice(0, 50).map(day => `
+            <div class="search-result-card" onclick="KellyCurriculumBrowser.selectDay(${day.day}, '${day.track}')">
+              <div class="result-track" style="background: ${day.trackInfo?.color || '#666'}">
+                ${day.trackInfo?.icon || '📚'} ${day.trackInfo?.name || 'Learn'}
+              </div>
+              <div class="result-info">
+                <div class="result-day">Day ${day.day}</div>
+                <div class="result-title">${day.title || 'Untitled'}</div>
+                <div class="result-desc">${truncate(day.description || '', 80)}</div>
+              </div>
+              <div class="result-play">▶</div>
+            </div>
+          `).join('')}
+        </div>
+      </div>
+    `;
+  }
+
   // Public API
   return {
     init,
@@ -396,6 +482,7 @@ const KellyCurriculumBrowser = (function() {
     toggleMonth,
     selectDay,
     loadMonth,
+    search,
     
     // Expose for debugging
     getCache: () => curriculumCache,

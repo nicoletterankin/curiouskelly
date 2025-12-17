@@ -4675,6 +4675,159 @@
       font-size: 14px;
     }
     
+    /* Curriculum Search Results */
+    .search-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 16px;
+      background: var(--bg-card);
+      border-radius: 12px;
+      margin-bottom: 16px;
+    }
+    
+    .search-header h3 {
+      margin: 0;
+      font-size: 14px;
+    }
+    
+    .clear-search-btn {
+      background: transparent;
+      border: 1px solid rgba(255,255,255,0.2);
+      color: white;
+      padding: 6px 12px;
+      border-radius: 8px;
+      cursor: pointer;
+      font-size: 12px;
+    }
+    
+    .clear-search-btn:hover {
+      background: rgba(255,255,255,0.1);
+    }
+    
+    .search-results {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+    
+    .search-result-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px;
+      background: var(--bg-card);
+      border-radius: 12px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .search-result-card:hover {
+      background: rgba(255,255,255,0.08);
+      transform: translateX(4px);
+    }
+    
+    .result-track {
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 600;
+      white-space: nowrap;
+    }
+    
+    .result-info {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .result-day {
+      font-size: 11px;
+      opacity: 0.6;
+    }
+    
+    .result-title {
+      font-weight: 600;
+      font-size: 14px;
+    }
+    
+    .result-desc {
+      font-size: 12px;
+      opacity: 0.7;
+      margin-top: 2px;
+    }
+    
+    .result-play {
+      font-size: 16px;
+      opacity: 0.5;
+    }
+    
+    .search-empty {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    
+    .search-empty-icon {
+      font-size: 48px;
+      margin-bottom: 16px;
+    }
+    
+    .search-empty h3 {
+      margin: 0 0 8px;
+    }
+    
+    .search-empty p {
+      opacity: 0.6;
+      margin: 0 0 16px;
+    }
+    
+    /* Day Cell Tooltip */
+    .day-cell {
+      position: relative;
+    }
+    
+    .day-cell-tooltip {
+      position: absolute;
+      bottom: calc(100% + 8px);
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.9);
+      color: white;
+      padding: 8px 12px;
+      border-radius: 8px;
+      font-size: 12px;
+      white-space: nowrap;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s ease;
+      z-index: 100;
+      pointer-events: none;
+    }
+    
+    .day-cell-tooltip::after {
+      content: '';
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      border: 6px solid transparent;
+      border-top-color: rgba(0,0,0,0.9);
+    }
+    
+    .day-cell:hover .day-cell-tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .day-cell:not(.locked):hover {
+      transform: scale(1.08);
+      z-index: 10;
+      box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+    }
+    
+    .day-cell:not(.locked):hover .day-cell-bg img {
+      opacity: 0.7;
+    }
+    
     /* Bookmarks Tab */
     .bookmarks-container {
       min-height: 200px;
@@ -12679,12 +12832,19 @@
           if ([7, 30, 100, 365].includes(dayCounter)) cell.classList.add('milestone');
 
           const thumbUrl = getLessonThumbnailUrl(dayCounter);
+          const cachedLesson = lessonsCache[dayCounter];
+          const lessonTopic = cachedLesson?.topic || cachedLesson?.title || '';
+          
           cell.innerHTML = `
             <div class="day-cell-bg">
               ${thumbUrl ? `<img src="${thumbUrl}" alt="" loading="lazy" decoding="async" onerror="this.remove();" />` : ''}
             </div>
             <span class="day-cell-num">${d + 1}</span>
+            ${lessonTopic ? `<div class="day-cell-tooltip">${lessonTopic}</div>` : ''}
           `;
+          
+          // Store day number for async tooltip loading
+          cell.dataset.day = dayCounter;
           
           const thisDay = dayCounter;
           if (!isLocked) {
@@ -14065,25 +14225,19 @@
       document.getElementById('phase-selector-close')?.addEventListener('click', hidePhaseSelector);
       document.querySelector('.phase-selector-backdrop')?.addEventListener('click', hidePhaseSelector);
       
-      // Curriculum search
-      document.getElementById('curriculum-search-input')?.addEventListener('input', (e) => {
-        const query = e.target.value.toLowerCase();
-        document.querySelectorAll('.curriculum-category').forEach(cat => {
-          const lessons = cat.querySelectorAll('.curriculum-lesson');
-          let hasMatch = false;
-          
-          lessons.forEach(lesson => {
-            const topic = lesson.querySelector('.curriculum-lesson-topic')?.textContent.toLowerCase() || '';
-            const match = topic.includes(query) || query === '';
-            lesson.style.display = match ? 'flex' : 'none';
-            if (match) hasMatch = true;
-          });
-          
-          // Show category if it has matching lessons, or expand it
-          cat.style.display = hasMatch || query === '' ? 'block' : 'none';
-          if (query && hasMatch) cat.classList.add('expanded');
+      // Curriculum search - debounced search with KellyCurriculumBrowser
+      const curriculumSearchInput = document.getElementById('curriculum-search-input');
+      if (curriculumSearchInput) {
+        let searchTimeout;
+        curriculumSearchInput.addEventListener('input', (e) => {
+          clearTimeout(searchTimeout);
+          searchTimeout = setTimeout(() => {
+            if (window.KellyCurriculumBrowser) {
+              KellyCurriculumBrowser.search(e.target.value);
+            }
+          }, 300); // Debounce 300ms
         });
-      });
+      }
       
       // Age slider
       document.getElementById('age-slider').addEventListener('input', e => {
