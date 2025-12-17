@@ -163,13 +163,13 @@ Stay curious! ✨
 ## PART 3: IMPLEMENTATION CHECKLIST
 
 ### Phase A: UI Containment (Today)
-- [ ] Add mutual exclusion for overlays
-- [ ] Fix paywall modal max-height
+- [x] Add mutual exclusion for overlays ✅ Already in setUiMode() + closeAllOverlays()
+- [x] Fix paywall modal max-height ✅ Already has safe-area calc
 - [ ] Test settings + paywall interaction
 - [ ] Verify no content clipping on small screens
 
 ### Phase B: Email Templates (This Week)
-- [ ] Design HTML email template
+- [x] Design HTML email template ✅ Created api/send-full-lesson-email.ts
 - [ ] Test across email clients (Gmail, Apple Mail, Outlook)
 - [ ] Create content extraction script from PhaseDNA
 - [ ] Set up email preference management
