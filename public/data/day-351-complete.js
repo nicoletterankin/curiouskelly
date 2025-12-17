@@ -3,6 +3,8 @@
  * Launch Day: December 17, 2025
  * LEARN Track: Practicing in Your Mind (Visualization)
  * GROW Track: Learning Accountability - Staying on Track
+ * 
+ * Age Groups: 3 (Kid 2-12, Adult 13-60, Senior 61+)
  */
 window.CURIOUS_KELLY = window.CURIOUS_KELLY || {};
 window.CURIOUS_KELLY.LOCAL_PACKS = window.CURIOUS_KELLY.LOCAL_PACKS || {};
@@ -10,9 +12,10 @@ window.CURIOUS_KELLY.DAY_351 = {
   "meta": {
     "created_at": "2025-12-16T23:30:00.000Z",
     "day_number": 351,
-    "version": "v3.0-launch",
+    "version": "v3.1-launch",
     "is_launch_day": true,
-    "date": "December 17, 2025"
+    "date": "December 17, 2025",
+    "age_groups": 3
   },
   "lesson": {
     "day_number": 351,
@@ -52,6 +55,7 @@ window.CURIOUS_KELLY.DAY_351 = {
       "phase": "Cliff",
       "content": {
         "script": "Here's the surprising part: when you vividly imagine doing something, your brain activates almost the same way as when you actually do it. But why would that help you improve?",
+        "cliffPrompt": "Why would imagining something make you better at it?",
         "options": [
           {
             "text": "It doesn't really help",
@@ -67,7 +71,6 @@ window.CURIOUS_KELLY.DAY_351 = {
           }
         ],
         "kellyPose": "contemplative",
-        "cliffPrompt": "Why would imagining something make you better at it?",
         "kellyEmotion": "thoughtful"
       },
       "created_at": "2025-12-16T23:30:00.000Z",
@@ -177,83 +180,92 @@ window.CURIOUS_KELLY.DAY_351 = {
     }
   ],
   "ageVariants": {
-    "2-5": {
+    "kid": {
+      "range": "2-12",
       "persona": "Playful Friend",
+      "voiceStyle": "warm, excited, simple words",
       "phases": {
-        "hook": "Hi little friend! Did you know your brain can practice things even when you're just sitting still? Close your eyes and imagine eating your favorite ice cream. Can you almost taste it? That's your brain practicing!",
-        "cliff": "Your brain is super smart! It can practice things without even moving!",
+        "hook": "Hi there, friend! Did you know your brain can practice things even when you're just sitting still? Close your eyes and imagine eating your favorite ice cream. Can you almost taste it? That's your brain practicing!",
+        "cliff": "Your brain is super smart! It can practice things without even moving! But how does that work?",
         "fact1": "When you imagine doing something, your brain lights up almost the same way as when you really do it! If you imagine jumping, the jumping part of your brain wakes up!",
         "fact2": "Athletes use this trick all the time! Before a big race, they close their eyes and imagine running super fast. They see themselves winning!",
         "fact3": "You can use this too! Before you try something new, like learning to catch a ball, close your eyes and imagine catching it perfectly!",
         "wisdom": "Remember, little learner: Your imagination is like a practice field for your brain. The more you picture yourself doing something, the better you get at it for real!",
         "outro": "That was so much fun! See you tomorrow for more learning adventures!"
       },
-      "durations": { "hook": 12, "cliff": 8, "fact1": 13, "fact2": 12, "fact3": 13, "wisdom": 11, "outro": 6 }
+      "cliffOptions": [
+        {
+          "text": "Maybe it's just pretend?",
+          "letter": "A",
+          "quality": "good",
+          "response": "Great thinking! But here's the cool part—your brain thinks it's real!"
+        },
+        {
+          "text": "It helps my brain learn!",
+          "letter": "B",
+          "quality": "best",
+          "response": "You got it! Your brain learns even when you're just imagining!"
+        }
+      ],
+      "durations": { "hook": 14, "cliff": 10, "fact1": 15, "fact2": 14, "fact3": 15, "wisdom": 13, "outro": 8 }
     },
-    "6-12": {
-      "persona": "Cool Big Sister",
-      "phases": {
-        "hook": "Hey curious one! What if I told you that you can get better at things without even doing them? It sounds like magic, but it's actually science. It's called visualization!",
-        "cliff": "Your brain has an amazing secret power. Want to know what it is?",
-        "fact1": "Here's the cool part: When you vividly imagine doing something, your brain activates nearly the same neural pathways as when you actually do it!",
-        "fact2": "Olympic athletes use this constantly. Studies show that athletes who combine physical practice with mental practice perform better than those who only do physical practice!",
-        "fact3": "Here's how to try it: Pick something you want to get better at. Close your eyes and imagine doing it perfectly—but use ALL your senses!",
-        "wisdom": "The big idea: Your mind is a practice ground. Every time you visualize success, you're building neural pathways that make success more likely!",
-        "outro": "That's a wrap! You're getting smarter every day. See you tomorrow!"
-      },
-      "durations": { "hook": 11, "cliff": 7, "fact1": 14, "fact2": 13, "fact3": 14, "wisdom": 10, "outro": 5 }
-    },
-    "13-17": {
-      "persona": "Smart Mentor",
-      "phases": {
-        "hook": "Want to get better at something without extra practice time? Visualization isn't just positive thinking—it's a neuroscience-backed technique used by elite performers.",
-        "cliff": "Your brain has a feature most people never use. Ready to unlock it?",
-        "fact1": "Your brain has something called 'motor imagery.' When you imagine performing an action, your motor cortex activates in patterns similar to actual movement.",
-        "fact2": "Research is clear: In one study, participants who visualized playing piano showed nearly identical brain changes to those who actually practiced.",
-        "fact3": "The key is specificity. Vague visualizations don't work as well. You need to imagine the exact movements, the environment, potential challenges.",
-        "wisdom": "Bottom line: Visualization isn't wishful thinking. It's cognitive rehearsal that primes your brain for performance. The most successful people use it.",
-        "outro": "That's the real stuff. See you tomorrow."
-      },
-      "durations": { "hook": 10, "cliff": 6, "fact1": 15, "fact2": 13, "fact3": 13, "wisdom": 10, "outro": 4 }
-    },
-    "18-35": {
+    "adult": {
+      "range": "13-60",
       "persona": "Equal Partner",
+      "voiceStyle": "conversational, informed, engaging",
       "phases": {
-        "hook": "Ever wondered why athletes close their eyes before a big moment? Visualization is a legitimate performance enhancement technique—and it's remarkably underused.",
-        "cliff": "There's a reason elite performers spend so much time just imagining. Want to know why?",
-        "fact1": "The neuroscience: Motor imagery activates premotor and primary motor cortices. Your brain literally can't distinguish between a vividly imagined action and a real one.",
-        "fact2": "Applications go beyond sports. Musicians visualize performances. Surgeons mentally rehearse procedures. The principle transfers to any skill-based domain.",
-        "fact3": "Implementation: Set aside 5-10 minutes daily. Choose a specific skill. Visualize in first person, with full sensory detail. Include the process, not just outcomes.",
-        "wisdom": "The takeaway: Mental practice is real practice. It's not a replacement for physical training, but it's a powerful supplement. Build it into your routine.",
-        "outro": "Knowledge that makes a difference. See you tomorrow."
+        "hook": "Ever wondered why athletes close their eyes before a big moment? Visualization is a legitimate performance enhancement technique—and it's remarkably underused. Let me show you why it works.",
+        "cliff": "Here's the surprising part: when you vividly imagine doing something, your brain activates almost the same way as when you actually do it. But why would that help you improve?",
+        "fact1": "The neuroscience: When you imagine performing an action, your motor cortex—the part that controls movement—lights up almost identically to when you actually move. Brain scans show about 90% overlap. Your brain literally can't tell the difference.",
+        "fact2": "Research proves it works. In one famous study, people who only imagined playing piano for five days showed nearly the same brain changes as those who actually practiced. Mental rehearsal creates real neuroplastic changes.",
+        "fact3": "Elite performers use this constantly. Olympic athletes spend up to 50% of their training time on mental rehearsal. Surgeons visualize procedures. Musicians rehearse in their minds. The key is specificity—the more detailed, the better.",
+        "wisdom": "Here's today's wisdom: Your imagination is a practice field. The mind that rehearses builds pathways the passive mind never develops. Tonight, try visualizing something you want to get better at. See it, feel it, live it. You're not dreaming—you're training.",
+        "outro": "That's today's lesson. Something powerful about your brain's ability to practice through imagination. I'll see you tomorrow with something new. Keep visualizing great things."
       },
-      "durations": { "hook": 11, "cliff": 6, "fact1": 14, "fact2": 13, "fact3": 13, "wisdom": 11, "outro": 5 }
+      "cliffOptions": [
+        {
+          "text": "It's just positive thinking",
+          "letter": "A",
+          "quality": "good",
+          "response": "That's what most people assume! But the science shows something much more concrete..."
+        },
+        {
+          "text": "It trains neural pathways",
+          "letter": "B",
+          "quality": "best",
+          "response": "Exactly right. Your brain builds real, measurable connections through imagination alone."
+        }
+      ],
+      "durations": { "hook": 13, "cliff": 11, "fact1": 16, "fact2": 15, "fact3": 15, "wisdom": 14, "outro": 9 }
     },
-    "36-60": {
-      "persona": "Respectful Guide",
-      "phases": {
-        "hook": "Visualization has moved from sports psychology into mainstream performance science. Understanding why it works offers practical benefits across many domains.",
-        "cliff": "Science has uncovered something remarkable about how our minds practice. Let's explore.",
-        "fact1": "Functional MRI studies demonstrate that imagined actions and executed actions share overlapping neural substrates. This isn't metaphor—it's measurable.",
-        "fact2": "The applications are broader than commonly recognized. Research shows visualization improves not just motor skills, but also cognitive tasks and emotional regulation.",
-        "fact3": "Effective visualization requires deliberate structure: first-person perspective, multisensory detail, process focus, and regular practice.",
-        "wisdom": "The mind that rehearses develops pathways the passive mind never builds. Visualization represents one of the few truly 'free' performance enhancers.",
-        "outro": "Wisdom worth carrying forward. Until tomorrow."
-      },
-      "durations": { "hook": 11, "cliff": 6, "fact1": 14, "fact2": 13, "fact3": 12, "wisdom": 12, "outro": 5 }
-    },
-    "61-102": {
+    "senior": {
+      "range": "61+",
       "persona": "Warm Companion",
+      "voiceStyle": "respectful, unhurried, connecting to life experience",
       "phases": {
-        "hook": "Good to see you, friend. Today we explore something remarkable—the power of the mind to practice through imagination alone. It's a capacity you've had your whole life.",
-        "cliff": "Our minds have always known something that science is now confirming. Shall we explore?",
-        "fact1": "Across cultures and ages, people have understood that imagining something vividly affects us deeply. Modern science now confirms what wisdom traditions long held.",
-        "fact2": "This power doesn't diminish with age. In fact, older adults often bring richer detail to visualization because they have more experience to draw upon.",
-        "fact3": "Some use visualization for practical skills, others for healing, others for simply savoring good memories. Whatever the application, the principle is the same.",
-        "wisdom": "Your mind remains a creative force throughout life. The ability to imagine, to mentally rehearse, to envision—these are gifts that only grow richer with time.",
-        "outro": "Another thread in life's beautiful tapestry. Until we meet again."
+        "hook": "Good to see you, friend. Today we explore something remarkable—the power of the mind to practice through imagination alone. It's a capacity you've had your whole life, and it only grows richer with experience.",
+        "cliff": "Our minds have always known something that science is now confirming. When we imagine something vividly, our brain responds almost as if it were real. But why would that help us?",
+        "fact1": "Across cultures and ages, people have understood that imagining something vividly affects us deeply. Modern brain scans now confirm what wisdom traditions long held—imagination activates the same brain regions as action.",
+        "fact2": "This power doesn't diminish with age. In fact, older adults often bring richer detail to visualization because they have more experience to draw upon. Your lifetime of memories is an asset here.",
+        "fact3": "Some use visualization for practical skills, others for healing, others for simply savoring good memories. Whatever the application, the principle is the same: the mind that practices grows stronger.",
+        "wisdom": "Your mind remains a creative force throughout life. The ability to imagine, to mentally rehearse, to envision—these are gifts that only grow richer with time. Tonight, perhaps visualize something that brings you joy.",
+        "outro": "Another thread in life's beautiful tapestry. Until we meet again, friend."
       },
-      "durations": { "hook": 12, "cliff": 6, "fact1": 14, "fact2": 13, "fact3": 13, "wisdom": 13, "outro": 6 }
+      "cliffOptions": [
+        {
+          "text": "Perhaps it's just daydreaming",
+          "letter": "A",
+          "quality": "good",
+          "response": "A reasonable thought. But science has found something deeper happening in the brain..."
+        },
+        {
+          "text": "The mind truly shapes the brain",
+          "letter": "B",
+          "quality": "best",
+          "response": "Beautifully said. Your life experience has taught you well—imagination is powerful medicine."
+        }
+      ],
+      "durations": { "hook": 15, "cliff": 12, "fact1": 17, "fact2": 16, "fact3": 16, "wisdom": 15, "outro": 10 }
     }
   },
   "phaseDetails": {
@@ -262,55 +274,58 @@ window.CURIOUS_KELLY.DAY_351 = {
       "icon": "🪝",
       "description": "Capture attention with wonder",
       "color": "#3b82f6",
-      "duration": 10
+      "duration": 13
     },
     "cliff": {
       "name": "Cliff",
       "icon": "🧗",
       "description": "Create curiosity and choice",
       "color": "#8b5cf6",
-      "duration": 6
+      "duration": 11,
+      "hasOptions": true
     },
     "fact1": {
       "name": "Fact 1",
       "icon": "🧠",
       "description": "Neural Overlap",
       "color": "#10b981",
-      "duration": 14
+      "duration": 16
     },
     "fact2": {
       "name": "Fact 2",
       "icon": "🎹",
       "description": "The Piano Study",
       "color": "#f59e0b",
-      "duration": 13
+      "duration": 15
     },
     "fact3": {
       "name": "Fact 3",
       "icon": "🏆",
       "description": "Elite Practice",
       "color": "#ec4899",
-      "duration": 12
+      "duration": 15
     },
     "wisdom": {
       "name": "Wisdom",
       "icon": "🦉",
       "description": "The deeper truth",
       "color": "#f59e0b",
-      "duration": 12
+      "duration": 14
     },
     "outro": {
       "name": "Outro",
       "icon": "👋",
       "description": "Warm goodbye",
       "color": "#6366f1",
-      "duration": 5
+      "duration": 9
     }
   },
   "growTrack": {
     "title": "Learning Accountability - Staying on Track",
-    "learning_objective": "Create accountability structures to follow through on learning commitments.",
-    "description": "Today's GROW lesson helps you build systems to keep your learning on track."
+    "emoji": "🎯",
+    "learning_objective": "Create accountability structures to follow through on learning commitments",
+    "description": "Today's GROW lesson helps you build systems to keep your learning on track. Great learners don't rely on willpower—they build systems.",
+    "activity": "Choose one person you trust and tell them about your learning goal for the week. Ask them to check in with you in 7 days. This simple act of making your commitment external dramatically increases follow-through."
   }
 };
 // Register in LOCAL_PACKS for fallback engine
