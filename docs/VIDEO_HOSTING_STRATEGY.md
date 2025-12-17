@@ -111,11 +111,19 @@ Track all videos and their locations:
 
 ## Immediate Actions (Dec 17)
 
-1. [ ] Download all Day 351 videos locally (DONE - in public/videos/summary/)
-2. [ ] Set up Cloudflare R2 bucket
-3. [ ] Upload videos to R2
-4. [ ] Update watch page and emails to use R2 URLs
-5. [ ] Create backup of HeyGen video URLs before they expire
+1. [x] Download all Day 351 videos locally (DONE - in video-backups/day-351/)
+2. [x] Set up Cloudflare R2 bucket (`curious-kelly-backups`)
+3. [x] Upload videos to R2
+4. [x] Update watch page and emails to use R2 URLs
+5. [x] Create backup of HeyGen video URLs before they expire
+
+### Current URLs
+
+**R2 Public URL:** `https://pub-29446fb0037f47e49993ebd6b4ed714e.r2.dev`
+
+**Custom Domain (pending):** `videos.curiouskelly.com`
+
+**Example video:** `https://pub-29446fb0037f47e49993ebd6b4ed714e.r2.dev/videos/summary/day-351.mp4`
 
 ---
 
