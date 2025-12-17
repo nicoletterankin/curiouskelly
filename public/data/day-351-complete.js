@@ -30,12 +30,12 @@ window.CURIOUS_KELLY.DAY_351 = {
     "total_duration_seconds": 180,
     "kelly_images": {
       "hook": "/kelly/phases/351/hook.png",
-      "cliff": "/kelly/phases/351/hook.png",
+      "cliff": "/kelly/phases/351/cliff.png",
       "fact1": "/kelly/phases/351/q1.png",
       "fact2": "/kelly/phases/351/q2.png",
       "fact3": "/kelly/phases/351/q3.png",
       "wisdom": "/kelly/phases/351/wisdom.png",
-      "outro": "/kelly/phases/351/wisdom.png"
+      "outro": "/kelly/phases/351/outro.png"
     }
   },
   "phases": {
