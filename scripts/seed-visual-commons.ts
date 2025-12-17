@@ -77,7 +77,9 @@ interface Lesson {
   day_number: number;
   topic: string;
   universal_truth: string;
-  facts?: string[];
+  fun_facts?: string[];
+  wow_moment?: string;
+  extended_explanation?: string;
 }
 
 interface GenerationResult {
@@ -168,7 +170,7 @@ Create a clear, educational scene illustrating the FIRST key concept of: "${less
 
 This is TEACHING content - clarity is everything.
 
-Core concept: ${lesson.facts?.[0] || lesson.universal_truth}
+Core concept: ${lesson.fun_facts?.[0] || lesson.universal_truth}
 
 STYLE:
 - Ultra photorealistic, bright and clear lighting
@@ -188,7 +190,7 @@ DO NOT include any text. The image should teach through visuals alone.
   fact2: (lesson) => `
 Create an educational scene showing DEEPER insight into: "${lesson.topic}"
 
-Building on foundational knowledge with: ${lesson.facts?.[1] || 'deeper understanding'}
+Building on foundational knowledge with: ${lesson.fun_facts?.[1] || 'deeper understanding'}
 
 STYLE:
 - Ultra photorealistic, layered lighting showing depth
@@ -208,7 +210,7 @@ Create a WOW MOMENT scene for: "${lesson.topic}"
 
 This is the SURPRISING detail that makes the lesson memorable.
 
-Wow factor: ${lesson.facts?.[2] || lesson.universal_truth}
+Wow factor: ${lesson.wow_moment || lesson.fun_facts?.[2] || lesson.universal_truth}
 
 STYLE:
 - Ultra photorealistic, dramatic "reveal" lighting
@@ -337,7 +339,7 @@ async function generateWithImagen(prompt: string): Promise<Buffer | null> {
 async function getLessonDetails(dayNumber: number): Promise<Lesson | null> {
   const { data, error } = await supabase
     .from('core_lessons')
-    .select('day_number, topic, universal_truth, facts')
+    .select('day_number, topic, universal_truth, fun_facts, wow_moment, extended_explanation')
     .eq('day_number', dayNumber)
     .maybeSingle();
   
