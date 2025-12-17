@@ -14,25 +14,29 @@
 
 const KellyCurriculumBrowser = (function() {
   
-  // Curriculum metadata
+  // Curriculum metadata - Using LOCKED naming: Learn + Grow (see docs/DUAL_TRACK_NAMING.md)
   const PROGRAMS = [
     {
-      id: 'year1',
-      year: 1,
-      name: 'Foundations of Knowledge',
+      id: 'learn',
+      track: 'learn',
+      name: 'Learn',
+      fullName: 'Learn Track',
       slug: 'year1-foundations',
       description: 'Daily lessons exploring the wonders of science, history, nature, and human achievement.',
       status: 'active',
-      icon: '🌟'
+      icon: '🌟',
+      color: '#f59e0b'
     },
     {
-      id: 'year2',
-      year: 2,
-      name: 'AI Fluency & Meta-Learning',
+      id: 'grow',
+      track: 'grow',
+      name: 'Grow',
+      fullName: 'Grow Track',
       slug: 'year2-ai-fluency',
-      description: '365 days of learning how to learn in the age of AI—critical thinking, ethics, and human capabilities.',
+      description: 'Daily lessons on critical thinking, AI fluency, and becoming a better learner.',
       status: 'active',
-      icon: '🧠'
+      icon: '🧠',
+      color: '#8b5cf6'
     }
   ];
 
@@ -51,25 +55,43 @@ const KellyCurriculumBrowser = (function() {
     { name: 'December', days: 31, startDay: 335 }
   ];
 
-  // Year 2 theme colors and icons
-  const YEAR2_THEMES = {
-    January: { theme: 'Foundations', icon: '🏛️', color: '#3b82f6' },
-    February: { theme: 'Questioning', icon: '❓', color: '#8b5cf6' },
-    March: { theme: 'Verification', icon: '✓', color: '#10b981' },
-    April: { theme: 'Memory & Learning', icon: '🧠', color: '#f59e0b' },
-    May: { theme: 'Creativity & AI', icon: '🎨', color: '#ec4899' },
-    June: { theme: 'Communication', icon: '💬', color: '#06b6d4' },
-    July: { theme: 'Ethics & Responsibility', icon: '⚖️', color: '#6366f1' },
-    August: { theme: 'Systems Thinking', icon: '🔗', color: '#14b8a6' },
-    September: { theme: 'Human Capabilities', icon: '❤️', color: '#ef4444' },
-    October: { theme: 'Privacy & Digital Citizenship', icon: '🔒', color: '#a855f7' },
-    November: { theme: 'Future of Learning', icon: '🚀', color: '#22c55e' },
-    December: { theme: 'Integration & Reflection', icon: '✨', color: '#f97316' }
+  // Theme colors and icons for each track
+  const TRACK_THEMES = {
+    // 🧠 Grow Track (Meta-learning, AI Fluency)
+    grow: {
+      January: { theme: 'Foundations', icon: '🏛️', color: '#8b5cf6' },
+      February: { theme: 'Questioning', icon: '❓', color: '#a855f7' },
+      March: { theme: 'Verification', icon: '✓', color: '#7c3aed' },
+      April: { theme: 'Memory & Learning', icon: '🧠', color: '#8b5cf6' },
+      May: { theme: 'Creativity & AI', icon: '🎨', color: '#a855f7' },
+      June: { theme: 'Communication', icon: '💬', color: '#7c3aed' },
+      July: { theme: 'Ethics & Responsibility', icon: '⚖️', color: '#8b5cf6' },
+      August: { theme: 'Systems Thinking', icon: '🔗', color: '#a855f7' },
+      September: { theme: 'Human Capabilities', icon: '❤️', color: '#7c3aed' },
+      October: { theme: 'Privacy & Digital Citizenship', icon: '🔒', color: '#8b5cf6' },
+      November: { theme: 'Future of Learning', icon: '🚀', color: '#a855f7' },
+      December: { theme: 'Integration & Reflection', icon: '✨', color: '#7c3aed' }
+    },
+    // 🌟 Learn Track (Knowledge, Discovery)
+    learn: {
+      January: { theme: 'Origins & Beginnings', icon: '🌅', color: '#f59e0b' },
+      February: { theme: 'Life & Growth', icon: '🌱', color: '#eab308' },
+      March: { theme: 'Forces & Motion', icon: '⚡', color: '#f59e0b' },
+      April: { theme: 'Earth & Environment', icon: '🌍', color: '#eab308' },
+      May: { theme: 'Innovation & Discovery', icon: '💡', color: '#f59e0b' },
+      June: { theme: 'Art & Expression', icon: '🎨', color: '#eab308' },
+      July: { theme: 'History & Civilization', icon: '🏛️', color: '#f59e0b' },
+      August: { theme: 'Space & Universe', icon: '🚀', color: '#eab308' },
+      September: { theme: 'Mind & Body', icon: '🧬', color: '#f59e0b' },
+      October: { theme: 'Society & Culture', icon: '🌐', color: '#eab308' },
+      November: { theme: 'Technology & Future', icon: '🔮', color: '#f59e0b' },
+      December: { theme: 'Wonder & Wisdom', icon: '✨', color: '#eab308' }
+    }
   };
 
   // Cache for loaded curriculum data
   let curriculumCache = {};
-  let currentProgram = 'year2';
+  let currentProgram = 'grow'; // Default to Grow track (was year2)
   let searchQuery = '';
   let expandedMonths = new Set();
 
@@ -105,14 +127,15 @@ const KellyCurriculumBrowser = (function() {
   function render(container) {
     const html = `
       <div class="curriculum-browser">
-        <!-- Program Selector -->
+        <!-- Track Selector (Learn + Grow) -->
         <div class="program-selector">
           ${PROGRAMS.map(p => `
             <button class="program-btn ${currentProgram === p.id ? 'active' : ''}" 
                     data-program="${p.id}"
-                    onclick="KellyCurriculumBrowser.selectProgram('${p.id}')">
+                    onclick="KellyCurriculumBrowser.selectProgram('${p.id}')"
+                    style="${currentProgram === p.id ? `background: ${p.color};` : ''}">
               <span class="program-icon">${p.icon}</span>
-              <span class="program-name">Year ${p.year}</span>
+              <span class="program-name">${p.name}</span>
             </button>
           `).join('')}
         </div>
@@ -133,28 +156,28 @@ const KellyCurriculumBrowser = (function() {
   }
 
   /**
-   * Render program info header
+   * Render track info header
    */
   function renderProgramInfo() {
     const program = PROGRAMS.find(p => p.id === currentProgram);
     if (!program) return '';
 
     return `
-      <div class="program-header">
+      <div class="program-header" style="border-color: ${program.color}40;">
         <div class="program-title">
-          <span class="program-icon-large">${program.icon}</span>
+          <span class="program-icon-large" style="background: ${program.color}20; padding: 12px; border-radius: 12px;">${program.icon}</span>
           <div>
-            <h2>${program.name}</h2>
+            <h2>${program.icon} ${program.name} Track</h2>
             <p>${program.description}</p>
           </div>
         </div>
         <div class="program-stats">
           <div class="stat">
-            <span class="stat-value">365</span>
+            <span class="stat-value" style="color: ${program.color};">365</span>
             <span class="stat-label">Days</span>
           </div>
           <div class="stat">
-            <span class="stat-value">12</span>
+            <span class="stat-value" style="color: ${program.color};">12</span>
             <span class="stat-label">Themes</span>
           </div>
         </div>
@@ -167,10 +190,12 @@ const KellyCurriculumBrowser = (function() {
    */
   function renderMonths() {
     const cache = curriculumCache[currentProgram] || {};
+    const program = PROGRAMS.find(p => p.id === currentProgram);
+    const trackThemes = TRACK_THEMES[currentProgram] || TRACK_THEMES['grow'];
     
     return MONTHS.map((month, index) => {
       const monthData = cache[month.name.toLowerCase()];
-      const themeInfo = currentProgram === 'year2' ? YEAR2_THEMES[month.name] : { theme: 'Foundations', icon: '📚', color: '#3b82f6' };
+      const themeInfo = trackThemes[month.name] || { theme: 'Learning', icon: '📚', color: program?.color || '#8b5cf6' };
       const isExpanded = expandedMonths.has(month.name);
       const lessonsLoaded = monthData && monthData.days && monthData.days.length > 0;
       
@@ -337,11 +362,16 @@ const KellyCurriculumBrowser = (function() {
       return curriculumCache[currentProgram][monthKey];
     }
 
-    // Determine path based on program
-    const basePath = currentProgram === 'year2' 
-      ? '/data/curriculum/year2-ai-fluency'
-      : '/data/curriculum/year1-foundations';
+    // Map track ID to file path (internal paths preserved for compatibility)
+    const pathMap = {
+      'learn': 'year1-foundations',
+      'grow': 'year2-ai-fluency',
+      'year1': 'year1-foundations',  // Legacy support
+      'year2': 'year2-ai-fluency'    // Legacy support
+    };
+    const folderName = pathMap[currentProgram] || 'year2-ai-fluency';
     
+    const basePath = `/data/curriculum/${folderName}`;
     const url = `${basePath}/${monthKey}_curriculum.json`;
 
     try {
@@ -363,9 +393,7 @@ const KellyCurriculumBrowser = (function() {
       
       // Try fallback to lessons folder
       try {
-        const fallbackUrl = currentProgram === 'year2'
-          ? `/lessons/year2-ai-fluency/${monthKey}_curriculum.json`
-          : `/lessons/year1-foundations/${monthKey}_curriculum.json`;
+        const fallbackUrl = `/lessons/${folderName}/${monthKey}_curriculum.json`;
         
         const fallbackResponse = await fetch(fallbackUrl);
         if (fallbackResponse.ok) {
