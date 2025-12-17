@@ -419,7 +419,7 @@ window.CURIOUS_KELLY.DAY_351 = {
         "kellyPose": "explaining",
         "kellyEmotion": "thoughtful"
       },
-      "visual_url": "/kelly/phases/351/hook.png"
+      "visual_url": "/kelly/phases/351/cliff.png"
     },
     {
       "id": "day351-fact1",
@@ -500,7 +500,7 @@ window.CURIOUS_KELLY.DAY_351 = {
         "kellyPose": "warm",
         "kellyEmotion": "encouraging"
       },
-      "visual_url": "/kelly/phases/351/wisdom.png"
+      "visual_url": "/kelly/phases/351/outro.png"
     }
   ],
   "shards": [
