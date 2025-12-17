@@ -3727,8 +3727,8 @@
     }
 
     .phase-dot {
-      width: 36px;
-      height: 36px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
       border: 2px solid rgba(255, 255, 255, 0.4);
       background: rgba(255, 255, 255, 0.15);
@@ -3739,8 +3739,8 @@
     .phase-segment.active .phase-dot {
       background: var(--kelly-color, var(--kelly-blue));
       border-color: var(--kelly-color, var(--kelly-blue));
-      transform: scale(1.15);
-      box-shadow: 0 0 24px rgba(37, 99, 235, 0.6), 0 0 8px rgba(37, 99, 235, 0.4);
+      transform: scale(1.1);
+      box-shadow: 0 0 20px rgba(37, 99, 235, 0.6), 0 0 8px rgba(37, 99, 235, 0.4);
     }
 
     .phase-segment.completed .phase-dot {
@@ -3748,11 +3748,61 @@
       border-color: var(--success);
       box-shadow: 0 0 12px rgba(16, 185, 129, 0.4);
     }
+    
+    /* Phase Tooltips - Show descriptions on hover */
+    .phase-segment {
+      position: relative;
+    }
+    
+    .phase-tooltip {
+      position: absolute;
+      top: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-top: 8px;
+      background: rgba(9, 9, 11, 0.95);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      border-radius: 8px;
+      padding: 8px 12px;
+      min-width: 140px;
+      max-width: 200px;
+      opacity: 0;
+      visibility: hidden;
+      transition: all 0.2s ease;
+      z-index: 100;
+      pointer-events: none;
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4);
+    }
+    
+    .phase-segment:hover .phase-tooltip {
+      opacity: 1;
+      visibility: visible;
+    }
+    
+    .phase-tooltip-title {
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--kelly-blue);
+      margin-bottom: 4px;
+    }
+    
+    .phase-tooltip-desc {
+      font-size: 10px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
 
     @media (max-width: 600px) {
-      .phase-dot { width: 28px; height: 28px; }
-      .phase-bar-top { padding-left: 12px; padding-right: 12px; gap: 12px; }
-      .phase-label { font-size: 0.75rem; }
+      .phase-dot { width: 24px; height: 24px; }
+      .phase-bar-top { padding-left: 8px; padding-right: 8px; gap: 4px; }
+      .phase-label { font-size: 0.7rem; }
+      /* Hide tooltips on mobile - use title attribute instead */
+      .phase-tooltip { display: none; }
+    }
+    
+    @media (max-width: 400px) {
+      .phase-dot { width: 20px; height: 20px; }
+      .phase-bar { gap: 4px; }
     }
     
     .caption-phase {
@@ -5077,20 +5127,21 @@
     }
     
     .complete-kelly {
-      width: 120px;
-      height: 120px;
-      border-radius: 50%;
-      margin-bottom: 24px;
+      width: 160px;
+      height: 90px; /* 16:9 aspect ratio */
+      border-radius: 12px;
+      margin-bottom: 20px;
       animation: celebratePop 0.6s ease;
       overflow: hidden;
       background: var(--bg-card);
+      box-shadow: 0 8px 24px rgba(0, 0, 0, 0.3);
     }
     
     .complete-kelly img {
       width: 100%;
       height: 100%;
       object-fit: cover;
-      border-radius: 50%;
+      border-radius: 12px;
     }
     
     @keyframes celebratePop {
@@ -5100,31 +5151,56 @@
     }
     
     .complete-title {
-      font-size: 32px;
+      font-size: 24px;
       font-weight: 700;
-      margin-bottom: 8px;
+      margin-bottom: 6px;
     }
     
     .complete-message {
-      font-size: 16px;
+      font-size: 14px;
       opacity: 0.7;
       max-width: 280px;
-      line-height: 1.5;
-      margin-bottom: 32px;
+      line-height: 1.4;
+      margin-bottom: 16px;
+    }
+    
+    /* What You Learned section */
+    .complete-learned {
+      background: rgba(37, 99, 235, 0.1);
+      border: 1px solid rgba(37, 99, 235, 0.2);
+      border-radius: 12px;
+      padding: 12px 16px;
+      margin-bottom: 16px;
+      max-width: 300px;
+      text-align: left;
+    }
+    
+    .complete-learned-title {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--kelly-blue);
+      margin-bottom: 6px;
+    }
+    
+    .complete-learned-fact {
+      font-size: 13px;
+      line-height: 1.4;
+      color: var(--text-primary);
     }
     
     .streak-display {
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 10px;
       background: var(--bg-card);
-      padding: 16px 24px;
-      border-radius: 20px;
-      margin-bottom: 24px;
+      padding: 10px 18px;
+      border-radius: 16px;
+      margin-bottom: 12px;
     }
     
     .streak-display .fire {
-      font-size: 32px;
+      font-size: 24px;
       animation: wiggle 0.5s ease infinite;
     }
     
@@ -5134,35 +5210,36 @@
     }
     
     .streak-display .count {
-      font-size: 36px;
+      font-size: 28px;
       font-weight: 700;
     }
     
     .streak-display .label {
-      font-size: 12px;
+      font-size: 10px;
       opacity: 0.5;
     }
     
     .tomorrow-teaser {
       background: rgba(255,255,255,0.05);
-      padding: 16px 24px;
-      border-radius: 16px;
-      margin-bottom: 32px;
+      padding: 10px 16px;
+      border-radius: 12px;
+      margin-bottom: 16px;
     }
     
     .tomorrow-teaser .label {
-      font-size: 11px;
+      font-size: 9px;
       text-transform: uppercase;
       letter-spacing: 1px;
       opacity: 0.5;
-      margin-bottom: 8px;
+      margin-bottom: 4px;
     }
     
     .tomorrow-teaser .topic {
       display: flex;
       align-items: center;
-      gap: 8px;
+      gap: 6px;
       font-weight: 500;
+      font-size: 14px;
     }
     
     /* ============================================
@@ -5827,36 +5904,64 @@
             <button class="phase-segment" data-phase="0" title="Hook">
               <span class="phase-dot"></span>
               <span class="phase-name">Hook</span>
+              <div class="phase-tooltip">
+                <div class="phase-tooltip-title">🎬 Hook</div>
+                <div class="phase-tooltip-desc">Grab your attention with a surprising question</div>
+              </div>
             </button>
             <div class="phase-connector"></div>
             <button class="phase-segment" data-phase="1" title="Cliff">
               <span class="phase-dot"></span>
               <span class="phase-name">Cliff</span>
+              <div class="phase-tooltip">
+                <div class="phase-tooltip-title">🔀 The Cliff</div>
+                <div class="phase-tooltip-desc">Make a choice that shapes your learning path</div>
+              </div>
             </button>
             <div class="phase-connector"></div>
             <button class="phase-segment" data-phase="2" title="Fact 1">
               <span class="phase-dot"></span>
               <span class="phase-name">Fact 1</span>
+              <div class="phase-tooltip">
+                <div class="phase-tooltip-title">💡 Fact 1</div>
+                <div class="phase-tooltip-desc">Discover the first key insight</div>
+              </div>
             </button>
             <div class="phase-connector"></div>
             <button class="phase-segment" data-phase="3" title="Fact 2">
               <span class="phase-dot"></span>
               <span class="phase-name">Fact 2</span>
+              <div class="phase-tooltip">
+                <div class="phase-tooltip-title">💡 Fact 2</div>
+                <div class="phase-tooltip-desc">Build on the evidence with more depth</div>
+              </div>
             </button>
             <div class="phase-connector"></div>
             <button class="phase-segment" data-phase="4" title="Fact 3">
               <span class="phase-dot"></span>
               <span class="phase-name">Fact 3</span>
+              <div class="phase-tooltip">
+                <div class="phase-tooltip-title">💡 Fact 3</div>
+                <div class="phase-tooltip-desc">Apply the concept to real-world examples</div>
+              </div>
             </button>
             <div class="phase-connector"></div>
             <button class="phase-segment" data-phase="5" title="Wisdom">
               <span class="phase-dot"></span>
               <span class="phase-name">Wisdom</span>
+              <div class="phase-tooltip">
+                <div class="phase-tooltip-title">✨ Wisdom</div>
+                <div class="phase-tooltip-desc">The essential takeaway to remember</div>
+              </div>
             </button>
             <div class="phase-connector"></div>
             <button class="phase-segment" data-phase="6" title="Outro">
               <span class="phase-dot"></span>
               <span class="phase-name">Outro</span>
+              <div class="phase-tooltip">
+                <div class="phase-tooltip-title">🎉 Outro</div>
+                <div class="phase-tooltip-desc">Wrap up and prepare for tomorrow</div>
+              </div>
             </button>
           </div>
           <span class="phase-label" id="phase-label">HOOK</span>
@@ -6393,8 +6498,16 @@
       </div>
       <h2 class="complete-title">Beautiful!</h2>
       <p class="complete-message" id="complete-message">
-        A wonderful lesson complete. Learning looks good on everyone.
+        Lesson complete. Learning looks great on you!
       </p>
+      
+      <!-- What You Learned - Key Takeaway -->
+      <div class="complete-learned" id="complete-learned">
+        <div class="complete-learned-title">💡 Key Insight</div>
+        <div class="complete-learned-fact" id="complete-wisdom">
+          Loading wisdom...
+        </div>
+      </div>
       
       <div class="streak-display">
         <span class="fire">🔥</span>
@@ -6414,7 +6527,7 @@
       
       <button class="btn-primary" id="btn-next-lesson">Continue Journey →</button>
       
-      <button class="btn-secondary" style="margin-top: 8px;" data-scene="lesson">
+      <button class="btn-secondary" style="margin-top: 6px; font-size: 13px;" data-scene="lesson">
         Review This Lesson
       </button>
     </section>
@@ -12145,6 +12258,16 @@
       }
       
       document.getElementById('complete-streak').textContent = state.streak;
+      
+      // Populate "What You Learned" wisdom
+      const wisdomEl = document.getElementById('complete-wisdom');
+      if (wisdomEl && currentLesson) {
+        // Try to get the wisdom/universal truth from the lesson
+        const wisdom = currentLesson.universalTruth || 
+                       lessonAtoms.find(a => a.phase === 'Wisdom')?.script?.slice(0, 150) ||
+                       `Today you learned about ${currentLesson.topic || 'something amazing'}!`;
+        wisdomEl.textContent = wisdom;
+      }
       
       // Load tomorrow's lesson topic with fallback
       const tomorrowDay = state.currentDay + 1;
