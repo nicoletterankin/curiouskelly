@@ -10279,8 +10279,8 @@
       setKellySpeaking(false);
       syncPlayPauseUI();
 
-      // Cliff owns pacing; never auto-advance while waiting or while a manual advance is pending.
-      if (state.waitingForChoice || state.manualAdvancePending || isCliffPhase()) return;
+      // Never auto-advance while waiting for a choice or while a manual advance is pending.
+      if (state.waitingForChoice || state.manualAdvancePending) return;
 
       // Auto-advance if enabled (respects both state.autoAdvance AND DEV_AUTOPLAY URL param)
       if (DEV_AUTOPLAY && state.autoAdvance && state.scene === 'lesson') {
@@ -11134,16 +11134,16 @@
       if (dayEl) dayEl.textContent = `Day ${state.currentDay || 1}`;
       if (topicEl && currentLesson?.topic) topicEl.textContent = currentLesson.topic;
       
-      // Show/hide choice buttons based on phase
+      // Show/hide choice buttons based on atom data (not phase name)
       const choicesEl = document.getElementById('guide-choices');
-      const hasChoices = currentAtom?.choice_intro || currentAtom?.option_a || isCliffPhase();
+      const hasChoices = !!(currentAtom?.choice_intro || currentAtom?.option_a);
       if (choicesEl) {
         choicesEl.style.display = hasChoices ? 'flex' : 'none';
         if (hasChoices) {
           const choiceAText = document.getElementById('guide-choice-a-text');
           const choiceBText = document.getElementById('guide-choice-b-text');
-          if (choiceAText) choiceAText.textContent = currentAtom?.option_a || currentLesson?.fork_a?.label || 'Option A';
-          if (choiceBText) choiceBText.textContent = currentAtom?.option_b || currentLesson?.fork_b?.label || 'Option B';
+          if (choiceAText) choiceAText.textContent = currentAtom?.option_a || 'Option A';
+          if (choiceBText) choiceBText.textContent = currentAtom?.option_b || 'Option B';
         }
       }
       
@@ -11270,14 +11270,8 @@
         enterPhaseWithChoices(currentAtom);
         return;
       }
-      
-      // Legacy: Cliff phase fallback (if no new choice content)
-      if (isCliffPhase()) {
-        enterCliffPhase(currentLesson);
-        return;
-      }
 
-      // Leaving choice phase should reset wait state/UI
+      // Not a choice phase - reset wait state/UI
       if (state.waitingForChoice) state.waitingForChoice = false;
       clearCliffTimeout();
       hideCliffUI({ resetSelection: true });
@@ -14461,7 +14455,7 @@ Style requirements:
     const PHASE_INFO = PHASES.map((p) => {
       const descByKey = {
         hook: 'Opening and orientation',
-        cliff: 'A choice awaits',
+        cliff: 'Choose your path',
         fact1: 'First insight',
         fact2: 'Second insight',
         fact3: 'Third insight',
