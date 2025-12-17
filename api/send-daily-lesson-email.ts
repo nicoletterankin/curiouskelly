@@ -143,7 +143,7 @@ function generateDailyLessonHTML(
                 Day ${dayNumber} of 365 · <a href="https://curiouskelly.com" style="color: #52525b;">curiouskelly.com</a>
               </p>
               <p style="color: #3f3f46; font-size: 11px; margin: 10px 0 0;">
-                <a href="https://curiouskelly.com/api/unsubscribe?token=UNSUBSCRIBE_TOKEN" style="color: #3f3f46;">Unsubscribe</a>
+                <a href="https://curiouskelly.com/settings" style="color: #3f3f46;">Manage email preferences</a>
               </p>
             </td>
           </tr>

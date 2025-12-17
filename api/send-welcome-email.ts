@@ -32,19 +32,40 @@ function getRandomFact(): string {
 function generateWelcomeEmailHTML(name: string, lessonUrl: string): string {
   // Kelly's Voice: Humble, Curious, Collaborative, Warm, Simple, Rich
   return `
-<p style="font-family: Georgia, serif; font-size: 19px; color: #1f2937; line-height: 1.9; max-width: 460px;">
-
-Hi — I'm Kelly.<br><br>
-
-I don't have all the answers. But I love finding them. And I think learning is better together.<br><br>
-
-Every day I find something wonderful and I can't wait to share it. Today's lesson is ready.<br><br>
-
-<a href="${lessonUrl}" style="color: #1e3a5f; text-decoration: underline;">Want to come along?</a><br><br>
-
-<span style="color: #6b7280;">— Kelly</span>
-
-</p>
+<div style="max-width: 480px; font-family: Georgia, serif;">
+  <p style="text-align: center; margin: 0 0 24px 0;">
+    <img src="https://curiouskelly.com/images/brand/kelly-mark-circle-128.png" alt="Kelly" width="80" height="80" style="border-radius: 50%; border: 3px solid #3b82f6;">
+  </p>
+  
+  <p style="font-size: 19px; color: #1f2937; line-height: 1.9; margin: 0 0 20px;">
+    Hi — I'm Kelly.
+  </p>
+  
+  <p style="font-size: 17px; color: #374151; line-height: 1.9; margin: 0 0 20px;">
+    I don't have all the answers. But I love finding them. And I think learning is better together.
+  </p>
+  
+  <p style="font-size: 17px; color: #374151; line-height: 1.9; margin: 0 0 20px;">
+    Every day I find something wonderful and I can't wait to share it. Today's lesson is ready.
+  </p>
+  
+  <p style="margin: 0 0 24px 0;">
+    <a href="${lessonUrl}" style="display: inline-block; background: #3b82f6; color: white; padding: 12px 24px; border-radius: 8px; text-decoration: none; font-family: -apple-system, sans-serif; font-size: 15px; font-weight: 500;">
+      Want to come along? →
+    </a>
+  </p>
+  
+  <p style="font-size: 15px; color: #6b7280; font-style: italic; margin: 0;">
+    — Kelly
+  </p>
+  
+  <hr style="border: none; border-top: 1px solid #e5e7eb; margin: 24px 0;">
+  
+  <p style="font-family: -apple-system, sans-serif; font-size: 11px; color: #9ca3af; margin: 0; text-align: center;">
+    ✨ Curious Kelly · <a href="https://curiouskelly.com" style="color: #9ca3af;">curiouskelly.com</a><br>
+    Lesson of the Day PBC · hello@curiouskelly.com
+  </p>
+</div>
   `.trim();
 }
 
