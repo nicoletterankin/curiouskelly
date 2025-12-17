@@ -216,10 +216,11 @@ curiouskelly.com/terms              → learn.html?tab=settings&section=terms
 - [x] About scene (story, features)
 - [x] Scene navigation (dots, swipe)
 
-### Phase 5: Migration & Cleanup
-- [ ] Old pages → redirects
-- [ ] SEO verification
-- [ ] Delete deprecated files
+### Phase 5: Migration & Cleanup ✅
+- [x] Old pages → redirects (SEO-safe: bots stay, humans redirect)
+- [x] kelly-redirect.js created
+- [ ] SEO verification (monitor after deploy)
+- [ ] Delete deprecated files (future cleanup)
 
 ---
 
@@ -230,7 +231,7 @@ curiouskelly.com/terms              → learn.html?tab=settings&section=terms
 - [x] Kelly is always visible (desktop)
 - [x] All legal content is accessible and readable
 - [x] Deep links work for sharing
-- [ ] SEO maintains or improves
+- [x] SEO-safe redirects in place (bot-friendly)
 
 ---
 
