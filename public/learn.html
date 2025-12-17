@@ -4097,11 +4097,12 @@
       cursor: pointer;
     }
     
-    .week-view, .grid-view {
-      display: none;
+    /* Grid view and week view are always visible inside their tab content */
+    .grid-view {
+      display: block;
     }
     
-    .week-view.active, .grid-view.active {
+    .week-view {
       display: block;
     }
     
@@ -13519,6 +13520,32 @@
     // EVENT LISTENERS
     // ============================================
     function setupEventListeners() {
+      // Journey tab navigation
+      document.querySelectorAll('.journey-tab').forEach(tab => {
+        tab.addEventListener('click', () => {
+          const tabId = tab.dataset.tab;
+          if (tabId) switchJourneyTab(tabId);
+        });
+      });
+      
+      // Calendar month navigation
+      document.getElementById('calendar-prev-month')?.addEventListener('click', () => {
+        if (currentCalendarMonth > 0) {
+          currentCalendarMonth--;
+          scrollToMonth(currentCalendarMonth);
+        }
+      });
+      document.getElementById('calendar-next-month')?.addEventListener('click', () => {
+        if (currentCalendarMonth < 11) {
+          currentCalendarMonth++;
+          scrollToMonth(currentCalendarMonth);
+        }
+      });
+      
+      // Phase selector modal close
+      document.getElementById('phase-selector-close')?.addEventListener('click', hidePhaseSelector);
+      document.querySelector('.phase-selector-backdrop')?.addEventListener('click', hidePhaseSelector);
+      
       // Carousel nav
       document.getElementById('carousel-prev').addEventListener('click', () => goToCarouselIndex(state.carouselIndex - 1));
       document.getElementById('carousel-next').addEventListener('click', () => goToCarouselIndex(state.carouselIndex + 1));
