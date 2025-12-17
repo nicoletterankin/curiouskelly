@@ -1,0 +1,565 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Daily Duo Email v2 — Kelly Delivers</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      line-height: 1.6;
+      color: #1a1a1a;
+      background: #f5f5f5;
+    }
+    
+    /* Preview wrapper */
+    .preview-wrapper {
+      padding: 20px;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+    }
+    .preview-header {
+      text-align: center;
+      color: white;
+      margin-bottom: 20px;
+    }
+    .preview-header h1 { font-size: 20px; margin-bottom: 4px; }
+    .preview-header p { opacity: 0.7; font-size: 13px; }
+    .preview-badge {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: #10b981;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+    
+    /* Email container */
+    .email {
+      max-width: 600px;
+      margin: 0 auto;
+      background: #ffffff;
+      border-radius: 0;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.4);
+    }
+    
+    /* Hero with Kelly */
+    .hero {
+      background: linear-gradient(135deg, #1e3a5f 0%, #0f172a 100%);
+      padding: 0;
+      text-align: center;
+      position: relative;
+    }
+    .hero-kelly {
+      width: 100%;
+      height: 280px;
+      background: url('https://www.curiouskelly.com/images/kelly-og-image.png') center top / cover no-repeat;
+      position: relative;
+    }
+    .hero-kelly::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 120px;
+      background: linear-gradient(to top, #1e3a5f, transparent);
+    }
+    .hero-content {
+      position: relative;
+      padding: 0 24px 24px;
+      margin-top: -60px;
+      z-index: 1;
+    }
+    .hero-day {
+      display: inline-block;
+      background: linear-gradient(135deg, #f59e0b, #8b5cf6);
+      color: white;
+      padding: 6px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+      letter-spacing: 0.5px;
+      margin-bottom: 12px;
+    }
+    .hero-greeting {
+      color: white;
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 8px;
+    }
+    .hero-subtitle {
+      color: rgba(255,255,255,0.8);
+      font-size: 14px;
+    }
+    
+    /* Kelly Says */
+    .kelly-says {
+      background: #f8fafc;
+      padding: 24px;
+      border-bottom: 1px solid #e2e8f0;
+    }
+    .kelly-avatar-row {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+    }
+    .kelly-avatar {
+      width: 56px;
+      height: 56px;
+      border-radius: 50%;
+      background: url('https://www.curiouskelly.com/images/kelly-og-image.png') center top / cover;
+      border: 3px solid #3b82f6;
+      flex-shrink: 0;
+    }
+    .kelly-bubble {
+      flex: 1;
+      background: white;
+      border-radius: 16px;
+      border-top-left-radius: 4px;
+      padding: 16px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+      position: relative;
+    }
+    .kelly-name {
+      font-size: 12px;
+      font-weight: 700;
+      color: #3b82f6;
+      margin-bottom: 6px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .kelly-name::after {
+      content: '✨';
+      font-size: 10px;
+    }
+    .kelly-message {
+      font-size: 15px;
+      color: #334155;
+      line-height: 1.5;
+    }
+    
+    /* Lesson Section */
+    .lesson-section {
+      padding: 28px 24px;
+    }
+    .section-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 12px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      margin-bottom: 12px;
+    }
+    .learn-tag {
+      background: #fef3c7;
+      color: #92400e;
+    }
+    .grow-tag {
+      background: #ede9fe;
+      color: #5b21b6;
+    }
+    .lesson-title {
+      font-size: 24px;
+      font-weight: 700;
+      color: #0f172a;
+      margin-bottom: 16px;
+      line-height: 1.2;
+    }
+    
+    /* Lesson Image */
+    .lesson-image {
+      width: 100%;
+      height: 200px;
+      border-radius: 12px;
+      margin-bottom: 20px;
+      background: linear-gradient(135deg, #fbbf24 0%, #f59e0b 100%);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+    .lesson-image-placeholder {
+      font-size: 64px;
+      opacity: 0.5;
+    }
+    .lesson-image-label {
+      position: absolute;
+      bottom: 12px;
+      left: 12px;
+      background: rgba(0,0,0,0.6);
+      color: white;
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 10px;
+      font-weight: 600;
+    }
+    
+    /* Lesson Content */
+    .lesson-content {
+      font-size: 16px;
+      color: #334155;
+      line-height: 1.7;
+    }
+    .lesson-content p {
+      margin-bottom: 16px;
+    }
+    .lesson-content strong {
+      color: #0f172a;
+    }
+    
+    /* Kelly Teaching Moment */
+    .kelly-teaching {
+      background: #f0f9ff;
+      border-left: 4px solid #3b82f6;
+      padding: 16px;
+      margin: 20px 0;
+      border-radius: 0 8px 8px 0;
+    }
+    .kelly-teaching-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    .kelly-mini {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: url('https://www.curiouskelly.com/images/kelly-og-image.png') center top / cover;
+      border: 2px solid #3b82f6;
+    }
+    .kelly-teaching-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #3b82f6;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .kelly-teaching-text {
+      font-size: 15px;
+      color: #1e40af;
+      font-style: italic;
+    }
+    
+    /* Universal Truth */
+    .universal-truth {
+      background: linear-gradient(135deg, #fef3c7, #fde68a);
+      padding: 20px;
+      border-radius: 12px;
+      margin: 20px 0;
+      text-align: center;
+    }
+    .truth-icon {
+      font-size: 28px;
+      margin-bottom: 8px;
+    }
+    .truth-text {
+      font-size: 18px;
+      font-weight: 600;
+      color: #78350f;
+      line-height: 1.4;
+    }
+    
+    /* Question Box */
+    .question-box {
+      background: #fffbeb;
+      border: 2px solid #fcd34d;
+      border-radius: 12px;
+      padding: 20px;
+      margin: 20px 0;
+    }
+    .question-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    .question-icon { font-size: 20px; }
+    .question-label {
+      font-size: 12px;
+      font-weight: 700;
+      color: #92400e;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+    .question-text {
+      font-size: 16px;
+      color: #78350f;
+      font-weight: 500;
+    }
+    
+    /* Divider */
+    .divider {
+      height: 1px;
+      background: linear-gradient(to right, transparent, #e2e8f0, transparent);
+      margin: 0 24px;
+    }
+    
+    /* GROW Section */
+    .grow-section {
+      background: #faf5ff;
+    }
+    .grow-section .lesson-image {
+      background: linear-gradient(135deg, #a78bfa 0%, #8b5cf6 100%);
+    }
+    .grow-section .kelly-teaching {
+      background: #faf5ff;
+      border-left-color: #8b5cf6;
+    }
+    .grow-section .kelly-teaching-label {
+      color: #7c3aed;
+    }
+    .grow-section .kelly-teaching-text {
+      color: #5b21b6;
+    }
+    .grow-section .universal-truth {
+      background: linear-gradient(135deg, #ede9fe, #ddd6fe);
+    }
+    .grow-section .truth-text {
+      color: #4c1d95;
+    }
+    
+    /* Daily Wisdom */
+    .wisdom-section {
+      background: linear-gradient(135deg, #0f172a 0%, #1e3a5f 100%);
+      padding: 32px 24px;
+      text-align: center;
+    }
+    .wisdom-kelly {
+      width: 64px;
+      height: 64px;
+      border-radius: 50%;
+      background: url('https://www.curiouskelly.com/images/kelly-og-image.png') center top / cover;
+      border: 3px solid #fbbf24;
+      margin: 0 auto 16px;
+    }
+    .wisdom-label {
+      font-size: 11px;
+      font-weight: 700;
+      color: #fbbf24;
+      text-transform: uppercase;
+      letter-spacing: 1.5px;
+      margin-bottom: 12px;
+    }
+    .wisdom-text {
+      font-size: 20px;
+      font-weight: 500;
+      color: white;
+      line-height: 1.5;
+      font-style: italic;
+    }
+    .wisdom-signature {
+      margin-top: 16px;
+      font-size: 14px;
+      color: rgba(255,255,255,0.7);
+    }
+    
+    /* Optional CTA (soft, not pushy) */
+    .optional-cta {
+      padding: 24px;
+      background: #f8fafc;
+      text-align: center;
+      border-top: 1px solid #e2e8f0;
+    }
+    .optional-cta-text {
+      font-size: 13px;
+      color: #64748b;
+      margin-bottom: 12px;
+    }
+    .optional-cta-button {
+      display: inline-block;
+      background: #e2e8f0;
+      color: #475569;
+      text-decoration: none;
+      padding: 10px 20px;
+      border-radius: 6px;
+      font-size: 13px;
+      font-weight: 500;
+    }
+    
+    /* Footer */
+    .footer {
+      padding: 24px;
+      text-align: center;
+      font-size: 12px;
+      color: #94a3b8;
+    }
+    .footer-brand {
+      font-size: 16px;
+      margin-bottom: 8px;
+    }
+    .footer a {
+      color: #64748b;
+      text-decoration: none;
+    }
+    .footer a:hover {
+      text-decoration: underline;
+    }
+  </style>
+</head>
+<body>
+  <div class="preview-wrapper">
+    <div class="preview-badge">V2 — KELLY DELIVERS</div>
+    
+    <div class="preview-header">
+      <h1>Daily Duo Email — Redesigned</h1>
+      <p>Kelly teaches IN the email. No need to leave.</p>
+    </div>
+
+    <div class="email">
+      <!-- Hero with Kelly's Face -->
+      <div class="hero">
+        <div class="hero-kelly"></div>
+        <div class="hero-content">
+          <div class="hero-day">Day 351 — December 17</div>
+          <div class="hero-greeting">Good morning, Sarah!</div>
+          <div class="hero-subtitle">Your Daily Duo is ready ✨</div>
+        </div>
+      </div>
+
+      <!-- Kelly Says Hello -->
+      <div class="kelly-says">
+        <div class="kelly-avatar-row">
+          <div class="kelly-avatar"></div>
+          <div class="kelly-bubble">
+            <div class="kelly-name">Kelly</div>
+            <div class="kelly-message">
+              Today we're exploring something magical — how your imagination can actually make you better at real skills. Plus, I'll show you the secret that separates good learners from great ones. Let's dive in!
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- LEARN Section -->
+      <div class="lesson-section">
+        <div class="section-tag learn-tag">🌟 LEARN</div>
+        <h2 class="lesson-title">Practicing in Your Mind</h2>
+        
+        <div class="lesson-image">
+          <span class="lesson-image-placeholder">🧠✨</span>
+          <span class="lesson-image-label">Lesson illustration</span>
+        </div>
+        
+        <div class="lesson-content">
+          <p>Have you ever imagined yourself doing something perfectly — scoring a goal, playing a song, giving a speech? That's called <strong>visualization</strong>, and it's one of the most powerful tools your brain has.</p>
+          
+          <div class="kelly-teaching">
+            <div class="kelly-teaching-header">
+              <div class="kelly-mini"></div>
+              <span class="kelly-teaching-label">Kelly explains</span>
+            </div>
+            <div class="kelly-teaching-text">
+              "Here's something that blew my mind when I learned it: when you vividly imagine doing something, your brain activates many of the same neural pathways as when you actually do it!"
+            </div>
+          </div>
+          
+          <p>Olympic athletes use this technique before competitions. Surgeons mentally rehearse complex procedures. Musicians practice pieces in their minds on long flights.</p>
+          
+          <p>The key is <strong>detail</strong>. Don't just imagine success — imagine the process. Feel your fingers on the keys. Hear the crowd. Smell the grass. The more senses you engage, the more your brain treats it as real practice.</p>
+          
+          <div class="universal-truth">
+            <div class="truth-icon">💡</div>
+            <div class="truth-text">Your imagination is a practice room that's always open.</div>
+          </div>
+          
+          <div class="question-box">
+            <div class="question-header">
+              <span class="question-icon">🤔</span>
+              <span class="question-label">Think about it</span>
+            </div>
+            <div class="question-text">What's one skill you'd like to improve? Spend 5 minutes today visualizing yourself doing it perfectly — every detail, every sense.</div>
+          </div>
+        </div>
+      </div>
+
+      <div class="divider"></div>
+
+      <!-- GROW Section -->
+      <div class="lesson-section grow-section">
+        <div class="section-tag grow-tag">🧠 GROW</div>
+        <h2 class="lesson-title">The Learning Loop</h2>
+        
+        <div class="lesson-image">
+          <span class="lesson-image-placeholder">🔄</span>
+          <span class="lesson-image-label">Skill illustration</span>
+        </div>
+        
+        <div class="lesson-content">
+          <p>Here's a secret that separates good learners from <strong>great</strong> ones: they don't just practice — they <strong>reflect</strong>.</p>
+          
+          <div class="kelly-teaching">
+            <div class="kelly-teaching-header">
+              <div class="kelly-mini"></div>
+              <span class="kelly-teaching-label">Kelly's tip</span>
+            </div>
+            <div class="kelly-teaching-text">
+              "After each attempt, ask yourself three questions: What worked? What didn't? What will I try differently next time? This simple habit turns repetition into rapid growth."
+            </div>
+          </div>
+          
+          <p>Most people practice the same way over and over. Great learners treat each practice session as an experiment. They notice patterns. They adjust. They compound their gains.</p>
+          
+          <div class="universal-truth">
+            <div class="truth-icon">🔮</div>
+            <div class="truth-text">Practice makes permanent. Reflection makes perfect.</div>
+          </div>
+          
+          <div class="question-box">
+            <div class="question-header">
+              <span class="question-icon">⚡</span>
+              <span class="question-label">Try this today</span>
+            </div>
+            <div class="question-text">After learning something new, take 60 seconds to write down one thing you understood well and one thing that's still fuzzy.</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Daily Wisdom with Kelly -->
+      <div class="wisdom-section">
+        <div class="wisdom-kelly"></div>
+        <div class="wisdom-label">✨ Today's Wisdom</div>
+        <div class="wisdom-text">
+          "Your imagination is a practice room. Your reflection is a coach. Together, they're unstoppable."
+        </div>
+        <div class="wisdom-signature">— Kelly 💙</div>
+      </div>
+
+      <!-- Optional CTA (soft, not pushy) -->
+      <div class="optional-cta">
+        <div class="optional-cta-text">Want to hear me explain this with voice and video?</div>
+        <a href="https://www.curiouskelly.com/learn.html?day=351" class="optional-cta-button">
+          Watch Today's Lesson →
+        </a>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer">
+        <div class="footer-brand">✨ Curious Kelly</div>
+        <p>You received your complete lesson. No need to click anything.</p>
+        <p style="margin-top: 12px;">
+          <a href="#">Preferences</a> · 
+          <a href="#">Unsubscribe</a> · 
+          <a href="https://www.curiouskelly.com">curiouskelly.com</a>
+        </p>
+        <p style="margin-top: 8px; color: #cbd5e1;">
+          Lesson of the Day PBC · hello@curiouskelly.com
+        </p>
+      </div>
+    </div>
+  </div>
+</body>
+</html>
