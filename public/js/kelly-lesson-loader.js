@@ -177,7 +177,9 @@ const KellyLessonLoader = {
 
     // Priority 1: Local Pack (deterministic, offline-ready)
     try {
-      const localPack = window?.CURIOUS_KELLY?.LOCAL_PACKS?.[packKey];
+      // Check both string key ("day-351") and numeric key (351)
+      const localPacks = window?.CURIOUS_KELLY?.LOCAL_PACKS;
+      const localPack = localPacks?.[packKey] || localPacks?.[dayNum] || localPacks?.[String(dayNum)];
       if (localPack && (localPack.lesson || localPack.atoms)) {
         const rawAtoms = Array.isArray(localPack.atoms) ? localPack.atoms : [];
         const atoms = rawAtoms.filter((a) => !a?.archetype || a.archetype === normalizedArchetype);
