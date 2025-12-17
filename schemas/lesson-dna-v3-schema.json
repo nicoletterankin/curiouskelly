@@ -1,0 +1,427 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Lesson DNA V3 Schema",
+  "description": "Complete lesson structure with Socratic mode, critical thinking, and AI transparency",
+  "type": "object",
+  "required": ["version", "meta", "ageVariants"],
+  
+  "properties": {
+    "version": {
+      "type": "string",
+      "pattern": "^3\\.\\d+\\.\\d+",
+      "description": "Schema version (must start with 3.x.x)"
+    },
+    
+    "meta": {
+      "type": "object",
+      "required": ["day", "topic", "universalTruth", "lessonType"],
+      "properties": {
+        "day": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 365
+        },
+        "topic": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 100
+        },
+        "universalTruth": {
+          "type": "string",
+          "minLength": 10,
+          "maxLength": 200
+        },
+        "lessonType": {
+          "type": "string",
+          "enum": ["standard", "ai-fluency", "recall", "deep-dive"],
+          "description": "Type of lesson determines flow and features"
+        },
+        "socraticMode": {
+          "type": "boolean",
+          "default": true,
+          "description": "If true, lesson uses question-first flow"
+        },
+        "criticalThinkingType": {
+          "type": "string",
+          "enum": ["epistemological", "counterfactual", "perspective", "application", "connection"],
+          "description": "Primary critical thinking prompt type for this lesson"
+        },
+        "generatedAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "category": {
+          "type": "string",
+          "enum": ["science", "history", "art", "geography", "language", "math", "philosophy", "technology", "nature", "culture"]
+        },
+        "tags": {
+          "type": "array",
+          "items": { "type": "string" },
+          "maxItems": 10
+        }
+      }
+    },
+    
+    "visuals": {
+      "type": "object",
+      "description": "Visual prompts for each phase",
+      "properties": {
+        "welcome": { "type": "string" },
+        "socratic": { "type": "string" },
+        "reveal": { "type": "string" },
+        "explore": { "type": "string" },
+        "wonder": { "type": "string" },
+        "reflect": { "type": "string" }
+      }
+    },
+    
+    "ageVariants": {
+      "type": "object",
+      "required": ["2-5", "6-12", "13-17", "18-35", "36-60", "61-102"],
+      "additionalProperties": false,
+      "properties": {
+        "2-5": { "$ref": "#/definitions/ageVariant" },
+        "6-12": { "$ref": "#/definitions/ageVariant" },
+        "13-17": { "$ref": "#/definitions/ageVariant" },
+        "18-35": { "$ref": "#/definitions/ageVariant" },
+        "36-60": { "$ref": "#/definitions/ageVariant" },
+        "61-102": { "$ref": "#/definitions/ageVariant" }
+      }
+    },
+    
+    "parentCompanion": {
+      "$ref": "#/definitions/parentCompanion"
+    },
+    
+    "recallPrompts": {
+      "type": "array",
+      "items": { "$ref": "#/definitions/recallPrompt" },
+      "description": "Spaced repetition prompts for this lesson"
+    },
+    
+    "interestAnalogies": {
+      "type": "object",
+      "description": "Topic-specific analogies based on learner interests",
+      "additionalProperties": { "type": "string" },
+      "examples": [
+        {
+          "sports": "The Sun's energy is like the ball in soccer...",
+          "music": "The Sun is like the beat of a song...",
+          "cooking": "The Sun is like the oven..."
+        }
+      ]
+    }
+  },
+  
+  "definitions": {
+    "ageVariant": {
+      "type": "object",
+      "required": ["persona", "teachingStyle", "phases", "voiceSettings"],
+      "properties": {
+        "persona": {
+          "type": "string",
+          "description": "Kelly's personality for this age group"
+        },
+        "teachingStyle": {
+          "type": "string",
+          "description": "How Kelly teaches for this age group"
+        },
+        "phases": {
+          "$ref": "#/definitions/phases"
+        },
+        "durations": {
+          "type": "object",
+          "properties": {
+            "welcome": { "type": "integer", "minimum": 3, "maximum": 15 },
+            "socratic": { "type": "integer", "minimum": 10, "maximum": 30 },
+            "reveal": { "type": "integer", "minimum": 5, "maximum": 20 },
+            "explore": { "type": "integer", "minimum": 10, "maximum": 30 },
+            "wonder": { "type": "integer", "minimum": 5, "maximum": 15 },
+            "reflect": { "type": "integer", "minimum": 5, "maximum": 15 }
+          }
+        },
+        "voiceSettings": {
+          "$ref": "#/definitions/voiceSettings"
+        }
+      }
+    },
+    
+    "phases": {
+      "type": "object",
+      "required": ["welcome", "socratic", "reveal", "explore", "wonder", "reflect"],
+      "properties": {
+        "welcome": {
+          "type": "string",
+          "description": "Greeting and topic introduction"
+        },
+        "socratic": {
+          "$ref": "#/definitions/socraticPhase"
+        },
+        "reveal": {
+          "type": "string",
+          "description": "Teaching content after Socratic question"
+        },
+        "explore": {
+          "$ref": "#/definitions/explorePhase"
+        },
+        "wonder": {
+          "$ref": "#/definitions/wonderPhase"
+        },
+        "reflect": {
+          "$ref": "#/definitions/reflectPhase"
+        }
+      }
+    },
+    
+    "socraticPhase": {
+      "type": "object",
+      "required": ["question", "options"],
+      "properties": {
+        "question": {
+          "type": "string",
+          "description": "The question Kelly asks before teaching"
+        },
+        "questionType": {
+          "type": "string",
+          "enum": ["conceptual", "predictive", "experiential", "hypothetical"],
+          "description": "Type of Socratic question"
+        },
+        "options": {
+          "type": "array",
+          "minItems": 2,
+          "maxItems": 4,
+          "items": { "$ref": "#/definitions/socraticOption" }
+        },
+        "noWrongAnswer": {
+          "type": "boolean",
+          "default": true,
+          "description": "All answers lead to learning, not failure"
+        },
+        "revealTransition": {
+          "type": "string",
+          "description": "Transition phrase from Socratic to reveal"
+        }
+      }
+    },
+    
+    "socraticOption": {
+      "type": "object",
+      "required": ["text", "quality", "kellyResponse"],
+      "properties": {
+        "text": {
+          "type": "string",
+          "maxLength": 50,
+          "description": "What the user sees as a choice"
+        },
+        "quality": {
+          "type": "string",
+          "enum": ["insightful", "close", "honest", "creative"],
+          "description": "Quality categorization (NOT right/wrong)"
+        },
+        "kellyResponse": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "Kelly's validating response"
+        },
+        "icon": {
+          "type": "string",
+          "maxLength": 4,
+          "description": "Emoji for the option card"
+        }
+      }
+    },
+    
+    "explorePhase": {
+      "type": "object",
+      "required": ["content"],
+      "properties": {
+        "content": {
+          "type": "string",
+          "description": "Main exploratory content"
+        },
+        "interactiveChoices": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/interactiveChoice" },
+          "description": "Optional choices during exploration"
+        },
+        "visualDemonstration": {
+          "type": "string",
+          "description": "Description of visual/animation to show"
+        }
+      }
+    },
+    
+    "interactiveChoice": {
+      "type": "object",
+      "required": ["prompt", "options"],
+      "properties": {
+        "prompt": { "type": "string" },
+        "options": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": ["text", "response"],
+            "properties": {
+              "text": { "type": "string" },
+              "response": { "type": "string" },
+              "nextContent": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    
+    "wonderPhase": {
+      "type": "object",
+      "required": ["content", "criticalThinking"],
+      "properties": {
+        "content": {
+          "type": "string",
+          "description": "The mind-expanding moment"
+        },
+        "criticalThinking": {
+          "$ref": "#/definitions/criticalThinkingPrompt"
+        }
+      }
+    },
+    
+    "criticalThinkingPrompt": {
+      "type": "object",
+      "required": ["prompt", "type"],
+      "properties": {
+        "prompt": {
+          "type": "string",
+          "description": "The critical thinking question"
+        },
+        "type": {
+          "type": "string",
+          "enum": ["epistemological", "counterfactual", "perspective", "application", "connection"]
+        },
+        "followUp": {
+          "type": "string",
+          "description": "Kelly's response after user engages"
+        }
+      }
+    },
+    
+    "reflectPhase": {
+      "type": "object",
+      "required": ["wisdom", "shift"],
+      "properties": {
+        "wisdom": {
+          "type": "string",
+          "description": "The universal truth restated for this age"
+        },
+        "shift": {
+          "type": "string",
+          "description": "How this lesson changes perspective"
+        },
+        "accumulation": {
+          "type": "string",
+          "description": "Connection to the 365-day journey"
+        },
+        "aiTransparency": {
+          "$ref": "#/definitions/aiTransparencyMoment"
+        }
+      }
+    },
+    
+    "aiTransparencyMoment": {
+      "type": "object",
+      "required": ["type", "content"],
+      "properties": {
+        "type": {
+          "type": "string",
+          "enum": ["limitation", "error-possibility", "experience-gap", "self-awareness"],
+          "description": "Type of transparency moment"
+        },
+        "content": {
+          "type": "string",
+          "description": "What Kelly says about being an AI"
+        },
+        "trigger": {
+          "type": "string",
+          "description": "What triggered this transparency moment"
+        }
+      }
+    },
+    
+    "voiceSettings": {
+      "type": "object",
+      "properties": {
+        "pitch": { "type": "number", "minimum": 0.8, "maximum": 1.2 },
+        "speed": { "type": "number", "minimum": 0.8, "maximum": 1.2 },
+        "warmth": { "type": "string", "enum": ["low", "medium", "medium-high", "high"] },
+        "energy": { "type": "string", "enum": ["gentle", "measured", "conversational", "direct", "enthusiastic", "playful"] }
+      }
+    },
+    
+    "parentCompanion": {
+      "type": "object",
+      "required": ["summary", "conversationStarter"],
+      "properties": {
+        "summary": {
+          "type": "string",
+          "maxLength": 200,
+          "description": "1-2 sentence summary for parents"
+        },
+        "conversationStarter": {
+          "type": "string",
+          "maxLength": 100,
+          "description": "Question for dinner table"
+        },
+        "extensionActivity": {
+          "type": "object",
+          "properties": {
+            "type": { "type": "string", "enum": ["observation", "experiment", "discussion", "creation", "exploration"] },
+            "instruction": { "type": "string" },
+            "question": { "type": "string" },
+            "scienceNote": { "type": "string" }
+          }
+        },
+        "bookRecommendations": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "properties": {
+              "title": { "type": "string" },
+              "author": { "type": "string" },
+              "ageRange": { "type": "string" },
+              "isbn": { "type": "string" }
+            }
+          }
+        }
+      }
+    },
+    
+    "recallPrompt": {
+      "type": "object",
+      "required": ["triggerAfterDays", "question", "kellyResponse"],
+      "properties": {
+        "triggerAfterDays": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 30,
+          "description": "Days after lesson to show this prompt"
+        },
+        "question": {
+          "type": "string",
+          "description": "The recall question"
+        },
+        "acceptableAnswers": {
+          "type": "array",
+          "items": { "type": "string" },
+          "description": "Keywords that indicate correct recall"
+        },
+        "kellyResponse": {
+          "type": "string",
+          "description": "Kelly's response when they remember"
+        },
+        "kellyHint": {
+          "type": "string",
+          "description": "Hint if they don't remember"
+        }
+      }
+    }
+  }
+}
