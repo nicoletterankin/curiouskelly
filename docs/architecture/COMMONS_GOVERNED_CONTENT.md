@@ -515,33 +515,63 @@ Each phase shows a Commons icon that opens phase-specific discussions:
 
 ## Migration Strategy
 
-### Day 1: Database Setup
-```sql
--- Run in Supabase SQL editor
-\i docs/backend/migrations/002_content_atoms.sql
+### Step 1: Run Database Migrations (5 min)
+
+1. Go to your Supabase Dashboard → SQL Editor
+2. Copy the entire contents of `docs/backend/migrations/RUN_ALL_MIGRATIONS.sql`
+3. Paste and run it
+4. You should see "✅ ALL MIGRATIONS COMPLETE" in the output
+
+### Step 2: Set Environment Variables
+
+```powershell
+# PowerShell (Windows)
+$env:PUBLIC_SUPABASE_URL = "https://your-project.supabase.co"
+$env:SUPABASE_SERVICE_ROLE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
+
+# Bash (Mac/Linux)
+export PUBLIC_SUPABASE_URL="https://your-project.supabase.co"
+export SUPABASE_SERVICE_ROLE_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9..."
 ```
 
-### Day 2-3: Content Seed
+Find these values in Supabase Dashboard → Settings → API:
+- `PUBLIC_SUPABASE_URL` = Project URL
+- `SUPABASE_SERVICE_ROLE_KEY` = service_role secret (⚠️ keep this private!)
+
+### Step 3: Run Content Migration (10-15 min)
+
 ```bash
-# Migrate all static files to content_atoms
+# Migrate all 365 days
 npx tsx scripts/migrate-to-content-atoms.ts --all
 
-# Verify
+# Or migrate a specific day for testing
+npx tsx scripts/migrate-to-content-atoms.ts --day 17
+
+# Or migrate a range
+npx tsx scripts/migrate-to-content-atoms.ts --range 1-50
+```
+
+### Step 4: Verify Migration
+
+```bash
 npx tsx scripts/verify-content-atoms.ts
 ```
 
-### Day 4: API Deployment
-```bash
-# Deploy new API endpoints
-git push  # Triggers Vercel deploy
+Expected output:
+```
+✅ Table content_atoms exists
+📊 Fetching atom counts per day...
+📈 Summary:
+   Total atoms in database: ~25000
+   Days with atoms: 365
+✅ VERIFICATION PASSED
 ```
 
-### Day 5: Feature Flag Rollout
-```typescript
-// In config.js
-KELLY_CONFIG.USE_CONTENT_ATOMS = true;  // Enable API-first loading
-KELLY_CONFIG.STATIC_FALLBACK = true;    // Keep static files as backup
-```
+### Step 5: Deploy (Automatic)
+
+Changes are already deployed! The Phase Commons UI will automatically:
+- Use real database data when tables exist
+- Fall back to mock data if tables don't exist yet
 
 ---
 
