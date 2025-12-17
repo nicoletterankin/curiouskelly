@@ -60,6 +60,9 @@
   <!-- Kelly Fallback Engine - bulletproof media delivery -->
   <script src="/js/kelly-fallback-engine.js"></script>
   
+  <!-- Stealth Learner Observation (invisible assessment) -->
+  <script src="/js/learner-observer.js"></script>
+  
   <!-- Lesson loader with fallback support -->
   <script src="/js/kelly-lesson-loader.js"></script>
   <script>
@@ -2290,28 +2293,62 @@
     }
 
     /* ============================================
-       JOURNEY MODE (full-screen, 16:9)
+       JOURNEY MODE (Right-Side Panel)
+       Kelly stays visible on the left!
        ============================================ */
     #journey-overlay {
       display: none;
-      padding: 24px 18px;
-      max-width: 900px;
-      margin: 0 auto;
-      height: 100%;
+      position: fixed;
+      top: calc(60px + var(--safe-top, 0px)); /* Below top nav */
+      right: 0;
+      bottom: calc(var(--nav-height, 64px) + var(--safe-bottom, 0px)); /* Above bottom nav */
+      width: 380px;
+      max-width: 45%;
+      background: rgba(9, 9, 11, 0.95);
+      -webkit-backdrop-filter: blur(24px);
+      backdrop-filter: blur(24px);
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
       overflow-y: auto;
+      overflow-x: hidden;
+      z-index: 100;
+      scrollbar-width: none;
+      box-shadow: -4px 0 24px rgba(0, 0, 0, 0.3);
     }
+    #journey-overlay::-webkit-scrollbar { display: none; }
 
     html[data-ui-mode="journey"] #journey-overlay {
       display: block;
     }
 
+    /* Keep Kelly's video visible - no filter needed, panel doesn't overlap */
+    html[data-ui-mode="journey"] .lesson-kelly,
+    html[data-ui-mode="journey"] .lesson-kelly-container {
+      transition: opacity 0.3s ease; /* Smooth transition if needed */
+    }
+
+    /* Hide lesson UI elements when in Journey mode */
     html[data-ui-mode="journey"] #phase-bar,
     html[data-ui-mode="journey"] #caption-phase,
     html[data-ui-mode="journey"] #caption-text,
     html[data-ui-mode="journey"] .reactions,
     html[data-ui-mode="journey"] #cliff-container,
-    html[data-ui-mode="journey"] #home-overlay {
+    html[data-ui-mode="journey"] #home-overlay,
+    html[data-ui-mode="journey"] .knowledge-nugget,
+    html[data-ui-mode="journey"] .lesson-depth-card,
+    html[data-ui-mode="journey"] .scene-header,
+    html[data-ui-mode="journey"] .header-playback-controls,
+    html[data-ui-mode="journey"] #day-badge {
       display: none !important;
+    }
+
+    /* Dim the bottom gradient so Kelly is more visible */
+    html[data-ui-mode="journey"] .bottom-zone {
+      background: linear-gradient(
+        to bottom,
+        rgba(9,9,11,0) 0%,
+        rgba(9,9,11,0.3) 50%,
+        rgba(9,9,11,0.6) 100%
+      );
     }
 
     .journey-mode-header {
@@ -2600,6 +2637,493 @@
     }
 
     /* ============================================
+       UNIFIED JOURNEY MODE (Right Panel Design)
+       Designed to fit in ~380px right panel
+       ============================================ */
+    .unified-journey {
+      padding: 16px;
+      height: 100%;
+      overflow-y: auto;
+      scrollbar-width: none;
+    }
+    .unified-journey::-webkit-scrollbar { display: none; }
+
+    /* Header with motivational stats */
+    .journey-header {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      margin-bottom: 20px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .journey-greeting {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .journey-greeting-text {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .journey-greeting-sub {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    .journey-stats-row {
+      display: flex;
+      gap: 12px;
+    }
+
+    .journey-stat {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 8px 12px;
+      background: rgba(255,255,255,0.03);
+      border-radius: 10px;
+      flex: 1;
+    }
+
+    .journey-stat-value {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--kelly-blue);
+    }
+
+    .journey-stat-label {
+      font-size: 0.65rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+    }
+
+    .journey-stat.streak .journey-stat-value {
+      color: #f59e0b;
+    }
+
+    /* Today's Lesson Hero Card (Compact for panel) */
+    .today-hero {
+      background: linear-gradient(135deg, rgba(37, 99, 235, 0.12) 0%, rgba(139, 92, 246, 0.08) 100%);
+      border: 1px solid rgba(37, 99, 235, 0.25);
+      border-radius: 16px;
+      padding: 16px;
+      margin-bottom: 20px;
+      position: relative;
+      overflow: hidden;
+    }
+
+    .today-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 4px 10px;
+      background: var(--kelly-blue);
+      color: white;
+      font-size: 0.65rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+
+    .today-hero-content {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .today-thumb {
+      display: none; /* Hide in panel mode - Kelly is visible on left */
+    }
+
+    .today-info {
+      flex: 1;
+    }
+
+    .today-day-label {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 2px;
+    }
+
+    .today-topic {
+      font-size: 1.1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+      line-height: 1.3;
+    }
+
+    .today-headline {
+      font-size: 0.85rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+      margin-bottom: 12px;
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
+    }
+
+    .today-cta {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      width: 100%;
+      padding: 10px 16px;
+      background: var(--kelly-blue);
+      color: white;
+      font-size: 0.9rem;
+      font-weight: 600;
+      border: none;
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .today-cta:hover {
+      background: var(--kelly-blue-light);
+    }
+
+    .today-cta-icon {
+      font-size: 1rem;
+    }
+
+    .today-meta {
+      display: flex;
+      gap: 12px;
+      margin-top: 10px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      justify-content: center;
+    }
+
+    .today-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* Completed Today State */
+    .today-hero.completed {
+      background: linear-gradient(135deg, rgba(34, 197, 94, 0.12) 0%, rgba(16, 185, 129, 0.08) 100%);
+      border-color: rgba(34, 197, 94, 0.25);
+    }
+
+    .today-hero.completed .today-badge {
+      background: var(--success);
+    }
+
+    .today-hero.completed .today-cta {
+      background: rgba(34, 197, 94, 0.15);
+      color: var(--success);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+    }
+
+    /* This Week Section */
+    .week-section {
+      margin-bottom: 20px;
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 12px;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .section-title {
+      display: flex;
+      align-items: center;
+      gap: 6px;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .section-title-icon {
+      font-size: 1rem;
+    }
+
+    .section-nav {
+      display: flex;
+      gap: 6px;
+    }
+
+    .section-nav-btn {
+      width: 28px;
+      height: 28px;
+      border: 1px solid var(--border-default);
+      background: transparent;
+      border-radius: 6px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.8rem;
+    }
+
+    .section-nav-btn:hover:not(:disabled) {
+      border-color: var(--kelly-blue);
+      color: var(--kelly-blue);
+    }
+
+    .section-nav-btn:disabled {
+      opacity: 0.3;
+      cursor: not-allowed;
+    }
+
+    .week-date-range {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      width: 100%;
+      text-align: center;
+      margin-bottom: 4px;
+    }
+
+    /* Week Cards - Horizontal scroll for panel */
+    .week-cards {
+      display: flex;
+      gap: 6px;
+      overflow-x: auto;
+      padding-bottom: 8px;
+      scrollbar-width: none;
+    }
+    .week-cards::-webkit-scrollbar { display: none; }
+
+    .week-card {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 10px 8px;
+      min-width: 46px;
+      background: rgba(24, 24, 27, 0.6);
+      border: 1px solid var(--border-default);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      flex-shrink: 0;
+    }
+
+    .week-card:hover:not(.locked) {
+      background: rgba(37, 99, 235, 0.1);
+      border-color: var(--kelly-blue);
+    }
+
+    .week-card.today {
+      background: rgba(37, 99, 235, 0.15);
+      border-color: var(--kelly-blue);
+      box-shadow: 0 0 12px rgba(37, 99, 235, 0.3);
+    }
+
+    .week-card.completed {
+      background: rgba(34, 197, 94, 0.1);
+      border-color: rgba(34, 197, 94, 0.3);
+    }
+
+    .week-card.locked {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
+    .week-card-dow {
+      font-size: 0.6rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+      margin-bottom: 2px;
+    }
+
+    .week-card-date {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .week-card-day {
+      font-size: 0.6rem;
+      color: var(--text-muted);
+    }
+
+    .week-card-status {
+      margin-top: 4px;
+      font-size: 0.75rem;
+    }
+
+    .week-card.completed .week-card-status {
+      color: var(--success);
+    }
+
+    .week-card.today .week-card-status {
+      color: var(--kelly-blue);
+    }
+
+    /* Hide tooltips in panel mode */
+    .week-card-tooltip {
+      display: none;
+    }
+
+    /* Expandable Sections */
+    .expand-section {
+      background: rgba(24, 24, 27, 0.4);
+      border: 1px solid var(--border-default);
+      border-radius: 10px;
+      margin-bottom: 10px;
+      overflow: hidden;
+    }
+
+    .expand-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 12px;
+      cursor: pointer;
+      transition: background 0.2s ease;
+    }
+
+    .expand-header:hover {
+      background: rgba(255,255,255,0.02);
+    }
+
+    .expand-header-left {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .expand-icon {
+      font-size: 1rem;
+    }
+
+    .expand-title {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+
+    .expand-count {
+      font-size: 0.7rem;
+      color: var(--text-muted);
+      background: rgba(255,255,255,0.05);
+      padding: 2px 6px;
+      border-radius: 8px;
+    }
+
+    .expand-arrow {
+      color: var(--text-muted);
+      font-size: 0.8rem;
+      transition: transform 0.2s ease;
+    }
+
+    .expand-section.open .expand-arrow {
+      transform: rotate(180deg);
+    }
+
+    .expand-content {
+      display: none;
+      padding: 0 12px 12px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    .expand-section.open .expand-content {
+      display: block;
+    }
+
+    /* Calendar grid in expand section */
+    .expand-content .journey-calendar-grid {
+      grid-template-columns: repeat(7, 1fr);
+      gap: 4px;
+    }
+
+    .expand-content .journey-day-cell {
+      padding: 6px 4px;
+      font-size: 0.75rem;
+    }
+
+    /* Motivational Empty States */
+    .empty-state {
+      text-align: center;
+      padding: 24px 16px;
+    }
+
+    .empty-state-icon {
+      font-size: 2rem;
+      margin-bottom: 12px;
+      opacity: 0.5;
+    }
+
+    .empty-state-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+
+    .empty-state-text {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    /* Wide screen - larger panel */
+    @media (min-width: 1400px) {
+      #journey-overlay {
+        width: 440px;
+        max-width: 32%;
+      }
+    }
+
+    /* Medium screens */
+    @media (max-width: 1000px) {
+      #journey-overlay {
+        width: 340px;
+        max-width: 50%;
+      }
+    }
+
+    /* Mobile - full width overlay, hide Kelly */
+    @media (max-width: 768px) {
+      #journey-overlay {
+        width: 100%;
+        max-width: 100%;
+        left: 0;
+        right: 0;
+        border-left: none;
+        box-shadow: none;
+      }
+
+      html[data-ui-mode="journey"] .lesson-kelly,
+      html[data-ui-mode="journey"] .lesson-kelly-container {
+        opacity: 0.15;
+      }
+      
+      .today-thumb {
+        display: flex !important;
+        width: 80px;
+        height: 80px;
+      }
+      
+      .today-hero-content {
+        flex-direction: row;
+        gap: 12px;
+      }
+    }
+
+    /* ============================================
        SETTINGS MODE (full-screen, master-detail)
        ============================================ */
     #settings-overlay {
@@ -2610,6 +3134,7 @@
 
     html[data-ui-mode="settings"] #settings-overlay {
       display: flex;
+      flex-direction: row-reverse; /* Sidebar on RIGHT */
     }
 
     html[data-ui-mode="settings"] #phase-bar,
@@ -2623,12 +3148,14 @@
     }
 
     .settings-sidebar {
-      width: 220px;
-      background: rgba(15, 15, 20, 0.9);
-      border-right: 1px solid var(--border-color);
-      padding: 16px 0;
+      width: 240px;
+      background: rgba(12, 12, 16, 0.95);
+      border-left: 1px solid var(--border-color);
+      padding: 20px 0;
       overflow-y: auto;
       flex-shrink: 0;
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
     }
 
     .settings-section-title {
@@ -2643,8 +3170,8 @@
     .settings-nav-item {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 12px 16px;
+      gap: 12px;
+      padding: 12px 20px;
       color: var(--text-secondary);
       cursor: pointer;
       transition: all 0.2s ease;
@@ -2652,22 +3179,37 @@
       background: none;
       width: 100%;
       text-align: left;
-      font-size: 0.9rem;
+      font-size: 0.875rem;
+      font-weight: 500;
+      border-radius: 0;
     }
 
     .settings-nav-item:hover {
-      background: rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.06);
       color: var(--text-primary);
     }
 
     .settings-nav-item.active {
-      background: rgba(37, 99, 235, 0.15);
+      background: rgba(37, 99, 235, 0.12);
       color: var(--kelly-blue-light);
-      border-left: 3px solid var(--kelly-blue);
+      border-right: 3px solid var(--kelly-blue);
     }
 
     .settings-nav-icon {
-      font-size: 1rem;
+      width: 20px;
+      height: 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+    }
+    
+    .settings-nav-icon svg {
+      width: 18px;
+      height: 18px;
+      stroke: currentColor;
+      stroke-width: 1.75;
+      fill: none;
     }
 
     .settings-content {
@@ -2692,26 +3234,189 @@
       line-height: 1.8;
     }
 
+    .settings-content-subtitle {
+      color: var(--text-muted);
+      font-size: 0.9rem;
+      margin-top: 4px;
+    }
+
     .settings-content-body h3 {
       color: var(--text-primary);
-      font-size: 1.1rem;
-      margin: 24px 0 12px;
+      font-size: 1rem;
+      font-weight: 600;
+      margin: 0 0 8px;
     }
 
     .settings-content-body p {
+      margin-bottom: 0;
+      color: var(--text-secondary);
+    }
+    
+    .settings-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid var(--border-color);
+      border-radius: 12px;
+      padding: 20px;
       margin-bottom: 16px;
+    }
+    
+    .settings-card:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    
+    /* Learning Journey Section */
+    .journey-loading {
+      text-align: center;
+      padding: 60px 20px;
+    }
+    
+    .journey-spinner {
+      width: 36px;
+      height: 36px;
+      border: 3px solid var(--border-color);
+      border-top-color: var(--kelly-blue);
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+      margin: 0 auto 16px;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .journey-overview {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    
+    .journey-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border-color);
+      border-radius: 16px;
+      padding: 20px;
+      text-align: center;
+    }
+    
+    .journey-card-icon {
+      font-size: 32px;
+      margin-bottom: 8px;
+    }
+    
+    .journey-card-label {
+      font-size: 0.7rem;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    
+    .journey-card-value {
+      font-size: 1.25rem;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .journey-card-desc {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      margin-top: 8px;
+    }
+    
+    .journey-badges {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 12px;
+    }
+    
+    .journey-badge {
+      background: linear-gradient(135deg, var(--kelly-blue) 0%, #764ba2 100%);
+      color: white;
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+    
+    .journey-badge.growth {
+      background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+    }
+    
+    .journey-progress-bar {
+      height: 8px;
+      background: var(--border-color);
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 12px 0;
+    }
+    
+    .journey-progress-fill {
+      height: 100%;
+      background: linear-gradient(90deg, var(--kelly-blue), #764ba2);
+      border-radius: 4px;
+      transition: width 0.8s ease-out;
+    }
+    
+    .journey-privacy-note {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin-top: 24px;
+      font-style: italic;
     }
 
     @media (max-width: 768px) {
-      .settings-sidebar {
-        width: 60px;
+      html[data-ui-mode="settings"] #settings-overlay {
+        flex-direction: column-reverse;
       }
-      .settings-nav-item span:not(.settings-nav-icon) {
+      
+      .settings-sidebar {
+        width: 100%;
+        flex-direction: row;
+        flex-wrap: wrap;
+        justify-content: center;
+        padding: 8px;
+        border-left: none;
+        border-top: 1px solid var(--border-color);
+        gap: 4px;
+      }
+      
+      .settings-section-title {
         display: none;
       }
+      
       .settings-nav-item {
-        justify-content: center;
-        padding: 12px 8px;
+        flex-direction: column;
+        padding: 8px 12px;
+        gap: 4px;
+        font-size: 0.7rem;
+        border-radius: 8px;
+        flex: 0 0 auto;
+      }
+      
+      .settings-nav-item.active {
+        border-right: none;
+        background: rgba(37, 99, 235, 0.2);
+      }
+      
+      .settings-nav-icon {
+        width: 24px;
+        height: 24px;
+      }
+      
+      .settings-nav-icon svg {
+        width: 20px;
+        height: 20px;
+      }
+      
+      .settings-content {
+        padding: 16px;
+      }
+      
+      .journey-overview {
+        grid-template-columns: 1fr;
       }
     }
 
@@ -3961,11 +4666,13 @@
     }
 
     .settings-kelly-img {
-      width: 80px;
-      height: 80px;
-      border-radius: 50%;
+      width: 120px;
+      height: 68px;
+      border-radius: 8px;
       object-fit: cover;
-      border: 3px solid rgba(59, 130, 246, 0.5);
+      object-position: center top;
+      border: 2px solid rgba(59, 130, 246, 0.5);
+      background: var(--surface-base);
       background: rgba(0, 0, 0, 0.25);
     }
 
@@ -4109,18 +4816,20 @@
     }
 
     .persona-card img {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
+      width: 56px;
+      height: 32px;
+      border-radius: 4px;
       object-fit: cover;
+      object-position: center top;
       margin-bottom: 0.45rem;
-      border: 2px solid rgba(255, 255, 255, 0.12);
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      background: var(--surface-base);
     }
 
     .persona-card .persona-emoji {
-      width: 48px;
-      height: 48px;
-      border-radius: 50%;
+      width: 56px;
+      height: 32px;
+      border-radius: 4px;
       display: none;
       align-items: center;
       justify-content: center;
@@ -7819,21 +8528,44 @@
     };
     
     // ============================================
-    // KELLY IMAGE HELPER
+    // KELLY IMAGE HELPER - Uses local /kelly/heads/ for adult Kelly
     // ============================================
+    const LOCAL_KELLY_HEADS = {
+      scientist: '/kelly/heads/kelly_scientist_head.png',
+      explorer: '/kelly/heads/kelly_explorer_head.png',
+      rebel: '/kelly/heads/kelly_rebel_head.png',
+      architect: '/kelly/heads/kelly_architect_head.png',
+      diplomat: '/kelly/heads/kelly_diplomat_head.png',
+      empath: '/kelly/heads/kelly_empath_head.png',
+      macgyver: '/kelly/heads/kelly_macgyver_head.png',
+      mystic: '/kelly/heads/kelly_mystic_head.png',
+      provider: '/kelly/heads/kelly_provider_head.png',
+      storyteller: '/kelly/heads/kelly_storyteller_head.png',
+      strategist: '/kelly/heads/kelly_strategist_head.png',
+      survivor: '/kelly/heads/kelly_survivor_head.png',
+      default: '/kelly/heads/kelly_default_head.png'
+    };
+    
     function getKellyImageUrl(personaId, ageBucket = 'adult') {
-      // Launch stability: keep images local unless explicitly enabled.
-      // (Local persona renders are not guaranteed to exist on all deployments.)
-      if (!ENABLE_REMOTE_KELLY_HEADS) return KELLY_PLACEHOLDER;
-
-      if (!manifest || !manifest.personas || !manifest.personas[personaId]) {
-        return KELLY_PLACEHOLDER;
+      // ADULT ONLY: Use local Kelly heads for now
+      // (Other ages will fall back to placeholder until we add more heads)
+      if (ageBucket === 'adult' && LOCAL_KELLY_HEADS[personaId]) {
+        return LOCAL_KELLY_HEADS[personaId];
       }
       
-      const persona = manifest.personas[personaId];
-      const headPath = persona?.images?.headByAge?.[ageBucket] || persona?.images?.head;
-      if (!headPath || !manifest?.cdnBase) return KELLY_PLACEHOLDER;
-      return `${manifest.cdnBase}/${headPath}`;
+      // For non-adult ages, try remote if enabled, otherwise use placeholder
+      if (ENABLE_REMOTE_KELLY_HEADS) {
+        if (manifest?.personas?.[personaId]) {
+          const persona = manifest.personas[personaId];
+          const headPath = persona?.images?.headByAge?.[ageBucket] || persona?.images?.head;
+          if (headPath && manifest?.cdnBase) {
+            return `${manifest.cdnBase}/${headPath}`;
+          }
+        }
+      }
+      
+      // Fallback to local adult head or placeholder
+      return LOCAL_KELLY_HEADS[personaId] || LOCAL_KELLY_HEADS.default || KELLY_PLACEHOLDER;
     }
 
     // Smooth image appearance (prevents flash in screenshots)
@@ -8014,6 +8746,19 @@
         archetype: state.kellyId,
         age_bucket: getEffectiveAgeBucket()
       }, dayNumber);
+
+      // Initialize stealth learner observer for this lesson
+      if (window.LearnerObserver) {
+        window.__lessonObserver = new window.LearnerObserver();
+        window.__lessonObserver.startLesson(
+          dayNumber,
+          lesson?.id || null,
+          PERSONA_TO_ARCHETYPE[state.kellyId] || 'The Scientist',
+          getEffectiveAgeBucket()
+        );
+        // Reset saved flag for new lesson
+        if (typeof __observationSaved !== 'undefined') __observationSaved = false;
+      }
 
       return currentLesson;
     }
@@ -8321,6 +9066,20 @@
     }
 
     async function getAudioUrl(dayNumber, phase, personaId, ageBucket, language = 'en') {
+      // PRIORITY 1: Check local pack for pre-generated audio
+      const localPack = window.CURIOUS_KELLY?.LOCAL_PACKS?.[dayNumber];
+      if (localPack?.phases?.[phase]?.talk?.audio) {
+        // Local pack has audio for this phase - use it directly
+        const phaseData = localPack.phases[phase];
+        // Return the talk audio as default for the phase
+        const localAudio = phaseData.talk?.audio;
+        if (localAudio) {
+          if (DEBUG) console.log(`🔊 Using local audio: ${localAudio}`);
+          return localAudio;
+        }
+      }
+      
+      // PRIORITY 2: Check Supabase for cloud-hosted audio
       if (!_db) return null;
       const { data } = await _db
         .from('kelly_video_assets')
@@ -8517,6 +9276,9 @@
         v.src = resolvedVideo;
         try {
           await v.play();
+          // VIDEO IS MUTED - Start audio playback alongside video!
+          // The video provides the visual, kellyAudio provides the sound.
+          kellyAudio.speak(dbPhase, script).catch(() => {});
           return true;
         } catch (e) {
           stopVideo();
@@ -8947,6 +9709,11 @@
         hasAtom: !!lessonAtoms[state.currentPhase],
         atomScript: lessonAtoms[state.currentPhase]?.script?.substring(0, 50)
       });
+      
+      // Stealth observation: track phase start
+      const phaseName = PHASES[state.currentPhase]?.name || `phase-${state.currentPhase}`;
+      window.__lessonObserver?.onPhaseStart(phaseName);
+      
       updatePhaseBar();
       
       // Update lesson detail panel if it's visible
@@ -9065,6 +9832,9 @@
         container.classList.remove('hidden');
       }
 
+      // Stealth observation: track that options are now visible
+      window.__lessonObserver?.onOptionsShown();
+
       // Store atom for choice handler
       window.__currentChoiceAtom = atom;
 
@@ -9094,6 +9864,12 @@
 
       const atom = window.__currentChoiceAtom;
       const phase = PHASES[state.currentPhase];
+      
+      // Stealth observation: track choice quality
+      // In our A/B model: A is typically "best", B is "good/alternate"
+      const choiceQuality = choice === 'A' ? 'best' : 'good';
+      window.__lessonObserver?.onChoice(choiceQuality);
+      window.__lessonObserver?.onPhaseEnd(phase?.name || `phase-${state.currentPhase}`);
       const isDay17 = Number(state.currentDay) === 17;
       
       // Visual feedback
@@ -9216,6 +9992,9 @@
     
     function prevPhase() {
       if (state.currentPhase > 0) {
+        // Track replay behavior for learning insights
+        window.__lessonObserver?.onVideoReplay();
+        
         state.currentPhase--;
         saveState();
         updatePhaseProgress();
@@ -9834,81 +10613,459 @@
     }
 
     // ============================================
-    // JOURNEY MODE (Full-Screen)
+    // UNIFIED JOURNEY MODE (Today-First Design)
     // ============================================
+    
+    // Cache for week lesson data
+    let journeyWeekCache = {};
+    let journeyExpandedSections = new Set();
+
     function buildJourneyOverlayHtml() {
+      const today = getTodayDayNumber();
+      const streak = state.streak || 0;
+      const completed = state.completedLessons?.length || 0;
+      const todayCompleted = state.completedLessons?.includes(today) || false;
+      
+      // Get greeting based on time of day
+      const hour = new Date().getHours();
+      let greeting = 'Good morning';
+      if (hour >= 12 && hour < 17) greeting = 'Good afternoon';
+      else if (hour >= 17) greeting = 'Good evening';
+      
+      // Motivational messages
+      const streakMsg = streak === 0 ? '🌱' : (streak >= 7 ? '🔥' : '⚡');
+      const progressPercent = Math.round((completed / 365) * 100);
+      
       return `
-        <div class="journey-mode-header">
-          <h1 class="journey-mode-title">🗺️ Your Learning Journey</h1>
-          <p class="journey-mode-subtitle">365 days of curiosity, one lesson at a time</p>
-        </div>
-        <div class="journey-tabs">
-          <button class="journey-tab active" data-tab="calendar" onclick="switchJourneyModeTab('calendar')">📅 Calendar</button>
-          <button class="journey-tab" data-tab="week" onclick="switchJourneyModeTab('week')">📆 Week</button>
-          <button class="journey-tab" data-tab="curriculum" onclick="switchJourneyModeTab('curriculum')">📚 Curriculum</button>
-          <button class="journey-tab" data-tab="bookmarks" onclick="switchJourneyModeTab('bookmarks')">🔖 Saved</button>
-          <button class="journey-tab" data-tab="commons" onclick="switchJourneyModeTab('commons')">👥 Commons</button>
-        </div>
-        <div class="journey-content">
-          <div class="journey-tab-content active" id="journey-mode-calendar">
-            <div id="journey-calendar-container"></div>
+        <div class="unified-journey">
+          <!-- Header with greeting and stats -->
+          <div class="journey-header">
+            <div class="journey-greeting">
+              <div class="journey-greeting-text">${greeting}!</div>
+              <div class="journey-greeting-sub">${getMotivationalMessage(streak, completed, todayCompleted)}</div>
+            </div>
+            <div class="journey-stats-row">
+              <div class="journey-stat streak">
+                <div class="journey-stat-value">${streakMsg} ${streak}</div>
+                <div class="journey-stat-label">Streak</div>
+              </div>
+              <div class="journey-stat">
+                <div class="journey-stat-value">${completed}</div>
+                <div class="journey-stat-label">Learned</div>
+              </div>
+            </div>
           </div>
-          <div class="journey-tab-content" id="journey-mode-week">
-            <div id="journey-week-container"></div>
+          
+          <!-- Today's Lesson Hero -->
+          <div class="today-hero ${todayCompleted ? 'completed' : ''}" id="today-hero">
+            <div class="today-badge">
+              ${todayCompleted ? '✓ Completed Today' : '✨ Todays Lesson'}
+            </div>
+            <div class="today-hero-content">
+              <div class="today-thumb" id="today-thumb">
+                <div class="today-thumb-fallback">${today}</div>
+              </div>
+              <div class="today-info">
+                <div class="today-day-label">Day ${today}</div>
+                <div class="today-topic" id="today-topic">Loading...</div>
+                <div class="today-headline" id="today-headline"></div>
+                <button class="today-cta" onclick="startTodaysLesson()">
+                  <span class="today-cta-icon">${todayCompleted ? '🔄' : '▶'}</span>
+                  ${todayCompleted ? 'Review Lesson' : 'Start Learning'}
+                </button>
+                <div class="today-meta">
+                  <div class="today-meta-item">⏱️ ~5 min</div>
+                  <div class="today-meta-item">🎓 All ages</div>
+                </div>
+              </div>
+            </div>
           </div>
-          <div class="journey-tab-content" id="journey-mode-curriculum">
-            <div id="journey-curriculum-container"></div>
+          
+          <!-- This Week Section -->
+          <div class="week-section">
+            <div class="section-header">
+              <div class="section-title">
+                <span class="section-title-icon">📅</span>
+                This Week
+              </div>
+              <span class="week-date-range" id="week-date-range"></span>
+              <div class="section-nav">
+                <button class="section-nav-btn" id="week-prev-btn" onclick="navigateWeek(-1)">←</button>
+                <button class="section-nav-btn" id="week-next-btn" onclick="navigateWeek(1)">→</button>
+              </div>
+            </div>
+            <div class="week-cards" id="unified-week-cards">
+              <!-- Populated by initUnifiedJourney -->
+            </div>
           </div>
-          <div class="journey-tab-content" id="journey-mode-bookmarks">
-            <div id="journey-bookmarks-container"></div>
+          
+          <!-- Expandable Sections -->
+          <div class="expand-section ${journeyExpandedSections.has('calendar') ? 'open' : ''}" data-section="calendar">
+            <div class="expand-header" onclick="toggleJourneySection('calendar')">
+              <div class="expand-header-left">
+                <span class="expand-icon">📆</span>
+                <span class="expand-title">Full Calendar</span>
+                <span class="expand-count">365 days</span>
+              </div>
+              <span class="expand-arrow">▼</span>
+            </div>
+            <div class="expand-content">
+              <div id="unified-calendar-container"></div>
+            </div>
           </div>
-          <div class="journey-tab-content" id="journey-mode-commons">
-            <div id="journey-commons-container"></div>
+          
+          <div class="expand-section ${journeyExpandedSections.has('saved') ? 'open' : ''}" data-section="saved">
+            <div class="expand-header" onclick="toggleJourneySection('saved')">
+              <div class="expand-header-left">
+                <span class="expand-icon">🔖</span>
+                <span class="expand-title">Saved Lessons</span>
+                <span class="expand-count" id="saved-count">${state.bookmarks?.length || 0}</span>
+              </div>
+              <span class="expand-arrow">▼</span>
+            </div>
+            <div class="expand-content">
+              <div id="unified-saved-container"></div>
+            </div>
+          </div>
+          
+          <div class="expand-section ${journeyExpandedSections.has('curriculum') ? 'open' : ''}" data-section="curriculum">
+            <div class="expand-header" onclick="toggleJourneySection('curriculum')">
+              <div class="expand-header-left">
+                <span class="expand-icon">📚</span>
+                <span class="expand-title">Browse Curriculum</span>
+                <span class="expand-count">All topics</span>
+              </div>
+              <span class="expand-arrow">▼</span>
+            </div>
+            <div class="expand-content">
+              <div id="unified-curriculum-container"></div>
+            </div>
+          </div>
+          
+          <div class="expand-section ${journeyExpandedSections.has('commons') ? 'open' : ''}" data-section="commons">
+            <div class="expand-header" onclick="toggleJourneySection('commons')">
+              <div class="expand-header-left">
+                <span class="expand-icon">👥</span>
+                <span class="expand-title">The Commons</span>
+                <span class="expand-count">Coming soon</span>
+              </div>
+              <span class="expand-arrow">▼</span>
+            </div>
+            <div class="expand-content">
+              <div id="unified-commons-container"></div>
+            </div>
           </div>
         </div>
       `;
     }
 
-    let currentJourneyModeTab = 'calendar';
+    function getMotivationalMessage(streak, completed, todayDone) {
+      if (todayDone) {
+        if (streak >= 7) return `${streak} days strong! You're on fire! 🔥`;
+        if (streak >= 3) return `${streak}-day streak! Keep the momentum!`;
+        return "Great job today! See you tomorrow.";
+      }
+      if (streak === 0 && completed === 0) {
+        return "Your learning journey begins today!";
+      }
+      if (streak === 0) {
+        return "Ready to restart your streak?";
+      }
+      if (streak >= 7) {
+        return `${streak} days and counting! Keep the chain!`;
+      }
+      return `Day ${streak + 1} awaits. Lets go!`;
+    }
 
     function initJourneyMode() {
-      // Initialize calendar view (default tab)
-      currentJourneyModeTab = 'calendar';
-      try { renderJourneyCalendar(); } catch(e) { console.warn('Journey calendar init failed:', e); }
+      // Load today's lesson data
+      loadTodayHeroData();
+      // Load this week's cards
+      loadUnifiedWeekCards();
+      // Update week navigation
+      updateWeekNavigation();
     }
 
-    function switchJourneyModeTab(tabId) {
-      currentJourneyModeTab = tabId;
+    async function loadTodayHeroData() {
+      const today = getTodayDayNumber();
+      const topicEl = document.getElementById('today-topic');
+      const headlineEl = document.getElementById('today-headline');
+      const thumbEl = document.getElementById('today-thumb');
       
-      // Update tab buttons
-      document.querySelectorAll('#journey-overlay .journey-tab').forEach(tab => {
-        tab.classList.toggle('active', tab.dataset.tab === tabId);
-      });
+      if (!topicEl) return;
       
-      // Update tab content
-      document.querySelectorAll('#journey-overlay .journey-tab-content').forEach(content => {
-        content.classList.toggle('active', content.id === `journey-mode-${tabId}`);
-      });
-      
-      // Initialize content for the selected tab
-      switch(tabId) {
-        case 'calendar':
-          renderJourneyCalendar();
-          break;
-        case 'week':
-          renderJourneyWeek();
-          break;
-        case 'curriculum':
-          initJourneyCurriculum();
-          break;
-        case 'bookmarks':
-          renderJourneyBookmarks();
-          break;
-        case 'commons':
-          renderJourneyCommons();
-          break;
+      try {
+        // Try to get lesson data
+        let lesson = null;
+        
+        if (typeof window.KellyLessonLoader?.loadLesson === 'function') {
+          const payload = await window.KellyLessonLoader.loadLesson(today, { preloadAdjacent: false });
+          lesson = payload?.lesson || null;
+        }
+        
+        if (!lesson && typeof window.getEmergencyLesson === 'function') {
+          lesson = window.getEmergencyLesson(today);
+        }
+        
+        if (lesson) {
+          topicEl.textContent = lesson.topic || lesson.title || `Day ${today}`;
+          headlineEl.textContent = lesson.marketing_headline || lesson.headline || lesson.universal_truth || '';
+          
+          // Try to load thumbnail
+          const thumbUrl = getLessonThumbnailUrl(today);
+          if (thumbUrl && thumbEl) {
+            const img = document.createElement('img');
+            img.src = thumbUrl;
+            img.alt = '';
+            img.onload = () => {
+              thumbEl.innerHTML = '';
+              thumbEl.appendChild(img);
+            };
+          }
+        } else {
+          topicEl.textContent = `Day ${today}`;
+        }
+      } catch (e) {
+        console.warn('Failed to load today hero:', e);
+        topicEl.textContent = `Day ${today}`;
       }
     }
+
+    async function loadUnifiedWeekCards() {
+      const container = document.getElementById('unified-week-cards');
+      const dateRangeEl = document.getElementById('week-date-range');
+      if (!container) return;
+      
+      const today = getTodayDayNumber();
+      const currentWeekOffset = state.weekOffset || Math.floor((today - 1) / 7);
+      const startDay = currentWeekOffset * 7 + 1;
+      const endDay = Math.min(startDay + 6, 365);
+      
+      // Update date range display
+      if (dateRangeEl && window.KellyCalendar?.formatWeekRangeLabel) {
+        dateRangeEl.textContent = window.KellyCalendar.formatWeekRangeLabel(startDay, NOW_CTX.year, NOW_CTX);
+      } else {
+        dateRangeEl.textContent = `Days ${startDay}–${endDay}`;
+      }
+      
+      // Show loading state
+      container.innerHTML = Array(7).fill().map(() => `
+        <div class="week-card" style="opacity: 0.5;">
+          <div class="week-card-dow">...</div>
+          <div class="week-card-date">—</div>
+        </div>
+      `).join('');
+      
+      // Load lesson data for this week
+      const lessons = await loadWeekLessons(startDay);
+      const lessonMap = {};
+      lessons.forEach(l => lessonMap[l.day_number] = l);
+      
+      // Build week cards aligned to actual calendar
+      let html = '';
+      const daysOfWeek = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      
+      for (let i = 0; i < 7; i++) {
+        const dayNum = startDay + i;
+        if (dayNum > 365) break;
+        
+        const lesson = lessonMap[dayNum] || {};
+        const isToday = dayNum === today;
+        const isCompleted = state.completedLessons?.includes(dayNum) || false;
+        const isFuture = dayNum > today;
+        const isLocked = !TESTING_MODE && isFuture && dayNum > today + 1;
+        
+        // Get actual date
+        let dateOfMonth = dayNum;
+        let dowIndex = i;
+        if (window.KellyTime?.dayNumberToDate) {
+          const d = window.KellyTime.dayNumberToDate(dayNum, NOW_CTX.year);
+          dateOfMonth = d.getDate();
+          dowIndex = d.getDay();
+        }
+        
+        const statusIcon = isCompleted ? '✓' : (isToday ? '▶' : (isLocked ? '🔒' : ''));
+        const stateClass = [
+          isToday ? 'today' : '',
+          isCompleted ? 'completed' : '',
+          isLocked ? 'locked' : ''
+        ].filter(Boolean).join(' ');
+        
+        html += `
+          <div class="week-card ${stateClass}" 
+               data-day="${dayNum}"
+               ${isLocked ? '' : `onclick="goToLessonFromJourney(${dayNum})"`}>
+            <div class="week-card-dow">${daysOfWeek[dowIndex]}</div>
+            <div class="week-card-date">${dateOfMonth}</div>
+            <div class="week-card-day">Day ${dayNum}</div>
+            ${statusIcon ? `<div class="week-card-status">${statusIcon}</div>` : ''}
+            ${lesson.topic ? `
+              <div class="week-card-tooltip">
+                <div class="week-card-tooltip-topic">${lesson.topic}</div>
+                ${lesson.marketing_headline ? `<div class="week-card-tooltip-headline">${lesson.marketing_headline}</div>` : ''}
+              </div>
+            ` : ''}
+          </div>
+        `;
+      }
+      
+      container.innerHTML = html;
+    }
+
+    function navigateWeek(direction) {
+      const today = getTodayDayNumber();
+      const maxWeek = Math.floor((today - 1) / 7);
+      
+      state.weekOffset = state.weekOffset || Math.floor((today - 1) / 7);
+      state.weekOffset += direction;
+      state.weekOffset = Math.max(0, Math.min(maxWeek, state.weekOffset));
+      
+      saveState();
+      loadUnifiedWeekCards();
+      updateWeekNavigation();
+    }
+
+    function updateWeekNavigation() {
+      const today = getTodayDayNumber();
+      const maxWeek = Math.floor((today - 1) / 7);
+      const currentWeek = state.weekOffset || Math.floor((today - 1) / 7);
+      
+      const prevBtn = document.getElementById('week-prev-btn');
+      const nextBtn = document.getElementById('week-next-btn');
+      
+      if (prevBtn) prevBtn.disabled = currentWeek <= 0;
+      if (nextBtn) nextBtn.disabled = currentWeek >= maxWeek;
+    }
+
+    function toggleJourneySection(sectionId) {
+      const section = document.querySelector(`.expand-section[data-section="${sectionId}"]`);
+      if (!section) return;
+      
+      const isOpen = section.classList.toggle('open');
+      
+      if (isOpen) {
+        journeyExpandedSections.add(sectionId);
+        // Initialize content on first open
+        switch(sectionId) {
+          case 'calendar':
+            renderUnifiedCalendar();
+            break;
+          case 'saved':
+            renderUnifiedSaved();
+            break;
+          case 'curriculum':
+            initUnifiedCurriculum();
+            break;
+          case 'commons':
+            renderUnifiedCommons();
+            break;
+        }
+      } else {
+        journeyExpandedSections.delete(sectionId);
+      }
+    }
+
+    function renderUnifiedCalendar() {
+      const container = document.getElementById('unified-calendar-container');
+      if (!container) return;
+      
+      const today = getTodayDayNumber();
+      const completed = state.completedLessons || [];
+      
+      let html = '<div class="journey-calendar-grid">';
+      for (let day = 1; day <= Math.min(today + 1, 365); day++) {
+        const isDone = completed.includes(day);
+        const isToday = day === today;
+        const statusClass = isDone ? 'completed' : (isToday ? 'today' : 'available');
+        html += `
+          <button class="journey-day-cell ${statusClass}" onclick="goToLessonFromJourney(${day})">
+            <span class="journey-day-num">${day}</span>
+            ${isDone ? '<span class="journey-day-check">✓</span>' : ''}
+          </button>
+        `;
+      }
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    function renderUnifiedSaved() {
+      const container = document.getElementById('unified-saved-container');
+      if (!container) return;
+      
+      const bookmarks = state.bookmarks || state.bookmarkedLessons || [];
+      
+      if (bookmarks.length === 0) {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">🔖</div>
+            <div class="empty-state-title">No saved lessons yet</div>
+            <div class="empty-state-text">Tap the bookmark icon during a lesson to save it for later.</div>
+          </div>
+        `;
+        return;
+      }
+      
+      let html = '<div class="journey-bookmarks-list">';
+      bookmarks.forEach(day => {
+        html += `
+          <button class="journey-bookmark-card" onclick="goToLessonFromJourney(${day})">
+            <span class="bookmark-day">Day ${day}</span>
+            <span class="bookmark-action">▶</span>
+          </button>
+        `;
+      });
+      html += '</div>';
+      container.innerHTML = html;
+    }
+
+    function initUnifiedCurriculum() {
+      const container = document.getElementById('unified-curriculum-container');
+      if (!container) return;
+      
+      if (typeof KellyCurriculumBrowser !== 'undefined') {
+        container.innerHTML = `
+          <div class="curriculum-search" style="margin-bottom: 16px;">
+            <input type="text" id="unified-curriculum-search" placeholder="Search lessons..." class="curriculum-search-input" style="width: 100%; max-width: 400px;">
+          </div>
+          <div id="unified-curriculum-categories"></div>
+        `;
+        KellyCurriculumBrowser.init('unified-curriculum-categories');
+      } else {
+        container.innerHTML = `
+          <div class="empty-state">
+            <div class="empty-state-icon">📚</div>
+            <div class="empty-state-title">Curriculum Browser</div>
+            <div class="empty-state-text">Explore all 365 lessons organized by theme and topic.</div>
+          </div>
+        `;
+      }
+    }
+
+    function renderUnifiedCommons() {
+      const container = document.getElementById('unified-commons-container');
+      if (!container) return;
+      
+      container.innerHTML = `
+        <div class="empty-state">
+          <div class="empty-state-icon">👥</div>
+          <div class="empty-state-title">The Commons</div>
+          <div class="empty-state-text">
+            A space for learners to connect, share insights, and grow together. 
+            <br><br>
+            <a href="mailto:hello@curiouskelly.com?subject=Commons%20Waitlist" style="color: var(--kelly-blue);">Join the waitlist →</a>
+          </div>
+        </div>
+      `;
+    }
+
+    // startTodaysLesson() is defined in Home section above - do not duplicate
+    
+    // Legacy function aliases for compatibility
+    let currentJourneyModeTab = 'unified';
+    function switchJourneyModeTab(tabId) { /* No-op in unified mode */ }
+    function renderJourneyCalendar() { renderUnifiedCalendar(); }
+    function renderJourneyWeek() { loadUnifiedWeekCards(); }
+    function renderJourneyBookmarks() { renderUnifiedSaved(); }
 
     function renderJourneyCommons() {
       const container = document.getElementById('journey-commons-container');
@@ -10061,47 +11218,65 @@
     let currentSettingsSection = 'account';
 
     function buildSettingsOverlayHtml() {
+      // Professional SVG icons
+      const icons = {
+        profile: '<svg viewBox="0 0 24 24"><circle cx="12" cy="8" r="4"/><path d="M20 21a8 8 0 1 0-16 0"/></svg>',
+        journey: '<svg viewBox="0 0 24 24"><path d="M12 2L2 7l10 5 10-5-10-5z"/><path d="M2 17l10 5 10-5"/><path d="M2 12l10 5 10-5"/></svg>',
+        preferences: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M12 1v4M12 19v4M4.22 4.22l2.83 2.83M16.95 16.95l2.83 2.83M1 12h4M19 12h4M4.22 19.78l2.83-2.83M16.95 7.05l2.83-2.83"/></svg>',
+        subscription: '<svg viewBox="0 0 24 24"><rect x="1" y="4" width="22" height="16" rx="2"/><line x1="1" y1="10" x2="23" y2="10"/></svg>',
+        help: '<svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>',
+        contact: '<svg viewBox="0 0 24 24"><path d="M4 4h16c1.1 0 2 .9 2 2v12c0 1.1-.9 2-2 2H4c-1.1 0-2-.9-2-2V6c0-1.1.9-2 2-2z"/><polyline points="22,6 12,13 2,6"/></svg>',
+        terms: '<svg viewBox="0 0 24 24"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/><line x1="16" y1="13" x2="8" y2="13"/><line x1="16" y1="17" x2="8" y2="17"/></svg>',
+        privacy: '<svg viewBox="0 0 24 24"><rect x="3" y="11" width="18" height="11" rx="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>',
+        trust: '<svg viewBox="0 0 24 24"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>',
+        accessibility: '<svg viewBox="0 0 24 24"><circle cx="12" cy="4" r="2"/><path d="M12 6v6m0 4v2"/><path d="M9 22l3-6 3 6"/><path d="M6 10l6 2 6-2"/></svg>'
+      };
+      
       return `
         <nav class="settings-sidebar">
           <div class="settings-section-title">Account</div>
           <button class="settings-nav-item active" data-section="account" onclick="showSettingsSection('account')">
-            <span class="settings-nav-icon">👤</span>
+            <span class="settings-nav-icon">${icons.profile}</span>
             <span>Profile</span>
           </button>
+          <button class="settings-nav-item" data-section="journey" onclick="showSettingsSection('journey')">
+            <span class="settings-nav-icon">${icons.journey}</span>
+            <span>Learning Journey</span>
+          </button>
           <button class="settings-nav-item" data-section="preferences" onclick="showSettingsSection('preferences')">
-            <span class="settings-nav-icon">🎨</span>
+            <span class="settings-nav-icon">${icons.preferences}</span>
             <span>Preferences</span>
           </button>
           <button class="settings-nav-item" data-section="subscription" onclick="showSettingsSection('subscription')">
-            <span class="settings-nav-icon">💳</span>
+            <span class="settings-nav-icon">${icons.subscription}</span>
             <span>Subscription</span>
           </button>
           
           <div class="settings-section-title">Support</div>
           <button class="settings-nav-item" data-section="help" onclick="showSettingsSection('help')">
-            <span class="settings-nav-icon">❓</span>
-            <span>Help Center</span>
+            <span class="settings-nav-icon">${icons.help}</span>
+            <span>Help</span>
           </button>
           <button class="settings-nav-item" data-section="contact" onclick="showSettingsSection('contact')">
-            <span class="settings-nav-icon">✉️</span>
-            <span>Contact Us</span>
+            <span class="settings-nav-icon">${icons.contact}</span>
+            <span>Contact</span>
           </button>
           
           <div class="settings-section-title">Legal</div>
           <button class="settings-nav-item" data-section="terms" onclick="showSettingsSection('terms')">
-            <span class="settings-nav-icon">📜</span>
+            <span class="settings-nav-icon">${icons.terms}</span>
             <span>Terms</span>
           </button>
           <button class="settings-nav-item" data-section="privacy" onclick="showSettingsSection('privacy')">
-            <span class="settings-nav-icon">🔒</span>
+            <span class="settings-nav-icon">${icons.privacy}</span>
             <span>Privacy</span>
           </button>
           <button class="settings-nav-item" data-section="trust" onclick="showSettingsSection('trust')">
-            <span class="settings-nav-icon">🛡️</span>
+            <span class="settings-nav-icon">${icons.trust}</span>
             <span>Trust & Safety</span>
           </button>
           <button class="settings-nav-item" data-section="accessibility" onclick="showSettingsSection('accessibility')">
-            <span class="settings-nav-icon">♿</span>
+            <span class="settings-nav-icon">${icons.accessibility}</span>
             <span>Accessibility</span>
           </button>
         </nav>
@@ -10111,7 +11286,7 @@
       `;
     }
 
-    const SETTINGS_SECTIONS = ['account', 'preferences', 'subscription', 'help', 'contact', 'terms', 'privacy', 'trust', 'accessibility'];
+    const SETTINGS_SECTIONS = ['account', 'journey', 'preferences', 'subscription', 'help', 'contact', 'terms', 'privacy', 'trust', 'accessibility'];
 
     function initSettingsMode() {
       currentSettingsSection = 'account';
@@ -10159,6 +11334,238 @@
       const contentArea = document.getElementById('settings-content-area');
       if (contentArea) {
         contentArea.innerHTML = getSettingsSectionContent(section);
+        
+        // Load journey data if that section
+        if (section === 'journey') {
+          loadLearningJourneyContent();
+        }
+      }
+    }
+    
+    async function loadLearningJourneyContent() {
+      const container = document.getElementById('learning-journey-container');
+      if (!container) return;
+      
+      try {
+        // Get user session
+        const session = await _db?.auth?.getSession?.();
+        const userId = session?.data?.session?.user?.id;
+        
+        if (!userId) {
+          container.innerHTML = `
+            <div class="settings-card" style="text-align: center; padding: 40px;">
+              <p style="font-size: 1.5rem; margin-bottom: 12px;">🔒</p>
+              <h3>Sign in to see your journey</h3>
+              <p>Your learning insights will appear here once you're signed in.</p>
+            </div>
+          `;
+          return;
+        }
+        
+        // Fetch insights from Supabase
+        const { data, error } = await _db
+          .from('user_learning_journey')
+          .select('*')
+          .eq('user_id', userId)
+          .single();
+        
+        if (error && error.code !== 'PGRST116') {
+          throw error;
+        }
+        
+        if (!data || data.lessons_analyzed < 3) {
+          const lessonsCompleted = data?.lessons_analyzed || 0;
+          const needed = Math.max(3 - lessonsCompleted, 0);
+          container.innerHTML = `
+            <div class="settings-card" style="text-align: center; padding: 40px;">
+              <p style="font-size: 2.5rem; margin-bottom: 16px;">🌱</p>
+              <h3 style="font-size: 1.25rem; margin-bottom: 8px;">Your Journey is Just Beginning</h3>
+              <p>Complete ${needed} more lesson${needed !== 1 ? 's' : ''} for Kelly to understand your learning style.</p>
+              <div class="journey-progress-bar" style="max-width: 200px; margin: 20px auto;">
+                <div class="journey-progress-fill" style="width: ${(lessonsCompleted / 3) * 100}%"></div>
+              </div>
+              <p style="font-size: 0.85rem; color: var(--text-muted);">${lessonsCompleted} of 3 lessons completed</p>
+            </div>
+          `;
+          return;
+        }
+        
+        // Render journey data
+        const styleEmojis = {
+          'explorer': '🧭',
+          'deliberator': '🎯',
+          'speedrunner': '⚡',
+          'reflector': '🌙',
+          'undetermined': '✨'
+        };
+        
+        const velocityLabels = {
+          'accelerating': 'Accelerating!',
+          'steady': 'Steady',
+          'warming_up': 'Warming Up',
+          'undetermined': 'Building...'
+        };
+        
+        const avgMin = Math.round((data.avg_session_duration || 0) / 60000);
+        
+        container.innerHTML = `
+          <div class="journey-overview">
+            <div class="journey-card">
+              <div class="journey-card-icon">${styleEmojis[data.engagement_style] || '✨'}</div>
+              <div class="journey-card-label">Your Style</div>
+              <div class="journey-card-value">${data.style_display || 'Discovering...'}</div>
+              <div class="journey-card-desc">${data.style_description || ''}</div>
+            </div>
+            
+            <div class="journey-card">
+              <div class="journey-card-icon">📈</div>
+              <div class="journey-card-label">Mastery</div>
+              <div class="journey-card-value">${data.overall_mastery || 0}%</div>
+              <div class="journey-progress-bar">
+                <div class="journey-progress-fill" style="width: ${data.overall_mastery || 0}%"></div>
+              </div>
+            </div>
+            
+            <div class="journey-card">
+              <div class="journey-card-icon">🚀</div>
+              <div class="journey-card-label">Momentum</div>
+              <div class="journey-card-value">${velocityLabels[data.learning_velocity] || 'Steady'}</div>
+              <div class="journey-card-desc">${data.lessons_analyzed} lessons analyzed</div>
+            </div>
+          </div>
+          
+          ${(data.strengths && data.strengths.length > 0) ? `
+            <div class="settings-card">
+              <h3>✨ Your Superpowers</h3>
+              <div class="journey-badges">
+                ${data.strengths.map(s => `<span class="journey-badge">🌟 ${s}</span>`).join('')}
+              </div>
+            </div>
+          ` : ''}
+          
+          ${(data.growth_areas && data.growth_areas.length > 0) ? `
+            <div class="settings-card">
+              <h3>🌱 Areas to Nurture</h3>
+              <div class="journey-badges">
+                ${data.growth_areas.map(g => `<span class="journey-badge growth">🌿 ${g}</span>`).join('')}
+              </div>
+            </div>
+          ` : ''}
+          
+          <div class="settings-card">
+            <h3>📊 Quick Stats</h3>
+            <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; margin-top: 16px; text-align: center;">
+              <div>
+                <div style="font-size: 1.5rem; font-weight: 600; color: var(--kelly-blue-light)">${data.lessons_analyzed || 0}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Lessons</div>
+              </div>
+              <div>
+                <div style="font-size: 1.5rem; font-weight: 600; color: var(--kelly-blue-light)">${data.streak_days || 0}</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Streak</div>
+              </div>
+              <div>
+                <div style="font-size: 1.5rem; font-weight: 600; color: var(--kelly-blue-light)">${avgMin}m</div>
+                <div style="font-size: 0.75rem; color: var(--text-muted); text-transform: uppercase;">Avg Session</div>
+              </div>
+            </div>
+          </div>
+          
+          <div class="settings-card" style="margin-top: 32px;">
+            <h3>🔒 Your Data, Your Control</h3>
+            <p style="margin-bottom: 16px;">Kelly learns how you learn to be a better teacher for you. This data is private and only visible to you.</p>
+            <div style="display: flex; gap: 12px; flex-wrap: wrap;">
+              <button class="btn btn-secondary" id="journey-export-btn" style="flex: 1; min-width: 140px;">
+                📤 Export My Data
+              </button>
+              <button class="btn btn-danger" id="journey-delete-btn" style="flex: 1; min-width: 140px; background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.5); color: #f87171;">
+                🗑️ Delete History
+              </button>
+            </div>
+          </div>
+        `;
+        
+        // Bind privacy control buttons
+        setTimeout(() => {
+          document.getElementById('journey-export-btn')?.addEventListener('click', handleJourneyExport);
+          document.getElementById('journey-delete-btn')?.addEventListener('click', handleJourneyDelete);
+        }, 0);
+        
+      } catch (err) {
+        console.error('[Journey] Load error:', err);
+        container.innerHTML = `
+          <div class="settings-card" style="text-align: center; padding: 40px;">
+            <p style="font-size: 1.5rem; margin-bottom: 12px;">📊</p>
+            <h3>Coming Soon</h3>
+            <p>Learning insights will appear here as you complete lessons.</p>
+          </div>
+        `;
+      }
+    }
+    
+    async function handleJourneyExport() {
+      try {
+        showToast('Preparing your data export...');
+        
+        const session = await _db?.auth?.getSession?.();
+        const userId = session?.data?.session?.user?.id;
+        if (!userId) {
+          showToast('Please sign in to export data');
+          return;
+        }
+        
+        const { data, error } = await _db.rpc('export_my_learning_data', { target_user_id: userId });
+        
+        if (error) throw error;
+        
+        // Download as JSON file
+        const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `curious-kelly-learning-data-${new Date().toISOString().split('T')[0]}.json`;
+        a.click();
+        URL.revokeObjectURL(url);
+        
+        showToast('✅ Your learning data has been exported!');
+      } catch (err) {
+        console.error('[Journey] Export error:', err);
+        showToast('Export failed. Please try again.');
+      }
+    }
+    
+    async function handleJourneyDelete() {
+      const confirmed = confirm(
+        '⚠️ Delete all your learning history?\\n\\n' +
+        'This will permanently remove:\\n' +
+        '• All lesson observations\\n' +
+        '• Your computed learning insights\\n' +
+        '• Your engagement patterns\\n\\n' +
+        'This action cannot be undone.'
+      );
+      
+      if (!confirmed) return;
+      
+      try {
+        showToast('Deleting your learning history...');
+        
+        const session = await _db?.auth?.getSession?.();
+        const userId = session?.data?.session?.user?.id;
+        if (!userId) {
+          showToast('Please sign in to delete data');
+          return;
+        }
+        
+        const { data, error } = await _db.rpc('delete_my_learning_history', { target_user_id: userId });
+        
+        if (error) throw error;
+        
+        showToast('✅ Your learning history has been deleted');
+        
+        // Reload the journey section to show empty state
+        loadLearningJourneyContent();
+      } catch (err) {
+        console.error('[Journey] Delete error:', err);
+        showToast('Delete failed. Please try again.');
       }
     }
 
@@ -10166,97 +11573,150 @@
       const sections = {
         account: `
           <div class="settings-content-header">
-            <h2 class="settings-content-title">👤 Profile</h2>
+            <h2 class="settings-content-title">Profile</h2>
+            <p class="settings-content-subtitle">Manage your account settings</p>
           </div>
           <div class="settings-content-body">
-            <p>Manage your account settings and preferences.</p>
-            <h3>Your Kelly</h3>
-            <p>Current persona: <strong>${state.kellyId || 'Not selected'}</strong></p>
-            <button class="btn btn-secondary" onclick="setUiMode('lesson'); showScene('character');">Change Kelly</button>
+            <div class="settings-card">
+              <h3>Your Kelly</h3>
+              <p>Current persona: <strong style="color: var(--kelly-blue-light)">${(state.kellyId || 'scientist').charAt(0).toUpperCase() + (state.kellyId || 'scientist').slice(1)}</strong></p>
+              <button class="btn btn-secondary" onclick="setUiMode('lesson'); showScene('character');">Change Kelly</button>
+            </div>
+            <div class="settings-card">
+              <h3>Account</h3>
+              <p>Signed in as: <strong>${window.__currentUserEmail || 'Guest'}</strong></p>
+            </div>
+          </div>
+        `,
+        journey: `
+          <div class="settings-content-header">
+            <h2 class="settings-content-title">Your Learning Journey</h2>
+            <p class="settings-content-subtitle">See how Kelly understands your learning style</p>
+          </div>
+          <div class="settings-content-body" id="learning-journey-container">
+            <div class="journey-loading">
+              <div class="journey-spinner"></div>
+              <p>Loading your journey...</p>
+            </div>
           </div>
         `,
         preferences: `
           <div class="settings-content-header">
-            <h2 class="settings-content-title">🎨 Preferences</h2>
+            <h2 class="settings-content-title">Preferences</h2>
+            <p class="settings-content-subtitle">Customize your learning experience</p>
           </div>
           <div class="settings-content-body">
-            <h3>Age Group</h3>
-            <p>Your content is adapted for your selected age range.</p>
-            <h3>Notifications</h3>
-            <p>Manage how and when Kelly reminds you to learn.</p>
+            <div class="settings-card">
+              <h3>Age Group</h3>
+              <p>Your content is adapted for your selected age range: <strong>${state.ageBucket || 'All ages'}</strong></p>
+            </div>
+            <div class="settings-card">
+              <h3>Notifications</h3>
+              <p>Manage how and when Kelly reminds you to learn.</p>
+            </div>
           </div>
         `,
         subscription: `
           <div class="settings-content-header">
-            <h2 class="settings-content-title">💳 Subscription</h2>
+            <h2 class="settings-content-title">Subscription</h2>
+            <p class="settings-content-subtitle">Manage your plan and billing</p>
           </div>
           <div class="settings-content-body">
-            <p>Manage your subscription and billing.</p>
-            <button class="btn btn-primary" onclick="showCheckout()">Manage Subscription</button>
+            <div class="settings-card">
+              <h3>Current Plan</h3>
+              <p>Status: <strong style="color: var(--kelly-blue-light)">Active</strong></p>
+              <button class="btn btn-primary" onclick="showCheckout()">Manage Subscription</button>
+            </div>
           </div>
         `,
         help: `
           <div class="settings-content-header">
-            <h2 class="settings-content-title">❓ Help Center</h2>
+            <h2 class="settings-content-title">Help</h2>
+            <p class="settings-content-subtitle">Frequently asked questions</p>
           </div>
           <div class="settings-content-body">
-            <h3>Frequently Asked Questions</h3>
-            <p><strong>How do I change my Kelly?</strong><br>Go to Profile settings and click "Change Kelly".</p>
-            <p><strong>How do lessons work?</strong><br>Each day, a new lesson unlocks. Complete it to maintain your streak!</p>
-            <p><strong>Can I go back to previous lessons?</strong><br>Yes! Use the Journey tab to browse all your completed lessons.</p>
+            <div class="settings-card">
+              <h3>How do I change my Kelly?</h3>
+              <p>Go to Profile settings and click "Change Kelly".</p>
+            </div>
+            <div class="settings-card">
+              <h3>How do lessons work?</h3>
+              <p>Each day, a new lesson unlocks. Complete it to maintain your streak!</p>
+            </div>
+            <div class="settings-card">
+              <h3>Can I go back to previous lessons?</h3>
+              <p>Yes! Use the Journey tab to browse all your completed lessons.</p>
+            </div>
           </div>
         `,
         contact: `
           <div class="settings-content-header">
-            <h2 class="settings-content-title">✉️ Contact Us</h2>
+            <h2 class="settings-content-title">Contact</h2>
+            <p class="settings-content-subtitle">Get in touch with us</p>
           </div>
           <div class="settings-content-body">
-            <p>We'd love to hear from you!</p>
-            <p>Email: <a href="mailto:hello@curiouskelly.com">hello@curiouskelly.com</a></p>
-            <p>Response time: Usually within 24 hours.</p>
+            <div class="settings-card">
+              <h3>Email</h3>
+              <p><a href="mailto:hello@curiouskelly.com" style="color: var(--kelly-blue-light)">hello@curiouskelly.com</a></p>
+              <p style="color: var(--text-muted); font-size: 0.875rem; margin-top: 8px;">Response time: Usually within 24 hours</p>
+            </div>
           </div>
         `,
         terms: `
           <div class="settings-content-header">
-            <h2 class="settings-content-title">📜 Terms of Service</h2>
+            <h2 class="settings-content-title">Terms of Service</h2>
+            <p class="settings-content-subtitle">Last updated: December 1, 2025</p>
           </div>
           <div class="settings-content-body">
-            <p>Last updated: December 1, 2025</p>
-            <h3>1. Acceptance of Terms</h3>
-            <p>By accessing Curious Kelly, you agree to these terms of service.</p>
-            <h3>2. Description of Service</h3>
-            <p>Curious Kelly provides daily educational content for learners ages 13 and up.</p>
-            <p><em>Full terms available at <a href="/terms.html" target="_blank">curiouskelly.com/terms</a></em></p>
+            <div class="settings-card">
+              <h3>1. Acceptance of Terms</h3>
+              <p>By accessing Curious Kelly, you agree to these terms of service.</p>
+            </div>
+            <div class="settings-card">
+              <h3>2. Description of Service</h3>
+              <p>Curious Kelly provides daily educational content for learners of all ages.</p>
+              <p style="margin-top: 12px"><a href="/terms.html" target="_blank" style="color: var(--kelly-blue-light)">Read full terms →</a></p>
+            </div>
           </div>
         `,
         privacy: `
           <div class="settings-content-header">
-            <h2 class="settings-content-title">🔒 Privacy Policy</h2>
+            <h2 class="settings-content-title">Privacy Policy</h2>
+            <p class="settings-content-subtitle">Last updated: December 1, 2025</p>
           </div>
           <div class="settings-content-body">
-            <p>Last updated: December 1, 2025</p>
-            <h3>What We Collect</h3>
-            <p>We collect only what's necessary to provide your learning experience.</p>
-            <h3>How We Use It</h3>
-            <p>Your data is used to personalize lessons and track progress.</p>
-            <p><em>Full policy at <a href="/privacy.html" target="_blank">curiouskelly.com/privacy</a></em></p>
+            <div class="settings-card">
+              <h3>What We Collect</h3>
+              <p>We collect only what's necessary to provide your learning experience.</p>
+            </div>
+            <div class="settings-card">
+              <h3>How We Use It</h3>
+              <p>Your data is used to personalize lessons and track progress.</p>
+              <p style="margin-top: 12px"><a href="/privacy.html" target="_blank" style="color: var(--kelly-blue-light)">Read full policy →</a></p>
+            </div>
           </div>
         `,
         trust: `
           <div class="settings-content-header">
-            <h2 class="settings-content-title">🛡️ Trust & Safety</h2>
+            <h2 class="settings-content-title">Trust & Safety</h2>
+            <p class="settings-content-subtitle">Our commitment to transparency</p>
           </div>
           <div class="settings-content-body">
-            <h3>Our Commitment</h3>
-            <p>Kelly is designed with transparency and safety at its core.</p>
-            <h3>AI Disclosure</h3>
-            <p>Kelly is an AI teacher. She's always honest about her nature and limitations.</p>
-            <p><em>Full details at <a href="/trust.html" target="_blank">curiouskelly.com/trust</a></em></p>
+            <div class="settings-card">
+              <h3>AI Disclosure</h3>
+              <p>Kelly is an AI teacher. She's always honest about her nature and limitations.</p>
+            </div>
+            <div class="settings-card">
+              <h3>Your Safety</h3>
+              <p>Kelly is designed with transparency and safety at its core.</p>
+              <p style="margin-top: 12px"><a href="/trust.html" target="_blank" style="color: var(--kelly-blue-light)">Learn more →</a></p>
+            </div>
           </div>
         `,
         accessibility: `
           <div class="settings-content-header">
-            <h2 class="settings-content-title">♿ Accessibility</h2>
+            <h2 class="settings-content-title">Accessibility</h2>
+            <p class="settings-content-subtitle">Making learning accessible to everyone</p>
           </div>
           <div class="settings-content-body">
             <h3>Our Commitment</h3>
@@ -10503,8 +11963,35 @@
         saveState();
       }
       
+      // Stealth observation: save lesson observation data
+      __observationSaved = true;
+      saveLessonObservation(true);
+      
       updatePlayButtonIndicator();
       showScene('complete');
+    }
+    
+    // Save stealth observation to Supabase
+    async function saveLessonObservation(completed = true, abandonedPhase = null) {
+      if (!window.__lessonObserver) return;
+      
+      try {
+        // Get user ID from Supabase session
+        const session = await _db?.auth?.getSession?.();
+        const userId = session?.data?.session?.user?.id;
+        
+        if (!userId) {
+          // Not logged in - don't save (observation requires auth)
+          return;
+        }
+        
+        const result = await window.__lessonObserver.save(_db, userId, completed, abandonedPhase);
+        if (result?.success) {
+          debugLog('[Observer] Saved observation:', result.sessionId);
+        }
+      } catch (err) {
+        debugWarn('[Observer] Failed to save observation:', err?.message || err);
+      }
     }
 
     // ============================================
@@ -11675,10 +13162,16 @@
       // Lesson control bar
       document.getElementById('btn-play-pause')?.addEventListener('click', () => {
         if (isVideoActive()) {
-          if (isVideoPlaying()) pauseVideo();
+          if (isVideoPlaying()) {
+            pauseVideo();
+            window.__lessonObserver?.onPause(); // Track user-initiated pause
+          }
           else resumeVideo();
         } else {
-          if (kellyAudio.isPlaying) kellyAudio.pause();
+          if (kellyAudio.isPlaying) {
+            kellyAudio.pause();
+            window.__lessonObserver?.onPause(); // Track user-initiated pause
+          }
           else kellyAudio.resume();
         }
         syncPlayPauseUI();
@@ -12601,6 +14094,17 @@
         return;
       }
     }
+    
+    // Save observation if user abandons mid-lesson
+    let __observationSaved = false;
+    window.addEventListener('beforeunload', () => {
+      // Only save if we haven't already and there's an active observer
+      if (!__observationSaved && window.__lessonObserver && state.currentPhase < PHASES.length - 1) {
+        const phase = PHASES[state.currentPhase]?.name || `phase-${state.currentPhase}`;
+        // Use sendBeacon for reliability during page unload
+        saveLessonObservation(false, phase);
+      }
+    });
     
     // Start the app
     init();

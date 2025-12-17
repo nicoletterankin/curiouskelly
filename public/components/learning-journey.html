@@ -1,0 +1,940 @@
+<!--
+  LEARNING JOURNEY COMPONENT
+  Displays user's learning insights in Settings panel
+  
+  Usage: Include this component in the settings modal/page
+  Dependencies: learner-observer.js, Supabase client
+-->
+
+<style>
+/* ==========================================
+   LEARNING JOURNEY - YOUR INSIGHTS DISPLAY
+   ========================================== */
+
+.learning-journey {
+  background: linear-gradient(135deg, #f8f4ff 0%, #e8f4ff 100%);
+  border-radius: 20px;
+  padding: 28px;
+  margin: 20px 0;
+  box-shadow: 0 4px 20px rgba(102, 126, 234, 0.1);
+}
+
+.learning-journey h3 {
+  font-size: 22px;
+  font-weight: 700;
+  color: #2d3748;
+  margin: 0 0 20px 0;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.learning-journey h3::before {
+  content: '🌟';
+}
+
+/* Journey Overview Cards */
+.journey-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: 16px;
+  margin: 24px 0;
+}
+
+.insight-card {
+  background: white;
+  border-radius: 16px;
+  padding: 20px 16px;
+  text-align: center;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  position: relative;
+  overflow: hidden;
+}
+
+.insight-card:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(102, 126, 234, 0.15);
+}
+
+.insight-card::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 4px;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 16px 16px 0 0;
+}
+
+.insight-emoji {
+  font-size: 36px;
+  margin-bottom: 12px;
+  display: block;
+}
+
+.insight-title {
+  font-size: 11px;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.insight-value {
+  font-size: 22px;
+  font-weight: 700;
+  color: #2d3748;
+  margin: 6px 0;
+  line-height: 1.2;
+}
+
+.insight-description {
+  font-size: 12px;
+  color: #a0aec0;
+  line-height: 1.5;
+  margin-top: 8px;
+}
+
+/* Mastery Progress Bar */
+.insight-progress {
+  height: 8px;
+  background: #e2e8f0;
+  border-radius: 4px;
+  overflow: hidden;
+  margin: 12px 0 8px;
+}
+
+.insight-progress .progress-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 4px;
+  transition: width 0.8s ease-out;
+}
+
+/* Strengths & Growth Sections */
+.journey-section {
+  margin: 24px 0;
+}
+
+.journey-section h4 {
+  font-size: 15px;
+  font-weight: 600;
+  color: #4a5568;
+  margin: 0 0 12px 0;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.badge-container {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.strength-badge {
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+}
+
+.growth-badge {
+  background: linear-gradient(135deg, #48bb78 0%, #38a169 100%);
+  color: white;
+  padding: 8px 16px;
+  border-radius: 24px;
+  font-size: 13px;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  box-shadow: 0 2px 8px rgba(72, 187, 120, 0.3);
+}
+
+/* Subject Mastery Bars */
+.subject-mastery {
+  margin: 24px 0;
+}
+
+.subject-mastery h4 {
+  margin-bottom: 16px;
+}
+
+.subject-row {
+  display: grid;
+  grid-template-columns: 100px 1fr 90px;
+  align-items: center;
+  gap: 12px;
+  margin: 10px 0;
+}
+
+.subject-name {
+  font-size: 14px;
+  font-weight: 500;
+  color: #4a5568;
+}
+
+.subject-bar {
+  height: 10px;
+  background: #e2e8f0;
+  border-radius: 5px;
+  overflow: hidden;
+}
+
+.subject-bar .fill {
+  height: 100%;
+  background: linear-gradient(90deg, #667eea, #764ba2);
+  border-radius: 5px;
+  transition: width 0.8s ease-out;
+}
+
+.subject-level {
+  font-size: 12px;
+  color: #718096;
+  text-align: right;
+}
+
+/* Stats Grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+  gap: 12px;
+  margin: 20px 0;
+  padding: 16px;
+  background: rgba(255, 255, 255, 0.6);
+  border-radius: 12px;
+}
+
+.stat-item {
+  text-align: center;
+}
+
+.stat-value {
+  font-size: 28px;
+  font-weight: 700;
+  color: #667eea;
+  line-height: 1;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: #718096;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  margin-top: 4px;
+}
+
+/* Privacy Controls */
+.privacy-controls {
+  background: rgba(255, 255, 255, 0.8);
+  border-radius: 12px;
+  padding: 16px;
+  margin-top: 24px;
+}
+
+.privacy-controls h4 {
+  font-size: 14px;
+  font-weight: 600;
+  color: #4a5568;
+  margin: 0 0 12px 0;
+}
+
+.toggle-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 10px 0;
+  border-bottom: 1px solid #e2e8f0;
+}
+
+.toggle-row:last-child {
+  border-bottom: none;
+}
+
+.toggle-label {
+  font-size: 14px;
+  color: #4a5568;
+}
+
+.toggle-helper {
+  font-size: 11px;
+  color: #a0aec0;
+  margin-left: 4px;
+}
+
+/* Toggle Switch */
+.toggle-switch {
+  position: relative;
+  width: 48px;
+  height: 26px;
+}
+
+.toggle-switch input {
+  opacity: 0;
+  width: 0;
+  height: 0;
+}
+
+.toggle-slider {
+  position: absolute;
+  cursor: pointer;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: #e2e8f0;
+  transition: 0.3s;
+  border-radius: 26px;
+}
+
+.toggle-slider:before {
+  position: absolute;
+  content: "";
+  height: 20px;
+  width: 20px;
+  left: 3px;
+  bottom: 3px;
+  background-color: white;
+  transition: 0.3s;
+  border-radius: 50%;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.2);
+}
+
+.toggle-switch input:checked + .toggle-slider {
+  background: linear-gradient(90deg, #667eea, #764ba2);
+}
+
+.toggle-switch input:checked + .toggle-slider:before {
+  transform: translateX(22px);
+}
+
+/* Action Buttons */
+.privacy-actions {
+  display: flex;
+  gap: 12px;
+  margin-top: 16px;
+  flex-wrap: wrap;
+}
+
+.btn-secondary {
+  background: white;
+  border: 1px solid #e2e8f0;
+  color: #4a5568;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-secondary:hover {
+  background: #f7fafc;
+  border-color: #cbd5e0;
+}
+
+.btn-danger {
+  background: white;
+  border: 1px solid #fc8181;
+  color: #c53030;
+  padding: 10px 16px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.btn-danger:hover {
+  background: #fff5f5;
+  border-color: #f56565;
+}
+
+/* Privacy Note */
+.privacy-note {
+  font-size: 12px;
+  color: #a0aec0;
+  text-align: center;
+  margin-top: 20px;
+  font-style: italic;
+  line-height: 1.5;
+}
+
+/* Loading State */
+.journey-loading {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.journey-loading .spinner {
+  width: 40px;
+  height: 40px;
+  border: 3px solid #e2e8f0;
+  border-top-color: #667eea;
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+  margin: 0 auto 16px;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.journey-loading p {
+  color: #718096;
+  font-size: 14px;
+}
+
+/* Empty State */
+.journey-empty {
+  text-align: center;
+  padding: 40px 20px;
+}
+
+.journey-empty .empty-icon {
+  font-size: 48px;
+  margin-bottom: 16px;
+}
+
+.journey-empty h4 {
+  font-size: 18px;
+  color: #4a5568;
+  margin: 0 0 8px 0;
+}
+
+.journey-empty p {
+  color: #718096;
+  font-size: 14px;
+  line-height: 1.5;
+}
+
+/* Confidence Indicator */
+.confidence-indicator {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-top: 16px;
+  padding: 12px;
+  background: rgba(102, 126, 234, 0.1);
+  border-radius: 8px;
+  font-size: 12px;
+  color: #667eea;
+}
+
+.confidence-dots {
+  display: flex;
+  gap: 4px;
+}
+
+.confidence-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: #e2e8f0;
+}
+
+.confidence-dot.filled {
+  background: #667eea;
+}
+
+/* Responsive */
+@media (max-width: 600px) {
+  .learning-journey {
+    padding: 20px 16px;
+    margin: 12px 0;
+  }
+  
+  .journey-overview {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .subject-row {
+    grid-template-columns: 80px 1fr 70px;
+    gap: 8px;
+  }
+  
+  .stats-grid {
+    grid-template-columns: 1fr 1fr;
+  }
+  
+  .privacy-actions {
+    flex-direction: column;
+  }
+  
+  .btn-secondary, .btn-danger {
+    width: 100%;
+    justify-content: center;
+  }
+}
+</style>
+
+<div class="learning-journey" id="learning-journey-component">
+  <!-- Loading State -->
+  <div class="journey-loading" id="journey-loading">
+    <div class="spinner"></div>
+    <p>Loading your learning journey...</p>
+  </div>
+  
+  <!-- Empty State (no data yet) -->
+  <div class="journey-empty" id="journey-empty" style="display: none;">
+    <div class="empty-icon">🌱</div>
+    <h4>Your Journey is Just Beginning</h4>
+    <p>Complete a few more lessons for Kelly to understand your learning style. Each lesson helps us personalize your experience.</p>
+    <div class="confidence-indicator">
+      <span>Progress:</span>
+      <div class="confidence-dots">
+        <span class="confidence-dot" id="dot-1"></span>
+        <span class="confidence-dot" id="dot-2"></span>
+        <span class="confidence-dot" id="dot-3"></span>
+        <span class="confidence-dot" id="dot-4"></span>
+        <span class="confidence-dot" id="dot-5"></span>
+      </div>
+      <span id="lessons-needed">Complete 3 lessons to unlock</span>
+    </div>
+  </div>
+  
+  <!-- Insights Content -->
+  <div id="journey-content" style="display: none;">
+    <h3>Your Learning Journey</h3>
+    
+    <!-- Overview Cards -->
+    <div class="journey-overview">
+      <div class="insight-card">
+        <span class="insight-emoji" id="style-emoji">🧭</span>
+        <div class="insight-title">Your Style</div>
+        <div class="insight-value" id="style-value">Explorer</div>
+        <div class="insight-description" id="style-description">
+          You love understanding deeply before moving on
+        </div>
+      </div>
+      
+      <div class="insight-card">
+        <span class="insight-emoji">📈</span>
+        <div class="insight-title">Mastery</div>
+        <div class="insight-progress">
+          <div class="progress-fill" id="mastery-fill" style="width: 0%"></div>
+        </div>
+        <div class="insight-value" id="mastery-value">0%</div>
+        <div class="insight-description" id="mastery-description">
+          Your learning progress
+        </div>
+      </div>
+      
+      <div class="insight-card">
+        <span class="insight-emoji" id="velocity-emoji">🚀</span>
+        <div class="insight-title">Momentum</div>
+        <div class="insight-value" id="velocity-value">Steady</div>
+        <div class="insight-description" id="velocity-description">
+          Your learning pace
+        </div>
+      </div>
+    </div>
+    
+    <!-- Quick Stats -->
+    <div class="stats-grid">
+      <div class="stat-item">
+        <div class="stat-value" id="lessons-count">0</div>
+        <div class="stat-label">Lessons</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="streak-count">0</div>
+        <div class="stat-label">Day Streak</div>
+      </div>
+      <div class="stat-item">
+        <div class="stat-value" id="avg-session">0m</div>
+        <div class="stat-label">Avg Session</div>
+      </div>
+    </div>
+    
+    <!-- Strengths -->
+    <div class="journey-section" id="strengths-section">
+      <h4>✨ Your Superpowers</h4>
+      <div class="badge-container" id="strengths-container">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+    
+    <!-- Growth Areas -->
+    <div class="journey-section" id="growth-section">
+      <h4>🌱 Areas to Nurture</h4>
+      <div class="badge-container" id="growth-container">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+    
+    <!-- Confidence Indicator -->
+    <div class="confidence-indicator">
+      <span>Profile Confidence:</span>
+      <div class="confidence-dots" id="confidence-dots">
+        <span class="confidence-dot"></span>
+        <span class="confidence-dot"></span>
+        <span class="confidence-dot"></span>
+        <span class="confidence-dot"></span>
+        <span class="confidence-dot"></span>
+      </div>
+      <span id="confidence-text">Based on X lessons</span>
+    </div>
+  </div>
+  
+  <!-- Privacy Controls -->
+  <div class="privacy-controls">
+    <h4>🔒 Your Data, Your Control</h4>
+    
+    <div class="toggle-row">
+      <div>
+        <span class="toggle-label">Allow Kelly to learn how you learn</span>
+        <span class="toggle-helper">(Helps personalize your experience)</span>
+      </div>
+      <label class="toggle-switch">
+        <input type="checkbox" id="observation-toggle" checked>
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+    
+    <div class="privacy-actions">
+      <button class="btn-secondary" id="export-data-btn">
+        📤 Export My Data
+      </button>
+      <button class="btn-danger" id="delete-history-btn">
+        🗑️ Delete History
+      </button>
+    </div>
+  </div>
+  
+  <p class="privacy-note">
+    Kelly learns how you learn to be a better teacher for you.<br>
+    This data is private and only visible to you.
+  </p>
+</div>
+
+<script>
+/**
+ * Learning Journey Component Controller
+ * Manages the display of learning insights in Settings
+ */
+class LearningJourneyComponent {
+  constructor(containerEl, supabaseClient) {
+    this.container = containerEl;
+    this.supabase = supabaseClient;
+    this.insights = null;
+    
+    // Element references
+    this.els = {
+      loading: document.getElementById('journey-loading'),
+      empty: document.getElementById('journey-empty'),
+      content: document.getElementById('journey-content'),
+      
+      // Style
+      styleEmoji: document.getElementById('style-emoji'),
+      styleValue: document.getElementById('style-value'),
+      styleDescription: document.getElementById('style-description'),
+      
+      // Mastery
+      masteryFill: document.getElementById('mastery-fill'),
+      masteryValue: document.getElementById('mastery-value'),
+      masteryDescription: document.getElementById('mastery-description'),
+      
+      // Velocity
+      velocityEmoji: document.getElementById('velocity-emoji'),
+      velocityValue: document.getElementById('velocity-value'),
+      velocityDescription: document.getElementById('velocity-description'),
+      
+      // Stats
+      lessonsCount: document.getElementById('lessons-count'),
+      streakCount: document.getElementById('streak-count'),
+      avgSession: document.getElementById('avg-session'),
+      
+      // Badges
+      strengthsContainer: document.getElementById('strengths-container'),
+      growthContainer: document.getElementById('growth-container'),
+      strengthsSection: document.getElementById('strengths-section'),
+      growthSection: document.getElementById('growth-section'),
+      
+      // Confidence
+      confidenceDots: document.getElementById('confidence-dots'),
+      confidenceText: document.getElementById('confidence-text'),
+      
+      // Empty state
+      lessonsNeeded: document.getElementById('lessons-needed'),
+      
+      // Controls
+      observationToggle: document.getElementById('observation-toggle'),
+      exportBtn: document.getElementById('export-data-btn'),
+      deleteBtn: document.getElementById('delete-history-btn')
+    };
+    
+    this.bindEvents();
+  }
+  
+  bindEvents() {
+    // Observation toggle
+    this.els.observationToggle?.addEventListener('change', (e) => {
+      const enabled = e.target.checked;
+      if (window.LearnerObserver) {
+        const observer = new window.LearnerObserver();
+        observer.setEnabled(enabled);
+      }
+      localStorage.setItem('kelly_observation_enabled', enabled ? 'true' : 'false');
+    });
+    
+    // Load current preference
+    const enabled = localStorage.getItem('kelly_observation_enabled') !== 'false';
+    if (this.els.observationToggle) {
+      this.els.observationToggle.checked = enabled;
+    }
+    
+    // Export button
+    this.els.exportBtn?.addEventListener('click', () => this.exportData());
+    
+    // Delete button
+    this.els.deleteBtn?.addEventListener('click', () => this.deleteHistory());
+  }
+  
+  async load(userId) {
+    this.showLoading();
+    
+    try {
+      const { data, error } = await this.supabase
+        .from('user_learning_journey')
+        .select('*')
+        .eq('user_id', userId)
+        .single();
+      
+      if (error && error.code !== 'PGRST116') {
+        throw error;
+      }
+      
+      this.insights = data;
+      
+      if (!data || data.lessons_analyzed < 3) {
+        this.showEmpty(data?.lessons_analyzed || 0);
+      } else {
+        this.render(data);
+      }
+    } catch (err) {
+      console.error('[Journey] Load error:', err);
+      this.showEmpty(0);
+    }
+  }
+  
+  showLoading() {
+    this.els.loading.style.display = 'block';
+    this.els.empty.style.display = 'none';
+    this.els.content.style.display = 'none';
+  }
+  
+  showEmpty(lessonsCompleted) {
+    this.els.loading.style.display = 'none';
+    this.els.empty.style.display = 'block';
+    this.els.content.style.display = 'none';
+    
+    // Update dots
+    const dots = this.els.empty.querySelectorAll('.confidence-dot');
+    for (let i = 0; i < dots.length; i++) {
+      if (i < lessonsCompleted) {
+        dots[i].classList.add('filled');
+      }
+    }
+    
+    const needed = Math.max(3 - lessonsCompleted, 0);
+    this.els.lessonsNeeded.textContent = needed > 0 
+      ? `Complete ${needed} more lesson${needed > 1 ? 's' : ''} to unlock`
+      : 'Processing your journey...';
+  }
+  
+  render(data) {
+    this.els.loading.style.display = 'none';
+    this.els.empty.style.display = 'none';
+    this.els.content.style.display = 'block';
+    
+    // Style
+    const styleMap = {
+      'explorer': { emoji: '🧭', name: 'Explorer', desc: 'You love understanding deeply before moving on' },
+      'deliberator': { emoji: '🎯', name: 'Deliberator', desc: 'You think carefully before making choices' },
+      'speedrunner': { emoji: '⚡', name: 'Quick Thinker', desc: "You're efficient and trust your instincts" },
+      'reflector': { emoji: '🌙', name: 'Reflector', desc: 'You take time to absorb each lesson' },
+      'undetermined': { emoji: '✨', name: 'Discovering...', desc: 'Your unique style is emerging' }
+    };
+    
+    const style = styleMap[data.engagement_style] || styleMap.undetermined;
+    this.els.styleEmoji.textContent = style.emoji;
+    this.els.styleValue.textContent = style.name;
+    this.els.styleDescription.textContent = style.desc;
+    
+    // Mastery
+    const mastery = data.overall_mastery || 0;
+    this.els.masteryFill.style.width = `${mastery}%`;
+    this.els.masteryValue.textContent = `${mastery}%`;
+    
+    if (mastery >= 80) {
+      this.els.masteryDescription.textContent = 'Outstanding progress!';
+    } else if (mastery >= 60) {
+      this.els.masteryDescription.textContent = 'Growing strong!';
+    } else if (mastery >= 40) {
+      this.els.masteryDescription.textContent = 'Building foundations';
+    } else {
+      this.els.masteryDescription.textContent = 'Just getting started';
+    }
+    
+    // Velocity
+    const velocityMap = {
+      'accelerating': { emoji: '🚀', name: 'Accelerating!', desc: 'Getting better faster' },
+      'steady': { emoji: '🎯', name: 'Steady', desc: 'Consistent progress' },
+      'warming_up': { emoji: '🌅', name: 'Warming Up', desc: 'Finding your rhythm' },
+      'undetermined': { emoji: '📊', name: 'Building...', desc: 'Tracking your pace' }
+    };
+    
+    const velocity = velocityMap[data.learning_velocity] || velocityMap.undetermined;
+    this.els.velocityEmoji.textContent = velocity.emoji;
+    this.els.velocityValue.textContent = velocity.name;
+    this.els.velocityDescription.textContent = velocity.desc;
+    
+    // Stats
+    this.els.lessonsCount.textContent = data.lessons_analyzed || 0;
+    this.els.streakCount.textContent = data.streak_days || 0;
+    
+    const avgMs = data.avg_session_duration || 0;
+    const avgMin = Math.round(avgMs / 60000);
+    this.els.avgSession.textContent = `${avgMin}m`;
+    
+    // Strengths
+    const strengths = data.strengths || [];
+    this.els.strengthsContainer.innerHTML = '';
+    if (strengths.length > 0) {
+      this.els.strengthsSection.style.display = 'block';
+      strengths.forEach(s => {
+        const badge = document.createElement('span');
+        badge.className = 'strength-badge';
+        badge.textContent = `🌟 ${s}`;
+        this.els.strengthsContainer.appendChild(badge);
+      });
+    } else {
+      this.els.strengthsSection.style.display = 'none';
+    }
+    
+    // Growth areas
+    const growth = data.growth_areas || [];
+    this.els.growthContainer.innerHTML = '';
+    if (growth.length > 0) {
+      this.els.growthSection.style.display = 'block';
+      growth.forEach(g => {
+        const badge = document.createElement('span');
+        badge.className = 'growth-badge';
+        badge.textContent = `🌿 ${g}`;
+        this.els.growthContainer.appendChild(badge);
+      });
+    } else {
+      this.els.growthSection.style.display = 'none';
+    }
+    
+    // Confidence
+    const confidence = data.confidence_level || 0;
+    const filledDots = Math.round(confidence * 5);
+    const dots = this.els.confidenceDots.querySelectorAll('.confidence-dot');
+    dots.forEach((dot, i) => {
+      if (i < filledDots) {
+        dot.classList.add('filled');
+      } else {
+        dot.classList.remove('filled');
+      }
+    });
+    
+    this.els.confidenceText.textContent = `Based on ${data.lessons_analyzed} lesson${data.lessons_analyzed !== 1 ? 's' : ''}`;
+  }
+  
+  async exportData() {
+    try {
+      const userId = await this.getCurrentUserId();
+      if (!userId) {
+        alert('Please sign in to export your data.');
+        return;
+      }
+      
+      const { data, error } = await this.supabase
+        .rpc('export_my_learning_data', { target_user_id: userId });
+      
+      if (error) throw error;
+      
+      // Download as JSON
+      const blob = new Blob([JSON.stringify(data, null, 2)], { type: 'application/json' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = `kelly-learning-data-${new Date().toISOString().split('T')[0]}.json`;
+      a.click();
+      URL.revokeObjectURL(url);
+      
+    } catch (err) {
+      console.error('[Journey] Export error:', err);
+      alert('Could not export data. Please try again.');
+    }
+  }
+  
+  async deleteHistory() {
+    const confirmed = confirm(
+      '⚠️ Delete all learning history?\n\n' +
+      'This will remove all observation data and insights.\n' +
+      'Kelly will start learning about you from scratch.\n\n' +
+      'This cannot be undone.'
+    );
+    
+    if (!confirmed) return;
+    
+    try {
+      const userId = await this.getCurrentUserId();
+      if (!userId) {
+        alert('Please sign in to delete your history.');
+        return;
+      }
+      
+      const { data, error } = await this.supabase
+        .rpc('delete_my_learning_history', { target_user_id: userId });
+      
+      if (error) throw error;
+      
+      alert('✅ Learning history deleted.\n\nKelly will learn about you again as you take lessons.');
+      this.showEmpty(0);
+      
+    } catch (err) {
+      console.error('[Journey] Delete error:', err);
+      alert('Could not delete history. Please try again.');
+    }
+  }
+  
+  async getCurrentUserId() {
+    const { data } = await this.supabase.auth.getSession();
+    return data?.session?.user?.id || null;
+  }
+}
+
+// Auto-initialize if Supabase client is available
+document.addEventListener('DOMContentLoaded', () => {
+  const container = document.getElementById('learning-journey-component');
+  if (container && window.supabase) {
+    window.learningJourney = new LearningJourneyComponent(container, window.supabase);
+    
+    // Load when user is authenticated
+    window.supabase.auth.getSession().then(({ data }) => {
+      if (data?.session?.user?.id) {
+        window.learningJourney.load(data.session.user.id);
+      }
+    });
+  }
+});
+</script>
