@@ -4736,6 +4736,8 @@
     .paywall-content {
       width: 100%;
       max-width: 380px;
+      max-height: calc(100vh - var(--safe-top, 44px) - var(--safe-bottom, 34px) - 40px);
+      overflow-y: auto;
       background: var(--bg-card);
       border-radius: 26px;
       padding: 22px;
@@ -7018,6 +7020,20 @@
       // Paywall selection stays as overlay, but checkout happens in the right panel (in-app).
       const el = document.getElementById('paywall');
       
+      // MUTUAL EXCLUSION: Exit settings/journey/home mode to show paywall cleanly
+      // This ensures paywall doesn't stack on top of other full-screen panels
+      const currentMode = document.documentElement.getAttribute('data-ui-mode');
+      if (currentMode && ['settings', 'journey', 'home'].includes(currentMode)) {
+        document.documentElement.removeAttribute('data-ui-mode');
+        // Clear overlay content to avoid lingering UI
+        const settingsOverlay = document.getElementById('settings-overlay');
+        const journeyOverlay = document.getElementById('journey-overlay');
+        const homeOverlay = document.getElementById('home-overlay');
+        if (settingsOverlay) { settingsOverlay.innerHTML = ''; settingsOverlay.setAttribute('aria-hidden', 'true'); }
+        if (journeyOverlay) { journeyOverlay.innerHTML = ''; journeyOverlay.setAttribute('aria-hidden', 'true'); }
+        if (homeOverlay) { homeOverlay.innerHTML = ''; homeOverlay.setAttribute('aria-hidden', 'true'); }
+      }
+      
       // Update the paywall with lesson-specific info
       const lessonDateEl = document.getElementById('paywall-lesson-date');
       if (lessonDateEl && dayNumber) {
@@ -9286,6 +9302,10 @@
 
     function setUiMode(mode) {
       const m = String(mode || 'lesson').toLowerCase();
+      
+      // MUTUAL EXCLUSION: Close all overlays (paywall, etc.) when switching modes
+      // This prevents stacking of settings panel + paywall modal
+      try { closeAllOverlays(); } catch (_) {}
       
       // Set or remove data-ui-mode attribute
       if (['home', 'journey', 'settings'].includes(m)) {
