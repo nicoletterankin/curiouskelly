@@ -6060,11 +6060,15 @@
         <!-- Home overlay (rendered by JS; hidden during lessons) -->
         <div id="home-overlay" aria-hidden="true"></div>
         
-        <!-- Journey overlay (full-screen 16:9 mode) -->
-        <div id="journey-overlay" aria-hidden="true"></div>
+        <!-- ⚠️ DEPRECATED: journey-overlay - Use #scene-journey panel instead -->
+        <!-- This overlay is kept for backwards compatibility but should NOT be used -->
+        <!-- See: docs/UI_PATTERN_AUDIT.md -->
+        <div id="journey-overlay" aria-hidden="true" data-deprecated="true"></div>
         
-        <!-- Settings overlay (full-screen master-detail mode) -->
-        <div id="settings-overlay" aria-hidden="true"></div>
+        <!-- ⚠️ DEPRECATED: settings-overlay - Use #scene-settings panel instead -->
+        <!-- This overlay is kept for backwards compatibility but should NOT be used -->
+        <!-- See: docs/UI_PATTERN_AUDIT.md -->
+        <div id="settings-overlay" aria-hidden="true" data-deprecated="true"></div>
           
           <!-- INTERACTIVE CHOICE PANEL (works for all phases) -->
           <div id="cliff-container" class="hidden" hidden>
@@ -6098,7 +6102,10 @@
     </section>
     
     <!-- ==========================================
-         SCENE: JOURNEY
+         SCENE: JOURNEY (CANONICAL)
+         ✅ This is the authoritative Journey UI.
+         ⚠️ DO NOT use #journey-overlay - it is DEPRECATED.
+         Access via: showScene('journey') or showJourneyMode()
          ========================================== -->
     <section class="scene" id="scene-journey">
       <div class="journey-scroll scrollable">
@@ -6190,7 +6197,11 @@
     </section>
     
     <!-- ==========================================
-         SCENE: SETTINGS
+         SCENE: SETTINGS (CANONICAL)
+         ✅ This is the authoritative Settings UI.
+         ⚠️ DO NOT use #settings-overlay - it is DEPRECATED.
+         Access via: showScene('settings') or showSettingsMode()
+         Contains: Kelly selector, Take Quiz, Learning preferences
          ========================================== -->
     <section class="scene" id="scene-settings">
       <div class="settings-scroll scrollable">
@@ -10084,6 +10095,13 @@
     function setUiMode(mode) {
       const m = String(mode || 'lesson').toLowerCase();
       
+      // ⚠️ DEPRECATION GUARDRAIL
+      // journey and settings modes are DEPRECATED - use showScene() instead
+      // Only 'home' mode should use this function
+      if (m === 'journey' || m === 'settings') {
+        console.warn(`[DEPRECATED] setUiMode('${m}') called. Use showScene('${m}') instead. See docs/UI_PATTERN_AUDIT.md`);
+      }
+      
       // MUTUAL EXCLUSION: Close all overlays (paywall, etc.) when switching modes
       // This prevents stacking of settings panel + paywall modal
       try { closeAllOverlays(); } catch (_) {}
@@ -11743,18 +11761,31 @@
     // ============================================
     // MODE SWITCHING FUNCTIONS
     // ============================================
+    // 
+    // ⚠️ GUARDRAIL: All navigation MUST use showScene() for content panels.
+    // DO NOT use setUiMode() for journey/settings - those overlays are DEPRECATED.
+    // The canonical UI is:
+    //   - Journey → showScene('journey') → #scene-journey in right panel
+    //   - Settings → showScene('settings') → #scene-settings in right panel
+    //   - Home → setUiMode('home') → #home-overlay (intentionally different)
+    //
+    // See: docs/UI_PATTERN_AUDIT.md for full documentation.
+    // ============================================
+    
     function showJourneyMode() {
       try { if (document.documentElement.hasAttribute('data-panel-open')) closePanel(); } catch (_) {}
       try { stopAllMedia(); } catch (_) {}
-      setUiMode('journey');
-      showScene('lesson'); // Keep the lesson shell visible (Kelly stays centered)
+      // Use the scene-journey panel (has calendar, week view, curriculum, bookmarks)
+      // NOT the journey-overlay (deprecated)
+      document.documentElement.removeAttribute('data-ui-mode');
+      showScene('journey');
     }
 
     function showSettingsMode() {
       try { if (document.documentElement.hasAttribute('data-panel-open')) closePanel(); } catch (_) {}
       try { stopAllMedia(); } catch (_) {}
       // Use the scene-settings panel (has Your Kelly selector + Take Quiz button)
-      // instead of the settings-overlay which has incomplete content
+      // NOT the settings-overlay (deprecated)
       document.documentElement.removeAttribute('data-ui-mode');
       showScene('settings');
     }
@@ -11834,13 +11865,13 @@
       if (!tab && !subtabRaw && !section) return;
 
       if (tab === 'journey') {
-        // Full-screen Journey mode
+        // Show journey panel (NOT the deprecated overlay)
         showJourneyMode();
         const subtab = (subtabRaw === 'saved') ? 'bookmarks' : subtabRaw;
         if (subtab) {
-          // Wait a tick for the overlay to render, then switch tab
+          // Switch tab in the scene-journey panel
           setTimeout(() => {
-            try { switchJourneyModeTab(subtab); } catch (_) {}
+            try { switchJourneyTab(subtab); } catch (_) {}
           }, 100);
         }
         return;
