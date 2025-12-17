@@ -8282,6 +8282,12 @@
         // Backfill derived fields for older saved states.
         if (!state.ageBucket) state.ageBucket = getAgeBucket(state.age);
 
+        // CRITICAL: Always reset currentDay to TODAY on load.
+        // This prevents stale state from loading old lessons.
+        // Users can still navigate to past lessons, but we start fresh.
+        state.currentDay = getTodayDayNumber();
+        state.currentPhase = 0; // Start at beginning of today's lesson
+
         // Never restore transient Cliff timer/wait flags from disk.
         state.cliffTimeout = null;
         state.waitingForChoice = false;

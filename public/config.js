@@ -31,9 +31,10 @@ window.KELLY_CONFIG = {
     static: 2000     // 2 seconds
   },
   
-  // PRODUCTION MODE: Paywall enabled, access tiers active
-  testingMode: false,
-  disablePaywall: false,
+  // DEVELOPMENT MODE: Paywall disabled for testing
+  // TODO: Set back to false before production deploy
+  testingMode: true,
+  disablePaywall: true,
   
   // PAYWALL DELAY: Seconds to wait before showing paywall (let users preview)
   // Set to 0 for instant paywall (old behavior)
