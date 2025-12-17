@@ -121,9 +121,9 @@ Track all videos and their locations:
 
 **R2 Public URL:** `https://pub-29446fb0037f47e49993ebd6b4ed714e.r2.dev`
 
-**Custom Domain (pending):** `videos.curiouskelly.com`
+**Custom Domain:** `videos.curiouskelly.com` ✅ ACTIVE
 
-**Example video:** `https://pub-29446fb0037f47e49993ebd6b4ed714e.r2.dev/videos/summary/day-351.mp4`
+**Production URL:** `https://videos.curiouskelly.com/videos/summary/day-351.mp4`
 
 ---
 
