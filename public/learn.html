@@ -32,8 +32,9 @@
   <meta name="twitter:description" content="Learn with Kelly — an AI-powered teacher. Explore today’s 5-minute lesson and build a daily learning habit.">
   <meta name="twitter:image" content="https://www.curiouskelly.com/images/kelly-og-image.png">
   
-  <!-- Deterministic local pack (Day 17) - enables offline loading -->
+  <!-- Deterministic local packs - enables offline loading -->
   <script src="/data/day-017-complete.js"></script>
+  <script src="/data/day-351-complete.js"></script>
   <script src="/config.js"></script>
   <!-- Note: Vercel Insights scripts removed to avoid console MIME errors
        when deployed outside Vercel (those endpoints return HTML/404). -->
@@ -11750,7 +11751,7 @@
       // Update lesson detail panel with current lesson info
       function updateLessonDetailPanel() {
         const dayNum = state.currentDay || getTodayDayNumber();
-        const lesson = lessonsCache[dayNum] || window.CURIOUS_KELLY?.DAY_017?.lesson;
+        const lesson = lessonsCache[dayNum] || window.CURIOUS_KELLY?.LOCAL_PACKS?.[dayNum]?.lesson;
         
         if (lesson) {
           const emoji = lesson.emoji || '📚';
@@ -11819,7 +11820,8 @@
 
       // Calculate total lesson duration for age group
       function getTotalDuration(ageGroup) {
-        const pack = window.CURIOUS_KELLY?.DAY_017;
+        const dayNum = state.currentDay || getTodayDayNumber();
+        const pack = window.CURIOUS_KELLY?.LOCAL_PACKS?.[dayNum];
         if (!pack?.ageVariants?.[ageGroup]?.durations) return 72;
         const durations = pack.ageVariants[ageGroup].durations;
         return Object.values(durations).reduce((a, b) => a + b, 0);
@@ -11827,8 +11829,9 @@
 
       // Update the Lesson Insights Bar (1)
       function updateLessonInsightsBar() {
-        const pack = window.CURIOUS_KELLY?.DAY_017;
-        const lesson = pack?.lesson || lessonsCache[state.currentDay];
+        const dayNum = state.currentDay || getTodayDayNumber();
+        const pack = window.CURIOUS_KELLY?.LOCAL_PACKS?.[dayNum];
+        const lesson = pack?.lesson || lessonsCache[dayNum];
         if (!lesson) return;
 
         const ageGroup = getCurrentAgeGroup();
@@ -11882,7 +11885,8 @@
       let nuggetInterval = null;
 
       function getKnowledgeNuggets() {
-        const pack = window.CURIOUS_KELLY?.DAY_017;
+        const dayNum = state.currentDay || getTodayDayNumber();
+        const pack = window.CURIOUS_KELLY?.LOCAL_PACKS?.[dayNum];
         if (!pack) return [];
         
         const nuggets = [];
@@ -11950,7 +11954,8 @@
 
       // Lesson Depth Card (3)
       function updateLessonDepthCard() {
-        const pack = window.CURIOUS_KELLY?.DAY_017;
+        const dayNum = state.currentDay || getTodayDayNumber();
+        const pack = window.CURIOUS_KELLY?.LOCAL_PACKS?.[dayNum];
         if (!pack) return;
         
         const ageVariants = pack.ageVariants ? Object.keys(pack.ageVariants).length : 6;
