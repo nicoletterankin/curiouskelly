@@ -194,6 +194,28 @@
             margin-top: 6px;
         }
         
+        /* V2 Badge */
+        .v2-badge {
+            position: absolute;
+            top: 8px;
+            left: 8px;
+            background: linear-gradient(135deg, #4ECDC4, #27AE60);
+            color: #000;
+            font-size: 11px;
+            font-weight: bold;
+            padding: 4px 10px;
+            border-radius: 4px;
+            z-index: 10;
+        }
+        
+        .v2-card {
+            border: 2px solid #4ECDC4;
+        }
+        
+        .visual-card {
+            position: relative;
+        }
+        
         /* Lightbox */
         .lightbox {
             display: none;
@@ -340,6 +362,12 @@
         </div>
         
         <div class="filters">
+            <div class="filter-group" id="version-filters">
+                <button class="filter-btn" data-version="all">All</button>
+                <button class="filter-btn active" data-version="v2">V2 Only ✨</button>
+                <button class="filter-btn" data-version="v1">V1 (Old)</button>
+            </div>
+            
             <div class="filter-group" id="day-filters">
                 <button class="filter-btn active" data-day="all">All Days</button>
             </div>
@@ -348,11 +376,14 @@
                 <option value="all">All Phases</option>
                 <option value="hook">Hook</option>
                 <option value="cliff">Cliff</option>
+                <option value="q1">Q1</option>
+                <option value="q2">Q2</option>
+                <option value="q3">Q3</option>
                 <option value="fact1">Fact 1</option>
                 <option value="fact2">Fact 2</option>
                 <option value="fact3">Fact 3</option>
-                <option value="quiz">Quiz</option>
                 <option value="wisdom">Wisdom</option>
+                <option value="outro">Outro</option>
             </select>
             
             <select class="filter-select" id="style-filter">
@@ -439,11 +470,16 @@
         }
         
         function applyFilters() {
+            const versionFilter = document.querySelector('#version-filters .filter-btn.active')?.dataset.version || 'all';
             const dayFilter = document.querySelector('#day-filters .filter-btn.active').dataset.day;
             const phaseFilter = document.getElementById('phase-filter').value;
             const styleFilter = document.getElementById('style-filter').value;
             
             filteredVisuals = allVisuals.filter(v => {
+                // Version filter
+                if (versionFilter === 'v2' && v.style !== 'curious-kelly-v2') return false;
+                if (versionFilter === 'v1' && v.style === 'curious-kelly-v2') return false;
+                
                 if (dayFilter !== 'all' && v.day_number !== parseInt(dayFilter)) return false;
                 if (phaseFilter !== 'all' && v.phase !== phaseFilter) return false;
                 if (styleFilter !== 'all' && v.style !== styleFilter) return false;
@@ -452,6 +488,15 @@
             
             renderGallery();
         }
+        
+        // Version filter click handlers
+        document.getElementById('version-filters').addEventListener('click', (e) => {
+            if (e.target.classList.contains('filter-btn')) {
+                document.querySelectorAll('#version-filters .filter-btn').forEach(btn => btn.classList.remove('active'));
+                e.target.classList.add('active');
+                applyFilters();
+            }
+        });
         
         function renderGallery() {
             const gallery = document.getElementById('gallery');
@@ -478,9 +523,11 @@
                 }
                 
                 const modelShort = visual.model_used ? visual.model_used.replace('imagen-4.0-', '').replace('-generate-001', '').replace('gemini-2.0-flash-exp-image-generation', 'gemini-flash') : 'unknown';
+                const isV2 = visual.style === 'curious-kelly-v2';
                 
                 html += `
-                    <div class="visual-card" onclick="openLightbox(${index})">
+                    <div class="visual-card ${isV2 ? 'v2-card' : ''}" onclick="openLightbox(${index})">
+                        ${isV2 ? '<span class="v2-badge">V2 ✨</span>' : ''}
                         <img 
                             src="${visual.public_url}" 
                             alt="Day ${visual.day_number} - ${visual.phase}"
