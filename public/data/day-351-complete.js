@@ -1,23 +1,24 @@
 /**
  * Day 351 Complete Data Pack - "Practicing in Your Mind"
  * Launch Day: December 17, 2025
- * LEARN Track: Practicing in Your Mind (Visualization)
- * GROW Track: Learning Accountability - Staying on Track
  * 
- * LAUNCH CONFIG: Adult only (13-60)
- * Kid and Senior variants require separate voice/model assets (future)
+ * FULL STRUCTURE: Each phase includes talk, question, options, responses, comments
+ * Adult Kelly only, English only
+ * 
+ * Audio files needed: 35 (7 phases × 5 audio types)
  */
 window.CURIOUS_KELLY = window.CURIOUS_KELLY || {};
 window.CURIOUS_KELLY.LOCAL_PACKS = window.CURIOUS_KELLY.LOCAL_PACKS || {};
 window.CURIOUS_KELLY.DAY_351 = {
   "meta": {
-    "created_at": "2025-12-16T23:30:00.000Z",
+    "created_at": "2025-12-17T00:00:00.000Z",
     "day_number": 351,
-    "version": "v4.0-launch-locked",
-    "is_launch_day": true,
+    "version": "v5.0-full-structure",
     "date": "December 17, 2025",
-    "age_groups": 1,
-    "voice_id": "wAdymQH5YucAkXwmrdL0"
+    "language": "en",
+    "age_group": "adult",
+    "voice_id": "wAdymQH5YucAkXwmrdL0",
+    "audio_files_count": 35
   },
   "lesson": {
     "day_number": 351,
@@ -26,13 +27,13 @@ window.CURIOUS_KELLY.DAY_351 = {
     "universal_truth": "The mind that rehearses grows stronger than the mind that merely waits",
     "emoji": "🔮",
     "category": "Meta-Learning",
-    "thumbnail_url": "/generated-visuals/day-351/thumbnail.png",
+    "total_duration_seconds": 180,
     "kelly_images": {
       "hook": "/kelly/phases/351/hook.png",
       "cliff": "/kelly/phases/351/hook.png",
-      "q1": "/kelly/phases/351/q1.png",
-      "q2": "/kelly/phases/351/q2.png",
-      "q3": "/kelly/phases/351/q3.png",
+      "fact1": "/kelly/phases/351/q1.png",
+      "fact2": "/kelly/phases/351/q2.png",
+      "fact3": "/kelly/phases/351/q3.png",
       "wisdom": "/kelly/phases/351/wisdom.png",
       "outro": "/kelly/phases/351/wisdom.png"
     }
@@ -41,132 +42,376 @@ window.CURIOUS_KELLY.DAY_351 = {
     "hook": {
       "name": "Hook",
       "icon": "🪝",
-      "script": "Ever wondered why athletes close their eyes before a big moment? Visualization is a legitimate performance enhancement technique—and it's remarkably underused. Let me show you why it works.",
-      "kellyPose": "welcome",
-      "kellyEmotion": "curious",
-      "duration": 13,
-      "image": "/kelly/phases/351/hook.png"
-    },
-    "cliff": {
-      "name": "Cliff",
-      "icon": "🧗",
-      "script": "Here's the surprising part: when you vividly imagine doing something, your brain activates almost the same way as when you actually do it. But why would that help you improve?",
-      "cliffPrompt": "Why would imagining something make you better at it?",
+      "order": 1,
+      "talk": {
+        "script": "Ever wondered why athletes close their eyes before a big moment? They're not just calming their nerves. They're doing something far more powerful—they're practicing. Without moving a muscle. It's called visualization, and the science behind it might change how you think about learning itself.",
+        "duration": 18,
+        "audio": "/audio/351/hook_talk.mp3",
+        "kellyPose": "curious",
+        "kellyEmotion": "intrigued"
+      },
+      "question": {
+        "prompt": "Before we dive in—have you ever imagined doing something before you actually did it?",
+        "audio": "/audio/351/hook_question.mp3",
+        "duration": 5
+      },
       "options": [
         {
-          "text": "It's just positive thinking",
           "letter": "A",
-          "quality": "good",
-          "response": "That's what most people assume! But the science shows something much more concrete..."
+          "text": "Yes, I mentally rehearse things sometimes",
+          "quality": "best"
         },
         {
-          "text": "It trains neural pathways",
           "letter": "B",
-          "quality": "best",
-          "response": "Exactly right. Your brain builds real, measurable connections through imagination alone."
+          "text": "Not really, I usually just wing it",
+          "quality": "good"
         }
       ],
-      "kellyPose": "contemplative",
-      "kellyEmotion": "thoughtful",
-      "duration": 11,
-      "image": "/kelly/phases/351/hook.png"
+      "responses": {
+        "A": {
+          "script": "You're already tapping into something powerful. Today you'll learn exactly why that works—and how to do it even better.",
+          "audio": "/audio/351/hook_response_a.mp3",
+          "duration": 8
+        },
+        "B": {
+          "script": "That's totally normal! Most people don't realize what they're missing. By the end of today, you might change your approach.",
+          "audio": "/audio/351/hook_response_b.mp3",
+          "duration": 8
+        }
+      },
+      "studentComment": {
+        "name": "Jordan",
+        "avatar": "👤",
+        "text": "I always picture my presentations before giving them. Didn't know there was science behind it!",
+        "audio": "/audio/351/hook_comment.mp3",
+        "duration": 5
+      }
+    },
+    "cliff": {
+      "name": "The Cliff",
+      "icon": "🧗",
+      "order": 2,
+      "talk": {
+        "script": "Here's where it gets interesting. When you vividly imagine doing something—really see it, feel it, experience it in your mind—your brain activates almost the same way as when you actually do it. The neurons fire. The pathways light up. But here's the question that puzzled scientists for years...",
+        "duration": 20,
+        "audio": "/audio/351/cliff_talk.mp3",
+        "kellyPose": "explaining",
+        "kellyEmotion": "thoughtful"
+      },
+      "question": {
+        "prompt": "Why would imagining something make you better at actually doing it?",
+        "audio": "/audio/351/cliff_question.mp3",
+        "duration": 4
+      },
+      "options": [
+        {
+          "letter": "A",
+          "text": "It's probably just confidence—positive thinking",
+          "quality": "good"
+        },
+        {
+          "letter": "B",
+          "text": "Maybe it actually trains the brain somehow",
+          "quality": "best"
+        }
+      ],
+      "responses": {
+        "A": {
+          "script": "That's what researchers thought at first too! Confidence does play a role. But brain scans revealed something far more concrete happening inside the skull.",
+          "audio": "/audio/351/cliff_response_a.mp3",
+          "duration": 10
+        },
+        "B": {
+          "script": "Exactly right. And not in some vague, mystical way—we're talking measurable, physical changes in neural structure. Let me show you the evidence.",
+          "audio": "/audio/351/cliff_response_b.mp3",
+          "duration": 9
+        }
+      },
+      "studentComment": {
+        "name": "Maya",
+        "avatar": "👤",
+        "text": "Wait, so daydreaming might actually be... productive?",
+        "audio": "/audio/351/cliff_comment.mp3",
+        "duration": 4
+      }
     },
     "fact1": {
-      "name": "Fact 1",
+      "name": "Fact 1: Neural Overlap",
       "icon": "🧠",
-      "title": "Neural Overlap",
-      "script": "The neuroscience: When you imagine performing an action, your motor cortex—the part that controls movement—lights up almost identically to when you actually move. Brain scans show about 90% overlap. Your brain literally can't tell the difference.",
-      "kellyPose": "explaining",
-      "kellyEmotion": "enthusiastic",
-      "duration": 16,
-      "image": "/kelly/phases/351/q1.png"
+      "order": 3,
+      "talk": {
+        "script": "When you imagine performing an action, your motor cortex—that's the part of your brain that controls movement—lights up almost identically to when you actually move. Brain scans show about 90% overlap. Ninety percent. Your brain literally cannot tell the difference between vividly imagining something and doing it. It's practicing either way.",
+        "duration": 22,
+        "audio": "/audio/351/fact1_talk.mp3",
+        "kellyPose": "explaining",
+        "kellyEmotion": "enthusiastic"
+      },
+      "question": {
+        "prompt": "What do you think this means for learning new skills?",
+        "audio": "/audio/351/fact1_question.mp3",
+        "duration": 4
+      },
+      "options": [
+        {
+          "letter": "A",
+          "text": "You could practice anywhere, anytime—even without equipment",
+          "quality": "best"
+        },
+        {
+          "letter": "B",
+          "text": "It might help, but real practice is probably still way better",
+          "quality": "good"
+        }
+      ],
+      "responses": {
+        "A": {
+          "script": "You've got it. On the bus, in bed, waiting in line—your brain doesn't care where your body is. It's ready to train.",
+          "audio": "/audio/351/fact1_response_a.mp3",
+          "duration": 8
+        },
+        "B": {
+          "script": "Real practice is important, absolutely. But here's the thing—the best performers don't choose one or the other. They combine both. And the results are remarkable.",
+          "audio": "/audio/351/fact1_response_b.mp3",
+          "duration": 10
+        }
+      },
+      "studentComment": {
+        "name": "Alex",
+        "avatar": "👤",
+        "text": "90%?! That's insane. My brain's been lying to me this whole time.",
+        "audio": "/audio/351/fact1_comment.mp3",
+        "duration": 5
+      }
     },
     "fact2": {
-      "name": "Fact 2",
+      "name": "Fact 2: The Piano Study",
       "icon": "🎹",
-      "title": "The Piano Study",
-      "script": "Research proves it works. In one famous study, people who only imagined playing piano for five days showed nearly the same brain changes as those who actually practiced. Mental rehearsal creates real neuroplastic changes.",
-      "kellyPose": "explaining",
-      "kellyEmotion": "curious",
-      "duration": 15,
-      "image": "/kelly/phases/351/q2.png"
+      "order": 4,
+      "talk": {
+        "script": "Let me tell you about a famous experiment. Researchers took people who had never played piano and divided them into three groups. Group one physically practiced a simple piece for five days. Group two only imagined practicing—same piece, same time, but never touched a key. Group three did nothing. After five days, they scanned everyone's brains. The results shocked the scientific community.",
+        "duration": 25,
+        "audio": "/audio/351/fact2_talk.mp3",
+        "kellyPose": "storytelling",
+        "kellyEmotion": "engaged"
+      },
+      "question": {
+        "prompt": "What do you think they found when comparing the imagination group to the physical practice group?",
+        "audio": "/audio/351/fact2_question.mp3",
+        "duration": 5
+      },
+      "options": [
+        {
+          "letter": "A",
+          "text": "The imagination group showed some improvement, but way less",
+          "quality": "good"
+        },
+        {
+          "letter": "B",
+          "text": "Their brains changed almost identically",
+          "quality": "best"
+        }
+      ],
+      "responses": {
+        "A": {
+          "script": "That's the logical guess. But here's the twist—the imagination group's brains showed nearly identical changes to the physical practice group. Mental rehearsal created real, measurable neuroplastic changes.",
+          "audio": "/audio/351/fact2_response_a.mp3",
+          "duration": 12
+        },
+        "B": {
+          "script": "Exactly. The brain regions responsible for piano playing grew in both groups. Imagination alone rewired their brains. Not as much as physical practice, but remarkably close.",
+          "audio": "/audio/351/fact2_response_b.mp3",
+          "duration": 11
+        }
+      },
+      "studentComment": {
+        "name": "Sam",
+        "avatar": "👤",
+        "text": "So I can tell my parents I'm practicing piano in my head? 😄",
+        "audio": "/audio/351/fact2_comment.mp3",
+        "duration": 4
+      }
     },
     "fact3": {
-      "name": "Fact 3",
+      "name": "Fact 3: Elite Practice",
       "icon": "🏆",
-      "title": "Elite Practice",
-      "script": "Elite performers use this constantly. Olympic athletes spend up to 50% of their training time on mental rehearsal. Surgeons visualize procedures. Musicians rehearse in their minds. The key is specificity—the more detailed, the better.",
-      "kellyPose": "excited",
-      "kellyEmotion": "amazed",
-      "duration": 15,
-      "image": "/kelly/phases/351/q3.png"
+      "order": 5,
+      "talk": {
+        "script": "This isn't just lab science. Elite performers have known this for decades. Olympic athletes spend up to 50% of their training time on mental rehearsal. Surgeons visualize entire procedures before making a single cut. Concert pianists play through pieces in their minds on the flight to performances. The key they all discovered: specificity. Vague daydreaming doesn't work. You need vivid, detailed, multi-sensory imagination.",
+        "duration": 28,
+        "audio": "/audio/351/fact3_talk.mp3",
+        "kellyPose": "passionate",
+        "kellyEmotion": "inspired"
+      },
+      "question": {
+        "prompt": "What makes visualization most effective, based on what the pros do?",
+        "audio": "/audio/351/fact3_question.mp3",
+        "duration": 4
+      },
+      "options": [
+        {
+          "letter": "A",
+          "text": "Imagining success and positive outcomes",
+          "quality": "good"
+        },
+        {
+          "letter": "B",
+          "text": "Vivid detail—seeing, feeling, hearing every step",
+          "quality": "best"
+        }
+      ],
+      "responses": {
+        "A": {
+          "script": "Positive outcomes matter for motivation, but here's the secret the pros know: you have to visualize the process, not just the result. Feel the movements. See the environment. Hear the sounds. That's what triggers the neural overlap.",
+          "audio": "/audio/351/fact3_response_a.mp3",
+          "duration": 14
+        },
+        "B": {
+          "script": "That's the key. The more senses you engage, the more your brain treats it as real practice. See it, feel it, hear it. First-person perspective. Every detail matters.",
+          "audio": "/audio/351/fact3_response_b.mp3",
+          "duration": 11
+        }
+      },
+      "studentComment": {
+        "name": "Riley",
+        "avatar": "👤",
+        "text": "50% of Olympic training is just... thinking? Mind = blown.",
+        "audio": "/audio/351/fact3_comment.mp3",
+        "duration": 5
+      }
     },
     "wisdom": {
       "name": "Wisdom",
       "icon": "🦉",
-      "script": "Here's today's wisdom: Your imagination is a practice field. The mind that rehearses builds pathways the passive mind never develops. Tonight, try visualizing something you want to get better at. See it, feel it, live it. You're not dreaming—you're training.",
-      "kellyPose": "warm",
-      "kellyEmotion": "gentle",
-      "duration": 14,
-      "image": "/kelly/phases/351/wisdom.png"
+      "order": 6,
+      "talk": {
+        "script": "Here's today's wisdom: Your imagination is a practice field. The mind that rehearses builds pathways the passive mind never develops. Every time you vividly imagine doing something, you're laying down the neural tracks that make it easier to do for real. This is one of the few truly free performance enhancers available to every human being.",
+        "duration": 22,
+        "audio": "/audio/351/wisdom_talk.mp3",
+        "kellyPose": "warm",
+        "kellyEmotion": "wise"
+      },
+      "question": {
+        "prompt": "What's one skill you'd like to practice in your mind this week?",
+        "audio": "/audio/351/wisdom_question.mp3",
+        "duration": 4
+      },
+      "options": [
+        {
+          "letter": "A",
+          "text": "Something physical—sports, music, or movement",
+          "quality": "best"
+        },
+        {
+          "letter": "B",
+          "text": "Something mental—presentations, conversations, decisions",
+          "quality": "best"
+        }
+      ],
+      "responses": {
+        "A": {
+          "script": "Perfect choice. Physical skills respond incredibly well to visualization. Tonight, before sleep, spend five minutes seeing yourself perform it perfectly. Feel every motion. You'll be surprised what happens.",
+          "audio": "/audio/351/wisdom_response_a.mp3",
+          "duration": 12
+        },
+        "B": {
+          "script": "Excellent. Visualization works for mental skills too—public speaking, difficult conversations, high-pressure decisions. Run through the scenario. See yourself handling it with grace. Your brain will be more prepared when it's real.",
+          "audio": "/audio/351/wisdom_response_b.mp3",
+          "duration": 13
+        }
+      },
+      "studentComment": {
+        "name": "Taylor",
+        "avatar": "👤",
+        "text": "I'm going to try this before my job interview next week!",
+        "audio": "/audio/351/wisdom_comment.mp3",
+        "duration": 4
+      }
     },
     "outro": {
       "name": "Outro",
       "icon": "👋",
-      "script": "That's today's lesson. Something powerful about your brain's ability to practice through imagination. I'll see you tomorrow with something new. Keep visualizing great things.",
-      "kellyPose": "wave",
-      "kellyEmotion": "happy",
-      "duration": 9,
-      "image": "/kelly/phases/351/wisdom.png"
+      "order": 7,
+      "talk": {
+        "script": "That's today's lesson. Your brain is more trainable than you ever imagined—literally. Visualization isn't wishful thinking. It's cognitive rehearsal that primes your brain for performance. Tonight, give it a try. Close your eyes. Pick something you want to master. And practice it in the one gym that's always open—your mind.",
+        "duration": 20,
+        "audio": "/audio/351/outro_talk.mp3",
+        "kellyPose": "warm",
+        "kellyEmotion": "encouraging"
+      },
+      "question": {
+        "prompt": "Will you try visualization practice tonight?",
+        "audio": "/audio/351/outro_question.mp3",
+        "duration": 3
+      },
+      "options": [
+        {
+          "letter": "A",
+          "text": "Yes, I'm going to give it a shot!",
+          "quality": "best"
+        },
+        {
+          "letter": "B",
+          "text": "Maybe—I need to think about what to practice",
+          "quality": "good"
+        }
+      ],
+      "responses": {
+        "A": {
+          "script": "Love that energy! Remember: specific, vivid, multi-sensory. See you tomorrow with something new. Keep visualizing great things.",
+          "audio": "/audio/351/outro_response_a.mp3",
+          "duration": 8
+        },
+        "B": {
+          "script": "Take your time choosing. The right skill will come to you. When you're ready, your brain will be too. See you tomorrow!",
+          "audio": "/audio/351/outro_response_b.mp3",
+          "duration": 8
+        }
+      },
+      "studentComment": {
+        "name": "Casey",
+        "avatar": "👤",
+        "text": "Best 3 minutes I've spent today. Thanks, Kelly! ✨",
+        "audio": "/audio/351/outro_comment.mp3",
+        "duration": 4
+      }
     }
   },
   "phaseOrder": ["hook", "cliff", "fact1", "fact2", "fact3", "wisdom", "outro"],
-  "totalDuration": 93,
+  "audioManifest": {
+    "total_files": 35,
+    "files": [
+      "hook_talk.mp3", "hook_question.mp3", "hook_response_a.mp3", "hook_response_b.mp3", "hook_comment.mp3",
+      "cliff_talk.mp3", "cliff_question.mp3", "cliff_response_a.mp3", "cliff_response_b.mp3", "cliff_comment.mp3",
+      "fact1_talk.mp3", "fact1_question.mp3", "fact1_response_a.mp3", "fact1_response_b.mp3", "fact1_comment.mp3",
+      "fact2_talk.mp3", "fact2_question.mp3", "fact2_response_a.mp3", "fact2_response_b.mp3", "fact2_comment.mp3",
+      "fact3_talk.mp3", "fact3_question.mp3", "fact3_response_a.mp3", "fact3_response_b.mp3", "fact3_comment.mp3",
+      "wisdom_talk.mp3", "wisdom_question.mp3", "wisdom_response_a.mp3", "wisdom_response_b.mp3", "wisdom_comment.mp3",
+      "outro_talk.mp3", "outro_question.mp3", "outro_response_a.mp3", "outro_response_b.mp3", "outro_comment.mp3"
+    ],
+    "base_path": "/audio/351/"
+  },
   "shards": [
     {
       "id": "shard-351-001",
       "type": "fun_fact",
-      "content": "Brain scans show visualization activates 90% of the same neural areas as actually doing something",
-      "source": "Neuroimaging studies"
+      "content": "Brain scans show visualization activates 90% of the same neural areas as actually doing something"
     },
     {
       "id": "shard-351-002",
       "type": "fun_fact",
-      "content": "Olympic athletes spend up to 50% of their training time on mental rehearsal",
-      "source": "Sports psychology research"
+      "content": "Olympic athletes spend up to 50% of their training time on mental rehearsal"
     },
     {
       "id": "shard-351-003",
       "type": "fun_fact",
-      "content": "Pianists who only visualized practicing improved nearly as much as those who physically practiced",
-      "source": "Pascual-Leone study"
-    },
-    {
-      "id": "shard-351-004",
-      "type": "discussion",
-      "content": "What's something you'd like to improve at? Can you visualize doing it perfectly?",
-      "purpose": "engagement"
+      "content": "Pianists who only visualized practicing improved nearly as much as those who physically practiced"
     }
   ],
   "growTrack": {
     "title": "Learning Accountability - Staying on Track",
     "emoji": "🎯",
     "learning_objective": "Create accountability structures to follow through on learning commitments",
-    "description": "Great learners don't rely on willpower—they build systems.",
     "activity": "Choose one person you trust and tell them about your learning goal for the week. Ask them to check in with you in 7 days."
-  },
-  "futureAgeVariants": {
-    "_note": "Kid (2-12) and Senior (61+) variants require separate voice clones and 3D models. Not for launch.",
-    "kid": {
-      "status": "planned",
-      "requires": ["kid_kelly_voice_id", "kid_kelly_3d_model"],
-      "persona": "Playful Friend"
-    },
-    "senior": {
-      "status": "planned", 
-      "requires": ["senior_kelly_voice_id", "senior_kelly_3d_model"],
-      "persona": "Warm Companion"
-    }
   }
 };
 // Register in LOCAL_PACKS for fallback engine
