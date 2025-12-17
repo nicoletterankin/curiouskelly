@@ -222,6 +222,13 @@ curiouskelly.com/terms              → learn.html?tab=settings&section=terms
 - [ ] SEO verification (monitor after deploy)
 - [ ] Delete deprecated files (future cleanup)
 
+### Phase 6: P3 Expansion ✅
+- [x] 5 new Home scenes (Compare, Gift, News, Impact, Values)
+- [x] Commons tab in Journey (community placeholder)
+- [x] Touch/swipe navigation for Home scenes
+- [x] Keyboard navigation for Home (←/→) and Settings (↑/↓)
+- [x] Redirects for gifts.html, newsroom.html, impact.html, diversity.html, compare-us.html, commons.html
+
 ---
 
 ## Success Criteria
