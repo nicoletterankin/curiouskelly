@@ -13731,21 +13731,24 @@ Style requirements:
       document.getElementById('phase-selector-close')?.addEventListener('click', hidePhaseSelector);
       document.querySelector('.phase-selector-backdrop')?.addEventListener('click', hidePhaseSelector);
       
-      // Carousel nav
-      document.getElementById('carousel-prev').addEventListener('click', () => goToCarouselIndex(state.carouselIndex - 1));
-      document.getElementById('carousel-next').addEventListener('click', () => goToCarouselIndex(state.carouselIndex + 1));
+      // Carousel nav (optional - may not exist in current UI)
+      document.getElementById('carousel-prev')?.addEventListener('click', () => goToCarouselIndex(state.carouselIndex - 1));
+      document.getElementById('carousel-next')?.addEventListener('click', () => goToCarouselIndex(state.carouselIndex + 1));
       
-      // Carousel touch swipe
-      let touchStart = 0;
-      document.getElementById('carousel-track').addEventListener('touchstart', e => touchStart = e.touches[0].clientX, { passive: true });
-      document.getElementById('carousel-track').addEventListener('touchend', e => {
-        const delta = e.changedTouches[0].clientX - touchStart;
-        if (Math.abs(delta) > 50) goToCarouselIndex(state.carouselIndex + (delta > 0 ? -1 : 1));
-      });
+      // Carousel touch swipe (optional - may not exist in current UI)
+      const carouselTrack = document.getElementById('carousel-track');
+      if (carouselTrack) {
+        let touchStart = 0;
+        carouselTrack.addEventListener('touchstart', e => touchStart = e.touches[0].clientX, { passive: true });
+        carouselTrack.addEventListener('touchend', e => {
+          const delta = e.changedTouches[0].clientX - touchStart;
+          if (Math.abs(delta) > 50) goToCarouselIndex(state.carouselIndex + (delta > 0 ? -1 : 1));
+        });
+      }
       
-      // Phase navigation
-      document.getElementById('tap-next').addEventListener('click', advancePhase);
-      document.getElementById('tap-prev').addEventListener('click', prevPhase);
+      // Phase navigation (tap zones - may not exist in current UI)
+      document.getElementById('tap-next')?.addEventListener('click', advancePhase);
+      document.getElementById('tap-prev')?.addEventListener('click', prevPhase);
       // Tap Kelly (center) closes any open panel (sacred rule: Kelly remains visible)
       document.getElementById('tap-center')?.addEventListener('click', () => {
         if (document.documentElement.hasAttribute('data-panel-open')) {
@@ -14293,7 +14296,7 @@ Style requirements:
       });
       
       // Side actions
-      document.getElementById('btn-bookmark').addEventListener('click', function() {
+      document.getElementById('btn-bookmark')?.addEventListener('click', function() {
         this.classList.toggle('bookmarked');
         if (this.classList.contains('bookmarked')) {
           state.bookmarks.push({ day: state.currentDay, phase: state.currentPhase, time: Date.now() });
@@ -14303,7 +14306,7 @@ Style requirements:
         saveState();
       });
       
-      document.getElementById('btn-infographic').addEventListener('click', async () => {
+      document.getElementById('btn-infographic')?.addEventListener('click', async () => {
         const overlay = document.getElementById('overlay-infographic');
         const imageEl = document.getElementById('infographic-image');
         const titleEl = document.getElementById('infographic-title');
@@ -14397,14 +14400,14 @@ Style requirements:
       });
       
       // Week navigation
-      document.getElementById('week-prev').addEventListener('click', () => {
+      document.getElementById('week-prev')?.addEventListener('click', () => {
         if (state.weekOffset > 0) {
           state.weekOffset--;
           buildWeekView();
         }
       });
       
-      document.getElementById('week-next').addEventListener('click', () => {
+      document.getElementById('week-next')?.addEventListener('click', () => {
         if (state.weekOffset < 51) {
           state.weekOffset++;
           buildWeekView();
@@ -14488,14 +14491,14 @@ Style requirements:
         updateSettingsUI();
       };
 
-      document.getElementById('toggle-reminder').addEventListener('click', function() {
+      document.getElementById('toggle-reminder')?.addEventListener('click', function() {
         const run = () => toggleReminder(this);
         if (requiresParentalGate()) runWithParentalGate(run);
         else run();
       });
 
       // Language picker
-      document.getElementById('btn-language').addEventListener('click', () => {
+      document.getElementById('btn-language')?.addEventListener('click', () => {
         showPicker('Language', [
           { value: 'en', label: 'English' },
           { value: 'es', label: 'Español' },
@@ -14509,7 +14512,7 @@ Style requirements:
       });
 
       // Voice speed picker
-      document.getElementById('btn-voice-speed').addEventListener('click', () => {
+      document.getElementById('btn-voice-speed')?.addEventListener('click', () => {
         showPicker('Voice Speed', [
           { value: 'slow', label: 'Slow' },
           { value: 'normal', label: 'Normal' },
@@ -14523,7 +14526,7 @@ Style requirements:
       });
 
       // Reminder time picker
-      document.getElementById('btn-reminder-time').addEventListener('click', () => {
+      document.getElementById('btn-reminder-time')?.addEventListener('click', () => {
         const open = () => showTimePicker(state.reminderTime, (time) => {
           state.reminderTime = time;
           saveState();
@@ -14625,7 +14628,7 @@ Style requirements:
       });
       
       // Next lesson button
-      document.getElementById('btn-next-lesson').addEventListener('click', async () => {
+      document.getElementById('btn-next-lesson')?.addEventListener('click', async () => {
         state.currentDay++;
         state.currentPhase = 0;
         saveState();
