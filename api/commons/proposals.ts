@@ -43,7 +43,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 async function handleGet(req: VercelRequest, res: VercelResponse, supabase: any) {
   const { address, day, phase, status = 'open' } = req.query;
 
-  // Build query
+  // Build query - note: we don't join users table to avoid schema relationship issues
   let query = supabase
     .from('commons_proposals')
     .select(`
@@ -59,11 +59,7 @@ async function handleGet(req: VercelRequest, res: VercelResponse, supabase: any)
       upvotes,
       downvotes,
       created_at,
-      user_id,
-      users:user_id (
-        id,
-        raw_user_meta_data
-      )
+      user_id
     `)
     .eq('status', status)
     .order('upvotes', { ascending: false });
@@ -108,9 +104,7 @@ async function handleGet(req: VercelRequest, res: VercelResponse, supabase: any)
     upvotes: p.upvotes || 0,
     downvotes: p.downvotes || 0,
     createdAt: p.created_at,
-    author: p.users?.raw_user_meta_data?.full_name || 
-            p.users?.raw_user_meta_data?.name || 
-            'Anonymous'
+    author: 'Community Member' // User lookup removed to avoid schema issues
   }));
 
   return res.status(200).json({

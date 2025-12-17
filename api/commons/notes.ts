@@ -43,7 +43,7 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 async function handleGet(req: VercelRequest, res: VercelResponse, supabase: any) {
   const { address, day, phase } = req.query;
 
-  // Build query
+  // Build query - note: we don't join users table to avoid schema relationship issues
   let query = supabase
     .from('commons_notes')
     .select(`
@@ -57,11 +57,7 @@ async function handleGet(req: VercelRequest, res: VercelResponse, supabase: any)
       helpful_count,
       insightful_count,
       created_at,
-      user_id,
-      users:user_id (
-        id,
-        raw_user_meta_data
-      )
+      user_id
     `)
     .order('is_featured', { ascending: false })
     .order('helpful_count', { ascending: false });
@@ -104,9 +100,7 @@ async function handleGet(req: VercelRequest, res: VercelResponse, supabase: any)
       insightful: n.insightful_count || 0
     },
     createdAt: n.created_at,
-    author: n.users?.raw_user_meta_data?.full_name || 
-            n.users?.raw_user_meta_data?.name || 
-            'Anonymous'
+    author: 'Community Member' // User lookup removed to avoid schema issues
   }));
 
   return res.status(200).json({
