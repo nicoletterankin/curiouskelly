@@ -9138,7 +9138,9 @@
 
     function applyDeepLinkNavigation() {
       // Deep links:
-      // - /calendar, /curriculum, /pricing, /about rewrite here with ?tab=... params
+      // ?tab=home|journey|learn|settings
+      // ?subtab=calendar|week|curriculum|bookmarks (for journey)
+      // ?section=account|help|contact|terms|privacy|trust|accessibility (for settings)
       const tab = (__URL_PARAMS.get('tab') || '').toLowerCase();
       const subtabRaw = (__URL_PARAMS.get('subtab') || '').toLowerCase();
       const section = (__URL_PARAMS.get('section') || '').toLowerCase();
@@ -9147,23 +9149,39 @@
       if (!tab && !subtabRaw && !section) return;
 
       if (tab === 'journey') {
-        showScene('journey');
+        // Full-screen Journey mode
+        showJourneyMode();
         const subtab = (subtabRaw === 'saved') ? 'bookmarks' : subtabRaw;
         if (subtab) {
-          try { switchJourneyTab(subtab); } catch (_) {}
+          // Wait a tick for the overlay to render, then switch tab
+          setTimeout(() => {
+            try { switchJourneyModeTab(subtab); } catch (_) {}
+          }, 100);
         }
         return;
       }
 
       if (tab === 'settings') {
-        showScene('settings');
-        if (section === 'subscription') openSubscriptionFromDeepLink();
-        if (section === 'about') openAboutFromDeepLink();
+        // Full-screen Settings mode
+        showSettingsMode();
+        if (section) {
+          // Wait a tick for the overlay to render, then show section
+          setTimeout(() => {
+            try { showSettingsSection(section); } catch (_) {}
+          }, 100);
+        }
         return;
       }
 
       if (tab === 'home') {
         showHomeState();
+        return;
+      }
+
+      if (tab === 'learn') {
+        // Close any mode overlays, go to lesson
+        setUiMode('lesson');
+        showScene('lesson');
         return;
       }
 

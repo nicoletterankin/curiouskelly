@@ -229,7 +229,7 @@ curiouskelly.com/terms              → learn.html?tab=settings&section=terms
 - [x] 16:9 frame is consistent across all tabs
 - [x] Kelly is always visible (desktop)
 - [x] All legal content is accessible and readable
-- [ ] Deep links work for sharing
+- [x] Deep links work for sharing
 - [ ] SEO maintains or improves
 
 ---
