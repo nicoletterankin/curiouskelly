@@ -29,7 +29,7 @@ import { GoogleGenerativeAI } from '@google/generative-ai';
 
 const CONFIG = {
   // Imagen 4 Ultra - Highest quality
-  MODEL: 'imagen-3.0-generate-002', // Latest Imagen model
+  MODEL: 'imagen-4.0-ultra-generate-001', // Imagen 4 Ultra
   COST_PER_IMAGE: 0.06,
   
   // Output settings
@@ -301,7 +301,7 @@ async function generateWithImagen(prompt: string): Promise<Buffer | null> {
       sampleCount: 1,
       aspectRatio: CONFIG.ASPECT_RATIO,
       personGeneration: 'dont_allow', // Educational content, avoid people issues
-      safetySetting: 'block_only_high'
+      safetySetting: 'block_low_and_above'
     }
   };
 

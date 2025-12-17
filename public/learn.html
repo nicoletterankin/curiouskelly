@@ -362,12 +362,13 @@
     .auto-toggle {
       display: flex;
       align-items: center;
-      gap: 0.25rem;
-      color: rgba(255,255,255,0.7);
-      font-size: 0.75rem;
+      gap: 0.35rem;
+      color: rgba(255,255,255,0.8);
+      font-size: 0.7rem;
       cursor: pointer;
       -webkit-user-select: none;
       user-select: none;
+      white-space: nowrap;
     }
 
     .auto-toggle input {
@@ -784,7 +785,7 @@
     
     .day-badge .topic {
       color: rgba(255,255,255,0.6);
-      max-width: 180px;
+      max-width: 280px;
       overflow: hidden;
       text-overflow: ellipsis;
       white-space: nowrap;
@@ -927,15 +928,25 @@
       flex: 1;
       display: flex;
       flex-direction: column;
-      min-height: 0;
+      min-height: 200px;
+      overflow: visible;
     }
     
-    /* Journey/Settings scroll content in panels */
+    /* Journey/Settings scroll content in panels - ensure visibility */
     #panel-journey-slot .journey-scroll,
     #panel-settings-slot .settings-scroll {
       flex: 1;
-      padding: 0;
+      padding: 8px;
       padding-top: 0;
+      min-height: auto;
+      display: block !important;
+      visibility: visible !important;
+      opacity: 1 !important;
+    }
+    
+    /* Debug: Make stats visible in panel */
+    #panel-journey-slot .stats-row {
+      display: flex !important;
     }
 
     /* ============================================
@@ -4007,15 +4018,13 @@
     }
     
     .stat-card .label {
-      font-size: 10px;
+      font-size: 9px;
       text-transform: uppercase;
-      letter-spacing: 0.5px;
-      opacity: 0.5;
+      letter-spacing: 0.3px;
+      opacity: 0.6;
       margin-top: 4px;
       white-space: nowrap;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      max-width: 100%;
+      overflow: visible;
     }
     
     .view-toggle {
@@ -7279,6 +7288,24 @@
         settingsSlot.style.display = open === 'settings' ? '' : 'none';
         checkoutSlot.style.display = open === 'checkout' ? '' : 'none';
       }
+      
+      // Ensure content is in the panel slots (fallback if mount failed)
+      if (open === 'journey' && journeySlot && !journeySlot.querySelector('.journey-scroll')) {
+        const journeyScene = document.getElementById('scene-journey');
+        const journeyScroll = journeyScene?.querySelector('.journey-scroll');
+        if (journeyScroll) {
+          journeySlot.appendChild(journeyScroll);
+          if (journeyScene) journeyScene.style.display = 'none';
+        }
+      }
+      if (open === 'settings' && settingsSlot && !settingsSlot.querySelector('.settings-scroll')) {
+        const settingsScene = document.getElementById('scene-settings');
+        const settingsScroll = settingsScene?.querySelector('.settings-scroll');
+        if (settingsScroll) {
+          settingsSlot.appendChild(settingsScroll);
+          if (settingsScene) settingsScene.style.display = 'none';
+        }
+      }
 
       // Nav highlight: when a panel is open, highlight that tab; otherwise defer to scene management.
       if (open === 'journey' || open === 'settings') {
@@ -7345,10 +7372,18 @@
       const journeySlot = document.getElementById('panel-journey-slot');
       const settingsSlot = document.getElementById('panel-settings-slot');
 
+      console.log('[Panel Mount] Journey:', { 
+        sceneExists: !!journeyScene, 
+        scrollExists: !!journeyScroll, 
+        slotExists: !!journeySlot 
+      });
+
       if (journeyScroll && journeySlot && journeyScroll.parentElement !== journeySlot) {
+        console.log('[Panel Mount] Moving journey content to slot');
         journeySlot.appendChild(journeyScroll);
       }
       if (settingsScroll && settingsSlot && settingsScroll.parentElement !== settingsSlot) {
+        console.log('[Panel Mount] Moving settings content to slot');
         settingsSlot.appendChild(settingsScroll);
       }
 
