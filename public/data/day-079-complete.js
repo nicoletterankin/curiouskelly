@@ -1,0 +1,108 @@
+/**
+ * Day 079 Data Pack - "Your Body's Instruction Manual"
+ * SKELETON - Basic curriculum data only
+ * Generated: 2025-12-17T03:54:00.044Z
+ */
+window.CURIOUS_KELLY = window.CURIOUS_KELLY || {};
+window.CURIOUS_KELLY.LOCAL_PACKS = window.CURIOUS_KELLY.LOCAL_PACKS || {};
+window.CURIOUS_KELLY.DAY_079 = {
+  "meta": {
+    "created_at": "2025-12-17T03:54:00.044Z",
+    "day_number": 79,
+    "version": "v3.0-skeleton",
+    "is_skeleton": true
+  },
+  "lesson": {
+    "day_number": 79,
+    "topic": "Your Body's Instruction Manual",
+    "headline": "Your Body's Instruction Manual is an important concept that helps us understand our world.",
+    "universal_truth": "Your Body's Instruction Manual is an important concept that helps us understand our world.",
+    "emoji": "👁️",
+    "category": "general",
+    "thumbnail_url": "/generated-visuals/day-079/thumbnail.png"
+  },
+  "atoms": [
+    {
+      "id": "day079-hook-001",
+      "phase": "Hook",
+      "content": {
+        "script": "Welcome to Day 79! Today we are exploring: Your Body's Instruction Manual. Your Body's Instruction Manual is an important concept that helps us understand our world.",
+        "kellyPose": "welcome",
+        "kellyEmotion": "curious"
+      }
+    },
+    {
+      "id": "day079-wisdom-001",
+      "phase": "Wisdom",
+      "content": {
+        "script": "Your Body's Instruction Manual is an important concept that helps us understand our world.",
+        "kellyPose": "warm",
+        "kellyEmotion": "gentle"
+      }
+    },
+    {
+      "id": "day079-outro-001",
+      "phase": "Outro",
+      "content": {
+        "script": "That is today lesson! See you tomorrow for more learning adventures. Stay curious!",
+        "kellyPose": "wave",
+        "kellyEmotion": "happy"
+      }
+    }
+  ],
+  "grow": {
+    "topic": "Recency Bias - New Isn't Always Right",
+    "objective": "Recognize the tendency to favor new information over established knowledge, and evaluate appropriately."
+  },
+  "ageVariants": {
+    "2-5": {
+      "persona": "Playful Friend",
+      "phases": {
+        "hook": "Hi little friend! Today we are learning about your body's instruction manual!",
+        "wisdom": "Your Body's Instruction Manual is an important concept that helps us understand our world.",
+        "outro": "Great job learning today! See you tomorrow!"
+      }
+    },
+    "6-12": {
+      "persona": "Cool Big Sister",
+      "phases": {
+        "hook": "Hey curious one! Ready to discover something cool about your body's instruction manual?",
+        "wisdom": "Your Body's Instruction Manual is an important concept that helps us understand our world.",
+        "outro": "You are getting smarter every day. See you tomorrow!"
+      }
+    },
+    "13-17": {
+      "persona": "Smart Mentor",
+      "phases": {
+        "hook": "Let us explore: Your Body's Instruction Manual. Here is what you need to know.",
+        "wisdom": "Your Body's Instruction Manual is an important concept that helps us understand our world.",
+        "outro": "That is the real stuff. See you tomorrow."
+      }
+    },
+    "18-35": {
+      "persona": "Equal Partner",
+      "phases": {
+        "hook": "Today topic: Your Body's Instruction Manual. Let us break it down.",
+        "wisdom": "Your Body's Instruction Manual is an important concept that helps us understand our world.",
+        "outro": "Knowledge that makes a difference. See you tomorrow."
+      }
+    },
+    "36-60": {
+      "persona": "Respectful Guide",
+      "phases": {
+        "hook": "Today we explore Your Body's Instruction Manual - a subject worth understanding.",
+        "wisdom": "Your Body's Instruction Manual is an important concept that helps us understand our world.",
+        "outro": "Wisdom worth carrying forward. Until tomorrow."
+      }
+    },
+    "61-102": {
+      "persona": "Honored Equal",
+      "phases": {
+        "hook": "Today we reflect on: Your Body's Instruction Manual. A timeless subject.",
+        "wisdom": "Your Body's Instruction Manual is an important concept that helps us understand our world.",
+        "outro": "Until we meet again. Take care."
+      }
+    }
+  }
+};
+window.CURIOUS_KELLY.LOCAL_PACKS[79] = window.CURIOUS_KELLY.DAY_079;

@@ -1,0 +1,108 @@
+/**
+ * Day 348 Data Pack - "When You Think You Can't Change"
+ * SKELETON - Basic curriculum data only
+ * Generated: 2025-12-17T03:54:00.188Z
+ */
+window.CURIOUS_KELLY = window.CURIOUS_KELLY || {};
+window.CURIOUS_KELLY.LOCAL_PACKS = window.CURIOUS_KELLY.LOCAL_PACKS || {};
+window.CURIOUS_KELLY.DAY_348 = {
+  "meta": {
+    "created_at": "2025-12-17T03:54:00.188Z",
+    "day_number": 348,
+    "version": "v3.0-skeleton",
+    "is_skeleton": true
+  },
+  "lesson": {
+    "day_number": 348,
+    "topic": "When You Think You Can't Change",
+    "headline": "Change is constant and inevitable in all things.",
+    "universal_truth": "Change is constant and inevitable in all things.",
+    "emoji": "🧠",
+    "category": "general",
+    "thumbnail_url": "/generated-visuals/day-348/thumbnail.png"
+  },
+  "atoms": [
+    {
+      "id": "day348-hook-001",
+      "phase": "Hook",
+      "content": {
+        "script": "Welcome to Day 348! Today we are exploring: When You Think You Can't Change. Change is constant and inevitable in all things.",
+        "kellyPose": "welcome",
+        "kellyEmotion": "curious"
+      }
+    },
+    {
+      "id": "day348-wisdom-001",
+      "phase": "Wisdom",
+      "content": {
+        "script": "Change is constant and inevitable in all things.",
+        "kellyPose": "warm",
+        "kellyEmotion": "gentle"
+      }
+    },
+    {
+      "id": "day348-outro-001",
+      "phase": "Outro",
+      "content": {
+        "script": "That is today lesson! See you tomorrow for more learning adventures. Stay curious!",
+        "kellyPose": "wave",
+        "kellyEmotion": "happy"
+      }
+    }
+  ],
+  "grow": {
+    "topic": "Setting Next Year's Goals - What Will You Learn?",
+    "objective": "Set clear, meaningful learning goals for the coming year."
+  },
+  "ageVariants": {
+    "2-5": {
+      "persona": "Playful Friend",
+      "phases": {
+        "hook": "Hi little friend! Today we are learning about when you think you can't change!",
+        "wisdom": "Change is constant and inevitable in all things.",
+        "outro": "Great job learning today! See you tomorrow!"
+      }
+    },
+    "6-12": {
+      "persona": "Cool Big Sister",
+      "phases": {
+        "hook": "Hey curious one! Ready to discover something cool about when you think you can't change?",
+        "wisdom": "Change is constant and inevitable in all things.",
+        "outro": "You are getting smarter every day. See you tomorrow!"
+      }
+    },
+    "13-17": {
+      "persona": "Smart Mentor",
+      "phases": {
+        "hook": "Let us explore: When You Think You Can't Change. Here is what you need to know.",
+        "wisdom": "Change is constant and inevitable in all things.",
+        "outro": "That is the real stuff. See you tomorrow."
+      }
+    },
+    "18-35": {
+      "persona": "Equal Partner",
+      "phases": {
+        "hook": "Today topic: When You Think You Can't Change. Let us break it down.",
+        "wisdom": "Change is constant and inevitable in all things.",
+        "outro": "Knowledge that makes a difference. See you tomorrow."
+      }
+    },
+    "36-60": {
+      "persona": "Respectful Guide",
+      "phases": {
+        "hook": "Today we explore When You Think You Can't Change - a subject worth understanding.",
+        "wisdom": "Change is constant and inevitable in all things.",
+        "outro": "Wisdom worth carrying forward. Until tomorrow."
+      }
+    },
+    "61-102": {
+      "persona": "Honored Equal",
+      "phases": {
+        "hook": "Today we reflect on: When You Think You Can't Change. A timeless subject.",
+        "wisdom": "Change is constant and inevitable in all things.",
+        "outro": "Until we meet again. Take care."
+      }
+    }
+  }
+};
+window.CURIOUS_KELLY.LOCAL_PACKS[348] = window.CURIOUS_KELLY.DAY_348;
