@@ -11753,8 +11753,10 @@
     function showSettingsMode() {
       try { if (document.documentElement.hasAttribute('data-panel-open')) closePanel(); } catch (_) {}
       try { stopAllMedia(); } catch (_) {}
-      setUiMode('settings');
-      showScene('lesson'); // Keep the lesson shell visible (Kelly stays centered)
+      // Use the scene-settings panel (has Your Kelly selector + Take Quiz button)
+      // instead of the settings-overlay which has incomplete content
+      document.documentElement.removeAttribute('data-ui-mode');
+      showScene('settings');
     }
 
     function showHomeState() {
@@ -11845,14 +11847,9 @@
       }
 
       if (tab === 'settings') {
-        // Full-screen Settings mode
+        // Show settings scene (has Your Kelly selector)
+        // Deep link sections (privacy, terms, etc.) not yet supported in this view
         showSettingsMode();
-        if (section) {
-          // Wait a tick for the overlay to render, then show section
-          setTimeout(() => {
-            try { showSettingsSection(section); } catch (_) {}
-          }, 100);
-        }
         return;
       }
 
