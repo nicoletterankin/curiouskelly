@@ -8,6 +8,7 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSupabaseAdmin, isSupabaseConfigured } from '../lib/supabase';
+import { loadStaticLesson } from '../lib/static-lessons';
 
 interface CoreLesson {
   id: string;
@@ -351,36 +352,57 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     return res.status(404).send(generate404Page(dayNumber || 0));
   }
 
-  if (!isSupabaseConfigured()) {
-    return res.status(500).send('Configuration error');
-  }
+  const prevDay = dayNumber > 1 ? dayNumber - 1 : null;
+  const nextDay = dayNumber < 365 ? dayNumber + 1 : null;
 
-  const supabase = getSupabaseAdmin();
-
+  // ---------------------------------------------------------------------------
+  // PRIORITY 1: Static Files (Zero DB dependency)
+  // ---------------------------------------------------------------------------
   try {
-    // Query core_lessons (the correct table with 365 rows)
-    const { data: lesson, error } = await supabase
-      .from('core_lessons')
-      .select('id, day_number, topic, universal_truth, marketing_headline, marketing_tagline, marketing_pitch')
-      .eq('day_number', dayNumber)
-      .single();
-
-    if (error || !lesson) {
-      console.warn('Lesson not found in core_lessons:', dayNumber, error?.message);
-      res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=86400, stale-while-revalidate=604800');
-      return res.status(404).send(generate404Page(dayNumber));
+    const staticPack = loadStaticLesson(dayNumber);
+    if (staticPack) {
+      const lesson: CoreLesson = {
+        id: `static-${dayNumber}`,
+        day_number: dayNumber,
+        topic: staticPack.lesson.topic,
+        universal_truth: staticPack.lesson.universal_truth,
+        marketing_headline: staticPack.lesson.headline,
+        marketing_tagline: staticPack.lesson.category,
+      };
+      
+      res.setHeader('Content-Type', 'text/html; charset=utf-8');
+      res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400');
+      return res.status(200).send(generateLessonPage(lesson, prevDay, nextDay));
     }
-
-    const prevDay = dayNumber > 1 ? dayNumber - 1 : null;
-    const nextDay = dayNumber < 365 ? dayNumber + 1 : null;
-
-    res.setHeader('Content-Type', 'text/html; charset=utf-8');
-    res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400');
-    
-    return res.status(200).send(generateLessonPage(lesson, prevDay, nextDay));
-
-  } catch (error) {
-    console.error('Lesson page error:', error);
-    return res.status(500).send('Something went wrong');
+  } catch (e) {
+    console.warn('[api/day/:number] Static file load failed:', e);
   }
+
+  // ---------------------------------------------------------------------------
+  // PRIORITY 2: Supabase (fallback)
+  // ---------------------------------------------------------------------------
+  if (isSupabaseConfigured()) {
+    try {
+      const supabase = getSupabaseAdmin();
+      const { data: lesson, error } = await supabase
+        .from('core_lessons')
+        .select('id, day_number, topic, universal_truth, marketing_headline, marketing_tagline, marketing_pitch')
+        .eq('day_number', dayNumber)
+        .single();
+
+      if (!error && lesson) {
+        res.setHeader('Content-Type', 'text/html; charset=utf-8');
+        res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=3600, stale-while-revalidate=86400');
+        return res.status(200).send(generateLessonPage(lesson, prevDay, nextDay));
+      }
+    } catch (error) {
+      console.error('Lesson page Supabase error:', error);
+    }
+  }
+
+  // ---------------------------------------------------------------------------
+  // PRIORITY 3: 404 (only if both static and DB fail)
+  // ---------------------------------------------------------------------------
+  res.setHeader('Cache-Control', 'public, max-age=0, s-maxage=86400, stale-while-revalidate=604800');
+  return res.status(404).send(generate404Page(dayNumber));
 }

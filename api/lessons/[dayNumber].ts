@@ -3,17 +3,20 @@
  * 
  * GET /api/lessons/:dayNumber
  * 
- * Primary: serves lessons from Supabase (service role) so unauthenticated
- * users can still load the full 365-day experience without relying on RLS.
+ * PRIORITY ORDER (Static-First for Resilience):
+ *   1. Static files in /public/data/ (instant, no DB)
+ *   2. Supabase (service role) as fallback
+ *   3. Emergency hardcoded data (always works)
  *
- * Fallback: serves static lessons if Supabase isn't configured.
+ * This ensures lessons load even during Supabase outages.
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { getSupabaseAdmin, isSupabaseConfigured } from '../lib/supabase.js';
+import { loadStaticLesson, formatLessonForApi, staticLessonExists } from '../lib/static-lessons.js';
 
-// Extended static lesson data (first 30 days)
-const STATIC_LESSONS: Record<number, { topic: string; universal_truth: string; greeting: string }> = {
+// Emergency fallback data (first 15 days - used if ALL else fails)
+const EMERGENCY_LESSONS: Record<number, { topic: string; universal_truth: string; greeting: string }> = {
   1: { topic: 'The Sun', universal_truth: 'Our star gives life to everything on Earth.', greeting: 'Let\'s explore the incredible power of the Sun!' },
   2: { topic: 'Why the Sky is Blue', universal_truth: 'Light bends and scatters to paint our world.', greeting: 'Have you ever wondered why the sky is blue?' },
   3: { topic: 'How Seeds Grow', universal_truth: 'Every giant oak began as a tiny seed with potential.', greeting: 'Today we\'re planting seeds of knowledge!' },
@@ -45,6 +48,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   // Extract day number from URL
   const { dayNumber, archetype, ageBucket } = req.query;
   const day = parseInt(Array.isArray(dayNumber) ? dayNumber[0] : dayNumber || '1');
+  const resolvedArchetype = Array.isArray(archetype) ? archetype[0] : (archetype || 'The Explorer');
+  const resolvedRegion = Array.isArray(ageBucket) ? ageBucket[0] : (ageBucket || 'adult');
   
   if (isNaN(day) || day < 1 || day > 365) {
     return res.status(400).json({ 
@@ -54,13 +59,23 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   }
 
   // ---------------------------------------------------------------------------
-  // PRIMARY: Supabase-backed lesson (service role; no auth required)
+  // PRIORITY 1: Static Files (Zero DB dependency - fastest, most reliable)
+  // ---------------------------------------------------------------------------
+  try {
+    const staticPack = loadStaticLesson(day);
+    if (staticPack) {
+      return res.status(200).json(formatLessonForApi(staticPack, resolvedArchetype, resolvedRegion));
+    }
+  } catch (e: any) {
+    console.warn('[api/lessons/:dayNumber] Static file load failed:', e?.message || e);
+  }
+
+  // ---------------------------------------------------------------------------
+  // PRIORITY 2: Supabase (fallback for days without static files)
   // ---------------------------------------------------------------------------
   if (isSupabaseConfigured()) {
     try {
       const db = getSupabaseAdmin();
-      const resolvedArchetype = Array.isArray(archetype) ? archetype[0] : (archetype || 'The Scientist');
-      const resolvedRegion = Array.isArray(ageBucket) ? ageBucket[0] : (ageBucket || 'adult');
 
       const { data: lesson, error: lessonError } = await db
         .from('core_lessons')
@@ -69,7 +84,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .single();
 
       if (lessonError || !lesson) {
-        // Fall through to static fallback if the DB doesn't have this day.
         throw new Error(lessonError?.message || 'Lesson not found');
       }
 
@@ -85,7 +99,6 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
           .select('*')
           .eq('core_lesson_id', lesson.id)
           .eq('archetype', resolvedArchetype)
-          // Prefer requested region + English fallback shards if present
           .in('region', [resolvedRegion, 'en'])
       ]);
 
@@ -99,19 +112,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         ageBucket: resolvedRegion,
       });
     } catch (e: any) {
-      // Intentionally fall through to static fallback below.
-      // (We keep this endpoint bulletproof even during partial outages.)
-      // eslint-disable-next-line no-console
       console.warn('[api/lessons/:dayNumber] Supabase path failed:', e?.message || e);
     }
   }
-  
-  // Get lesson from static data (cycle through available lessons)
+
+  // ---------------------------------------------------------------------------
+  // PRIORITY 3: Emergency Fallback (hardcoded - THE LESSON ALWAYS PLAYS)
+  // ---------------------------------------------------------------------------
   const lessonKey = day <= 15 ? day : ((day - 1) % 15) + 1;
-  const lessonData = STATIC_LESSONS[lessonKey];
+  const lessonData = EMERGENCY_LESSONS[lessonKey];
   
   const lesson = {
-    id: `api-${day}`,
+    id: `emergency-${day}`,
     day_number: day,
     topic: lessonData.topic,
     universal_truth: lessonData.universal_truth,
@@ -122,19 +134,19 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   const atoms = [
     { phase: 'Hook', content: { script: lessonData.greeting, text: lessonData.greeting } },
     { phase: 'Fact1', content: { script: `Did you know? ${lessonData.universal_truth}`, text: lessonData.universal_truth } },
-    { phase: 'Fact2', content: { script: `Here\'s something fascinating about ${lessonData.topic}...`, text: 'More fascinating facts await!' } },
-    { phase: 'Fact3', content: { script: `And here\'s one more amazing thing about ${lessonData.topic}...`, text: 'One more amazing discovery!' } },
+    { phase: 'Fact2', content: { script: `Here's something fascinating about ${lessonData.topic}...`, text: 'More fascinating facts await!' } },
+    { phase: 'Fact3', content: { script: `And here's one more amazing thing about ${lessonData.topic}...`, text: 'One more amazing discovery!' } },
     { phase: 'Wisdom', content: { script: `Remember: ${lessonData.universal_truth}`, text: lessonData.universal_truth } }
   ];
   
   return res.status(200).json({
-    source: 'api-static',
+    source: 'emergency-fallback',
     lesson,
     atoms,
     shards: [],
     dayNumber: day,
-    archetype: archetype || 'The Scientist',
-    ageBucket: ageBucket || 'adult'
+    archetype: resolvedArchetype,
+    ageBucket: resolvedRegion
   });
 }
 
