@@ -1,44 +1,44 @@
 /**
  * Kelly Curriculum Browser
- * Displays 365-day curriculum organized by program year and month
+ * Displays 365-day DUAL TRACK curriculum (Learn + Grow)
  * 
  * Features:
- * - Program selector (Year 1, Year 2)
+ * - Daily Duo view: Both tracks shown per day
  * - Month-based navigation with expandable sections
- * - Daily topic display with learning objectives
- * - Search functionality
+ * - Search across both tracks
  * - Integration with lesson player
+ * 
+ * @see docs/DUAL_TRACK_NAMING.md for naming conventions
  */
 
 'use strict';
 
 const KellyCurriculumBrowser = (function() {
   
-  // Curriculum metadata - Using LOCKED naming: Learn + Grow (see docs/DUAL_TRACK_NAMING.md)
-  const PROGRAMS = [
-    {
+  // Track definitions - LOCKED naming (see docs/DUAL_TRACK_NAMING.md)
+  const TRACKS = {
+    learn: {
       id: 'learn',
-      track: 'learn',
       name: 'Learn',
       fullName: 'Learn Track',
       slug: 'year1-foundations',
-      description: 'Daily lessons exploring the wonders of science, history, nature, and human achievement.',
-      status: 'active',
+      description: 'What the world IS',
       icon: '🌟',
       color: '#f59e0b'
     },
-    {
+    grow: {
       id: 'grow',
-      track: 'grow',
       name: 'Grow',
       fullName: 'Grow Track',
       slug: 'year2-ai-fluency',
-      description: 'Daily lessons on critical thinking, AI fluency, and becoming a better learner.',
-      status: 'active',
+      description: 'How to LEARN',
       icon: '🧠',
       color: '#8b5cf6'
     }
-  ];
+  };
+
+  // Legacy support
+  const PROGRAMS = [TRACKS.learn, TRACKS.grow];
 
   const MONTHS = [
     { name: 'January', days: 31, startDay: 1 },
@@ -89,14 +89,15 @@ const KellyCurriculumBrowser = (function() {
     }
   };
 
-  // Cache for loaded curriculum data
-  let curriculumCache = {};
-  let currentProgram = 'grow'; // Default to Grow track (was year2)
+  // Cache for loaded curriculum data (both tracks)
+  let curriculumCache = { learn: {}, grow: {} };
+  let viewMode = 'duo'; // 'duo' (both tracks) or 'single' (one track)
+  let currentTrack = 'learn'; // For single-track view fallback
   let searchQuery = '';
   let expandedMonths = new Set();
 
   /**
-   * Initialize the curriculum browser
+   * Initialize the curriculum browser (Daily Duo mode)
    */
   function init(containerId = 'curriculum-categories') {
     const container = document.getElementById(containerId);
@@ -108,46 +109,44 @@ const KellyCurriculumBrowser = (function() {
     // Render initial UI
     render(container);
 
-    // Setup search listener
-    const searchInput = document.getElementById('curriculum-search-input');
-    if (searchInput) {
-      searchInput.addEventListener('input', (e) => {
-        searchQuery = e.target.value.toLowerCase().trim();
-        render(container);
-      });
-    }
-
-    // Load default program
-    loadProgram(currentProgram, container);
+    // Load both tracks
+    loadAllTracks(container);
   }
 
   /**
-   * Render the curriculum browser UI
+   * Render the curriculum browser UI - Daily Duo view
    */
   function render(container) {
     const html = `
-      <div class="curriculum-browser">
-        <!-- Track Selector (Learn + Grow) -->
-        <div class="program-selector">
-          ${PROGRAMS.map(p => `
-            <button class="program-btn ${currentProgram === p.id ? 'active' : ''}" 
-                    data-program="${p.id}"
-                    onclick="KellyCurriculumBrowser.selectProgram('${p.id}')"
-                    style="${currentProgram === p.id ? `background: ${p.color};` : ''}">
-              <span class="program-icon">${p.icon}</span>
-              <span class="program-name">${p.name}</span>
-            </button>
-          `).join('')}
+      <div class="curriculum-browser curriculum-duo-mode">
+        <!-- Header: Daily Duo branding -->
+        <div class="duo-header">
+          <div class="duo-title">
+            <span class="duo-icon">📚</span>
+            <div>
+              <h2>365 Days of Learning</h2>
+              <p class="duo-subtitle">Every day, two lessons: <span style="color: ${TRACKS.learn.color}">${TRACKS.learn.icon} ${TRACKS.learn.name}</span> + <span style="color: ${TRACKS.grow.color}">${TRACKS.grow.icon} ${TRACKS.grow.name}</span></p>
+            </div>
+          </div>
+          <div class="duo-stats">
+            <div class="stat"><span class="stat-value">730</span><span class="stat-label">Topics</span></div>
+            <div class="stat"><span class="stat-value">365</span><span class="stat-label">Days</span></div>
+          </div>
         </div>
 
-        <!-- Program Info -->
-        <div class="program-info">
-          ${renderProgramInfo()}
+        <!-- Track Legend -->
+        <div class="track-legend">
+          <div class="track-badge learn-badge" style="background: ${TRACKS.learn.color}20; border-color: ${TRACKS.learn.color}">
+            ${TRACKS.learn.icon} <strong>${TRACKS.learn.name}</strong> — ${TRACKS.learn.description}
+          </div>
+          <div class="track-badge grow-badge" style="background: ${TRACKS.grow.color}20; border-color: ${TRACKS.grow.color}">
+            ${TRACKS.grow.icon} <strong>${TRACKS.grow.name}</strong> — ${TRACKS.grow.description}
+          </div>
         </div>
 
         <!-- Months Grid -->
         <div class="curriculum-months" id="curriculum-months">
-          ${renderMonths()}
+          ${renderMonthsDuo()}
         </div>
       </div>
     `;
@@ -156,70 +155,34 @@ const KellyCurriculumBrowser = (function() {
   }
 
   /**
-   * Render track info header
+   * Render months in Daily Duo mode (both tracks)
    */
-  function renderProgramInfo() {
-    const program = PROGRAMS.find(p => p.id === currentProgram);
-    if (!program) return '';
-
-    return `
-      <div class="program-header" style="border-color: ${program.color}40;">
-        <div class="program-title">
-          <span class="program-icon-large" style="background: ${program.color}20; padding: 12px; border-radius: 12px;">${program.icon}</span>
-          <div>
-            <h2>${program.icon} ${program.name} Track</h2>
-            <p>${program.description}</p>
-          </div>
-        </div>
-        <div class="program-stats">
-          <div class="stat">
-            <span class="stat-value" style="color: ${program.color};">365</span>
-            <span class="stat-label">Days</span>
-          </div>
-          <div class="stat">
-            <span class="stat-value" style="color: ${program.color};">12</span>
-            <span class="stat-label">Themes</span>
-          </div>
-        </div>
-      </div>
-    `;
-  }
-
-  /**
-   * Render all months
-   */
-  function renderMonths() {
-    const cache = curriculumCache[currentProgram] || {};
-    const program = PROGRAMS.find(p => p.id === currentProgram);
-    const trackThemes = TRACK_THEMES[currentProgram] || TRACK_THEMES['grow'];
+  function renderMonthsDuo() {
+    const learnCache = curriculumCache.learn || {};
+    const growCache = curriculumCache.grow || {};
     
     return MONTHS.map((month, index) => {
-      const monthData = cache[month.name.toLowerCase()];
-      const themeInfo = trackThemes[month.name] || { theme: 'Learning', icon: '📚', color: program?.color || '#8b5cf6' };
+      const learnData = learnCache[month.name.toLowerCase()];
+      const growData = growCache[month.name.toLowerCase()];
       const isExpanded = expandedMonths.has(month.name);
-      const lessonsLoaded = monthData && monthData.days && monthData.days.length > 0;
+      const dataLoaded = (learnData?.days?.length > 0) || (growData?.days?.length > 0);
       
-      // Filter by search query
-      let filteredDays = [];
-      if (lessonsLoaded && searchQuery) {
-        filteredDays = monthData.days.filter(d => 
-          d.title.toLowerCase().includes(searchQuery) ||
-          d.learning_objective?.toLowerCase().includes(searchQuery)
-        );
-        if (filteredDays.length === 0 && !isExpanded) return ''; // Hide months with no matches
-      } else if (lessonsLoaded) {
-        filteredDays = monthData.days;
-      }
+      // Get theme info for display
+      const learnTheme = TRACK_THEMES.learn[month.name] || { theme: 'Learning', icon: '📚' };
+      const growTheme = TRACK_THEMES.grow[month.name] || { theme: 'Growing', icon: '🧠' };
 
       return `
         <div class="curriculum-month ${isExpanded ? 'expanded' : ''}" data-month="${month.name}">
           <div class="curriculum-month-header" onclick="KellyCurriculumBrowser.toggleMonth('${month.name}')">
             <div class="month-left">
-              <div class="month-icon" style="background: ${themeInfo.color}">${themeInfo.icon}</div>
+              <div class="month-duo-icons">
+                <span class="mini-icon learn" style="background: ${TRACKS.learn.color}">${TRACKS.learn.icon}</span>
+                <span class="mini-icon grow" style="background: ${TRACKS.grow.color}">${TRACKS.grow.icon}</span>
+              </div>
               <div class="month-info">
                 <h3>${month.name}</h3>
-                <span class="month-theme">${themeInfo.theme}</span>
-                <span class="month-days">${month.days} days • Day ${month.startDay}-${month.startDay + month.days - 1}</span>
+                <span class="month-theme">${learnTheme.theme} + ${growTheme.theme}</span>
+                <span class="month-days">${month.days} days × 2 tracks = ${month.days * 2} topics</span>
               </div>
             </div>
             <div class="month-right">
@@ -228,10 +191,10 @@ const KellyCurriculumBrowser = (function() {
           </div>
           ${isExpanded ? `
             <div class="curriculum-month-content">
-              ${lessonsLoaded ? renderDays(filteredDays, month) : `
+              ${dataLoaded ? renderDaysDuo(learnData?.days || [], growData?.days || [], month) : `
                 <div class="loading-days">
                   <div class="loading-spinner"></div>
-                  <span>Loading ${month.name} curriculum...</span>
+                  <span>Loading ${month.name}...</span>
                 </div>
               `}
             </div>
@@ -242,68 +205,73 @@ const KellyCurriculumBrowser = (function() {
   }
 
   /**
-   * Render days within a month
+   * Render days with both Learn + Grow topics side by side
    */
-  function renderDays(days, month) {
-    if (!days || days.length === 0) {
-      return '<div class="no-days">No lessons found</div>';
-    }
-
-    return `
-      <div class="days-list">
-        ${days.map(day => {
-          // Get completion status from global state if available
-          const isCompleted = window.state?.completedLessons?.includes(day.day) || false;
-          const isToday = day.day === getTodayDayNumber();
-          
-          return `
-            <div class="day-card ${isCompleted ? 'completed' : ''} ${isToday ? 'today' : ''}" 
-                 onclick="KellyCurriculumBrowser.selectDay(${day.day})"
-                 data-day="${day.day}">
-              <div class="day-number">
-                <span class="day-badge">${day.day}</span>
-                ${isToday ? '<span class="today-badge">TODAY</span>' : ''}
+  function renderDaysDuo(learnDays, growDays, month) {
+    // Create a merged view by day number
+    const dayCount = month.days;
+    const startDay = month.startDay;
+    
+    let html = '<div class="days-list duo-days">';
+    
+    for (let i = 0; i < dayCount; i++) {
+      const dayNum = startDay + i;
+      const dateOfMonth = i + 1;
+      
+      const learnDay = learnDays.find(d => d.day === dayNum) || {};
+      const growDay = growDays.find(d => d.day === dayNum) || {};
+      
+      const isToday = dayNum === getTodayDayNumber();
+      const isCompleted = window.state?.completedLessons?.includes(dayNum) || false;
+      
+      html += `
+        <div class="duo-day-card ${isToday ? 'today' : ''} ${isCompleted ? 'completed' : ''}" 
+             data-day="${dayNum}">
+          <div class="duo-day-header">
+            <span class="duo-day-number">Day ${dayNum}</span>
+            <span class="duo-day-date">${month.name} ${dateOfMonth}</span>
+            ${isToday ? '<span class="today-badge">TODAY</span>' : ''}
+          </div>
+          <div class="duo-day-tracks">
+            <div class="duo-track learn-track" onclick="KellyCurriculumBrowser.selectDay(${dayNum}, 'learn')">
+              <div class="track-icon" style="background: ${TRACKS.learn.color}">${TRACKS.learn.icon}</div>
+              <div class="track-content">
+                <div class="track-label">Learn</div>
+                <div class="track-title">${learnDay.title || 'Loading...'}</div>
               </div>
-              <div class="day-content">
-                <div class="day-title">${day.title}</div>
-                <div class="day-objective">${truncate(day.learning_objective, 100)}</div>
-              </div>
-              <div class="day-status">
-                ${isCompleted ? '✓' : '▶'}
-              </div>
+              <div class="track-play">▶</div>
             </div>
-          `;
-        }).join('')}
-      </div>
-    `;
-  }
-
-  /**
-   * Select a program (Year 1 or Year 2)
-   */
-  function selectProgram(programId) {
-    if (currentProgram === programId) return;
-    
-    currentProgram = programId;
-    expandedMonths.clear();
-    
-    const container = document.getElementById('curriculum-categories');
-    if (container) {
-      render(container);
-      loadProgram(programId, container);
+            <div class="duo-track grow-track" onclick="KellyCurriculumBrowser.selectDay(${dayNum}, 'grow')">
+              <div class="track-icon" style="background: ${TRACKS.grow.color}">${TRACKS.grow.icon}</div>
+              <div class="track-content">
+                <div class="track-label">Grow</div>
+                <div class="track-title">${growDay.title || 'Loading...'}</div>
+              </div>
+              <div class="track-play">▶</div>
+            </div>
+          </div>
+        </div>
+      `;
     }
+    
+    html += '</div>';
+    return html;
   }
 
+  // Legacy function for single-track view (kept for compatibility)
+  function renderMonths() { return renderMonthsDuo(); }
+  function renderDays(days, month) { return renderDaysDuo(days, [], month); }
+
   /**
-   * Toggle month expansion
+   * Toggle month expansion (loads both tracks)
    */
   function toggleMonth(monthName) {
     if (expandedMonths.has(monthName)) {
       expandedMonths.delete(monthName);
     } else {
       expandedMonths.add(monthName);
-      // Load month data if not cached
-      loadMonth(monthName);
+      // Load both tracks for this month
+      loadMonthDuo(monthName.toLowerCase());
     }
     
     const container = document.getElementById('curriculum-categories');
@@ -313,12 +281,12 @@ const KellyCurriculumBrowser = (function() {
   /**
    * Select a day to play
    */
-  function selectDay(dayNumber) {
-    console.log(`[CurriculumBrowser] Selected day ${dayNumber}`);
+  function selectDay(dayNumber, track = 'learn') {
+    console.log(`[CurriculumBrowser] Selected day ${dayNumber}, track: ${track}`);
     
-    // Close the panel
-    if (typeof closePanel === 'function') {
-      closePanel();
+    // Close the journey mode if open
+    if (typeof closeJourneyMode === 'function') {
+      closeJourneyMode();
     }
     
     // Navigate to lesson
@@ -333,84 +301,69 @@ const KellyCurriculumBrowser = (function() {
   }
 
   /**
-   * Load all curriculum for a program
+   * Load both tracks for all months (initial load)
    */
-  async function loadProgram(programId, container) {
-    if (!curriculumCache[programId]) {
-      curriculumCache[programId] = {};
-    }
-
-    // Load all months in parallel
-    const loadPromises = MONTHS.map(month => loadMonth(month.name.toLowerCase()));
+  async function loadAllTracks(container) {
+    const learnPromises = MONTHS.map(m => loadMonthForTrack('learn', m.name.toLowerCase()));
+    const growPromises = MONTHS.map(m => loadMonthForTrack('grow', m.name.toLowerCase()));
     
     try {
-      await Promise.all(loadPromises);
-      render(container);
+      await Promise.all([...learnPromises, ...growPromises]);
+      if (container) render(container);
     } catch (error) {
-      console.error('[CurriculumBrowser] Error loading program:', error);
+      console.error('[CurriculumBrowser] Error loading tracks:', error);
     }
   }
 
   /**
-   * Load a single month's curriculum
+   * Load both tracks for a single month
    */
-  async function loadMonth(monthName) {
-    const monthKey = monthName.toLowerCase();
+  async function loadMonthDuo(monthKey) {
+    await Promise.all([
+      loadMonthForTrack('learn', monthKey),
+      loadMonthForTrack('grow', monthKey)
+    ]);
     
+    const container = document.getElementById('curriculum-categories');
+    if (container) render(container);
+  }
+
+  /**
+   * Load a single month's curriculum for a specific track
+   */
+  async function loadMonthForTrack(trackId, monthKey) {
     // Check cache
-    if (curriculumCache[currentProgram]?.[monthKey]) {
-      return curriculumCache[currentProgram][monthKey];
+    if (curriculumCache[trackId]?.[monthKey]) {
+      return curriculumCache[trackId][monthKey];
     }
 
-    // Map track ID to file path (internal paths preserved for compatibility)
     const pathMap = {
       'learn': 'year1-foundations',
-      'grow': 'year2-ai-fluency',
-      'year1': 'year1-foundations',  // Legacy support
-      'year2': 'year2-ai-fluency'    // Legacy support
+      'grow': 'year2-ai-fluency'
     };
-    const folderName = pathMap[currentProgram] || 'year2-ai-fluency';
-    
-    const basePath = `/data/curriculum/${folderName}`;
-    const url = `${basePath}/${monthKey}_curriculum.json`;
+    const folderName = pathMap[trackId];
+    const url = `/data/curriculum/${folderName}/${monthKey}_curriculum.json`;
 
     try {
       const response = await fetch(url);
-      if (!response.ok) {
-        throw new Error(`HTTP ${response.status}`);
-      }
+      if (!response.ok) throw new Error(`HTTP ${response.status}`);
       
       const data = await response.json();
       
-      if (!curriculumCache[currentProgram]) {
-        curriculumCache[currentProgram] = {};
-      }
-      curriculumCache[currentProgram][monthKey] = data;
+      if (!curriculumCache[trackId]) curriculumCache[trackId] = {};
+      curriculumCache[trackId][monthKey] = data;
       
       return data;
     } catch (error) {
-      console.warn(`[CurriculumBrowser] Could not load ${monthKey}:`, error.message);
-      
-      // Try fallback to lessons folder
-      try {
-        const fallbackUrl = `/lessons/${folderName}/${monthKey}_curriculum.json`;
-        
-        const fallbackResponse = await fetch(fallbackUrl);
-        if (fallbackResponse.ok) {
-          const data = await fallbackResponse.json();
-          if (!curriculumCache[currentProgram]) {
-            curriculumCache[currentProgram] = {};
-          }
-          curriculumCache[currentProgram][monthKey] = data;
-          return data;
-        }
-      } catch (fallbackError) {
-        console.warn(`[CurriculumBrowser] Fallback also failed for ${monthKey}`);
-      }
-      
+      console.warn(`[CurriculumBrowser] Could not load ${trackId}/${monthKey}:`, error.message);
       return null;
     }
   }
+
+  // Legacy support
+  function selectProgram(programId) { /* No-op in duo mode */ }
+  function loadProgram(programId, container) { return loadAllTracks(container); }
+  function loadMonth(monthName) { return loadMonthDuo(monthName.toLowerCase()); }
 
   /**
    * Helper: Get today's day number

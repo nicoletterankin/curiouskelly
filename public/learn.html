@@ -1745,6 +1745,87 @@
       text-transform: uppercase;
     }
 
+    /* Today's Duo Preview */
+    .todays-duo {
+      background: rgba(24, 24, 27, 0.8);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 16px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      text-align: left;
+    }
+
+    .duo-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      color: var(--text-muted);
+      margin-bottom: 12px;
+      text-align: center;
+    }
+
+    .duo-tracks-preview {
+      display: flex;
+      flex-direction: column;
+      gap: 8px;
+    }
+
+    .duo-track-preview {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 10px;
+      transition: all 0.2s ease;
+    }
+
+    .duo-track-preview:hover {
+      background: rgba(255, 255, 255, 0.06);
+    }
+
+    .track-icon-sm {
+      width: 28px;
+      height: 28px;
+      border-radius: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      flex-shrink: 0;
+    }
+
+    .duo-track-preview .track-name {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      width: 40px;
+      flex-shrink: 0;
+    }
+
+    .duo-track-preview.learn .track-name { color: #f59e0b; }
+    .duo-track-preview.grow .track-name { color: #8b5cf6; }
+
+    .duo-track-preview .track-topic {
+      flex: 1;
+      font-size: 0.9rem;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    @media (max-width: 500px) {
+      .todays-duo {
+        padding: 12px 14px;
+      }
+      .duo-track-preview .track-topic {
+        font-size: 0.8rem;
+      }
+    }
+
     .hero-cta-group {
       display: flex;
       gap: 16px;
@@ -9219,8 +9300,9 @@
         if (m === 'home') {
           homeOverlay.setAttribute('aria-hidden', 'false');
           homeOverlay.innerHTML = buildHomeOverlayHtml();
-          // Initialize swipe navigation
+          // Initialize swipe navigation and load today's duo
           try { initHomeSwipe(); } catch (_) {}
+          try { loadTodaysDuo(); } catch (_) {}
         } else {
           homeOverlay.setAttribute('aria-hidden', 'true');
           homeOverlay.innerHTML = '';
@@ -9287,14 +9369,40 @@
             <div class="hero-scene-content">
               <h1 class="hero-scene-title">✨ Curious Kelly</h1>
               <p class="hero-scene-tagline">
-                One lesson, every day. 365 days of wonder. 
-                An AI teacher who knows your name, adapts to your pace, 
-                and makes learning feel like magic.
+                Two lessons, every day. Learn something new about the world, 
+                then grow your ability to learn better.
               </p>
+              
+              <!-- Today's Duo -->
+              <div class="todays-duo" id="todays-duo">
+                <div class="duo-label">Day ${day} — Today's Learning</div>
+                <div class="duo-tracks-preview">
+                  <div class="duo-track-preview learn" id="duo-learn-preview">
+                    <span class="track-icon-sm" style="background: #f59e0b">🌟</span>
+                    <span class="track-name">Learn</span>
+                    <span class="track-topic" id="learn-topic-today">Loading...</span>
+                  </div>
+                  <div class="duo-track-preview grow" id="duo-grow-preview">
+                    <span class="track-icon-sm" style="background: #8b5cf6">🧠</span>
+                    <span class="track-name">Grow</span>
+                    <span class="track-topic" id="grow-topic-today">Loading...</span>
+                  </div>
+                </div>
+              </div>
+              
+              <div class="hero-cta-group">
+                <button class="hero-cta-primary" onclick="startTodaysLesson()">
+                  Start Day ${day} →
+                </button>
+                <button class="hero-cta-secondary" onclick="goToHomeScene(1)">
+                  See Plans
+                </button>
+              </div>
+              
               <div class="hero-scene-stats">
                 <div class="hero-stat">
-                  <div class="hero-stat-value">365</div>
-                  <div class="hero-stat-label">Lessons</div>
+                  <div class="hero-stat-value">730</div>
+                  <div class="hero-stat-label">Topics/Year</div>
                 </div>
                 <div class="hero-stat">
                   <div class="hero-stat-value">🔥 ${streak}</div>
@@ -9304,14 +9412,6 @@
                   <div class="hero-stat-value">${completed}</div>
                   <div class="hero-stat-label">Completed</div>
                 </div>
-              </div>
-              <div class="hero-cta-group">
-                <button class="hero-cta-primary" onclick="startTodaysLesson()">
-                  Start Day ${day} →
-                </button>
-                <button class="hero-cta-secondary" onclick="goToHomeScene(1)">
-                  See Plans
-                </button>
               </div>
             </div>
           </div>
@@ -9599,6 +9699,51 @@
       
       container.addEventListener('touchstart', handleHomeTouchStart, { passive: true });
       container.addEventListener('touchend', handleHomeTouchEnd, { passive: true });
+    }
+
+    // Load Today's Duo - fetch both Learn and Grow topics for today
+    async function loadTodaysDuo() {
+      const dayNum = getTodayDayNumber();
+      const monthIndex = getMonthFromDayNumber(dayNum);
+      const months = ['january', 'february', 'march', 'april', 'may', 'june', 
+                      'july', 'august', 'september', 'october', 'november', 'december'];
+      const monthKey = months[monthIndex];
+      
+      // Fetch both tracks in parallel
+      try {
+        const [learnData, growData] = await Promise.all([
+          fetch(`/data/curriculum/year1-foundations/${monthKey}_curriculum.json`).then(r => r.ok ? r.json() : null),
+          fetch(`/data/curriculum/year2-ai-fluency/${monthKey}_curriculum.json`).then(r => r.ok ? r.json() : null)
+        ]);
+        
+        // Find today's lessons
+        const learnLesson = learnData?.days?.find(d => d.day === dayNum);
+        const growLesson = growData?.days?.find(d => d.day === dayNum);
+        
+        // Update the UI
+        const learnEl = document.getElementById('learn-topic-today');
+        const growEl = document.getElementById('grow-topic-today');
+        
+        if (learnEl && learnLesson) {
+          learnEl.textContent = learnLesson.title;
+        }
+        if (growEl && growLesson) {
+          growEl.textContent = growLesson.title;
+        }
+      } catch (error) {
+        console.warn('[TodaysDuo] Could not load topics:', error);
+      }
+    }
+
+    // Helper: Get month index (0-11) from day number (1-365)
+    function getMonthFromDayNumber(dayNum) {
+      const monthDays = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+      let total = 0;
+      for (let i = 0; i < 12; i++) {
+        total += monthDays[i];
+        if (dayNum <= total) return i;
+      }
+      return 11; // December fallback
     }
 
     function handleHomeTouchStart(e) {
