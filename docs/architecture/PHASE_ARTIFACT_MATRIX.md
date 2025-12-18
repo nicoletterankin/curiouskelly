@@ -62,14 +62,16 @@ Every phase in a Curious Kelly lesson can have multiple artifacts. This document
 | script | ✅ | Subtitles / Kelly speaks | - |
 | kelly_video | ✅ | Main stage | video_commons |
 | kelly_audio | ✅ | Audio track | audio_commons |
-| scene_visual | 🎯 | 100% wallpaper behind Kelly | visual_commons |
-| prompt | ❌ | - | - |
-| options | ❌ | - | - |
+| scene_visual | ✅ | 100% wallpaper behind Kelly | visual_commons |
+| prompt | ✅ | Question for learner | - |
+| option_a | ✅ | Choice button A | visual_commons |
+| option_b | ✅ | Choice button B | visual_commons |
 
 **Visual Behavior:**
 - Scene visual fades in as wallpaper (dimmed 40%)
 - Kelly appears centered over wallpaper
 - Sets emotional tone for lesson
+- Choice cards appear with A/B visuals
 
 ---
 
@@ -117,13 +119,13 @@ Every phase in a Curious Kelly lesson can have multiple artifacts. This document
 | script | ✅ | Kelly teaches | - |
 | kelly_video | ✅ | 50% or full | video_commons |
 | kelly_audio | ✅ | Audio track | audio_commons |
-| scene_visual | 🎯 | 50% side or wallpaper | visual_commons |
+| scene_visual | ✅ | 50% side or wallpaper | visual_commons |
 | infographic | 🎯 | Expandable diagram | visual_commons |
-| prompt | ⭐ | Quiz question | - |
-| option_a | ⭐ | Quiz answer A | - |
-| option_b | ⭐ | Quiz answer B | - |
+| prompt | ✅ | Quiz question | - |
+| option_a | ✅ | Quiz answer A + visual | visual_commons |
+| option_b | ✅ | Quiz answer B + visual | visual_commons |
 
-⭐ = Optional but valuable for engagement
+**All Q phases have choices** - typically testing comprehension or addressing misconceptions
 
 **Visual Behavior (Q phases):**
 ```
@@ -266,13 +268,17 @@ ALTER TABLE visual_commons ADD COLUMN IF NOT EXISTS
 | Kelly Videos | 7 | One per phase (+ option responses) |
 | Kelly Audios | 7+ | One per phase + option feedbacks |
 | Scene Visuals | 7 | One per phase |
-| Choice A Visuals | 1-7 | Cliff required, others optional |
-| Choice B Visuals | 1-7 | Cliff required, others optional |
+| Choice A Visuals | **7** | **REQUIRED for every phase** |
+| Choice B Visuals | **7** | **REQUIRED for every phase** |
 | Infographics | 0-3 | Q phases optional |
 | Celebration | 1 | Outro |
 
-**Minimum per lesson:** ~25 artifacts
-**Full coverage:** ~50+ artifacts
+**EVERY phase has:**
+- A prompt (question for learner)
+- Option A (text, quality, response, visual)
+- Option B (text, quality, response, visual)
+
+**This means 21 choice visuals per lesson** (7 phases × 2 options + 7 scenes)
 
 ---
 
