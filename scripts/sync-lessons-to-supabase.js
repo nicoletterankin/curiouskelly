@@ -125,20 +125,38 @@ async function syncLesson(dayNumber) {
     const phaseData = phases[phase];
     if (!phaseData) continue;
     
-    // Build content object with v5.0 full-choices structure
+    // Build content object with v5.0 full-choices-i18n structure
+    // Handles both old (string) and new (i18n object) formats
+    const getI18nField = (field, fallback = '') => {
+      if (!field) return fallback;
+      if (typeof field === 'object' && field.en !== undefined) return field; // Already i18n
+      return { en: field, es: '[NEEDS TRANSLATION]', pt: '[NEEDS TRANSLATION]' };
+    };
+    
+    const getEnglish = (field, fallback = '') => {
+      if (!field) return fallback;
+      if (typeof field === 'object' && field.en !== undefined) return field.en;
+      return field;
+    };
+    
     const content = {
-      title: phaseData.title || phase,
-      script: phaseData.script || '',
-      duration: phaseData.duration || 15,
-      // v5.0 choice fields
-      prompt: phaseData.prompt || null,
-      options: phaseData.options || [],
-      // Legacy compatibility
-      choice_intro: phaseData.prompt || null,
-      option_a: phaseData.options?.[0]?.text || null,
-      option_b: phaseData.options?.[1]?.text || null,
-      success_response: phaseData.options?.[0]?.response || null,
-      alt_response: phaseData.options?.[1]?.response || null,
+      title: getI18nField(phaseData.title, phase),
+      script: getI18nField(phaseData.script, ''),
+      duration: typeof phaseData.duration === 'object' ? phaseData.duration : { en: phaseData.duration || 15, es: Math.round((phaseData.duration || 15) * 1.15), pt: Math.round((phaseData.duration || 15) * 1.08) },
+      // v5.0 choice fields (full i18n)
+      prompt: getI18nField(phaseData.prompt),
+      options: (phaseData.options || []).map(opt => ({
+        letter: opt.letter,
+        text: getI18nField(opt.text),
+        quality: opt.quality,
+        response: getI18nField(opt.response)
+      })),
+      // Legacy compatibility (English only for older clients)
+      choice_intro: getEnglish(phaseData.prompt),
+      option_a: getEnglish(phaseData.options?.[0]?.text),
+      option_b: getEnglish(phaseData.options?.[1]?.text),
+      success_response: getEnglish(phaseData.options?.[0]?.response),
+      alt_response: getEnglish(phaseData.options?.[1]?.response),
     };
     
     // Check if atom exists (for default archetype)

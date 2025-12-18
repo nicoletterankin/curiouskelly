@@ -29,7 +29,10 @@ Translate 365 daily lessons from English to Spanish and Portuguese while:
 | Email HTML | `generated-emails/day-{N}-email.html` | ~111 | ✅ Yes |
 | Video manifests | `content/email-summary-video/day-{NNN}-*.json` | ~154 | ✅ Yes |
 
-### Fields to Translate per Lesson JSON
+### Fields to Translate per Lesson JSON (v5.0-full-choices)
+
+> **IMPORTANT:** As of v5.0, ALL phases have choices (not just cliff).
+> Phase names changed: fact1→q1, fact2→q2, fact3→q3
 
 ```
 meta.topic                    ← Topic name (e.g., "Starting Fresh" → "Empezando de Nuevo")
@@ -38,24 +41,65 @@ universal_truth              ← Core wisdom message
 fun_facts[]                  ← Array of 3 educational facts
 discussion_questions[]       ← Array of 3 reflection questions
 
+# ALL phases now have the same structure:
+phases.hook.title            ← Phase title
 phases.hook.script           ← Opening narration
+phases.hook.prompt           ← Question text (NEW - all phases have this)
+phases.hook.options[].text   ← Answer choices (NEW - all phases have this)
+phases.hook.options[].response ← Feedback per choice (NEW - all phases have this)
+
+phases.cliff.title           ← Phase title
 phases.cliff.script          ← Cliffhanger setup
 phases.cliff.prompt          ← Question text
 phases.cliff.options[].text  ← Answer choices
 phases.cliff.options[].response ← Feedback per choice
-phases.fact1.title           ← Fact section title
-phases.fact1.script          ← Fact narration
-phases.fact2.title           ← 
-phases.fact2.script          ← 
-phases.fact3.title           ← 
-phases.fact3.script          ← 
+
+phases.q1.title              ← (was fact1) Fact section title
+phases.q1.script             ← Fact narration
+phases.q1.prompt             ← Question text (NEW)
+phases.q1.options[].text     ← Answer choices (NEW)
+phases.q1.options[].response ← Feedback per choice (NEW)
+
+phases.q2.title              ← (was fact2)
+phases.q2.script             ←
+phases.q2.prompt             ← (NEW)
+phases.q2.options[].text     ← (NEW)
+phases.q2.options[].response ← (NEW)
+
+phases.q3.title              ← (was fact3)
+phases.q3.script             ←
+phases.q3.prompt             ← (NEW)
+phases.q3.options[].text     ← (NEW)
+phases.q3.options[].response ← (NEW)
+
+phases.wisdom.title          ← Phase title
 phases.wisdom.script         ← Wisdom message
+phases.wisdom.prompt         ← Question text (NEW)
+phases.wisdom.options[].text ← Answer choices (NEW)
+phases.wisdom.options[].response ← Feedback per choice (NEW)
+
+phases.outro.title           ← Phase title
 phases.outro.script          ← Closing narration
+phases.outro.prompt          ← Question text (NEW)
+phases.outro.options[].text  ← Answer choices (NEW)
+phases.outro.options[].response ← Feedback per choice (NEW)
 
 growTrack.title              ← Growth activity title
 growTrack.learning_objective ← What learner achieves
 growTrack.activity           ← Activity instructions
 ```
+
+### Total Translation Fields per Lesson
+
+| Component | EN Fields | ES/PT Translations |
+|-----------|-----------|-------------------|
+| Meta/headline | 3 | 6 |
+| Fun facts | 3 | 6 |
+| Discussion questions | 3 | 6 |
+| Phases (7 × 5 fields each) | 35 | 70 |
+| Phase options (7 × 2 × 2 fields) | 28 | 56 |
+| GrowTrack | 3 | 6 |
+| **TOTAL** | **75** | **150** |
 
 ### Fields to NEVER Translate
 
