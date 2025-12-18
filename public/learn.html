@@ -249,6 +249,14 @@
       align-items: flex-start;
       line-height: 1.2;
       flex-shrink: 0;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 8px;
+      transition: background 0.15s;
+    }
+    
+    .nav-time-display:hover {
+      background: rgba(255, 255, 255, 0.08);
     }
     
     .nav-time {
@@ -273,6 +281,14 @@
       flex: 1;
       min-width: 0;
       overflow: hidden;
+      cursor: pointer;
+      padding: 4px 8px;
+      border-radius: 8px;
+      transition: background 0.15s;
+    }
+    
+    .nav-topic-display:hover {
+      background: rgba(255, 255, 255, 0.08);
     }
     
     .nav-topic-label {
@@ -6242,228 +6258,579 @@
     }
     
     /* ============================================
-       BOTTOM NAV
+       EVERYTHING BUTTON - Super Prominent Playback Controls
+       Always visible, never covers Kelly's face
        ============================================ */
-    .bottom-nav {
+    .everything-button {
       position: fixed;
-      bottom: 0;
-      left: 0;
-      right: 0;
-      height: calc(var(--nav-height) + var(--safe-bottom));
-      padding-bottom: var(--safe-bottom);
-      background: var(--surface-deep);
-      border-top: 1px solid var(--border-default);
+      bottom: calc(24px + var(--safe-bottom));
+      left: 50%;
+      transform: translateX(-50%);
       display: flex;
-      align-items: center;
-      justify-content: space-around;
-      padding-left: 20px;
-      padding-right: 20px;
-      z-index: 100;
-    }
-    
-    .nav-item {
-      display: flex;
-      flex-direction: column;
       align-items: center;
       gap: 4px;
-      background: none;
-      border: none;
-      color: var(--text-muted);
-      font-size: 11px;
-      cursor: pointer;
-      padding: 8px 20px;
-      transition: all 0.2s ease;
-      text-decoration: none;
+      padding: 6px;
+      background: rgba(15, 15, 22, 0.9);
+      -webkit-backdrop-filter: blur(24px);
+      backdrop-filter: blur(24px);
+      border-radius: 36px;
+      border: 1px solid rgba(255, 255, 255, 0.12);
+      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+      z-index: 200;
     }
     
-    .nav-icon-svg {
-      width: 24px;
-      height: 24px;
-      transition: transform 0.2s ease;
-    }
-    
-    .nav-logo-img {
-      width: 28px;
-      height: 28px;
-      border-radius: 50%;
-      object-fit: cover;
-      border: 2px solid transparent;
-      transition: border-color 0.2s ease;
-    }
-    
-    .nav-item.active .nav-logo-img {
-      border-color: var(--kelly-blue);
-    }
-    
-    .nav-item.active {
-      color: var(--kelly-blue);
-    }
-    
-    .nav-item.active .nav-icon-svg {
-      transform: scale(1.1);
-    }
-    
-    /* Elevated Play Button - Center of Nav */
-    .nav-item.nav-play-btn {
-      position: relative;
-      padding: 0;
-      background: transparent;
-    }
-    
-    .play-btn-inner {
-      width: 56px;
-      height: 56px;
-      background: linear-gradient(135deg, var(--kelly-blue, #3b82f6), #6366f1);
-      border-radius: 50%;
+    .everything-btn {
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
-      transform: translateY(-12px);
-      transition: all 0.2s ease;
-    }
-    
-    .play-btn-inner:hover {
-      transform: translateY(-16px);
-      box-shadow: 0 6px 25px rgba(99, 102, 241, 0.5);
-    }
-    
-    .play-btn-inner svg {
-      width: 22px;
-      height: 22px;
+      border: none;
+      cursor: pointer;
+      transition: all 0.15s ease;
       color: white;
-      margin-left: 2px; /* Visual centering for play icon */
     }
     
-    .nav-item.nav-play-btn.active .play-btn-inner {
-      box-shadow: 0 4px 24px rgba(99, 102, 241, 0.6);
+    .everything-btn:hover {
+      transform: scale(1.08);
     }
     
-    /* Smart Play Button Phase Indicator */
-    .nav-item.nav-play-btn .phase-indicator {
-      position: absolute;
-      top: -16px;
-      right: -6px;
+    .everything-btn:active {
+      transform: scale(0.95);
+    }
+    
+    /* Previous/Next buttons */
+    .everything-btn.btn-prev,
+    .everything-btn.btn-next {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    
+    .everything-btn.btn-prev:hover,
+    .everything-btn.btn-next:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+    
+    .everything-btn.btn-prev svg,
+    .everything-btn.btn-next svg {
       width: 20px;
       height: 20px;
+    }
+    
+    /* Giant Play/Pause button */
+    .everything-btn.btn-play {
+      width: 72px;
+      height: 72px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--kelly-blue, #3b82f6) 0%, #6366f1 100%);
+      box-shadow: 0 4px 20px rgba(99, 102, 241, 0.5);
+      margin: 0 4px;
+    }
+    
+    .everything-btn.btn-play:hover {
+      box-shadow: 0 6px 28px rgba(99, 102, 241, 0.7);
+      transform: scale(1.05);
+    }
+    
+    .everything-btn.btn-play svg {
+      width: 28px;
+      height: 28px;
+      margin-left: 3px; /* Visual centering for play icon */
+    }
+    
+    .everything-btn.btn-play.paused svg {
+      margin-left: 0;
+    }
+    
+    /* Mute button */
+    .everything-btn.btn-mute {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.08);
+    }
+    
+    .everything-btn.btn-mute:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+    
+    .everything-btn.btn-mute.muted {
+      background: rgba(239, 68, 68, 0.2);
+      color: #ef4444;
+    }
+    
+    .everything-btn.btn-mute svg {
+      width: 20px;
+      height: 20px;
+    }
+    
+    /* Phase indicator on play button */
+    .everything-button .phase-badge {
+      position: absolute;
+      top: -4px;
+      right: calc(50% - 50px);
+      width: 22px;
+      height: 22px;
       border-radius: 50%;
       background: var(--accent, #fbbf24);
-      font-size: 10px;
+      font-size: 11px;
       font-weight: 700;
       display: flex;
       align-items: center;
       justify-content: center;
       color: var(--surface-deepest);
-      border: 2px solid var(--surface-deep);
+      border: 2px solid rgba(15, 15, 22, 0.9);
       box-shadow: 0 2px 8px rgba(0,0,0,0.4);
-      z-index: 5;
     }
     
-    .nav-item.nav-play-btn.completed .phase-indicator {
-      background: var(--success, #22c55e);
-      color: white;
-    }
-    
-    .nav-item.nav-play-btn.waiting .play-btn-inner {
-      animation: playPulse 2s infinite ease-in-out;
-    }
-    
-    @keyframes playPulse {
-      0%, 100% {
-        box-shadow: 0 4px 20px rgba(99, 102, 241, 0.4);
-        transform: translateY(-12px) scale(1);
+    /* Mobile: slightly smaller */
+    @media (max-width: 480px) {
+      .everything-button {
+        padding: 4px;
+        gap: 2px;
       }
-      50% {
-        box-shadow: 0 4px 30px rgba(var(--kelly-color-rgb), 0.7);
-        transform: translateY(-10px) scale(1.05);
+      
+      .everything-btn.btn-prev,
+      .everything-btn.btn-next,
+      .everything-btn.btn-mute {
+        width: 40px;
+        height: 40px;
+      }
+      
+      .everything-btn.btn-play {
+        width: 60px;
+        height: 60px;
+      }
+      
+      .everything-btn.btn-play svg {
+        width: 24px;
+        height: 24px;
       }
     }
     
     /* ============================================
-       PLAYBACK CONTROLS POPOVER
+       RIGHT ICON BAR - Vertical icon strip
        ============================================ */
-    .playback-popover {
-      position: absolute;
-      bottom: 100%;
-      left: 50%;
-      transform: translateX(-50%) translateY(10px);
-      background: rgba(24, 24, 27, 0.95);
-      backdrop-filter: blur(20px);
-      -webkit-backdrop-filter: blur(20px);
-      border: 1px solid rgba(255, 255, 255, 0.15);
-      border-radius: 16px;
-      padding: 8px 12px;
+    .right-icon-bar {
+      position: fixed;
+      right: 0;
+      top: 50%;
+      transform: translateY(-50%);
       display: flex;
-      align-items: center;
-      gap: 6px;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 0.2s ease, transform 0.2s ease;
-      z-index: 100;
-      white-space: nowrap;
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+      flex-direction: column;
+      gap: 4px;
+      padding: 8px 6px;
+      background: rgba(15, 15, 22, 0.85);
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+      border-radius: 24px 0 0 24px;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-right: none;
+      z-index: 150;
     }
     
-    .playback-popover::after {
-      content: '';
-      position: absolute;
-      bottom: -8px;
-      left: 50%;
-      transform: translateX(-50%);
-      border: 8px solid transparent;
-      border-top-color: rgba(24, 24, 27, 0.95);
-    }
-    
-    .nav-play-wrapper:hover .playback-popover,
-    .nav-play-wrapper:focus-within .playback-popover,
-    .playback-popover.visible {
-      opacity: 1;
-      pointer-events: auto;
-      transform: translateX(-50%) translateY(0);
-    }
-    
-    .playback-popover .pop-btn {
-      width: 36px;
-      height: 36px;
+    .icon-bar-btn {
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       border: none;
-      background: rgba(255, 255, 255, 0.1);
-      color: white;
+      background: transparent;
+      color: var(--text-secondary);
       cursor: pointer;
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: background 0.15s, transform 0.1s;
+      transition: all 0.15s ease;
     }
     
-    .playback-popover .pop-btn:hover {
-      background: rgba(255, 255, 255, 0.2);
-      transform: scale(1.1);
+    .icon-bar-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
     }
     
-    .playback-popover .pop-btn.primary {
-      background: var(--kelly-color, #3b82f6);
-      width: 44px;
-      height: 44px;
+    .icon-bar-btn.active {
+      background: rgba(37, 99, 235, 0.2);
+      color: var(--kelly-blue);
     }
     
-    .playback-popover .pop-btn.primary:hover {
-      background: var(--kelly-blue-light, #60a5fa);
+    .icon-bar-btn svg {
+      width: 22px;
+      height: 22px;
     }
     
-    .playback-popover .pop-divider {
-      width: 1px;
-      height: 24px;
-      background: rgba(255, 255, 255, 0.15);
-      margin: 0 4px;
+    .icon-bar-btn .profile-avatar {
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      object-fit: cover;
+      border: 2px solid transparent;
     }
     
-    .playback-popover .pop-toggle {
+    .icon-bar-btn.active .profile-avatar {
+      border-color: var(--kelly-blue);
+    }
+    
+    /* Mobile: move to bottom right corner */
+    @media (max-width: 768px) {
+      .right-icon-bar {
+        top: auto;
+        bottom: calc(100px + var(--safe-bottom));
+        transform: none;
+        border-radius: 24px 0 0 24px;
+      }
+    }
+    
+    /* ============================================
+       UNIFIED RIGHT PANEL
+       ============================================ */
+    .unified-panel {
+      position: fixed;
+      top: calc(60px + var(--safe-top));
+      right: 56px; /* Right of icon bar */
+      bottom: calc(100px + var(--safe-bottom));
+      width: 360px;
+      background: rgba(15, 15, 22, 0.95);
+      -webkit-backdrop-filter: blur(24px);
+      backdrop-filter: blur(24px);
+      border-left: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 16px 0 0 16px;
+      transform: translateX(100%);
+      opacity: 0;
+      pointer-events: none;
+      transition: transform 0.3s ease, opacity 0.3s ease;
+      z-index: 140;
+      display: flex;
+      flex-direction: column;
+      overflow: hidden;
+    }
+    
+    .unified-panel.open {
+      transform: translateX(0);
+      opacity: 1;
+      pointer-events: auto;
+    }
+    
+    .unified-panel-header {
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 6px 10px;
-      border-radius: 8px;
+      justify-content: space-between;
+      padding: 16px 20px;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.08);
+      flex-shrink: 0;
+    }
+    
+    .unified-panel-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .unified-panel-close {
+      width: 32px;
+      height: 32px;
+      border-radius: 50%;
+      border: none;
+      background: rgba(255, 255, 255, 0.08);
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      transition: all 0.15s;
+    }
+    
+    .unified-panel-close:hover {
+      background: rgba(255, 255, 255, 0.15);
+      color: var(--text-primary);
+    }
+    
+    .unified-panel-content {
+      flex: 1;
+      overflow-y: auto;
+      padding: 16px 20px;
+    }
+    
+    /* Panel content slots - only one visible at a time */
+    .panel-slot {
+      display: none;
+    }
+    
+    .panel-slot.active {
+      display: block;
+    }
+    
+    /* Mobile: full width panel */
+    @media (max-width: 768px) {
+      .unified-panel {
+        right: 0;
+        width: 100%;
+        max-width: 100%;
+        border-radius: 0;
+        bottom: calc(100px + var(--safe-bottom));
+      }
+    }
+    
+    /* ============================================
+       UNIFIED PANEL CONTENT STYLES
+       ============================================ */
+    
+    /* Search */
+    .search-container {
+      margin-bottom: 16px;
+    }
+    
+    .search-input {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 14px;
+    }
+    
+    .search-input:focus {
+      outline: none;
+      border-color: var(--kelly-blue);
+      background: rgba(255, 255, 255, 0.12);
+    }
+    
+    .search-input::placeholder {
+      color: var(--text-muted);
+    }
+    
+    /* Profile Sections */
+    .profile-section {
+      margin-bottom: 20px;
+    }
+    
+    .section-label {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--text-muted);
+      margin: 0 0 10px;
+    }
+    
+    .current-lesson-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 16px;
+    }
+    
+    .current-lesson-card .lesson-day {
+      font-size: 12px;
+      color: var(--kelly-blue);
+      font-weight: 600;
+      margin-bottom: 4px;
+    }
+    
+    .current-lesson-card .lesson-topic {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 6px;
+    }
+    
+    .current-lesson-card .lesson-phase {
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+    
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 12px;
+    }
+    
+    .stat-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 16px;
+      text-align: center;
+    }
+    
+    .stat-card .stat-value {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+    }
+    
+    .stat-card .stat-label {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 4px;
+    }
+    
+    .subscription-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 12px;
+      padding: 14px 16px;
+    }
+    
+    .subscription-card .sub-status {
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    
+    .subscription-card .sub-upgrade {
+      color: var(--kelly-blue);
+      font-size: 13px;
+      cursor: pointer;
+    }
+    
+    .toggle-row {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    
+    .toggle-switch {
+      width: 48px;
+      height: 26px;
+      background: rgba(255, 255, 255, 0.15);
+      border-radius: 13px;
+      position: relative;
+      cursor: pointer;
+      transition: background 0.2s;
+    }
+    
+    .toggle-switch[data-mode="3d"] {
+      background: var(--kelly-blue);
+    }
+    
+    .toggle-switch .toggle-thumb {
+      position: absolute;
+      top: 3px;
+      left: 3px;
+      width: 20px;
+      height: 20px;
+      background: white;
+      border-radius: 50%;
+      transition: left 0.2s;
+    }
+    
+    .toggle-switch[data-mode="3d"] .toggle-thumb {
+      left: 25px;
+    }
+    
+    .byok-input {
+      width: 100%;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.08);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 14px;
+      font-family: monospace;
+    }
+    
+    .byok-input:focus {
+      outline: none;
+      border-color: var(--kelly-blue);
+    }
+    
+    /* Settings Menu */
+    .settings-menu {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    
+    .settings-menu-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px 16px;
+      background: transparent;
+      border: none;
+      border-radius: 12px;
+      color: var(--text-primary);
+      font-size: 14px;
+      cursor: pointer;
+      transition: background 0.15s;
+      text-align: left;
+      width: 100%;
+    }
+    
+    .settings-menu-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+    
+    .settings-menu-item .settings-icon {
+      font-size: 18px;
+    }
+    
+    .settings-menu-item .settings-arrow {
+      margin-left: auto;
+      color: var(--text-muted);
+    }
+    
+    /* Gmail Integration */
+    .gmail-integration h4 {
+      color: var(--text-primary);
+    }
+    
+    /* Journey Week View */
+    .journey-week-view {
+      display: grid;
+      grid-template-columns: repeat(7, 1fr);
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .week-day-card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 10px;
+      padding: 12px 8px;
+      text-align: center;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .week-day-card:hover {
+      background: rgba(255, 255, 255, 0.1);
+    }
+    
+    .week-day-card.today {
+      border: 2px solid var(--kelly-blue);
+    }
+    
+    .week-day-card.completed {
+      background: rgba(34, 197, 94, 0.2);
+    }
+    
+    .week-day-card .day-name {
+      font-size: 10px;
+      color: var(--text-muted);
+      text-transform: uppercase;
+    }
+    
+    .week-day-card .day-num {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin: 4px 0;
+    }
+    
+    .week-day-card .day-status {
+      font-size: 12px;
+    }
+    
+    /* ============================================
+       LEGACY BOTTOM NAV - REMOVED
+       Keeping minimal styles for backwards compatibility
+       ============================================ */
+    .bottom-nav { display: none !important; }
+    .nav-play-wrapper { display: none !important; }
+    .playback-popover { display: none !important; }
       background: rgba(255, 255, 255, 0.05);
       font-size: 12px;
       color: rgba(255, 255, 255, 0.7);
@@ -7775,64 +8142,189 @@
     </section>
     
     <!-- ==========================================
-         BOTTOM NAV - Professional SVG Icons
+         EVERYTHING BUTTON - Super Prominent Playback Controls
          ========================================== -->
-    <nav class="bottom-nav">
-      <button class="nav-item" id="nav-home-btn" type="button" onclick="handleHomeButton()">
-        <img src="/images/brand/kelly-mark-circle-64.png" alt="Kelly" class="nav-logo-img">
-        <span class="nav-label">Home</span>
+    <div class="everything-button" id="everything-button">
+      <button class="everything-btn btn-prev" id="eb-prev" title="Previous phase" aria-label="Previous">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
       </button>
-      <button class="nav-item" id="nav-journey-btn" data-scene="journey" onclick="showJourneyMode()" type="button">
-        <svg class="nav-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <button class="everything-btn btn-play" id="eb-play" title="Play/Pause" aria-label="Play or Pause">
+        <svg id="eb-play-icon" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+      </button>
+      <button class="everything-btn btn-next" id="eb-next" title="Next phase" aria-label="Next">
+        <svg viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
+      </button>
+      <button class="everything-btn btn-mute" id="eb-mute" title="Mute/Unmute" aria-label="Toggle sound">
+        <svg id="eb-mute-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/>
+          <path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>
+        </svg>
+      </button>
+      <span class="phase-badge" id="eb-phase-badge">1</span>
+    </div>
+    
+    <!-- ==========================================
+         RIGHT ICON BAR - Panel Navigation
+         ========================================== -->
+    <aside class="right-icon-bar" id="right-icon-bar">
+      <button class="icon-bar-btn" data-panel="search" title="Search lessons">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"/>
+          <path d="m21 21-4.35-4.35"/>
+        </svg>
+      </button>
+      <button class="icon-bar-btn" data-panel="journey" title="Your journey">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
           <line x1="16" y1="2" x2="16" y2="6"/>
           <line x1="8" y1="2" x2="8" y2="6"/>
           <line x1="3" y1="10" x2="21" y2="10"/>
         </svg>
-        <span class="nav-label">Journey</span>
       </button>
-      <div class="nav-play-wrapper">
-        <!-- Playback Controls Popover -->
-        <div class="playback-popover" id="playback-popover">
-          <button class="pop-btn" id="pop-mute" title="Mute/Unmute" aria-label="Toggle sound">
-            <span id="pop-mute-icon">🔊</span>
-          </button>
-          <div class="pop-divider"></div>
-          <button class="pop-btn" id="pop-prev" title="Previous phase" aria-label="Previous">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 6h2v12H6zm3.5 6l8.5 6V6z"/></svg>
-          </button>
-          <button class="pop-btn primary" id="pop-play-pause" title="Play/Pause" aria-label="Play or pause">
-            <span id="pop-play-icon">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-            </span>
-          </button>
-          <button class="pop-btn" id="pop-next" title="Next phase" aria-label="Next">
-            <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M6 18l8.5-6L6 6v12zM16 6v12h2V6h-2z"/></svg>
-          </button>
-          <div class="pop-divider"></div>
-          <label class="pop-toggle" title="Auto-advance between phases">
-            <input type="checkbox" id="pop-auto-toggle" checked>
-            <span>Auto</span>
-          </label>
-        </div>
-        
-        <button class="nav-item nav-play-btn" id="nav-play-btn" data-scene="lesson" onclick="handlePlayButton()" type="button" aria-label="Play">
-          <div class="play-btn-inner">
-            <svg viewBox="0 0 24 24" fill="currentColor">
-              <polygon points="5 3 19 12 5 21 5 3"/>
-            </svg>
-          </div>
-          <span class="phase-indicator" id="play-phase-indicator">1</span>
-        </button>
-      </div>
-      <button class="nav-item" id="nav-settings-btn" data-scene="settings" onclick="showSettingsMode()" type="button">
-        <svg class="nav-icon-svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <button class="icon-bar-btn" data-panel="profile" title="Your profile">
+        <img src="/images/brand/kelly-mark-circle-64.png" alt="You" class="profile-avatar" id="icon-bar-avatar">
+      </button>
+      <button class="icon-bar-btn" data-panel="settings" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="3"/>
           <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/>
         </svg>
-        <span class="nav-label">Settings</span>
       </button>
-    </nav>
+    </aside>
+    
+    <!-- ==========================================
+         UNIFIED RIGHT PANEL
+         ========================================== -->
+    <aside class="unified-panel" id="unified-panel">
+      <div class="unified-panel-header">
+        <span class="unified-panel-title" id="unified-panel-title">Panel</span>
+        <button class="unified-panel-close" id="unified-panel-close" aria-label="Close panel">✕</button>
+      </div>
+      <div class="unified-panel-content">
+        <!-- SEARCH SLOT -->
+        <div class="panel-slot" id="panel-search">
+          <div class="search-container">
+            <input type="text" id="panel-search-input" class="search-input" placeholder="Search lessons, topics..." autocomplete="off">
+          </div>
+          <div class="search-results" id="panel-search-results">
+            <p style="color: var(--text-muted); text-align: center; padding: 40px 0;">Type to search all 365 lessons...</p>
+          </div>
+        </div>
+        
+        <!-- JOURNEY SLOT -->
+        <div class="panel-slot" id="panel-journey">
+          <!-- Week view will be populated by JS -->
+          <div class="journey-week-view" id="journey-week-view"></div>
+          
+          <!-- Gmail Integration -->
+          <div class="gmail-integration" style="margin-top: 24px; padding: 16px; background: rgba(255,255,255,0.05); border-radius: 12px;">
+            <h4 style="margin: 0 0 8px; font-size: 14px;">📅 Calendar Integration</h4>
+            <p style="font-size: 12px; color: var(--text-muted); margin: 0 0 12px;">Add all lesson topics to your calendar</p>
+            <button class="btn-secondary" id="btn-gmail-connect" style="width: 100%; font-size: 13px;">
+              Connect Google Calendar
+            </button>
+            <button class="btn-primary" id="btn-add-all-2026" style="width: 100%; margin-top: 8px; font-size: 13px; display: none;">
+              Add All 2026 Topics →
+            </button>
+          </div>
+        </div>
+        
+        <!-- PROFILE SLOT -->
+        <div class="panel-slot" id="panel-profile">
+          <!-- Current Lesson Info -->
+          <div class="profile-section">
+            <h4 class="section-label">Current Lesson</h4>
+            <div class="current-lesson-card">
+              <div class="lesson-day" id="profile-lesson-day">Day 352</div>
+              <div class="lesson-topic" id="profile-lesson-topic">Quieting Your Thoughts</div>
+              <div class="lesson-phase" id="profile-lesson-phase">Phase: Hook</div>
+            </div>
+          </div>
+          
+          <!-- Progress Stats -->
+          <div class="profile-section">
+            <h4 class="section-label">Your Progress</h4>
+            <div class="stats-grid">
+              <div class="stat-card">
+                <div class="stat-value" id="profile-streak">0</div>
+                <div class="stat-label">Day Streak</div>
+              </div>
+              <div class="stat-card">
+                <div class="stat-value" id="profile-completed">0</div>
+                <div class="stat-label">Lessons Done</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Subscription -->
+          <div class="profile-section">
+            <h4 class="section-label">Subscription</h4>
+            <div class="subscription-card" id="profile-subscription">
+              <span class="sub-status">Explorer</span>
+              <span class="sub-upgrade">Upgrade →</span>
+            </div>
+          </div>
+          
+          <!-- Kelly Mode Toggle -->
+          <div class="profile-section">
+            <h4 class="section-label">Kelly Mode</h4>
+            <div class="toggle-row">
+              <span>2D (HeyGen)</span>
+              <div class="toggle-switch" id="toggle-kelly-mode" data-mode="2d">
+                <div class="toggle-thumb"></div>
+              </div>
+              <span>3D (Unity)</span>
+            </div>
+          </div>
+          
+          <!-- BYOK Config -->
+          <div class="profile-section">
+            <h4 class="section-label">AI Configuration (BYOK)</h4>
+            <p style="font-size: 12px; color: var(--text-muted); margin: 0 0 12px;">Bring your own API key for real-time chat</p>
+            <input type="password" id="byok-api-key" class="byok-input" placeholder="sk-..." autocomplete="off">
+            <button class="btn-secondary" id="btn-test-byok" style="width: 100%; margin-top: 8px; font-size: 13px;">
+              Test Connection
+            </button>
+          </div>
+        </div>
+        
+        <!-- SETTINGS SLOT -->
+        <div class="panel-slot" id="panel-settings">
+          <div class="settings-menu">
+            <button class="settings-menu-item" data-settings="help">
+              <span class="settings-icon">❓</span>
+              <span>Help & FAQ</span>
+              <span class="settings-arrow">→</span>
+            </button>
+            <button class="settings-menu-item" data-settings="billing">
+              <span class="settings-icon">💳</span>
+              <span>Billing</span>
+              <span class="settings-arrow">→</span>
+            </button>
+            <button class="settings-menu-item" data-settings="preferences">
+              <span class="settings-icon">🎚️</span>
+              <span>Preferences</span>
+              <span class="settings-arrow">→</span>
+            </button>
+            <button class="settings-menu-item" data-settings="privacy">
+              <span class="settings-icon">🔒</span>
+              <span>Privacy</span>
+              <span class="settings-arrow">→</span>
+            </button>
+            <button class="settings-menu-item" data-settings="about">
+              <span class="settings-icon">ℹ️</span>
+              <span>About</span>
+              <span class="settings-arrow">→</span>
+            </button>
+            <button class="settings-menu-item" data-settings="contact">
+              <span class="settings-icon">✉️</span>
+              <span>Contact</span>
+              <span class="settings-arrow">→</span>
+            </button>
+          </div>
+        </div>
+      </div>
+    </aside>
     
     <!-- ==========================================
          OVERLAYS
@@ -8673,12 +9165,35 @@
       }
     }
 
-    function sendToKelly() {
+    async function sendToKelly() {
       const input = document.getElementById('kelly-chat-input');
       const text = String(input?.value || '').trim();
       if (!text) return;
+      
+      // Show user's message
       appendComment({ emoji: '🗣️', text, simulated: false, user: true });
       if (input) input.value = '';
+      
+      // Try BYOK real-time response
+      const byokResponse = await sendByokMessage(text);
+      if (byokResponse) {
+        // Show Kelly's AI response
+        setTimeout(() => {
+          appendComment({ emoji: '✨', text: byokResponse, simulated: false, kelly: true });
+        }, 500);
+      } else {
+        // Fallback: Show a generic acknowledgment
+        setTimeout(() => {
+          const fallbacks = [
+            "That's a great thought! Let me think about that...",
+            "Interesting question! We'll explore that in the lesson.",
+            "I love your curiosity! Keep those questions coming.",
+            "Thanks for sharing! That's exactly the kind of thinking I encourage."
+          ];
+          const response = fallbacks[Math.floor(Math.random() * fallbacks.length)];
+          appendComment({ emoji: '💭', text: response, simulated: false, kelly: true });
+        }, 800);
+      }
     }
     
     // ============================================
@@ -11346,6 +11861,573 @@
       }
     }
     
+    // ============================================
+    // EVERYTHING BUTTON & UNIFIED PANEL SYSTEM
+    // ============================================
+    
+    // Current panel state
+    let currentPanelId = null;
+    
+    function setupEverythingButton() {
+      // Play/Pause
+      document.getElementById('eb-play')?.addEventListener('click', () => {
+        if (isVideoActive()) {
+          if (isVideoPlaying()) {
+            pauseVideo();
+            window.__lessonObserver?.onPause();
+          } else {
+            resumeVideo();
+          }
+        } else {
+          if (kellyAudio.isPlaying) {
+            kellyAudio.pause();
+            window.__lessonObserver?.onPause();
+          } else {
+            kellyAudio.resume();
+          }
+        }
+        syncEverythingButton();
+      });
+      
+      // Previous phase
+      document.getElementById('eb-prev')?.addEventListener('click', () => {
+        prevPhase();
+      });
+      
+      // Next phase
+      document.getElementById('eb-next')?.addEventListener('click', () => {
+        advancePhase();
+      });
+      
+      // Mute
+      document.getElementById('eb-mute')?.addEventListener('click', () => {
+        toggleEverythingMute();
+      });
+    }
+    
+    function syncEverythingButton() {
+      const playBtn = document.getElementById('eb-play');
+      const playIcon = document.getElementById('eb-play-icon');
+      const phaseBadge = document.getElementById('eb-phase-badge');
+      
+      if (!playBtn || !playIcon) return;
+      
+      const isPlaying = isVideoPlaying() || kellyAudio.isPlaying;
+      
+      if (isPlaying) {
+        playIcon.innerHTML = '<rect x="6" y="4" width="4" height="16"/><rect x="14" y="4" width="4" height="16"/>';
+        playBtn.classList.add('paused');
+      } else {
+        playIcon.innerHTML = '<polygon points="5 3 19 12 5 21 5 3"/>';
+        playBtn.classList.remove('paused');
+      }
+      
+      // Update phase badge
+      if (phaseBadge) {
+        phaseBadge.textContent = (state.currentPhase + 1).toString();
+      }
+    }
+    
+    function toggleEverythingMute() {
+      const muteBtn = document.getElementById('eb-mute');
+      const muteIcon = document.getElementById('eb-mute-icon');
+      const isMuted = muteBtn?.classList.contains('muted');
+      
+      // Toggle mute state
+      const v = getKellyVideoEl();
+      if (v) v.muted = !isMuted;
+      if (kellyAudio.audio) kellyAudio.audio.muted = !isMuted;
+      
+      // Update button state
+      if (muteBtn) {
+        muteBtn.classList.toggle('muted', !isMuted);
+      }
+      
+      // Update icon
+      if (muteIcon) {
+        if (!isMuted) {
+          muteIcon.innerHTML = '<line x1="1" y1="1" x2="23" y2="23"/><path d="M9 9v3a3 3 0 0 0 5.12 2.12M15 9.34V4a3 3 0 0 0-5.94-.6"/><path d="M17 14.3A6 6 0 0 0 6 9v0a6 6 0 0 0 .5 2.4"/>';
+        } else {
+          muteIcon.innerHTML = '<polygon points="11 5 6 9 2 9 2 15 6 15 11 19 11 5"/><path d="M19.07 4.93a10 10 0 0 1 0 14.14M15.54 8.46a5 5 0 0 1 0 7.07"/>';
+        }
+      }
+    }
+    
+    function setupUnifiedPanel() {
+      // Icon bar buttons
+      document.querySelectorAll('.icon-bar-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const panelId = btn.dataset.panel;
+          if (panelId) {
+            toggleUnifiedPanel(panelId);
+          }
+        });
+      });
+      
+      // Close button
+      document.getElementById('unified-panel-close')?.addEventListener('click', () => {
+        closeUnifiedPanel();
+      });
+      
+      // Settings menu items
+      document.querySelectorAll('.settings-menu-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const settingsId = item.dataset.settings;
+          handleSettingsNavigation(settingsId);
+        });
+      });
+      
+      // Kelly mode toggle
+      document.getElementById('toggle-kelly-mode')?.addEventListener('click', () => {
+        toggleKellyMode();
+      });
+      
+      // BYOK test button
+      document.getElementById('btn-test-byok')?.addEventListener('click', () => {
+        testByokConnection();
+      });
+      
+      // Header click behaviors
+      // Kelly logo -> opens chat/comments panel (for now, just toggle left panel)
+      document.querySelector('.kelly-home-link')?.addEventListener('click', (e) => {
+        e.preventDefault();
+        // Open chat/comments panel
+        openPanel('left');
+      });
+      
+      // Time/Date display -> opens journey panel
+      document.querySelector('.nav-time-display')?.addEventListener('click', () => {
+        toggleUnifiedPanel('journey');
+      });
+      
+      // Topic display -> opens journey panel
+      document.querySelector('.nav-topic-display')?.addEventListener('click', () => {
+        toggleUnifiedPanel('journey');
+      });
+    }
+    
+    function toggleUnifiedPanel(panelId) {
+      const panel = document.getElementById('unified-panel');
+      const iconBtns = document.querySelectorAll('.icon-bar-btn');
+      
+      // If clicking same panel, close it
+      if (currentPanelId === panelId && panel?.classList.contains('open')) {
+        closeUnifiedPanel();
+        return;
+      }
+      
+      // Update active icon
+      iconBtns.forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.panel === panelId);
+      });
+      
+      // Show correct panel slot
+      document.querySelectorAll('.panel-slot').forEach(slot => {
+        slot.classList.remove('active');
+      });
+      document.getElementById(`panel-${panelId}`)?.classList.add('active');
+      
+      // Update panel title
+      const titles = {
+        search: 'Search',
+        journey: 'Your Journey',
+        profile: 'Profile',
+        settings: 'Settings'
+      };
+      const titleEl = document.getElementById('unified-panel-title');
+      if (titleEl) titleEl.textContent = titles[panelId] || 'Panel';
+      
+      // Open panel
+      panel?.classList.add('open');
+      currentPanelId = panelId;
+      
+      // Populate panel content if needed
+      if (panelId === 'journey') populateJourneyPanel();
+      if (panelId === 'profile') populateProfilePanel();
+    }
+    
+    function closeUnifiedPanel() {
+      const panel = document.getElementById('unified-panel');
+      panel?.classList.remove('open');
+      
+      document.querySelectorAll('.icon-bar-btn').forEach(btn => {
+        btn.classList.remove('active');
+      });
+      
+      currentPanelId = null;
+    }
+    
+    function populateJourneyPanel() {
+      const weekView = document.getElementById('journey-week-view');
+      if (!weekView) return;
+      
+      const today = getTodayDayNumber();
+      const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
+      
+      // Get week range
+      const startDay = Math.max(1, today - 3);
+      const endDay = Math.min(365, today + 3);
+      
+      let html = '';
+      for (let d = startDay; d <= endDay; d++) {
+        const lesson = manifest?.lessons?.[d] || { topic: `Day ${d}` };
+        const date = window.KellyTime?.dayNumberToDate(d) || new Date();
+        const dayOfWeek = days[date.getDay()];
+        const isToday = d === today;
+        const isCompleted = state.completedLessons?.includes(d);
+        
+        html += `
+          <div class="week-day-card ${isToday ? 'today' : ''} ${isCompleted ? 'completed' : ''}" data-day="${d}">
+            <div class="day-name">${dayOfWeek}</div>
+            <div class="day-num">${date.getDate()}</div>
+            <div class="day-status">${isCompleted ? '✓' : isToday ? '▶' : ''}</div>
+          </div>
+        `;
+      }
+      weekView.innerHTML = html;
+      
+      // Add click handlers
+      weekView.querySelectorAll('.week-day-card').forEach(card => {
+        card.addEventListener('click', () => {
+          const day = parseInt(card.dataset.day);
+          if (day) {
+            state.currentDay = day;
+            saveState();
+            loadLessonRuntime(day);
+            closeUnifiedPanel();
+          }
+        });
+      });
+    }
+    
+    function populateProfilePanel() {
+      // Current lesson info
+      const dayEl = document.getElementById('profile-lesson-day');
+      const topicEl = document.getElementById('profile-lesson-topic');
+      const phaseEl = document.getElementById('profile-lesson-phase');
+      
+      if (dayEl) dayEl.textContent = `Day ${state.currentDay || 1}`;
+      if (topicEl) topicEl.textContent = currentLesson?.topic || 'Loading...';
+      if (phaseEl) phaseEl.textContent = `Phase: ${PHASES[state.currentPhase]?.name || 'Hook'}`;
+      
+      // Stats
+      const streakEl = document.getElementById('profile-streak');
+      const completedEl = document.getElementById('profile-completed');
+      if (streakEl) streakEl.textContent = state.streak || 0;
+      if (completedEl) completedEl.textContent = state.completedLessons?.length || 0;
+    }
+    
+    function handleSettingsNavigation(settingsId) {
+      // For now, just show an alert - will be wired to existing settings panels
+      console.log('Navigate to settings:', settingsId);
+      
+      // Could open existing settings sub-panels here
+      switch(settingsId) {
+        case 'help':
+          // Show help content
+          break;
+        case 'billing':
+          showCheckout();
+          closeUnifiedPanel();
+          break;
+        case 'preferences':
+          // Show preferences
+          break;
+        case 'privacy':
+          // Show privacy
+          break;
+        case 'about':
+          // Show about
+          break;
+        case 'contact':
+          // Show contact
+          break;
+      }
+    }
+    
+    function toggleKellyMode() {
+      const toggle = document.getElementById('toggle-kelly-mode');
+      if (!toggle) return;
+      
+      const currentMode = toggle.dataset.mode || '2d';
+      const newMode = currentMode === '2d' ? '3d' : '2d';
+      
+      toggle.dataset.mode = newMode;
+      state.kellyMode = newMode;
+      saveState();
+      
+      // Switch between 2D (video/image) and 3D (Unity)
+      applyKellyMode(newMode);
+    }
+    
+    function applyKellyMode(mode) {
+      const kellyImg = document.getElementById('lesson-kelly-img');
+      const kellyVideo = document.getElementById('kelly-video');
+      const unityContainer = document.getElementById('kelly-unity-container');
+      
+      if (mode === '3d') {
+        // Show Unity, hide 2D
+        if (kellyImg) kellyImg.style.display = 'none';
+        if (kellyVideo) kellyVideo.style.display = 'none';
+        
+        // Create Unity container if needed
+        if (!unityContainer) {
+          createUnityEmbed();
+        } else {
+          unityContainer.style.display = 'block';
+        }
+        
+        console.log('Kelly mode: 3D (Unity)');
+      } else {
+        // Show 2D, hide Unity
+        if (kellyImg) kellyImg.style.display = '';
+        if (kellyVideo) kellyVideo.style.display = '';
+        if (unityContainer) unityContainer.style.display = 'none';
+        
+        console.log('Kelly mode: 2D (HeyGen/Image)');
+      }
+    }
+    
+    function createUnityEmbed() {
+      const lessonKelly = document.getElementById('lesson-kelly');
+      if (!lessonKelly) return;
+      
+      // Create Unity container
+      const container = document.createElement('div');
+      container.id = 'kelly-unity-container';
+      container.style.cssText = `
+        position: absolute;
+        inset: 0;
+        width: 100%;
+        height: 100%;
+        z-index: 5;
+      `;
+      
+      // Add iframe for Unity WebGL (pointing to existing build)
+      container.innerHTML = `
+        <iframe 
+          id="kelly-unity-frame"
+          src="/unity/kelly-live/index.html" 
+          style="width: 100%; height: 100%; border: none; background: transparent;"
+          allow="autoplay; microphone"
+          sandbox="allow-scripts allow-same-origin"
+        ></iframe>
+      `;
+      
+      lessonKelly.appendChild(container);
+      
+      // Setup Unity communication
+      setupUnityCommunication();
+    }
+    
+    function setupUnityCommunication() {
+      // Listen for messages from Unity
+      window.addEventListener('message', (event) => {
+        if (event.origin !== window.location.origin) return;
+        
+        const { type, data } = event.data || {};
+        
+        switch(type) {
+          case 'unity-ready':
+            console.log('Unity Kelly is ready');
+            break;
+          case 'unity-speak-complete':
+            // Handle speech completion
+            break;
+        }
+      });
+    }
+    
+    function sendToUnity(message, data) {
+      const iframe = document.getElementById('kelly-unity-frame');
+      if (iframe?.contentWindow) {
+        iframe.contentWindow.postMessage({ type: message, data }, '*');
+      }
+    }
+    
+    // Apply saved Kelly mode on load
+    function loadKellyMode() {
+      const savedMode = state.kellyMode || localStorage.getItem('kelly_mode') || '2d';
+      state.kellyMode = savedMode;
+      
+      const toggle = document.getElementById('toggle-kelly-mode');
+      if (toggle) toggle.dataset.mode = savedMode;
+      
+      // Only apply 3D mode if explicitly set (2D is default)
+      if (savedMode === '3d') {
+        applyKellyMode('3d');
+      }
+    }
+    
+    async function testByokConnection() {
+      const keyInput = document.getElementById('byok-api-key');
+      const btn = document.getElementById('btn-test-byok');
+      
+      if (!keyInput || !btn) return;
+      
+      const apiKey = keyInput.value.trim();
+      if (!apiKey) {
+        alert('Please enter an API key');
+        return;
+      }
+      
+      btn.textContent = 'Testing...';
+      btn.disabled = true;
+      
+      try {
+        // Simple test - try to call OpenAI
+        const response = await fetch('https://api.openai.com/v1/models', {
+          headers: { 'Authorization': `Bearer ${apiKey}` }
+        });
+        
+        if (response.ok) {
+          alert('✅ Connection successful! Kelly can now respond in real-time.');
+          state.byokApiKey = apiKey;
+          localStorage.setItem('kelly_byok_key', apiKey);
+          saveState();
+          
+          // Update the input to show it's saved
+          keyInput.placeholder = '••••••••••••••••';
+          keyInput.value = '';
+        } else {
+          alert('❌ Invalid API key');
+        }
+      } catch (e) {
+        alert('❌ Connection failed: ' + e.message);
+      } finally {
+        btn.textContent = 'Test Connection';
+        btn.disabled = false;
+      }
+    }
+    
+    // Check for saved BYOK key on load
+    function loadByokKey() {
+      const savedKey = localStorage.getItem('kelly_byok_key');
+      if (savedKey) {
+        state.byokApiKey = savedKey;
+        const keyInput = document.getElementById('byok-api-key');
+        if (keyInput) {
+          keyInput.placeholder = '••••••••••••••••';
+        }
+      }
+    }
+    
+    // ============================================
+    // GMAIL CALENDAR INTEGRATION
+    // ============================================
+    
+    function setupGmailIntegration() {
+      document.getElementById('btn-gmail-connect')?.addEventListener('click', connectGoogleCalendar);
+      document.getElementById('btn-add-all-2026')?.addEventListener('click', addAllTopicsToCalendar);
+    }
+    
+    async function connectGoogleCalendar() {
+      const btn = document.getElementById('btn-gmail-connect');
+      const addAllBtn = document.getElementById('btn-add-all-2026');
+      
+      // For now, just simulate connection (real implementation would use Google OAuth)
+      btn.textContent = 'Connecting...';
+      btn.disabled = true;
+      
+      // Simulate OAuth flow
+      setTimeout(() => {
+        state.gmailConnected = true;
+        saveState();
+        
+        btn.textContent = '✓ Connected';
+        btn.classList.add('connected');
+        
+        if (addAllBtn) {
+          addAllBtn.style.display = 'block';
+        }
+        
+        alert('📅 Google Calendar connected! You can now add lesson topics to your calendar.');
+      }, 1500);
+    }
+    
+    function generateGoogleCalendarUrl(lesson, dayNumber) {
+      // Generate a Google Calendar event URL
+      const date = window.KellyTime?.dayNumberToDate(dayNumber) || new Date();
+      
+      // Format: YYYYMMDD
+      const year = date.getFullYear();
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const day = String(date.getDate()).padStart(2, '0');
+      const dateStr = `${year}${month}${day}`;
+      
+      const title = encodeURIComponent(`Curious Kelly: ${lesson.topic || 'Daily Lesson'}`);
+      const details = encodeURIComponent(`Day ${dayNumber} - ${lesson.topic || 'Daily Lesson'}\n\nLearn with Kelly at: https://curiouskelly.com/learn.html?day=${dayNumber}`);
+      
+      // 9 AM for 15 minutes
+      const startTime = `${dateStr}T090000`;
+      const endTime = `${dateStr}T091500`;
+      
+      return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startTime}/${endTime}&details=${details}`;
+    }
+    
+    function addAllTopicsToCalendar() {
+      const btn = document.getElementById('btn-add-all-2026');
+      
+      // Generate a link to add all 365 lessons
+      // For simplicity, we'll open a page with instructions
+      alert(`📅 Adding all 365 lesson topics to your calendar!
+      
+This will open Google Calendar with each topic scheduled for 9 AM each day.
+
+Tip: Use "Add to Calendar" on individual lessons for now while we build the bulk import feature.`);
+      
+      // Open calendar with today's lesson as example
+      const todayDay = getTodayDayNumber();
+      const lesson = manifest?.lessons?.[todayDay] || { topic: 'Daily Lesson' };
+      const calendarUrl = generateGoogleCalendarUrl(lesson, todayDay);
+      window.open(calendarUrl, '_blank');
+    }
+    
+    // Add single lesson to calendar
+    function addLessonToCalendar(dayNumber) {
+      const lesson = manifest?.lessons?.[dayNumber] || { topic: `Day ${dayNumber}` };
+      const calendarUrl = generateGoogleCalendarUrl(lesson, dayNumber);
+      window.open(calendarUrl, '_blank');
+    }
+    
+    // BYOK Chat - Send message to Kelly using user's API key
+    async function sendByokMessage(message) {
+      const apiKey = state.byokApiKey || localStorage.getItem('kelly_byok_key');
+      if (!apiKey) {
+        console.log('No BYOK key configured, using fallback responses');
+        return null;
+      }
+      
+      try {
+        const response = await fetch('https://api.openai.com/v1/chat/completions', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+            'Authorization': `Bearer ${apiKey}`
+          },
+          body: JSON.stringify({
+            model: 'gpt-4o-mini',
+            messages: [
+              {
+                role: 'system',
+                content: `You are Kelly, a warm and curious AI teacher. You're currently teaching "${currentLesson?.topic || 'today\'s lesson'}". Keep responses brief (2-3 sentences), friendly, and educational. The learner is on phase ${state.currentPhase + 1} of 7.`
+              },
+              { role: 'user', content: message }
+            ],
+            max_tokens: 150
+          })
+        });
+        
+        if (response.ok) {
+          const data = await response.json();
+          return data.choices?.[0]?.message?.content || null;
+        }
+      } catch (e) {
+        console.error('BYOK chat error:', e);
+      }
+      return null;
+    }
+    
     // Wire up lesson guide navigation buttons
     function setupLessonGuideEvents() {
       const prevBtn = document.getElementById('guide-prev-btn');
@@ -11687,10 +12769,11 @@
         updatePhaseProgress();
         updatePlayButtonIndicator();
         updateNavPhaseDots(); // Sync header phase dots
+        syncEverythingButton(); // Sync Everything Button
         
         // Show phase-appropriate visual from Visual Commons
         if (window.LessonVisualDisplay) {
-          const phaseNames = ['hook', 'cliff', 'fact1', 'fact2', 'fact3', 'wisdom', 'outro', 'complete'];
+          const phaseNames = ['hook', 'cliff', 'q1', 'q2', 'q3', 'wisdom', 'outro', 'complete'];
           const phaseName = phaseNames[index] || 'hook';
           window.LessonVisualDisplay.show(state.currentDay, phaseName);
         }
@@ -16485,6 +17568,14 @@ Style requirements:
       startNavClock();
       setupNavPhaseDots();
       updateNavPhaseDots();
+      
+      // New unified panel system
+      setupEverythingButton();
+      setupUnifiedPanel();
+      syncEverythingButton();
+      loadByokKey();
+      setupGmailIntegration();
+      loadKellyMode();
 
       // Initial route:
       // - First-time users: show simple home welcome

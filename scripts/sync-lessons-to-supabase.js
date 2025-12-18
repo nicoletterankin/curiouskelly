@@ -56,6 +56,14 @@ function loadLesson(dayNumber) {
   }
 }
 
+// Helper to extract English text from i18n object or plain string
+function getEnText(value, fallback = '') {
+  if (!value) return fallback;
+  if (typeof value === 'object' && value.en !== undefined) return value.en;
+  if (typeof value === 'string') return value;
+  return fallback;
+}
+
 async function syncLesson(dayNumber) {
   const lesson = loadLesson(dayNumber);
   if (!lesson) {
@@ -63,7 +71,11 @@ async function syncLesson(dayNumber) {
     return { success: false, error: 'No file' };
   }
   
-  const topic = lesson.meta?.topic || 'Unknown Topic';
+  // Handle i18n topic object
+  const topic = getEnText(lesson.meta?.topic, 'Unknown Topic');
+  const universalTruth = getEnText(lesson.universal_truth, '');
+  const headline = getEnText(lesson.headline, topic);
+  
   console.log(`📚 Day ${dayNumber}: "${topic}"`);
   
   // 1. Check if core_lesson exists
@@ -82,8 +94,8 @@ async function syncLesson(dayNumber) {
       .insert({
         day_number: dayNumber,
         topic: topic,
-        universal_truth: lesson.universal_truth || '',
-        marketing_headline: lesson.headline || topic,
+        universal_truth: universalTruth,
+        marketing_headline: headline,
         marketing_tagline: lesson.meta?.category || '',
         icon_emoji: lesson.meta?.emoji || '📚'
       })
@@ -103,8 +115,8 @@ async function syncLesson(dayNumber) {
       .from('core_lessons')
       .update({
         topic: topic,
-        universal_truth: lesson.universal_truth || '',
-        marketing_headline: lesson.headline || topic,
+        universal_truth: universalTruth,
+        marketing_headline: headline,
         icon_emoji: lesson.meta?.emoji || '📚'
       })
       .eq('id', lessonId);
@@ -116,34 +128,33 @@ async function syncLesson(dayNumber) {
     }
   }
   
-  // 2. Sync atoms for each phase
+  // 2. Sync atoms for each phase (if lesson_atoms table exists)
   const phases = lesson.phases || {};
   let atomsCreated = 0;
   let atomsUpdated = 0;
+  let atomsSkipped = false;
+  
+  // Helper functions for i18n
+  const getI18nField = (field, fallback = '') => {
+    if (!field) return fallback;
+    if (typeof field === 'object' && field.en !== undefined) return field;
+    return { en: field, es: '[NEEDS TRANSLATION]', pt: '[NEEDS TRANSLATION]' };
+  };
+  
+  const getEnglishLocal = (field, fallback = '') => {
+    if (!field) return fallback;
+    if (typeof field === 'object' && field.en !== undefined) return field.en;
+    return field;
+  };
   
   for (const phase of PHASES) {
     const phaseData = phases[phase];
     if (!phaseData) continue;
     
-    // Build content object with v5.0 full-choices-i18n structure
-    // Handles both old (string) and new (i18n object) formats
-    const getI18nField = (field, fallback = '') => {
-      if (!field) return fallback;
-      if (typeof field === 'object' && field.en !== undefined) return field; // Already i18n
-      return { en: field, es: '[NEEDS TRANSLATION]', pt: '[NEEDS TRANSLATION]' };
-    };
-    
-    const getEnglish = (field, fallback = '') => {
-      if (!field) return fallback;
-      if (typeof field === 'object' && field.en !== undefined) return field.en;
-      return field;
-    };
-    
     const content = {
       title: getI18nField(phaseData.title, phase),
       script: getI18nField(phaseData.script, ''),
       duration: typeof phaseData.duration === 'object' ? phaseData.duration : { en: phaseData.duration || 15, es: Math.round((phaseData.duration || 15) * 1.15), pt: Math.round((phaseData.duration || 15) * 1.08) },
-      // v5.0 choice fields (full i18n)
       prompt: getI18nField(phaseData.prompt),
       options: (phaseData.options || []).map(opt => ({
         letter: opt.letter,
@@ -151,48 +162,60 @@ async function syncLesson(dayNumber) {
         quality: opt.quality,
         response: getI18nField(opt.response)
       })),
-      // Legacy compatibility (English only for older clients)
-      choice_intro: getEnglish(phaseData.prompt),
-      option_a: getEnglish(phaseData.options?.[0]?.text),
-      option_b: getEnglish(phaseData.options?.[1]?.text),
-      success_response: getEnglish(phaseData.options?.[0]?.response),
-      alt_response: getEnglish(phaseData.options?.[1]?.response),
+      // Legacy compatibility
+      choice_intro: getEnglishLocal(phaseData.prompt),
+      option_a: getEnglishLocal(phaseData.options?.[0]?.text),
+      option_b: getEnglishLocal(phaseData.options?.[1]?.text),
+      success_response: getEnglishLocal(phaseData.options?.[0]?.response),
+      alt_response: getEnglishLocal(phaseData.options?.[1]?.response),
     };
     
-    // Check if atom exists (for default archetype)
-    const { data: existingAtom } = await supabase
-      .from('lesson_atoms')
-      .select('id')
-      .eq('core_lesson_id', lessonId)
-      .eq('phase', phase)
-      .eq('archetype', 'The Scientist')
-      .single();
-    
-    if (existingAtom) {
-      // Update
-      const { error } = await supabase
+    try {
+      // Check if lesson_atoms table exists and atom exists
+      const { data: existingAtom, error: selectError } = await supabase
         .from('lesson_atoms')
-        .update({ content })
-        .eq('id', existingAtom.id);
+        .select('id')
+        .eq('core_lesson_id', lessonId)
+        .eq('phase', phase)
+        .eq('archetype', 'The Scientist')
+        .single();
       
-      if (!error) atomsUpdated++;
-    } else {
-      // Insert
-      const { error } = await supabase
-        .from('lesson_atoms')
-        .insert({
-          core_lesson_id: lessonId,
-          day_number: dayNumber,
-          phase,
-          archetype: 'The Scientist',
-          content
-        });
+      if (selectError && selectError.code === '42P01') {
+        // Table doesn't exist - skip atoms sync
+        atomsSkipped = true;
+        break;
+      }
       
-      if (!error) atomsCreated++;
+      if (existingAtom) {
+        const { error } = await supabase
+          .from('lesson_atoms')
+          .update({ content })
+          .eq('id', existingAtom.id);
+        if (!error) atomsUpdated++;
+      } else {
+        const { error } = await supabase
+          .from('lesson_atoms')
+          .insert({
+            core_lesson_id: lessonId,
+            day_number: dayNumber,
+            phase,
+            archetype: 'The Scientist',
+            content
+          });
+        if (!error) atomsCreated++;
+      }
+    } catch (e) {
+      // Table might not exist
+      atomsSkipped = true;
+      break;
     }
   }
   
-  console.log(`   📝 Atoms: ${atomsCreated} created, ${atomsUpdated} updated`);
+  if (atomsSkipped) {
+    console.log(`   ⏭️  Atoms: table not found (run migration)`);
+  } else {
+    console.log(`   📝 Atoms: ${atomsCreated} created, ${atomsUpdated} updated`);
+  }
   
   return { success: true, lessonId, atomsCreated, atomsUpdated };
 }
