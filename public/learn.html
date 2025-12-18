@@ -1013,23 +1013,28 @@
     /* Sacred side panels (glass overlays; Kelly stays visible behind) */
     /* NOTE: Old .right-panel is now replaced by .unified-panel */
     .left-panel {
-      position: absolute;
-      top: 0;
-      bottom: calc(var(--nav-height) + var(--safe-bottom));
+      position: fixed;
+      top: 60px;
+      bottom: 100px;
       width: 320px;
+      left: 0;
+      transform: translateX(-100%);
+      background: rgba(15, 15, 19, 0.95);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+      border-right: 1px solid rgba(255, 255, 255, 0.1);
+      z-index: 180;
+      transition: transform 0.3s ease;
+    }
+    
+    .left-panel.open {
+      transform: translateX(0);
     }
     
     /* OLD right-panel - HIDDEN, replaced by unified-panel */
     .right-panel {
       display: none !important;
     }
-    
-    .right-panel-OLD {
-      position: absolute;
-      top: 0;
-      /* Keep panel content above fixed bottom nav (so chat input stays reachable) */
-      bottom: calc(var(--nav-height) + var(--safe-bottom));
-      width: 320px;
       max-width: 85vw;
       transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
       z-index: 100;
@@ -1039,23 +1044,7 @@
       min-height: 0;
     }
 
-    .left-panel {
-      left: 0;
-      transform: translateX(-100%);
-    }
-    .left-panel.open {
-      transform: translateX(0);
-      pointer-events: auto;
-    }
-
-    .right-panel {
-      right: 0;
-      transform: translateX(100%);
-    }
-    .right-panel.open {
-      transform: translateX(0);
-      pointer-events: auto;
-    }
+    /* Left/right panel transforms now in unified section above */
 
     .panel-content {
       height: 100%;
@@ -1957,9 +1946,10 @@
     }
 
     /* ============================================
-       2. KNOWLEDGE NUGGETS (Bottom enhancement)
+       2. KNOWLEDGE NUGGETS (HIDDEN - replaced by panel system)
        ============================================ */
     .knowledge-nugget {
+      display: none !important;
       position: absolute;
       bottom: 100%;
       left: 50%;
@@ -6764,40 +6754,105 @@
       border-color: var(--kelly-blue);
     }
     
-    /* Settings Menu */
-    .settings-menu {
+    /* Settings Accordion */
+    .settings-accordion {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: 4px;
     }
     
-    .settings-menu-item {
+    .settings-section {
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    
+    .settings-section[open] {
+      background: rgba(255, 255, 255, 0.06);
+    }
+    
+    .settings-section-header {
       display: flex;
       align-items: center;
       gap: 12px;
       padding: 14px 16px;
-      background: transparent;
-      border: none;
-      border-radius: 12px;
-      color: var(--text-primary);
-      font-size: 14px;
       cursor: pointer;
-      transition: background 0.15s;
-      text-align: left;
-      width: 100%;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      list-style: none;
     }
     
-    .settings-menu-item:hover {
-      background: rgba(255, 255, 255, 0.08);
+    .settings-section-header::-webkit-details-marker {
+      display: none;
     }
     
-    .settings-menu-item .settings-icon {
+    .settings-section-header::after {
+      content: '+';
+      margin-left: auto;
+      font-size: 18px;
+      color: var(--text-muted);
+      transition: transform 0.2s;
+    }
+    
+    .settings-section[open] .settings-section-header::after {
+      content: '−';
+    }
+    
+    .settings-section-header:hover {
+      background: rgba(255, 255, 255, 0.05);
+    }
+    
+    .settings-section-header .settings-icon {
       font-size: 18px;
     }
     
-    .settings-menu-item .settings-arrow {
-      margin-left: auto;
-      color: var(--text-muted);
+    .settings-section-content {
+      padding: 0 16px 16px;
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    
+    .settings-section-content p {
+      margin: 0 0 8px;
+    }
+    
+    .settings-link {
+      color: var(--kelly-blue);
+      text-decoration: none;
+      font-size: 13px;
+    }
+    
+    .settings-link:hover {
+      text-decoration: underline;
+    }
+    
+    .settings-plan-info {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 8px;
+    }
+    
+    .settings-toggle-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 10px 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+      cursor: pointer;
+    }
+    
+    .settings-toggle-row:last-child {
+      border-bottom: none;
+    }
+    
+    .settings-toggle-row input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--kelly-blue);
     }
     
     /* Gmail Integration */
@@ -6805,50 +6860,95 @@
       color: var(--text-primary);
     }
     
-    /* Journey Week View */
+    /* Journey Lesson List - Vertical list with titles */
     .journey-week-view {
-      display: grid;
-      grid-template-columns: repeat(7, 1fr);
-      gap: 8px;
-      margin-bottom: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
     }
     
-    .week-day-card {
-      background: rgba(255, 255, 255, 0.05);
+    .journey-lesson-list {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+    
+    .journey-lesson-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.03);
       border-radius: 10px;
-      padding: 12px 8px;
-      text-align: center;
       cursor: pointer;
       transition: all 0.15s;
     }
     
-    .week-day-card:hover {
-      background: rgba(255, 255, 255, 0.1);
+    .journey-lesson-item:hover {
+      background: rgba(255, 255, 255, 0.08);
     }
     
-    .week-day-card.today {
-      border: 2px solid var(--kelly-blue);
+    .journey-lesson-item.today {
+      background: rgba(37, 99, 235, 0.15);
+      border-left: 3px solid var(--kelly-blue);
     }
     
-    .week-day-card.completed {
-      background: rgba(34, 197, 94, 0.2);
+    .journey-lesson-item.completed {
+      opacity: 0.7;
     }
     
-    .week-day-card .day-name {
+    .journey-lesson-item.completed .journey-lesson-status {
+      color: #22c55e;
+    }
+    
+    .journey-lesson-item.missed {
+      opacity: 0.5;
+    }
+    
+    .journey-lesson-date {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      min-width: 50px;
+    }
+    
+    .journey-day-name {
+      font-size: 10px;
+      text-transform: uppercase;
+      color: var(--text-muted);
+    }
+    
+    .journey-month-day {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-secondary);
+    }
+    
+    .journey-lesson-info {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .journey-lesson-num {
       font-size: 10px;
       color: var(--text-muted);
       text-transform: uppercase;
     }
     
-    .week-day-card .day-num {
-      font-size: 18px;
-      font-weight: 600;
+    .journey-lesson-topic {
+      font-size: 14px;
+      font-weight: 500;
       color: var(--text-primary);
-      margin: 4px 0;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
     }
     
-    .week-day-card .day-status {
-      font-size: 12px;
+    .journey-lesson-status {
+      font-size: 16px;
+      width: 24px;
+      text-align: center;
+      color: var(--kelly-blue);
     }
     
     /* ============================================
@@ -6980,8 +7080,12 @@
     }
 
     /* ============================================
-       PAYWALL (IAP STUB UI)
+       PAYWALL (OLD MODAL - HIDDEN, use panel checkout instead)
        ============================================ */
+    #paywall {
+      display: none !important;
+    }
+    
     .paywall-content {
       width: 100%;
       max-width: 380px;
@@ -8315,39 +8419,92 @@
           </div>
         </div>
         
-        <!-- SETTINGS SLOT -->
+        <!-- SETTINGS SLOT - Accordion Style -->
         <div class="panel-slot" id="panel-settings">
-          <div class="settings-menu">
-            <button class="settings-menu-item" data-settings="help">
-              <span class="settings-icon">❓</span>
-              <span>Help & FAQ</span>
-              <span class="settings-arrow">→</span>
-            </button>
-            <button class="settings-menu-item" data-settings="billing">
-              <span class="settings-icon">💳</span>
-              <span>Billing</span>
-              <span class="settings-arrow">→</span>
-            </button>
-            <button class="settings-menu-item" data-settings="preferences">
-              <span class="settings-icon">🎚️</span>
-              <span>Preferences</span>
-              <span class="settings-arrow">→</span>
-            </button>
-            <button class="settings-menu-item" data-settings="privacy">
-              <span class="settings-icon">🔒</span>
-              <span>Privacy</span>
-              <span class="settings-arrow">→</span>
-            </button>
-            <button class="settings-menu-item" data-settings="about">
-              <span class="settings-icon">ℹ️</span>
-              <span>About</span>
-              <span class="settings-arrow">→</span>
-            </button>
-            <button class="settings-menu-item" data-settings="contact">
-              <span class="settings-icon">✉️</span>
-              <span>Contact</span>
-              <span class="settings-arrow">→</span>
-            </button>
+          <div class="settings-accordion">
+            <!-- Help Section -->
+            <details class="settings-section">
+              <summary class="settings-section-header">
+                <span class="settings-icon">❓</span>
+                <span>Help & FAQ</span>
+              </summary>
+              <div class="settings-section-content">
+                <p>Kelly teaches one lesson per day for 365 days. Today's lesson is always yours!</p>
+                <a href="mailto:hello@curiouskelly.com" class="settings-link">Email Support →</a>
+              </div>
+            </details>
+            
+            <!-- Billing Section -->
+            <details class="settings-section">
+              <summary class="settings-section-header">
+                <span class="settings-icon">💳</span>
+                <span>Subscription</span>
+              </summary>
+              <div class="settings-section-content">
+                <div class="settings-plan-info">
+                  <span>Current Plan:</span>
+                  <strong id="settings-current-plan">Explorer</strong>
+                </div>
+                <button class="btn-primary" onclick="showCheckout(); closeUnifiedPanel();" style="width: 100%; margin-top: 12px;">
+                  Upgrade to Kelly+ →
+                </button>
+              </div>
+            </details>
+            
+            <!-- Preferences Section -->
+            <details class="settings-section">
+              <summary class="settings-section-header">
+                <span class="settings-icon">🎚️</span>
+                <span>Preferences</span>
+              </summary>
+              <div class="settings-section-content">
+                <label class="settings-toggle-row">
+                  <span>Auto-play lessons</span>
+                  <input type="checkbox" id="pref-autoplay" checked>
+                </label>
+                <label class="settings-toggle-row">
+                  <span>Show captions</span>
+                  <input type="checkbox" id="pref-captions" checked>
+                </label>
+              </div>
+            </details>
+            
+            <!-- Privacy Section -->
+            <details class="settings-section">
+              <summary class="settings-section-header">
+                <span class="settings-icon">🔒</span>
+                <span>Privacy</span>
+              </summary>
+              <div class="settings-section-content">
+                <p style="font-size: 13px; color: var(--text-muted);">Your data stays on your device. We don't sell or share personal information.</p>
+                <a href="/privacy" class="settings-link">Privacy Policy →</a>
+              </div>
+            </details>
+            
+            <!-- About Section -->
+            <details class="settings-section">
+              <summary class="settings-section-header">
+                <span class="settings-icon">ℹ️</span>
+                <span>About</span>
+              </summary>
+              <div class="settings-section-content">
+                <p style="font-size: 13px;"><strong>Curious Kelly</strong> v1.0.0</p>
+                <p style="font-size: 12px; color: var(--text-muted);">Made with 💜 by Lesson of the Day PBC</p>
+                <a href="/terms" class="settings-link">Terms of Service →</a>
+              </div>
+            </details>
+            
+            <!-- Contact Section -->
+            <details class="settings-section">
+              <summary class="settings-section-header">
+                <span class="settings-icon">✉️</span>
+                <span>Contact Kelly</span>
+              </summary>
+              <div class="settings-section-content">
+                <p style="font-size: 13px;">Questions, feedback, or just want to say hi?</p>
+                <a href="mailto:hello@curiouskelly.com" class="settings-link">hello@curiouskelly.com →</a>
+              </div>
+            </details>
           </div>
         </div>
       </div>
@@ -12091,30 +12248,41 @@
       const today = getTodayDayNumber();
       const days = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
       
-      // Get week range
+      // Show more days with lesson titles
       const startDay = Math.max(1, today - 3);
-      const endDay = Math.min(365, today + 3);
+      const endDay = Math.min(365, today + 7);
       
-      let html = '';
+      let html = '<div class="journey-lesson-list">';
       for (let d = startDay; d <= endDay; d++) {
-        const lesson = manifest?.lessons?.[d] || { topic: `Day ${d}` };
+        const lesson = manifest?.lessons?.[d] || { topic: `Day ${d} Lesson` };
         const date = window.KellyTime?.dayNumberToDate(d) || new Date();
         const dayOfWeek = days[date.getDay()];
+        const monthDay = `${date.toLocaleString('default', { month: 'short' })} ${date.getDate()}`;
         const isToday = d === today;
         const isCompleted = state.completedLessons?.includes(d);
+        const isPast = d < today;
         
         html += `
-          <div class="week-day-card ${isToday ? 'today' : ''} ${isCompleted ? 'completed' : ''}" data-day="${d}">
-            <div class="day-name">${dayOfWeek}</div>
-            <div class="day-num">${date.getDate()}</div>
-            <div class="day-status">${isCompleted ? '✓' : isToday ? '▶' : ''}</div>
+          <div class="journey-lesson-item ${isToday ? 'today' : ''} ${isCompleted ? 'completed' : ''} ${isPast && !isCompleted ? 'missed' : ''}" data-day="${d}">
+            <div class="journey-lesson-date">
+              <span class="journey-day-name">${dayOfWeek}</span>
+              <span class="journey-month-day">${monthDay}</span>
+            </div>
+            <div class="journey-lesson-info">
+              <div class="journey-lesson-num">Day ${d}</div>
+              <div class="journey-lesson-topic">${lesson.topic || 'Daily Lesson'}</div>
+            </div>
+            <div class="journey-lesson-status">
+              ${isCompleted ? '✓' : isToday ? '▶' : isPast ? '○' : ''}
+            </div>
           </div>
         `;
       }
+      html += '</div>';
       weekView.innerHTML = html;
       
       // Add click handlers
-      weekView.querySelectorAll('.week-day-card').forEach(card => {
+      weekView.querySelectorAll('.journey-lesson-item').forEach(card => {
         card.addEventListener('click', () => {
           const day = parseInt(card.dataset.day);
           if (day) {
