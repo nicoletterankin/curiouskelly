@@ -1,0 +1,122 @@
+# KELLY-SYNC Pipeline Configuration
+# Production settings for 4K/8K output
+
+pipeline:
+  name: "kelly-sync"
+  version: "1.0.0"
+  target_resolution: "4k"  # Options: 1080p, 4k, 8k
+  target_fps: 30
+  
+# Kelly-specific configuration
+kelly:
+  reference_image: "C:/iLearnStudio/projects/Kelly/Ref/Best Character Reference/head and shoulders without chair.png"
+  heygen_archive_dir: "generated-videos/heygen-archive"
+  motion_library: "generated-images/kelly-motion-library.json"
+  voice_id: "wAdymQH5YucAkXwmrdL0"  # ElevenLabs Kelly voice
+
+# Model configurations
+models:
+  # VideoReTalking - Lip Synthesis
+  video_retalking:
+    enabled: true
+    checkpoint: "models/video_retalking/DNet.pt"
+    face_detection: "models/video_retalking/face_detection.pt"
+    audio2pose: "models/video_retalking/audio2pose.pt"
+    audio2exp: "models/video_retalking/audio2exp.pt"
+    wav2lip: "models/video_retalking/wav2lip.pt"
+    
+  # CodeFormer - Face Restoration
+  codeformer:
+    enabled: true
+    checkpoint: "models/codeformer/codeformer.pth"
+    fidelity_weight: 0.7  # 0=quality, 1=fidelity to original
+    background_enhance: true
+    face_upsample: true
+    upscale: 2
+    
+  # Real-ESRGAN - Super Resolution
+  real_esrgan:
+    enabled: true
+    model_name: "RealESRGAN_x4plus"
+    # Also available: RealESRGAN_x4plus_anime_6B, RealESRGAN_x2plus
+    tile: 400  # Tile size for memory efficiency
+    tile_pad: 40
+    pre_pad: 0
+    half_precision: true  # Use FP16 for speed
+    
+  # First Order Motion Model
+  fomm:
+    enabled: true
+    checkpoint: "models/fomm/vox-adv-cpk.pth.tar"
+    config: "models/fomm/vox-256.yaml"
+    cpu: false
+    
+  # Whisper - Phoneme Extraction
+  whisper:
+    model_size: "large-v3"  # Options: tiny, base, small, medium, large-v3
+    device: "cuda"
+    compute_type: "float16"
+
+# Quality settings
+quality:
+  # Lip sync accuracy threshold
+  syncnet_threshold: 0.85
+  
+  # Face identity preservation
+  arcface_threshold: 0.80
+  
+  # Temporal smoothing
+  enable_temporal_smoothing: true
+  smoothing_window: 5  # frames
+  
+  # Blending
+  blending_method: "poisson"  # Options: alpha, poisson, seamless
+  feather_radius: 3
+  
+  # Color matching
+  enable_color_matching: true
+  color_match_method: "histogram"  # Options: histogram, mean, mkl
+
+# Output settings
+output:
+  format: "mp4"
+  codec: "libx264"
+  crf: 18  # Lower = higher quality (18-23 typical)
+  preset: "slow"  # Options: ultrafast, fast, medium, slow, veryslow
+  audio_codec: "aac"
+  audio_bitrate: "192k"
+  
+  # Resolution presets
+  resolutions:
+    1080p:
+      width: 1920
+      height: 1080
+    4k:
+      width: 3840
+      height: 2160
+    8k:
+      width: 7680
+      height: 4320
+
+# Processing settings
+processing:
+  batch_size: 4  # Frames per batch
+  num_workers: 4
+  pin_memory: true
+  device: "cuda:0"
+  
+  # Memory management for RTX 5090
+  max_vram_usage_gb: 28  # Leave 4GB headroom
+  enable_memory_efficient_attention: true
+  
+  # Checkpointing
+  save_intermediate: true
+  intermediate_dir: "temp/intermediate"
+  
+# Paths
+paths:
+  models_dir: "models"
+  assets_dir: "assets"
+  output_dir: "output"
+  temp_dir: "temp"
+  logs_dir: "logs"

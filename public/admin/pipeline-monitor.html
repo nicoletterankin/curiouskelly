@@ -1,0 +1,288 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>🎬 Kelly Video Pipeline Monitor</title>
+  <style>
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body { 
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      color: #fff; min-height: 100vh; padding: 20px;
+    }
+    .container { max-width: 1400px; margin: 0 auto; }
+    h1 { text-align: center; margin-bottom: 30px; font-size: 2.5em; }
+    .stats-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 20px; margin-bottom: 30px; }
+    .stat-card { background: rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; text-align: center; }
+    .stat-value { font-size: 3em; font-weight: bold; margin-bottom: 5px; }
+    .stat-label { color: #aaa; font-size: 0.9em; }
+    .stat-card.heygen { border-left: 4px solid #ff6b6b; }
+    .stat-card.sync { border-left: 4px solid #4ecdc4; }
+    .stat-card.local { border-left: 4px solid #ffe66d; }
+    .pipeline-section { background: rgba(255,255,255,0.05); border-radius: 12px; padding: 20px; margin-bottom: 20px; }
+    .pipeline-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 15px; }
+    .pipeline-title { font-size: 1.3em; font-weight: bold; }
+    .status-badge { padding: 5px 12px; border-radius: 20px; font-size: 0.8em; }
+    .status-active { background: #4ecdc4; color: #000; }
+    .status-waiting { background: #ffe66d; color: #000; }
+    .status-error { background: #ff6b6b; color: #fff; }
+    .progress-bar { height: 20px; background: rgba(255,255,255,0.1); border-radius: 10px; overflow: hidden; margin: 10px 0; }
+    .progress-fill { height: 100%; transition: width 0.3s; }
+    .progress-heygen { background: linear-gradient(90deg, #ff6b6b, #feca57); }
+    .progress-sync { background: linear-gradient(90deg, #4ecdc4, #44bd32); }
+    table { width: 100%; border-collapse: collapse; }
+    th, td { padding: 12px; text-align: left; border-bottom: 1px solid rgba(255,255,255,0.1); }
+    th { color: #888; font-weight: normal; }
+    .icon { font-size: 1.2em; margin-right: 8px; }
+    .refresh-btn { background: #4ecdc4; color: #000; border: none; padding: 10px 20px; border-radius: 8px; cursor: pointer; font-weight: bold; }
+    .refresh-btn:hover { background: #44bd32; }
+    .estimate-box { background: rgba(78, 205, 196, 0.2); border: 1px solid #4ecdc4; border-radius: 8px; padding: 15px; margin-top: 20px; }
+    .cost-box { background: rgba(255, 107, 107, 0.2); border: 1px solid #ff6b6b; border-radius: 8px; padding: 15px; margin-top: 20px; }
+    .autonomy-section { background: linear-gradient(135deg, rgba(255,230,109,0.1), rgba(78,205,196,0.1)); border: 2px solid #ffe66d; border-radius: 12px; padding: 20px; margin-top: 30px; }
+    .autonomy-title { color: #ffe66d; font-size: 1.5em; margin-bottom: 15px; }
+    .phase-card { background: rgba(0,0,0,0.3); border-radius: 8px; padding: 15px; margin: 10px 0; }
+    .phase-number { color: #4ecdc4; font-weight: bold; }
+    #log { background: #000; border-radius: 8px; padding: 15px; font-family: monospace; font-size: 0.85em; max-height: 200px; overflow-y: auto; margin-top: 15px; }
+    .log-entry { margin: 5px 0; }
+    .log-time { color: #666; }
+    .log-success { color: #4ecdc4; }
+    .log-error { color: #ff6b6b; }
+    .log-info { color: #ffe66d; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🎬 Kelly Video Pipeline Monitor</h1>
+    
+    <div class="stats-grid">
+      <div class="stat-card heygen">
+        <div class="stat-value" id="heygen-completed">-</div>
+        <div class="stat-label">HeyGen Completed</div>
+      </div>
+      <div class="stat-card heygen">
+        <div class="stat-value" id="heygen-waiting">-</div>
+        <div class="stat-label">HeyGen Waiting</div>
+      </div>
+      <div class="stat-card sync">
+        <div class="stat-value" id="sync-completed">-</div>
+        <div class="stat-label">Sync Labs Completed</div>
+      </div>
+      <div class="stat-card sync">
+        <div class="stat-value" id="sync-waiting">-</div>
+        <div class="stat-label">Sync Labs Waiting</div>
+      </div>
+      <div class="stat-card local">
+        <div class="stat-value" id="total-ready">-</div>
+        <div class="stat-label">Total Videos Ready</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="credits">-</div>
+        <div class="stat-label">HeyGen Credits</div>
+      </div>
+    </div>
+
+    <!-- Day 351 Section -->
+    <div class="pipeline-section">
+      <div class="pipeline-header">
+        <div class="pipeline-title">📅 Day 351 (Today)</div>
+        <span class="status-badge status-active" id="day351-status">Loading...</span>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill progress-heygen" id="day351-progress" style="width: 0%"></div>
+      </div>
+      <table id="day351-table">
+        <thead><tr><th>Archetype</th><th>HeyGen</th><th>Sync Labs</th><th>Status</th></tr></thead>
+        <tbody></tbody>
+      </table>
+    </div>
+
+    <!-- Batch Queue Section -->
+    <div class="pipeline-section">
+      <div class="pipeline-header">
+        <div class="pipeline-title">📦 Batch Queue (Days 1-365)</div>
+        <button class="refresh-btn" onclick="refreshData()">🔄 Refresh</button>
+      </div>
+      <div class="progress-bar">
+        <div class="progress-fill progress-heygen" id="batch-progress" style="width: 0%"></div>
+      </div>
+      <div class="estimate-box">
+        <strong>⏱️ Estimates:</strong><br>
+        <span id="batch-estimate">Calculating...</span>
+      </div>
+      <div class="cost-box">
+        <strong>💰 Cost Analysis:</strong><br>
+        <span id="cost-analysis">Calculating...</span>
+      </div>
+    </div>
+
+    <!-- Autonomy Section -->
+    <div class="autonomy-section">
+      <div class="autonomy-title">🚀 Path to Kelly Autonomy</div>
+      <p style="color:#aaa; margin-bottom: 15px;">Breaking free from HeyGen/Sync dependencies</p>
+      
+      <div class="phase-card">
+        <span class="phase-number">Phase 1:</span> <strong>Motion Library Extraction</strong>
+        <p style="color:#888; margin-top:5px;">Extract motion patterns from completed HeyGen videos. Build Kelly's gesture/expression atlas.</p>
+      </div>
+      
+      <div class="phase-card">
+        <span class="phase-number">Phase 2:</span> <strong>Local Lip-Sync</strong>
+        <p style="color:#888; margin-top:5px;">Deploy Wav2Lip/SadTalker locally. Process in seconds, not minutes.</p>
+      </div>
+      
+      <div class="phase-card">
+        <span class="phase-number">Phase 3:</span> <strong>Viseme-Based Animation</strong>
+        <p style="color:#888; margin-top:5px;">Map phonemes to mouth shapes. Pre-render Kelly mouth sprites.</p>
+      </div>
+      
+      <div class="phase-card">
+        <span class="phase-number">Phase 4:</span> <strong>Real-Time Kelly</strong>
+        <p style="color:#888; margin-top:5px;">WebGL puppet system. Audio-reactive animation. Zero rendering latency.</p>
+      </div>
+    </div>
+
+    <!-- Live Log -->
+    <div class="pipeline-section">
+      <div class="pipeline-title">📋 Activity Log</div>
+      <div id="log"></div>
+    </div>
+  </div>
+
+  <script>
+    const ARCHETYPES = ['scientist', 'explorer', 'rebel', 'architect', 'diplomat', 'empath', 'macgyver', 'mystic', 'provider', 'storyteller', 'strategist', 'survivor'];
+    
+    let pipelineData = {
+      heygen: { completed: 0, waiting: 0, total: 377 },
+      sync: { completed: 0, waiting: 0, total: 0 },
+      day351: {},
+      lastUpdate: null
+    };
+
+    function log(message, type = 'info') {
+      const logEl = document.getElementById('log');
+      const time = new Date().toLocaleTimeString();
+      const typeClass = type === 'success' ? 'log-success' : type === 'error' ? 'log-error' : 'log-info';
+      logEl.innerHTML = `<div class="log-entry"><span class="log-time">[${time}]</span> <span class="${typeClass}">${message}</span></div>` + logEl.innerHTML;
+    }
+
+    function updateUI() {
+      // Stats
+      document.getElementById('heygen-completed').textContent = pipelineData.heygen.completed;
+      document.getElementById('heygen-waiting').textContent = pipelineData.heygen.waiting;
+      document.getElementById('sync-completed').textContent = pipelineData.sync.completed;
+      document.getElementById('sync-waiting').textContent = pipelineData.sync.waiting;
+      document.getElementById('total-ready').textContent = pipelineData.heygen.completed + pipelineData.sync.completed;
+      
+      // Day 351 progress
+      const day351Completed = Object.values(pipelineData.day351).filter(v => v.heygen === 'completed' || v.sync === 'completed').length;
+      const day351Pct = Math.round((day351Completed / 12) * 100);
+      document.getElementById('day351-progress').style.width = day351Pct + '%';
+      document.getElementById('day351-status').textContent = day351Completed === 12 ? '✅ Complete' : `${day351Completed}/12`;
+      document.getElementById('day351-status').className = 'status-badge ' + (day351Completed === 12 ? 'status-active' : 'status-waiting');
+
+      // Day 351 table
+      const tbody = document.querySelector('#day351-table tbody');
+      tbody.innerHTML = ARCHETYPES.map(arch => {
+        const data = pipelineData.day351[arch] || {};
+        const heygenIcon = data.heygen === 'completed' ? '✅' : data.heygen === 'waiting' ? '⏳' : '❌';
+        const syncIcon = data.sync === 'completed' ? '✅' : data.sync === 'waiting' ? '⏳' : '—';
+        const status = (data.heygen === 'completed' || data.sync === 'completed') ? '🟢 Ready' : '🟡 Processing';
+        return `<tr><td>${arch}</td><td>${heygenIcon}</td><td>${syncIcon}</td><td>${status}</td></tr>`;
+      }).join('');
+
+      // Batch progress
+      const batchPct = Math.round((pipelineData.heygen.completed / pipelineData.heygen.total) * 100);
+      document.getElementById('batch-progress').style.width = batchPct + '%';
+
+      // Estimates
+      const remaining = pipelineData.heygen.waiting;
+      const avgTimePerVideo = 15; // minutes based on observed data
+      const estHours = Math.round((remaining * avgTimePerVideo) / 60);
+      document.getElementById('batch-estimate').innerHTML = `
+        Remaining: <strong>${remaining}</strong> videos<br>
+        Est. completion: <strong>${estHours} hours</strong> at current rate<br>
+        Throughput: ~4 videos/hour (HeyGen queue limited)
+      `;
+
+      // Cost analysis
+      const heygenCostPerMin = 0.05; // approximate
+      const syncCostPerMin = 0.08;
+      const avgVideoDuration = 1.5; // minutes
+      const heygenCost = pipelineData.heygen.total * avgVideoDuration * heygenCostPerMin;
+      const syncCost = pipelineData.sync.total * avgVideoDuration * syncCostPerMin;
+      document.getElementById('cost-analysis').innerHTML = `
+        HeyGen batch: ~$${heygenCost.toFixed(0)} for ${pipelineData.heygen.total} videos<br>
+        Sync Labs: ~$${syncCost.toFixed(0)} for ${pipelineData.sync.total} videos<br>
+        <strong style="color:#ffe66d;">Local processing: $0 (after setup)</strong>
+      `;
+    }
+
+    async function fetchDay351Status() {
+      try {
+        const res = await fetch('/generated-videos/day-351-manifest.json');
+        const manifest = await res.json();
+        
+        for (const [arch, data] of Object.entries(manifest.videos)) {
+          pipelineData.day351[arch] = {
+            heygen: data.status || 'unknown',
+            sync: 'none'
+          };
+          if (data.status === 'completed') pipelineData.heygen.completed++;
+          else if (data.status === 'waiting') pipelineData.heygen.waiting++;
+        }
+        log('Day 351 manifest loaded', 'success');
+      } catch (e) {
+        log('Failed to load Day 351 manifest: ' + e.message, 'error');
+      }
+    }
+
+    async function fetchSyncStatus() {
+      try {
+        // Check sync-labs-redub manifests
+        const days = [352, 353, 354];
+        let completed = 0, waiting = 0;
+        
+        for (const day of days) {
+          try {
+            const res = await fetch(`/generated-videos/sync-labs-redub/day-${day}-redub-manifest.json`);
+            if (res.ok) {
+              const manifest = await res.json();
+              for (const [arch, data] of Object.entries(manifest.videos)) {
+                if (data.success) completed++;
+                else waiting++;
+              }
+            }
+          } catch {}
+        }
+        
+        pipelineData.sync.completed = completed;
+        pipelineData.sync.waiting = waiting;
+        pipelineData.sync.total = completed + waiting;
+        log(`Sync Labs: ${completed} completed, ${waiting} failed/waiting`, 'info');
+      } catch (e) {
+        log('Sync status check failed: ' + e.message, 'error');
+      }
+    }
+
+    async function refreshData() {
+      log('Refreshing pipeline data...', 'info');
+      pipelineData.heygen.completed = 0;
+      pipelineData.heygen.waiting = 0;
+      
+      await fetchDay351Status();
+      await fetchSyncStatus();
+      
+      pipelineData.lastUpdate = new Date();
+      updateUI();
+      log('Data refresh complete', 'success');
+    }
+
+    // Initial load
+    refreshData();
+    
+    // Auto-refresh every 60 seconds
+    setInterval(refreshData, 60000);
+  </script>
+</body>
+</html>

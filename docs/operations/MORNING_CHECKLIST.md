@@ -5,6 +5,36 @@
 
 ---
 
+## 🎬 FIRST: Check Overnight Video Production
+
+**If you ran the overnight script, check these:**
+
+### 1. Did the script complete?
+```powershell
+# Check if manifests exist for all days
+Get-ChildItem generated-videos\sync-labs-redub\*.json | Measure-Object
+# Should show 14 files (days 352-365)
+```
+
+### 2. Quick video spot-check:
+- Open `generated-videos/sync-labs-redub/day-352-redub-manifest.json`
+- Pick a random video URL and view it
+- Confirm Kelly looks consistent and lips sync properly
+
+### 3. If any days failed:
+```powershell
+# Retry specific day
+npx tsx scripts/sync-labs-video-redub.ts --day 358 --reference-day 351
+```
+
+### 4. Check HeyGen queue (explorer/mystic/provider):
+```powershell
+npx tsx scripts/heygen-recon-v2.ts --check-status
+```
+If complete, can re-dub those 3 archetypes later for full 12/12 coverage.
+
+---
+
 ## 🔐 Step 1: Set Environment Variables (5 min)
 
 ### Open Vercel Dashboard
