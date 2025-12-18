@@ -5119,6 +5119,53 @@
       gap: 8px;
     }
     
+    .search-results-list {
+      display: flex;
+      flex-direction: column;
+      gap: 4px;
+    }
+    
+    .search-result-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 14px;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 10px;
+      cursor: pointer;
+      transition: all 0.15s;
+    }
+    
+    .search-result-item:hover {
+      background: rgba(255, 255, 255, 0.08);
+    }
+    
+    .search-result-emoji {
+      font-size: 24px;
+      width: 36px;
+      text-align: center;
+    }
+    
+    .search-result-info {
+      flex: 1;
+      min-width: 0;
+    }
+    
+    .search-result-topic {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+    
+    .search-result-meta {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin-top: 2px;
+    }
+    
     .search-result-card {
       display: flex;
       align-items: center;
@@ -12164,14 +12211,6 @@
         closeUnifiedPanel();
       });
       
-      // Settings menu items
-      document.querySelectorAll('.settings-menu-item').forEach(item => {
-        item.addEventListener('click', () => {
-          const settingsId = item.dataset.settings;
-          handleSettingsNavigation(settingsId);
-        });
-      });
-      
       // Kelly mode toggle
       document.getElementById('toggle-kelly-mode')?.addEventListener('click', () => {
         toggleKellyMode();
@@ -12183,10 +12222,9 @@
       });
       
       // Header click behaviors
-      // Kelly logo -> opens chat/comments panel (for now, just toggle left panel)
+      // Kelly logo -> opens chat/comments panel
       document.querySelector('.kelly-home-link')?.addEventListener('click', (e) => {
         e.preventDefault();
-        // Open chat/comments panel
         openPanel('left');
       });
       
@@ -12199,6 +12237,156 @@
       document.querySelector('.nav-topic-display')?.addEventListener('click', () => {
         toggleUnifiedPanel('journey');
       });
+      
+      // SEARCH functionality
+      setupSearchPanel();
+      
+      // LEARN/GROW toggle
+      setupTrackToggle();
+    }
+    
+    // ============================================
+    // SEARCH PANEL - Search all 365 lessons
+    // ============================================
+    function setupSearchPanel() {
+      const searchInput = document.getElementById('panel-search-input');
+      const resultsContainer = document.getElementById('panel-search-results');
+      
+      if (!searchInput || !resultsContainer) return;
+      
+      let debounceTimer;
+      
+      searchInput.addEventListener('input', (e) => {
+        clearTimeout(debounceTimer);
+        const query = e.target.value.trim().toLowerCase();
+        
+        if (query.length < 2) {
+          resultsContainer.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 40px 0;">Type to search all 365 lessons...</p>';
+          return;
+        }
+        
+        debounceTimer = setTimeout(() => {
+          performSearch(query, resultsContainer);
+        }, 200);
+      });
+      
+      // Focus search input when panel opens
+      const observer = new MutationObserver(() => {
+        const panel = document.getElementById('panel-search');
+        if (panel?.classList.contains('active')) {
+          searchInput.focus();
+        }
+      });
+      
+      const panelSearch = document.getElementById('panel-search');
+      if (panelSearch) {
+        observer.observe(panelSearch, { attributes: true, attributeFilter: ['class'] });
+      }
+    }
+    
+    function performSearch(query, container) {
+      const results = [];
+      
+      // Search through manifest lessons
+      if (manifest?.lessons) {
+        for (let dayNum = 1; dayNum <= 365; dayNum++) {
+          const lesson = manifest.lessons[dayNum];
+          if (!lesson) continue;
+          
+          const topic = (lesson.topic || '').toLowerCase();
+          const category = (lesson.category || '').toLowerCase();
+          
+          if (topic.includes(query) || category.includes(query) || dayNum.toString() === query) {
+            results.push({
+              day: dayNum,
+              topic: lesson.topic || `Day ${dayNum}`,
+              category: lesson.category || '',
+              emoji: lesson.emoji || '📚'
+            });
+          }
+          
+          if (results.length >= 20) break; // Limit results
+        }
+      }
+      
+      // Also search through loaded lesson atoms if available
+      if (window.lessonAtoms) {
+        // Search in current lesson content
+      }
+      
+      if (results.length === 0) {
+        container.innerHTML = `<p style="color: var(--text-muted); text-align: center; padding: 40px 0;">No lessons found for "${query}"</p>`;
+        return;
+      }
+      
+      let html = '<div class="search-results-list">';
+      results.forEach(r => {
+        const date = window.KellyTime?.dayNumberToDate(r.day);
+        const dateStr = date ? date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }) : '';
+        
+        html += `
+          <div class="search-result-item" data-day="${r.day}">
+            <span class="search-result-emoji">${r.emoji}</span>
+            <div class="search-result-info">
+              <div class="search-result-topic">${r.topic}</div>
+              <div class="search-result-meta">Day ${r.day} • ${dateStr}${r.category ? ' • ' + r.category : ''}</div>
+            </div>
+          </div>
+        `;
+      });
+      html += '</div>';
+      
+      container.innerHTML = html;
+      
+      // Add click handlers
+      container.querySelectorAll('.search-result-item').forEach(item => {
+        item.addEventListener('click', () => {
+          const day = parseInt(item.dataset.day);
+          if (day) {
+            state.currentDay = day;
+            saveState();
+            loadLessonRuntime(day);
+            closeUnifiedPanel();
+          }
+        });
+      });
+    }
+    
+    // ============================================
+    // LEARN/GROW TRACK TOGGLE
+    // ============================================
+    function setupTrackToggle() {
+      const learnBtn = document.getElementById('track-learn');
+      const growBtn = document.getElementById('track-grow');
+      
+      if (!learnBtn || !growBtn) return;
+      
+      learnBtn.addEventListener('click', () => switchTrack('learn'));
+      growBtn.addEventListener('click', () => switchTrack('grow'));
+      
+      // Initialize from state
+      const currentTrack = state.track || 'learn';
+      updateTrackUI(currentTrack);
+    }
+    
+    function switchTrack(track) {
+      state.track = track;
+      saveState();
+      updateTrackUI(track);
+      
+      // Update header topic to show appropriate track topic
+      updateNavTopic();
+      
+      // Optionally reload lesson with different track content
+      console.log('Switched to track:', track);
+    }
+    
+    function updateTrackUI(track) {
+      const learnBtn = document.getElementById('track-learn');
+      const growBtn = document.getElementById('track-grow');
+      
+      learnBtn?.classList.toggle('active', track === 'learn');
+      growBtn?.classList.toggle('active', track === 'grow');
     }
     
     function toggleUnifiedPanel(panelId) {
@@ -12525,30 +12713,51 @@
     function setupGmailIntegration() {
       document.getElementById('btn-gmail-connect')?.addEventListener('click', connectGoogleCalendar);
       document.getElementById('btn-add-all-2026')?.addEventListener('click', addAllTopicsToCalendar);
+      
+      // Check if already connected
+      if (state.gmailConnected) {
+        const btn = document.getElementById('btn-gmail-connect');
+        const addAllBtn = document.getElementById('btn-add-all-2026');
+        if (btn) {
+          btn.textContent = '✓ Connected';
+          btn.classList.add('connected');
+        }
+        if (addAllBtn) addAllBtn.style.display = 'block';
+      }
     }
     
     async function connectGoogleCalendar() {
       const btn = document.getElementById('btn-gmail-connect');
       const addAllBtn = document.getElementById('btn-add-all-2026');
       
-      // For now, just simulate connection (real implementation would use Google OAuth)
+      // Open Google Calendar authorization
+      // For now, we'll use the simpler approach of just enabling the add buttons
+      // A full OAuth implementation would require a backend
+      
       btn.textContent = 'Connecting...';
       btn.disabled = true;
       
-      // Simulate OAuth flow
+      // Test connection by opening a sample calendar event
+      const todayDay = getTodayDayNumber();
+      const lesson = manifest?.lessons?.[todayDay] || { topic: 'Quieting Your Thoughts' };
+      const testUrl = generateGoogleCalendarUrl(lesson, todayDay);
+      
+      // Open in new window
+      const popup = window.open(testUrl, 'google_calendar', 'width=600,height=600');
+      
+      // Mark as connected
       setTimeout(() => {
         state.gmailConnected = true;
         saveState();
         
         btn.textContent = '✓ Connected';
         btn.classList.add('connected');
+        btn.disabled = false;
         
         if (addAllBtn) {
           addAllBtn.style.display = 'block';
         }
-        
-        alert('📅 Google Calendar connected! You can now add lesson topics to your calendar.');
-      }, 1500);
+      }, 2000);
     }
     
     function generateGoogleCalendarUrl(lesson, dayNumber) {
@@ -12561,32 +12770,100 @@
       const day = String(date.getDate()).padStart(2, '0');
       const dateStr = `${year}${month}${day}`;
       
-      const title = encodeURIComponent(`Curious Kelly: ${lesson.topic || 'Daily Lesson'}`);
-      const details = encodeURIComponent(`Day ${dayNumber} - ${lesson.topic || 'Daily Lesson'}\n\nLearn with Kelly at: https://curiouskelly.com/learn.html?day=${dayNumber}`);
+      const topic = lesson.topic || 'Daily Lesson';
+      const title = encodeURIComponent(`🌟 Curious Kelly: ${topic}`);
+      const details = encodeURIComponent(
+        `Day ${dayNumber} - ${topic}\n\n` +
+        `📚 Learn with Kelly at:\nhttps://curiouskelly.com/learn.html?day=${dayNumber}\n\n` +
+        `⏱️ Just 8 minutes for today's lesson!`
+      );
       
       // 9 AM for 15 minutes
       const startTime = `${dateStr}T090000`;
       const endTime = `${dateStr}T091500`;
       
-      return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startTime}/${endTime}&details=${details}`;
+      return `https://calendar.google.com/calendar/render?action=TEMPLATE&text=${title}&dates=${startTime}/${endTime}&details=${details}&sf=true`;
+    }
+    
+    function generateICSFile(lessons) {
+      // Generate an ICS file for bulk import
+      let ics = `BEGIN:VCALENDAR
+VERSION:2.0
+PRODID:-//Curious Kelly//Daily Lessons//EN
+CALSCALE:GREGORIAN
+METHOD:PUBLISH
+X-WR-CALNAME:Curious Kelly Daily Lessons
+`;
+      
+      lessons.forEach(({ day, topic, date }) => {
+        const dateStr = date.toISOString().split('T')[0].replace(/-/g, '');
+        ics += `BEGIN:VEVENT
+DTSTART:${dateStr}T090000
+DTEND:${dateStr}T091500
+SUMMARY:🌟 Curious Kelly: ${topic}
+DESCRIPTION:Day ${day} - ${topic}\\n\\nLearn with Kelly at: https://curiouskelly.com/learn.html?day=${day}
+URL:https://curiouskelly.com/learn.html?day=${day}
+END:VEVENT
+`;
+      });
+      
+      ics += 'END:VCALENDAR';
+      return ics;
     }
     
     function addAllTopicsToCalendar() {
       const btn = document.getElementById('btn-add-all-2026');
+      btn.textContent = 'Generating...';
+      btn.disabled = true;
       
-      // Generate a link to add all 365 lessons
-      // For simplicity, we'll open a page with instructions
-      alert(`📅 Adding all 365 lesson topics to your calendar!
+      // Collect all lessons for 2026 (days 1-365)
+      const lessons = [];
+      const startDate = new Date('2026-01-01');
       
-This will open Google Calendar with each topic scheduled for 9 AM each day.
+      for (let d = 1; d <= 365; d++) {
+        const date = new Date(startDate);
+        date.setDate(date.getDate() + d - 1);
+        
+        const lesson = manifest?.lessons?.[d] || {};
+        lessons.push({
+          day: d,
+          topic: lesson.topic || `Day ${d} Lesson`,
+          date: date
+        });
+      }
+      
+      // Generate ICS file
+      const icsContent = generateICSFile(lessons);
+      
+      // Download ICS file
+      const blob = new Blob([icsContent], { type: 'text/calendar' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'curious-kelly-2026-lessons.ics';
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      URL.revokeObjectURL(url);
+      
+      btn.textContent = '✓ Downloaded!';
+      
+      setTimeout(() => {
+        btn.textContent = 'Add All 2026 Topics →';
+        btn.disabled = false;
+      }, 3000);
+      
+      // Show instructions
+      alert(`📅 Calendar file downloaded!
 
-Tip: Use "Add to Calendar" on individual lessons for now while we build the bulk import feature.`);
-      
-      // Open calendar with today's lesson as example
-      const todayDay = getTodayDayNumber();
-      const lesson = manifest?.lessons?.[todayDay] || { topic: 'Daily Lesson' };
-      const calendarUrl = generateGoogleCalendarUrl(lesson, todayDay);
-      window.open(calendarUrl, '_blank');
+To import into Google Calendar:
+1. Open calendar.google.com
+2. Click the gear icon → Settings
+3. Click "Import & export" 
+4. Select the downloaded file
+5. Click "Import"
+
+All 365 lesson topics will be added to your calendar!`);
     }
     
     // Add single lesson to calendar
