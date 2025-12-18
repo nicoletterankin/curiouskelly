@@ -8564,17 +8564,17 @@
         { emoji: '🎯', text: 'Going with A' },
         { emoji: '🧭', text: 'B feels right' },
       ],
-      fact1: [
+      q1: [
         { emoji: '😮', text: 'Whoa—didn’t know that' },
         { emoji: '📝', text: 'Taking notes' },
         { emoji: '💡', text: 'That clicked' },
       ],
-      fact2: [
+      q2: [
         { emoji: '🧠', text: 'This is making sense' },
         { emoji: '🔍', text: 'Details matter' },
         { emoji: '👏', text: 'Nice explanation' },
       ],
-      fact3: [
+      q3: [
         { emoji: '⚡', text: 'Big insight' },
         { emoji: '📌', text: 'Key point right here' },
         { emoji: '💭', text: 'Thinking…' },
@@ -8817,17 +8817,18 @@
     // ============================================
     const CLIFF_WAIT_TIME = 10000; // 10 seconds before auto-select
 
+    // v5.0-full-choices: All phases support A/B choices
     const PHASE_CONFIG = {
-      hook:   { name: 'Hook',   icon: '🎬', dbName: 'hook',   journey: 'Welcome',   kelly: 'active' },
-      cliff:  { name: 'Cliff',  icon: '🔀', dbName: 'hook',   journey: 'Choose',    kelly: 'reflective', hasChoice: true }, // Reuse hook videos (strategist in hook)
-      fact1:  { name: 'Fact 1', icon: '💡', dbName: 'q1',     journey: 'Explore',   kelly: 'active' },
-      fact2:  { name: 'Fact 2', icon: '💡', dbName: 'q2',     journey: 'Discover',  kelly: 'active' },
-      fact3:  { name: 'Fact 3', icon: '💡', dbName: 'q3',     journey: 'Challenge', kelly: 'active' },
-      wisdom: { name: 'Wisdom', icon: '✨', dbName: 'wisdom', journey: 'Reflect',   kelly: 'reflective' },
-      outro:  { name: 'Outro',  icon: '🎉', dbName: 'wisdom', journey: 'Celebrate', kelly: 'warm' }, // Reuse wisdom videos (storyteller in wisdom)
+      hook:   { name: 'Hook',   icon: '🎬', dbName: 'hook',   journey: 'Welcome',   kelly: 'active',      hasChoice: true },
+      cliff:  { name: 'Cliff',  icon: '🔀', dbName: 'cliff',  journey: 'Choose',    kelly: 'reflective',  hasChoice: true },
+      q1:     { name: 'Q1',     icon: '💡', dbName: 'q1',     journey: 'Explore',   kelly: 'active',      hasChoice: true },
+      q2:     { name: 'Q2',     icon: '💡', dbName: 'q2',     journey: 'Discover',  kelly: 'active',      hasChoice: true },
+      q3:     { name: 'Q3',     icon: '💡', dbName: 'q3',     journey: 'Challenge', kelly: 'active',      hasChoice: true },
+      wisdom: { name: 'Wisdom', icon: '✨', dbName: 'wisdom', journey: 'Reflect',   kelly: 'reflective',  hasChoice: true },
+      outro:  { name: 'Outro',  icon: '🎉', dbName: 'outro',  journey: 'Celebrate', kelly: 'warm',        hasChoice: true },
     };
 
-    const PHASE_ORDER = ['hook', 'cliff', 'fact1', 'fact2', 'fact3', 'wisdom', 'outro'];
+    const PHASE_ORDER = ['hook', 'cliff', 'q1', 'q2', 'q3', 'wisdom', 'outro'];
     const PHASES = PHASE_ORDER.map((key) => ({ key, ...PHASE_CONFIG[key] }));
     
     // ============================================
@@ -8846,9 +8847,9 @@
     const PHASE_ARCHETYPES = {
       hook: 'explorer',     // Wonder sparks curiosity
       cliff: 'strategist',  // Tactical mind for choices
-      fact1: 'scientist',   // Data-driven facts
-      fact2: 'architect',   // Building structure
-      fact3: 'macgyver',    // Practical application
+      q1: 'scientist',   // Data-driven facts
+      q2: 'architect',   // Building structure
+      q3: 'macgyver',    // Practical application
       wisdom: 'mystic',     // Profound insight
       outro: 'storyteller'  // Theatrical wrap-up
     };
@@ -10226,10 +10227,18 @@
       lessonAtoms = PHASES.map(phase => {
         const atom = atoms.find(a => a.phase === phase.dbName) || atoms.find(a => a.phase === phase.name);
         const content = atom?.content || {};
+        
+        // v5.0-full-choices: Support both old format (choice_intro, option_a, option_b)
+        // AND new format (prompt, options[])
+        const options = content.options || [];
+        const optionA = options[0] || {};
+        const optionB = options[1] || {};
+        
         return {
           phase: phase.name,
           dbPhase: phase.dbName,
           icon: phase.icon,
+          title: content.title || phase.name,
           script:
             content.script ||
             content.text ||
@@ -10238,12 +10247,14 @@
           videoUrl: atom?.hd_video_url,
           visualUrl: atom?.visual_url,
           atomContent: atom?.content,
-          // Interactive choice fields (new universal choice model)
-          choice_intro: content.choice_intro,
-          option_a: content.option_a,
-          option_b: content.option_b,
-          success_response: content.success_response,
-          alt_response: content.alt_response,
+          // Interactive choice fields - support both old and new format
+          choice_intro: content.prompt || content.choice_intro,
+          option_a: optionA.text || content.option_a,
+          option_b: optionB.text || content.option_b,
+          option_a_quality: optionA.quality || 'good',
+          option_b_quality: optionB.quality || 'good',
+          success_response: optionA.response || content.success_response,
+          alt_response: optionB.response || content.alt_response,
         };
       });
 
@@ -11289,9 +11300,9 @@
       const descriptions = {
         hook: 'A surprising question to spark curiosity',
         cliff: 'Choose your path through today\'s lesson',
-        fact1: 'Discover the first key insight',
-        fact2: 'Build on what you\'ve learned',
-        fact3: 'Connect the final piece',
+        q1: 'Discover the first key insight',
+        q2: 'Build on what you\'ve learned',
+        q3: 'Connect the final piece',
         wisdom: 'A moment of reflection and insight',
         outro: 'Celebrate your learning journey'
       };
@@ -14019,9 +14030,9 @@
       const phaseDescriptions = {
         hook: 'an engaging opening that captures attention',
         cliff: 'a thought-provoking question or mystery',
-        fact1: 'an educational diagram with clear labels',
-        fact2: 'a detailed scientific illustration',
-        fact3: 'a wow-moment revelation',
+        q1: 'an educational diagram with clear labels',
+        q2: 'a detailed scientific illustration',
+        q3: 'a wow-moment revelation',
         wisdom: 'an inspirational, contemplative scene',
         outro: 'a warm, concluding image',
         complete: 'a celebratory achievement visual'
@@ -14638,9 +14649,9 @@ Style requirements:
       const descByKey = {
         hook: 'Opening and orientation',
         cliff: 'Choose your path',
-        fact1: 'First insight',
-        fact2: 'Second insight',
-        fact3: 'Third insight',
+        q1: 'First insight',
+        q2: 'Second insight',
+        q3: 'Third insight',
         wisdom: 'Deeper meaning',
         outro: 'Celebrate and preview tomorrow',
       };
@@ -16639,3 +16650,4 @@ Style requirements:
   </script>
 </body>
 </html>
+
