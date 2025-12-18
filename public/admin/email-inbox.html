@@ -1,0 +1,898 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Email Inbox - Kelly Admin</title>
+    <style>
+        :root {
+            --bg-color: #0a0a0b;
+            --bg-secondary: #111113;
+            --bg-elevated: #18181b;
+            --text-primary: #fafafa;
+            --text-secondary: #a1a1aa;
+            --text-muted: #71717a;
+            --accent-primary: #3b82f6;
+            --accent-hover: #2563eb;
+            --border-color: #27272a;
+            --success: #22c55e;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background: var(--bg-color);
+            color: var(--text-primary);
+            line-height: 1.5;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 24px;
+        }
+
+        /* Header */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 32px;
+            padding-bottom: 24px;
+            border-bottom: 1px solid var(--border-color);
+        }
+
+        .header h1 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 12px;
+        }
+
+        .header-actions {
+            display: flex;
+            gap: 12px;
+        }
+
+        /* Stats Bar */
+        .stats-bar {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+            gap: 16px;
+            margin-bottom: 32px;
+        }
+
+        .stat-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            text-align: center;
+        }
+
+        .stat-value {
+            font-size: 2rem;
+            font-weight: 600;
+            color: var(--accent-primary);
+        }
+
+        .stat-label {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 4px;
+        }
+
+        /* Filters */
+        .filters {
+            display: flex;
+            gap: 12px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+
+        .filter-btn {
+            padding: 8px 16px;
+            background: var(--bg-secondary);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-secondary);
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+
+        .filter-btn:hover {
+            border-color: var(--text-muted);
+            color: var(--text-primary);
+        }
+
+        .filter-btn.active {
+            background: var(--accent-primary);
+            border-color: var(--accent-primary);
+            color: white;
+        }
+
+        /* Thread List */
+        .thread-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .thread-item {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .thread-item:hover {
+            border-color: var(--accent-primary);
+        }
+
+        .thread-item.selected {
+            border-color: var(--accent-primary);
+            box-shadow: 0 0 0 1px var(--accent-primary);
+        }
+
+        .thread-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 8px;
+        }
+
+        .thread-from {
+            font-weight: 600;
+            color: var(--text-primary);
+        }
+
+        .thread-time {
+            font-size: 0.8rem;
+            color: var(--text-muted);
+        }
+
+        .thread-subject {
+            font-size: 1rem;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .thread-preview {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        .thread-meta {
+            display: flex;
+            gap: 8px;
+            margin-top: 12px;
+            flex-wrap: wrap;
+        }
+
+        .tag {
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: 500;
+        }
+
+        .tag-category {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        .tag-urgency-critical {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .tag-urgency-high {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        .tag-urgency-normal {
+            background: rgba(59, 130, 246, 0.2);
+            color: #60a5fa;
+        }
+
+        .tag-sentiment-angry {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        .tag-sentiment-negative {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        .tag-sentiment-positive {
+            background: rgba(34, 197, 94, 0.2);
+            color: #4ade80;
+        }
+
+        .tag-status {
+            background: rgba(161, 161, 170, 0.2);
+            color: var(--text-secondary);
+        }
+
+        .tag-status-pending {
+            background: rgba(245, 158, 11, 0.2);
+            color: #fbbf24;
+        }
+
+        .tag-status-escalated {
+            background: rgba(239, 68, 68, 0.2);
+            color: #f87171;
+        }
+
+        /* Detail Panel */
+        .detail-panel {
+            position: fixed;
+            top: 0;
+            right: -600px;
+            width: 600px;
+            height: 100vh;
+            background: var(--bg-secondary);
+            border-left: 1px solid var(--border-color);
+            overflow-y: auto;
+            transition: right 0.3s ease;
+            z-index: 100;
+        }
+
+        .detail-panel.open {
+            right: 0;
+        }
+
+        .detail-header {
+            padding: 24px;
+            border-bottom: 1px solid var(--border-color);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            position: sticky;
+            top: 0;
+            background: var(--bg-secondary);
+            z-index: 10;
+        }
+
+        .close-btn {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 1.5rem;
+            cursor: pointer;
+            padding: 4px 8px;
+        }
+
+        .close-btn:hover {
+            color: var(--text-primary);
+        }
+
+        .detail-content {
+            padding: 24px;
+        }
+
+        .message-card {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            padding: 20px;
+            margin-bottom: 16px;
+        }
+
+        .message-card.inbound {
+            border-left: 3px solid var(--accent-primary);
+        }
+
+        .message-card.draft {
+            border-left: 3px solid var(--warning);
+            background: rgba(245, 158, 11, 0.05);
+        }
+
+        .message-card.outbound {
+            border-left: 3px solid var(--success);
+        }
+
+        .message-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 12px;
+            font-size: 0.85rem;
+        }
+
+        .message-direction {
+            font-weight: 600;
+            text-transform: uppercase;
+            font-size: 0.75rem;
+        }
+
+        .message-body {
+            white-space: pre-wrap;
+            font-size: 0.95rem;
+            line-height: 1.7;
+            color: var(--text-secondary);
+        }
+
+        /* Response Editor */
+        .response-editor {
+            margin-top: 24px;
+        }
+
+        .editor-label {
+            font-weight: 600;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        .editor-input {
+            width: 100%;
+            padding: 12px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            margin-bottom: 12px;
+        }
+
+        .editor-textarea {
+            width: 100%;
+            min-height: 200px;
+            padding: 16px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 8px;
+            color: var(--text-primary);
+            font-size: 0.95rem;
+            font-family: inherit;
+            line-height: 1.7;
+            resize: vertical;
+        }
+
+        .editor-input:focus,
+        .editor-textarea:focus {
+            outline: none;
+            border-color: var(--accent-primary);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 12px;
+            margin-top: 16px;
+        }
+
+        .btn {
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.2s;
+            border: none;
+        }
+
+        .btn-primary {
+            background: var(--accent-primary);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--accent-hover);
+        }
+
+        .btn-success {
+            background: var(--success);
+            color: white;
+        }
+
+        .btn-success:hover {
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background: var(--bg-elevated);
+            color: var(--text-primary);
+            border: 1px solid var(--border-color);
+        }
+
+        .btn-secondary:hover {
+            border-color: var(--text-muted);
+        }
+
+        .btn-danger {
+            background: var(--danger);
+            color: white;
+        }
+
+        /* AI Summary */
+        .ai-summary {
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.2);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+
+        .ai-summary-title {
+            font-size: 0.8rem;
+            font-weight: 600;
+            color: var(--accent-primary);
+            margin-bottom: 8px;
+        }
+
+        .ai-summary-text {
+            color: var(--text-secondary);
+            font-size: 0.9rem;
+        }
+
+        /* Loading */
+        .loading {
+            text-align: center;
+            padding: 48px;
+            color: var(--text-muted);
+        }
+
+        /* Empty State */
+        .empty-state {
+            text-align: center;
+            padding: 64px 24px;
+            color: var(--text-muted);
+        }
+
+        .empty-state-icon {
+            font-size: 3rem;
+            margin-bottom: 16px;
+        }
+
+        /* Toast */
+        .toast {
+            position: fixed;
+            bottom: 24px;
+            right: 24px;
+            padding: 16px 24px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-color);
+            border-radius: 12px;
+            box-shadow: 0 8px 32px rgba(0,0,0,0.3);
+            display: none;
+            z-index: 200;
+        }
+
+        .toast.success {
+            border-color: var(--success);
+        }
+
+        .toast.error {
+            border-color: var(--danger);
+        }
+
+        .toast.show {
+            display: block;
+            animation: slideIn 0.3s ease;
+        }
+
+        @keyframes slideIn {
+            from { transform: translateY(100px); opacity: 0; }
+            to { transform: translateY(0); opacity: 1; }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .detail-panel {
+                width: 100%;
+                right: -100%;
+            }
+
+            .stats-bar {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header class="header">
+            <h1>
+                <span>📬</span>
+                Kelly's Email Inbox
+            </h1>
+            <div class="header-actions">
+                <button class="btn btn-secondary" onclick="loadThreads()">↻ Refresh</button>
+                <a href="/admin" class="btn btn-secondary">← Back to Admin</a>
+            </div>
+        </header>
+
+        <div class="stats-bar" id="stats">
+            <div class="stat-card">
+                <div class="stat-value" id="stat-pending">-</div>
+                <div class="stat-label">Pending Review</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-escalated">-</div>
+                <div class="stat-label">Escalated</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-today">-</div>
+                <div class="stat-label">Today</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value" id="stat-auto">-</div>
+                <div class="stat-label">Auto-Responded</div>
+            </div>
+        </div>
+
+        <div class="filters">
+            <button class="filter-btn active" data-filter="needs_action">Needs Action</button>
+            <button class="filter-btn" data-filter="pending_approval">Pending Approval</button>
+            <button class="filter-btn" data-filter="escalated">Escalated</button>
+            <button class="filter-btn" data-filter="responded">Responded</button>
+            <button class="filter-btn" data-filter="all">All</button>
+        </div>
+
+        <div class="thread-list" id="thread-list">
+            <div class="loading">Loading emails...</div>
+        </div>
+    </div>
+
+    <!-- Detail Panel -->
+    <div class="detail-panel" id="detail-panel">
+        <div class="detail-header">
+            <h2 id="detail-subject">Thread Details</h2>
+            <button class="close-btn" onclick="closePanel()">×</button>
+        </div>
+        <div class="detail-content" id="detail-content">
+            <!-- Populated dynamically -->
+        </div>
+    </div>
+
+    <!-- Toast -->
+    <div class="toast" id="toast"></div>
+
+    <script>
+        const API_BASE = '/api/email';
+        let currentFilter = 'needs_action';
+        let threads = [];
+        let currentThread = null;
+
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            loadThreads();
+            setupFilters();
+            checkUrlParams();
+        });
+
+        function setupFilters() {
+            document.querySelectorAll('.filter-btn').forEach(btn => {
+                btn.addEventListener('click', () => {
+                    document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFilter = btn.dataset.filter;
+                    loadThreads();
+                });
+            });
+        }
+
+        function checkUrlParams() {
+            const params = new URLSearchParams(window.location.search);
+            const threadId = params.get('thread');
+            if (threadId) {
+                setTimeout(() => openThread(threadId), 500);
+            }
+        }
+
+        async function loadThreads() {
+            const listEl = document.getElementById('thread-list');
+            listEl.innerHTML = '<div class="loading">Loading emails...</div>';
+
+            try {
+                const status = currentFilter === 'all' ? '' : currentFilter;
+                const response = await fetch(`${API_BASE}/threads?status=${status}&limit=50`);
+                const data = await response.json();
+
+                threads = data.threads || [];
+                updateStats(data);
+                renderThreads();
+            } catch (error) {
+                console.error('Failed to load threads:', error);
+                listEl.innerHTML = '<div class="empty-state"><div class="empty-state-icon">⚠️</div><p>Failed to load emails</p></div>';
+            }
+        }
+
+        function updateStats(data) {
+            // This is a simplified version - in production, fetch actual stats
+            const pending = threads.filter(t => t.status === 'pending_approval').length;
+            const escalated = threads.filter(t => t.status === 'escalated').length;
+            const today = threads.filter(t => isToday(new Date(t.created_at))).length;
+            const auto = threads.filter(t => t.status === 'responded').length;
+
+            document.getElementById('stat-pending').textContent = pending;
+            document.getElementById('stat-escalated').textContent = escalated;
+            document.getElementById('stat-today').textContent = today;
+            document.getElementById('stat-auto').textContent = auto;
+        }
+
+        function isToday(date) {
+            const today = new Date();
+            return date.toDateString() === today.toDateString();
+        }
+
+        function renderThreads() {
+            const listEl = document.getElementById('thread-list');
+
+            if (threads.length === 0) {
+                listEl.innerHTML = `
+                    <div class="empty-state">
+                        <div class="empty-state-icon">📭</div>
+                        <p>No emails in this category</p>
+                    </div>
+                `;
+                return;
+            }
+
+            listEl.innerHTML = threads.map(thread => `
+                <div class="thread-item" data-id="${thread.id}" onclick="openThread('${thread.id}')">
+                    <div class="thread-header">
+                        <span class="thread-from">${escapeHtml(thread.from_name || thread.from_email)}</span>
+                        <span class="thread-time">${formatTime(thread.created_at)}</span>
+                    </div>
+                    <div class="thread-subject">${escapeHtml(thread.subject)}</div>
+                    <div class="thread-preview">${escapeHtml(thread.ai_summary || '')}</div>
+                    <div class="thread-meta">
+                        <span class="tag tag-category">${thread.category}</span>
+                        <span class="tag tag-urgency-${thread.urgency}">${thread.urgency}</span>
+                        ${thread.sentiment && thread.sentiment !== 'neutral' 
+                            ? `<span class="tag tag-sentiment-${thread.sentiment}">${thread.sentiment}</span>` 
+                            : ''}
+                        <span class="tag tag-status tag-status-${thread.status}">${formatStatus(thread.status)}</span>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        async function openThread(threadId) {
+            const panel = document.getElementById('detail-panel');
+            const content = document.getElementById('detail-content');
+            
+            content.innerHTML = '<div class="loading">Loading thread...</div>';
+            panel.classList.add('open');
+
+            // Highlight selected
+            document.querySelectorAll('.thread-item').forEach(el => {
+                el.classList.toggle('selected', el.dataset.id === threadId);
+            });
+
+            try {
+                const response = await fetch(`${API_BASE}/threads?id=${threadId}`);
+                const data = await response.json();
+
+                currentThread = data;
+                document.getElementById('detail-subject').textContent = data.thread.subject;
+                
+                renderThreadDetail(data);
+            } catch (error) {
+                console.error('Failed to load thread:', error);
+                content.innerHTML = '<div class="empty-state"><p>Failed to load thread</p></div>';
+            }
+        }
+
+        function renderThreadDetail(data) {
+            const { thread, messages } = data;
+            const content = document.getElementById('detail-content');
+
+            const inboundMsg = messages.find(m => m.direction === 'inbound');
+            const draftMsg = messages.find(m => m.direction === 'draft' && !m.is_approved);
+            const hasDraft = !!draftMsg;
+
+            content.innerHTML = `
+                ${thread.ai_summary ? `
+                    <div class="ai-summary">
+                        <div class="ai-summary-title">🤖 Kelly's Analysis</div>
+                        <div class="ai-summary-text">${escapeHtml(thread.ai_summary)}</div>
+                    </div>
+                ` : ''}
+
+                <div class="thread-meta" style="margin-bottom: 20px;">
+                    <span class="tag tag-category">${thread.category}</span>
+                    <span class="tag tag-urgency-${thread.urgency}">${thread.urgency}</span>
+                    ${thread.sentiment ? `<span class="tag tag-sentiment-${thread.sentiment}">${thread.sentiment}</span>` : ''}
+                </div>
+
+                ${messages.map(msg => `
+                    <div class="message-card ${msg.direction}">
+                        <div class="message-header">
+                            <span class="message-direction">${msg.direction}</span>
+                            <span>${formatTime(msg.created_at)}</span>
+                        </div>
+                        <div style="margin-bottom: 8px; color: var(--text-muted); font-size: 0.85rem;">
+                            ${msg.direction === 'inbound' ? `From: ${escapeHtml(msg.from_email)}` : `To: ${escapeHtml(msg.to_email)}`}
+                        </div>
+                        <div class="message-body">${escapeHtml(msg.body_text || '')}</div>
+                    </div>
+                `).join('')}
+
+                ${thread.status === 'pending_approval' || thread.status === 'escalated' ? `
+                    <div class="response-editor">
+                        <label class="editor-label">Subject</label>
+                        <input type="text" class="editor-input" id="edit-subject" value="${escapeHtml(draftMsg?.subject || 'Re: ' + thread.subject)}">
+                        
+                        <label class="editor-label">Response</label>
+                        <textarea class="editor-textarea" id="edit-body">${escapeHtml(draftMsg?.body_text || '')}</textarea>
+                        
+                        <div class="action-buttons">
+                            <button class="btn btn-success" onclick="approveAndSend()">
+                                ✓ Approve & Send
+                            </button>
+                            <button class="btn btn-primary" onclick="sendCustomReply()">
+                                Send Custom Reply
+                            </button>
+                            <button class="btn btn-secondary" onclick="closeThread()">
+                                Close Without Reply
+                            </button>
+                        </div>
+                    </div>
+                ` : thread.status === 'open' ? `
+                    <div class="response-editor">
+                        <label class="editor-label">Quick Reply</label>
+                        <textarea class="editor-textarea" id="edit-body" placeholder="Type your response..."></textarea>
+                        
+                        <div class="action-buttons">
+                            <button class="btn btn-primary" onclick="sendCustomReply()">
+                                Send Reply
+                            </button>
+                            <button class="btn btn-secondary" onclick="closeThread()">
+                                Close Thread
+                            </button>
+                        </div>
+                    </div>
+                ` : ''}
+            `;
+        }
+
+        async function approveAndSend() {
+            if (!currentThread) return;
+
+            const subject = document.getElementById('edit-subject')?.value;
+            const body = document.getElementById('edit-body')?.value;
+
+            if (!body || body.trim().length < 10) {
+                showToast('Please write a response', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/approve`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        threadId: currentThread.thread.id,
+                        editedSubject: subject,
+                        editedBody: body,
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('Email sent successfully!', 'success');
+                    closePanel();
+                    loadThreads();
+                } else {
+                    showToast(data.error || 'Failed to send', 'error');
+                }
+            } catch (error) {
+                showToast('Failed to send email', 'error');
+            }
+        }
+
+        async function sendCustomReply() {
+            if (!currentThread) return;
+
+            const subject = document.getElementById('edit-subject')?.value || 'Re: ' + currentThread.thread.subject;
+            const body = document.getElementById('edit-body')?.value;
+
+            if (!body || body.trim().length < 10) {
+                showToast('Please write a response', 'error');
+                return;
+            }
+
+            try {
+                const response = await fetch(`${API_BASE}/reply`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify({
+                        threadId: currentThread.thread.id,
+                        subject: subject,
+                        body: body,
+                        closeThread: true,
+                    }),
+                });
+
+                const data = await response.json();
+
+                if (data.success) {
+                    showToast('Reply sent!', 'success');
+                    closePanel();
+                    loadThreads();
+                } else {
+                    showToast(data.error || 'Failed to send', 'error');
+                }
+            } catch (error) {
+                showToast('Failed to send reply', 'error');
+            }
+        }
+
+        async function closeThread() {
+            if (!currentThread) return;
+            
+            // For now, just close the panel
+            // In production, call an API to mark as closed
+            showToast('Thread closed', 'success');
+            closePanel();
+            loadThreads();
+        }
+
+        function closePanel() {
+            document.getElementById('detail-panel').classList.remove('open');
+            document.querySelectorAll('.thread-item').forEach(el => el.classList.remove('selected'));
+            currentThread = null;
+        }
+
+        function showToast(message, type = 'success') {
+            const toast = document.getElementById('toast');
+            toast.textContent = message;
+            toast.className = `toast ${type} show`;
+            
+            setTimeout(() => {
+                toast.classList.remove('show');
+            }, 3000);
+        }
+
+        function formatTime(dateStr) {
+            const date = new Date(dateStr);
+            const now = new Date();
+            const diffMs = now - date;
+            const diffMins = Math.floor(diffMs / 60000);
+            const diffHours = Math.floor(diffMs / 3600000);
+            const diffDays = Math.floor(diffMs / 86400000);
+
+            if (diffMins < 60) return `${diffMins}m ago`;
+            if (diffHours < 24) return `${diffHours}h ago`;
+            if (diffDays < 7) return `${diffDays}d ago`;
+            return date.toLocaleDateString();
+        }
+
+        function formatStatus(status) {
+            const labels = {
+                'pending_approval': 'Pending',
+                'escalated': 'Escalated',
+                'responded': 'Responded',
+                'closed': 'Closed',
+                'open': 'Open',
+                'spam': 'Spam',
+            };
+            return labels[status] || status;
+        }
+
+        function escapeHtml(text) {
+            if (!text) return '';
+            return text
+                .replace(/&/g, '&amp;')
+                .replace(/</g, '&lt;')
+                .replace(/>/g, '&gt;')
+                .replace(/"/g, '&quot;');
+        }
+    </script>
+</body>
+</html>

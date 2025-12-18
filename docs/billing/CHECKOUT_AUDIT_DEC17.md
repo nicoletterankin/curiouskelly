@@ -102,7 +102,10 @@ The checkout system is **fully internationalized** and ready for global customer
 
 ---
 
-## ⚠️ Pending: Stripe Dashboard Setup
+## 📋 BACKLOGGED: Stripe Dashboard Setup
+
+**Status:** Code complete, awaiting Stripe configuration  
+**Backlogged:** December 17, 2025
 
 The code is ready, but these Stripe Dashboard tasks are required:
 
