@@ -974,8 +974,13 @@
       clip-path: inset(0);
     }
 
-    /* Lesson header becomes a floating control cluster (does not push layout) */
+    /* Lesson header HIDDEN - duplicate of kelly-top-nav */
     #scene-lesson .scene-header {
+      display: none !important;
+    }
+    
+    /* Old floating header - kept for reference but hidden
+    #scene-lesson .scene-header-OLD {
       position: absolute;
       top: 78px;
       left: 16px;
@@ -1006,8 +1011,20 @@
     }
 
     /* Sacred side panels (glass overlays; Kelly stays visible behind) */
-    .left-panel,
+    /* NOTE: Old .right-panel is now replaced by .unified-panel */
+    .left-panel {
+      position: absolute;
+      top: 0;
+      bottom: calc(var(--nav-height) + var(--safe-bottom));
+      width: 320px;
+    }
+    
+    /* OLD right-panel - HIDDEN, replaced by unified-panel */
     .right-panel {
+      display: none !important;
+    }
+    
+    .right-panel-OLD {
       position: absolute;
       top: 0;
       /* Keep panel content above fixed bottom nav (so chat input stays reachable) */
@@ -6259,13 +6276,14 @@
     
     /* ============================================
        EVERYTHING BUTTON - Super Prominent Playback Controls
-       Always visible, never covers Kelly's face
+       Bottom-right corner, never covers Kelly's face
        ============================================ */
     .everything-button {
       position: fixed;
       bottom: calc(24px + var(--safe-bottom));
-      left: 50%;
-      transform: translateX(-50%);
+      right: 20px;
+      left: auto;
+      transform: none;
       display: flex;
       align-items: center;
       gap: 4px;
@@ -6470,13 +6488,22 @@
       border-color: var(--kelly-blue);
     }
     
-    /* Mobile: move to bottom right corner */
+    /* Mobile: move up to avoid Everything Button */
     @media (max-width: 768px) {
       .right-icon-bar {
         top: auto;
-        bottom: calc(100px + var(--safe-bottom));
+        bottom: calc(120px + var(--safe-bottom));
         transform: none;
         border-radius: 24px 0 0 24px;
+      }
+    }
+    
+    /* Desktop: position above Everything Button */
+    @media (min-width: 769px) {
+      .right-icon-bar {
+        bottom: calc(100px + var(--safe-bottom));
+        top: auto;
+        transform: none;
       }
     }
     
