@@ -167,13 +167,15 @@ Every phase in a Curious Kelly lesson can have multiple artifacts. This document
 | script | ✅ | Kelly reflects | - |
 | kelly_video | ✅ | Centered | video_commons |
 | kelly_audio | ✅ | Audio track | audio_commons |
-| scene_visual | 🎯 | 100% wallpaper (warm) | visual_commons |
-| reflection_prompt | ⭐ | What to think about | - |
+| scene_visual | ✅ | 100% wallpaper (warm) | visual_commons |
+| prompt | ✅ | Reflection question | - |
+| option_a | ✅ | Wisdom path A + visual | visual_commons |
+| option_b | ✅ | Wisdom path B + visual | visual_commons |
 
 **Visual Behavior:**
 - Warm, contemplative wallpaper
 - Kelly centered, slightly smaller
-- Longer pause for reflection
+- Choice cards for reflection themes
 
 ---
 
@@ -186,7 +188,10 @@ Every phase in a Curious Kelly lesson can have multiple artifacts. This document
 | script | ✅ | Kelly celebrates | - |
 | kelly_video | ✅ | Full celebration | video_commons |
 | kelly_audio | ✅ | Audio track | audio_commons |
-| celebration_visual | 🎯 | Achievement feeling | visual_commons |
+| scene_visual | ✅ | Celebration visual | visual_commons |
+| prompt | ✅ | Takeaway question | - |
+| option_a | ✅ | Action A + visual | visual_commons |
+| option_b | ✅ | Action B + visual | visual_commons |
 | tomorrow_teaser | ✅ | Next lesson preview | - |
 
 ---
