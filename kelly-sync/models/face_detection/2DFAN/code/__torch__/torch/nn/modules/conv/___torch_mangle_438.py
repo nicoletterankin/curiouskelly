@@ -1,0 +1,11 @@
+class Conv2d(Module):
+  __parameters__ = ["weight", "bias", ]
+  __buffers__ = []
+  weight : Tensor
+  bias : Tensor
+  training : bool
+  def forward(self: __torch__.torch.nn.modules.conv.___torch_mangle_438.Conv2d,
+    input: Tensor) -> Tensor:
+    _0 = self.bias
+    _1 = torch._convolution(input, self.weight, _0, [1, 1], [0, 0], [1, 1], False, [0, 0], 1, True, False, True, True)
+    return _1

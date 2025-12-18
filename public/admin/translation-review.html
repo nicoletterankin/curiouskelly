@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Translation Review | Quality Control</title>
+  <style>
+    :root {
+      --primary: #6366f1;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-2: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #475569;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    
+    h1 { font-size: 1.5rem; }
+    
+    .progress-bar {
+      background: var(--surface);
+      height: 8px;
+      border-radius: 4px;
+      margin-bottom: 2rem;
+      overflow: hidden;
+    }
+    
+    .progress-fill {
+      height: 100%;
+      background: var(--success);
+      transition: width 0.3s;
+    }
+    
+    .review-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border);
+    }
+    
+    .review-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    .review-meta {
+      display: flex;
+      gap: 1rem;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+    
+    .review-meta span {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+    }
+    
+    .comparison {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    @media (max-width: 768px) {
+      .comparison { grid-template-columns: 1fr; }
+    }
+    
+    .text-panel {
+      background: var(--surface-2);
+      border-radius: 8px;
+      padding: 1rem;
+    }
+    
+    .text-panel h4 {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      margin-bottom: 0.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .text-content {
+      font-size: 1rem;
+      line-height: 1.6;
+    }
+    
+    .text-content.source { color: var(--text-muted); }
+    
+    /* Quality Checks */
+    .quality-checks {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .quality-check {
+      display: flex;
+      align-items: center;
+      gap: 0.25rem;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      background: var(--surface-2);
+    }
+    
+    .quality-check.pass { color: var(--success); }
+    .quality-check.warn { color: var(--warning); }
+    .quality-check.fail { color: var(--danger); }
+    
+    /* Actions */
+    .review-actions {
+      display: flex;
+      gap: 0.75rem;
+      flex-wrap: wrap;
+    }
+    
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border-radius: 8px;
+      border: none;
+      font-size: 0.875rem;
+      font-weight: 600;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: all 0.2s;
+    }
+    
+    .btn-approve {
+      background: var(--success);
+      color: white;
+    }
+    .btn-approve:hover { filter: brightness(1.1); }
+    
+    .btn-reject {
+      background: var(--danger);
+      color: white;
+    }
+    .btn-reject:hover { filter: brightness(1.1); }
+    
+    .btn-edit {
+      background: var(--warning);
+      color: black;
+    }
+    .btn-edit:hover { filter: brightness(1.1); }
+    
+    .btn-skip {
+      background: var(--surface-2);
+      color: var(--text-muted);
+      border: 1px solid var(--border);
+    }
+    .btn-skip:hover { background: var(--surface); }
+    
+    /* Edit Mode */
+    .edit-panel {
+      display: none;
+      margin-top: 1rem;
+    }
+    
+    .edit-panel.active { display: block; }
+    
+    .edit-panel textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-size: 1rem;
+      line-height: 1.6;
+      resize: vertical;
+      margin-bottom: 0.75rem;
+    }
+    
+    .edit-panel textarea:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    /* Stats */
+    .stats-row {
+      display: flex;
+      gap: 2rem;
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
+      color: var(--text-muted);
+    }
+    
+    .stat {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .stat-value {
+      font-weight: 700;
+      color: var(--text);
+    }
+    
+    /* Kelly Voice Guide */
+    .voice-guide {
+      background: linear-gradient(135deg, var(--surface-2), var(--surface));
+      border-radius: 8px;
+      padding: 1rem;
+      margin-bottom: 1.5rem;
+      border-left: 4px solid var(--primary);
+    }
+    
+    .voice-guide h4 {
+      color: var(--primary);
+      margin-bottom: 0.5rem;
+      font-size: 0.875rem;
+    }
+    
+    .voice-guide ul {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      padding-left: 1rem;
+      margin: 0;
+    }
+    
+    .voice-guide li { margin: 0.25rem 0; }
+    
+    /* Keyboard hints */
+    .keyboard-hints {
+      display: flex;
+      gap: 1.5rem;
+      justify-content: center;
+      padding: 1rem;
+      background: var(--surface);
+      border-radius: 8px;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    
+    .keyboard-hint kbd {
+      background: var(--bg);
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      border: 1px solid var(--border);
+      font-family: monospace;
+      margin-right: 0.25rem;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🔍 Translation Quality Review</h1>
+      <div class="stats-row">
+        <div class="stat">
+          <span>Reviewed:</span>
+          <span class="stat-value" id="stat-reviewed">0</span>
+        </div>
+        <div class="stat">
+          <span>Approved:</span>
+          <span class="stat-value" style="color: var(--success)" id="stat-approved">0</span>
+        </div>
+        <div class="stat">
+          <span>Rejected:</span>
+          <span class="stat-value" style="color: var(--danger)" id="stat-rejected">0</span>
+        </div>
+        <div class="stat">
+          <span>Remaining:</span>
+          <span class="stat-value" id="stat-remaining">0</span>
+        </div>
+      </div>
+    </header>
+    
+    <div class="progress-bar">
+      <div class="progress-fill" id="progress-fill" style="width: 0%"></div>
+    </div>
+    
+    <!-- Kelly Voice Guide -->
+    <div class="voice-guide">
+      <h4>✨ Kelly's Voice Checklist</h4>
+      <ul>
+        <li><strong>Warm greeting:</strong> "¡Bienvenidos!" not cold "Bienvenido"</li>
+        <li><strong>Informal address:</strong> Uses "tú" (ES) or "você" (PT), never formal</li>
+        <li><strong>Questions preserved:</strong> Rhetorical questions stay as questions</li>
+        <li><strong>Enthusiasm intact:</strong> Exclamation marks and pauses (—) kept</li>
+        <li><strong>No English remnants:</strong> All text fully translated</li>
+      </ul>
+    </div>
+    
+    <!-- Review Card -->
+    <div class="review-card" id="review-card">
+      <div class="review-header">
+        <div class="review-meta">
+          <span>📅 Day <span id="meta-day">1</span></span>
+          <span>📍 <span id="meta-phase">hook</span></span>
+          <span>📝 <span id="meta-field">script</span></span>
+          <span>🌍 <span id="meta-lang">es</span></span>
+        </div>
+        <span class="quality-check" id="meta-provider">via OpenAI</span>
+      </div>
+      
+      <div class="comparison">
+        <div class="text-panel">
+          <h4>🇺🇸 English (Source)</h4>
+          <div class="text-content source" id="text-source">
+            Loading...
+          </div>
+        </div>
+        <div class="text-panel">
+          <h4>🇪🇸 Spanish (Translation)</h4>
+          <div class="text-content" id="text-translation">
+            Loading...
+          </div>
+        </div>
+      </div>
+      
+      <div class="quality-checks" id="quality-checks">
+        <!-- Populated by JS -->
+      </div>
+      
+      <div class="review-actions">
+        <button class="btn btn-approve" onclick="approve()">
+          ✅ Approve (A)
+        </button>
+        <button class="btn btn-edit" onclick="toggleEdit()">
+          ✏️ Edit (E)
+        </button>
+        <button class="btn btn-reject" onclick="reject()">
+          ❌ Reject (R)
+        </button>
+        <button class="btn btn-skip" onclick="skip()">
+          ⏭️ Skip (S)
+        </button>
+      </div>
+      
+      <div class="edit-panel" id="edit-panel">
+        <textarea id="edit-textarea" placeholder="Edit the translation..."></textarea>
+        <button class="btn btn-approve" onclick="saveEdit()">
+          💾 Save & Approve
+        </button>
+      </div>
+    </div>
+    
+    <div class="keyboard-hints">
+      <span class="keyboard-hint"><kbd>A</kbd> Approve</span>
+      <span class="keyboard-hint"><kbd>E</kbd> Edit</span>
+      <span class="keyboard-hint"><kbd>R</kbd> Reject</span>
+      <span class="keyboard-hint"><kbd>S</kbd> Skip</span>
+      <span class="keyboard-hint"><kbd>←</kbd><kbd>→</kbd> Navigate</span>
+    </div>
+  </div>
+  
+  <script>
+    // Sample review items (Day 1 Spanish translations)
+    const REVIEW_ITEMS = [
+      {
+        day: 1, phase: 'hook', field: 'script', lang: 'es', provider: 'OpenAI GPT-4o-mini',
+        source: 'Welcome to Day One. Not just of this journey, but of something bigger. Every moment offers a chance to begin again. Today, we explore why fresh starts are more available than we think.',
+        translation: '¡Bienvenidos al Día Uno! No solo de este viaje, sino de algo más grande. Cada momento ofrece una oportunidad para comenzar de nuevo. Hoy, exploramos por qué los nuevos comienzos son más accesibles de lo que pensamos.',
+        status: 'pending'
+      },
+      {
+        day: 1, phase: 'hook', field: 'prompt', lang: 'es', provider: 'OpenAI GPT-4o-mini',
+        source: 'What brings you here today?',
+        translation: '¿Qué te trae aquí hoy?',
+        status: 'pending'
+      },
+      {
+        day: 1, phase: 'cliff', field: 'script', lang: 'es', provider: 'OpenAI GPT-4o-mini',
+        source: "Here's what's fascinating: our brains are wired to love new beginnings. But why do some fresh starts stick while others fade by February?",
+        translation: 'Aquí está lo fascinante: nuestros cerebros están programados para amar los nuevos comienzos. Pero, ¿por qué algunos comienzos frescos se mantienen mientras que otros se desvanecen para febrero?',
+        status: 'pending'
+      },
+      {
+        day: 1, phase: 'q1', field: 'script', lang: 'es', provider: 'OpenAI GPT-4o-mini',
+        source: "You've probably heard it takes 21 days to form a habit. That number? Made up in the 1960s. Real research from University College London found it takes 66 days on average—and varies widely by person and habit. The good news? Missing a day doesn't reset your progress.",
+        translation: "Probablemente has oído que se necesitan 21 días para formar un hábito. ¿Ese número? Inventado en los años 60. La investigación real de University College London encontró que, en promedio, se necesitan 66 días—y varía mucho según la persona y el hábito. ¿La buena noticia? Perder un día no reinicia tu progreso.",
+        status: 'pending'
+      },
+      {
+        day: 1, phase: 'wisdom', field: 'script', lang: 'es', provider: 'OpenAI GPT-4o-mini',
+        source: "Here's today's wisdom: You don't need January 1st to start fresh. Every morning—every moment—is a chance to begin again. The best time to plant a tree was 20 years ago. The second best time is now.",
+        translation: "Esta es la sabiduría de hoy: No necesitas el 1 de enero para empezar de nuevo. Cada mañana—cada momento—es una oportunidad para comenzar otra vez. El mejor momento para plantar un árbol fue hace 20 años. El segundo mejor momento es ahora.",
+        status: 'pending'
+      }
+    ];
+    
+    let currentIndex = 0;
+    let stats = { reviewed: 0, approved: 0, rejected: 0 };
+    
+    function runQualityChecks(source, translation, lang) {
+      const checks = [];
+      
+      // Length ratio check
+      const lengthRatio = translation.length / source.length;
+      const lengthOK = lengthRatio > 0.8 && lengthRatio < 1.5;
+      checks.push({
+        name: `Length: ${(lengthRatio * 100).toFixed(0)}%`,
+        status: lengthOK ? 'pass' : lengthRatio > 0.6 && lengthRatio < 2 ? 'warn' : 'fail'
+      });
+      
+      // Check for warm greeting (Spanish)
+      if (lang === 'es') {
+        const hasWarmGreeting = /¡?bienvenid/i.test(translation) || !(/welcome/i.test(source));
+        checks.push({
+          name: 'Warm greeting',
+          status: hasWarmGreeting ? 'pass' : 'warn'
+        });
+        
+        // Check for informal "tú"
+        const usesInformal = /\b(tú|te|tu|contigo|ti)\b/i.test(translation);
+        const usesFormal = /\b(usted|ustedes)\b/i.test(translation);
+        checks.push({
+          name: 'Informal "tú"',
+          status: usesInformal && !usesFormal ? 'pass' : usesFormal ? 'fail' : 'warn'
+        });
+      }
+      
+      // Check for question preservation
+      const sourceQuestions = (source.match(/\?/g) || []).length;
+      const transQuestions = (translation.match(/\?/g) || []).length;
+      if (sourceQuestions > 0) {
+        checks.push({
+          name: 'Questions preserved',
+          status: transQuestions >= sourceQuestions ? 'pass' : 'warn'
+        });
+      }
+      
+      // Check for English remnants
+      const englishWords = ['the', 'and', 'but', 'you', 'your', 'this', 'that', 'what', 'how', 'why'];
+      const hasEnglish = englishWords.some(word => 
+        new RegExp(`\\b${word}\\b`, 'i').test(translation)
+      );
+      checks.push({
+        name: 'No English',
+        status: hasEnglish ? 'fail' : 'pass'
+      });
+      
+      // Check for enthusiasm markers
+      const sourceExclaim = (source.match(/!/g) || []).length;
+      const transExclaim = (translation.match(/!/g) || []).length;
+      if (sourceExclaim > 0) {
+        checks.push({
+          name: 'Enthusiasm (!)',
+          status: transExclaim >= sourceExclaim * 0.5 ? 'pass' : 'warn'
+        });
+      }
+      
+      return checks;
+    }
+    
+    function renderItem() {
+      const item = REVIEW_ITEMS[currentIndex];
+      if (!item) {
+        document.getElementById('review-card').innerHTML = `
+          <div style="text-align: center; padding: 3rem;">
+            <h2>🎉 All done!</h2>
+            <p style="color: var(--text-muted);">No more translations to review.</p>
+          </div>
+        `;
+        return;
+      }
+      
+      document.getElementById('meta-day').textContent = item.day;
+      document.getElementById('meta-phase').textContent = item.phase;
+      document.getElementById('meta-field').textContent = item.field;
+      document.getElementById('meta-lang').textContent = item.lang.toUpperCase();
+      document.getElementById('meta-provider').textContent = `via ${item.provider}`;
+      document.getElementById('text-source').textContent = item.source;
+      document.getElementById('text-translation').textContent = item.translation;
+      
+      // Run quality checks
+      const checks = runQualityChecks(item.source, item.translation, item.lang);
+      document.getElementById('quality-checks').innerHTML = checks.map(c => `
+        <span class="quality-check ${c.status}">
+          ${c.status === 'pass' ? '✅' : c.status === 'warn' ? '⚠️' : '❌'} ${c.name}
+        </span>
+      `).join('');
+      
+      // Update stats
+      document.getElementById('stat-reviewed').textContent = stats.reviewed;
+      document.getElementById('stat-approved').textContent = stats.approved;
+      document.getElementById('stat-rejected').textContent = stats.rejected;
+      document.getElementById('stat-remaining').textContent = REVIEW_ITEMS.filter(i => i.status === 'pending').length;
+      
+      // Update progress
+      const progress = (stats.reviewed / REVIEW_ITEMS.length) * 100;
+      document.getElementById('progress-fill').style.width = `${progress}%`;
+      
+      // Reset edit panel
+      document.getElementById('edit-panel').classList.remove('active');
+      document.getElementById('edit-textarea').value = item.translation;
+    }
+    
+    function approve() {
+      REVIEW_ITEMS[currentIndex].status = 'approved';
+      stats.reviewed++;
+      stats.approved++;
+      currentIndex++;
+      renderItem();
+    }
+    
+    function reject() {
+      REVIEW_ITEMS[currentIndex].status = 'rejected';
+      stats.reviewed++;
+      stats.rejected++;
+      currentIndex++;
+      renderItem();
+    }
+    
+    function skip() {
+      currentIndex++;
+      renderItem();
+    }
+    
+    function toggleEdit() {
+      document.getElementById('edit-panel').classList.toggle('active');
+      document.getElementById('edit-textarea').focus();
+    }
+    
+    function saveEdit() {
+      const newText = document.getElementById('edit-textarea').value;
+      REVIEW_ITEMS[currentIndex].translation = newText;
+      REVIEW_ITEMS[currentIndex].status = 'approved';
+      REVIEW_ITEMS[currentIndex].edited = true;
+      stats.reviewed++;
+      stats.approved++;
+      currentIndex++;
+      renderItem();
+    }
+    
+    // Keyboard shortcuts
+    document.addEventListener('keydown', (e) => {
+      if (e.target.tagName === 'TEXTAREA') return;
+      
+      switch (e.key.toLowerCase()) {
+        case 'a': approve(); break;
+        case 'e': toggleEdit(); break;
+        case 'r': reject(); break;
+        case 's': skip(); break;
+        case 'arrowleft':
+          if (currentIndex > 0) { currentIndex--; renderItem(); }
+          break;
+        case 'arrowright':
+          if (currentIndex < REVIEW_ITEMS.length - 1) { currentIndex++; renderItem(); }
+          break;
+      }
+    });
+    
+    // Initialize
+    renderItem();
+  </script>
+</body>
+</html>

@@ -1,0 +1,814 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Translation Center | Curious Kelly</title>
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4f46e5;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --bg: #0f172a;
+      --surface: #1e293b;
+      --surface-2: #334155;
+      --text: #f8fafc;
+      --text-muted: #94a3b8;
+      --border: #475569;
+    }
+    
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--bg);
+      color: var(--text);
+      min-height: 100vh;
+    }
+    
+    .container {
+      max-width: 1400px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+      padding-bottom: 1rem;
+      border-bottom: 1px solid var(--border);
+    }
+    
+    h1 { font-size: 1.75rem; display: flex; align-items: center; gap: 0.5rem; }
+    
+    .stats-row {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-bottom: 2rem;
+    }
+    
+    .stat-card {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 1.25rem;
+      border: 1px solid var(--border);
+    }
+    
+    .stat-card h3 { color: var(--text-muted); font-size: 0.875rem; margin-bottom: 0.5rem; }
+    .stat-card .value { font-size: 2rem; font-weight: 700; }
+    .stat-card .sub { font-size: 0.75rem; color: var(--text-muted); margin-top: 0.25rem; }
+    
+    .section {
+      background: var(--surface);
+      border-radius: 12px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+      border: 1px solid var(--border);
+    }
+    
+    .section h2 {
+      font-size: 1.25rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    /* Language Grid */
+    .language-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+      gap: 1rem;
+    }
+    
+    .language-card {
+      background: var(--surface-2);
+      border-radius: 8px;
+      padding: 1rem;
+      border: 1px solid var(--border);
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+    
+    .language-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+    }
+    
+    .language-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+    
+    .language-flag { font-size: 2rem; }
+    .language-name { font-weight: 600; }
+    .language-native { color: var(--text-muted); font-size: 0.875rem; }
+    
+    .language-progress {
+      background: var(--bg);
+      height: 8px;
+      border-radius: 4px;
+      overflow: hidden;
+      margin: 0.75rem 0;
+    }
+    
+    .language-progress-bar {
+      height: 100%;
+      background: var(--primary);
+      border-radius: 4px;
+      transition: width 0.3s;
+    }
+    
+    .language-progress-bar.complete { background: var(--success); }
+    .language-progress-bar.partial { background: var(--warning); }
+    
+    .language-stats {
+      display: flex;
+      justify-content: space-between;
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      margin-bottom: 0.75rem;
+    }
+    
+    .language-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .btn {
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      border: none;
+      font-size: 0.875rem;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      transition: background 0.2s;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    .btn-primary:hover { background: var(--primary-dark); }
+    
+    .btn-secondary {
+      background: var(--surface);
+      color: var(--text);
+      border: 1px solid var(--border);
+    }
+    .btn-secondary:hover { background: var(--surface-2); }
+    
+    .btn-success {
+      background: var(--success);
+      color: white;
+    }
+    
+    .cost-badge {
+      background: var(--primary);
+      color: white;
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .status-badge {
+      padding: 0.25rem 0.5rem;
+      border-radius: 4px;
+      font-size: 0.75rem;
+      font-weight: 600;
+    }
+    
+    .status-complete { background: var(--success); color: white; }
+    .status-partial { background: var(--warning); color: black; }
+    .status-open { background: var(--surface); color: var(--text-muted); border: 1px solid var(--border); }
+    
+    /* Sponsorship Modal */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: rgba(0,0,0,0.8);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .modal.active { display: flex; }
+    
+    .modal-content {
+      background: var(--surface);
+      border-radius: 16px;
+      padding: 2rem;
+      max-width: 500px;
+      width: 90%;
+      border: 1px solid var(--border);
+    }
+    
+    .modal-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 1.5rem;
+    }
+    
+    .modal-close {
+      background: none;
+      border: none;
+      color: var(--text-muted);
+      font-size: 1.5rem;
+      cursor: pointer;
+    }
+    
+    .sponsor-options {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+    }
+    
+    .sponsor-option {
+      background: var(--surface-2);
+      border: 2px solid var(--border);
+      border-radius: 12px;
+      padding: 1.25rem;
+      cursor: pointer;
+      transition: border-color 0.2s;
+    }
+    
+    .sponsor-option:hover { border-color: var(--primary); }
+    .sponsor-option.selected { border-color: var(--primary); background: rgba(99, 102, 241, 0.1); }
+    
+    .sponsor-option h4 { margin-bottom: 0.5rem; }
+    .sponsor-option p { color: var(--text-muted); font-size: 0.875rem; }
+    
+    .sponsor-option .price {
+      font-size: 1.5rem;
+      font-weight: 700;
+      color: var(--primary);
+      margin-top: 0.5rem;
+    }
+    
+    /* BYOK Key Input */
+    .key-input-group {
+      margin-top: 1rem;
+    }
+    
+    .key-input-group label {
+      display: block;
+      margin-bottom: 0.5rem;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+    }
+    
+    .key-input-group input {
+      width: 100%;
+      padding: 0.75rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+      font-family: monospace;
+    }
+    
+    .key-input-group input:focus {
+      outline: none;
+      border-color: var(--primary);
+    }
+    
+    /* Tier Filters */
+    .tier-filters {
+      display: flex;
+      gap: 0.5rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+    
+    .tier-filter {
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      border: 1px solid var(--border);
+      background: transparent;
+      color: var(--text-muted);
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .tier-filter.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+    
+    .tier-filter:hover:not(.active) {
+      background: var(--surface-2);
+    }
+    
+    /* Search */
+    .search-box {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+    }
+    
+    .search-box input {
+      flex: 1;
+      padding: 0.75rem 1rem;
+      border-radius: 8px;
+      border: 1px solid var(--border);
+      background: var(--bg);
+      color: var(--text);
+    }
+    
+    .search-box input::placeholder { color: var(--text-muted); }
+    .search-box input:focus { outline: none; border-color: var(--primary); }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🌍 Translation Center</h1>
+      <div>
+        <button class="btn btn-primary" onclick="openBYOKModal()">
+          🔑 Add Your API Key
+        </button>
+      </div>
+    </header>
+    
+    <!-- Stats Row -->
+    <div class="stats-row">
+      <div class="stat-card">
+        <h3>Languages</h3>
+        <div class="value">195</div>
+        <div class="sub">Available for sponsorship</div>
+      </div>
+      <div class="stat-card">
+        <h3>Spanish</h3>
+        <div class="value" style="color: var(--warning)">2.7%</div>
+        <div class="sub">10/365 lessons translated</div>
+      </div>
+      <div class="stat-card">
+        <h3>Portuguese</h3>
+        <div class="value" style="color: var(--text-muted)">0%</div>
+        <div class="sub">Open for sponsorship</div>
+      </div>
+      <div class="stat-card">
+        <h3>Community Credits</h3>
+        <div class="value">$0</div>
+        <div class="sub">BYOK credits donated</div>
+      </div>
+    </div>
+    
+    <!-- Priority Languages -->
+    <div class="section">
+      <h2>🚀 Priority Languages</h2>
+      <p style="color: var(--text-muted); margin-bottom: 1rem;">
+        These languages have the highest demand. Sponsor with cash or donate your API credits.
+      </p>
+      
+      <div class="language-grid">
+        <!-- Spanish -->
+        <div class="language-card">
+          <div class="language-header">
+            <span class="language-flag">🇪🇸</span>
+            <div>
+              <div class="language-name">Spanish</div>
+              <div class="language-native">Español</div>
+            </div>
+            <span class="status-badge status-partial">In Progress</span>
+          </div>
+          <div class="language-progress">
+            <div class="language-progress-bar partial" style="width: 2.7%"></div>
+          </div>
+          <div class="language-stats">
+            <span>10/365 lessons</span>
+            <span>355 remaining</span>
+          </div>
+          <div class="language-actions">
+            <button class="btn btn-primary" onclick="openSponsorModal('es', 'Spanish', 27)">
+              💳 Sponsor $27
+            </button>
+            <button class="btn btn-secondary" onclick="openBYOKModal('es')">
+              🔑 Use My Credits
+            </button>
+          </div>
+        </div>
+        
+        <!-- Portuguese -->
+        <div class="language-card">
+          <div class="language-header">
+            <span class="language-flag">🇧🇷</span>
+            <div>
+              <div class="language-name">Portuguese</div>
+              <div class="language-native">Português</div>
+            </div>
+            <span class="status-badge status-open">Open</span>
+          </div>
+          <div class="language-progress">
+            <div class="language-progress-bar" style="width: 0%"></div>
+          </div>
+          <div class="language-stats">
+            <span>0/365 lessons</span>
+            <span>365 remaining</span>
+          </div>
+          <div class="language-actions">
+            <button class="btn btn-primary" onclick="openSponsorModal('pt', 'Portuguese', 30)">
+              💳 Sponsor $30
+            </button>
+            <button class="btn btn-secondary" onclick="openBYOKModal('pt')">
+              🔑 Use My Credits
+            </button>
+          </div>
+        </div>
+        
+        <!-- French -->
+        <div class="language-card">
+          <div class="language-header">
+            <span class="language-flag">🇫🇷</span>
+            <div>
+              <div class="language-name">French</div>
+              <div class="language-native">Français</div>
+            </div>
+            <span class="status-badge status-open">Open</span>
+          </div>
+          <div class="language-progress">
+            <div class="language-progress-bar" style="width: 0%"></div>
+          </div>
+          <div class="language-stats">
+            <span>0/365 lessons</span>
+            <span>365 remaining</span>
+          </div>
+          <div class="language-actions">
+            <button class="btn btn-primary" onclick="openSponsorModal('fr', 'French', 30)">
+              💳 Sponsor $30
+            </button>
+            <button class="btn btn-secondary" onclick="openBYOKModal('fr')">
+              🔑 Use My Credits
+            </button>
+          </div>
+        </div>
+        
+        <!-- German -->
+        <div class="language-card">
+          <div class="language-header">
+            <span class="language-flag">🇩🇪</span>
+            <div>
+              <div class="language-name">German</div>
+              <div class="language-native">Deutsch</div>
+            </div>
+            <span class="status-badge status-open">Open</span>
+          </div>
+          <div class="language-progress">
+            <div class="language-progress-bar" style="width: 0%"></div>
+          </div>
+          <div class="language-stats">
+            <span>0/365 lessons</span>
+            <span>365 remaining</span>
+          </div>
+          <div class="language-actions">
+            <button class="btn btn-primary" onclick="openSponsorModal('de', 'German', 30)">
+              💳 Sponsor $30
+            </button>
+            <button class="btn btn-secondary" onclick="openBYOKModal('de')">
+              🔑 Use My Credits
+            </button>
+          </div>
+        </div>
+        
+        <!-- Chinese -->
+        <div class="language-card">
+          <div class="language-header">
+            <span class="language-flag">🇨🇳</span>
+            <div>
+              <div class="language-name">Chinese</div>
+              <div class="language-native">简体中文</div>
+            </div>
+            <span class="status-badge status-open">Open</span>
+          </div>
+          <div class="language-progress">
+            <div class="language-progress-bar" style="width: 0%"></div>
+          </div>
+          <div class="language-stats">
+            <span>0/365 lessons</span>
+            <span>365 remaining</span>
+          </div>
+          <div class="language-actions">
+            <button class="btn btn-primary" onclick="openSponsorModal('zh', 'Chinese', 35)">
+              💳 Sponsor $35
+            </button>
+            <button class="btn btn-secondary" onclick="openBYOKModal('zh')">
+              🔑 Use My Credits
+            </button>
+          </div>
+        </div>
+        
+        <!-- Japanese -->
+        <div class="language-card">
+          <div class="language-header">
+            <span class="language-flag">🇯🇵</span>
+            <div>
+              <div class="language-name">Japanese</div>
+              <div class="language-native">日本語</div>
+            </div>
+            <span class="status-badge status-open">Open</span>
+          </div>
+          <div class="language-progress">
+            <div class="language-progress-bar" style="width: 0%"></div>
+          </div>
+          <div class="language-stats">
+            <span>0/365 lessons</span>
+            <span>365 remaining</span>
+          </div>
+          <div class="language-actions">
+            <button class="btn btn-primary" onclick="openSponsorModal('ja', 'Japanese', 35)">
+              💳 Sponsor $35
+            </button>
+            <button class="btn btn-secondary" onclick="openBYOKModal('ja')">
+              🔑 Use My Credits
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+    
+    <!-- All Languages -->
+    <div class="section">
+      <h2>🌐 All 195 Languages</h2>
+      
+      <div class="search-box">
+        <input type="text" id="language-search" placeholder="Search languages..." oninput="filterLanguages()">
+      </div>
+      
+      <div class="tier-filters">
+        <button class="tier-filter active" data-tier="all" onclick="setTierFilter('all')">All (195)</button>
+        <button class="tier-filter" data-tier="1" onclick="setTierFilter('1')">Tier 1 - $25-40 (12)</button>
+        <button class="tier-filter" data-tier="2" onclick="setTierFilter('2')">Tier 2 - $40-60 (25)</button>
+        <button class="tier-filter" data-tier="3" onclick="setTierFilter('3')">Tier 3 - $60-100 (50)</button>
+        <button class="tier-filter" data-tier="4" onclick="setTierFilter('4')">Tier 4 - $100-200 (108)</button>
+      </div>
+      
+      <div class="language-grid" id="all-languages">
+        <!-- Dynamically populated -->
+      </div>
+    </div>
+  </div>
+  
+  <!-- Sponsor Modal -->
+  <div class="modal" id="sponsor-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>💳 Sponsor <span id="sponsor-lang-name">Spanish</span></h3>
+        <button class="modal-close" onclick="closeModals()">&times;</button>
+      </div>
+      
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+        Your sponsorship will fund the complete translation of 365 daily lessons.
+        You'll be credited as a Language Champion.
+      </p>
+      
+      <div class="sponsor-options">
+        <div class="sponsor-option selected" onclick="selectSponsorOption(this, 'full')">
+          <h4>🏆 Full Sponsorship</h4>
+          <p>Translate all 365 lessons. Your name displayed as sponsor.</p>
+          <div class="price" id="sponsor-full-price">$30</div>
+        </div>
+        
+        <div class="sponsor-option" onclick="selectSponsorOption(this, 'partial')">
+          <h4>📚 Partial Sponsorship</h4>
+          <p>Contribute any amount toward this language.</p>
+          <div class="price">Custom amount</div>
+        </div>
+      </div>
+      
+      <button class="btn btn-success" style="width: 100%; margin-top: 1.5rem; padding: 1rem;" onclick="proceedToCheckout()">
+        Proceed to Checkout →
+      </button>
+    </div>
+  </div>
+  
+  <!-- BYOK Modal -->
+  <div class="modal" id="byok-modal">
+    <div class="modal-content">
+      <div class="modal-header">
+        <h3>🔑 Use Your API Credits</h3>
+        <button class="modal-close" onclick="closeModals()">&times;</button>
+      </div>
+      
+      <p style="color: var(--text-muted); margin-bottom: 1.5rem;">
+        Donate your API credits to translate lessons. Your translations help everyone and are saved forever.
+      </p>
+      
+      <div class="sponsor-options">
+        <div class="sponsor-option selected" data-provider="openai">
+          <h4>OpenAI (GPT-4)</h4>
+          <p>Best for preserving Kelly's voice and personality</p>
+        </div>
+        <div class="sponsor-option" data-provider="google">
+          <h4>Google Cloud Translation</h4>
+          <p>500K free chars/month. Good for bulk translation.</p>
+        </div>
+        <div class="sponsor-option" data-provider="deepl">
+          <h4>DeepL</h4>
+          <p>Highest quality for European languages.</p>
+        </div>
+      </div>
+      
+      <div class="key-input-group">
+        <label>Your API Key (stored locally, never sent to our servers)</label>
+        <input type="password" id="byok-key" placeholder="sk-... or AIza...">
+      </div>
+      
+      <div class="key-input-group">
+        <label>Target Language</label>
+        <select id="byok-lang" style="width: 100%; padding: 0.75rem; border-radius: 8px; border: 1px solid var(--border); background: var(--bg); color: var(--text);">
+          <option value="es">Spanish (Español)</option>
+          <option value="pt">Portuguese (Português)</option>
+          <option value="fr">French (Français)</option>
+          <option value="de">German (Deutsch)</option>
+          <option value="zh">Chinese (简体中文)</option>
+          <option value="ja">Japanese (日本語)</option>
+        </select>
+      </div>
+      
+      <button class="btn btn-success" style="width: 100%; margin-top: 1.5rem; padding: 1rem;" onclick="startBYOKTranslation()">
+        Start Translating →
+      </button>
+    </div>
+  </div>
+  
+  <script>
+    // Language data
+    const LANGUAGES = [
+      // Tier 1
+      { code: 'es', name: 'Spanish', native: 'Español', flag: '🇪🇸', tier: 1, cost: 30, translated: 10 },
+      { code: 'pt', name: 'Portuguese', native: 'Português', flag: '🇧🇷', tier: 1, cost: 30, translated: 0 },
+      { code: 'fr', name: 'French', native: 'Français', flag: '🇫🇷', tier: 1, cost: 30, translated: 0 },
+      { code: 'de', name: 'German', native: 'Deutsch', flag: '🇩🇪', tier: 1, cost: 30, translated: 0 },
+      { code: 'zh', name: 'Chinese', native: '简体中文', flag: '🇨🇳', tier: 1, cost: 35, translated: 0 },
+      { code: 'ja', name: 'Japanese', native: '日本語', flag: '🇯🇵', tier: 1, cost: 35, translated: 0 },
+      { code: 'ko', name: 'Korean', native: '한국어', flag: '🇰🇷', tier: 1, cost: 30, translated: 0 },
+      { code: 'ar', name: 'Arabic', native: 'العربية', flag: '🇸🇦', tier: 1, cost: 35, translated: 0 },
+      { code: 'hi', name: 'Hindi', native: 'हिन्दी', flag: '🇮🇳', tier: 1, cost: 30, translated: 0 },
+      { code: 'it', name: 'Italian', native: 'Italiano', flag: '🇮🇹', tier: 1, cost: 28, translated: 0 },
+      { code: 'ru', name: 'Russian', native: 'Русский', flag: '🇷🇺', tier: 1, cost: 30, translated: 0 },
+      { code: 'zh-TW', name: 'Chinese (Trad)', native: '繁體中文', flag: '🇹🇼', tier: 1, cost: 35, translated: 0 },
+      // Tier 2
+      { code: 'nl', name: 'Dutch', native: 'Nederlands', flag: '🇳🇱', tier: 2, cost: 40, translated: 0 },
+      { code: 'pl', name: 'Polish', native: 'Polski', flag: '🇵🇱', tier: 2, cost: 40, translated: 0 },
+      { code: 'tr', name: 'Turkish', native: 'Türkçe', flag: '🇹🇷', tier: 2, cost: 40, translated: 0 },
+      { code: 'vi', name: 'Vietnamese', native: 'Tiếng Việt', flag: '🇻🇳', tier: 2, cost: 45, translated: 0 },
+      { code: 'th', name: 'Thai', native: 'ไทย', flag: '🇹🇭', tier: 2, cost: 45, translated: 0 },
+      { code: 'id', name: 'Indonesian', native: 'Bahasa Indonesia', flag: '🇮🇩', tier: 2, cost: 40, translated: 0 },
+      { code: 'sv', name: 'Swedish', native: 'Svenska', flag: '🇸🇪', tier: 2, cost: 40, translated: 0 },
+      { code: 'da', name: 'Danish', native: 'Dansk', flag: '🇩🇰', tier: 2, cost: 40, translated: 0 },
+      { code: 'no', name: 'Norwegian', native: 'Norsk', flag: '🇳🇴', tier: 2, cost: 40, translated: 0 },
+      { code: 'fi', name: 'Finnish', native: 'Suomi', flag: '🇫🇮', tier: 2, cost: 45, translated: 0 },
+      { code: 'cs', name: 'Czech', native: 'Čeština', flag: '🇨🇿', tier: 2, cost: 42, translated: 0 },
+      { code: 'el', name: 'Greek', native: 'Ελληνικά', flag: '🇬🇷', tier: 2, cost: 45, translated: 0 },
+      { code: 'he', name: 'Hebrew', native: 'עברית', flag: '🇮🇱', tier: 2, cost: 45, translated: 0 },
+      { code: 'uk', name: 'Ukrainian', native: 'Українська', flag: '🇺🇦', tier: 2, cost: 42, translated: 0 },
+      { code: 'ro', name: 'Romanian', native: 'Română', flag: '🇷🇴', tier: 2, cost: 42, translated: 0 },
+      { code: 'hu', name: 'Hungarian', native: 'Magyar', flag: '🇭🇺', tier: 2, cost: 45, translated: 0 },
+      { code: 'bn', name: 'Bengali', native: 'বাংলা', flag: '🇧🇩', tier: 2, cost: 45, translated: 0 },
+      { code: 'ta', name: 'Tamil', native: 'தமிழ்', flag: '🇮🇳', tier: 2, cost: 50, translated: 0 },
+      { code: 'te', name: 'Telugu', native: 'తెలుగు', flag: '🇮🇳', tier: 2, cost: 50, translated: 0 },
+      // Tier 3 (sample)
+      { code: 'sw', name: 'Swahili', native: 'Kiswahili', flag: '🇰🇪', tier: 3, cost: 55, translated: 0 },
+      { code: 'af', name: 'Afrikaans', native: 'Afrikaans', flag: '🇿🇦', tier: 3, cost: 55, translated: 0 },
+      { code: 'ca', name: 'Catalan', native: 'Català', flag: '🇪🇸', tier: 3, cost: 55, translated: 0 },
+      { code: 'eu', name: 'Basque', native: 'Euskara', flag: '🇪🇸', tier: 3, cost: 75, translated: 0 },
+      { code: 'ga', name: 'Irish', native: 'Gaeilge', flag: '🇮🇪', tier: 3, cost: 75, translated: 0 },
+      { code: 'cy', name: 'Welsh', native: 'Cymraeg', flag: '🏴󠁧󠁢󠁷󠁬󠁳󠁿', tier: 3, cost: 70, translated: 0 },
+      // Tier 4 (sample)
+      { code: 'mi', name: 'Māori', native: 'Te Reo Māori', flag: '🇳🇿', tier: 4, cost: 130, translated: 0 },
+      { code: 'haw', name: 'Hawaiian', native: 'ʻŌlelo Hawaiʻi', flag: '🇺🇸', tier: 4, cost: 150, translated: 0 },
+      { code: 'nv', name: 'Navajo', native: 'Diné bizaad', flag: '🇺🇸', tier: 4, cost: 140, translated: 0 },
+    ];
+    
+    let currentTier = 'all';
+    let currentSearch = '';
+    let selectedLang = null;
+    
+    function renderLanguages() {
+      const container = document.getElementById('all-languages');
+      const filtered = LANGUAGES.filter(lang => {
+        const matchesTier = currentTier === 'all' || lang.tier === parseInt(currentTier);
+        const matchesSearch = currentSearch === '' || 
+          lang.name.toLowerCase().includes(currentSearch) ||
+          lang.native.toLowerCase().includes(currentSearch) ||
+          lang.code.toLowerCase().includes(currentSearch);
+        return matchesTier && matchesSearch;
+      });
+      
+      container.innerHTML = filtered.map(lang => {
+        const percent = Math.round((lang.translated / 365) * 100);
+        const status = lang.translated === 365 ? 'complete' : lang.translated > 0 ? 'partial' : 'open';
+        const statusLabel = status === 'complete' ? 'Complete' : status === 'partial' ? 'In Progress' : 'Open';
+        const remaining = 365 - lang.translated;
+        const remainingCost = Math.round((remaining / 365) * lang.cost);
+        
+        return `
+          <div class="language-card">
+            <div class="language-header">
+              <span class="language-flag">${lang.flag}</span>
+              <div>
+                <div class="language-name">${lang.name}</div>
+                <div class="language-native">${lang.native}</div>
+              </div>
+              <span class="status-badge status-${status}">${statusLabel}</span>
+            </div>
+            <div class="language-progress">
+              <div class="language-progress-bar ${status}" style="width: ${percent}%"></div>
+            </div>
+            <div class="language-stats">
+              <span>${lang.translated}/365 lessons</span>
+              <span>${remaining} remaining</span>
+            </div>
+            <div class="language-actions">
+              <button class="btn btn-primary" onclick="openSponsorModal('${lang.code}', '${lang.name}', ${remainingCost})">
+                💳 $${remainingCost}
+              </button>
+              <button class="btn btn-secondary" onclick="openBYOKModal('${lang.code}')">
+                🔑 BYOK
+              </button>
+            </div>
+          </div>
+        `;
+      }).join('');
+    }
+    
+    function setTierFilter(tier) {
+      currentTier = tier;
+      document.querySelectorAll('.tier-filter').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.tier === tier);
+      });
+      renderLanguages();
+    }
+    
+    function filterLanguages() {
+      currentSearch = document.getElementById('language-search').value.toLowerCase();
+      renderLanguages();
+    }
+    
+    function openSponsorModal(code, name, cost) {
+      selectedLang = { code, name, cost };
+      document.getElementById('sponsor-lang-name').textContent = name;
+      document.getElementById('sponsor-full-price').textContent = `$${cost}`;
+      document.getElementById('sponsor-modal').classList.add('active');
+    }
+    
+    function openBYOKModal(code) {
+      document.getElementById('byok-modal').classList.add('active');
+      if (code) {
+        document.getElementById('byok-lang').value = code;
+      }
+    }
+    
+    function closeModals() {
+      document.querySelectorAll('.modal').forEach(m => m.classList.remove('active'));
+    }
+    
+    function selectSponsorOption(el, type) {
+      document.querySelectorAll('.sponsor-option').forEach(o => o.classList.remove('selected'));
+      el.classList.add('selected');
+    }
+    
+    function proceedToCheckout() {
+      if (!selectedLang) return;
+      // TODO: Integrate with Stripe checkout
+      alert(`Redirecting to Stripe checkout for ${selectedLang.name} sponsorship ($${selectedLang.cost})...`);
+    }
+    
+    function startBYOKTranslation() {
+      const key = document.getElementById('byok-key').value;
+      const lang = document.getElementById('byok-lang').value;
+      
+      if (!key) {
+        alert('Please enter your API key');
+        return;
+      }
+      
+      // Store key locally
+      localStorage.setItem('byok_key', key);
+      localStorage.setItem('byok_lang', lang);
+      
+      // TODO: Start translation job
+      alert(`Starting translation to ${lang}. Your key is stored locally only.`);
+      closeModals();
+    }
+    
+    // Initialize
+    renderLanguages();
+  </script>
+</body>
+</html>
