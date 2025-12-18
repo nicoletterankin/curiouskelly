@@ -1,0 +1,810 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Stripe Setup Suite — Curious Kelly Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: white;
+      padding: 2rem;
+    }
+    
+    .container {
+      max-width: 1000px;
+      margin: 0 auto;
+    }
+    
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+    
+    h1 {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+    }
+    
+    .subtitle {
+      opacity: 0.7;
+      font-size: 1.1rem;
+    }
+    
+    .section {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+    
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+    
+    .section-header h2 {
+      font-size: 1.2rem;
+    }
+    
+    .step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      background: #e94560;
+      border-radius: 50%;
+      font-size: 0.9rem;
+      font-weight: bold;
+    }
+    
+    .link-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      background: rgba(255, 255, 255, 0.08);
+      padding: 1rem 1.25rem;
+      border-radius: 10px;
+      margin-bottom: 0.75rem;
+      transition: background 0.2s;
+    }
+    
+    .link-card:hover {
+      background: rgba(255, 255, 255, 0.12);
+    }
+    
+    .link-card .label {
+      font-weight: 500;
+    }
+    
+    .link-card .description {
+      font-size: 0.85rem;
+      opacity: 0.6;
+      margin-top: 0.25rem;
+    }
+    
+    .link-card a {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      background: #635bff;
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 6px;
+      text-decoration: none;
+      font-size: 0.9rem;
+      font-weight: 500;
+      transition: background 0.2s;
+    }
+    
+    .link-card a:hover {
+      background: #7a73ff;
+    }
+    
+    .link-card a.vercel {
+      background: #000;
+    }
+    
+    .link-card a.vercel:hover {
+      background: #333;
+    }
+    
+    .copy-section {
+      margin-top: 1rem;
+    }
+    
+    .copy-row {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      background: rgba(0, 0, 0, 0.3);
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 0.85rem;
+    }
+    
+    .copy-row .var-name {
+      min-width: 220px;
+      color: #00cec9;
+    }
+    
+    .copy-row .var-value {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.1);
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+      overflow-x: auto;
+    }
+    
+    .copy-row input {
+      flex: 1;
+      background: rgba(255, 255, 255, 0.1);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      padding: 0.5rem 0.75rem;
+      border-radius: 4px;
+      color: white;
+      font-family: inherit;
+      font-size: inherit;
+    }
+    
+    .copy-row input:focus {
+      outline: none;
+      border-color: #635bff;
+    }
+    
+    .copy-btn {
+      padding: 0.5rem 0.75rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      border-radius: 4px;
+      color: white;
+      cursor: pointer;
+      font-size: 0.85rem;
+      transition: background 0.2s;
+    }
+    
+    .copy-btn:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .copy-btn.copied {
+      background: #00b894;
+    }
+    
+    .checklist {
+      list-style: none;
+    }
+    
+    .checklist li {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .checklist li:last-child {
+      border-bottom: none;
+    }
+    
+    .checklist input[type="checkbox"] {
+      width: 20px;
+      height: 20px;
+      margin-top: 2px;
+      accent-color: #00b894;
+    }
+    
+    .checklist .item-content {
+      flex: 1;
+    }
+    
+    .checklist .item-title {
+      font-weight: 500;
+    }
+    
+    .checklist .item-detail {
+      font-size: 0.85rem;
+      opacity: 0.6;
+      margin-top: 0.25rem;
+    }
+    
+    .pricing-table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-top: 1rem;
+    }
+    
+    .pricing-table th,
+    .pricing-table td {
+      padding: 0.75rem;
+      text-align: left;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .pricing-table th {
+      font-weight: 600;
+      opacity: 0.7;
+      font-size: 0.85rem;
+      text-transform: uppercase;
+    }
+    
+    .pricing-table .price {
+      color: #00b894;
+      font-weight: 600;
+    }
+    
+    .export-section {
+      margin-top: 1.5rem;
+      padding: 1.5rem;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 12px;
+    }
+    
+    .export-section h3 {
+      margin-bottom: 1rem;
+      font-size: 1rem;
+    }
+    
+    .export-textarea {
+      width: 100%;
+      height: 200px;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      border-radius: 8px;
+      padding: 1rem;
+      color: white;
+      font-family: 'Monaco', 'Consolas', monospace;
+      font-size: 0.85rem;
+      resize: vertical;
+    }
+    
+    .export-textarea:focus {
+      outline: none;
+      border-color: #635bff;
+    }
+    
+    .btn-row {
+      display: flex;
+      gap: 0.75rem;
+      margin-top: 1rem;
+    }
+    
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 8px;
+      font-size: 0.95rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn-primary {
+      background: #e94560;
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: #ff6b6b;
+    }
+    
+    .btn-secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: white;
+    }
+    
+    .btn-secondary:hover {
+      background: rgba(255, 255, 255, 0.2);
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 0.25rem 0.75rem;
+      border-radius: 20px;
+      font-size: 0.8rem;
+      font-weight: 500;
+    }
+    
+    .status-pending {
+      background: rgba(255, 193, 7, 0.2);
+      color: #ffc107;
+    }
+    
+    .status-complete {
+      background: rgba(0, 184, 148, 0.2);
+      color: #00b894;
+    }
+    
+    footer {
+      text-align: center;
+      margin-top: 3rem;
+      padding-top: 2rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+      opacity: 0.6;
+      font-size: 0.9rem;
+    }
+    
+    .alert {
+      padding: 1rem 1.25rem;
+      border-radius: 8px;
+      margin-bottom: 1rem;
+    }
+    
+    .alert-info {
+      background: rgba(99, 91, 255, 0.2);
+      border-left: 4px solid #635bff;
+    }
+    
+    .alert-warning {
+      background: rgba(255, 193, 7, 0.2);
+      border-left: 4px solid #ffc107;
+    }
+    
+    .alert-success {
+      background: rgba(0, 184, 148, 0.2);
+      border-left: 4px solid #00b894;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>💳 Stripe Setup Suite</h1>
+      <p class="subtitle">Complete payment configuration for Curious Kelly</p>
+    </header>
+    
+    <!-- Quick Links -->
+    <section class="section">
+      <div class="section-header">
+        <span class="step-number">1</span>
+        <h2>Quick Links — Open These Tabs</h2>
+      </div>
+      
+      <div class="link-card">
+        <div>
+          <div class="label">Stripe Dashboard</div>
+          <div class="description">Main Stripe control panel</div>
+        </div>
+        <a href="https://dashboard.stripe.com" target="_blank">Open →</a>
+      </div>
+      
+      <div class="link-card">
+        <div>
+          <div class="label">Stripe Webhooks</div>
+          <div class="description">Configure webhook endpoints</div>
+        </div>
+        <a href="https://dashboard.stripe.com/webhooks" target="_blank">Open →</a>
+      </div>
+      
+      <div class="link-card">
+        <div>
+          <div class="label">Stripe Products</div>
+          <div class="description">Manage subscription products & prices</div>
+        </div>
+        <a href="https://dashboard.stripe.com/products" target="_blank">Open →</a>
+      </div>
+      
+      <div class="link-card">
+        <div>
+          <div class="label">Stripe API Keys</div>
+          <div class="description">Get your secret key</div>
+        </div>
+        <a href="https://dashboard.stripe.com/apikeys" target="_blank">Open →</a>
+      </div>
+      
+      <div class="link-card">
+        <div>
+          <div class="label">Vercel Environment Variables</div>
+          <div class="description">Set production environment variables</div>
+        </div>
+        <a href="https://vercel.com/lotd/curiouskelly/settings/environment-variables" target="_blank" class="vercel">Open →</a>
+      </div>
+    </section>
+    
+    <!-- Webhook Configuration -->
+    <section class="section">
+      <div class="section-header">
+        <span class="step-number">2</span>
+        <h2>Webhook Configuration</h2>
+      </div>
+      
+      <div class="alert alert-info">
+        <strong>Webhook URL to use:</strong><br>
+        <code style="user-select: all;">https://www.curiouskelly.com/api/webhooks/stripe-revenue</code>
+      </div>
+      
+      <p style="margin-bottom: 1rem; opacity: 0.8;">These events must be enabled:</p>
+      
+      <ul class="checklist">
+        <li>
+          <input type="checkbox" id="evt1">
+          <div class="item-content">
+            <div class="item-title">checkout.session.completed</div>
+            <div class="item-detail">New purchase completed</div>
+          </div>
+        </li>
+        <li>
+          <input type="checkbox" id="evt2">
+          <div class="item-content">
+            <div class="item-title">customer.subscription.created</div>
+            <div class="item-detail">New subscription started</div>
+          </div>
+        </li>
+        <li>
+          <input type="checkbox" id="evt3">
+          <div class="item-content">
+            <div class="item-title">customer.subscription.updated</div>
+            <div class="item-detail">Subscription changed (upgrade/downgrade)</div>
+          </div>
+        </li>
+        <li>
+          <input type="checkbox" id="evt4">
+          <div class="item-content">
+            <div class="item-title">customer.subscription.deleted</div>
+            <div class="item-detail">Subscription cancelled</div>
+          </div>
+        </li>
+        <li>
+          <input type="checkbox" id="evt5">
+          <div class="item-content">
+            <div class="item-title">invoice.payment_succeeded</div>
+            <div class="item-detail">Renewal payment successful</div>
+          </div>
+        </li>
+        <li>
+          <input type="checkbox" id="evt6">
+          <div class="item-content">
+            <div class="item-title">invoice.payment_failed</div>
+            <div class="item-detail">Payment failed</div>
+          </div>
+        </li>
+        <li>
+          <input type="checkbox" id="evt7">
+          <div class="item-content">
+            <div class="item-title">invoice.upcoming</div>
+            <div class="item-detail">Renewal reminder</div>
+          </div>
+        </li>
+        <li>
+          <input type="checkbox" id="evt8">
+          <div class="item-content">
+            <div class="item-title">charge.refunded</div>
+            <div class="item-detail">Refund processed</div>
+          </div>
+        </li>
+        <li>
+          <input type="checkbox" id="evt9">
+          <div class="item-content">
+            <div class="item-title">charge.dispute.created</div>
+            <div class="item-detail">Chargeback opened</div>
+          </div>
+        </li>
+      </ul>
+    </section>
+    
+    <!-- Pricing Configuration -->
+    <section class="section">
+      <div class="section-header">
+        <span class="step-number">3</span>
+        <h2>Required Products & Prices</h2>
+      </div>
+      
+      <table class="pricing-table">
+        <thead>
+          <tr>
+            <th>Product</th>
+            <th>Price</th>
+            <th>Type</th>
+            <th>Env Variable</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Kelly+ Monthly</td>
+            <td class="price">$7.99/mo</td>
+            <td>Recurring</td>
+            <td><code>STRIPE_PRICE_MONTHLY</code></td>
+          </tr>
+          <tr>
+            <td>Kelly+ Annual</td>
+            <td class="price">$49.99/yr</td>
+            <td>Recurring</td>
+            <td><code>STRIPE_PRICE_ANNUAL</code></td>
+          </tr>
+          <tr>
+            <td>Kelly+ Family</td>
+            <td class="price">$99.99/yr</td>
+            <td>Recurring</td>
+            <td><code>STRIPE_PRICE_FAMILY</code></td>
+          </tr>
+          <tr>
+            <td>Kelly+ Lifetime</td>
+            <td class="price">$199.99</td>
+            <td>One-time</td>
+            <td><code>STRIPE_PRICE_LIFETIME</code></td>
+          </tr>
+          <tr>
+            <td>Gift - 3 Months</td>
+            <td class="price">$24.99</td>
+            <td>One-time</td>
+            <td><code>STRIPE_PRICE_GIFT_3MO</code></td>
+          </tr>
+          <tr>
+            <td>Gift - 6 Months</td>
+            <td class="price">$39.99</td>
+            <td>One-time</td>
+            <td><code>STRIPE_PRICE_GIFT_6MO</code></td>
+          </tr>
+          <tr>
+            <td>Gift - 12 Months</td>
+            <td class="price">$49.99</td>
+            <td>One-time</td>
+            <td><code>STRIPE_PRICE_GIFT_12MO</code></td>
+          </tr>
+          <tr>
+            <td>Gift - Lifetime</td>
+            <td class="price">$149.99</td>
+            <td>One-time</td>
+            <td><code>STRIPE_PRICE_GIFT_LIFETIME</code></td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+    
+    <!-- Environment Variables Input -->
+    <section class="section">
+      <div class="section-header">
+        <span class="step-number">4</span>
+        <h2>Paste Your Values Here</h2>
+      </div>
+      
+      <p style="margin-bottom: 1rem; opacity: 0.8;">
+        Copy values from Stripe and paste below. Then use the Export button to get the Vercel format.
+      </p>
+      
+      <div class="copy-section">
+        <div class="copy-row">
+          <span class="var-name">STRIPE_SECRET_KEY</span>
+          <input type="password" id="stripe_secret" placeholder="sk_live_..." onchange="updateExport()">
+          <button class="copy-btn" onclick="copyValue('stripe_secret')">👁️</button>
+        </div>
+        
+        <div class="copy-row">
+          <span class="var-name">STRIPE_WEBHOOK_SECRET</span>
+          <input type="password" id="stripe_webhook" placeholder="whsec_..." onchange="updateExport()">
+          <button class="copy-btn" onclick="copyValue('stripe_webhook')">👁️</button>
+        </div>
+        
+        <div class="copy-row">
+          <span class="var-name">STRIPE_PRICE_MONTHLY</span>
+          <input type="text" id="price_monthly" placeholder="price_..." onchange="updateExport()">
+          <button class="copy-btn" onclick="copyValue('price_monthly')">📋</button>
+        </div>
+        
+        <div class="copy-row">
+          <span class="var-name">STRIPE_PRICE_ANNUAL</span>
+          <input type="text" id="price_annual" placeholder="price_..." onchange="updateExport()">
+          <button class="copy-btn" onclick="copyValue('price_annual')">📋</button>
+        </div>
+        
+        <div class="copy-row">
+          <span class="var-name">STRIPE_PRICE_FAMILY</span>
+          <input type="text" id="price_family" placeholder="price_..." onchange="updateExport()">
+          <button class="copy-btn" onclick="copyValue('price_family')">📋</button>
+        </div>
+        
+        <div class="copy-row">
+          <span class="var-name">STRIPE_PRICE_LIFETIME</span>
+          <input type="text" id="price_lifetime" placeholder="price_..." onchange="updateExport()">
+          <button class="copy-btn" onclick="copyValue('price_lifetime')">📋</button>
+        </div>
+        
+        <div class="copy-row">
+          <span class="var-name">STRIPE_PRICE_GIFT_3MO</span>
+          <input type="text" id="price_gift_3mo" placeholder="price_..." onchange="updateExport()">
+          <button class="copy-btn" onclick="copyValue('price_gift_3mo')">📋</button>
+        </div>
+        
+        <div class="copy-row">
+          <span class="var-name">STRIPE_PRICE_GIFT_6MO</span>
+          <input type="text" id="price_gift_6mo" placeholder="price_..." onchange="updateExport()">
+          <button class="copy-btn" onclick="copyValue('price_gift_6mo')">📋</button>
+        </div>
+        
+        <div class="copy-row">
+          <span class="var-name">STRIPE_PRICE_GIFT_12MO</span>
+          <input type="text" id="price_gift_12mo" placeholder="price_..." onchange="updateExport()">
+          <button class="copy-btn" onclick="copyValue('price_gift_12mo')">📋</button>
+        </div>
+        
+        <div class="copy-row">
+          <span class="var-name">STRIPE_PRICE_GIFT_LIFETIME</span>
+          <input type="text" id="price_gift_lifetime" placeholder="price_..." onchange="updateExport()">
+          <button class="copy-btn" onclick="copyValue('price_gift_lifetime')">📋</button>
+        </div>
+      </div>
+      
+      <!-- Export Section -->
+      <div class="export-section">
+        <h3>📤 Export for Vercel</h3>
+        <p style="font-size: 0.9rem; opacity: 0.7; margin-bottom: 1rem;">
+          Copy this text and paste directly into Vercel's "Import from .env" feature
+        </p>
+        <textarea id="export-output" class="export-textarea" readonly placeholder="Fill in the values above to generate export..."></textarea>
+        <div class="btn-row">
+          <button class="btn btn-primary" onclick="copyExport()">📋 Copy to Clipboard</button>
+          <button class="btn btn-secondary" onclick="downloadExport()">💾 Download .env</button>
+          <button class="btn btn-secondary" onclick="clearAll()">🗑️ Clear All</button>
+        </div>
+      </div>
+    </section>
+    
+    <!-- Testing -->
+    <section class="section">
+      <div class="section-header">
+        <span class="step-number">5</span>
+        <h2>Test Your Setup</h2>
+      </div>
+      
+      <div class="link-card">
+        <div>
+          <div class="label">Test Checkout Flow</div>
+          <div class="description">Verify the pricing page and checkout work</div>
+        </div>
+        <a href="https://curiouskelly.com/pricing.html" target="_blank">Test →</a>
+      </div>
+      
+      <div class="link-card">
+        <div>
+          <div class="label">Webhook Tester</div>
+          <div class="description">Send test webhook events from Stripe</div>
+        </div>
+        <a href="https://dashboard.stripe.com/webhooks" target="_blank">Test →</a>
+      </div>
+      
+      <div class="alert alert-warning" style="margin-top: 1rem;">
+        <strong>⚠️ After updating Vercel env vars:</strong><br>
+        You must redeploy for changes to take effect. Go to Vercel Deployments → Redeploy
+      </div>
+    </section>
+    
+    <footer>
+      <p>Curious Kelly Admin Suite • Stripe Setup v1.0</p>
+      <p style="margin-top: 0.5rem;">© 2025 Lesson of the Day PBC</p>
+    </footer>
+  </div>
+  
+  <script>
+    // Load saved values from localStorage
+    document.addEventListener('DOMContentLoaded', () => {
+      const fields = [
+        'stripe_secret', 'stripe_webhook',
+        'price_monthly', 'price_annual', 'price_family', 'price_lifetime',
+        'price_gift_3mo', 'price_gift_6mo', 'price_gift_12mo', 'price_gift_lifetime'
+      ];
+      
+      fields.forEach(field => {
+        const saved = localStorage.getItem(`stripe_setup_${field}`);
+        if (saved) {
+          document.getElementById(field).value = saved;
+        }
+      });
+      
+      // Load checkbox states
+      for (let i = 1; i <= 9; i++) {
+        const saved = localStorage.getItem(`stripe_setup_evt${i}`);
+        if (saved === 'true') {
+          document.getElementById(`evt${i}`).checked = true;
+        }
+      }
+      
+      updateExport();
+      
+      // Save on change
+      fields.forEach(field => {
+        document.getElementById(field).addEventListener('input', () => {
+          localStorage.setItem(`stripe_setup_${field}`, document.getElementById(field).value);
+          updateExport();
+        });
+      });
+      
+      for (let i = 1; i <= 9; i++) {
+        document.getElementById(`evt${i}`).addEventListener('change', (e) => {
+          localStorage.setItem(`stripe_setup_evt${i}`, e.target.checked);
+        });
+      }
+    });
+    
+    function updateExport() {
+      const vars = {
+        'STRIPE_SECRET_KEY': document.getElementById('stripe_secret').value,
+        'STRIPE_WEBHOOK_SECRET': document.getElementById('stripe_webhook').value,
+        'STRIPE_PRICE_MONTHLY': document.getElementById('price_monthly').value,
+        'STRIPE_PRICE_ANNUAL': document.getElementById('price_annual').value,
+        'STRIPE_PRICE_FAMILY': document.getElementById('price_family').value,
+        'STRIPE_PRICE_LIFETIME': document.getElementById('price_lifetime').value,
+        'STRIPE_PRICE_GIFT_3MO': document.getElementById('price_gift_3mo').value,
+        'STRIPE_PRICE_GIFT_6MO': document.getElementById('price_gift_6mo').value,
+        'STRIPE_PRICE_GIFT_12MO': document.getElementById('price_gift_12mo').value,
+        'STRIPE_PRICE_GIFT_LIFETIME': document.getElementById('price_gift_lifetime').value,
+      };
+      
+      const lines = [];
+      for (const [key, value] of Object.entries(vars)) {
+        if (value) {
+          lines.push(`${key}=${value}`);
+        }
+      }
+      
+      document.getElementById('export-output').value = lines.join('\n');
+    }
+    
+    function copyValue(fieldId) {
+      const input = document.getElementById(fieldId);
+      if (input.type === 'password') {
+        input.type = 'text';
+        setTimeout(() => { input.type = 'password'; }, 2000);
+      } else {
+        input.select();
+        document.execCommand('copy');
+      }
+    }
+    
+    function copyExport() {
+      const textarea = document.getElementById('export-output');
+      textarea.select();
+      document.execCommand('copy');
+      
+      const btn = event.target;
+      btn.textContent = '✅ Copied!';
+      setTimeout(() => { btn.textContent = '📋 Copy to Clipboard'; }, 2000);
+    }
+    
+    function downloadExport() {
+      const content = document.getElementById('export-output').value;
+      const blob = new Blob([content], { type: 'text/plain' });
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = 'stripe-env.txt';
+      a.click();
+      URL.revokeObjectURL(url);
+    }
+    
+    function clearAll() {
+      if (confirm('Clear all saved values?')) {
+        const fields = [
+          'stripe_secret', 'stripe_webhook',
+          'price_monthly', 'price_annual', 'price_family', 'price_lifetime',
+          'price_gift_3mo', 'price_gift_6mo', 'price_gift_12mo', 'price_gift_lifetime'
+        ];
+        
+        fields.forEach(field => {
+          document.getElementById(field).value = '';
+          localStorage.removeItem(`stripe_setup_${field}`);
+        });
+        
+        for (let i = 1; i <= 9; i++) {
+          document.getElementById(`evt${i}`).checked = false;
+          localStorage.removeItem(`stripe_setup_evt${i}`);
+        }
+        
+        updateExport();
+      }
+    }
+  </script>
+</body>
+</html>
