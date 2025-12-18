@@ -1,0 +1,715 @@
+---
+/**
+ * CommonsPanel Component
+ * 
+ * Dashboard for browsing all community contributions:
+ * - Recent comments across all lessons
+ * - Featured insights
+ * - Curriculum suggestions
+ * - User's own contributions
+ */
+
+interface Props {
+  initialTab?: 'recent' | 'featured' | 'suggestions' | 'mine';
+}
+
+const { initialTab = 'recent' } = Astro.props;
+---
+
+<div class="commons-panel" data-initial-tab={initialTab}>
+  <header class="commons-header">
+    <h1>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M17 21v-2a4 4 0 0 0-4-4H5a4 4 0 0 0-4 4v2"></path>
+        <circle cx="9" cy="7" r="4"></circle>
+        <path d="M23 21v-2a4 4 0 0 0-3-3.87"></path>
+        <path d="M16 3.13a4 4 0 0 1 0 7.75"></path>
+      </svg>
+      The Commons
+    </h1>
+    <p class="subtitle">Community insights and curriculum contributions</p>
+  </header>
+
+  <nav class="commons-tabs" role="tablist">
+    <button 
+      role="tab" 
+      class="tab-btn" 
+      data-tab="recent"
+      aria-selected={initialTab === 'recent'}
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <circle cx="12" cy="12" r="10"></circle>
+        <polyline points="12 6 12 12 16 14"></polyline>
+      </svg>
+      Recent
+    </button>
+    <button 
+      role="tab" 
+      class="tab-btn" 
+      data-tab="featured"
+      aria-selected={initialTab === 'featured'}
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+      </svg>
+      Featured
+    </button>
+    <button 
+      role="tab" 
+      class="tab-btn" 
+      data-tab="suggestions"
+      aria-selected={initialTab === 'suggestions'}
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M12 20h9"></path>
+        <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+      </svg>
+      Suggestions
+    </button>
+    <button 
+      role="tab" 
+      class="tab-btn" 
+      data-tab="mine"
+      aria-selected={initialTab === 'mine'}
+    >
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+        <circle cx="12" cy="7" r="4"></circle>
+      </svg>
+      My Contributions
+    </button>
+  </nav>
+
+  <div class="commons-filters">
+    <div class="filter-group">
+      <label for="track-filter">Track</label>
+      <select id="track-filter">
+        <option value="all">All Tracks</option>
+        <option value="1">LEARN (Year 1)</option>
+        <option value="2">GROW (Year 2)</option>
+      </select>
+    </div>
+    <div class="filter-group">
+      <label for="type-filter">Type</label>
+      <select id="type-filter">
+        <option value="all">All Types</option>
+        <option value="insight">Insights</option>
+        <option value="question">Questions</option>
+        <option value="experience">Experiences</option>
+        <option value="suggestion">Suggestions</option>
+      </select>
+    </div>
+    <div class="filter-group search-group">
+      <label for="search-input" class="sr-only">Search</label>
+      <input type="search" id="search-input" placeholder="Search contributions...">
+    </div>
+  </div>
+
+  <div class="commons-content">
+    <!-- Recent Tab -->
+    <section class="tab-panel" data-panel="recent" hidden={initialTab !== 'recent'}>
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading recent contributions...</p>
+      </div>
+    </section>
+
+    <!-- Featured Tab -->
+    <section class="tab-panel" data-panel="featured" hidden={initialTab !== 'featured'}>
+      <div class="loading-state">
+        <div class="spinner"></div>
+        <p>Loading featured insights...</p>
+      </div>
+    </section>
+
+    <!-- Suggestions Tab -->
+    <section class="tab-panel" data-panel="suggestions" hidden={initialTab !== 'suggestions'}>
+      <div class="suggestions-intro">
+        <h2>Help Improve the Curriculum</h2>
+        <p>See what improvements have been suggested and accepted. Your ideas matter!</p>
+      </div>
+      <div class="suggestions-list">
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading suggestions...</p>
+        </div>
+      </div>
+    </section>
+
+    <!-- My Contributions Tab -->
+    <section class="tab-panel" data-panel="mine" hidden={initialTab !== 'mine'}>
+      <div class="my-stats">
+        <div class="stat-card">
+          <span class="stat-value">0</span>
+          <span class="stat-label">Comments</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value">0</span>
+          <span class="stat-label">Upvotes Received</span>
+        </div>
+        <div class="stat-card">
+          <span class="stat-value">0</span>
+          <span class="stat-label">Suggestions Accepted</span>
+        </div>
+      </div>
+      <div class="my-contributions-list">
+        <div class="empty-state">
+          <p>You haven't made any contributions yet.</p>
+          <a href="/calendar" class="cta-link">Start exploring lessons to share your insights!</a>
+        </div>
+      </div>
+    </section>
+  </div>
+
+  <div class="commons-footer">
+    <p>Community guidelines apply to all contributions. <a href="/watch/special/s-019">Read guidelines</a></p>
+  </div>
+</div>
+
+<style>
+  .commons-panel {
+    max-width: 1000px;
+    margin: 0 auto;
+    padding: 2rem;
+    color: white;
+  }
+
+  .commons-header {
+    text-align: center;
+    margin-bottom: 2rem;
+  }
+
+  .commons-header h1 {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 0.75rem;
+    font-size: 2rem;
+    margin: 0 0 0.5rem 0;
+  }
+
+  .commons-header h1 svg {
+    width: 32px;
+    height: 32px;
+  }
+
+  .subtitle {
+    margin: 0;
+    opacity: 0.7;
+  }
+
+  .commons-tabs {
+    display: flex;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    overflow-x: auto;
+  }
+
+  .tab-btn {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+    padding: 0.75rem 1.25rem;
+    background: rgba(255, 255, 255, 0.05);
+    border: none;
+    border-radius: 8px;
+    color: inherit;
+    cursor: pointer;
+    font-size: 0.95rem;
+    white-space: nowrap;
+    transition: background 0.2s;
+  }
+
+  .tab-btn svg {
+    width: 18px;
+    height: 18px;
+    opacity: 0.7;
+  }
+
+  .tab-btn:hover {
+    background: rgba(255, 255, 255, 0.1);
+  }
+
+  .tab-btn[aria-selected="true"] {
+    background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%);
+  }
+
+  .tab-btn[aria-selected="true"] svg {
+    opacity: 1;
+  }
+
+  .commons-filters {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .filter-group {
+    display: flex;
+    flex-direction: column;
+    gap: 0.25rem;
+  }
+
+  .filter-group label {
+    font-size: 0.8rem;
+    opacity: 0.6;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .filter-group select,
+  .filter-group input {
+    padding: 0.5rem 0.75rem;
+    background: rgba(255, 255, 255, 0.1);
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    border-radius: 6px;
+    color: inherit;
+    font-size: 0.9rem;
+    min-width: 150px;
+  }
+
+  .filter-group select:focus,
+  .filter-group input:focus {
+    outline: none;
+    border-color: #e94560;
+  }
+
+  .search-group {
+    flex-grow: 1;
+    min-width: 200px;
+  }
+
+  .search-group input {
+    width: 100%;
+  }
+
+  .sr-only {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    border: 0;
+  }
+
+  .tab-panel {
+    min-height: 400px;
+  }
+
+  .loading-state {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: 1rem;
+    padding: 4rem 2rem;
+    opacity: 0.6;
+  }
+
+  .spinner {
+    width: 32px;
+    height: 32px;
+    border: 3px solid rgba(255, 255, 255, 0.3);
+    border-top-color: white;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+  }
+
+  @keyframes spin {
+    to { transform: rotate(360deg); }
+  }
+
+  .suggestions-intro {
+    text-align: center;
+    padding: 2rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    margin-bottom: 1.5rem;
+  }
+
+  .suggestions-intro h2 {
+    margin: 0 0 0.5rem 0;
+    font-size: 1.3rem;
+  }
+
+  .suggestions-intro p {
+    margin: 0;
+    opacity: 0.7;
+  }
+
+  .my-stats {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+    gap: 1rem;
+    margin-bottom: 2rem;
+  }
+
+  .stat-card {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding: 1.5rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    text-align: center;
+  }
+
+  .stat-value {
+    font-size: 2rem;
+    font-weight: 700;
+    color: #e94560;
+  }
+
+  .stat-label {
+    font-size: 0.85rem;
+    opacity: 0.7;
+    margin-top: 0.25rem;
+  }
+
+  .empty-state {
+    text-align: center;
+    padding: 3rem;
+    background: rgba(255, 255, 255, 0.03);
+    border-radius: 12px;
+    border: 1px dashed rgba(255, 255, 255, 0.2);
+  }
+
+  .empty-state p {
+    margin: 0 0 1rem 0;
+    opacity: 0.7;
+  }
+
+  .cta-link {
+    display: inline-block;
+    padding: 0.75rem 1.5rem;
+    background: linear-gradient(135deg, #e94560 0%, #ff6b6b 100%);
+    color: white;
+    text-decoration: none;
+    border-radius: 20px;
+    font-weight: 500;
+    transition: transform 0.2s;
+  }
+
+  .cta-link:hover {
+    transform: translateY(-2px);
+  }
+
+  .contribution-card {
+    padding: 1.25rem;
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 12px;
+    margin-bottom: 1rem;
+  }
+
+  .contribution-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 0.75rem;
+  }
+
+  .contribution-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    font-size: 0.85rem;
+    opacity: 0.7;
+  }
+
+  .contribution-badge {
+    padding: 0.125rem 0.5rem;
+    background: rgba(233, 69, 96, 0.2);
+    border-radius: 4px;
+    font-size: 0.75rem;
+    color: #ff6b6b;
+  }
+
+  .contribution-content {
+    line-height: 1.6;
+    margin-bottom: 0.75rem;
+  }
+
+  .contribution-footer {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-size: 0.85rem;
+    opacity: 0.6;
+  }
+
+  .lesson-link {
+    color: #00cec9;
+    text-decoration: none;
+  }
+
+  .lesson-link:hover {
+    text-decoration: underline;
+  }
+
+  .commons-footer {
+    text-align: center;
+    margin-top: 3rem;
+    padding-top: 1.5rem;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    font-size: 0.9rem;
+    opacity: 0.6;
+  }
+
+  .commons-footer a {
+    color: #e94560;
+    text-decoration: none;
+  }
+
+  .commons-footer a:hover {
+    text-decoration: underline;
+  }
+
+  @media (max-width: 600px) {
+    .commons-panel {
+      padding: 1rem;
+    }
+
+    .commons-header h1 {
+      font-size: 1.5rem;
+    }
+
+    .tab-btn {
+      padding: 0.5rem 1rem;
+      font-size: 0.85rem;
+    }
+
+    .tab-btn svg {
+      display: none;
+    }
+
+    .commons-filters {
+      flex-direction: column;
+    }
+
+    .filter-group {
+      width: 100%;
+    }
+
+    .filter-group select,
+    .filter-group input {
+      width: 100%;
+    }
+  }
+</style>
+
+<script>
+  class CommonsPanelController {
+    constructor(element: HTMLElement) {
+      this.element = element;
+      this.currentTab = element.dataset.initialTab || 'recent';
+      this.init();
+    }
+
+    element: HTMLElement;
+    currentTab: string;
+    filters = {
+      track: 'all',
+      type: 'all',
+      search: ''
+    };
+
+    init() {
+      this.bindEvents();
+      this.loadContent(this.currentTab);
+    }
+
+    bindEvents() {
+      // Tab switching
+      this.element.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.addEventListener('click', (e) => {
+          const target = e.currentTarget as HTMLButtonElement;
+          const tab = target.dataset.tab;
+          if (tab) this.switchTab(tab);
+        });
+      });
+
+      // Filters
+      const trackFilter = this.element.querySelector('#track-filter') as HTMLSelectElement;
+      const typeFilter = this.element.querySelector('#type-filter') as HTMLSelectElement;
+      const searchInput = this.element.querySelector('#search-input') as HTMLInputElement;
+
+      trackFilter?.addEventListener('change', () => {
+        this.filters.track = trackFilter.value;
+        this.loadContent(this.currentTab);
+      });
+
+      typeFilter?.addEventListener('change', () => {
+        this.filters.type = typeFilter.value;
+        this.loadContent(this.currentTab);
+      });
+
+      let searchTimeout: number;
+      searchInput?.addEventListener('input', () => {
+        clearTimeout(searchTimeout);
+        searchTimeout = window.setTimeout(() => {
+          this.filters.search = searchInput.value;
+          this.loadContent(this.currentTab);
+        }, 300);
+      });
+    }
+
+    switchTab(tab: string) {
+      this.currentTab = tab;
+
+      // Update tab buttons
+      this.element.querySelectorAll('.tab-btn').forEach(btn => {
+        btn.setAttribute('aria-selected', btn.dataset.tab === tab ? 'true' : 'false');
+      });
+
+      // Update panels
+      this.element.querySelectorAll('.tab-panel').forEach(panel => {
+        const el = panel as HTMLElement;
+        if (el.dataset.panel === tab) {
+          el.removeAttribute('hidden');
+        } else {
+          el.setAttribute('hidden', '');
+        }
+      });
+
+      this.loadContent(tab);
+    }
+
+    async loadContent(tab: string) {
+      const panel = this.element.querySelector(`[data-panel="${tab}"]`);
+      if (!panel) return;
+
+      // Show loading state
+      const loadingHtml = `
+        <div class="loading-state">
+          <div class="spinner"></div>
+          <p>Loading...</p>
+        </div>
+      `;
+
+      switch (tab) {
+        case 'recent':
+          await this.loadRecent(panel);
+          break;
+        case 'featured':
+          await this.loadFeatured(panel);
+          break;
+        case 'suggestions':
+          await this.loadSuggestions(panel);
+          break;
+        case 'mine':
+          await this.loadMyContributions(panel);
+          break;
+      }
+    }
+
+    async loadRecent(panel: Element) {
+      // In a real implementation, this would fetch from Supabase
+      panel.innerHTML = `
+        <div class="empty-state">
+          <p>No contributions yet. Be the first to share your insights!</p>
+          <a href="/calendar" class="cta-link">Explore Lessons</a>
+        </div>
+      `;
+    }
+
+    async loadFeatured(panel: Element) {
+      panel.innerHTML = `
+        <div class="empty-state">
+          <p>Featured insights coming soon! The best contributions will be highlighted here.</p>
+        </div>
+      `;
+    }
+
+    async loadSuggestions(panel: Element) {
+      const intro = panel.querySelector('.suggestions-intro')?.outerHTML || '';
+      panel.innerHTML = intro + `
+        <div class="suggestions-list">
+          <div class="empty-state">
+            <p>No curriculum suggestions yet. Share your ideas to improve the lessons!</p>
+            <a href="/watch/special/s-004" class="cta-link">Learn How to Contribute</a>
+          </div>
+        </div>
+      `;
+    }
+
+    async loadMyContributions(panel: Element) {
+      // Keep the stats section
+      const stats = panel.querySelector('.my-stats')?.outerHTML || '';
+      
+      // Check if user is authenticated
+      // In a real implementation, check Supabase auth
+      const isAuthenticated = false;
+
+      if (!isAuthenticated) {
+        panel.innerHTML = stats + `
+          <div class="empty-state">
+            <p>Sign in to see your contributions</p>
+            <a href="/login" class="cta-link">Sign In</a>
+          </div>
+        `;
+      } else {
+        panel.innerHTML = stats + `
+          <div class="empty-state">
+            <p>You haven't made any contributions yet.</p>
+            <a href="/calendar" class="cta-link">Start exploring lessons!</a>
+          </div>
+        `;
+      }
+    }
+
+    renderContribution(item: any): string {
+      const trackName = item.lesson_year === 1 ? 'LEARN' : 'GROW';
+      const typeEmojis: Record<string, string> = {
+        insight: '💡',
+        question: '❓',
+        experience: '📖',
+        suggestion: '💭'
+      };
+
+      return `
+        <article class="contribution-card">
+          <header class="contribution-header">
+            <div class="contribution-meta">
+              <span class="contribution-badge">${typeEmojis[item.comment_type] || '💬'} ${item.comment_type}</span>
+              <span>${trackName} Day ${item.lesson_day}</span>
+              <span>${item.phase} phase</span>
+            </div>
+            <span class="upvotes">⬆ ${item.upvotes}</span>
+          </header>
+          <p class="contribution-content">${this.escapeHtml(item.content)}</p>
+          <footer class="contribution-footer">
+            <a href="/watch/day-${item.lesson_day}" class="lesson-link">View Lesson →</a>
+            <span>${this.formatTime(item.created_at)}</span>
+          </footer>
+        </article>
+      `;
+    }
+
+    formatTime(dateStr: string): string {
+      const date = new Date(dateStr);
+      return date.toLocaleDateString('en-US', { 
+        month: 'short', 
+        day: 'numeric',
+        year: 'numeric'
+      });
+    }
+
+    escapeHtml(text: string): string {
+      const div = document.createElement('div');
+      div.textContent = text;
+      return div.innerHTML;
+    }
+  }
+
+  // Initialize
+  document.addEventListener('DOMContentLoaded', () => {
+    document.querySelectorAll('.commons-panel').forEach(el => {
+      new CommonsPanelController(el as HTMLElement);
+    });
+  });
+</script>
