@@ -3,7 +3,7 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Stripe Setup Suite — Curious Kelly Admin</title>
+  <title>Environment & Stripe Setup — Curious Kelly Admin</title>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
@@ -362,9 +362,50 @@
 <body>
   <div class="container">
     <header>
-      <h1>💳 Stripe Setup Suite</h1>
-      <p class="subtitle">Complete payment configuration for Curious Kelly</p>
+      <h1>🔐 Environment & Stripe Setup</h1>
+      <p class="subtitle">Complete configuration suite for Curious Kelly</p>
     </header>
+    
+    <!-- Security Variables -->
+    <section class="section" style="border: 2px solid #e94560;">
+      <div class="section-header">
+        <span class="step-number" style="background: #e94560;">!</span>
+        <h2>Security Variables (DO FIRST)</h2>
+      </div>
+      
+      <div class="alert alert-warning">
+        <strong>⚠️ Required for cron jobs and admin access</strong><br>
+        These must be set before the notification system works.
+      </div>
+      
+      <div class="copy-section">
+        <div class="copy-row">
+          <span class="var-name">CRON_SECRET</span>
+          <input type="text" id="cron_secret" placeholder="ck_cron_2025_..." onchange="updateExport()">
+          <button class="copy-btn" onclick="generateSecret('cron_secret', 'ck_cron_2025_')">🎲 Generate</button>
+        </div>
+        
+        <div class="copy-row">
+          <span class="var-name">ADMIN_KEY</span>
+          <input type="text" id="admin_key" placeholder="ck_admin_..." onchange="updateExport()">
+          <button class="copy-btn" onclick="generateSecret('admin_key', 'ck_admin_')">🎲 Generate</button>
+        </div>
+        
+        <div class="copy-row">
+          <span class="var-name">SENDGRID_API_KEY</span>
+          <input type="password" id="sendgrid_key" placeholder="SG.xxxxx..." onchange="updateExport()">
+          <button class="copy-btn" onclick="togglePassword('sendgrid_key')">👁️</button>
+        </div>
+      </div>
+      
+      <div class="link-card" style="margin-top: 1rem;">
+        <div>
+          <div class="label">Get SendGrid API Key</div>
+          <div class="description">Create a new API key with Mail Send permission</div>
+        </div>
+        <a href="https://app.sendgrid.com/settings/api_keys" target="_blank">Open →</a>
+      </div>
+    </section>
     
     <!-- Quick Links -->
     <section class="section">
@@ -688,9 +729,32 @@
   </div>
   
   <script>
+    // Generate random string
+    function generateRandomString(length) {
+      const chars = 'abcdefghijklmnopqrstuvwxyz0123456789';
+      let result = '';
+      for (let i = 0; i < length; i++) {
+        result += chars.charAt(Math.floor(Math.random() * chars.length));
+      }
+      return result;
+    }
+    
+    function generateSecret(fieldId, prefix) {
+      const field = document.getElementById(fieldId);
+      field.value = prefix + generateRandomString(20);
+      localStorage.setItem(`stripe_setup_${fieldId}`, field.value);
+      updateExport();
+    }
+    
+    function togglePassword(fieldId) {
+      const field = document.getElementById(fieldId);
+      field.type = field.type === 'password' ? 'text' : 'password';
+    }
+    
     // Load saved values from localStorage
     document.addEventListener('DOMContentLoaded', () => {
       const fields = [
+        'cron_secret', 'admin_key', 'sendgrid_key',
         'stripe_secret', 'stripe_webhook',
         'price_monthly', 'price_annual', 'price_family', 'price_lifetime',
         'price_gift_3mo', 'price_gift_6mo', 'price_gift_12mo', 'price_gift_lifetime'
@@ -730,6 +794,11 @@
     
     function updateExport() {
       const vars = {
+        // Security (DO FIRST)
+        'CRON_SECRET': document.getElementById('cron_secret').value,
+        'ADMIN_KEY': document.getElementById('admin_key').value,
+        'SENDGRID_API_KEY': document.getElementById('sendgrid_key').value,
+        // Stripe
         'STRIPE_SECRET_KEY': document.getElementById('stripe_secret').value,
         'STRIPE_WEBHOOK_SECRET': document.getElementById('stripe_webhook').value,
         'STRIPE_PRICE_MONTHLY': document.getElementById('price_monthly').value,
@@ -787,6 +856,7 @@
     function clearAll() {
       if (confirm('Clear all saved values?')) {
         const fields = [
+          'cron_secret', 'admin_key', 'sendgrid_key',
           'stripe_secret', 'stripe_webhook',
           'price_monthly', 'price_annual', 'price_family', 'price_lifetime',
           'price_gift_3mo', 'price_gift_6mo', 'price_gift_12mo', 'price_gift_lifetime'
