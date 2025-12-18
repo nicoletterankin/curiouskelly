@@ -45,13 +45,13 @@ def print_step(num, text):
     print(f"{Colors.CYAN}[{num}]{Colors.END} {text}")
 
 def print_success(text):
-    print(f"  {Colors.GREEN}✅ {text}{Colors.END}")
+    print(f"  {Colors.GREEN}[OK] {text}{Colors.END}")
 
 def print_warning(text):
-    print(f"  {Colors.WARNING}⚠️  {text}{Colors.END}")
+    print(f"  {Colors.WARNING}[WARN] {text}{Colors.END}")
 
 def print_error(text):
-    print(f"  {Colors.FAIL}❌ {text}{Colors.END}")
+    print(f"  {Colors.FAIL}[ERR] {text}{Colors.END}")
 
 def run_command(cmd, check=True, capture=False):
     """Run a shell command."""
@@ -326,7 +326,7 @@ def print_next_steps():
         activate = f"source {venv_path}/bin/activate"
     
     print(f"""
-{Colors.GREEN}✅ Kelly-Sync pipeline is ready!{Colors.END}
+{Colors.GREEN}[OK] Kelly-Sync pipeline is ready!{Colors.END}
 
 {Colors.BOLD}To activate the environment:{Colors.END}
     {activate}
@@ -346,7 +346,7 @@ def print_next_steps():
 {Colors.BOLD}Documentation:{Colors.END}
     kelly-sync/README.md
 
-{Colors.CYAN}Happy generating! 🎬{Colors.END}
+{Colors.CYAN}Happy generating!{Colors.END}
 """)
 
 def main():
