@@ -5,13 +5,24 @@
  * The one email you actually want to read each week.
  * 
  * Schedule: 0 18 * * 0 (Sunday 6 PM)
+ * 
+ * ZERO TRUST: Auth verified, rate limited, circuit breaker enabled
  */
 
 import { createClient } from '@supabase/supabase-js';
 import { sendFounderEmail, weeklyDigestEmail } from '../../lib/notifications/founder-alerts';
+import {
+  verifyCronAuth,
+  checkEmailRateLimit,
+  checkCircuit,
+  recordSuccess,
+  recordFailure,
+  logAudit
+} from '../../lib/security/zero-trust';
 
 const SUPABASE_URL = process.env.PUBLIC_SUPABASE_URL!;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
+const CRON_NAME = 'weekly-digest';
 
 function getWeekNumber(date: Date): number {
   const firstDayOfYear = new Date(date.getFullYear(), 0, 1);
@@ -20,9 +31,20 @@ function getWeekNumber(date: Date): number {
 }
 
 export default async function handler(req: any, res: any) {
-  const authHeader = req.headers.authorization;
-  if (process.env.CRON_SECRET && authHeader !== `Bearer ${process.env.CRON_SECRET}`) {
-    return res.status(401).json({ error: 'Unauthorized' });
+  // Zero Trust: Verify authentication
+  const auth = verifyCronAuth(req);
+  if (!auth.authorized) {
+    return res.status(401).json({ error: 'Unauthorized', reason: auth.reason });
+  }
+  
+  // Zero Trust: Check circuit breaker
+  if (!checkCircuit(CRON_NAME)) {
+    return res.status(503).json({ error: 'Circuit open', message: 'Too many recent failures' });
+  }
+  
+  // Zero Trust: Rate limit emails
+  if (!checkEmailRateLimit()) {
+    return res.status(429).json({ error: 'Rate limited', message: 'Too many emails sent recently' });
   }
 
   const supabase = createClient(SUPABASE_URL, SUPABASE_SERVICE_KEY);

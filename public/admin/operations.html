@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Operations Monitor — Curious Kelly Admin</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+      min-height: 100vh;
+      color: white;
+      padding: 2rem;
+    }
+    
+    .container { max-width: 1200px; margin: 0 auto; }
+    
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 2rem;
+    }
+    
+    h1 {
+      font-size: 1.75rem;
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+    }
+    
+    .status-badge {
+      display: inline-block;
+      padding: 0.5rem 1rem;
+      border-radius: 20px;
+      font-size: 0.9rem;
+      font-weight: 600;
+    }
+    
+    .status-healthy { background: rgba(0, 184, 148, 0.2); color: #00b894; }
+    .status-degraded { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
+    .status-unhealthy { background: rgba(233, 69, 96, 0.2); color: #e94560; }
+    
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    
+    .card {
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 16px;
+      padding: 1.5rem;
+    }
+    
+    .card h2 {
+      font-size: 1rem;
+      opacity: 0.7;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .stat-value {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 0.5rem;
+    }
+    
+    .stat-label { font-size: 0.9rem; opacity: 0.6; }
+    
+    .check-list { list-style: none; }
+    
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.75rem 0;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .check-item:last-child { border-bottom: none; }
+    
+    .check-icon {
+      width: 24px;
+      height: 24px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+    }
+    
+    .check-pass { background: rgba(0, 184, 148, 0.2); color: #00b894; }
+    .check-fail { background: rgba(233, 69, 96, 0.2); color: #e94560; }
+    .check-warn { background: rgba(255, 193, 7, 0.2); color: #ffc107; }
+    
+    .check-name { flex: 1; }
+    .check-message { font-size: 0.85rem; opacity: 0.6; max-width: 200px; text-align: right; }
+    
+    .cron-schedule {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+    
+    .cron-item {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 1rem;
+      border-radius: 8px;
+    }
+    
+    .cron-name { font-weight: 600; margin-bottom: 0.25rem; }
+    .cron-time { font-size: 0.85rem; opacity: 0.6; }
+    .cron-next { font-size: 0.8rem; color: #00b894; margin-top: 0.5rem; }
+    
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.75rem 1.5rem;
+      background: rgba(255, 255, 255, 0.1);
+      border: none;
+      border-radius: 8px;
+      color: white;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.2s;
+    }
+    
+    .btn:hover { background: rgba(255, 255, 255, 0.2); }
+    .btn-primary { background: #e94560; }
+    .btn-primary:hover { background: #ff6b6b; }
+    
+    .activity-log {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .log-entry {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.75rem;
+      background: rgba(0, 0, 0, 0.2);
+      border-radius: 8px;
+      margin-bottom: 0.5rem;
+    }
+    
+    .log-time { font-size: 0.8rem; opacity: 0.5; min-width: 80px; }
+    .log-type { font-size: 0.75rem; padding: 0.25rem 0.5rem; border-radius: 4px; background: rgba(255,255,255,0.1); }
+    .log-detail { flex: 1; font-size: 0.9rem; }
+    
+    .loading {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 3rem;
+      opacity: 0.5;
+    }
+    
+    @keyframes spin {
+      to { transform: rotate(360deg); }
+    }
+    
+    .spinner {
+      width: 24px;
+      height: 24px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: white;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    .lock-banner {
+      background: linear-gradient(135deg, rgba(0, 184, 148, 0.2), rgba(0, 206, 201, 0.2));
+      border: 1px solid rgba(0, 184, 148, 0.3);
+      border-radius: 12px;
+      padding: 1rem 1.5rem;
+      margin-bottom: 2rem;
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+    }
+    
+    .lock-banner .icon { font-size: 1.5rem; }
+    .lock-banner .text { flex: 1; }
+    .lock-banner .title { font-weight: 600; color: #00b894; }
+    .lock-banner .detail { font-size: 0.85rem; opacity: 0.8; }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <h1>🔒 Operations Monitor</h1>
+      <div id="overall-status" class="status-badge status-degraded">Loading...</div>
+    </header>
+    
+    <div class="lock-banner">
+      <div class="icon">✅</div>
+      <div class="text">
+        <div class="title">AUTONOMOUS OPERATIONS LOCKED</div>
+        <div class="detail">System configured for zero day-to-day intervention. Community self-moderates via voting.</div>
+      </div>
+      <a href="/docs/operations/AUTONOMOUS_OPERATIONS_LOCK.md" class="btn">View Lock Doc</a>
+    </div>
+    
+    <div class="grid">
+      <!-- Health Summary -->
+      <div class="card">
+        <h2>📊 Health Summary</h2>
+        <div id="health-stats">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+      
+      <!-- Recent Notifications -->
+      <div class="card">
+        <h2>📧 Recent Notifications</h2>
+        <div id="recent-notifications">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+      
+      <!-- Cron Schedule -->
+      <div class="card" style="grid-column: 1 / -1;">
+        <h2>⏰ Cron Schedule</h2>
+        <div class="cron-schedule">
+          <div class="cron-item">
+            <div class="cron-name">🎉 Happy Digest</div>
+            <div class="cron-time">Daily at 8 PM</div>
+            <div class="cron-next" id="next-happy"></div>
+          </div>
+          <div class="cron-item">
+            <div class="cron-name">⚠️ Escalation Check</div>
+            <div class="cron-time">Daily at 9 AM</div>
+            <div class="cron-next" id="next-escalation"></div>
+          </div>
+          <div class="cron-item">
+            <div class="cron-name">📊 Weekly Digest</div>
+            <div class="cron-time">Sunday at 6 PM</div>
+            <div class="cron-next" id="next-weekly"></div>
+          </div>
+          <div class="cron-item">
+            <div class="cron-name">🔥 Streak Check</div>
+            <div class="cron-time">Daily at 11 PM</div>
+            <div class="cron-next" id="next-streak"></div>
+          </div>
+          <div class="cron-item">
+            <div class="cron-name">🎬 HeyGen Monitor</div>
+            <div class="cron-time">Every 4 hours</div>
+            <div class="cron-next" id="next-heygen"></div>
+          </div>
+        </div>
+      </div>
+      
+      <!-- Verification Checks -->
+      <div class="card" style="grid-column: 1 / -1;">
+        <h2>✅ System Verification</h2>
+        <div id="verification-checks">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+        <div style="margin-top: 1rem;">
+          <button class="btn btn-primary" onclick="runVerification()">🔄 Re-run Verification</button>
+        </div>
+      </div>
+      
+      <!-- Activity Log -->
+      <div class="card" style="grid-column: 1 / -1;">
+        <h2>📜 Recent Activity</h2>
+        <div id="activity-log" class="activity-log">
+          <div class="loading"><div class="spinner"></div></div>
+        </div>
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    // Calculate next run times
+    function getNextRun(hour, minute = 0, dayOfWeek = null) {
+      const now = new Date();
+      const next = new Date();
+      
+      next.setHours(hour, minute, 0, 0);
+      
+      if (dayOfWeek !== null) {
+        // Weekly - find next occurrence of day
+        const daysUntil = (dayOfWeek - now.getDay() + 7) % 7;
+        next.setDate(next.getDate() + (daysUntil === 0 && now > next ? 7 : daysUntil));
+      } else if (next <= now) {
+        next.setDate(next.getDate() + 1);
+      }
+      
+      const diff = next - now;
+      const hours = Math.floor(diff / (1000 * 60 * 60));
+      const mins = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60));
+      
+      return hours > 0 ? `in ${hours}h ${mins}m` : `in ${mins}m`;
+    }
+    
+    document.getElementById('next-happy').textContent = getNextRun(20);
+    document.getElementById('next-escalation').textContent = getNextRun(9);
+    document.getElementById('next-weekly').textContent = getNextRun(18, 0, 0);
+    document.getElementById('next-streak').textContent = getNextRun(23);
+    document.getElementById('next-heygen').textContent = 'Every 4 hours';
+    
+    // Load health data
+    async function loadHealth() {
+      try {
+        const res = await fetch('/api/health/operations');
+        const data = await res.json();
+        
+        document.getElementById('overall-status').textContent = data.status.toUpperCase();
+        document.getElementById('overall-status').className = `status-badge status-${data.status}`;
+        
+        document.getElementById('health-stats').innerHTML = `
+          <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 1rem; text-align: center;">
+            <div>
+              <div class="stat-value" style="color: #00b894;">${data.summary.pass}</div>
+              <div class="stat-label">Pass</div>
+            </div>
+            <div>
+              <div class="stat-value" style="color: #ffc107;">${data.summary.warn}</div>
+              <div class="stat-label">Warn</div>
+            </div>
+            <div>
+              <div class="stat-value" style="color: #e94560;">${data.summary.fail}</div>
+              <div class="stat-label">Fail</div>
+            </div>
+          </div>
+          <div style="margin-top: 1rem; font-size: 0.85rem; opacity: 0.6;">
+            Last checked: ${new Date(data.timestamp).toLocaleString()}
+          </div>
+        `;
+      } catch (err) {
+        document.getElementById('health-stats').innerHTML = `
+          <div style="color: #e94560;">Failed to load health data</div>
+        `;
+      }
+    }
+    
+    // Run verification
+    async function runVerification() {
+      document.getElementById('verification-checks').innerHTML = '<div class="loading"><div class="spinner"></div></div>';
+      
+      try {
+        const res = await fetch('/api/admin/verify-operations');
+        const data = await res.json();
+        
+        const checksHtml = data.results.map(check => `
+          <div class="check-item">
+            <div class="check-icon ${check.status === 'pass' ? 'check-pass' : check.status === 'fail' ? 'check-fail' : 'check-warn'}">
+              ${check.status === 'pass' ? '✓' : check.status === 'fail' ? '✗' : '!'}
+            </div>
+            <div class="check-name">${check.name}</div>
+            <div class="check-message">${check.message}</div>
+          </div>
+        `).join('');
+        
+        document.getElementById('verification-checks').innerHTML = `
+          <ul class="check-list">${checksHtml}</ul>
+        `;
+        
+        document.getElementById('overall-status').textContent = data.status;
+        document.getElementById('overall-status').className = `status-badge ${
+          data.status === 'PASS' ? 'status-healthy' : 
+          data.status === 'FAIL' ? 'status-unhealthy' : 'status-degraded'
+        }`;
+      } catch (err) {
+        document.getElementById('verification-checks').innerHTML = `
+          <div style="color: #e94560;">Verification failed: ${err.message}</div>
+        `;
+      }
+    }
+    
+    // Load notifications (mock for now - would need API)
+    function loadNotifications() {
+      document.getElementById('recent-notifications').innerHTML = `
+        <div style="text-align: center; padding: 1rem; opacity: 0.6;">
+          No notifications in last 24 hours
+          <div style="font-size: 0.85rem; margin-top: 0.5rem;">
+            (Happy digest runs at 8 PM)
+          </div>
+        </div>
+      `;
+    }
+    
+    // Load activity log (mock for now)
+    function loadActivity() {
+      document.getElementById('activity-log').innerHTML = `
+        <div class="log-entry">
+          <div class="log-time">${new Date().toLocaleTimeString()}</div>
+          <div class="log-type">system</div>
+          <div class="log-detail">Operations monitor loaded</div>
+        </div>
+      `;
+    }
+    
+    // Initialize
+    loadHealth();
+    runVerification();
+    loadNotifications();
+    loadActivity();
+    
+    // Auto-refresh every 5 minutes
+    setInterval(loadHealth, 5 * 60 * 1000);
+  </script>
+</body>
+</html>
