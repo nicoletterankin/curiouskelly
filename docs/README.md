@@ -129,6 +129,31 @@ Temporary archive for older/orphaned documentation files:
 2. [guides/CC5_HEADSHOT_BEGINNER_GUIDE.md](guides/CC5_HEADSHOT_BEGINNER_GUIDE.md) - Character creation
 3. [KELLY_AVATAR_WORKFLOW.md](guides/KELLY_AVATAR_WORKFLOW.md) - Workflow
 
+## 🎬 Video Production (CRITICAL)
+
+### HeyGen Bypass Strategy
+**→ [VIDEO_GENERATION_BYPASS_STRATEGY.md](VIDEO_GENERATION_BYPASS_STRATEGY.md)** — LOCKED strategy for bypassing HeyGen queue using Sync Labs
+
+**Key Scripts:**
+- `scripts/sync-labs-video-redub.ts` — Re-dub HeyGen videos with new audio (PREFERRED)
+- `scripts/sync-labs-batch-generate.ts` — Fresh generation from LoRA (FALLBACK)
+
+**Quick Commands:**
+```powershell
+# Re-dub Day 352 using Day 351 HeyGen videos as motion base
+npx tsx scripts/sync-labs-video-redub.ts --day 352 --reference-day 351
+
+# Fresh generation for missing archetypes (fallback)
+npx tsx scripts/sync-labs-batch-generate.ts --day 352 --only explorer,mystic,provider
+```
+
+### Related Video Docs
+- [HEYGEN_MOTION_LIBRARY_GUIDE.md](HEYGEN_MOTION_LIBRARY_GUIDE.md) — Multi-motion scene stitching
+- [DUAL_MODE_KELLY_ARCHITECTURE.md](DUAL_MODE_KELLY_ARCHITECTURE.md) — 2D/3D mode toggle
+- [KELLY_36_MOTION_PROMPTS.md](KELLY_36_MOTION_PROMPTS.md) — Motion prompt templates
+
+---
+
 ## 🔍 Quick Reference
 
 ### Common Commands
