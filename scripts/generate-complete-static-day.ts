@@ -216,6 +216,9 @@ async function generateCompleteDay(dayNumber: number): Promise<void> {
   const filename = `day-${dayNumber}-complete.js`;
   const filepath = path.join(outputDir, filename);
 
+  // Pad day number for consistency
+  const paddedDay = dayNumber.toString().padStart(3, '0');
+  
   const jsContent = `/**
  * Day ${dayNumber} Data Pack - "${lesson.topic}"
  * COMPLETE - All content validated, no placeholders
@@ -223,7 +226,13 @@ async function generateCompleteDay(dayNumber: number): Promise<void> {
  */
 window.CURIOUS_KELLY = window.CURIOUS_KELLY || {};
 window.CURIOUS_KELLY.LOCAL_PACKS = window.CURIOUS_KELLY.LOCAL_PACKS || {};
-window.CURIOUS_KELLY.DAY_${dayNumber} = ${JSON.stringify(pack, null, 2)};
+// Register in LOCAL_PACKS with multiple key formats for bulletproof lookup
+window.CURIOUS_KELLY.LOCAL_PACKS['day-${paddedDay}'] = ${JSON.stringify(pack, null, 2)};
+window.CURIOUS_KELLY.LOCAL_PACKS['day-${dayNumber}'] = window.CURIOUS_KELLY.LOCAL_PACKS['day-${paddedDay}'];
+window.CURIOUS_KELLY.LOCAL_PACKS[${dayNumber}] = window.CURIOUS_KELLY.LOCAL_PACKS['day-${paddedDay}'];
+window.CURIOUS_KELLY.LOCAL_PACKS['${dayNumber}'] = window.CURIOUS_KELLY.LOCAL_PACKS['day-${paddedDay}'];
+// Legacy format for backward compatibility
+window.CURIOUS_KELLY.DAY_${dayNumber} = window.CURIOUS_KELLY.LOCAL_PACKS['day-${paddedDay}'];
 `;
 
   fs.writeFileSync(filepath, jsContent);

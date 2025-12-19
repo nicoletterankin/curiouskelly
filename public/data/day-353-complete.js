@@ -1,13 +1,14 @@
 /**
  * Day 353 Data Pack - "Being Where You Are"
  * COMPLETE - All content validated, no placeholders
- * Generated: 2025-12-19T18:11:01.622Z
+ * Generated: 2025-12-19T18:19:26.284Z
  */
 window.CURIOUS_KELLY = window.CURIOUS_KELLY || {};
 window.CURIOUS_KELLY.LOCAL_PACKS = window.CURIOUS_KELLY.LOCAL_PACKS || {};
-window.CURIOUS_KELLY.DAY_353 = {
+// Register in LOCAL_PACKS with multiple key formats for bulletproof lookup
+window.CURIOUS_KELLY.LOCAL_PACKS['day-353'] = {
   "meta": {
-    "created_at": "2025-12-19T18:11:01.622Z",
+    "created_at": "2025-12-19T18:19:26.284Z",
     "day_number": 353,
     "version": "v5.0-complete",
     "is_complete": true,
@@ -779,3 +780,8 @@ window.CURIOUS_KELLY.DAY_353 = {
     }
   }
 };
+window.CURIOUS_KELLY.LOCAL_PACKS['day-353'] = window.CURIOUS_KELLY.LOCAL_PACKS['day-353'];
+window.CURIOUS_KELLY.LOCAL_PACKS[353] = window.CURIOUS_KELLY.LOCAL_PACKS['day-353'];
+window.CURIOUS_KELLY.LOCAL_PACKS['353'] = window.CURIOUS_KELLY.LOCAL_PACKS['day-353'];
+// Legacy format for backward compatibility
+window.CURIOUS_KELLY.DAY_353 = window.CURIOUS_KELLY.LOCAL_PACKS['day-353'];

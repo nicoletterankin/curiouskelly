@@ -1,13 +1,14 @@
 /**
  * Day 354 Data Pack - "What Makes You Come Alive"
  * COMPLETE - All content validated, no placeholders
- * Generated: 2025-12-19T18:11:11.960Z
+ * Generated: 2025-12-19T18:19:27.565Z
  */
 window.CURIOUS_KELLY = window.CURIOUS_KELLY || {};
 window.CURIOUS_KELLY.LOCAL_PACKS = window.CURIOUS_KELLY.LOCAL_PACKS || {};
-window.CURIOUS_KELLY.DAY_354 = {
+// Register in LOCAL_PACKS with multiple key formats for bulletproof lookup
+window.CURIOUS_KELLY.LOCAL_PACKS['day-354'] = {
   "meta": {
-    "created_at": "2025-12-19T18:11:11.959Z",
+    "created_at": "2025-12-19T18:19:27.564Z",
     "day_number": 354,
     "version": "v5.0-complete",
     "is_complete": true,
@@ -781,3 +782,8 @@ window.CURIOUS_KELLY.DAY_354 = {
     }
   }
 };
+window.CURIOUS_KELLY.LOCAL_PACKS['day-354'] = window.CURIOUS_KELLY.LOCAL_PACKS['day-354'];
+window.CURIOUS_KELLY.LOCAL_PACKS[354] = window.CURIOUS_KELLY.LOCAL_PACKS['day-354'];
+window.CURIOUS_KELLY.LOCAL_PACKS['354'] = window.CURIOUS_KELLY.LOCAL_PACKS['day-354'];
+// Legacy format for backward compatibility
+window.CURIOUS_KELLY.DAY_354 = window.CURIOUS_KELLY.LOCAL_PACKS['day-354'];
