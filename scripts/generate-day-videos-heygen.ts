@@ -248,20 +248,21 @@ async function upsertKellyVideoAsset(params: {
     // If constraints/columns don't match, fall through to Attempt B.
   }
 
-  // Attempt B: migration 004 schema (lesson_day + video_public_url)
+  // Attempt B: Use current schema (day_number + template)
   {
     const payload: any = {
-      lesson_day: params.day,
-      phase: params.phase === 'hook' ? 'welcome' : params.phase,
+      day_number: params.day,
+      phase: params.phase,
+      template: params.persona,
+      asset_type: 'video',
       age_bucket: params.ageBucket,
       language: params.language,
-      archetype: params.archetype,
-      source_image_path: params.sourceImagePath,
-      source_audio_url: params.audioUrl,
-      script_text: params.script,
-      video_storage_path: `heygen/${params.heygenVideoId}`,
+      storage_bucket: AUDIO_BUCKET,
+      storage_path: `heygen/${params.heygenVideoId}`,
+      public_url: '',
+      generation_prompt: params.script,
       status: 'generating',
-      generation_started_at: now,
+      created_at: now,
       updated_at: now,
     };
 
