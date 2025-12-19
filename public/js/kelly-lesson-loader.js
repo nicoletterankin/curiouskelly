@@ -56,6 +56,28 @@ const KellyLessonLoader = {
 
   // Local API fallback (Vercel functions) — always available in this repo
   LOCAL_API_ENDPOINT: '/api/lessons',
+
+  // Canonical "seed" lessons shipped with the app (365 days).
+  // These are the MVP backbone: 7 phases × 2 choices.
+  SEED_LESSONS_BASE_URL: '/lessons',
+
+  // On-demand lesson generation (client-side, deterministic).
+  ON_DEMAND_TOPIC_STORAGE_KEY: 'kellyOnDemandTopic',
+  ON_DEMAND_TOPIC_MAX_LEN: 80,
+  ON_DEMAND_TOPIC_MIN_LEN: 3,
+
+  // MVP completeness target for the lesson player.
+  MVP_PHASE_ORDER: ['Hook', 'Cliff', 'Fact1', 'Fact2', 'Fact3', 'Wisdom', 'Outro'],
+  MVP_PHASE_KEY_MAP: {
+    hook: 'Hook',
+    cliff: 'Cliff',
+    q1: 'Fact1',
+    q2: 'Fact2',
+    q3: 'Fact3',
+    wisdom: 'Wisdom',
+    outro: 'Outro',
+  },
+  MVP_DEFAULT_VISUAL_URL: '/images/kelly-hero-4k.png',
   
   // Archetype mapping (id -> database name)
   ARCHETYPES: {
@@ -175,21 +197,49 @@ const KellyLessonLoader = {
     const paddedDay = String(dayNum).padStart(3, '0');
     const packKey = `day-${paddedDay}`;
 
+    // On-demand overrides everything (Grow track / URL param).
+    try {
+      const onDemand = this.getOnDemandTopic();
+      if (onDemand) {
+        const generated = this.buildOnDemandLesson(dayNum, normalizedArchetype, targetRegion, onDemand);
+        const processed = this.ensureMvpLessonShape(generated, { dayNum, archetype: normalizedArchetype, region: targetRegion });
+        return {
+          lesson: processed?.lesson || null,
+          atoms: processed?.atoms || [],
+          shards: processed?.shards || [],
+          source: 'on-demand',
+        };
+      }
+    } catch (_) {}
+
     // Priority 1: Local Pack (deterministic, offline-ready)
     try {
       // Check both string key ("day-351") and numeric key (351)
       const localPacks = window?.CURIOUS_KELLY?.LOCAL_PACKS;
       const localPack = localPacks?.[packKey] || localPacks?.[dayNum] || localPacks?.[String(dayNum)];
       if (localPack && (localPack.lesson || localPack.atoms)) {
+        const meta = localPack.meta || {};
+        const version = String(meta.version || '').toLowerCase();
+        const isSkeleton = !!meta.is_skeleton || version.includes('skeleton');
+
         const rawAtoms = Array.isArray(localPack.atoms) ? localPack.atoms : [];
         const atoms = rawAtoms.filter((a) => !a?.archetype || a.archetype === normalizedArchetype);
-        __kellyLoaderDebugLog(`[Loader] Using local pack for day ${dayNum}`);
-        return {
-          lesson: localPack.lesson || null,
-          atoms,
-          shards: [],
-          source: 'local_pack',
-        };
+
+        // If the local pack is a skeleton, skip it and fall through to the seed lessons.
+        // This is the "gap-filler pipeline": skeleton → full (at runtime).
+        if (!isSkeleton) {
+          __kellyLoaderDebugLog(`[Loader] Using local pack for day ${dayNum}`);
+          const tmp = { lesson: localPack.lesson || null, atoms, shards: [] };
+          const processed = this.ensureMvpLessonShape(tmp, { dayNum, archetype: normalizedArchetype, region: targetRegion });
+          return {
+            lesson: processed?.lesson || localPack.lesson || null,
+            atoms: processed?.atoms || atoms,
+            shards: [],
+            source: 'local_pack',
+          };
+        }
+
+        __kellyLoaderDebugLog(`[Loader] Local pack is skeleton for day ${dayNum}; using seed lessons instead`);
       }
     } catch (_) {
       // Non-fatal: fall through to normal loader logic.
@@ -235,6 +285,51 @@ const KellyLessonLoader = {
     }
     
     __kellyLoaderDebugLog(`🔍 Loading Day ${dayNum} for ${normalizedArchetype} (${targetRegion})`);
+
+    // ============================================================
+    // ON-DEMAND (INSTANT) LESSONS
+    // - Used for "Create a new lesson: <topic>" from search panel.
+    // - By default, this runs in the Grow track; Learn stays day-based.
+    // ============================================================
+    try {
+      const onDemand = this.getOnDemandTopic();
+      if (onDemand) {
+        const generated = this.buildOnDemandLesson(dayNum, normalizedArchetype, targetRegion, onDemand);
+        const processed = this.ensureMvpLessonShape(generated, { dayNum, archetype: normalizedArchetype, region: targetRegion });
+        this.cache.set(cacheKey, processed);
+        if (preloadAdjacent && !_isPreload) this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
+        return processed;
+      }
+    } catch (e) {
+      __kellyLoaderDebugWarn('⚠️ On-demand lesson generation failed, falling back to day lesson:', e?.message || e);
+    }
+
+    // ============================================================
+    // SEED (LOCAL) LESSONS — 365-day MVP backbone
+    // This is intentionally *before* Supabase/D1 so the app is
+    // resilient and fast even when networks are flaky.
+    //
+    // To opt out: set window.KELLY_CONFIG.preferSeedLessons = false
+    // ============================================================
+    const preferSeedLessons =
+      (typeof window !== 'undefined' &&
+        window.KELLY_CONFIG &&
+        window.KELLY_CONFIG.preferSeedLessons === false)
+        ? false
+        : true;
+    if (preferSeedLessons) {
+      try {
+        const seedResult = await this.trySeedLessons(dayNum, normalizedArchetype, targetRegion);
+        if (seedResult) {
+          const processed = this.ensureMvpLessonShape(seedResult, { dayNum, archetype: normalizedArchetype, region: targetRegion });
+          this.cache.set(cacheKey, processed);
+          if (preloadAdjacent && !_isPreload) this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
+          return processed;
+        }
+      } catch (seedErr) {
+        __kellyLoaderDebugWarn(`⚠️ Seed lessons failed for day ${dayNum}:`, seedErr?.message || seedErr);
+      }
+    }
     
     if (!this.supabase) {
       __kellyLoaderDebugWarn('⚠️ Supabase not initialized, trying Cloudflare D1...');
@@ -244,9 +339,10 @@ const KellyLessonLoader = {
         const d1Data = await this.tryCloudflareD1(dayNum, normalizedArchetype, targetRegion);
         if (d1Data?.lesson) {
           const result = this.formatD1Response(d1Data, dayNum, normalizedArchetype, targetRegion);
-          this.cache.set(cacheKey, result);
+          const processed = this.ensureMvpLessonShape(result, { dayNum, archetype: normalizedArchetype, region: targetRegion });
+          this.cache.set(cacheKey, processed);
           if (preloadAdjacent && !_isPreload) this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
-          return result;
+          return processed;
         }
       } catch (d1Error) {
         __kellyLoaderDebugWarn(`⚠️ Cloudflare D1 failed:`, d1Error.message);
@@ -262,9 +358,10 @@ const KellyLessonLoader = {
             region: targetRegion,
             _source: 'vercel-api'
           });
-          this.cache.set(cacheKey, result);
+          const processed = this.ensureMvpLessonShape(result, { dayNum, archetype: normalizedArchetype, region: targetRegion });
+          this.cache.set(cacheKey, processed);
           if (preloadAdjacent && !_isPreload) this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
-          return result;
+          return processed;
         }
       } catch (apiError) {
         __kellyLoaderDebugWarn(`⚠️ Local API fallback failed:`, apiError.message);
@@ -286,9 +383,10 @@ const KellyLessonLoader = {
       ]);
       
       if (supabaseResult) {
-        this.cache.set(cacheKey, supabaseResult);
+        const processed = this.ensureMvpLessonShape(supabaseResult, { dayNum, archetype: normalizedArchetype, region: targetRegion });
+        this.cache.set(cacheKey, processed);
         if (preloadAdjacent && !_isPreload) this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
-        return supabaseResult;
+        return processed;
       }
       
       throw new Error('Supabase returned no data');
@@ -303,10 +401,11 @@ const KellyLessonLoader = {
       const d1Data = await this.tryCloudflareD1(dayNum, normalizedArchetype, targetRegion);
       if (d1Data?.lesson) {
         const result = this.formatD1Response(d1Data, dayNum, normalizedArchetype, targetRegion);
-        this.cache.set(cacheKey, result);
+        const processed = this.ensureMvpLessonShape(result, { dayNum, archetype: normalizedArchetype, region: targetRegion });
+        this.cache.set(cacheKey, processed);
         if (preloadAdjacent && !_isPreload) this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
         __kellyLoaderDebugLog(`✅ [L2] D1 success`);
-        return result;
+        return processed;
       }
     } catch (d1Error) {
       __kellyLoaderDebugWarn(`⚠️ [L2] Cloudflare D1 failed: ${d1Error.message}`);
@@ -323,10 +422,11 @@ const KellyLessonLoader = {
           region: targetRegion,
           _source: 'vercel-api'
         });
-        this.cache.set(cacheKey, result);
+        const processed = this.ensureMvpLessonShape(result, { dayNum, archetype: normalizedArchetype, region: targetRegion });
+        this.cache.set(cacheKey, processed);
         if (preloadAdjacent && !_isPreload) this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
         __kellyLoaderDebugLog(`✅ [L2.5] Local API success`);
-        return result;
+        return processed;
       }
     } catch (apiError) {
       __kellyLoaderDebugWarn(`⚠️ [L2.5] Local API failed: ${apiError.message}`);
@@ -337,9 +437,10 @@ const KellyLessonLoader = {
       __kellyLoaderDebugLog(`🔄 [L3] Trying Static JSON for day ${dayNum}...`);
       const staticResult = await this.tryStaticJSON(dayNum, normalizedArchetype, targetRegion);
       if (staticResult) {
-        this.cache.set(cacheKey, staticResult);
+        const processed = this.ensureMvpLessonShape(staticResult, { dayNum, archetype: normalizedArchetype, region: targetRegion });
+        this.cache.set(cacheKey, processed);
         __kellyLoaderDebugLog(`✅ [L3] Static JSON success`);
-        return staticResult;
+        return processed;
       }
     } catch (staticError) {
       __kellyLoaderDebugWarn(`⚠️ [L3] Static JSON failed: ${staticError.message}`);
@@ -409,6 +510,11 @@ const KellyLessonLoader = {
    * Try fetching from static JSON files
    */
   async tryStaticJSON(dayNum, archetype, region) {
+    // Prefer canonical /public/lessons seed packs (365 days).
+    const seed = await this.trySeedLessons(dayNum, archetype, region);
+    if (seed) return seed;
+
+    // Best-effort fallback: legacy generated/lessons format (may not exist).
     const paddedDay = String(dayNum).padStart(3, '0');
     const jsonUrl = `/generated/lessons/day-${paddedDay}.json`;
     
@@ -485,6 +591,316 @@ const KellyLessonLoader = {
       },
       dayNumber
     }));
+  },
+
+  /**
+   * Load canonical seed lesson JSON shipped with the app:
+   *   GET /lessons/day-<N>.json
+   *
+   * This is the reliable 365-day MVP source of truth.
+   */
+  async trySeedLessons(dayNumber, archetype, region) {
+    try {
+      const url = `${this.SEED_LESSONS_BASE_URL}/day-${dayNumber}.json`;
+      const response = await fetch(url, { signal: AbortSignal.timeout(this.STATIC_TIMEOUT) });
+      if (!response.ok) return null;
+
+      const seed = await response.json();
+      const lesson = this.seedToLesson(seed, dayNumber);
+      const atoms = this.seedToAtoms(seed, dayNumber, archetype, region);
+
+      return this.buildResult(lesson, atoms, [], {
+        dayNumber,
+        archetype,
+        region,
+        _source: 'seed-lessons'
+      });
+    } catch (e) {
+      return null;
+    }
+  },
+
+  seedToLesson(seed, dayNumber) {
+    const topicEn = seed?.meta?.topic?.en || seed?.meta?.topic || seed?.topic?.en || seed?.topic || `Day ${dayNumber}`;
+    const truthEn = seed?.universal_truth?.en || seed?.universal_truth || seed?.meta?.universalTruth || '';
+    const headlineEn = seed?.headline?.en || seed?.headline || '';
+    return {
+      id: `seed-${dayNumber}`,
+      day_number: dayNumber,
+      topic: topicEn,
+      universal_truth: truthEn,
+      marketing_headline: headlineEn || topicEn,
+      marketing_tagline: '',
+      category: seed?.meta?.category || '',
+      emoji: seed?.meta?.emoji || '📚',
+    };
+  },
+
+  seedToAtoms(seed, dayNumber, archetype, region) {
+    const phases = seed?.phases || {};
+    const pickLang = (region === 'es' || region === 'pt') ? region : 'en';
+    const lang = (pickLang === 'pt') ? 'pt' : (pickLang === 'es') ? 'es' : 'en';
+
+    const getText = (node) => {
+      if (!node) return '';
+      if (typeof node === 'string') return node;
+      if (node?.[lang] && node[lang] !== '[NEEDS TRANSLATION]') return node[lang];
+      if (node?.en) return node.en;
+      return '';
+    };
+
+    // Make archetype feel distinct without needing separate DB rows.
+    const voiceWrap = (phaseKey, base) => {
+      const t = String(base || '').trim();
+      if (!t) return '';
+      if (String(archetype) === 'The Explorer') {
+        if (phaseKey === 'hook') return `Adventure time. ${t}`;
+        if (phaseKey === 'cliff') return `Two paths. ${t}`;
+        return t;
+      }
+      if (String(archetype) === 'The Rebel') {
+        if (phaseKey === 'hook') return `No fluff. ${t}`;
+        if (phaseKey === 'cliff') return `Choose your move. ${t}`;
+        return t;
+      }
+      // Scientist default
+      return t;
+    };
+
+    const phaseEntries = [
+      ['hook', phases.hook],
+      ['cliff', phases.cliff],
+      ['q1', phases.q1],
+      ['q2', phases.q2],
+      ['q3', phases.q3],
+      ['wisdom', phases.wisdom],
+      ['outro', phases.outro],
+    ];
+
+    return phaseEntries.map(([phaseKey, phaseNode]) => {
+      const phaseName = this.MVP_PHASE_KEY_MAP[String(phaseKey)] || String(phaseKey);
+
+      const script = voiceWrap(String(phaseKey), getText(phaseNode?.script));
+      const prompt = getText(phaseNode?.prompt);
+      const options = Array.isArray(phaseNode?.options) ? phaseNode.options : [];
+
+      const normalizedOptions = (options.length >= 2)
+        ? options.slice(0, 2).map((opt, idx) => ({
+          letter: opt?.letter || (idx === 0 ? 'A' : 'B'),
+          icon: this.defaultIconForOption(phaseName, archetype, idx),
+          text: getText(opt?.text) || (idx === 0 ? 'Option A' : 'Option B'),
+          quality: opt?.quality || 'good',
+          response: getText(opt?.response) || 'Nice choice.',
+        }))
+        : this.buildDefaultOptionsForPhase(phaseName, archetype);
+
+      return {
+        id: `seed-${dayNumber}-${phaseKey}-${String(archetype).replace(/\s+/g, '-')}`,
+        phase: phaseName,
+        archetype: archetype,
+        content: {
+          script: script || `Today: ${seed?.meta?.topic?.en || seed?.meta?.topic || 'a new idea'}.`,
+          prompt: prompt || undefined,
+          options: normalizedOptions,
+        },
+        hd_video_url: null,
+        visual_url: this.MVP_DEFAULT_VISUAL_URL
+      };
+    });
+  },
+
+  buildDefaultOptionsForPhase(phaseName, archetype) {
+    const p = String(phaseName || '').toLowerCase();
+    if (p === 'hook') {
+      return [
+        { letter: 'A', icon: this.defaultIconForOption(phaseName, archetype, 0), text: 'Teach me', quality: 'good', response: "Love it. Let's go." },
+        { letter: 'B', icon: this.defaultIconForOption(phaseName, archetype, 1), text: 'Make it practical', quality: 'good', response: "Perfect. We'll keep it useful." },
+      ];
+    }
+    if (p === 'cliff') {
+      return [
+        { letter: 'A', icon: this.defaultIconForOption(phaseName, archetype, 0), text: 'Go deeper', quality: 'good', response: 'Great. Depth first.' },
+        { letter: 'B', icon: this.defaultIconForOption(phaseName, archetype, 1), text: 'Keep it simple', quality: 'good', response: 'Great. Simple is powerful.' },
+      ];
+    }
+    if (p === 'fact1' || p === 'fact2' || p === 'fact3') {
+      return [
+        { letter: 'A', icon: this.defaultIconForOption(phaseName, archetype, 0), text: 'Give me an example', quality: 'good', response: 'Example coming up.' },
+        { letter: 'B', icon: this.defaultIconForOption(phaseName, archetype, 1), text: 'Show me the idea', quality: 'good', response: "Got it. Here's the core idea." },
+      ];
+    }
+    if (p === 'wisdom') {
+      return [
+        { letter: 'A', icon: this.defaultIconForOption(phaseName, archetype, 0), text: 'What should I do?', quality: 'good', response: "Let's turn this into action." },
+        { letter: 'B', icon: this.defaultIconForOption(phaseName, archetype, 1), text: 'What should I remember?', quality: 'good', response: "Here's the takeaway." },
+      ];
+    }
+    if (p === 'outro') {
+      return [
+        { letter: 'A', icon: this.defaultIconForOption(phaseName, archetype, 0), text: 'Lock it in', quality: 'good', response: 'Done. You’ve got it.' },
+        { letter: 'B', icon: this.defaultIconForOption(phaseName, archetype, 1), text: 'Come back tomorrow', quality: 'good', response: 'See you tomorrow.' },
+      ];
+    }
+    return [
+      { letter: 'A', icon: this.defaultIconForOption(phaseName, archetype, 0), text: 'A', quality: 'good', response: 'Nice.' },
+      { letter: 'B', icon: this.defaultIconForOption(phaseName, archetype, 1), text: 'B', quality: 'good', response: 'Nice.' },
+    ];
+  },
+
+  defaultIconForOption(phaseName, archetype, idx) {
+    const a = String(archetype || '').toLowerCase();
+    const p = String(phaseName || '').toLowerCase();
+    if (a.includes('explorer')) return idx === 0 ? '🧭' : '🗺️';
+    if (a.includes('rebel')) return idx === 0 ? '⚡' : '🔥';
+    if (p === 'wisdom') return idx === 0 ? '✅' : '💎';
+    return idx === 0 ? '📌' : '💡';
+  },
+
+  // Minimal, practical topic safety gate (client-side).
+  validateOnDemandTopic(raw) {
+    const topic = String(raw || '').trim();
+    if (topic.length < this.ON_DEMAND_TOPIC_MIN_LEN) return { ok: false, reason: 'too_short' };
+    if (topic.length > this.ON_DEMAND_TOPIC_MAX_LEN) return { ok: false, reason: 'too_long' };
+    const blocked = /(porn|sex|rape|nud(e|ity)|bestial|incest|fetish|suicide|self[-\s]?harm|kill yourself|how to (make|build) (a )?(bomb|weapon)|explosive|meth|cocaine|heroin)/i;
+    if (blocked.test(topic)) return { ok: false, reason: 'blocked' };
+    const allowed = /^[\p{L}\p{N}\s,'’".:;?!()&\-]+$/u;
+    if (!allowed.test(topic)) return { ok: false, reason: 'bad_chars' };
+    return { ok: true, topic };
+  },
+
+  getOnDemandTopic() {
+    // URL param takes precedence.
+    try {
+      if (typeof location !== 'undefined' && location.search) {
+        const p = new URLSearchParams(location.search);
+        const fromUrl = p.get('gen') || p.get('topic');
+        if (fromUrl) {
+          const v = this.validateOnDemandTopic(fromUrl);
+          return v.ok ? v.topic : null;
+        }
+      }
+    } catch (_) {}
+
+    // Otherwise use localStorage only when the user is in Grow track.
+    try {
+      if (typeof localStorage === 'undefined') return null;
+      const rawState = localStorage.getItem('kellyState');
+      const state = rawState ? JSON.parse(rawState) : {};
+      if (String(state?.track || 'learn') !== 'grow') return null;
+
+      const stored = localStorage.getItem(this.ON_DEMAND_TOPIC_STORAGE_KEY);
+      if (!stored) return null;
+      const v = this.validateOnDemandTopic(stored);
+      return v.ok ? v.topic : null;
+    } catch (_) {
+      return null;
+    }
+  },
+
+  buildOnDemandLesson(dayNum, archetype, region, topic) {
+    const lesson = {
+      id: `ondemand-${Date.now()}`,
+      day_number: dayNum,
+      topic,
+      universal_truth: 'A good question is a doorway. Today we walk through it.',
+      marketing_headline: topic,
+      marketing_tagline: '',
+      category: 'On Demand',
+      emoji: '✨',
+    };
+
+    const phaseScripts = {
+      Hook: `Today, you picked: "${topic}". We'll keep it simple, clear, and useful.`,
+      Cliff: `Quick choice: do you want the practical path, or the deep path?`,
+      Fact1: `First: the simplest truth about "${topic}".`,
+      Fact2: `Second: the thing most people miss about "${topic}".`,
+      Fact3: `Third: the "aha" connection that makes it stick.`,
+      Wisdom: `Now the takeaway: one sentence you can use today.`,
+      Outro: `That's it. Small lesson, big leverage. Want another?`,
+    };
+
+    const atoms = this.MVP_PHASE_ORDER.map((phaseName) => ({
+      id: `ondemand-${dayNum}-${phaseName}-${String(archetype).replace(/\s+/g, '-')}`,
+      phase: phaseName,
+      archetype,
+      content: {
+        script: phaseScripts[phaseName] || '',
+        options: this.buildDefaultOptionsForPhase(phaseName, archetype),
+      },
+      hd_video_url: null,
+      visual_url: this.MVP_DEFAULT_VISUAL_URL
+    }));
+
+    return this.buildResult(lesson, atoms, [], {
+      dayNumber: dayNum,
+      archetype,
+      region,
+      _source: 'on-demand'
+    });
+  },
+
+  ensureMvpLessonShape(result, ctx) {
+    // Normalize atoms into the shape learn.html expects: content.script + content.options[2] + visual_url.
+    if (!result || !Array.isArray(result.atoms)) return result;
+
+    const { dayNum } = ctx || {};
+    const fallbackVisual = this.MVP_DEFAULT_VISUAL_URL;
+
+    result.atoms = result.atoms.map((atom) => {
+      const phase = atom?.phase || 'Hook';
+      const archetype = atom?.archetype || (ctx?.archetype || 'The Scientist');
+
+      const content = (typeof atom?.content === 'object' && atom.content) ? atom.content : { script: String(atom?.content || '') };
+      const script = (typeof content.script === 'string') ? content.script : (typeof content.text === 'string') ? content.text : '';
+      let options = Array.isArray(content.options) ? content.options : [];
+
+      if (options.length < 2) options = this.buildDefaultOptionsForPhase(phase, archetype);
+      if (options.length > 2) options = options.slice(0, 2);
+
+      const normalizedOptions = options.map((opt, idx) => ({
+        letter: opt?.letter || (idx === 0 ? 'A' : 'B'),
+        icon: opt?.icon || this.defaultIconForOption(phase, archetype, idx),
+        text: opt?.text || (idx === 0 ? 'Option A' : 'Option B'),
+        quality: opt?.quality || 'good',
+        response: opt?.response || 'Nice choice.',
+      }));
+
+      return {
+        ...atom,
+        phase,
+        archetype,
+        content: {
+          ...content,
+          script: script || `Day ${dayNum || ''}: ${result.lesson?.topic || 'Today'}.`,
+          options: normalizedOptions,
+        },
+        visual_url: atom?.visual_url || fallbackVisual,
+        hd_video_url: atom?.hd_video_url ?? null,
+      };
+    });
+
+    // Ensure all MVP phases exist (gap-filler).
+    try {
+      const have = new Set(result.atoms.map(a => a?.phase).filter(Boolean));
+      const topic = result.lesson?.topic || 'Today';
+      const archetype = ctx?.archetype || 'The Scientist';
+      for (const phaseName of this.MVP_PHASE_ORDER) {
+        if (have.has(phaseName)) continue;
+        result.atoms.push({
+          id: `mvpfill-${dayNum || 'x'}-${phaseName}-${String(archetype).replace(/\\s+/g, '-')}`,
+          phase: phaseName,
+          archetype,
+          content: {
+            script: `Today: ${topic}.`,
+            options: this.buildDefaultOptionsForPhase(phaseName, archetype),
+          },
+          hd_video_url: null,
+          visual_url: fallbackVisual,
+        });
+      }
+    } catch (_) {}
+
+    return result;
   },
 
   /**
@@ -1038,4 +1454,196 @@ if (typeof module !== 'undefined' && module.exports) {
 window.KellyLessonLoader = KellyLessonLoader;
 
 __kellyLoaderDebugLog('📚 Kelly Lesson Loader ready');
+
+// ============================================================
+// Right-panel Search: "Create a new lesson: <query>"
+// - No learn.html edits required: we inject a normal search result item.
+// - We store the topic in localStorage and switch to Grow track.
+// ============================================================
+(function setupOnDemandSearchInjection() {
+  if (typeof window === 'undefined' || typeof document === 'undefined') return;
+
+  let __bound = false;
+  let __boundInput = null;
+  let __boundContainer = null;
+  let __retryTimer = null;
+  let __rootObserver = null;
+  let __valuePollTimer = null;
+
+  const tryBind = () => {
+    const input = document.getElementById('panel-search-input');
+    const container = document.getElementById('panel-search-results');
+
+    // If DOM isn't ready yet (or panels mount late), keep retrying.
+    if (!input || !container) return false;
+
+    // Idempotent: if we're already bound to the current nodes, do nothing.
+    if (__bound && __boundInput === input && __boundContainer === container) return true;
+
+    // If we previously bound to a different input/container, stop old polling.
+    if (__valuePollTimer) {
+      clearInterval(__valuePollTimer);
+      __valuePollTimer = null;
+    }
+
+    const removeExisting = () => {
+      const existing = document.getElementById('kelly-search-generate');
+      if (existing) existing.remove();
+    };
+
+    const getListEl = () => {
+      const list = container.querySelector('.search-results-list');
+      if (list) return list;
+      // If the search rendered a "no results" <p>, create a list below it.
+      const newList = document.createElement('div');
+      newList.className = 'search-results-list';
+      container.appendChild(newList);
+      return newList;
+    };
+
+    const render = () => {
+      removeExisting();
+
+      const query = String(input.value || '').trim();
+      if (query.length < 3) return;
+
+      const validator = window.KellyLessonLoader?.validateOnDemandTopic?.(query);
+      const ok = !!validator?.ok;
+      __kellyLoaderDebugLog('[OnDemandSearch] render', { query, ok, reason: validator?.reason || null });
+
+      const item = document.createElement('div');
+      item.className = 'search-result-item';
+      item.id = 'kelly-search-generate';
+      item.setAttribute('role', 'button');
+      item.setAttribute('tabindex', '0');
+
+      const title = ok ? `Create lesson: ${validator.topic}` : `Can't create lesson: "${query}"`;
+      const meta = ok
+        ? 'Instant • Safe defaults • Uses Grow track'
+        : `Blocked (${validator?.reason || 'invalid'})`;
+
+      item.innerHTML = `
+        <span class="search-result-emoji">✨</span>
+        <div class="search-result-info">
+          <div class="search-result-topic">${title}</div>
+          <div class="search-result-meta">${meta}</div>
+        </div>
+      `;
+
+      const activate = () => {
+        if (!ok) return;
+        try {
+          // Store topic for loader (Grow track only)
+          localStorage.setItem(window.KellyLessonLoader.ON_DEMAND_TOPIC_STORAGE_KEY, validator.topic);
+
+          // Force Grow track in persisted state so the loader will use the on-demand topic.
+          const raw = localStorage.getItem('kellyState');
+          const next = raw ? JSON.parse(raw) : {};
+          next.track = 'grow';
+          localStorage.setItem('kellyState', JSON.stringify(next));
+
+          // Update UI state if the toggle exists.
+          const growBtn = document.getElementById('track-grow');
+          if (growBtn) growBtn.click();
+
+          const day = (window.state && window.state.currentDay) ? window.state.currentDay : 1;
+          if (typeof window.loadLessonRuntime === 'function') {
+            window.loadLessonRuntime(day);
+            if (typeof window.closeUnifiedPanel === 'function') window.closeUnifiedPanel();
+            return;
+          }
+        } catch (_) {}
+
+        // Hard fallback: reload with URL param for the loader.
+        try {
+          window.location.href = `/learn.html?gen=${encodeURIComponent(validator.topic)}`;
+        } catch (_) {}
+      };
+
+      item.addEventListener('click', activate);
+      item.addEventListener('keydown', (e) => {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          activate();
+        }
+      });
+
+      const list = getListEl();
+      list.appendChild(item);
+      __kellyLoaderDebugLog('[OnDemandSearch] injected row');
+    };
+
+    // Render after each search render pass.
+    input.addEventListener('input', () => setTimeout(render, 0));
+    input.addEventListener('change', () => setTimeout(render, 0));
+    input.addEventListener('keyup', () => setTimeout(render, 0));
+
+    // Also observe changes to the container (search re-renders innerHTML).
+    const obs = new MutationObserver(() => setTimeout(render, 0));
+    obs.observe(container, { childList: true, subtree: true });
+
+    __bound = true;
+    __boundInput = input;
+    __boundContainer = container;
+    __kellyLoaderDebugLog('[OnDemandSearch] bound to #panel-search-input and #panel-search-results');
+
+    // First render (covers the case where input already has value)
+    setTimeout(render, 0);
+
+    // Value-poll fallback: catches cases where code sets input.value without firing events.
+    let last = String(input.value || '');
+    __valuePollTimer = setInterval(() => {
+      const next = String(input.value || '');
+      if (next !== last) {
+        last = next;
+        render();
+      }
+    }, 120);
+
+    return true;
+  };
+
+  const ensureBound = () => {
+    if (tryBind()) {
+      if (__retryTimer) {
+        clearInterval(__retryTimer);
+        __retryTimer = null;
+      }
+      if (__rootObserver) {
+        try { __rootObserver.disconnect(); } catch (_) {}
+        __rootObserver = null;
+      }
+      return;
+    }
+
+    // Polling retry (simple + reliable)
+    if (!__retryTimer) {
+      let attempts = 0;
+      __retryTimer = setInterval(() => {
+        attempts += 1;
+        if (tryBind()) {
+          clearInterval(__retryTimer);
+          __retryTimer = null;
+        } else if (attempts >= 80) { // ~20s @ 250ms
+          clearInterval(__retryTimer);
+          __retryTimer = null;
+        }
+      }, 250);
+    }
+
+    // MutationObserver retry (covers late-mount DOM)
+    if (!__rootObserver && document.documentElement) {
+      __rootObserver = new MutationObserver(() => {
+        if (tryBind()) {
+          try { __rootObserver.disconnect(); } catch (_) {}
+          __rootObserver = null;
+        }
+      });
+      __rootObserver.observe(document.documentElement, { childList: true, subtree: true });
+    }
+  };
+
+  if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ensureBound);
+  else ensureBound();
+})();
 
