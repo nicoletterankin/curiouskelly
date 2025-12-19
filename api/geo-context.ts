@@ -81,8 +81,8 @@ const COUNTRY_TO_LANGUAGE: Record<string, string> = {
   US: 'en', GB: 'en', CA: 'en', AU: 'en', NZ: 'en', IE: 'en',
   ES: 'es', MX: 'es', AR: 'es', CO: 'es', PE: 'es', CL: 'es', VE: 'es', EC: 'es',
   BR: 'pt', PT: 'pt',
-  FR: 'fr', BE: 'fr', CH: 'fr', CA: 'fr', // Quebec
-  DE: 'de', AT: 'de', CH: 'de',
+  FR: 'fr', BE: 'fr', CH: 'de', // Swiss German is most common
+  DE: 'de', AT: 'de',
   IN: 'hi', // Though English is common too
 };
 
