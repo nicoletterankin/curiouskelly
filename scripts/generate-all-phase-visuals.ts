@@ -323,8 +323,8 @@ function getContextForTopic(topic: string): typeof VISUAL_CONTEXTS['default'] {
 // ═══════════════════════════════════════════════════════════════════
 
 const supabase = createClient(
-  process.env.SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!,
-  process.env.SUPABASE_SERVICE_KEY!
+  process.env.SUPABASE_URL || process.env.PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.SUPABASE_SERVICE_KEY || process.env.SUPABASE_SERVICE_ROLE_KEY!
 );
 
 interface Lesson {
@@ -416,10 +416,23 @@ async function generateImage(prompt: string, outputPath: string): Promise<{ succ
       }
     }) as any;
     
-    const imageUrl = Array.isArray(output) ? output[0] : output;
+    // Handle Replicate output (FileOutput objects use toString() to return URL)
+    let imageUrl: string;
+    if (Array.isArray(output) && output.length > 0) {
+      // FileOutput objects implement toString() to return the URL
+      imageUrl = String(output[0]);
+    } else if (typeof output === 'string') {
+      imageUrl = output;
+    } else if (output && typeof output === 'object') {
+      // Fallback for other object types
+      imageUrl = String((output as any).url || output);
+    } else {
+      imageUrl = String(output);
+    }
     
-    if (!imageUrl) {
-      return { success: false, error: 'No image URL returned' };
+    // Validate URL format
+    if (!imageUrl || !imageUrl.startsWith('http')) {
+      return { success: false, error: `Invalid image URL: ${imageUrl?.slice(0, 100) || 'empty'}` };
     }
     
     const buffer = await downloadImage(imageUrl);
@@ -582,11 +595,11 @@ async function main() {
     console.error('❌ REPLICATE_API_TOKEN not set');
     process.exit(1);
   }
-  if (!process.env.SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
+  if (!process.env.SUPABASE_URL && !process.env.PUBLIC_SUPABASE_URL && !process.env.NEXT_PUBLIC_SUPABASE_URL) {
     console.error('❌ SUPABASE_URL not set');
     process.exit(1);
   }
-  if (!process.env.SUPABASE_SERVICE_KEY) {
+  if (!process.env.SUPABASE_SERVICE_KEY && !process.env.SUPABASE_SERVICE_ROLE_KEY) {
     console.error('❌ SUPABASE_SERVICE_KEY not set');
     process.exit(1);
   }

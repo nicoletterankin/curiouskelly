@@ -7428,7 +7428,7 @@
 
   <!-- Unified top navigation - Kelly is a Clock -->
   <nav class="kelly-top-nav">
-    <button type="button" class="kelly-home-link" title="Home" onclick="handleHomeButton()">
+    <button type="button" class="kelly-home-link" title="Chat with Kelly" id="kelly-logo-btn">
       <img src="/images/brand/kelly-mark-circle-64.png" alt="Kelly" class="kelly-logo-img">
     </button>
     
@@ -14630,6 +14630,8 @@ The learner is on phase ${state.currentPhase + 1} of 7. Be helpful and make lear
     }
 
     function goToLessonFromJourney(dayNumber) {
+      // Update URL without page reload (SPA navigation)
+      history.pushState({ day: dayNumber }, '', `?day=${dayNumber}`);
       setUiMode('lesson');
       showScene('lesson');
       loadLessonRuntime(dayNumber);
@@ -18494,6 +18496,24 @@ Style requirements:
     
     // Start the app
     init();
+    
+    // Handle browser back/forward for SPA navigation
+    window.addEventListener('popstate', (event) => {
+      console.log('[Navigation] Browser back/forward detected');
+      if (typeof stopAllMedia === 'function') stopAllMedia();
+      const params = new URLSearchParams(window.location.search);
+      const dayParam = params.get('day');
+      if (dayParam) {
+        const dayNumber = parseInt(dayParam, 10);
+        if (dayNumber >= 1 && dayNumber <= 365) {
+          setUiMode('lesson');
+          showScene('lesson');
+          loadLessonRuntime(dayNumber);
+        }
+      } else {
+        showScene('home');
+      }
+    });
   </script>
 
   <script>
