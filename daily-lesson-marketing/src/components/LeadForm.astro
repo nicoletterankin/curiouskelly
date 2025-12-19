@@ -18,7 +18,17 @@ const recaptchaSiteKey = import.meta.env.PUBLIC_RECAPTCHA_SITE_KEY ?? '';
 const antiBotPreference = turnstileSiteKey ? 'turnstile' : recaptchaSiteKey ? 'recaptcha' : 'none';
 ---
 
-<div class="lead-form-card" data-lead-card>
+<div
+  class="lead-form-card"
+  data-lead-card
+  data-locale={localeCode}
+  data-journey={journey}
+  data-antibot={antiBotPreference}
+  data-recaptcha-site-key={recaptchaSiteKey}
+>
+  <script type="application/json" data-lead-copy>
+    {JSON.stringify(dictionary.leadForm)}
+  </script>
   <h2 class="h4 mb-3">{dictionary.leadForm.title}</h2>
   <p class="text-muted mb-4">{dictionary.leadForm.subtitle}</p>
   <form class="row g-3" data-lead-form novalidate>
@@ -137,7 +147,7 @@ const antiBotPreference = turnstileSiteKey ? 'turnstile' : recaptchaSiteKey ? 'r
   <noscript>
     <p class="mt-3 text-muted">
       JavaScript is required to submit the form. Email
-      <a href="mailto:concierge@curiouskelly.com">concierge@curiouskelly.com</a> to reserve your spot.
+      <a href="mailto:hello@curiouskelly.com">hello@curiouskelly.com</a> to reserve your spot.
     </p>
   </noscript>
 </div>
@@ -160,12 +170,13 @@ const antiBotPreference = turnstileSiteKey ? 'turnstile' : recaptchaSiteKey ? 'r
   const countrySelect = form.querySelector('#country');
   const regionSelect = form.querySelector('#region');
   const phoneInput = form.querySelector('#phone');
-  const locale = JSON.stringify(localeCode);
-  const journey = JSON.stringify(journey);
-  const copy = JSON.stringify(dictionary.leadForm);
+  const locale = (card instanceof HTMLElement ? card.dataset.locale : null) ?? 'en-US';
+  const journey = (card instanceof HTMLElement ? card.dataset.journey : null) ?? 'home';
+  const copyNode = card?.querySelector('[data-lead-copy]');
+  const copy = copyNode?.textContent ? JSON.parse(copyNode.textContent) : {};
   const thankYouHref = buildLocalizedPath('/thank-you/', locale);
-  const antiBot = JSON.stringify(antiBotPreference);
-  const recaptchaSiteKey = JSON.stringify(recaptchaSiteKey);
+  const antiBot = (card instanceof HTMLElement ? card.dataset.antibot : null) ?? 'none';
+  const recaptchaSiteKey = (card instanceof HTMLElement ? card.dataset.recaptchaSiteKey : null) ?? '';
 
   const iti = intlTelInput(phoneInput, {
     initialCountry: 'auto',

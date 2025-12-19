@@ -52,7 +52,7 @@ export const enUS: LocaleDictionary = {
       'We just pinged the concierge team. Expect a follow-up within one business day with your access kit.',
     successCta: 'Return to home',
     errors: {
-      generic: 'We could not save your information. Please retry or contact concierge@curiouskelly.com.',
+      generic: 'We could not save your information. Please retry or contact hello@curiouskelly.com.',
       turnstile: 'Please complete the verification to prove you’re human.'
     },
     fields: {
@@ -238,7 +238,7 @@ export const enUS: LocaleDictionary = {
     heading: 'You’re officially on Kelly’s radar.',
     body: 'We sent a confirmation email with next steps. A concierge will reach out within 24 hours.',
     checklist: [
-      'Add concierge@curiouskelly.com to your safe senders list.',
+      'Add hello@curiouskelly.com to your safe senders list.',
       'Invite a colleague to join the onboarding session.',
       'Prepare your top learning goals for 2026.'
     ],

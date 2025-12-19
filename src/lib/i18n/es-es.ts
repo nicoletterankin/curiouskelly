@@ -53,7 +53,7 @@ export const esES: LocaleDictionary = {
       'Acabamos de avisar al equipo de concierge. Recibirás un mensaje en menos de un día hábil con tu kit de acceso.',
     successCta: 'Volver al inicio',
     errors: {
-      generic: 'No pudimos guardar tu información. Inténtalo de nuevo o escribe a concierge@curiouskelly.com.',
+      generic: 'No pudimos guardar tu información. Inténtalo de nuevo o escribe a hello@curiouskelly.com.',
       turnstile: 'Completa la verificación para confirmar que eres humano.'
     },
     fields: {
@@ -240,7 +240,7 @@ export const esES: LocaleDictionary = {
     heading: 'Kelly ya tiene tu solicitud.',
     body: 'En breve recibirás un correo con los próximos pasos. Un concierge te contactará en 24 horas.',
     checklist: [
-      'Añade concierge@curiouskelly.com a tu lista segura.',
+      'Añade hello@curiouskelly.com a tu lista segura.',
       'Invita a una persona colega a la sesión de onboarding.',
       'Prepara tus principales objetivos de aprendizaje para 2026.'
     ],
