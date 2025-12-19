@@ -189,13 +189,10 @@ export default async function handler(
     const minute = parseInt(minuteStr, 10);
     
     // Get day of week (getDay() returns 0=Sunday, 1=Monday, etc.)
-    // Use the Date object directly for day number since 'weekday: numeric' is not valid
-    const formatter = new Intl.DateTimeFormat('en-US', { ...options });
-    const parts = formatter.formatToParts(now);
+    // Use getDay() directly - it's UTC based but close enough for this use case
     const dayOfWeek = now.toLocaleString('en-US', { ...options, weekday: 'long' });
     const dayOfWeekShort = now.toLocaleString('en-US', { ...options, weekday: 'short' });
-    // Calculate day of week from the formatted date
-    const dayOfWeekNumber = new Date(now.toLocaleString('en-US', { ...options })).getDay();
+    const dayOfWeekNumber = now.getDay(); // 0=Sunday, 6=Saturday
     
     // Get date components
     const dayOfMonth = parseInt(now.toLocaleString('en-US', { ...options, day: 'numeric' }), 10);
