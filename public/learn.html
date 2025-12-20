@@ -1368,6 +1368,98 @@
       transform: scale(0.98);
     }
     
+    /* Practice with AI (Grow Track + BYOK) */
+    .kelly-panel-practice {
+      padding: 12px 16px;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(37, 99, 235, 0.08) 100%);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    
+    .practice-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 10px;
+    }
+    
+    .practice-icon {
+      font-size: 1.2rem;
+    }
+    
+    .practice-title {
+      font-weight: 600;
+      color: var(--text-primary);
+      flex: 1;
+    }
+    
+    .practice-byok-badge {
+      font-size: 0.7rem;
+      padding: 2px 8px;
+      background: rgba(139, 92, 246, 0.2);
+      border-radius: 10px;
+      color: #a78bfa;
+    }
+    
+    .practice-byok-badge.active {
+      background: rgba(34, 197, 94, 0.2);
+      color: #4ade80;
+    }
+    
+    .practice-prompt {
+      font-size: 0.9rem;
+      color: var(--text-secondary);
+      background: rgba(0, 0, 0, 0.2);
+      padding: 12px;
+      border-radius: 8px;
+      margin-bottom: 12px;
+      font-style: italic;
+      border-left: 3px solid rgba(139, 92, 246, 0.5);
+    }
+    
+    .practice-actions {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .practice-btn {
+      flex: 1;
+      padding: 10px 12px;
+      border-radius: 8px;
+      border: none;
+      cursor: pointer;
+      font-weight: 500;
+      font-size: 0.85rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+      transition: all 0.2s ease;
+      background: linear-gradient(135deg, #8b5cf6, #6366f1);
+      color: white;
+    }
+    
+    .practice-btn:hover {
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(139, 92, 246, 0.3);
+    }
+    
+    .practice-btn.secondary {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-secondary);
+    }
+    
+    .practice-btn.secondary:hover {
+      background: rgba(255, 255, 255, 0.15);
+    }
+    
+    .practice-note {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+      text-align: center;
+      margin: 0;
+    }
+    
     .reaction-emoji { font-size: 1.5rem; }
     .reaction-label { font-size: 0.75rem; font-weight: 500; }
     
@@ -8380,6 +8472,29 @@
               </button>
             </div>
             
+            <!-- PRACTICE WITH AI: Only shows for Grow track (BYOK powered) -->
+            <div class="kelly-panel-practice" id="kelly-panel-practice" style="display: none;">
+              <div class="practice-header">
+                <span class="practice-icon">🤖</span>
+                <span class="practice-title">Practice with AI</span>
+                <span class="practice-byok-badge" id="practice-byok-status">Powered by Your Keys</span>
+              </div>
+              <div class="practice-content" id="practice-content">
+                <div class="practice-prompt" id="practice-prompt">
+                  Try asking an AI: "Explain how you process my question step by step."
+                </div>
+                <div class="practice-actions">
+                  <button class="practice-btn" id="practice-try-btn" onclick="openPracticeChat()">
+                    <span>💬</span> Try It Now
+                  </button>
+                  <button class="practice-btn secondary" id="practice-add-key-btn" onclick="openPanel('settings'); document.querySelector('.byok-section summary')?.click();">
+                    <span>🔑</span> Add API Key
+                  </button>
+                </div>
+                <p class="practice-note">Use your own OpenAI, Anthropic, or Google AI key to practice directly.</p>
+              </div>
+            </div>
+
             <!-- COMMENTS FEED: Student reactions -->
             <div class="kelly-panel-comments-header">
               <span>💬 What students are saying</span>
@@ -13450,14 +13565,17 @@
     
     function switchTrack(track) {
       state.track = track;
+      state.currentTrack = track; // Sync both state properties
       saveState();
       updateTrackUI(track);
       
-      // Update header topic to show appropriate track topic
-      updateNavTopic();
+      // Update header CTA to show track info
+      const trackName = track === 'grow' ? '🤖 AI Fluency' : '📚 Learn';
+      updateNavTopic(currentLesson?.topic || 'Today\'s Lesson', `${trackName} Track`);
       
-      // Optionally reload lesson with different track content
+      // Reload lesson with new track content
       console.log('Switched to track:', track);
+      loadLessonRuntime(state.currentDay);
     }
     
     function updateTrackUI(track) {
@@ -13466,6 +13584,88 @@
       
       learnBtn?.classList.toggle('active', track === 'learn');
       growBtn?.classList.toggle('active', track === 'grow');
+      
+      // Show/hide Practice with AI section for Grow track
+      const practiceSection = document.getElementById('kelly-panel-practice');
+      if (practiceSection) {
+        practiceSection.style.display = (track === 'grow') ? 'block' : 'none';
+        
+        // Update practice prompt based on current lesson
+        if (track === 'grow') {
+          updatePracticePrompt();
+        }
+      }
+      
+      // Update Kelly track buttons in Kelly Panel
+      document.getElementById('kelly-track-learn')?.classList.toggle('active', track === 'learn');
+      document.getElementById('kelly-track-grow')?.classList.toggle('active', track === 'grow');
+    }
+    
+    function updatePracticePrompt() {
+      const promptEl = document.getElementById('practice-prompt');
+      const statusEl = document.getElementById('practice-byok-status');
+      const tryBtn = document.getElementById('practice-try-btn');
+      const addKeyBtn = document.getElementById('practice-add-key-btn');
+      
+      if (!promptEl) return;
+      
+      // Get topic-specific practice prompt
+      const topic = currentLesson?.topic || state.topic || 'AI';
+      const practicePrompts = {
+        'I\'m an AI': 'Try asking an AI: "Explain how you process my question step by step."',
+        'What Makes You Human': 'Ask an AI: "What can humans do that you cannot?"',
+        'Types of Intelligence': 'Try: "What type of intelligence do you have? What types are you missing?"',
+        'How AI Learns': 'Ask: "Explain how you learned to respond to questions like this."',
+        'Human + AI': 'Try: "Help me brainstorm ideas for a project I\'m working on."',
+        'Asking AI': 'Practice: "Rewrite this sentence to be clearer: [your sentence]"',
+        'When AI Is Wrong': 'Test: "What year did the first iPhone come out?" (Verify the answer!)',
+        'AI as Creative Tool': 'Try: "Write a short poem about learning."',
+        'Communicating with AI': 'Practice: "Summarize this in one sentence: [paste text]"',
+      };
+      
+      promptEl.textContent = practicePrompts[topic] || 
+        `Today's topic: "${topic}" — Try asking an AI about this topic!`;
+      
+      // Check BYOK status
+      const hasKeys = checkBYOKStatus();
+      if (statusEl) {
+        statusEl.textContent = hasKeys ? '✓ Keys Ready' : 'Add Your Keys';
+        statusEl.classList.toggle('active', hasKeys);
+      }
+      
+      // Show appropriate button
+      if (tryBtn && addKeyBtn) {
+        tryBtn.style.display = hasKeys ? 'flex' : 'none';
+        addKeyBtn.style.display = hasKeys ? 'none' : 'flex';
+      }
+    }
+    
+    function checkBYOKStatus() {
+      // Check if user has any BYOK keys configured
+      try {
+        const storedKeys = localStorage.getItem('byok_keys');
+        if (storedKeys) {
+          const keys = JSON.parse(storedKeys);
+          return Object.values(keys).some(k => k && k.length > 0);
+        }
+      } catch (e) {}
+      return false;
+    }
+    
+    function openPracticeChat() {
+      // Open chat with the practice prompt pre-filled
+      const promptEl = document.getElementById('practice-prompt');
+      const chatInput = document.getElementById('kelly-chat-input');
+      
+      if (chatInput && promptEl) {
+        // Extract the "Try asking:" text
+        const promptText = promptEl.textContent;
+        const match = promptText.match(/"([^"]+)"/);
+        if (match) {
+          chatInput.value = match[1];
+          chatInput.focus();
+        }
+      }
     }
     
     function toggleUnifiedPanel(panelId) {
@@ -14020,12 +14220,15 @@
       // Track toggle
       document.querySelectorAll('.kelly-track-btn').forEach(btn => {
         btn.addEventListener('click', () => {
-          document.querySelectorAll('.kelly-track-btn').forEach(b => b.classList.remove('active'));
-          btn.classList.add('active');
-          
           const track = btn.dataset.track;
+          
+          // Sync both state properties
+          state.track = track;
           state.currentTrack = track;
           saveState();
+          
+          // Update all track UIs (including Practice with AI section)
+          updateTrackUI(track);
           
           // Reload lesson for new track
           loadLessonRuntime(state.currentDay);
@@ -19716,6 +19919,12 @@ Style requirements:
       loadSubscription();
       syncPlayPauseUI();
       syncAutoAdvanceUI();
+      
+      // Initialize track UI from saved state
+      const savedTrack = state.track || state.currentTrack || 'learn';
+      state.track = savedTrack;
+      state.currentTrack = savedTrack;
+      updateTrackUI(savedTrack);
       
       // ============================================
       // DEV MODE: Apply URL parameter overrides
