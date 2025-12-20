@@ -261,6 +261,42 @@
       background: rgba(255, 255, 255, 0.08);
     }
     
+    /* Quick action buttons in header */
+    .nav-quick-actions {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    
+    .nav-action-btn {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: transparent;
+      border: none;
+      color: var(--text-muted);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.15s ease;
+    }
+    
+    .nav-action-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-primary);
+    }
+    
+    .nav-action-btn.active {
+      background: rgba(37, 99, 235, 0.2);
+      color: var(--kelly-blue);
+    }
+    
+    .nav-action-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+    
     .nav-time {
       font-size: 18px;
       font-weight: 700;
@@ -4072,96 +4108,107 @@
       }
     }
 
-    /* Interactive Choice Panel - MUST show both options fully */
+    /* ============================================
+       CHOICE CARDS - Student's learning path
+       Polished, integrated with visuals, no A/B labels
+       ============================================ */
     #cliff-container {
       position: absolute;
-      /* Position higher to avoid bottom nav clipping */
-      top: 40%;
+      bottom: 24px;
       left: 50%;
-      transform: translate(-50%, -50%);
-      width: 90%;
-      max-width: 560px;
+      transform: translateX(-50%);
+      width: calc(100% - 32px);
+      max-width: 680px;
       z-index: 100;
-      background: rgba(9, 9, 11, 0.95);
-      border-radius: 12px;
-      padding: 16px 20px;
-      -webkit-backdrop-filter: blur(8px);
-      backdrop-filter: blur(8px);
-      border: 1px solid rgba(37, 99, 235, 0.3);
-      /* Ensure it doesn't overflow viewport */
-      max-height: calc(100vh - 180px);
-      overflow-y: auto;
+      background: linear-gradient(to top, rgba(9, 9, 11, 0.98), rgba(9, 9, 11, 0.85));
+      border-radius: 20px;
+      padding: 20px;
+      -webkit-backdrop-filter: blur(16px);
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      box-shadow: 0 -8px 32px rgba(0, 0, 0, 0.4);
     }
     
     #cliff-prompt {
       text-align: center;
-      font-size: 1.1rem;
-      color: var(--text-primary);
+      font-size: 1rem;
+      color: var(--text-secondary);
       margin-bottom: 16px;
       font-weight: 500;
-      line-height: 1.4;
     }
     
     #cliff-choices {
       display: grid;
       grid-template-columns: 1fr 1fr;
-      gap: 12px;
+      gap: 16px;
     }
     
     .cliff-btn {
+      position: relative;
       display: flex;
       flex-direction: column;
       align-items: center;
-      justify-content: center;
-      padding: 12px 10px;
-      background: rgba(24, 24, 27, 0.8);
-      border: 2px solid rgba(37, 99, 235, 0.3);
-      border-radius: 10px;
+      justify-content: flex-end;
+      padding: 0;
+      background: transparent;
+      border: 2px solid rgba(255, 255, 255, 0.12);
+      border-radius: 16px;
       cursor: pointer;
-      transition: all 0.3s ease;
+      transition: all 0.25s ease;
       color: var(--text-primary);
-      min-height: 80px;
+      min-height: 120px;
+      overflow: hidden;
     }
     
     .cliff-btn:hover {
-      transform: translateY(-4px);
+      transform: scale(1.02);
       border-color: var(--kelly-blue);
-      background: rgba(37, 99, 235, 0.15);
-      box-shadow: 0 8px 24px rgba(37, 99, 235, 0.3);
+      box-shadow: 0 8px 32px rgba(37, 99, 235, 0.25);
+    }
+    
+    .cliff-btn:active {
+      transform: scale(0.98);
     }
     
     .cliff-btn.selected {
-      border-color: var(--success);
-      background: rgba(16, 185, 129, 0.15);
+      border-color: var(--kelly-green, #22c55e);
+      box-shadow: 0 0 24px rgba(34, 197, 94, 0.3);
     }
     
+    /* Visual background for choice */
     .cliff-visual {
+      position: absolute;
+      top: 0;
+      left: 0;
       width: 100%;
-      max-width: 260px;
-      aspect-ratio: 4 / 3;
-      border-radius: 10px;
-      margin-bottom: 12px;
-      border: 1px solid rgba(255, 255, 255, 0.08);
-      background: rgba(24, 24, 27, 0.7);
+      height: 100%;
       object-fit: cover;
+      opacity: 0.6;
+      z-index: 0;
+    }
+    
+    .cliff-visual[src]:not([src=""]) {
+      opacity: 0.7;
     }
 
+    /* Hide the old A/B icons - Kelly doesn't say A or B */
     .cliff-icon {
-      font-size: 1.5rem;
-      margin-bottom: 6px;
+      display: none !important;
     }
     
+    /* Choice text overlay */
     .cliff-label {
-      font-size: 0.85rem;
+      position: relative;
+      z-index: 1;
+      font-size: 0.95rem;
       font-weight: 600;
-      color: var(--kelly-blue);
-      margin-bottom: 2px;
+      color: white;
       text-align: center;
-      line-height: 1.3;
-      /* Ensure full text shows */
-      max-width: 100%;
-      word-wrap: break-word;
-      overflow-wrap: break-word;
+      line-height: 1.35;
+      padding: 16px 12px;
+      background: linear-gradient(to top, rgba(0,0,0,0.85), rgba(0,0,0,0.4), transparent);
+      width: 100%;
+      text-shadow: 0 2px 8px rgba(0,0,0,0.6);
     }
     
     .cliff-desc {
@@ -4878,6 +4925,52 @@
       font-size: 8px;
       right: 4px;
       top: 4px;
+    }
+    
+    /* Journey Track Toggle (Learn/Grow) */
+    .journey-track-toggle {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 16px;
+    }
+    
+    .journey-track-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      padding: 12px 16px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 2px solid rgba(255, 255, 255, 0.1);
+      border-radius: 12px;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .journey-track-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    
+    .journey-track-btn.active {
+      background: linear-gradient(135deg, var(--kelly-blue), var(--kelly-purple, #8b5cf6));
+      border-color: transparent;
+      color: white;
+    }
+    
+    .journey-track-btn .track-badge {
+      background: rgba(255, 255, 255, 0.2);
+      padding: 2px 8px;
+      border-radius: 10px;
+      font-size: 11px;
+    }
+    
+    .journey-track-btn.active .track-badge {
+      background: rgba(255, 255, 255, 0.3);
     }
     
     /* Journey Hub Tabs */
@@ -6652,9 +6745,10 @@
     }
     
     /* ============================================
-       RIGHT ICON BAR - Vertical icon strip
+       RIGHT ICON BAR - HIDDEN (moved to header)
        ============================================ */
     .right-icon-bar {
+      display: none !important; /* Icons now in header nav */
       position: fixed;
       right: 0;
       top: 50%;
@@ -7616,16 +7710,29 @@
 
   <!-- Unified top navigation - Kelly is a Clock -->
   <nav class="kelly-top-nav">
-    <!-- LEFT: Kelly Logo -->
-    <button type="button" class="kelly-home-link" title="Chat with Kelly" id="kelly-logo-btn">
+    <!-- LEFT: Kelly Logo (opens Kelly Panel) -->
+    <button type="button" class="kelly-home-link" title="Today's Lesson" id="kelly-logo-btn">
       <img src="/images/brand/kelly-mark-circle-64.png" alt="Kelly" class="kelly-logo-img">
     </button>
     
-    <!-- MOVED TO KELLY PANEL: Phase dots, Learn/Grow toggle, Topic -->
-    <!-- Clean header: Only Logo + Time/Date remain -->
+    <!-- SPACER: Push right items to the right -->
+    <div style="flex: 1;"></div>
     
-    <!-- RIGHT: Time & Date Display (anchored) -->
-    <div class="nav-time-display">
+    <!-- RIGHT: Quick Actions (moved from side rail) -->
+    <div class="nav-quick-actions">
+      <button class="nav-action-btn" data-panel="search" title="Search lessons">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
+      </button>
+      <button class="nav-action-btn" data-panel="journey" title="Calendar">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="3" y="4" width="18" height="18" rx="2"/><line x1="16" y1="2" x2="16" y2="6"/><line x1="8" y1="2" x2="8" y2="6"/><line x1="3" y1="10" x2="21" y2="10"/></svg>
+      </button>
+      <button class="nav-action-btn" data-panel="settings" title="Settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="3"/><path d="M12 1v4m0 14v4m-9-9h4m14 0h4m-3.5-6.5-2.8 2.8m-9.4 9.4-2.8 2.8m0-12.2 2.8 2.8m9.4 9.4 2.8 2.8"/></svg>
+      </button>
+    </div>
+    
+    <!-- RIGHT: Time & Date Display (clickable - opens calendar) -->
+    <div class="nav-time-display" data-panel="journey">
       <span class="nav-time" id="nav-time">--:--</span>
       <span class="nav-date" id="nav-date">Loading...</span>
     </div>
@@ -7999,10 +8106,7 @@
             <div class="tap-zone" id="tap-next"></div>
           </div>
           
-          <!-- Side actions simplified - visual & chat now in Kelly Panel -->
-          <div class="side-actions">
-            <button class="side-action" id="btn-bookmark" title="Save this moment">🔖</button>
-          </div>
+          <!-- Side actions removed - all controls now in header or Kelly Panel -->
         </div>
 
         <!-- RIGHT PANEL (lesson guide / journey / settings) -->
@@ -8118,24 +8222,18 @@
         <div id="settings-overlay" aria-hidden="true" data-deprecated="true"></div>
           
           <!-- INTERACTIVE CHOICE PANEL (works for all phases) -->
+          <!-- CHOICE CARDS: Student's learning path -->
           <div id="cliff-container" class="hidden" hidden>
-            <div id="cliff-prompt">Which path calls to you?</div>
+            <div id="cliff-prompt">Choose your path:</div>
             <div id="cliff-choices">
               <button id="cliff-choice-a" class="cliff-btn" data-choice="A" type="button">
-                <img id="cliff-visual-a" class="cliff-visual" alt="" hidden loading="eager" decoding="async" />
-                <span class="cliff-icon">🅰️</span>
-                <span class="cliff-label" id="cliff-label-a">Option A</span>
-                <span class="cliff-desc" id="cliff-desc-a"></span>
+                <img id="cliff-visual-a" class="cliff-visual" alt="Choice visual" loading="eager" decoding="async" />
+                <span class="cliff-label" id="cliff-label-a">Explore this path</span>
               </button>
               <button id="cliff-choice-b" class="cliff-btn" data-choice="B" type="button">
-                <img id="cliff-visual-b" class="cliff-visual" alt="" hidden loading="eager" decoding="async" />
-                <span class="cliff-icon">🅱️</span>
-                <span class="cliff-label" id="cliff-label-b">Option B</span>
-                <span class="cliff-desc" id="cliff-desc-b"></span>
+                <img id="cliff-visual-b" class="cliff-visual" alt="Choice visual" loading="eager" decoding="async" />
+                <span class="cliff-label" id="cliff-label-b">Discover this way</span>
               </button>
-            </div>
-            <div id="cliff-timer" class="hidden" hidden style="width:100%;max-width:520px;">
-              <div id="cliff-timer-bar" style="height:4px;width:0%;background:rgba(255,255,255,0.65);border-radius:999px;"></div>
             </div>
           </div>
           <div class="reactions">
@@ -8171,12 +8269,21 @@
           </div>
         </div>
         
+        <!-- Track Toggle: Learn (365) + Grow (365) = 730 lessons -->
+        <div class="journey-track-toggle">
+          <button class="journey-track-btn active" data-track="learn">
+            📚 Learn <span class="track-badge">365</span>
+          </button>
+          <button class="journey-track-btn" data-track="grow">
+            🤖 Grow <span class="track-badge">365</span>
+          </button>
+        </div>
+        
         <!-- Journey Hub Tabs -->
         <div class="journey-tabs">
           <button class="journey-tab active" data-tab="calendar">📅 Calendar</button>
           <button class="journey-tab" data-tab="week">📆 Week</button>
           <button class="journey-tab" data-tab="curriculum">📚 Curriculum</button>
-          <button class="journey-tab" data-tab="bookmarks">🔖 Saved</button>
         </div>
         
         <!-- Journey Tab Contents -->
@@ -12708,7 +12815,7 @@
     }
     
     function setupUnifiedPanel() {
-      // Icon bar buttons
+      // Icon bar buttons (legacy - now hidden)
       document.querySelectorAll('.icon-bar-btn').forEach(btn => {
         btn.addEventListener('click', () => {
           const panelId = btn.dataset.panel;
@@ -12716,6 +12823,24 @@
             toggleUnifiedPanel(panelId);
           }
         });
+      });
+      
+      // Header nav action buttons (new)
+      document.querySelectorAll('.nav-action-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const panelId = btn.dataset.panel;
+          if (panelId) {
+            // Update active state
+            document.querySelectorAll('.nav-action-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
+            toggleUnifiedPanel(panelId);
+          }
+        });
+      });
+      
+      // Time/date display also opens journey
+      document.querySelector('.nav-time-display')?.addEventListener('click', () => {
+        toggleUnifiedPanel('journey');
       });
       
       // Close button
@@ -18530,6 +18655,23 @@ Style requirements:
       document.querySelectorAll('.journey-tab').forEach(tab => {
         tab.addEventListener('click', () => {
           switchJourneyTab(tab.dataset.tab);
+        });
+      });
+      
+      // Journey track toggle (Learn/Grow)
+      document.querySelectorAll('.journey-track-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          document.querySelectorAll('.journey-track-btn').forEach(b => b.classList.remove('active'));
+          btn.classList.add('active');
+          
+          state.journeyTrack = btn.dataset.track;
+          saveState();
+          
+          // Rebuild current view with new track
+          const activeTab = document.querySelector('.journey-tab.active');
+          if (activeTab) {
+            switchJourneyTab(activeTab.dataset.tab);
+          }
         });
       });
       
