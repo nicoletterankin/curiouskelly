@@ -2,6 +2,20 @@
 
 **Launch Day + 2** | **Investment: Critical** | **Backlog: Significant**
 
+## 🆕 TODAY'S FIXES (Session 2)
+
+### Deployed
+1. ✅ **Header CTA** - "TODAY" badge with lesson topic + phase info
+2. ✅ **Settings gear icon** - proper gear SVG (was showing sparkle)
+3. ✅ **Tagline fix** - now shows "Hook (1/7) • X moments" instead of `[object Object]`
+4. ✅ **Contribution model** - "Support Kelly" section with non-gating messaging:
+   - "Today's lesson is always yours"
+   - "We never gate learning"
+   - Sponsor/Support/Founding Member options
+5. ✅ **BYOK Community Flywheel** - stats showing Videos Made, Contributors, Credits Saved
+6. ✅ **In-panel checkout** - stays in Settings, never leaves site
+7. ✅ **Geo-pricing API** - fixed 404 error, PPP pricing for India, Brazil, Mexico
+
 ---
 
 ## 🚀 SYSTEMS OPERATIONAL
