@@ -31,32 +31,35 @@ window.KELLY_CONFIG = {
     static: 2000     // 2 seconds
   },
   
-  // PRODUCTION MODE: Paywall enabled
-  // Set to true only for local development/testing
+  // PRODUCTION MODE: No gating, ever.
+  // "Never gate anyone.. ever.." - The contribution model is OPTIONAL.
+  // All 730 lessons (Learn + Grow tracks) are available to everyone.
   testingMode: false,
-  disablePaywall: false,
+  disablePaywall: true,  // ALL LESSONS ACCESSIBLE - contribution is optional
   
-  // PAYWALL DELAY: Seconds to wait before showing paywall (let users preview)
-  // Set to 0 for instant paywall (old behavior)
-  paywallDelayMs: 5000,
+  // PAYWALL DELAY: N/A since paywall is disabled
+  // Kept for backwards compatibility
+  paywallDelayMs: 0,
 
   // VISUALS (INFOGRAPHIC POPUPS)
   // Disabled until the on-brand infographic pipeline passes QA.
   // Prevents low-quality/incorrect visuals from showing in production.
   visualsEnabled: false,
   
-  // ACCESS MODEL:
-  // - "Today's lesson" is ALWAYS included for everyone, forever
-  // - Pay-per-lesson for past/future lessons
-  // - Subscription unlocks all 365 + emergency lessons
+  // ACCESS MODEL: NEVER GATE, EVER.
+  // - ALL 730 lessons (Learn + Grow) are available to everyone, always
+  // - Contribution options exist for those who want to support:
+  //   1. Sponsor a Learner - Help someone else access Kelly
+  //   2. Annual Supporter - Contribute to platform growth
+  //   3. Lifetime Founding Member - Join the founding circle
+  //   4. BYOK Credits - Contribute AI credits for community videos
   //
-  // "Today" = the lesson for the current calendar day (Day of Year 1-365)
-  // This creates urgency: learn today or pay for it later
+  // Education is priceless, not worthless. We don't gate. We invite.
   accessModel: {
-    todayIsFree: true,              // The core promise
-    enablePayPerLesson: true,       // Buy individual lessons
-    enableSubscription: true,       // Monthly/annual/lifetime access
-    emergencyLessonsCount: 40       // Bonus lessons for subscribers
+    todayIsFree: true,              // All days are free
+    enablePayPerLesson: false,      // DISABLED - no gating
+    enableSubscription: true,       // Optional contribution tiers
+    emergencyLessonsCount: 40       // Bonus content for supporters
   }
 };
 

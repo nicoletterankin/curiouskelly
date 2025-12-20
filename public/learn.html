@@ -11040,6 +11040,18 @@
      * - No trials, no countdowns - just "today is yours"
      */
     function canAccessDay(dayNumber) {
+      // NEVER GATE ANYONE.. EVER..
+      // All 730 lessons (Learn + Grow tracks) are accessible to everyone.
+      // Contribution is optional and happens through the Settings panel.
+      //
+      // "Education is priceless, not worthless. We don't gate. We invite."
+      
+      // Check if paywall is explicitly disabled (should be true in production)
+      if (window.KELLY_CONFIG?.disablePaywall === true) {
+        debugLog(`🆓 Day ${dayNumber} accessible (no gating policy)`);
+        return true;
+      }
+      
       // Testing mode - all days accessible
       if (TESTING_MODE || bypassTesting) {
         debugLog(`🔓 Day ${dayNumber} accessible (testing mode)`);
@@ -11053,21 +11065,15 @@
         return true;
       }
       
-      // Subscribers get everything
+      // Supporters/subscribers get recognition (but everyone gets access)
       if (isPremium()) {
-        debugLog(`⭐ Day ${dayNumber} accessible (subscriber)`);
+        debugLog(`⭐ Day ${dayNumber} accessible (supporter)`);
         return true;
       }
       
-      // Check individual lesson purchase (from local cache)
-      if (isLessonPurchased(dayNumber)) {
-        debugLog(`💳 Day ${dayNumber} accessible (purchased)`);
-        return true;
-      }
-      
-      // Not accessible - show paywall with options
-      debugLog(`🔒 Day ${dayNumber} requires subscription or purchase`);
-      return false;
+      // Fallback: still allow access (never gate)
+      debugLog(`🆓 Day ${dayNumber} accessible (open access model)`);
+      return true;
     }
 
     function isNativeApp() {
