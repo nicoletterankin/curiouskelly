@@ -28,17 +28,17 @@
 
 ## 🔴 GAPS TO FIX (Priority Order)
 
-### 1. GROW TRACK MISSING
-**Impact: Students see "Grow 365" toggle but nothing happens**
-- No `track` column in `core_lessons` table
-- No grow track lessons in database
-- Toggle exists but isn't wired to real data
+### 1. GROW TRACK ✅ FIXED
+**Status: Database ready, starter lessons created**
+- ✅ Added `track` column to `core_lessons` table
+- ✅ Created unique constraint on (day_number, track)
+- ✅ Added 7 starter Grow lessons (AI fluency curriculum)
+- ✅ Player now passes track to lesson loader
+- 🟡 Need to generate remaining 358 Grow track lessons
 
-**Fix Required:**
-```sql
-ALTER TABLE core_lessons ADD COLUMN track TEXT DEFAULT 'learn';
--- Then populate 365 grow track lessons
-```
+**Current State:**
+- Learn track: 365 lessons
+- Grow track: 7 lessons (Days 1-7)
 
 ### 2. API KEY CONFUSION
 **Impact: Students don't know which key does what**

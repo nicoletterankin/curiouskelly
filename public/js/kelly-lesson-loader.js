@@ -264,6 +264,7 @@ const KellyLessonLoader = {
       archetype = 'The Scientist',
       age = 30,
       region = null,
+      track = 'learn', // 'learn' (traditional) or 'grow' (AI fluency)
       useCache = true,
       // Launch hardening:
       // - Prevent recursive preloading from expanding to all 365 days.
@@ -274,9 +275,10 @@ const KellyLessonLoader = {
     
     const normalizedArchetype = this.normalizeArchetype(archetype);
     const targetRegion = region || this.ageToRegion(age);
+    const normalizedTrack = (track === 'grow') ? 'grow' : 'learn';
     const dayNum = Math.max(1, Math.min(365, parseInt(dayNumber) || 1));
     
-    const cacheKey = `${dayNum}-${normalizedArchetype}-${targetRegion}`;
+    const cacheKey = `${normalizedTrack}-${dayNum}-${normalizedArchetype}-${targetRegion}`;
     
     // Check cache
     if (useCache && this.cache.has(cacheKey)) {
@@ -372,7 +374,7 @@ const KellyLessonLoader = {
     
     try {
       // Wrap Supabase calls in timeout (NEVER hang forever)
-      const supabasePromise = this.fetchFromSupabaseWithTimeout(dayNum, normalizedArchetype, targetRegion, options.age);
+      const supabasePromise = this.fetchFromSupabaseWithTimeout(dayNum, normalizedArchetype, targetRegion, options.age, normalizedTrack);
       
       // Fetch base lesson from core_lessons (with timeout)
       const supabaseResult = await Promise.race([
@@ -453,13 +455,19 @@ const KellyLessonLoader = {
   
   /**
    * Fetch from Supabase with all data
+   * @param {number} dayNum - Day number (1-365)
+   * @param {string} archetype - Kelly persona
+   * @param {string} region - Age region
+   * @param {number} age - User age
+   * @param {string} track - 'learn' or 'grow'
    */
-  async fetchFromSupabaseWithTimeout(dayNum, archetype, region, age) {
-    // Fetch base lesson from core_lessons
+  async fetchFromSupabaseWithTimeout(dayNum, archetype, region, age, track = 'learn') {
+    // Fetch base lesson from core_lessons (with track filter)
     const { data: lesson, error: lessonError } = await this.supabase
       .from('core_lessons')
       .select('*')
       .eq('day_number', dayNum)
+      .eq('track', track)
       .single();
     
     if (lessonError || !lesson) {
