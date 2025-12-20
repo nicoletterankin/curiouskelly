@@ -188,10 +188,12 @@ const KellyLessonLoader = {
       archetype = 'The Scientist',
       age = 30,
       region = null,
+      track = 'learn', // 'learn' (traditional) or 'grow' (AI fluency)
     } = options;
 
     const normalizedArchetype = this.normalizeArchetype(archetype);
     const targetRegion = region || this.ageToRegion(age);
+    const normalizedTrack = (track === 'grow') ? 'grow' : 'learn';
     const dayNum = Math.max(1, Math.min(365, parseInt(dayNumber) || 1));
 
     const paddedDay = String(dayNum).padStart(3, '0');
@@ -213,40 +215,45 @@ const KellyLessonLoader = {
     } catch (_) {}
 
     // Priority 1: Local Pack (deterministic, offline-ready)
-    try {
-      // Check both string key ("day-351") and numeric key (351)
-      const localPacks = window?.CURIOUS_KELLY?.LOCAL_PACKS;
-      const localPack = localPacks?.[packKey] || localPacks?.[dayNum] || localPacks?.[String(dayNum)];
-      if (localPack && (localPack.lesson || localPack.atoms)) {
-        const meta = localPack.meta || {};
-        const version = String(meta.version || '').toLowerCase();
-        const isSkeleton = !!meta.is_skeleton || version.includes('skeleton');
+    // NOTE: Local packs only exist for Learn track. Skip for Grow.
+    if (normalizedTrack === 'learn') {
+      try {
+        // Check both string key ("day-351") and numeric key (351)
+        const localPacks = window?.CURIOUS_KELLY?.LOCAL_PACKS;
+        const localPack = localPacks?.[packKey] || localPacks?.[dayNum] || localPacks?.[String(dayNum)];
+        if (localPack && (localPack.lesson || localPack.atoms)) {
+          const meta = localPack.meta || {};
+          const version = String(meta.version || '').toLowerCase();
+          const isSkeleton = !!meta.is_skeleton || version.includes('skeleton');
 
-        const rawAtoms = Array.isArray(localPack.atoms) ? localPack.atoms : [];
-        const atoms = rawAtoms.filter((a) => !a?.archetype || a.archetype === normalizedArchetype);
+          const rawAtoms = Array.isArray(localPack.atoms) ? localPack.atoms : [];
+          const atoms = rawAtoms.filter((a) => !a?.archetype || a.archetype === normalizedArchetype);
 
-        // If the local pack is a skeleton, skip it and fall through to the seed lessons.
-        // This is the "gap-filler pipeline": skeleton → full (at runtime).
-        if (!isSkeleton) {
-          __kellyLoaderDebugLog(`[Loader] Using local pack for day ${dayNum}`);
-          const tmp = { lesson: localPack.lesson || null, atoms, shards: [] };
-          const processed = this.ensureMvpLessonShape(tmp, { dayNum, archetype: normalizedArchetype, region: targetRegion });
-          return {
-            lesson: processed?.lesson || localPack.lesson || null,
-            atoms: processed?.atoms || atoms,
-            shards: [],
-            source: 'local_pack',
-          };
+          // If the local pack is a skeleton, skip it and fall through to the seed lessons.
+          // This is the "gap-filler pipeline": skeleton → full (at runtime).
+          if (!isSkeleton) {
+            __kellyLoaderDebugLog(`[Loader] Using local pack for day ${dayNum}`);
+            const tmp = { lesson: localPack.lesson || null, atoms, shards: [] };
+            const processed = this.ensureMvpLessonShape(tmp, { dayNum, archetype: normalizedArchetype, region: targetRegion });
+            return {
+              lesson: processed?.lesson || localPack.lesson || null,
+              atoms: processed?.atoms || atoms,
+              shards: [],
+              source: 'local_pack',
+            };
+          }
+
+          __kellyLoaderDebugLog(`[Loader] Local pack is skeleton for day ${dayNum}; using seed lessons instead`);
         }
-
-        __kellyLoaderDebugLog(`[Loader] Local pack is skeleton for day ${dayNum}; using seed lessons instead`);
+      } catch (_) {
+        // Non-fatal: fall through to normal loader logic.
       }
-    } catch (_) {
-      // Non-fatal: fall through to normal loader logic.
+    } else {
+      __kellyLoaderDebugLog(`[Loader] Skipping local pack for Grow track - using Supabase`);
     }
 
-    // Priority 2+: Existing cascading loader logic
-    const result = await this.getLesson(dayNum, { archetype: normalizedArchetype, age, region: targetRegion });
+    // Priority 2+: Existing cascading loader logic (passes track through)
+    const result = await this.getLesson(dayNum, { archetype: normalizedArchetype, age, region: targetRegion, track: normalizedTrack });
     return {
       lesson: result?.lesson || null,
       atoms: result?.atoms || [],
@@ -312,6 +319,7 @@ const KellyLessonLoader = {
     // resilient and fast even when networks are flaky.
     //
     // To opt out: set window.KELLY_CONFIG.preferSeedLessons = false
+    // NOTE: Seed lessons only exist for Learn track. Grow track must use Supabase.
     // ============================================================
     const preferSeedLessons =
       (typeof window !== 'undefined' &&
@@ -319,7 +327,8 @@ const KellyLessonLoader = {
         window.KELLY_CONFIG.preferSeedLessons === false)
         ? false
         : true;
-    if (preferSeedLessons) {
+    // Skip seed lessons for Grow track - they only exist for Learn
+    if (preferSeedLessons && normalizedTrack === 'learn') {
       try {
         const seedResult = await this.trySeedLessons(dayNum, normalizedArchetype, targetRegion);
         if (seedResult) {
