@@ -60,17 +60,24 @@ jobs:
           echo "days=$DAYS" >> $GITHUB_OUTPUT
           echo "📅 Target days: $DAYS"
 
+      - name: Generate cliff/outro atoms if missing
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          IFS=',' read -ra DAY_ARRAY <<< "${{ steps.days.outputs.days }}"
+          for day in "${DAY_ARRAY[@]}"; do
+            echo "Generating cliff/outro atoms for day $day..."
+            npx tsx scripts/generate-cliff-outro-atoms.ts --day=$day || true
+          done
+
       - name: Generate audio (ElevenLabs)
+        if: ${{ github.event.inputs.dry_run != 'true' }}
         env:
           ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
           SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
           SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
-        run: |
-          DRY_RUN_FLAG=""
-          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
-            DRY_RUN_FLAG="--dry-run"
-          fi
-          npx tsx scripts/daily-generation-engine.ts --days=${{ steps.days.outputs.days }} $DRY_RUN_FLAG
+        run: npx tsx scripts/generate-audio-only.ts --days=${{ steps.days.outputs.days }}
 
       - name: Generate videos (SadTalker via fal.ai)
         if: ${{ github.event.inputs.dry_run != 'true' }}

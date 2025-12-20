@@ -121,7 +121,7 @@ async function verifyDay(day: number): Promise<DayStatus> {
   const { data: videos } = await supabase
     .from('kelly_video_assets')
     .select('phase, public_url, status')
-    .eq('lesson_day', day)
+    .eq('day_number', day)
     .eq('status', 'validated');
 
   status.details.videoCount = videos?.length || 0;
