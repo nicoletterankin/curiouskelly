@@ -177,9 +177,9 @@ const LessonResilience = {
         lesson: {
           id: `static-${dayNumber}`,
           day_number: dayNumber,
-          topic: data.meta?.topic || `Day ${dayNumber} Lesson`,
+          topic: data.meta?.topic || data.topic || 'Loading...',
           universal_truth: data.meta?.universalTruth || '',
-          marketing_headline: data.meta?.topic || '',
+          marketing_headline: data.meta?.topic || data.topic || '',
           marketing_tagline: ''
         },
         atoms: this.buildAtomsFromStatic(ageVariant, dayNumber),

@@ -538,9 +538,9 @@ const KellyLessonLoader = {
     const lesson = {
       id: `static-${dayNum}`,
       day_number: dayNum,
-      topic: data.meta?.topic || `Day ${dayNum} Lesson`,
+      topic: data.meta?.topic || data.topic || 'Loading...',
       universal_truth: data.meta?.universalTruth || '',
-      marketing_headline: data.meta?.topic || '',
+      marketing_headline: data.meta?.topic || data.topic || '',
       marketing_tagline: ''
     };
     
@@ -621,7 +621,7 @@ const KellyLessonLoader = {
   },
 
   seedToLesson(seed, dayNumber) {
-    const topicEn = seed?.meta?.topic?.en || seed?.meta?.topic || seed?.topic?.en || seed?.topic || `Day ${dayNumber}`;
+    const topicEn = seed?.meta?.topic?.en || seed?.meta?.topic || seed?.topic?.en || seed?.topic || 'Loading...';
     const truthEn = seed?.universal_truth?.en || seed?.universal_truth || seed?.meta?.universalTruth || '';
     const headlineEn = seed?.headline?.en || seed?.headline || '';
     return {

@@ -1,0 +1,162 @@
+name: Daily Kelly
+
+on:
+  schedule:
+    # 5am UTC daily - Kelly wakes up and generates tomorrow's lessons
+    - cron: '0 5 * * *'
+  workflow_dispatch:
+    inputs:
+      days:
+        description: 'Comma-separated day numbers (e.g., 355,356) or "auto"'
+        required: false
+        default: 'auto'
+      dry_run:
+        description: 'Dry run (no actual generation)'
+        type: boolean
+        default: false
+
+env:
+  NODE_VERSION: '18'
+
+jobs:
+  generate-and-deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 120  # 2 hour max for video generation
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+          cache: 'npm'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Calculate target days
+        id: days
+        run: |
+          if [ "${{ github.event.inputs.days }}" = "" ] || [ "${{ github.event.inputs.days }}" = "auto" ]; then
+            # Calculate next 3 days from day 1 (Jan 1, 2025)
+            START_DATE="2025-01-01"
+            TODAY=$(date +%Y-%m-%d)
+            DAYS_SINCE=$(( ($(date -d "$TODAY" +%s) - $(date -d "$START_DATE" +%s)) / 86400 + 1 ))
+            DAY1=$((DAYS_SINCE + 1))
+            DAY2=$((DAYS_SINCE + 2))
+            DAY3=$((DAYS_SINCE + 3))
+            # Cap at 365
+            [ $DAY1 -gt 365 ] && DAY1=365
+            [ $DAY2 -gt 365 ] && DAY2=365
+            [ $DAY3 -gt 365 ] && DAY3=365
+            DAYS="$DAY1,$DAY2,$DAY3"
+          else
+            DAYS="${{ github.event.inputs.days }}"
+          fi
+          echo "days=$DAYS" >> $GITHUB_OUTPUT
+          echo "📅 Target days: $DAYS"
+
+      - name: Generate audio (ElevenLabs)
+        env:
+          ELEVENLABS_API_KEY: ${{ secrets.ELEVENLABS_API_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: |
+          DRY_RUN_FLAG=""
+          if [ "${{ github.event.inputs.dry_run }}" = "true" ]; then
+            DRY_RUN_FLAG="--dry-run"
+          fi
+          npx tsx scripts/daily-generation-engine.ts --days=${{ steps.days.outputs.days }} $DRY_RUN_FLAG
+
+      - name: Generate videos (SadTalker via fal.ai)
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        env:
+          FAL_KEY: ${{ secrets.FAL_KEY }}
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npx tsx scripts/generate-sadtalker.ts --days=${{ steps.days.outputs.days }}
+
+      - name: Sync to database
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npx tsx scripts/sync-bucket-to-database.ts
+
+      - name: Verify all days ready
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        env:
+          SUPABASE_URL: ${{ secrets.SUPABASE_URL }}
+          SUPABASE_SERVICE_ROLE_KEY: ${{ secrets.SUPABASE_SERVICE_ROLE_KEY }}
+        run: npx tsx scripts/verify-day-ready.ts --days=${{ steps.days.outputs.days }}
+
+      - name: Commit generated assets
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        run: |
+          git config user.name "Kelly Bot"
+          git config user.email "hello@curiouskelly.com"
+          git add -A
+          if git diff --staged --quiet; then
+            echo "No changes to commit"
+          else
+            git commit -m "🤖 Daily generation: $(date +%Y-%m-%d) - Days ${{ steps.days.outputs.days }}"
+            git push
+          fi
+
+      - name: Trigger Vercel deployment
+        if: ${{ github.event.inputs.dry_run != 'true' }}
+        env:
+          VERCEL_TOKEN: ${{ secrets.VERCEL_TOKEN }}
+          VERCEL_ORG_ID: ${{ secrets.VERCEL_ORG_ID }}
+          VERCEL_PROJECT_ID: ${{ secrets.VERCEL_PROJECT_ID }}
+        run: |
+          if [ -n "$VERCEL_TOKEN" ]; then
+            echo "Triggering Vercel deployment..."
+            curl -X POST "https://api.vercel.com/v1/integrations/deploy/prj_${VERCEL_PROJECT_ID}/deploy" \
+              -H "Authorization: Bearer $VERCEL_TOKEN" \
+              -H "Content-Type: application/json" || true
+          else
+            echo "VERCEL_TOKEN not set, skipping deployment trigger"
+          fi
+
+      - name: Send success notification
+        if: success() && github.event.inputs.dry_run != 'true'
+        env:
+          ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+        run: |
+          if [ -n "$ALERT_WEBHOOK_URL" ]; then
+            npx tsx scripts/alert.ts GENERATION_COMPLETE '{"days": [${{ steps.days.outputs.days }}]}'
+          else
+            echo "✅ Generation complete for days: ${{ steps.days.outputs.days }}"
+          fi
+
+  notify-failure:
+    runs-on: ubuntu-latest
+    needs: generate-and-deploy
+    if: failure()
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Send failure alert
+        env:
+          ALERT_WEBHOOK_URL: ${{ secrets.ALERT_WEBHOOK_URL }}
+          ALERT_EMAIL: ${{ secrets.ALERT_EMAIL }}
+        run: |
+          echo "❌ Daily Kelly generation FAILED!"
+          if [ -n "$ALERT_WEBHOOK_URL" ]; then
+            npx tsx scripts/alert.ts GENERATION_FAILED '{"error": "GitHub Actions workflow failed. Check logs."}'
+          fi
+          # TODO: Add email notification via SendGrid or similar

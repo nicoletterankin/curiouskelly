@@ -4210,6 +4210,26 @@
       text-align: center;
     }
 
+    .tts-status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 4px 12px;
+      border-radius: 999px;
+      font-size: 0.75rem;
+      letter-spacing: 0.08em;
+      text-transform: uppercase;
+      color: rgba(255, 255, 255, 0.75);
+      border: 1px solid rgba(255, 255, 255, 0.15);
+      background: rgba(15, 23, 42, 0.55);
+      backdrop-filter: blur(10px);
+      margin: 0 auto 12px;
+    }
+
+    .tts-status-pill.hidden {
+      display: none;
+    }
+
     /* Caption text - contained, not giant */
     #caption-text,
     .lesson-transcript,
@@ -4563,12 +4583,28 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, rgba(var(--kelly-color-rgb), 0.85) 0%, rgba(30, 58, 95, 0.85) 100%);
+      background: transparent; /* Use parent procedural background instead */
       color: white;
       font-weight: 800;
       font-size: 18px;
       letter-spacing: 0.5px;
       text-shadow: 0 2px 8px rgba(0,0,0,0.35);
+      z-index: 2;
+    }
+    
+    /* When there's an image, hide the fallback */
+    .week-day .day-thumb:has(.day-thumb-img) .day-thumb-fallback {
+      opacity: 0;
+    }
+    
+    .week-day .day-thumb .day-thumb-icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 28px;
+      opacity: 0.4;
+      z-index: 1;
     }
     
     .week-day:active {
@@ -4674,6 +4710,23 @@
       opacity: 0.42;
       filter: saturate(1.08) contrast(1.02);
       transform: scale(1.03);
+    }
+    
+    .day-cell .day-cell-icon {
+      position: absolute;
+      top: 50%;
+      left: 50%;
+      transform: translate(-50%, -50%);
+      font-size: 18px;
+      opacity: 0.35;
+      filter: grayscale(0.3);
+    }
+    
+    .day-cell:hover .day-cell-icon {
+      opacity: 0.6;
+      filter: grayscale(0);
+      transform: translate(-50%, -50%) scale(1.1);
+      transition: all 0.2s ease;
     }
 
     .day-cell .day-cell-num {
@@ -6316,26 +6369,37 @@
     }
     
     /* ============================================
-       EVERYTHING BUTTON - Super Prominent Playback Controls
-       Bottom-right corner, never covers Kelly's face
+       EVERYTHING BUTTON - Transport Controls
+       Upper-right quadrant, tucked under the nav
        ============================================ */
     .everything-button {
       position: fixed;
-      bottom: calc(24px + var(--safe-bottom));
-      right: 20px;
+      top: calc(var(--safe-top) + 140px);
+      right: clamp(16px, 3vw, 48px);
+      bottom: auto;
       left: auto;
-      transform: none;
+      transform-origin: top right;
       display: flex;
       align-items: center;
       gap: 4px;
       padding: 6px;
-      background: rgba(15, 15, 22, 0.9);
+      background: rgba(15, 15, 22, 0.8);
       -webkit-backdrop-filter: blur(24px);
       backdrop-filter: blur(24px);
       border-radius: 36px;
       border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: 0 8px 32px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.05) inset;
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
+      opacity: 0.38;
+      transition: opacity 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
       z-index: 200;
+    }
+
+    .everything-button:hover,
+    .everything-button:focus-within,
+    .everything-button.is-active {
+      opacity: 0.95;
+      transform: scale(1.01);
+      box-shadow: 0 6px 28px rgba(0, 0, 0, 0.45), 0 0 0 1px rgba(255, 255, 255, 0.08) inset;
     }
     
     .everything-btn {
@@ -6359,8 +6423,8 @@
     /* Previous/Next buttons */
     .everything-btn.btn-prev,
     .everything-btn.btn-next {
-      width: 48px;
-      height: 48px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.08);
     }
@@ -6378,8 +6442,8 @@
     
     /* Giant Play/Pause button */
     .everything-btn.btn-play {
-      width: 72px;
-      height: 72px;
+      width: 64px;
+      height: 64px;
       border-radius: 50%;
       background: linear-gradient(135deg, var(--kelly-blue, #3b82f6) 0%, #6366f1 100%);
       box-shadow: 0 4px 20px rgba(99, 102, 241, 0.5);
@@ -6403,8 +6467,8 @@
     
     /* Mute button */
     .everything-btn.btn-mute {
-      width: 48px;
-      height: 48px;
+      width: 44px;
+      height: 44px;
       border-radius: 50%;
       background: rgba(255, 255, 255, 0.08);
     }
@@ -6427,7 +6491,7 @@
     .everything-button .phase-badge {
       position: absolute;
       top: -4px;
-      right: calc(50% - 50px);
+      right: calc(50% - 44px);
       width: 22px;
       height: 22px;
       border-radius: 50%;
@@ -6445,6 +6509,8 @@
     /* Mobile: slightly smaller */
     @media (max-width: 480px) {
       .everything-button {
+        top: calc(var(--safe-top) + 110px);
+        right: 12px;
         padding: 4px;
         gap: 2px;
       }
@@ -7876,6 +7942,10 @@
             <div class="nugget-label" id="nugget-label">💡 Did You Know?</div>
             <div class="nugget-content" id="nugget-content">You forget 95% of your dreams within 5 minutes of waking up</div>
           </div>
+
+          <div class="tts-status-pill hidden" id="tts-status-pill">
+            Kelly voice warming up — showing text
+          </div>
           
           <div class="caption-phase" id="caption-phase">
             <span class="phase-icon">🪝</span>
@@ -8879,6 +8949,40 @@
     const ENABLE_RUNTIME_TTS = __URL_PARAMS.get('tts') !== 'false' && !STATIC_ONLY_MODE;
     // Remote persona head images can be opt-in (otherwise keep the app fully local/quiet).
     const ENABLE_REMOTE_KELLY_HEADS = __URL_PARAMS.get('remoteHeads') === 'true';
+    let __kellyTextOnlyMode = { disabled: false, reason: null };
+
+    function markTtsUnavailable(reason = 'unknown', options = {}) {
+      if (__kellyTextOnlyMode.disabled) return;
+      __kellyTextOnlyMode = { disabled: true, reason };
+      if (typeof window !== 'undefined') {
+        window.__KELLY_TTS_DISABLED = true;
+      }
+      if (typeof document !== 'undefined') {
+        document.documentElement.setAttribute('data-tts-mode', 'text-only');
+        const pill = document.getElementById('tts-status-pill');
+        if (pill) {
+          pill.textContent =
+            reason === 'missing_api_key'
+              ? 'Kelly voice offline — showing script'
+              : 'Kelly voice temporarily offline';
+          pill.classList.remove('hidden');
+        }
+      }
+      if (options.emitEvent !== false && typeof document !== 'undefined') {
+        document.dispatchEvent(
+          new CustomEvent('kelly-tts-unavailable', {
+            detail: { reason, origin: 'learn', timestamp: Date.now() }
+          })
+        );
+      }
+    }
+
+    if (typeof window !== 'undefined') {
+      window.addEventListener('kelly-tts-unavailable', (event) => {
+        const detail = event?.detail || {};
+        markTtsUnavailable(detail.reason || 'unknown', { emitEvent: false });
+      });
+    }
     // Disable browser-direct Supabase reads by default; prefer serverless /api for production stability.
     const ENABLE_SUPABASE_CLIENT =
       __URL_PARAMS.get('supabaseClient') === 'true' ||
@@ -9766,6 +9870,26 @@
     }
 
     // Get thumbnail URL for a lesson day (returns null when unavailable)
+    // Cache for Supabase thumbnail URLs (loaded once)
+    let SUPABASE_THUMBNAIL_CACHE = null;
+    
+    async function loadSupabaseThumbnails() {
+      if (SUPABASE_THUMBNAIL_CACHE) return SUPABASE_THUMBNAIL_CACHE;
+      if (!window.supabase) return {};
+      try {
+        const { data, error } = await window.supabase
+          .from('core_lessons')
+          .select('day_number, thumbnail_url')
+          .not('thumbnail_url', 'is', null);
+        if (error || !data) return {};
+        SUPABASE_THUMBNAIL_CACHE = {};
+        data.forEach(d => { SUPABASE_THUMBNAIL_CACHE[d.day_number] = d.thumbnail_url; });
+        return SUPABASE_THUMBNAIL_CACHE;
+      } catch (e) {
+        return {};
+      }
+    }
+
     function getLessonThumbnailUrl(dayNumber) {
       const day = Math.max(1, Math.min(365, Number(dayNumber) || 1));
       const key = String(day);
@@ -9777,13 +9901,54 @@
         return `${base}${rel}`;
       }
 
-      // 2) January convention fallback (days 1-31 already exist on disk)
+      // 2) Supabase cache (if loaded)
+      if (SUPABASE_THUMBNAIL_CACHE?.[day]) {
+        return SUPABASE_THUMBNAIL_CACHE[day];
+      }
+
+      // 3) Monthly convention fallback - try any available month
+      const monthInfo = getMonthAndDayInMonth(day);
+      if (monthInfo) {
+        // Check if this month is marked complete in manifest
+        const monthStatus = THUMBNAIL_MANIFEST?.months?.[monthInfo.month]?.status;
+        if (monthStatus === 'complete') {
+          return `/assets/kelly/production/thumbnails/${monthInfo.month}/lesson-${monthInfo.dayInMonth}.webp`;
+        }
+      }
+
+      // 4) January always available (days 1-31)
       if (day >= 1 && day <= 31) {
         return `/assets/kelly/production/thumbnails/january/lesson-${day}.webp`;
       }
 
-      // 3) No thumbnail yet
+      // 5) No thumbnail yet - return null (UI will use procedural fallback)
       return null;
+    }
+    
+    // Helper to get month name and day-in-month for any day number
+    function getMonthAndDayInMonth(dayNumber) {
+      const months = [
+        { name: 'january', days: 31 },
+        { name: 'february', days: 28 },
+        { name: 'march', days: 31 },
+        { name: 'april', days: 30 },
+        { name: 'may', days: 31 },
+        { name: 'june', days: 30 },
+        { name: 'july', days: 31 },
+        { name: 'august', days: 31 },
+        { name: 'september', days: 30 },
+        { name: 'october', days: 31 },
+        { name: 'november', days: 30 },
+        { name: 'december', days: 31 }
+      ];
+      let remaining = Math.max(1, Math.min(365, Number(dayNumber) || 1));
+      for (const month of months) {
+        if (remaining <= month.days) {
+          return { month: month.name, dayInMonth: remaining };
+        }
+        remaining -= month.days;
+      }
+      return { month: 'december', dayInMonth: 31 };
     }
 
     function getFallbackThumbnail(dayNumber, topic) {
@@ -9791,6 +9956,86 @@
         try { return generateProceduralThumbnail(dayNumber, topic); } catch (e) {}
       }
       return null; // Use CSS fallback
+    }
+    
+    /**
+     * Generate a procedural thumbnail CSS background for days without images.
+     * Creates unique visuals based on day number and topic.
+     */
+    function getProceduralThumbnailStyle(dayNumber, topic = '', icon = '') {
+      // Generate consistent hue from day number (spread across color wheel)
+      const hue = (dayNumber * 37 + 180) % 360;
+      const saturation = 55 + (dayNumber % 20);
+      const lightness = 18 + (dayNumber % 12);
+      
+      // Determine pattern type based on day
+      const patterns = ['radial', 'linear', 'conic', 'mesh'];
+      const patternType = patterns[dayNumber % patterns.length];
+      
+      // Create gradient based on pattern type
+      let gradient;
+      switch (patternType) {
+        case 'radial':
+          gradient = `radial-gradient(ellipse at ${30 + (dayNumber % 40)}% ${20 + (dayNumber % 60)}%, 
+            hsl(${hue}, ${saturation}%, ${lightness + 15}%) 0%, 
+            hsl(${(hue + 30) % 360}, ${saturation - 10}%, ${lightness}%) 50%,
+            hsl(${(hue + 60) % 360}, ${saturation - 20}%, ${lightness - 5}%) 100%)`;
+          break;
+        case 'conic':
+          gradient = `conic-gradient(from ${dayNumber * 10}deg at 50% 50%,
+            hsl(${hue}, ${saturation}%, ${lightness}%) 0deg,
+            hsl(${(hue + 45) % 360}, ${saturation}%, ${lightness + 5}%) 90deg,
+            hsl(${(hue + 90) % 360}, ${saturation}%, ${lightness}%) 180deg,
+            hsl(${(hue + 135) % 360}, ${saturation}%, ${lightness + 5}%) 270deg,
+            hsl(${hue}, ${saturation}%, ${lightness}%) 360deg)`;
+          break;
+        case 'mesh':
+          gradient = `linear-gradient(${45 + dayNumber}deg, 
+              hsl(${hue}, ${saturation}%, ${lightness}%) 0%, 
+              transparent 50%),
+            linear-gradient(${135 + dayNumber}deg, 
+              hsl(${(hue + 60) % 360}, ${saturation}%, ${lightness + 5}%) 0%, 
+              transparent 50%),
+            linear-gradient(${225 + dayNumber}deg, 
+              hsl(${(hue + 120) % 360}, ${saturation}%, ${lightness}%) 0%, 
+              hsl(${(hue + 180) % 360}, ${saturation - 15}%, ${lightness - 3}%) 100%)`;
+          break;
+        default: // linear
+          gradient = `linear-gradient(${135 + (dayNumber * 3) % 45}deg, 
+            hsl(${hue}, ${saturation}%, ${lightness + 10}%) 0%, 
+            hsl(${(hue + 40) % 360}, ${saturation}%, ${lightness}%) 50%,
+            hsl(${(hue + 80) % 360}, ${saturation - 10}%, ${lightness - 5}%) 100%)`;
+      }
+      
+      return {
+        background: gradient,
+        icon: icon || getTopicIcon(topic, dayNumber)
+      };
+    }
+    
+    /**
+     * Get an appropriate icon for a topic
+     */
+    function getTopicIcon(topic, dayNumber) {
+      if (!topic) return ['✨', '🌟', '💡', '🎯', '🌱'][dayNumber % 5];
+      const t = topic.toLowerCase();
+      if (t.includes('water')) return '💧';
+      if (t.includes('cloud') || t.includes('sky')) return '☁️';
+      if (t.includes('light') || t.includes('sun')) return '☀️';
+      if (t.includes('star') || t.includes('space')) return '⭐';
+      if (t.includes('brain') || t.includes('mind')) return '🧠';
+      if (t.includes('heart') || t.includes('love')) return '❤️';
+      if (t.includes('plant') || t.includes('grow')) return '🌱';
+      if (t.includes('music') || t.includes('sound')) return '🎵';
+      if (t.includes('book') || t.includes('read')) return '📚';
+      if (t.includes('art') || t.includes('create')) return '🎨';
+      if (t.includes('friend') || t.includes('people')) return '👥';
+      if (t.includes('earth') || t.includes('planet')) return '🌍';
+      if (t.includes('time')) return '⏰';
+      if (t.includes('dream') || t.includes('sleep')) return '💭';
+      if (t.includes('food') || t.includes('eat')) return '🍎';
+      if (t.includes('move') || t.includes('body')) return '🏃';
+      return ['✨', '🌟', '💡', '🎯', '🌱', '🔮', '💎'][dayNumber % 7];
     }
     
     // ============================================
@@ -11174,11 +11419,16 @@
             const dayNum = startDay + i;
             const payload = await window.KellyLessonLoader.loadLesson(dayNum, { archetype, age: state.age, region });
             const lesson = payload?.lesson || {};
-            return {
+            const result = {
               day_number: dayNum,
-              topic: lesson?.topic || `Lesson for ${getDisplayDate(dayNum)}`,
-              marketing_headline: lesson?.marketing_headline || lesson?.headline || lesson?.topic || 'An amazing lesson awaits...'
+              topic: lesson?.topic || 'Loading...',
+              marketing_headline: lesson?.marketing_headline || lesson?.headline || lesson?.topic || ''
             };
+            // Cache the lesson for future lookups
+            if (lesson?.topic) {
+              lessonsCache[dayNum] = lesson;
+            }
+            return result;
           })
         );
 
@@ -11191,11 +11441,16 @@
             const dayNum = startDay + i;
             const apiPayload = await loadLessonFromApi(dayNum);
             const lesson = apiPayload?.lesson;
-            return {
+            const result = {
               day_number: dayNum,
-              topic: lesson?.topic || `Lesson for ${getDisplayDate(dayNum)}`,
-              marketing_headline: lesson?.marketing_headline || lesson?.topic || 'An amazing lesson awaits...'
+              topic: lesson?.topic || 'Loading...',
+              marketing_headline: lesson?.marketing_headline || lesson?.topic || ''
             };
+            // Cache the lesson for future lookups
+            if (lesson?.topic) {
+              lessonsCache[dayNum] = lesson;
+            }
+            return result;
           })
         );
         return results;
@@ -11210,6 +11465,11 @@
       if (!kelly) return;
       kelly.classList.toggle('speaking', !!isSpeaking);
       kelly.classList.toggle('idle', !isSpeaking);
+      const controls = document.getElementById('everything-button');
+      if (controls) {
+        const shouldHighlight = !!isSpeaking || isVideoPlaying();
+        controls.classList.toggle('is-active', shouldHighlight);
+      }
     }
 
     function getKellyVideoEl() {
@@ -11377,6 +11637,13 @@
         if (DEBUG) console.log('🔇 TTS disabled (ENABLE_RUNTIME_TTS=false)');
         return null;
       }
+      if (__kellyTextOnlyMode.disabled || (typeof window !== 'undefined' && window.__KELLY_TTS_DISABLED)) {
+        if (!__kellyTextOnlyMode.disabled) {
+          markTtsUnavailable('disabled_upstream', { emitEvent: false });
+        }
+        if (DEBUG) console.log('🔇 TTS skipped: text-only mode active');
+        return null;
+      }
       if (!text) {
         if (DEBUG) console.log('🔇 TTS skipped: no text provided');
         return null;
@@ -11393,8 +11660,15 @@
         });
 
         if (!response.ok) {
-          const errorText = await response.text();
+          let errorPayload = null;
+          try {
+            errorPayload = await response.clone().json();
+          } catch (_) {}
+          const errorText = errorPayload ? JSON.stringify(errorPayload) : await response.text();
           console.error(`🔇 TTS API error ${response.status}:`, errorText);
+          if (response.status === 503 && (errorPayload?.code === 'MISSING_API_KEY' || errorPayload?.ttsAvailable === false)) {
+            markTtsUnavailable('missing_api_key');
+          }
           return null;
         }
         const blob = await response.blob();
@@ -11440,17 +11714,30 @@
     async function getVideoUrl(dayNumber, phase, personaId, ageBucket, language = 'en') {
       if (!_db) return null;
       try {
+        // Map dbPhase (Hook, Cliff, Fact1, etc.) to database phase (hook, cliff, q1, etc.)
+        const phaseMap = {
+          'hook': 'hook', 'Hook': 'hook',
+          'cliff': 'cliff', 'Cliff': 'cliff',
+          'q1': 'q1', 'Fact1': 'q1', 'fact1': 'q1',
+          'q2': 'q2', 'Fact2': 'q2', 'fact2': 'q2',
+          'q3': 'q3', 'Fact3': 'q3', 'fact3': 'q3',
+          'wisdom': 'wisdom', 'Wisdom': 'wisdom',
+          'outro': 'outro', 'Outro': 'outro',
+        };
+        const dbPhase = phaseMap[phase] || phase.toLowerCase();
+        
         const { data } = await _db
           .from('kelly_video_assets')
           .select('public_url')
           .eq('day_number', dayNumber)
-          .eq('phase', phase)
+          .eq('phase', dbPhase)
           .eq('template', personaId)
           .eq('age_bucket', ageBucket)
           .eq('asset_type', 'video')
           .eq('language', language)
           .in('status', ['validated', 'published', 'generated'])
           .limit(1);
+        if (DEBUG) console.log(`[getVideoUrl] day=${dayNumber}, phase=${phase}->${dbPhase}, template=${personaId}, found=${!!data?.[0]?.public_url}`);
         return data?.[0]?.public_url || null;
       } catch (e) {
         return null;
@@ -11463,13 +11750,16 @@
     // ============================================
     const motionClipCache = Object.create(null);
     const motionClipInflight = Object.create(null);
+    const MVP_MOTION_ARCHETYPE = 'explorer'; // See docs/GOLDEN_THREE_ARCHETYPES.md → fallback guidance
+    const MVP_MOTION_AGE_BUCKET = 'adult';
 
     function getPhaseKeyFromDbPhase(dbPhase) {
       const match = PHASES?.find((p) => p?.dbName === dbPhase || p?.name === dbPhase || p?.key === dbPhase);
       return (match?.key || String(dbPhase || '')).toLowerCase();
     }
 
-    async function getMotionClipUrl(persona, ageBucket, phase) {
+    async function getMotionClipUrl(persona, ageBucket, phase, options = {}) {
+      const allowFallback = options.allowFallback !== false;
       const personaId = String(persona || '').trim() || 'scientist';
       const bucket = String(ageBucket || '').trim() || 'adult';
       const phaseKey = String(phase || '').trim().toLowerCase();
@@ -11506,7 +11796,9 @@
             } catch (_) {}
           }
 
-          if (!videoUrl) console.warn(`No motion clip for ${cacheKey}`);
+          if (!videoUrl) {
+            console.warn(`No motion clip for ${cacheKey}`);
+          }
 
           // Store positive OR negative result to avoid repeated lookups.
           motionClipCache[cacheKey] = videoUrl || null;
@@ -11520,7 +11812,30 @@
         }
       })();
 
-      return motionClipInflight[cacheKey];
+      const clip = await motionClipInflight[cacheKey];
+      if (clip || !allowFallback) {
+        return clip;
+      }
+
+      const needsFallback =
+        personaId !== MVP_MOTION_ARCHETYPE || bucket !== MVP_MOTION_AGE_BUCKET;
+      if (needsFallback) {
+        const fallbackClip = await getMotionClipUrl(
+          MVP_MOTION_ARCHETYPE,
+          MVP_MOTION_AGE_BUCKET,
+          phaseKey,
+          { allowFallback: false }
+        );
+        if (fallbackClip) {
+          console.warn(
+            `[KellyMotion] Using MVP fallback (${MVP_MOTION_ARCHETYPE}_${MVP_MOTION_AGE_BUCKET}_${phaseKey}) for ${cacheKey}`
+          );
+          motionClipCache[cacheKey] = fallbackClip;
+          return fallbackClip;
+        }
+      }
+
+      return clip;
     }
 
     function stopAllMedia() {
@@ -12467,7 +12782,7 @@
       currentPanelId = null;
     }
     
-    function populateJourneyPanel() {
+    async function populateJourneyPanel() {
       const weekView = document.getElementById('journey-week-view');
       if (!weekView) return;
       
@@ -12478,9 +12793,23 @@
       const startDay = Math.max(1, today - 3);
       const endDay = Math.min(365, today + 7);
       
+      // Show loading state first
+      weekView.innerHTML = '<div class="journey-lesson-list"><div style="text-align: center; padding: 20px; opacity: 0.5;">Loading lessons...</div></div>';
+      
+      // Fetch lessons asynchronously from Supabase/cache
+      let lessons = [];
+      try {
+        lessons = await loadWeekLessons(startDay);
+      } catch (e) {
+        console.warn('populateWeekView: failed to load lessons', e);
+      }
+      const lessonMap = {};
+      lessons.forEach(l => { if (l?.day_number) lessonMap[l.day_number] = l; });
+      
       let html = '<div class="journey-lesson-list">';
       for (let d = startDay; d <= endDay; d++) {
-        const lesson = manifest?.lessons?.[d] || { topic: `Day ${d} Lesson` };
+        const lesson = lessonMap[d] || lessonsCache[d] || {};
+        const topicText = lesson.topic || lesson.title || 'Loading...';
         const date = window.KellyTime?.dayNumberToDate(d) || new Date();
         const dayOfWeek = days[date.getDay()];
         const monthDay = `${date.toLocaleString('default', { month: 'short' })} ${date.getDate()}`;
@@ -12496,7 +12825,7 @@
             </div>
             <div class="journey-lesson-info">
               <div class="journey-lesson-num">Day ${d}</div>
-              <div class="journey-lesson-topic">${lesson.topic || 'Daily Lesson'}</div>
+              <div class="journey-lesson-topic">${topicText}</div>
             </div>
             <div class="journey-lesson-status">
               ${isCompleted ? '✓' : isToday ? '▶' : isPast ? '○' : ''}
@@ -12898,10 +13227,31 @@ END:VEVENT
       return ics;
     }
     
-    function addAllTopicsToCalendar() {
+    async function addAllTopicsToCalendar() {
       const btn = document.getElementById('btn-add-all-2026');
-      btn.textContent = 'Generating...';
+      btn.textContent = 'Loading lessons...';
       btn.disabled = true;
+      
+      // Load all lessons from Supabase/cache for real topics
+      const lessonTopics = {};
+      try {
+        // Load lessons in batches of 7 (weeks) to avoid overwhelming the API
+        for (let startDay = 1; startDay <= 365; startDay += 7) {
+          const weekLessons = await loadWeekLessons(startDay);
+          weekLessons.forEach(l => {
+            if (l?.day_number && l?.topic) {
+              lessonTopics[l.day_number] = l.topic;
+            }
+          });
+          // Update progress
+          const progress = Math.min(100, Math.round((startDay / 365) * 100));
+          btn.textContent = `Loading... ${progress}%`;
+        }
+      } catch (e) {
+        console.warn('Failed to load all lessons for calendar:', e);
+      }
+      
+      btn.textContent = 'Generating...';
       
       // Collect all lessons for 2026 (days 1-365)
       const lessons = [];
@@ -12911,10 +13261,11 @@ END:VEVENT
         const date = new Date(startDate);
         date.setDate(date.getDate() + d - 1);
         
-        const lesson = manifest?.lessons?.[d] || {};
+        // Use loaded topic, cache, or show Loading... (never "Day X Lesson")
+        const topic = lessonTopics[d] || lessonsCache[d]?.topic || `Day ${d}`;
         lessons.push({
           day: d,
-          topic: lesson.topic || `Day ${d} Lesson`,
+          topic: topic,
           date: date
         });
       }
@@ -12954,9 +13305,18 @@ All 365 lesson topics will be added to your calendar!`);
     }
     
     // Add single lesson to calendar
-    function addLessonToCalendar(dayNumber) {
-      const lesson = manifest?.lessons?.[dayNumber] || { topic: `Day ${dayNumber}` };
-      const calendarUrl = generateGoogleCalendarUrl(lesson, dayNumber);
+    async function addLessonToCalendar(dayNumber) {
+      // Try cache first, then load from Supabase
+      let lesson = lessonsCache[dayNumber];
+      if (!lesson?.topic) {
+        try {
+          const lessons = await loadWeekLessons(dayNumber);
+          lesson = lessons.find(l => l.day_number === dayNumber) || {};
+        } catch (e) {
+          console.warn('Failed to load lesson for calendar:', e);
+        }
+      }
+      const calendarUrl = generateGoogleCalendarUrl(lesson || {}, dayNumber);
       window.open(calendarUrl, '_blank');
     }
     
@@ -16359,10 +16719,19 @@ Style requirements:
 
         const thumbUrl = getLessonThumbnailUrl(dayNum);
         
+        // Generate procedural background for days without thumbnails
+        let thumbBgStyle = '';
+        let thumbIcon = '';
+        if (!thumbUrl) {
+          const procedural = getProceduralThumbnailStyle(dayNum, lesson.topic, lesson.icon || lesson.icon_emoji);
+          thumbBgStyle = `style="${procedural.background}"`;
+          thumbIcon = `<span class="day-thumb-icon">${procedural.icon}</span>`;
+        }
+        
         el.innerHTML = `
-          <div class="day-thumb" aria-hidden="true">
+          <div class="day-thumb" ${thumbBgStyle} aria-hidden="true">
             ${thumbUrl ? `<img class="day-thumb-img" src="${thumbUrl}" alt="" loading="lazy" decoding="async"
-              onerror="this.remove();" />` : ''}
+              onerror="this.remove();" />` : thumbIcon}
             <div class="day-thumb-fallback">${dayNum}</div>
           </div>
           <div class="day-num" title="${getDisplayDate(dayNum)}">${dom}</div>
@@ -16445,10 +16814,20 @@ Style requirements:
           const thumbUrl = getLessonThumbnailUrl(dayCounter);
           const cachedLesson = lessonsCache[dayCounter];
           const lessonTopic = cachedLesson?.topic || cachedLesson?.title || '';
+          const lessonIcon = cachedLesson?.icon || cachedLesson?.icon_emoji || '';
+          
+          // Generate procedural background for days without thumbnails
+          let bgStyle = '';
+          let iconOverlay = '';
+          if (!thumbUrl) {
+            const procedural = getProceduralThumbnailStyle(dayCounter, lessonTopic, lessonIcon);
+            bgStyle = `style="${procedural.background}"`;
+            iconOverlay = `<span class="day-cell-icon">${procedural.icon}</span>`;
+          }
           
           cell.innerHTML = `
-            <div class="day-cell-bg">
-              ${thumbUrl ? `<img src="${thumbUrl}" alt="" loading="lazy" decoding="async" onerror="this.remove();" />` : ''}
+            <div class="day-cell-bg" ${bgStyle}>
+              ${thumbUrl ? `<img src="${thumbUrl}" alt="" loading="lazy" decoding="async" onerror="this.parentElement.style.background=getProceduralThumbnailStyle(${dayCounter}).background; this.remove();" />` : iconOverlay}
             </div>
             <span class="day-cell-num">${d + 1}</span>
             ${lessonTopic ? `<div class="day-cell-tooltip">${lessonTopic}</div>` : ''}
@@ -16581,9 +16960,13 @@ Style requirements:
       
       // Get lesson info
       let lesson = lessonsCache[dayNumber];
-      if (!lesson) {
-        const lessons = await loadWeekLessons(dayNumber);
-        lesson = lessons.find(l => l.day_number === dayNumber) || { topic: `Day ${dayNumber} Lesson` };
+      if (!lesson?.topic) {
+        try {
+          const lessons = await loadWeekLessons(dayNumber);
+          lesson = lessons.find(l => l.day_number === dayNumber) || { topic: 'Loading...' };
+        } catch (e) {
+          lesson = { topic: 'Loading...' };
+        }
       }
       
       const displayDate = getDisplayDate(dayNumber);
@@ -16761,7 +17144,7 @@ Style requirements:
             const lesson = payload?.lesson || {};
             return {
               day_number: dayNum,
-              topic: lesson?.topic || (typeof window.getEmergencyLesson === 'function' ? (window.getEmergencyLesson(dayNum)?.title || window.getEmergencyLesson(dayNum)?.topic) : '') || `Day ${dayNum}`,
+              topic: lesson?.topic || (typeof window.getEmergencyLesson === 'function' ? (window.getEmergencyLesson(dayNum)?.title || window.getEmergencyLesson(dayNum)?.topic) : '') || 'Loading...',
               marketing_headline: lesson?.marketing_headline || lesson?.headline || lesson?.topic || ''
             };
           })
@@ -18328,6 +18711,8 @@ Style requirements:
       await loadManifest();
       // Best-effort: preload thumbnail index for journey views
       await loadThumbnailManifest();
+      // Load Supabase thumbnail URLs for days not in manifest
+      loadSupabaseThumbnails().catch(() => {});
 
       if (__URL_PARAMS.has('audit')) {
         await auditSupabaseQueries();
@@ -18375,7 +18760,9 @@ Style requirements:
           !!state.currentDay &&
           state.currentPhase > 0 &&
           state.currentPhase < PHASES.length;
-        const dayToLoad = shouldResumeInProgress ? state.currentDay : todayDay;
+        // Don't overwrite if DEV_START_DAY explicitly set the day
+        const explicitDevDay = DEV_START_DAY && DEV_START_DAY > 0 && DEV_START_DAY <= 365;
+        const dayToLoad = explicitDevDay ? state.currentDay : (shouldResumeInProgress ? state.currentDay : todayDay);
         state.currentDay = dayToLoad;
         if (!state.ageBucket) state.ageBucket = getAgeBucket(state.age);
         saveState();

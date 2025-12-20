@@ -32,10 +32,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   
   if (!apiKey) {
     console.error('[TTS API] ❌ ELEVENLABS_API_KEY not set in environment');
-    return res.status(500).json({ 
+    return res.status(503).json({ 
       error: 'TTS service not configured',
+      code: 'MISSING_API_KEY',
       details: 'ELEVENLABS_API_KEY environment variable is not set',
-      hint: 'Add ELEVENLABS_API_KEY to Vercel Dashboard → Settings → Environment Variables'
+      hint: 'Add ELEVENLABS_API_KEY to Vercel Dashboard → Settings → Environment Variables',
+      ttsAvailable: false
     });
   }
 

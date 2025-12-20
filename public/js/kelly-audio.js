@@ -29,6 +29,9 @@ class KellyAudio {
     this.isPaused = false;
     this.currentText = '';
     this.audioCache = new Map();
+    this.ttsAvailable = true;
+    this.ttsDisabledReason = null;
+    this.textOnlyBanner = null;
 
     // Voice is always available via /api/tts endpoint
     // ⚠️ NO BROWSER TTS - EVER
@@ -210,6 +213,10 @@ class KellyAudio {
    * ElevenLabs TTS via secure API proxy
    */
   async _speakWithElevenLabs(text, options) {
+    if (window.__KELLY_TTS_DISABLED || this.ttsAvailable === false) {
+      throw new Error('TTS unavailable');
+    }
+
     // Check cache first
     const cacheKey = `${text}-${options.language || 'en'}`;
     if (this.audioCache.has(cacheKey)) {
@@ -230,6 +237,9 @@ class KellyAudio {
 
     if (!response.ok) {
       const error = await response.json().catch(() => ({ error: 'TTS failed' }));
+      if (response.status === 503 && (error?.code === 'MISSING_API_KEY' || error?.ttsAvailable === false)) {
+        this._markTtsUnavailable('missing_api_key');
+      }
       throw new Error(`TTS API error: ${response.status} - ${error.error || 'Unknown'}`);
     }
 
@@ -239,6 +249,61 @@ class KellyAudio {
     this.audioCache.set(cacheKey, audioBuffer);
 
     return this._playAudioBuffer(audioBuffer);
+  }
+
+  /**
+   * Flag TTS as unavailable and inform UI
+   */
+  _markTtsUnavailable(reason = 'unknown') {
+    if (this.ttsAvailable === false) return;
+    this.ttsAvailable = false;
+    this.ttsDisabledReason = reason;
+    this.hasVoice = false;
+    if (typeof window !== 'undefined') {
+      window.__KELLY_TTS_DISABLED = true;
+    }
+    if (typeof document !== 'undefined') {
+      document.dispatchEvent(new CustomEvent('kelly-tts-unavailable', {
+        detail: {
+          reason,
+          timestamp: Date.now()
+        }
+      }));
+    }
+    this._showTextOnlyBanner(reason);
+  }
+
+  /**
+   * Render a subtle banner to indicate text-only mode
+   */
+  _showTextOnlyBanner(reason) {
+    if (typeof document === 'undefined') return;
+    const existing = document.getElementById('kelly-text-only-indicator');
+    if (existing) {
+      existing.classList.remove('hidden');
+      return;
+    }
+
+    const banner = document.createElement('div');
+    banner.id = 'kelly-text-only-indicator';
+    banner.textContent = reason === 'missing_api_key'
+      ? 'Kelly voice is warming up — showing text for now.'
+      : 'Kelly is in text-only mode right now.';
+    banner.style.position = 'fixed';
+    banner.style.top = '16px';
+    banner.style.right = '16px';
+    banner.style.zIndex = '9999';
+    banner.style.padding = '8px 14px';
+    banner.style.borderRadius = '999px';
+    banner.style.fontSize = '12px';
+    banner.style.letterSpacing = '0.08em';
+    banner.style.textTransform = 'uppercase';
+    banner.style.background = 'rgba(15, 23, 42, 0.75)';
+    banner.style.border = '1px solid rgba(255, 255, 255, 0.15)';
+    banner.style.color = '#fff';
+    banner.style.backdropFilter = 'blur(8px)';
+    document.body.appendChild(banner);
+    this.textOnlyBanner = banner;
   }
 
   /**

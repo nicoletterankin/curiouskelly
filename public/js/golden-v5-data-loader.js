@@ -170,7 +170,7 @@ class GoldenV5DataLoader {
   getPlaceholderLesson(dayNumber, archetype) {
     return {
       dayNumber: dayNumber,
-      topic: `Day ${dayNumber} Lesson`,
+      topic: 'Loading...',
       universalTruth: 'Loading...',
       iconEmoji: '📚',
       estimatedDuration: 8,
