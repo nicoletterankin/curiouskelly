@@ -4452,7 +4452,8 @@
 
     .phase-segment:hover { transform: scale(1.06); }
 
-    .phase-name {
+    /* Phase name hidden only in OLD phase dots (not Kelly Panel) */
+    .phase-nav .phase-name {
       display: none; /* label lives in #phase-label */
     }
 
@@ -13506,6 +13507,65 @@
       }
     }
     
+    // Sync Kelly Panel phase button with current phase
+    function updateKellyPanelPhase(phaseIndex) {
+      document.querySelectorAll('.kelly-phase-btn').forEach((btn, i) => {
+        btn.classList.toggle('active', i === phaseIndex);
+        // Mark earlier phases as completed
+        btn.classList.toggle('completed', i < phaseIndex);
+      });
+    }
+    
+    // Update Kelly Panel visual when phase changes
+    function updateKellyPanelVisual(dayNumber, phaseIndex) {
+      const imgEl = document.getElementById('kelly-visual-img');
+      const placeholder = document.querySelector('.kelly-panel-visual .visual-placeholder');
+      
+      if (!imgEl) return;
+      
+      // Try to get visual from Visual Commons
+      const phaseNames = ['hook', 'cliff', 'q1', 'q2', 'q3', 'wisdom', 'outro'];
+      const phaseName = phaseNames[phaseIndex] || 'hook';
+      
+      // Try Visual Commons
+      tryLoadVisualFromCommons(dayNumber, phaseName, imgEl, placeholder);
+    }
+    
+    async function tryLoadVisualFromCommons(dayNumber, phase, imgEl, placeholder) {
+      try {
+        const SUPABASE_URL = window.SUPABASE_URL || 'https://tvjalxxsyryjphkforjv.supabase.co';
+        const ANON_KEY = window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI';
+        
+        const url = `${SUPABASE_URL}/rest/v1/visual_commons?day_number=eq.${dayNumber}&phase=eq.${phase}&status=eq.active&select=public_url&limit=1`;
+        const response = await fetch(url, { headers: { 'apikey': ANON_KEY } });
+        
+        if (response.ok) {
+          const visuals = await response.json();
+          if (visuals && visuals.length > 0 && visuals[0].public_url) {
+            imgEl.src = visuals[0].public_url;
+            imgEl.style.display = 'block';
+            if (placeholder) placeholder.style.display = 'none';
+            return;
+          }
+        }
+        
+        // No visual found - try generated assets folder
+        const dayPadded = String(dayNumber).padStart(3, '0');
+        const fallbackUrl = `/generated-assets/day-${dayPadded}-${phase}.png`;
+        imgEl.src = fallbackUrl;
+        imgEl.onerror = () => {
+          imgEl.style.display = 'none';
+          if (placeholder) placeholder.style.display = 'block';
+        };
+        imgEl.onload = () => {
+          imgEl.style.display = 'block';
+          if (placeholder) placeholder.style.display = 'none';
+        };
+      } catch (e) {
+        console.debug('Visual load:', e.message);
+      }
+    }
+    
     function updateKellyPanelForLesson(lesson) {
       const titleEl = document.getElementById('kelly-panel-title');
       const taglineEl = document.getElementById('kelly-panel-tagline');
@@ -14170,6 +14230,8 @@ The learner is on phase ${state.currentPhase + 1} of 7. Be helpful and make lear
         updatePlayButtonIndicator();
         updateNavPhaseDots(); // Sync header phase dots
         syncEverythingButton(); // Sync Everything Button
+        updateKellyPanelPhase(index); // Sync Kelly Panel phase button
+        updateKellyPanelVisual(state.currentDay, index); // Load visual for this phase
         
         // Show phase-appropriate visual from Visual Commons
         if (window.LessonVisualDisplay) {
