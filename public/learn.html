@@ -81,6 +81,8 @@
   
   <!-- Lesson loader with fallback support -->
   <script src="/js/kelly-lesson-loader.js"></script>
+  <!-- BYOK Manager: Bring Your Own Key Flywheel -->
+  <script src="/js/byok-manager.js"></script>
   <script>
     // Compatibility shim: some deployments exposed `getLesson()` but not `loadLesson()`.
     // The curriculum view (and other flows) call `window.KellyLessonLoader.loadLesson(...)`.
@@ -7147,6 +7149,211 @@
       margin: 0 0 8px;
     }
     
+    /* BYOK Hub Styles */
+    .byok-status-badge {
+      margin-left: auto;
+      font-size: 10px;
+      padding: 2px 8px;
+      border-radius: 10px;
+      background: rgba(255, 255, 255, 0.1);
+      color: var(--text-muted);
+    }
+    
+    .byok-status-badge.active {
+      background: rgba(34, 197, 94, 0.2);
+      color: #22c55e;
+    }
+    
+    .byok-intro {
+      font-size: 12px;
+      color: var(--text-secondary);
+      margin-bottom: 16px !important;
+    }
+    
+    .byok-providers {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    
+    .byok-provider-card {
+      background: rgba(255, 255, 255, 0.03);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 12px;
+      padding: 12px;
+      transition: all 0.2s ease;
+    }
+    
+    .byok-provider-card:hover {
+      background: rgba(255, 255, 255, 0.05);
+      border-color: rgba(255, 255, 255, 0.12);
+    }
+    
+    .byok-provider-card.connected {
+      border-color: rgba(34, 197, 94, 0.4);
+      background: rgba(34, 197, 94, 0.05);
+    }
+    
+    .byok-provider-header {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    
+    .provider-icon {
+      font-size: 1.2rem;
+    }
+    
+    .provider-name {
+      font-weight: 600;
+      font-size: 13px;
+    }
+    
+    .provider-badge {
+      font-size: 9px;
+      padding: 2px 6px;
+      border-radius: 4px;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    
+    .provider-badge.video {
+      background: rgba(139, 92, 246, 0.2);
+      color: #a78bfa;
+    }
+    
+    .provider-badge.chat {
+      background: rgba(59, 130, 246, 0.2);
+      color: #60a5fa;
+    }
+    
+    .provider-badge.image {
+      background: rgba(236, 72, 153, 0.2);
+      color: #f472b6;
+    }
+    
+    .provider-badge.voice {
+      background: rgba(34, 197, 94, 0.2);
+      color: #4ade80;
+    }
+    
+    .provider-status {
+      margin-left: auto;
+      font-size: 11px;
+    }
+    
+    .provider-status.connected::before {
+      content: '✓ ';
+      color: #22c55e;
+    }
+    
+    .provider-desc {
+      font-size: 11px;
+      color: var(--text-muted);
+      margin: 0 0 10px !important;
+      line-height: 1.4;
+    }
+    
+    .byok-input-row {
+      display: flex;
+      gap: 8px;
+      margin-bottom: 6px;
+    }
+    
+    .byok-key-input {
+      flex: 1;
+      padding: 8px 10px;
+      border-radius: 8px;
+      border: 1px solid var(--border-color);
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      font-size: 12px;
+    }
+    
+    .byok-key-input:focus {
+      outline: none;
+      border-color: var(--kelly-blue);
+    }
+    
+    .byok-connect-btn {
+      padding: 8px 14px;
+      border-radius: 8px;
+      border: none;
+      background: var(--kelly-blue);
+      color: white;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .byok-connect-btn:hover {
+      background: var(--kelly-blue-dark, #1d4ed8);
+    }
+    
+    .byok-connect-btn.connected {
+      background: #22c55e;
+    }
+    
+    .byok-connect-btn.connected::after {
+      content: ' ✓';
+    }
+    
+    .provider-setup-link {
+      font-size: 10px;
+      color: var(--kelly-blue-light);
+      text-decoration: none;
+    }
+    
+    .provider-setup-link:hover {
+      text-decoration: underline;
+    }
+    
+    .byok-capabilities {
+      margin-top: 16px;
+      padding: 12px;
+      background: rgba(255, 255, 255, 0.02);
+      border-radius: 10px;
+    }
+    
+    .capabilities-title {
+      font-size: 12px;
+      font-weight: 600;
+      margin-bottom: 10px;
+    }
+    
+    .capabilities-grid {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 6px;
+    }
+    
+    .capability {
+      font-size: 11px;
+      padding: 4px 10px;
+      border-radius: 12px;
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .capability.locked {
+      opacity: 0.4;
+    }
+    
+    .capability.unlocked {
+      opacity: 1;
+      border-color: rgba(34, 197, 94, 0.4);
+      background: rgba(34, 197, 94, 0.1);
+    }
+    
+    .byok-privacy {
+      font-size: 10px;
+      color: var(--text-muted);
+      margin-top: 12px !important;
+      text-align: center;
+    }
+    
     .settings-link {
       color: var(--kelly-blue);
       text-decoration: none;
@@ -8879,24 +9086,112 @@
               </div>
             </details>
             
-            <!-- API Keys (BYOK) Section -->
-            <details class="settings-section">
+            <!-- BYOK Hub: Bring Your Own Keys -->
+            <details class="settings-section" id="byok-hub-section">
               <summary class="settings-section-header">
                 <span class="settings-icon">🔑</span>
-                <span>API Keys</span>
+                <span>AI Keys Hub</span>
+                <span class="byok-status-badge" id="byok-hub-badge">0 connected</span>
               </summary>
-              <div class="settings-section-content">
-                <p style="font-size: 12px; color: var(--text-muted); margin-bottom: 12px;">Use your own API keys to generate custom visuals.</p>
-                <div style="margin-bottom: 12px;">
-                  <label style="font-size: 12px; font-weight: 500; display: block; margin-bottom: 4px;">Google AI API Key</label>
-                  <input type="password" id="settings-byok-key" placeholder="AIza..." style="width: 100%; padding: 8px 12px; border-radius: 8px; border: 1px solid var(--border-color); background: var(--bg-elevated); color: var(--text-primary); font-size: 13px;">
+              <div class="settings-section-content byok-hub">
+                <p class="byok-intro">Connect your AI keys to unlock powerful features. Free credits available!</p>
+                
+                <!-- Provider Cards -->
+                <div class="byok-providers" id="byok-providers">
+                  
+                  <!-- HeyGen (VIDEO - The Bottleneck Breaker!) -->
+                  <div class="byok-provider-card" data-provider="heygen">
+                    <div class="byok-provider-header">
+                      <span class="provider-icon">🎬</span>
+                      <span class="provider-name">HeyGen</span>
+                      <span class="provider-badge video">VIDEO</span>
+                      <span class="provider-status" id="byok-status-heygen"></span>
+                    </div>
+                    <p class="provider-desc">Generate Kelly videos with AI avatars. Free credits for new users!</p>
+                    <div class="byok-input-row">
+                      <input type="password" id="byok-key-heygen" placeholder="Your HeyGen API key" class="byok-key-input">
+                      <button class="byok-connect-btn" onclick="connectBYOK('heygen')">Connect</button>
+                    </div>
+                    <a href="https://app.heygen.com/settings/api" target="_blank" class="provider-setup-link">Get free API key →</a>
+                  </div>
+                  
+                  <!-- OpenAI -->
+                  <div class="byok-provider-card" data-provider="openai">
+                    <div class="byok-provider-header">
+                      <span class="provider-icon">🤖</span>
+                      <span class="provider-name">OpenAI</span>
+                      <span class="provider-badge chat">CHAT</span>
+                      <span class="provider-status" id="byok-status-openai"></span>
+                    </div>
+                    <p class="provider-desc">Power live chat with Kelly. GPT-4o for intelligent conversations.</p>
+                    <div class="byok-input-row">
+                      <input type="password" id="byok-key-openai" placeholder="sk-..." class="byok-key-input">
+                      <button class="byok-connect-btn" onclick="connectBYOK('openai')">Connect</button>
+                    </div>
+                    <a href="https://platform.openai.com/api-keys" target="_blank" class="provider-setup-link">Get API key ($5 free credit) →</a>
+                  </div>
+                  
+                  <!-- Anthropic -->
+                  <div class="byok-provider-card" data-provider="anthropic">
+                    <div class="byok-provider-header">
+                      <span class="provider-icon">🧠</span>
+                      <span class="provider-name">Anthropic</span>
+                      <span class="provider-badge chat">CHAT</span>
+                      <span class="provider-status" id="byok-status-anthropic"></span>
+                    </div>
+                    <p class="provider-desc">Claude AI for thoughtful, nuanced conversations with Kelly.</p>
+                    <div class="byok-input-row">
+                      <input type="password" id="byok-key-anthropic" placeholder="sk-ant-..." class="byok-key-input">
+                      <button class="byok-connect-btn" onclick="connectBYOK('anthropic')">Connect</button>
+                    </div>
+                    <a href="https://console.anthropic.com/settings/keys" target="_blank" class="provider-setup-link">Get API key ($5 free credit) →</a>
+                  </div>
+                  
+                  <!-- Google AI -->
+                  <div class="byok-provider-card" data-provider="google">
+                    <div class="byok-provider-header">
+                      <span class="provider-icon">✨</span>
+                      <span class="provider-name">Google AI</span>
+                      <span class="provider-badge image">IMAGE</span>
+                      <span class="provider-status" id="byok-status-google"></span>
+                    </div>
+                    <p class="provider-desc">Generate custom visuals with Gemini & Imagen. Generous free tier!</p>
+                    <div class="byok-input-row">
+                      <input type="password" id="byok-key-google" placeholder="AIza..." class="byok-key-input">
+                      <button class="byok-connect-btn" onclick="connectBYOK('google')">Connect</button>
+                    </div>
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" class="provider-setup-link">Get free API key →</a>
+                  </div>
+                  
+                  <!-- ElevenLabs -->
+                  <div class="byok-provider-card" data-provider="elevenlabs">
+                    <div class="byok-provider-header">
+                      <span class="provider-icon">🎙️</span>
+                      <span class="provider-name">ElevenLabs</span>
+                      <span class="provider-badge voice">VOICE</span>
+                      <span class="provider-status" id="byok-status-elevenlabs"></span>
+                    </div>
+                    <p class="provider-desc">Premium voice synthesis. 10,000 free characters/month!</p>
+                    <div class="byok-input-row">
+                      <input type="password" id="byok-key-elevenlabs" placeholder="Your ElevenLabs key" class="byok-key-input">
+                      <button class="byok-connect-btn" onclick="connectBYOK('elevenlabs')">Connect</button>
+                    </div>
+                    <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" class="provider-setup-link">Get free API key →</a>
+                  </div>
                 </div>
-                <label class="settings-toggle-row" style="margin-bottom: 8px;">
-                  <span style="font-size: 12px;">Save key locally (encrypted)</span>
-                  <input type="checkbox" id="settings-byok-save" checked>
-                </label>
-                <button class="btn-secondary" onclick="saveByokFromSettings()" style="width: 100%; padding: 10px; font-size: 13px;">Save API Key</button>
-                <p style="font-size: 11px; color: var(--text-muted); margin-top: 8px;">🔒 Your key is stored only in your browser and never sent to our servers.</p>
+                
+                <!-- Capabilities Summary -->
+                <div class="byok-capabilities" id="byok-capabilities">
+                  <div class="capabilities-title">🌟 Your Unlocked Powers</div>
+                  <div class="capabilities-grid" id="capabilities-grid">
+                    <span class="capability locked" data-cap="chat">💬 Live Chat</span>
+                    <span class="capability locked" data-cap="video">🎬 Video Gen</span>
+                    <span class="capability locked" data-cap="image">🎨 Image Gen</span>
+                    <span class="capability locked" data-cap="tts">🎙️ Voice Gen</span>
+                  </div>
+                </div>
+                
+                <p class="byok-privacy">🔒 Keys stored locally in your browser. Never sent to our servers.</p>
               </div>
             </details>
             
@@ -13427,30 +13722,150 @@
     }
     
     // Save BYOK key from Settings panel
-    function saveByokFromSettings() {
-      const keyInput = document.getElementById('settings-byok-key');
-      const saveCheckbox = document.getElementById('settings-byok-save');
+    // ============================================
+    // BYOK HUB: Unified Key Management
+    // ============================================
+    
+    async function connectBYOK(providerId) {
+      const keyInput = document.getElementById(`byok-key-${providerId}`);
+      const btn = keyInput?.parentElement?.querySelector('.byok-connect-btn');
+      const statusEl = document.getElementById(`byok-status-${providerId}`);
+      const card = document.querySelector(`.byok-provider-card[data-provider="${providerId}"]`);
       
-      const apiKey = keyInput?.value?.trim();
-      if (!apiKey || !apiKey.startsWith('AIza')) {
-        showToast('Please enter a valid Google AI API key (starts with AIza...)');
+      const key = keyInput?.value?.trim();
+      if (!key) {
+        showToast('Please enter an API key');
         return;
       }
       
-      // Save to state
-      state.byokApiKey = apiKey;
-      
-      // Optionally persist to localStorage
-      if (saveCheckbox?.checked) {
-        localStorage.setItem('kelly_byok_key', apiKey);
-        localStorage.setItem('kelly_byok_provider', 'google');
+      // Show loading state
+      if (btn) {
+        btn.textContent = 'Testing...';
+        btn.disabled = true;
       }
       
-      // Also update the BYOK modal input if it exists
-      const modalInput = document.getElementById('byok-api-key');
-      if (modalInput) modalInput.value = apiKey;
+      try {
+        // Use BYOKManager to validate and save
+        if (window.BYOKManager) {
+          const result = await window.BYOKManager.saveKey(providerId, key);
+          
+          if (result.success) {
+            // Success!
+            showToast(`${providerId.charAt(0).toUpperCase() + providerId.slice(1)} connected! 🎉`);
+            
+            if (btn) {
+              btn.textContent = 'Connected';
+              btn.classList.add('connected');
+            }
+            if (statusEl) {
+              statusEl.textContent = 'Connected';
+              statusEl.classList.add('connected');
+            }
+            if (card) {
+              card.classList.add('connected');
+            }
+            if (keyInput) {
+              keyInput.value = '';
+              keyInput.placeholder = '••••••••••••••••';
+            }
+            
+            // Also save to legacy locations for backwards compatibility
+            if (providerId === 'openai') {
+              localStorage.setItem('kelly_byok_key', key);
+              localStorage.setItem('kelly_byok_provider', 'openai');
+              state.byokApiKey = key;
+              state.byokProvider = 'openai';
+            } else if (providerId === 'google') {
+              localStorage.setItem('kelly_visual_api_key', key);
+            }
+            
+            // Update capabilities display
+            updateBYOKCapabilities();
+          } else {
+            showToast(`❌ ${result.error || 'Invalid key'}`);
+            if (btn) {
+              btn.textContent = 'Connect';
+              btn.disabled = false;
+            }
+          }
+        } else {
+          // Fallback: Save directly
+          localStorage.setItem(`kelly_byok_${providerId}`, key);
+          showToast(`${providerId} key saved! 🔑`);
+          if (btn) {
+            btn.textContent = 'Connected';
+            btn.classList.add('connected');
+          }
+        }
+      } catch (e) {
+        showToast(`Error: ${e.message}`);
+        if (btn) {
+          btn.textContent = 'Connect';
+          btn.disabled = false;
+        }
+      }
+    }
+    
+    function updateBYOKCapabilities() {
+      if (!window.BYOKManager) return;
       
-      showToast('API key saved! 🔑');
+      const summary = window.BYOKManager.getStatusSummary();
+      
+      // Update badge
+      const badge = document.getElementById('byok-hub-badge');
+      if (badge) {
+        badge.textContent = `${summary.providersConfigured} connected`;
+        badge.classList.toggle('active', summary.providersConfigured > 0);
+      }
+      
+      // Update capability indicators
+      const capsMap = {
+        'chat': summary.canChat,
+        'video': summary.canGenerateVideo,
+        'image': summary.canGenerateImage,
+        'tts': summary.canGenerateTTS
+      };
+      
+      document.querySelectorAll('.capability[data-cap]').forEach(el => {
+        const cap = el.dataset.cap;
+        const unlocked = capsMap[cap];
+        el.classList.toggle('unlocked', unlocked);
+        el.classList.toggle('locked', !unlocked);
+      });
+      
+      // Update provider cards
+      summary.providers.forEach(p => {
+        const card = document.querySelector(`.byok-provider-card[data-provider="${p.id}"]`);
+        const btn = card?.querySelector('.byok-connect-btn');
+        const status = document.getElementById(`byok-status-${p.id}`);
+        const input = document.getElementById(`byok-key-${p.id}`);
+        
+        if (card) card.classList.add('connected');
+        if (btn) {
+          btn.textContent = 'Connected';
+          btn.classList.add('connected');
+        }
+        if (status) {
+          status.textContent = 'Connected';
+          status.classList.add('connected');
+        }
+        if (input) {
+          input.placeholder = '••••••••••••••••';
+        }
+      });
+    }
+    
+    function initBYOKHub() {
+      // Initialize BYOKManager if available
+      if (window.BYOKManager) {
+        window.BYOKManager.init();
+        updateBYOKCapabilities();
+      }
+    }
+    
+    // Legacy function for backwards compatibility
+    function saveByokFromSettings() {
+      connectBYOK('google');
     }
     
     // ============================================
@@ -19216,6 +19631,7 @@ Style requirements:
       setupKellyPanel();
       syncEverythingButton();
       loadByokKey();
+      initBYOKHub(); // Initialize BYOK Hub with all providers
       setupGmailIntegration();
       loadKellyMode();
 
