@@ -13947,6 +13947,33 @@ The learner is on phase ${state.currentPhase + 1} of 7. Be helpful and make lear
       imgEl.src = src;
       imgEl.hidden = false;
     }
+    
+    // Load choice visuals from Visual Commons
+    async function loadChoiceVisualsFromCommons(dayNum, phase, imgA, imgB) {
+      try {
+        const SUPABASE_URL = window.SUPABASE_URL || 'https://tvjalxxsyryjphkforjv.supabase.co';
+        const ANON_KEY = window.SUPABASE_ANON_KEY || 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI';
+        
+        // Try to fetch visuals for this day/phase
+        const url = `${SUPABASE_URL}/rest/v1/visual_commons?day_number=eq.${dayNum}&phase=eq.${phase}&status=eq.active&select=public_url,style&limit=2`;
+        const response = await fetch(url, { headers: { 'apikey': ANON_KEY } });
+        
+        if (response.ok) {
+          const visuals = await response.json();
+          if (visuals && visuals.length >= 1) {
+            // Use first visual for option A
+            setChoiceVisual(imgA, visuals[0]?.public_url);
+            // Use second visual (or different style) for option B if available
+            if (visuals.length >= 2) {
+              setChoiceVisual(imgB, visuals[1]?.public_url);
+            }
+          }
+        }
+      } catch (e) {
+        // Silent fail - visuals are optional
+        console.debug('Choice visual load:', e.message);
+      }
+    }
 
     function enterPhaseWithChoices(atom) {
       const phase = PHASES[state.currentPhase];
@@ -13979,17 +14006,20 @@ The learner is on phase ${state.currentPhase + 1} of 7. Be helpful and make lear
       if (descAEl) descAEl.textContent = typeof atom.option_a === 'object' ? (atom.option_a?.description || '') : '';
       if (descBEl) descBEl.textContent = typeof atom.option_b === 'object' ? (atom.option_b?.description || '') : '';
 
-      // Optional choice visuals (Day 17 launch polish)
-      const isDay17 = Number(state.currentDay) === 17;
+      // Load choice visuals from Visual Commons or generate placeholders
       const imgA = document.getElementById('cliff-visual-a');
       const imgB = document.getElementById('cliff-visual-b');
+      const dayNum = state.currentDay || 1;
+      
+      // Try to load visuals from Visual Commons
+      loadChoiceVisualsFromCommons(dayNum, phase?.key || 'cliff', imgA, imgB);
+      
+      // Also try legacy Day 17 paths as fallback
+      const isDay17 = Number(dayNum) === 17;
       if (isDay17) {
         const key = phase?.key || 'cliff';
         setChoiceVisual(imgA, `/generated-images/day-017/${key}_option_a.svg`);
         setChoiceVisual(imgB, `/generated-images/day-017/${key}_option_b.svg`);
-      } else {
-        setChoiceVisual(imgA, null);
-        setChoiceVisual(imgB, null);
       }
 
       // Show container
