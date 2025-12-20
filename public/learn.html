@@ -8124,6 +8124,9 @@
         <button class="nav-action-btn" data-panel="search" title="Search 730 lessons">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
         </button>
+        <a href="/contribute" class="nav-action-btn" title="Power Kelly — Contribute Credits" style="text-decoration: none; color: inherit;">
+          <span style="font-size: 16px;">🎁</span>
+        </a>
         <button class="nav-action-btn" data-panel="settings" title="Settings & AI Keys">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"/>
@@ -14243,7 +14246,67 @@
         window.BYOKManager.init();
         updateBYOKCapabilities();
       }
+      
+      // Fetch community stats
+      fetchCommunityStats();
     }
+    
+    /**
+     * Fetch and display community contribution stats
+     * Shows how many lessons have been powered by the gift economy
+     */
+    async function fetchCommunityStats() {
+      try {
+        const response = await fetch('/api/contribution');
+        if (!response.ok) return;
+        
+        const stats = await response.json();
+        
+        // Update dashboard elements
+        const lessonsEl = document.getElementById('community-lessons-gen');
+        const contributorsEl = document.getElementById('community-contributors');
+        const savedEl = document.getElementById('community-saved');
+        
+        if (lessonsEl) {
+          lessonsEl.textContent = stats.lessons_touched > 0 ? stats.lessons_touched : '—';
+        }
+        if (contributorsEl) {
+          contributorsEl.textContent = stats.contributors > 0 ? stats.contributors : '—';
+        }
+        if (savedEl && stats.value_dollars > 0) {
+          savedEl.textContent = `$${Math.round(stats.value_dollars)}`;
+        }
+        
+      } catch (err) {
+        // Silent fail - stats are nice-to-have
+        console.debug('Community stats fetch failed:', err);
+      }
+    }
+    
+    /**
+     * Log a contribution when BYOK key is used
+     * Called from BYOKManager or directly from API calls
+     */
+    async function logContribution(provider, resourceType, dayNumber, phase, estimatedCostCents = 1) {
+      try {
+        await fetch('/api/contribution', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            provider,
+            resource_type: resourceType,
+            day_number: dayNumber,
+            phase,
+            estimated_cost_cents: estimatedCostCents
+          })
+        });
+      } catch (err) {
+        // Silent fail - logging is best-effort
+      }
+    }
+    
+    // Expose for use in BYOK operations
+    window.logContribution = logContribution;
     
     // Legacy function for backwards compatibility
     function saveByokFromSettings() {
