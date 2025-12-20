@@ -178,3 +178,4 @@ Add entries for days 32-365 as they're generated.
 - `scripts/kelly-visual-identity/generate-thumbnails-january.ts`
 - `scripts/kelly-visual-identity/generate-thumbnails-february.ts`
 - `scripts/generate-day17-thumbnail.ts`
+

@@ -69,3 +69,4 @@ export const AGE_BUCKETS = ['kid', 'teen', 'adult', 'mature', 'elder'] as const;
 export type Archetype = typeof ARCHETYPES[number];
 export type AgeBucket = typeof AGE_BUCKETS[number];
 export type Phase = typeof GENERATION_CONFIG.phases[number];
+
