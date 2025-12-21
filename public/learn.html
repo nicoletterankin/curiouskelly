@@ -91,6 +91,9 @@
   <!-- These systems let Kelly animate in real-time from scripts + TTS audio  -->
   <!-- NOTE: KellyAudio is defined inline below - don't import kelly-audio.js -->
   <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- PixiJS compositor (WebGL overlay layer) -->
+  <script src="https://cdn.jsdelivr.net/npm/pixi.js@8/dist/pixi.min.js"></script>
+  <script src="/js/kelly-pixi-compositor.js"></script>
   <script src="/js/kelly-lipsync.js"></script>
   <script src="/js/kelly-expression-bridge.js"></script>
   <script src="/js/kelly-alignment-player.js"></script>
@@ -6107,7 +6110,7 @@
       padding: 20px;
     }
     
-    /* FAQ Styles */
+    /* Support / Subpanel Styles */
     .faq-item {
       margin-bottom: 20px;
       padding-bottom: 20px;
@@ -8134,9 +8137,14 @@
         <button class="nav-action-btn" data-panel="search" title="Search 730 lessons">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="7"/><path d="m21 21-4.35-4.35"/></svg>
         </button>
-        <a href="/contribute" class="nav-action-btn" title="Power Kelly — Contribute Credits" style="text-decoration: none; color: inherit;">
-          <span style="font-size: 16px;">🎁</span>
-        </a>
+        <button class="nav-action-btn" data-panel="journey" title="Learning Calendar">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="3" y="4" width="18" height="18" rx="2" ry="2"/>
+            <line x1="16" y1="2" x2="16" y2="6"/>
+            <line x1="8" y1="2" x2="8" y2="6"/>
+            <line x1="3" y1="10" x2="21" y2="10"/>
+          </svg>
+        </button>
         <button class="nav-action-btn" data-panel="settings" title="Settings & AI Keys">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="12" cy="12" r="3"/>
@@ -8829,8 +8837,8 @@
           </div>
           <div class="settings-item" id="btn-subscription">
             <div class="icon">💎</div>
-            <div class="label">Subscription</div>
-            <div class="value" id="subscription-status">Explorer</div>
+            <div class="label">Billing</div>
+            <div class="value" id="subscription-status">Included</div>
             <div class="arrow">›</div>
           </div>
         </div>
@@ -8851,12 +8859,12 @@
           <div class="settings-section-title">Support</div>
           <div class="settings-item" id="btn-help">
             <div class="icon">❓</div>
-            <div class="label">Help & FAQ</div>
+            <div class="label">Email support</div>
             <div class="arrow">›</div>
           </div>
           <div class="settings-item" id="btn-feedback">
             <div class="icon">✉️</div>
-            <div class="label">Message Kelly</div>
+            <div class="label">Contact</div>
             <div class="arrow">›</div>
           </div>
         </div>
@@ -8889,34 +8897,20 @@
       
       <!-- SUB-PANELS (hidden by default, slide in when item clicked) -->
       
-      <!-- HELP & FAQ Sub-panel -->
+      <!-- SUPPORT Sub-panel -->
       <div class="settings-subpanel" id="settings-help-panel">
         <div class="subpanel-header">
           <button class="subpanel-back" onclick="closeSettingsSubpanel()">← Back</button>
-          <div class="subpanel-title">Help & FAQ</div>
+          <div class="subpanel-title">Support</div>
         </div>
         <div class="subpanel-content">
-          <div class="faq-item">
-            <div class="faq-q">How do lessons work?</div>
-            <div class="faq-a">Each day, a new lesson unlocks. Complete it to maintain your streak! Lessons take about 5 minutes.</div>
-          </div>
-          <div class="faq-item">
-            <div class="faq-q">Can I go back to previous lessons?</div>
-            <div class="faq-a">Yes! Use the Journey tab to browse all your completed lessons.</div>
-          </div>
-          <div class="faq-item">
-            <div class="faq-q">How does Kelly adapt to me?</div>
-            <div class="faq-a">Kelly observes how you learn (with your permission) and adjusts her teaching style. You can control this in Preferences.</div>
-          </div>
-          <div class="faq-item">
-            <div class="faq-q">What's included with a subscription?</div>
-            <div class="faq-a">Subscribers get access to all 365 lessons, all Kelly personas, and Year 2 content when it launches.</div>
-          </div>
-          <div class="faq-item">
-            <div class="faq-q">Still have questions?</div>
-            <div class="faq-a">
-              <button class="btn-secondary" onclick="openSettingsSubpanel('contact')">Message Kelly →</button>
-            </div>
+          <div style="padding: 6px 2px;">
+            <p style="color: var(--text-muted); margin: 0 0 14px; line-height: 1.5;">
+              Real support is email-first. If something feels broken, confusing, or incorrect, tell us and we’ll fix it.
+            </p>
+            <a class="settings-link" href="mailto:hello@curiouskelly.com">hello@curiouskelly.com →</a>
+            <div style="height: 14px;"></div>
+            <button class="btn-secondary" type="button" onclick="openSettingsSubpanel('contact')">Send a message →</button>
           </div>
         </div>
       </div>
@@ -8925,17 +8919,19 @@
       <div class="settings-subpanel" id="settings-contact-panel">
         <div class="subpanel-header">
           <button class="subpanel-back" onclick="closeSettingsSubpanel()">← Back</button>
-          <div class="subpanel-title">Message Kelly</div>
+          <div class="subpanel-title">Contact</div>
         </div>
         <div class="subpanel-content">
-          <p style="color: var(--text-muted); margin-bottom: 16px;">Have a question or feedback? Kelly reads every message.</p>
+          <p style="color: var(--text-muted); margin-bottom: 16px; line-height: 1.5;">
+            Have a question or feedback? Send us a note. If you include an email, we can reply there.
+          </p>
           <div class="contact-form">
             <input type="email" id="contact-email" class="contact-input" placeholder="Your email" />
             <textarea id="contact-message" class="contact-textarea" placeholder="What's on your mind?" rows="4"></textarea>
             <button class="btn-primary" id="contact-send-btn" onclick="sendContactMessage()">Send Message</button>
           </div>
           <p style="color: var(--text-muted); font-size: 12px; margin-top: 16px; text-align: center;">
-            We typically respond within 24 hours.
+            Prefer your email app? Use <a href="mailto:hello@curiouskelly.com" class="settings-link">hello@curiouskelly.com</a>.
           </p>
         </div>
       </div>
@@ -8993,7 +8989,7 @@
             <p>Curious Kelly provides daily educational content. By using the service, you agree to use it respectfully and not misuse it.</p>
             
             <h4>Subscriptions</h4>
-            <p>Today's lesson is always yours. Subscriptions unlock the full 365-day journey and can be cancelled anytime.</p>
+            <p>Learning is included. Subscriptions are optional contributions and can be cancelled anytime.</p>
             
             <h4>Content</h4>
             <p>Lessons are for personal learning. Please don't redistribute or commercially use our content.</p>
@@ -9267,42 +9263,43 @@
             <details class="settings-section">
               <summary class="settings-section-header">
                 <span class="settings-icon">❓</span>
-                <span>Help & FAQ</span>
+                <span>Support</span>
               </summary>
               <div class="settings-section-content">
-                <p>Kelly teaches one lesson per day for 365 days. Today's lesson is always yours!</p>
-                <a href="mailto:hello@curiouskelly.com" class="settings-link">Email Support →</a>
+                <p>For real support, email us. Billing questions, bugs, or “this copy is wrong” — all welcome.</p>
+                <a href="mailto:hello@curiouskelly.com" class="settings-link">hello@curiouskelly.com →</a>
               </div>
             </details>
             
-            <!-- Contribution Section - Never Gate, Always Free -->
+            <!-- Contribution Section - Never Gate -->
             <details class="settings-section" id="contribution-section">
               <summary class="settings-section-header">
                 <span class="settings-icon">💜</span>
-                <span>Support Kelly</span>
+                <span>Billing</span>
               </summary>
               <div class="settings-section-content">
                 <div class="contribution-philosophy" style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.1), rgba(37, 99, 235, 0.1)); border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 1px solid rgba(147, 51, 234, 0.2);">
-                  <h4 style="margin: 0 0 8px; color: var(--text-primary); font-size: 15px;">✨ Today's lesson is always yours</h4>
+                  <h4 style="margin: 0 0 8px; color: var(--text-primary); font-size: 15px;">✨ Contributing is learning</h4>
                   <p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
-                    We never gate learning. All 730 lessons (Learn + Grow tracks) are available to everyone, always. Your contribution helps us reach more learners worldwide.
+                    You can contribute your <strong>time</strong>, <strong>talent</strong>, or <strong>tokens</strong>:
+                    time is showing up daily with Kelly, talent is helping make Kelly better for others, and tokens are paying with your API keys from third‑party providers or with money via Stripe.
                   </p>
                 </div>
                 
                 <div class="contribution-options" style="display: flex; flex-direction: column; gap: 12px;">
-                  <button class="btn-primary" onclick="openCheckoutPanel('sponsor');" style="width: 100%; background: linear-gradient(135deg, #9333ea, #2563eb);">
-                    🌍 Sponsor a Learner — $7.99/mo
+                  <button class="btn-primary" onclick="openCheckoutPanel('monthly');" style="width: 100%; background: linear-gradient(135deg, #9333ea, #2563eb);">
+                    💳 Monthly — $7.99/mo
                   </button>
                   <button class="btn-secondary" onclick="openCheckoutPanel('annual');" style="width: 100%;">
-                    💜 Annual Supporter — $49.99/yr
+                    💜 Annual — $49.99/yr
                   </button>
                   <button class="btn-secondary" onclick="openCheckoutPanel('lifetime');" style="width: 100%;">
-                    🏆 Lifetime Founding Member — $199
+                    🏆 Lifetime — $199.99
                   </button>
                 </div>
                 
                 <p style="margin-top: 12px; font-size: 11px; color: var(--text-muted); text-align: center;">
-                  100% goes to lesson creation, translation, and accessibility
+                  Payments are processed by Stripe. No card numbers are stored by Lesson of the Day PBC.
                 </p>
               </div>
             </details>
@@ -9334,9 +9331,9 @@
               </summary>
               <div class="settings-section-content byok-hub">
                 <div class="byok-hero" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1)); border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 1px solid rgba(99, 102, 241, 0.2);">
-                  <p style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 0 0 8px;">✨ Kelly runs on community power.</p>
+                  <p style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 0 0 8px;">✨ Tokens can be API keys, too.</p>
                   <p style="font-size: 12px; color: var(--text-secondary); margin: 0; line-height: 1.5;">
-                    Got API credits sitting unused? Tech companies give away free tiers that often go to waste. 
+                    Got API credits sitting unused? Many providers include starter credits that often go to waste.
                     Add your keys here and Kelly turns them into lessons for curious minds who can't afford AI tutoring.
                   </p>
                 </div>
@@ -9355,12 +9352,12 @@
                       <span class="provider-badge video">VIDEO</span>
                       <span class="provider-status" id="byok-status-heygen"></span>
                     </div>
-                    <p class="provider-desc">Generate Kelly videos with AI avatars. Free credits for new users!</p>
+                    <p class="provider-desc">Generate Kelly videos with AI avatars. Starter credits may be available for new accounts.</p>
                     <div class="byok-input-row">
                       <input type="password" id="byok-key-heygen" placeholder="Your HeyGen API key" class="byok-key-input">
                       <button class="byok-connect-btn" onclick="connectBYOK('heygen')">Connect</button>
                     </div>
-                    <a href="https://app.heygen.com/settings/api" target="_blank" class="provider-setup-link">Get free API key →</a>
+                    <a href="https://app.heygen.com/settings/api" target="_blank" class="provider-setup-link">Get API key →</a>
                   </div>
                   
                   <!-- OpenAI -->
@@ -9376,7 +9373,7 @@
                       <input type="password" id="byok-key-openai" placeholder="sk-..." class="byok-key-input">
                       <button class="byok-connect-btn" onclick="connectBYOK('openai')">Connect</button>
                     </div>
-                    <a href="https://platform.openai.com/api-keys" target="_blank" class="provider-setup-link">Get API key ($5 free credit) →</a>
+                    <a href="https://platform.openai.com/api-keys" target="_blank" class="provider-setup-link">Get API key →</a>
                   </div>
                   
                   <!-- Anthropic -->
@@ -9392,7 +9389,7 @@
                       <input type="password" id="byok-key-anthropic" placeholder="sk-ant-..." class="byok-key-input">
                       <button class="byok-connect-btn" onclick="connectBYOK('anthropic')">Connect</button>
                     </div>
-                    <a href="https://console.anthropic.com/settings/keys" target="_blank" class="provider-setup-link">Get API key ($5 free credit) →</a>
+                    <a href="https://console.anthropic.com/settings/keys" target="_blank" class="provider-setup-link">Get API key →</a>
                   </div>
                   
                   <!-- Google AI -->
@@ -9403,12 +9400,12 @@
                       <span class="provider-badge image">IMAGE</span>
                       <span class="provider-status" id="byok-status-google"></span>
                     </div>
-                    <p class="provider-desc">Generate custom visuals with Gemini & Imagen. Generous free tier!</p>
+                    <p class="provider-desc">Generate custom visuals with Gemini & Imagen. Starter credits may be available.</p>
                     <div class="byok-input-row">
                       <input type="password" id="byok-key-google" placeholder="AIza..." class="byok-key-input">
                       <button class="byok-connect-btn" onclick="connectBYOK('google')">Connect</button>
                     </div>
-                    <a href="https://aistudio.google.com/app/apikey" target="_blank" class="provider-setup-link">Get free API key →</a>
+                    <a href="https://aistudio.google.com/app/apikey" target="_blank" class="provider-setup-link">Get API key →</a>
                   </div>
                   
                   <!-- ElevenLabs -->
@@ -9419,12 +9416,12 @@
                       <span class="provider-badge voice">VOICE</span>
                       <span class="provider-status" id="byok-status-elevenlabs"></span>
                     </div>
-                    <p class="provider-desc">Premium voice synthesis. 10,000 free characters/month!</p>
+                    <p class="provider-desc">Premium voice synthesis. Starter plan credits may be available.</p>
                     <div class="byok-input-row">
                       <input type="password" id="byok-key-elevenlabs" placeholder="Your ElevenLabs key" class="byok-key-input">
                       <button class="byok-connect-btn" onclick="connectBYOK('elevenlabs')">Connect</button>
                     </div>
-                    <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" class="provider-setup-link">Get free API key →</a>
+                    <a href="https://elevenlabs.io/app/settings/api-keys" target="_blank" class="provider-setup-link">Get API key →</a>
                   </div>
                   
                   <!-- Groq (FAST!) -->
@@ -9435,12 +9432,12 @@
                       <span class="provider-badge chat" style="background: #f59e0b;">FAST</span>
                       <span class="provider-status" id="byok-status-groq"></span>
                     </div>
-                    <p class="provider-desc">Blazing fast inference. Free tier with Llama & Mixtral models!</p>
+                    <p class="provider-desc">Blazing fast inference. Starter credits may be available.</p>
                     <div class="byok-input-row">
                       <input type="password" id="byok-key-groq" placeholder="gsk_..." class="byok-key-input">
                       <button class="byok-connect-btn" onclick="connectBYOK('groq')">Connect</button>
                     </div>
-                    <a href="https://console.groq.com/keys" target="_blank" class="provider-setup-link">Get free API key →</a>
+                    <a href="https://console.groq.com/keys" target="_blank" class="provider-setup-link">Get API key →</a>
                   </div>
                   
                   <!-- Together AI -->
@@ -9451,12 +9448,12 @@
                       <span class="provider-badge chat">CHAT</span>
                       <span class="provider-status" id="byok-status-together"></span>
                     </div>
-                    <p class="provider-desc">Open source models. $5 free credit for new accounts!</p>
+                    <p class="provider-desc">Open source models. Starter credits may be available for new accounts.</p>
                     <div class="byok-input-row">
                       <input type="password" id="byok-key-together" placeholder="Your Together key" class="byok-key-input">
                       <button class="byok-connect-btn" onclick="connectBYOK('together')">Connect</button>
                     </div>
-                    <a href="https://api.together.xyz/settings/api-keys" target="_blank" class="provider-setup-link">Get $5 free →</a>
+                    <a href="https://api.together.xyz/settings/api-keys" target="_blank" class="provider-setup-link">Get API key →</a>
                   </div>
                   
                   <!-- Replicate -->
@@ -9467,12 +9464,12 @@
                       <span class="provider-badge image">IMAGE</span>
                       <span class="provider-status" id="byok-status-replicate"></span>
                     </div>
-                    <p class="provider-desc">Run open source models. Free tier for SDXL, Whisper & more!</p>
+                    <p class="provider-desc">Run open source models. Starter credits may be available.</p>
                     <div class="byok-input-row">
                       <input type="password" id="byok-key-replicate" placeholder="r8_..." class="byok-key-input">
                       <button class="byok-connect-btn" onclick="connectBYOK('replicate')">Connect</button>
                     </div>
-                    <a href="https://replicate.com/account/api-tokens" target="_blank" class="provider-setup-link">Get free API key →</a>
+                    <a href="https://replicate.com/account/api-tokens" target="_blank" class="provider-setup-link">Get API key →</a>
                   </div>
                   
                   <!-- Stability AI -->
@@ -9483,12 +9480,12 @@
                       <span class="provider-badge image">IMAGE</span>
                       <span class="provider-status" id="byok-status-stability"></span>
                     </div>
-                    <p class="provider-desc">Stable Diffusion creators. 25 free credits to start!</p>
+                    <p class="provider-desc">Stable Diffusion creators. Starter credits may be available.</p>
                     <div class="byok-input-row">
                       <input type="password" id="byok-key-stability" placeholder="sk-..." class="byok-key-input">
                       <button class="byok-connect-btn" onclick="connectBYOK('stability')">Connect</button>
                     </div>
-                    <a href="https://platform.stability.ai/account/keys" target="_blank" class="provider-setup-link">Get 25 free credits →</a>
+                    <a href="https://platform.stability.ai/account/keys" target="_blank" class="provider-setup-link">Get API key →</a>
                   </div>
                   
                   <!-- Fal.ai -->
@@ -9537,18 +9534,15 @@
                     </div>
                   </div>
                   <p style="margin: 10px 0 0; font-size: 11px; color: var(--text-secondary); text-align: center; line-height: 1.4;">
-                    Big tech gives away free credits. Most go unused. Together, we turn them into education for everyone.
+                    Many providers include starter credits. Most go unused. Together, we turn them into education for everyone.
                   </p>
                 </div>
                 
-                <!-- Free Credits Guide -->
+                <!-- Starter Credits Guide -->
                 <div style="margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.04); border-radius: 8px; border: 1px solid var(--border-default);">
-                  <div style="font-size: 11px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">💡 Don't have API keys? Get free ones:</div>
+                  <div style="font-size: 11px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">💡 Don’t have API keys yet?</div>
                   <div style="font-size: 11px; color: var(--text-secondary); line-height: 1.6;">
-                    • <strong>HeyGen</strong> — Free trial creates 5 Kelly videos<br>
-                    • <strong>OpenAI</strong> — $5 free credit powers 50 conversations<br>
-                    • <strong>ElevenLabs</strong> — 10K free chars = 100 lesson segments<br>
-                    • <strong>Google AI</strong> — Generous free tier for images
+                    Start with the provider you already use, then create an API key in their dashboard.
                   </div>
                 </div>
                 
@@ -9669,40 +9663,40 @@
       </div>
     </div>
 
-    <!-- In-app: Subscription & Pricing (absorbed from marketing) -->
+    <!-- In-app: Billing (absorbed from marketing) -->
     <div class="overlay" id="overlay-pricing" aria-hidden="true">
       <button class="overlay-close" data-close-overlay>✕</button>
       <div style="width: 100%; max-width: 820px;">
-        <h3 class="infographic-title" style="margin-bottom: 6px;">Subscription & Pricing</h3>
-        <p class="infographic-desc" style="margin-top: 0; margin-bottom: 18px;">Access all lessons. Share with family.</p>
+        <h3 class="infographic-title" style="margin-bottom: 6px;">Billing</h3>
+        <p class="infographic-desc" style="margin-top: 0; margin-bottom: 18px;">Contributing is learning — with your time, talent, or tokens.</p>
 
         <div style="display:grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px;">
           <div style="background: var(--surface-elevated); border: 1px solid var(--border-default); border-radius: 14px; padding: 16px;">
             <div style="font-weight: 700; margin-bottom: 6px;">Today</div>
             <div style="font-size: 28px; font-weight: 800; margin-bottom: 6px;">$0</div>
-            <div style="color: var(--text-secondary); font-size: 13px; margin-bottom: 12px;">Today's lesson is always yours.</div>
+            <div style="color: var(--text-secondary); font-size: 13px; margin-bottom: 12px;">Time contribution: show up daily with Kelly.</div>
             <ul style="margin: 0 0 14px 18px; color: var(--text-secondary); font-size: 13px; line-height: 1.5;">
               <li>Today's daily lesson</li>
-              <li>Basic personalization</li>
-              <li>Community access</li>
+              <li>Progress tracking</li>
+              <li>Learn + Grow tracks</li>
             </ul>
             <button class="btn-primary" type="button" onclick="closeAllOverlays(); handlePlayButton();">Start Today's Lesson</button>
           </div>
 
           <div style="background: linear-gradient(135deg, var(--kelly-blue-dark), var(--kelly-blue)); border: 2px solid var(--kelly-blue); border-radius: 14px; padding: 16px;">
             <div style="display:flex; align-items:center; justify-content:space-between; gap:10px;">
-              <div style="font-weight: 800; color: white;">Annual</div>
+              <div style="font-weight: 800; color: white;">Tokens</div>
               <div style="background: var(--gold-wisdom); color:#000; font-size: 11px; font-weight: 800; padding: 3px 8px; border-radius: 999px;">Most Popular</div>
             </div>
             <div style="font-size: 28px; font-weight: 900; color: white; margin: 6px 0;">$49.99<span style="font-size: 13px; font-weight: 600;">/year</span></div>
-            <div style="color: rgba(255,255,255,0.9); font-size: 13px; margin-bottom: 12px;">Save 48% — $4.17/month</div>
+            <div style="color: rgba(255,255,255,0.9); font-size: 13px; margin-bottom: 12px;">Tokens: contribute via Stripe.</div>
             <ul style="margin: 0 0 14px 18px; color: rgba(255,255,255,0.92); font-size: 13px; line-height: 1.5;">
-              <li>All 365 lessons, anytime</li>
-              <li>Learn at any pace</li>
-              <li>Progress tracking</li>
-              <li>Cancel anytime</li>
+              <li>Optional — learning stays included</li>
+              <li>Secure checkout powered by Stripe</li>
+              <li>Cancel anytime (subscriptions)</li>
+              <li>Receipts by email</li>
             </ul>
-            <button class="btn-primary" type="button" style="background:white;color:var(--kelly-blue);" onclick="closeAllOverlays(); openCheckoutPanel('annual');">Upgrade (Annual)</button>
+            <button class="btn-primary" type="button" style="background:white;color:var(--kelly-blue);" onclick="closeAllOverlays(); openCheckoutPanel('annual');">Continue (Annual)</button>
             <div style="margin-top: 10px; display:flex; gap: 8px;">
               <button class="btn-secondary" type="button" style="flex:1;" onclick="closeAllOverlays(); openCheckoutPanel('monthly');">Monthly $7.99</button>
               <button class="btn-secondary" type="button" style="flex:1;" onclick="closeAllOverlays(); openCheckoutPanel('lifetime');">Lifetime $199.99</button>
@@ -9711,7 +9705,7 @@
         </div>
 
         <p style="margin-top: 14px; text-align: center; font-size: 12px; color: var(--text-muted);">
-          Checkout happens inside Kelly (right panel). No card numbers are stored by Curious Kelly.
+          Checkout happens inside Kelly (right panel). No card numbers are stored by Lesson of the Day PBC.
         </p>
       </div>
     </div>
@@ -9723,7 +9717,7 @@
         <h3 class="infographic-title" style="margin-bottom: 6px;">🔑 Use Your API Key</h3>
         <p class="infographic-desc" style="margin-top: 0; margin-bottom: 18px;">
           Generate unique visuals using your own Google AI API key.<br>
-          <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--kelly-blue-light);">Get yours free →</a>
+          <a href="https://aistudio.google.com/app/apikey" target="_blank" style="color: var(--kelly-blue-light);">Get an API key →</a>
         </p>
         
         <div style="background: var(--surface-elevated); border: 1px solid var(--border-default); border-radius: 14px; padding: 20px; text-align: left;">
@@ -9803,21 +9797,21 @@
 
           <!-- Subscription Options -->
           <div class="paywall-subscribe-option" style="background: linear-gradient(135deg, var(--kelly-blue-dark), var(--kelly-blue)); border-radius: 12px; padding: 20px; border: 2px solid var(--kelly-blue);">
-            <span style="background: var(--gold-wisdom); color: #000; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 4px;">ALL ACCESS</span>
-            <h3 style="font-size: 16px; margin: 8px 0; color: white;">Unlock Everything</h3>
+            <span style="background: var(--gold-wisdom); color: #000; font-size: 11px; font-weight: 600; padding: 3px 8px; border-radius: 4px;">OPTIONAL</span>
+            <h3 style="font-size: 16px; margin: 8px 0; color: white;">Support the Project</h3>
             <p class="plan-price" style="font-size: 28px; font-weight: 600; color: white;"><span data-price="monthly">$7.99</span><span style="font-size: 14px; font-weight: 400;">/mo</span></p>
             <ul style="font-size: 13px; color: rgba(255,255,255,0.9); margin: 12px 0 16px; padding-left: 18px; text-align: left;">
-              <li>All 365 lessons</li>
-              <li>Go back or skip ahead</li>
-              <li>40+ bonus lessons</li>
-              <li>Cancel anytime</li>
+              <li>Learning stays included</li>
+              <li>Secure checkout powered by Stripe</li>
+              <li>Cancel anytime (subscriptions)</li>
+              <li>Receipts by email</li>
             </ul>
             <button class="paywall-option featured" id="plan-monthly" type="button" style="width: 100%; background: white; color: var(--kelly-blue);">
-              <span class="plan-name">Subscribe Monthly</span>
+              <span class="plan-name">Contribute Monthly</span>
             </button>
             <div style="display: flex; gap: 8px; margin-top: 10px;">
               <button class="paywall-option-mini" id="plan-yearly" type="button" style="flex: 1; background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer;">
-                Yearly <span data-price="annual">$49.99</span>
+                Annual <span data-price="annual">$49.99</span>
               </button>
               <button class="paywall-option-mini" id="plan-lifetime" type="button" style="flex: 1; background: rgba(255,255,255,0.2); border: none; color: white; padding: 8px; border-radius: 6px; font-size: 12px; cursor: pointer;">
                 Lifetime <span data-price="lifetime">$199</span>
@@ -9827,7 +9821,7 @@
         </div>
 
         <p class="paywall-footer" style="margin-top: 20px; text-align: center; font-size: 13px; color: var(--text-muted);">
-          💡 <strong>Today's lesson is always included.</strong> Come back tomorrow for the next one.
+          💡 <strong>Contributing is learning.</strong> Time, talent, or tokens — your choice.
         </p>
         <p class="paywall-terms" style="margin-top: 8px;">
           <button type="button" class="btn-secondary" id="paywall-restore" style="padding: 0; font-size: 12px;">Restore purchases</button>
@@ -9887,10 +9881,19 @@
     // Production polish: stable local fallback media
     const KELLY_PLACEHOLDER = '/images/kelly-hero-4k.png';
     // Static-only mode (e.g. `npx serve public -l 3000`): no Vercel `/api/*` routes available.
+    // If a remote TTS endpoint is configured (Cloudflare Worker), allow runtime TTS even in local static serving.
+    const __HAS_REMOTE_TTS =
+      !!__URL_PARAMS.get('ttsEndpoint') ||
+      (typeof window !== 'undefined' &&
+        typeof window.KELLY_CONFIG?.ttsEndpoint === 'string' &&
+        window.KELLY_CONFIG.ttsEndpoint.trim() &&
+        !window.KELLY_CONFIG.ttsEndpoint.trim().startsWith('/'));
+
     const STATIC_ONLY_MODE =
+      !__HAS_REMOTE_TTS &&
       (location.hostname === 'localhost' || location.hostname === '127.0.0.1') &&
       String(location.port || '') === '3000';
-    // Enable runtime TTS by default in production (when /api/tts is available).
+    // Enable runtime TTS by default in production (when a configured TTS endpoint is available).
     // Disable in static-only mode or via ?tts=false URL param.
     const ENABLE_RUNTIME_TTS = __URL_PARAMS.get('tts') !== 'false' && !STATIC_ONLY_MODE;
     // Remote persona head images can be opt-in (otherwise keep the app fully local/quiet).
@@ -11342,14 +11345,14 @@
       // Paywall hit
       if (eventName === 'paywall_opened') {
         sessionStorage.setItem(shownKey, '1');
-        showToast('✨ Want unlimited lessons? Upgrade without leaving Kelly.');
+        showToast('💜 Want to support the project? Billing is optional — and checkout happens without leaving Kelly.');
         return;
       }
 
       // Simple streak milestone (3)
       if (eventName === 'streak_milestone' && Number(state?.streak || 0) >= 3) {
         sessionStorage.setItem(shownKey, '1');
-        showToast('🔥 3-day streak! Keep the momentum going with Kelly+.');
+        showToast('🔥 3-day streak! If you want to support the project, you can do it in Billing.');
       }
     }
 
@@ -11386,14 +11389,14 @@
       slot.innerHTML = `
         <div class="checkout-panel">
           <div class="checkout-header">
-            <div class="checkout-title">Unlock Kelly+</div>
-            <div class="checkout-subtitle">Seamless, secure checkout—without leaving Kelly.</div>
+            <div class="checkout-title">Billing</div>
+            <div class="checkout-subtitle">Contributing is learning — time, talent, or tokens. Stripe handles secure checkout.</div>
           </div>
 
           <div class="checkout-plans" id="checkout-plans">
             <button class="checkout-plan ${__selectedPlanType === 'annual' ? 'selected' : ''}" data-plan="annual" type="button">
               <div class="row">
-                <div class="name">Yearly</div>
+                <div class="name">Annual</div>
                 <div class="price">$49.99/yr</div>
               </div>
               <div class="note">Best value</div>
@@ -11421,7 +11424,7 @@
             </button>
 
             <button class="checkout-cta" id="checkout-cta" type="button">Continue</button>
-            <div class="checkout-terms">Trial applies to subscriptions. No card numbers are stored by Curious Kelly.</div>
+            <div class="checkout-terms">Subscriptions include 7 days to explore. No card numbers are stored by Lesson of the Day PBC.</div>
           </div>
 
           <div class="checkout-embedded hidden" id="checkout-embedded">
@@ -12360,56 +12363,81 @@
     }
     
     // ============================================
-    // LOAD WEEK LESSONS FROM SUPABASE
+    // LOAD WEEK LESSONS FROM STATIC JSON
     // ============================================
     async function loadWeekLessons(startDay) {
-      // Canonical: use KellyLessonLoader (it will choose local pack / Supabase / API / static / emergency)
+      // Fetch both Learn and Grow track titles from static curriculum files
+      const results = [];
+      const endDay = Math.min(365, startDay + 6);
+      
+      // Cache for loaded curriculum files
+      if (!window.__curriculumCache) {
+        window.__curriculumCache = { learn: {}, grow: {} };
+      }
+      
       try {
-        if (!window.KellyLessonLoader) throw new Error('KellyLessonLoader missing');
-
-        // Use default archetype (contextual Kelly - no user selection)
-        const archetype = 'The Scientist';
-        const region = getEffectiveAgeBucket();
-
-        const results = await Promise.all(
-          Array.from({ length: 7 }, async (_, i) => {
-            const dayNum = startDay + i;
-            const payload = await window.KellyLessonLoader.loadLesson(dayNum, { archetype, age: state.age, region });
-            const lesson = payload?.lesson || {};
-            const result = {
-              day_number: dayNum,
-              topic: lesson?.topic || 'Loading...',
-              marketing_headline: lesson?.marketing_headline || lesson?.headline || lesson?.topic || ''
-            };
-            // Cache the lesson for future lookups
-            if (lesson?.topic) {
-              lessonsCache[dayNum] = lesson;
-            }
-            return result;
-          })
-        );
-
+        const months = ['january', 'february', 'march', 'april', 'may', 'june', 
+                        'july', 'august', 'september', 'october', 'november', 'december'];
+        
+        // Determine which months we need to load
+        const monthsNeeded = new Set();
+        for (let d = startDay; d <= endDay; d++) {
+          const monthIndex = getMonthFromDayNumber(d);
+          monthsNeeded.add(months[monthIndex]);
+        }
+        
+        // Load curriculum files for needed months
+        const loadPromises = [];
+        for (const month of monthsNeeded) {
+          if (!window.__curriculumCache.learn[month]) {
+            loadPromises.push(
+              fetch(`/data/curriculum/year1-foundations/${month}_curriculum.json`)
+                .then(r => r.ok ? r.json() : null)
+                .then(data => { window.__curriculumCache.learn[month] = data; })
+                .catch(() => { window.__curriculumCache.learn[month] = null; })
+            );
+          }
+          if (!window.__curriculumCache.grow[month]) {
+            loadPromises.push(
+              fetch(`/data/curriculum/year2-ai-fluency/${month}_curriculum.json`)
+                .then(r => r.ok ? r.json() : null)
+                .then(data => { window.__curriculumCache.grow[month] = data; })
+                .catch(() => { window.__curriculumCache.grow[month] = null; })
+            );
+          }
+        }
+        
+        await Promise.all(loadPromises);
+        
+        // Build results from cached data
+        for (let d = startDay; d <= endDay; d++) {
+          const monthIndex = getMonthFromDayNumber(d);
+          const monthKey = months[monthIndex];
+          
+          const learnData = window.__curriculumCache.learn[monthKey];
+          const growData = window.__curriculumCache.grow[monthKey];
+          
+          const learnLesson = learnData?.days?.find(day => day.day === d);
+          const growLesson = growData?.days?.find(day => day.day === d);
+          
+          results.push({
+            day_number: d,
+            learnTopic: learnLesson?.title || 'Loading...',
+            growTopic: growLesson?.title || 'Loading...'
+          });
+        }
+        
         return results;
       } catch (e) {
         debugWarn('Week lessons load failed:', e);
-        // Fallback: local API per day (non-fatal)
-        const results = await Promise.all(
-          Array.from({ length: 7 }, async (_, i) => {
-            const dayNum = startDay + i;
-            const apiPayload = await loadLessonFromApi(dayNum);
-            const lesson = apiPayload?.lesson;
-            const result = {
-              day_number: dayNum,
-              topic: lesson?.topic || 'Loading...',
-              marketing_headline: lesson?.marketing_headline || lesson?.topic || ''
-            };
-            // Cache the lesson for future lookups
-            if (lesson?.topic) {
-              lessonsCache[dayNum] = lesson;
-            }
-            return result;
-          })
-        );
+        // Fallback: return placeholder data
+        for (let d = startDay; d <= endDay; d++) {
+          results.push({
+            day_number: d,
+            learnTopic: 'Loading...',
+            growTopic: 'Loading...'
+          });
+        }
         return results;
       }
     }
@@ -12625,6 +12653,17 @@
       if (toggle) toggle.checked = !!state.autoAdvance;
     }
 
+    function getTtsEndpoint() {
+      // Highest priority: URL param (useful for demos without redeploy)
+      const urlOverride = __URL_PARAMS.get('ttsEndpoint');
+      if (urlOverride) return urlOverride;
+      // Next: config.js
+      const cfg = (typeof window !== 'undefined' && window.KELLY_CONFIG) ? window.KELLY_CONFIG : {};
+      if (cfg && typeof cfg.ttsEndpoint === 'string' && cfg.ttsEndpoint.trim()) return cfg.ttsEndpoint.trim();
+      // Legacy fallback (may be disabled on static deployments)
+      return '/api/tts';
+    }
+
     async function generateTTS(text) {
       if (!ENABLE_RUNTIME_TTS) {
         if (DEBUG) console.log('🔇 TTS disabled (ENABLE_RUNTIME_TTS=false)');
@@ -12641,14 +12680,20 @@
         if (DEBUG) console.log('🔇 TTS skipped: no text provided');
         return null;
       }
-      if (DEBUG) console.log(`🎤 Calling /api/tts with ${text.length} chars...`);
+      const ttsEndpoint = getTtsEndpoint();
+      if (DEBUG) console.log(`🎤 Calling TTS (${ttsEndpoint}) with ${text.length} chars...`);
       try {
-        const response = await fetch('/api/tts', {
+        const response = await fetch(ttsEndpoint, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
             text,
-            voiceId: CONFIG.ELEVENLABS_VOICE_ID
+            voiceId: CONFIG.ELEVENLABS_VOICE_ID,
+            // Extra metadata for edge caching / fallback routing
+            language: state.language || 'en',
+            speed: (state.voiceSpeed === 'slow' ? 0.8 : state.voiceSpeed === 'fast' ? 1.2 : 1.0),
+            day: state.currentDay || null,
+            phase: state.currentPhase || null
           })
         });
 
@@ -12664,6 +12709,16 @@
           }
           return null;
         }
+        // Harden: static deployments may rewrite /api/* to JSON (200 OK) — detect non-audio.
+        const ct = (response.headers.get('content-type') || '').toLowerCase();
+        if (!ct.includes('audio')) {
+          let snippet = '';
+          try { snippet = await response.clone().text(); } catch (_) {}
+          console.error('🔇 TTS endpoint returned non-audio payload:', ct, snippet.slice(0, 240));
+          markTtsUnavailable('non_audio_response');
+          return null;
+        }
+
         const blob = await response.blob();
         if (DEBUG) console.log(`🎤 TTS success: ${blob.size} bytes`);
         return URL.createObjectURL(blob);
@@ -12845,6 +12900,8 @@
       __nowPlayingKey = null;
       stopVideo();
       kellyAudio.stop();
+      // Stop compositor overlays (if present)
+      try { window.KellyPixiCompositor?.setEnabled(false); } catch (_) {}
     }
 
     // Tracks the currently playing phase media to prevent double-starts.
@@ -12858,6 +12915,7 @@
       const phaseKey = getPhaseKeyFromDbPhase(dbPhase);
       // Use PHASE-SPECIFIC archetype (contextual Kelly architecture)
       const personaId = getPhaseArchetype(phaseKey) || 'scientist';
+      const HYBRID_DEMO = __URL_PARAMS.get('hybrid') === '1';
 
       const requestKey = `${state.currentDay || ''}|${state.currentPhase}|${personaId}|${ageBucket}|${phaseKey}`;
       // If the exact same phase media is already active, don't restart it.
@@ -12875,13 +12933,22 @@
           stopAllMedia();
           __nowPlayingKey = requestKey;
 
-      // Prefer atom-provided video URL (e.g. lesson_atoms.hd_video_url)
-      let resolvedVideo = videoUrl || null;
-      let resolvedSource = resolvedVideo ? 'atom' : null;
-      if (!resolvedVideo) {
-        // Try kelly_video_assets lookup (best-effort)
-        resolvedVideo = await getVideoUrl(state.currentDay, dbPhase, personaId, ageBucket, state.language);
-        if (resolvedVideo) resolvedSource = 'kelly_video_assets';
+      // Prefer atom-provided video URL (e.g. lesson_atoms.hd_video_url),
+      // but hybrid demo forces the known-good ground truth HeyGen sample.
+      let resolvedVideo = null;
+      let resolvedSource = null;
+
+      if (HYBRID_DEMO) {
+        resolvedVideo = '/kelly/videos/001/welcome.mp4';
+        resolvedSource = 'hybrid_ground_truth';
+      } else {
+        resolvedVideo = videoUrl || null;
+        resolvedSource = resolvedVideo ? 'atom' : null;
+        if (!resolvedVideo) {
+          // Try kelly_video_assets lookup (best-effort)
+          resolvedVideo = await getVideoUrl(state.currentDay, dbPhase, personaId, ageBucket, state.language);
+          if (resolvedVideo) resolvedSource = 'kelly_video_assets';
+        }
       }
       if (!resolvedVideo) {
         // Final fallback: generic motion clip per persona+age+phase (no day/language coupling)
@@ -12924,7 +12991,8 @@
         if (img) img.style.display = 'none';
 
         // Determine if video has baked-in audio (HeyGen talking heads) or needs separate TTS (motion clips)
-        const videoHasAudio = resolvedSource === 'atom' || resolvedSource === 'kelly_video_assets';
+        // Hybrid demo uses the video as a visual base only; audio comes from live ElevenLabs.
+        const videoHasAudio = (resolvedSource === 'atom' || resolvedSource === 'kelly_video_assets') && !HYBRID_DEMO;
         const needsSeparateTTS = resolvedSource === 'kelly_motion_library';
         
         if (DEBUG) console.log(`▶️ Playing: ${personaId}_${ageBucket}_${phaseKey} | source: ${resolvedSource} | hasAudio: ${videoHasAudio}`);
@@ -12957,6 +13025,21 @@
         v.onplay = () => {
           setKellySpeaking(true);
           syncPlayPauseUI();
+
+          // Ensure compositor is enabled and receiving blendshapes.
+          try {
+            if (window.KellyPixiCompositor) {
+              window.KellyPixiCompositor.init({ containerEl: document.getElementById('kelly-stage') });
+              window.KellyPixiCompositor.attachVideo(v);
+              window.KellyPixiCompositor.setEnabled(true);
+              // Hook blendshape stream to compositor
+              if (window.KellyLipSync) {
+                window.KellyLipSync.onBlendshapesUpdate = (blendshapes) => {
+                  try { window.KellyPixiCompositor.setBlendshapes(blendshapes); } catch (_) {}
+                };
+              }
+            }
+          } catch (_) {}
           
           // If video has baked-in audio, connect lip-sync to it
           if (videoHasAudio && window.KellyLipSync) {
@@ -12980,20 +13063,24 @@
           if (window.KellyLipSync) {
             try { window.KellyLipSync.stopFromAudioElement(v); } catch (e) {}
           }
+          // Stop compositor overlays
+          try { window.KellyPixiCompositor?.setEnabled(false); } catch (_) {}
           // Return to idle image when clip ends.
           stopVideo();
           onPhaseMediaEnd();
         };
         v.onerror = async () => {
           stopVideo();
+          try { window.KellyPixiCompositor?.setEnabled(false); } catch (_) {}
           await kellyAudio.speak(dbPhase, script);
         };
 
         v.src = resolvedVideo;
         try {
           await v.play();
-          // Only use separate TTS for motion clips (no baked-in audio)
-          if (needsSeparateTTS) {
+          // Only use separate TTS for motion clips (no baked-in audio),
+          // OR hybrid demo (video is visual base; live ElevenLabs provides voice).
+          if (needsSeparateTTS || HYBRID_DEMO) {
             if (DEBUG) console.log('🎤 Starting TTS for motion clip...');
             kellyAudio.speak(dbPhase, script).catch(() => {});
           }
@@ -13006,7 +13093,7 @@
             v.setAttribute('muted', '');
             await v.play();
             // If we had to mute a video that had audio, now we need TTS
-            if (videoHasAudio || needsSeparateTTS) {
+            if (videoHasAudio || needsSeparateTTS || HYBRID_DEMO) {
               kellyAudio.speak(dbPhase, script).catch(() => {});
             }
             return true;
@@ -13954,20 +14041,64 @@
       // Show loading state first
       weekView.innerHTML = '<div class="journey-lesson-list"><div style="text-align: center; padding: 20px; opacity: 0.5;">Loading lessons...</div></div>';
       
-      // Fetch lessons asynchronously from Supabase/cache
+      // Fetch lessons asynchronously from static files
       let lessons = [];
       try {
         lessons = await loadWeekLessons(startDay);
       } catch (e) {
         console.warn('populateWeekView: failed to load lessons', e);
       }
+      
+      // Fetch asset availability from Supabase (for preview thumbnails)
+      let dayAssetsMap = {};
+      try {
+        if (window.supabase) {
+          // Get lesson IDs for the range
+          const { data: coreLessons } = await window.supabase
+            .from('core_lessons')
+            .select('id, day_number')
+            .gte('day_number', startDay)
+            .lte('day_number', endDay)
+            .eq('track', 'learn');
+          
+          if (coreLessons && coreLessons.length > 0) {
+            const lessonIds = coreLessons.map(l => l.id);
+            const lessonIdToDay = {};
+            coreLessons.forEach(l => lessonIdToDay[l.id] = l.day_number);
+            
+            // Get assets for these lessons
+            const { data: assets } = await window.supabase
+              .from('lesson_atoms')
+              .select('core_lesson_id, phase, visual_url, hd_video_url')
+              .in('core_lesson_id', lessonIds)
+              .eq('archetype', 'The Scientist')
+              .or('visual_url.not.is.null,hd_video_url.not.is.null');
+            
+            if (assets) {
+              assets.forEach(a => {
+                const dayNum = lessonIdToDay[a.core_lesson_id];
+                if (!dayAssetsMap[dayNum]) dayAssetsMap[dayNum] = [];
+                dayAssetsMap[dayNum].push({
+                  phase: a.phase,
+                  visual: a.visual_url,
+                  video: a.hd_video_url
+                });
+              });
+            }
+          }
+        }
+      } catch (e) {
+        console.warn('Could not load asset previews:', e);
+      }
+      
       const lessonMap = {};
       lessons.forEach(l => { if (l?.day_number) lessonMap[l.day_number] = l; });
       
       let html = '<div class="journey-lesson-list">';
       for (let d = startDay; d <= endDay; d++) {
-        const lesson = lessonMap[d] || lessonsCache[d] || {};
-        const topicText = lesson.topic || lesson.title || 'Loading...';
+        const lesson = lessonMap[d] || {};
+        const learnTopic = lesson.learnTopic || 'Loading...';
+        const growTopic = lesson.growTopic || 'Loading...';
         const date = window.KellyTime?.dayNumberToDate(d) || new Date();
         const dayOfWeek = days[date.getDay()];
         const monthDay = `${date.toLocaleString('default', { month: 'short' })} ${date.getDate()}`;
@@ -13975,15 +14106,37 @@
         const isCompleted = state.completedLessons?.includes(d);
         const isPast = d < today;
         
+        // Check if we have assets for this day
+        const dayAssets = dayAssetsMap[d] || [];
+        const hasAssets = dayAssets.length > 0;
+        const assetCount = dayAssets.length;
+        
+        // Get first available visual for preview
+        const previewAsset = dayAssets.find(a => a.visual);
+        const previewUrl = previewAsset?.visual;
+        
         html += `
           <div class="journey-lesson-item ${isToday ? 'today' : ''} ${isCompleted ? 'completed' : ''} ${isPast && !isCompleted ? 'missed' : ''}" data-day="${d}">
-            <div class="journey-lesson-date">
+            ${previewUrl ? `
+              <div style="width: 80px; height: 60px; margin-right: 12px; border-radius: 8px; overflow: hidden; flex-shrink: 0;">
+                <img src="${previewUrl}" style="width: 100%; height: 100%; object-fit: cover;" alt="Lesson preview" loading="lazy">
+              </div>
+            ` : ''}
+            <div class="journey-lesson-date" style="${previewUrl ? 'display: none;' : ''}">
               <span class="journey-day-name">${dayOfWeek}</span>
               <span class="journey-month-day">${monthDay}</span>
             </div>
-            <div class="journey-lesson-info">
-              <div class="journey-lesson-num">Day ${d}</div>
-              <div class="journey-lesson-topic">${topicText}</div>
+            <div class="journey-lesson-info" style="flex: 1;">
+              <div class="journey-lesson-num">
+                Day ${d} • ${dayOfWeek} ${monthDay}
+                ${hasAssets ? `<span style="margin-left: 8px; font-size: 10px; background: #10b981; color: white; padding: 2px 6px; border-radius: 4px;">✓ ${assetCount} assets</span>` : ''}
+              </div>
+              <div class="journey-lesson-topic" style="margin-bottom: 4px;">
+                <strong style="color: #60a5fa;">Learn:</strong> ${learnTopic}
+              </div>
+              <div class="journey-lesson-topic">
+                <strong style="color: #a78bfa;">Grow:</strong> ${growTopic}
+              </div>
             </div>
             <div class="journey-lesson-status">
               ${isCompleted ? '✓' : isToday ? '▶' : isPast ? '○' : ''}
@@ -15552,7 +15705,7 @@ The learner is on phase ${state.currentPhase + 1} of 7. Be helpful and make lear
           <div class="home-scene" id="home-scene-pricing">
             <div class="pricing-scene-content">
               <h2 class="pricing-scene-title">Simple, Fair Pricing</h2>
-              <p class="pricing-scene-subtitle">Today's lesson is always yours. Unlock the full 365-day journey.</p>
+                <p class="pricing-scene-subtitle">Learning is included. Contributions are optional.</p>
               <div class="pricing-cards">
                 <div class="pricing-card">
                   <div class="pricing-card-name">Explorer</div>
@@ -16693,7 +16846,7 @@ The learner is on phase ${state.currentPhase + 1} of 7. Be helpful and make lear
         } else if (isPartial) {
           statusHTML = `<span style="color: #f59e0b; font-size: 12px;">${config.lessons}/365</span>`;
         } else {
-          statusHTML = `<span style="color: #64748b; font-size: 12px;">$${config.cost} to sponsor</span>`;
+          statusHTML = `<span style="color: #64748b; font-size: 12px;">$${config.cost} to translate</span>`;
         }
         
         return `
@@ -16792,7 +16945,7 @@ The learner is on phase ${state.currentPhase + 1} of 7. Be helpful and make lear
               }
             }
           } else {
-            // No content - show sponsor modal
+            // No content - show translation support modal
             modal.remove();
             window.KellyLanguageSelector?.showSponsorModal?.(lang, config);
           }
@@ -17265,6 +17418,12 @@ The learner is on phase ${state.currentPhase + 1} of 7. Be helpful and make lear
       if (captionsToggle) {
         captionsToggle.classList.toggle('active', state.showCaptions !== false);
       }
+
+      // Preferences (accordion checkbox mirrors)
+      const prefAutoplay = document.getElementById('pref-autoplay');
+      if (prefAutoplay) prefAutoplay.checked = !!state.autoAdvance;
+      const prefCaptions = document.getElementById('pref-captions');
+      if (prefCaptions) prefCaptions.checked = !!state.showCaptions;
       
       // Observation toggle
       const observationToggle = document.getElementById('toggle-observation');
@@ -17466,7 +17625,7 @@ The learner is on phase ${state.currentPhase + 1} of 7. Be helpful and make lear
             });
           
           if (!error) {
-            showToast('✅ Message sent! Kelly will respond soon.');
+            showToast('✅ Message sent. If you included an email, we can reply there.');
             if (messageInput) messageInput.value = '';
             closeSettingsSubpanel();
             return;
@@ -17477,12 +17636,12 @@ The learner is on phase ${state.currentPhase + 1} of 7. Be helpful and make lear
         const subject = encodeURIComponent('Message from Curious Kelly App');
         const body = encodeURIComponent(`${message}\n\nFrom: ${email || 'Anonymous'}`);
         window.open(`mailto:hello@curiouskelly.com?subject=${subject}&body=${body}`, '_blank');
-        showToast('Opening email client...');
+        showToast('Opening your email app…');
         closeSettingsSubpanel();
         
       } catch (err) {
         console.error('[Contact] Error:', err);
-        showToast('Message sent via email');
+        showToast('Opening your email app…');
         // Fallback
         const subject = encodeURIComponent('Message from Curious Kelly App');
         const body = encodeURIComponent(`${message}\n\nFrom: ${email || 'Anonymous'}`);
@@ -18901,7 +19060,7 @@ Style requirements:
       
       // Update subscription status in new location
       const subStatus = document.getElementById('subscription-status');
-      if (subStatus) subStatus.textContent = isPremium() ? 'Premium' : 'Explorer';
+      if (subStatus) subStatus.textContent = isPremium() ? 'Supporter' : 'Included';
       
       // Initialize all toggle states and dynamic values
       initSettingsToggleStates();
@@ -19946,7 +20105,7 @@ Style requirements:
       bindGated('btn-about', () => showAboutOverlay());
       
       // Settings subpanel handlers - stay IN the panel
-      bindGated('btn-help', () => openSettingsSubpanel('help'));
+      bindGated('btn-help', () => openSettingsSubpanel('contact'));
       bindGated('btn-feedback', () => openSettingsSubpanel('contact'));
       bindGated('btn-journey-insights', () => openSettingsSubpanel('journey'));
       bindGated('btn-privacy', () => openSettingsSubpanel('privacy'));
@@ -19960,6 +20119,8 @@ Style requirements:
       document.getElementById('toggle-autoplay')?.addEventListener('click', function() {
         state.autoAdvance = !state.autoAdvance;
         this.classList.toggle('active', state.autoAdvance);
+        const pref = document.getElementById('pref-autoplay');
+        if (pref) pref.checked = !!state.autoAdvance;
         saveState();
         showToast(state.autoAdvance ? 'Auto-play enabled' : 'Auto-play disabled');
       });
@@ -19967,6 +20128,24 @@ Style requirements:
       document.getElementById('toggle-captions')?.addEventListener('click', function() {
         state.showCaptions = !state.showCaptions;
         this.classList.toggle('active', state.showCaptions);
+        const pref = document.getElementById('pref-captions');
+        if (pref) pref.checked = !!state.showCaptions;
+        saveState();
+        updateCaptionsVisibility();
+        showToast(state.showCaptions ? 'Captions on' : 'Captions off');
+      });
+
+      // Preferences (accordion checkboxes) - mirror the same state
+      document.getElementById('pref-autoplay')?.addEventListener('change', function() {
+        state.autoAdvance = !!this.checked;
+        document.getElementById('toggle-autoplay')?.classList.toggle('active', state.autoAdvance);
+        saveState();
+        showToast(state.autoAdvance ? 'Auto-play enabled' : 'Auto-play disabled');
+      });
+
+      document.getElementById('pref-captions')?.addEventListener('change', function() {
+        state.showCaptions = !!this.checked;
+        document.getElementById('toggle-captions')?.classList.toggle('active', state.showCaptions);
         saveState();
         updateCaptionsVisibility();
         showToast(state.showCaptions ? 'Captions on' : 'Captions off');
@@ -20477,7 +20656,8 @@ Style requirements:
       // Initialize Kelly Animation Systems
       if (window.KellyLipSync) window.KellyLipSync.init();
       if (window.KellyExpressionBridge) window.KellyExpressionBridge.init();
-      if (window.KellyVisualSystem) window.KellyVisualSystem.init();
+      // KellyVisualSystem exports a class; do not call `.init()` (not a function).
+      // The lesson runtime instantiates it where needed.
       console.log('[Kelly Animation] Systems initialized');
     });
   </script>

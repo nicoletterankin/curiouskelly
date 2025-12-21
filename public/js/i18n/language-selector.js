@@ -2,7 +2,7 @@
  * Language Selector Component (Enhanced with Translation Progress)
  * 
  * Provides a dropdown for language selection that integrates with i18n-core.
- * Shows translation progress and sponsor CTAs for incomplete languages.
+ * Shows translation progress and optional contribution CTAs for incomplete languages.
  * 
  * Usage:
  *   <div data-language-selector></div>
@@ -311,7 +311,7 @@
   }
 
   /**
-   * Show sponsor modal for untranslated languages
+   * Show contribution modal for untranslated languages
    */
   function showSponsorModal(lang, config) {
     // Check if modal already exists
@@ -346,7 +346,7 @@
         <div style="font-size: 48px; margin-bottom: 16px;">${config.flag}</div>
         <h2 style="font-size: 24px; margin-bottom: 8px; color: #f8fafc;">${config.native}</h2>
         <p style="color: #94a3b8; margin-bottom: 24px; line-height: 1.5;">
-          This language isn't available yet. Help bring Kelly to ${config.name} speakers!
+          Contributing is learning. Want to help bring Kelly to ${config.name} speakers?
         </p>
         
         <div style="display: flex; flex-direction: column; gap: 12px;">
@@ -363,7 +363,7 @@
             font-weight: 600;
             transition: background 0.2s;
           ">
-            💳 Sponsor for $${config.cost}
+            💳 Contribute $${config.cost}
           </a>
           
           <a href="/languages?byok=${lang}" style="
