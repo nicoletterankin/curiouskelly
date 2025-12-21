@@ -39,11 +39,12 @@ class GoldenV5DataLoader {
     if (__GOLDEN_DEBUG) console.log(`[GoldenV5DataLoader] Loading Day ${dayNumber} (${archetype})...`);
 
     try {
-      // Step 1: Load core lesson data
+      // Step 1: Load core lesson data (with track filter - required for .single() to work)
       const { data: coreLesson, error: coreError } = await this.supabase
         .from('core_lessons')
         .select('*')
         .eq('day_number', dayNumber)
+        .eq('track', 'learn')
         .single();
 
       if (coreError) throw coreError;

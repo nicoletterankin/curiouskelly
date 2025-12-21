@@ -64,20 +64,21 @@ const LessonResilience = {
    * Layer 1: Supabase (Primary)
    */
   async fromSupabase(dayNumber, options = {}) {
-    const { supabase, archetype = 'The Scientist', ageBucket = 'adult' } = options;
+    const { supabase, archetype = 'The Scientist', ageBucket = 'adult', track = 'learn' } = options;
     
     if (!supabase) {
       throw new Error('Supabase not initialized');
     }
     
-    if (__RESILIENCE_DEBUG) console.log(`🔍 [L1] Supabase: Day ${dayNumber}`);
+    if (__RESILIENCE_DEBUG) console.log(`🔍 [L1] Supabase: Day ${dayNumber}, track=${track}`);
     
     const fetchPromise = (async () => {
-      // Fetch core lesson
+      // Fetch core lesson (with track filter - required as we have both 'learn' and 'grow' tracks)
       const { data: lesson, error: lessonError } = await supabase
         .from('core_lessons')
         .select('*')
         .eq('day_number', dayNumber)
+        .eq('track', track)
         .single();
       
       if (lessonError || !lesson) {
