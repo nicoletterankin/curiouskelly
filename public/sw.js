@@ -1,7 +1,7 @@
 // Curious Kelly Service Worker
 // App-shell caching + (optional) push notifications
 
-const CACHE_NAME = 'curious-kelly-app-v4';
+const CACHE_NAME = 'curious-kelly-app-v5'; // Bumped: Clean Kelly + TTS system
 
 const APP_SHELL = [
   '/learn.html',
