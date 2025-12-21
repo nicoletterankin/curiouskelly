@@ -12716,19 +12716,35 @@
         };
         const dbPhase = phaseMap[phase] || phase.toLowerCase();
         
-        const { data } = await _db
-          .from('kelly_video_assets')
-          .select('public_url')
-          .eq('day_number', dayNumber)
-          .eq('phase', dbPhase)
-          .eq('template', personaId)
-          .eq('age_bucket', ageBucket)
-          .eq('asset_type', 'video')
-          .eq('language', language)
-          .in('status', ['validated', 'published', 'generated'])
-          .limit(1);
-        if (DEBUG) console.log(`[getVideoUrl] day=${dayNumber}, phase=${phase}->${dbPhase}, template=${personaId}, found=${!!data?.[0]?.public_url}`);
-        return data?.[0]?.public_url || null;
+        // ═══════════════════════════════════════════════════════════════════════
+        // CLEAN KELLY PRIORITY: Prefer 'default' or 'base' templates (no props)
+        // This ensures facial consistency - no goggles, headbands, or accessories
+        // ═══════════════════════════════════════════════════════════════════════
+        const cleanTemplates = ['default', 'base'];
+        const templatePriority = [...cleanTemplates, personaId];
+        
+        // Try clean templates first, then fall back to archetype
+        for (const template of templatePriority) {
+          const { data } = await _db
+            .from('kelly_video_assets')
+            .select('public_url')
+            .eq('day_number', dayNumber)
+            .eq('phase', dbPhase)
+            .eq('template', template)
+            .eq('age_bucket', ageBucket)
+            .eq('asset_type', 'video')
+            .eq('language', language)
+            .in('status', ['validated', 'published', 'generated'])
+            .limit(1);
+          
+          if (data?.[0]?.public_url) {
+            if (DEBUG) console.log(`[getVideoUrl] day=${dayNumber}, phase=${dbPhase}, template=${template} (clean), found=true`);
+            return data[0].public_url;
+          }
+        }
+        
+        if (DEBUG) console.log(`[getVideoUrl] day=${dayNumber}, phase=${dbPhase}, no clean video found, will use TTS+animation`);
+        return null;
       } catch (e) {
         return null;
       }
@@ -12740,7 +12756,7 @@
     // ============================================
     const motionClipCache = Object.create(null);
     const motionClipInflight = Object.create(null);
-    const MVP_MOTION_ARCHETYPE = 'explorer'; // See docs/GOLDEN_THREE_ARCHETYPES.md → fallback guidance
+    const MVP_MOTION_ARCHETYPE = 'default'; // CLEAN KELLY: No props, no accessories. Was 'explorer' which has glasses.
     const MVP_MOTION_AGE_BUCKET = 'adult';
 
     function getPhaseKeyFromDbPhase(dbPhase) {
