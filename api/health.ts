@@ -7,6 +7,8 @@
  * - API is responding
  * - Database is connected
  * - Email service is configured
+ * 
+ * Last updated: 2025-12-20 - Force redeploy
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
