@@ -85,6 +85,16 @@
   <script src="/js/byok-manager.js"></script>
   <!-- Generation Queue: Community pooling for batch lessons -->
   <script src="/js/kelly-generation-queue.js"></script>
+  
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <!-- KELLY ANIMATION STACK: Runtime rendering instead of pre-baked videos   -->
+  <!-- These systems let Kelly animate in real-time from scripts + TTS audio  -->
+  <!-- ═══════════════════════════════════════════════════════════════════════ -->
+  <script src="/js/kelly-audio.js"></script>
+  <script src="/js/kelly-lipsync.js"></script>
+  <script src="/js/kelly-expression-bridge.js"></script>
+  <script src="/js/kelly-alignment-player.js"></script>
+  <script src="/js/kelly-visual-system.js"></script>
   <script>
     // Compatibility shim: some deployments exposed `getLesson()` but not `loadLesson()`.
     // The curriculum view (and other flows) call `window.KellyLessonLoader.loadLesson(...)`.
@@ -12540,10 +12550,46 @@
       onSpeakStart() {
         setKellySpeaking(true);
         syncPlayPauseUI();
+        
+        // ═══════════════════════════════════════════════════════════════════
+        // WIRE LIP-SYNC: Connect audio element to real-time animation system
+        // This analyzes audio frequencies and drives Kelly's mouth movements
+        // ═══════════════════════════════════════════════════════════════════
+        if (window.KellyLipSync && this.audio) {
+          try {
+            if (!window.KellyLipSync.isInitialized) {
+              window.KellyLipSync.init();
+            }
+            window.KellyLipSync.resume().then(() => {
+              window.KellyLipSync.startFromAudioElement(this.audio);
+              if (DEBUG) console.log('👄 Lip-sync connected to audio');
+            }).catch(() => {});
+          } catch (e) {
+            if (DEBUG) console.warn('Lip-sync init failed:', e);
+          }
+        }
+        
+        // Set expression based on current phase
+        if (window.KellyExpressionBridge && window.KellyExpressionBridge.isInitialized) {
+          const phaseKey = state.currentPhase || 'hook';
+          window.KellyExpressionBridge.setPhaseExpression(phaseKey);
+        }
       }
       
       onSpeakEnd() {
         onPhaseMediaEnd();
+        
+        // Stop lip-sync when audio ends
+        if (window.KellyLipSync && this.audio) {
+          try {
+            window.KellyLipSync.stopFromAudioElement(this.audio);
+          } catch (e) {}
+        }
+        
+        // Reset to neutral expression
+        if (window.KellyExpressionBridge) {
+          window.KellyExpressionBridge.setExpression('neutral', { duration: 400 });
+        }
       }
       
       onError() {
@@ -12878,8 +12924,29 @@
         v.onplay = () => {
           setKellySpeaking(true);
           syncPlayPauseUI();
+          
+          // If video has baked-in audio, connect lip-sync to it
+          if (videoHasAudio && window.KellyLipSync) {
+            try {
+              if (!window.KellyLipSync.isInitialized) window.KellyLipSync.init();
+              window.KellyLipSync.resume().then(() => {
+                window.KellyLipSync.startFromAudioElement(v);
+                if (DEBUG) console.log('👄 Lip-sync connected to video audio');
+              }).catch(() => {});
+            } catch (e) {}
+          }
+          
+          // Set expression based on current phase
+          if (window.KellyExpressionBridge && window.KellyExpressionBridge.isInitialized) {
+            const phaseKey = state.currentPhase || 'hook';
+            window.KellyExpressionBridge.setPhaseExpression(phaseKey);
+          }
         };
         v.onended = () => {
+          // Stop lip-sync from video
+          if (window.KellyLipSync) {
+            try { window.KellyLipSync.stopFromAudioElement(v); } catch (e) {}
+          }
           // Return to idle image when clip ends.
           stopVideo();
           onPhaseMediaEnd();
