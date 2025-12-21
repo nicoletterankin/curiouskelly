@@ -1,0 +1,209 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "$id": "gold-standard-day.schema.json",
+  "title": "Gold Standard Lesson Day",
+  "description": "Complete script specification for a single day's lesson, covering all phases and response variants. This is the LOCKED format for production-ready content.",
+  "type": "object",
+  "required": ["meta", "phases", "voiceCompliance"],
+  "properties": {
+    "meta": {
+      "type": "object",
+      "required": ["day", "archetype", "topic", "locked", "totalClips"],
+      "properties": {
+        "day": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 365,
+          "description": "The day number (1-365)"
+        },
+        "archetype": {
+          "type": "string",
+          "enum": [
+            "The Explorer",
+            "The Sage",
+            "The Hero",
+            "The Creator",
+            "The Caregiver",
+            "The Jester",
+            "The Rebel"
+          ],
+          "description": "The archetype this lesson is tailored for"
+        },
+        "topic": {
+          "type": "string",
+          "description": "The lesson topic"
+        },
+        "locked": {
+          "type": "boolean",
+          "description": "Whether this content is locked and approved"
+        },
+        "lockedDate": {
+          "type": "string",
+          "format": "date",
+          "description": "ISO date when content was locked"
+        },
+        "lockedBy": {
+          "type": "string",
+          "description": "Who approved and locked the content"
+        },
+        "totalClips": {
+          "type": "integer",
+          "description": "Total number of audio/video clips required"
+        }
+      }
+    },
+    "phases": {
+      "type": "object",
+      "required": ["Hook", "Cliff", "Fact1", "Fact2", "Fact3", "Wisdom", "Outro"],
+      "properties": {
+        "Hook": { "$ref": "#/definitions/phaseWithOptions" },
+        "Cliff": { "$ref": "#/definitions/cliffPhase" },
+        "Fact1": { "$ref": "#/definitions/phaseWithOptions" },
+        "Fact2": { "$ref": "#/definitions/phaseWithOptions" },
+        "Fact3": { "$ref": "#/definitions/phaseWithOptions" },
+        "Wisdom": { "$ref": "#/definitions/phaseWithOptions" },
+        "Outro": { "$ref": "#/definitions/outroPhase" }
+      }
+    },
+    "voiceCompliance": {
+      "type": "object",
+      "required": ["forbidden", "required", "verified"],
+      "properties": {
+        "forbidden": {
+          "type": "object",
+          "description": "Forbidden phrases that must NOT appear in scripts",
+          "properties": {
+            "hey": { "type": "boolean", "const": false },
+            "getThis": { "type": "boolean", "const": false },
+            "crazyRight": { "type": "boolean", "const": false },
+            "wildRight": { "type": "boolean", "const": false },
+            "howCoolIsThat": { "type": "boolean", "const": false },
+            "superCool": { "type": "boolean", "const": false },
+            "prettyAmazing": { "type": "boolean", "const": false }
+          }
+        },
+        "required": {
+          "type": "object",
+          "description": "Required voice elements that must be present",
+          "properties": {
+            "contractions": { "type": "boolean", "const": true },
+            "emDashes": { "type": "boolean", "const": true },
+            "variedOpeners": { "type": "boolean", "const": true },
+            "intellectualAuthority": { "type": "boolean", "const": true },
+            "warmthWithoutUnprofessional": { "type": "boolean", "const": true }
+          }
+        },
+        "verified": { "type": "boolean" },
+        "verifiedDate": { "type": "string", "format": "date" }
+      }
+    }
+  },
+  "definitions": {
+    "clipSpec": {
+      "type": "object",
+      "required": ["clipId", "script", "kellyPose", "kellyEmotion", "estimatedDuration"],
+      "properties": {
+        "clipId": {
+          "type": "string",
+          "pattern": "^kelly-\\d{3}-[a-z]+-[a-z0-9]+-[a-z0-9-]+$",
+          "description": "Unique identifier for this clip (e.g., kelly-355-explorer-hook-intro)"
+        },
+        "script": {
+          "type": "string",
+          "minLength": 20,
+          "description": "The exact script Kelly will speak. NO ditzy talk. Intelligent teacher voice."
+        },
+        "kellyPose": {
+          "type": "string",
+          "description": "Kelly's physical pose/stance for this clip"
+        },
+        "kellyEmotion": {
+          "type": "string",
+          "description": "Kelly's emotional state for this clip"
+        },
+        "estimatedDuration": {
+          "type": "integer",
+          "minimum": 3,
+          "maximum": 60,
+          "description": "Estimated duration in seconds"
+        }
+      }
+    },
+    "option": {
+      "type": "object",
+      "required": ["letter", "text", "quality", "response"],
+      "properties": {
+        "letter": {
+          "type": "string",
+          "enum": ["A", "B", "C"],
+          "description": "The option letter"
+        },
+        "text": {
+          "type": "string",
+          "description": "The button text the learner sees"
+        },
+        "icon": {
+          "type": "string",
+          "description": "Optional emoji icon for the option"
+        },
+        "quality": {
+          "type": "string",
+          "enum": ["best", "good", "redirect"],
+          "description": "The pedagogical quality of this choice"
+        },
+        "response": {
+          "$ref": "#/definitions/clipSpec",
+          "description": "What Kelly says when this option is selected"
+        }
+      }
+    },
+    "phaseWithOptions": {
+      "type": "object",
+      "required": ["intro", "options"],
+      "properties": {
+        "intro": {
+          "$ref": "#/definitions/clipSpec",
+          "description": "Kelly's opening for this phase"
+        },
+        "options": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/option" },
+          "minItems": 2,
+          "maxItems": 3,
+          "description": "The interactive choices for this phase"
+        }
+      }
+    },
+    "cliffPhase": {
+      "type": "object",
+      "required": ["intro", "cliffPrompt", "options"],
+      "properties": {
+        "intro": {
+          "$ref": "#/definitions/clipSpec",
+          "description": "Kelly's opening for the cliff phase"
+        },
+        "cliffPrompt": {
+          "type": "string",
+          "description": "The brief prompt shown with the choices"
+        },
+        "options": {
+          "type": "array",
+          "items": { "$ref": "#/definitions/option" },
+          "minItems": 2,
+          "maxItems": 2,
+          "description": "Exactly 2 choices for the cliff phase"
+        }
+      }
+    },
+    "outroPhase": {
+      "type": "object",
+      "required": ["intro"],
+      "properties": {
+        "intro": {
+          "$ref": "#/definitions/clipSpec",
+          "description": "Kelly's closing for the lesson (no choices)"
+        }
+      }
+    }
+  }
+}
