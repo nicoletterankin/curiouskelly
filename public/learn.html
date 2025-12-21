@@ -12777,40 +12777,34 @@
       const cacheKey = `${avatarKey}_${phaseKey}`;
       // Cache hit (including negative cache via null)
       if (cacheKey in motionClipCache) return motionClipCache[cacheKey];
-      // De-dupe concurrent lookups for the same phase (prevents double /api/motion-clip hits)
+      // De-dupe concurrent lookups for the same phase
       if (motionClipInflight[cacheKey]) return motionClipInflight[cacheKey];
 
       motionClipInflight[cacheKey] = (async () => {
         try {
-          // Use server endpoint to avoid client-side RLS/CORS constraints.
-          const url = `/api/motion-clip?persona=${encodeURIComponent(personaId)}&age=${encodeURIComponent(bucket)}&phase=${encodeURIComponent(phaseKey)}`;
-          const res = await fetch(url);
-          const data = res.ok ? await res.json().catch(() => ({})) : null;
-          let videoUrl = data?.videoUrl || null;
+          // STATIC MOTION DATA (no API): serve Unity-ready JSON from /public/kelly-motion/
+          // Example: /kelly-motion/explorer_adult_hook_unity.json
+          const safe = (s) => String(s || '').trim().toLowerCase().replace(/[^a-z0-9_-]+/g, '');
+          const staticUrl = `/kelly-motion/${safe(personaId)}_${safe(bucket)}_${safe(phaseKey)}_unity.json`;
 
-          if (!videoUrl) {
-            // Local static serving (e.g. `npx serve public`) won't have /api routes.
-            // Fallback to a direct Supabase query if available.
+          // Best-effort existence check (avoid caching broken URLs)
+          let ok = false;
+          try {
+            const head = await fetch(staticUrl, { method: 'HEAD' });
+            ok = head.ok;
+          } catch (_) {}
+          if (!ok) {
             try {
-              const db = _db;
-              if (!db) throw new Error('No supabase client');
-              const { data: row, error } = await db
-                .from('kelly_motion_library')
-                .select('video_url')
-                .eq('avatar_key', avatarKey)
-                .eq('phase', phaseKey)
-                .eq('status', 'archived')
-                .single();
-              if (!error && row?.video_url) videoUrl = row.video_url;
+              const get = await fetch(staticUrl);
+              ok = get.ok;
             } catch (_) {}
           }
 
-          if (!videoUrl) {
-            console.warn(`No motion clip for ${cacheKey}`);
+          if (!ok) {
+            console.warn(`No static motion JSON for ${cacheKey}: ${staticUrl}`);
           }
 
-          // Store positive OR negative result to avoid repeated lookups.
-          motionClipCache[cacheKey] = videoUrl || null;
+          motionClipCache[cacheKey] = ok ? staticUrl : null;
           return motionClipCache[cacheKey];
         } catch (err) {
           console.error('Motion clip fetch error:', err);
@@ -12891,8 +12885,28 @@
       }
       if (!resolvedVideo) {
         // Final fallback: generic motion clip per persona+age+phase (no day/language coupling)
-        resolvedVideo = await getMotionClipUrl(personaId, ageBucket, phaseKey);
-        if (resolvedVideo) resolvedSource = 'kelly_motion_library';
+        // Only meaningful in 3D (Unity) mode now that motion clips are JSON.
+        if (state.kellyMode === '3d') {
+          resolvedVideo = await getMotionClipUrl(personaId, ageBucket, phaseKey);
+          if (resolvedVideo) resolvedSource = 'kelly_motion_library';
+        }
+      }
+
+      // 3D (Unity) motion clips are JSON, not videos — hand off to Unity instead of <video>.
+      if (state.kellyMode === '3d' && resolvedSource === 'kelly_motion_library' && resolvedVideo && /\.json(\?|$)/i.test(resolvedVideo)) {
+        try {
+          sendToUnity('play-motion-clip', {
+            url: resolvedVideo,
+            persona: personaId,
+            age: ageBucket,
+            phase: phaseKey,
+            dbPhase
+          });
+        } catch (e) {
+          console.warn('Failed to send motion clip to Unity:', e);
+        }
+        await kellyAudio.speak(dbPhase, script);
+        return true;
       }
 
       if (resolvedVideo) {
