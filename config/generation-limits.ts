@@ -70,3 +70,5 @@ export type Archetype = typeof ARCHETYPES[number];
 export type AgeBucket = typeof AGE_BUCKETS[number];
 export type Phase = typeof GENERATION_CONFIG.phases[number];
 
+
+

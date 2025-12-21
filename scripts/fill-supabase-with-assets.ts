@@ -234,8 +234,26 @@ async function generateImage(prompt: string): Promise<Buffer | null> {
       }
     }) as any;
     
-    const imageUrl = Array.isArray(output) ? output[0] : output;
-    if (!imageUrl) return null;
+    // Handle Replicate SDK FileOutput objects - use String() to get URL
+    let imageUrl: string | null = null;
+    
+    if (Array.isArray(output) && output.length > 0) {
+      const first = output[0];
+      // FileOutput objects have toString that returns the URL
+      const urlStr = String(first);
+      if (urlStr && urlStr.startsWith('http')) {
+        imageUrl = urlStr;
+      }
+    } else if (typeof output === 'string') {
+      imageUrl = output;
+    }
+    
+    if (!imageUrl) {
+      console.log('  ⚠️ No image URL in output');
+      return null;
+    }
+    
+    console.log(`  🔗 Image URL: ${imageUrl.substring(0, 60)}...`);
     
     return await downloadImage(imageUrl);
   } catch (error: any) {

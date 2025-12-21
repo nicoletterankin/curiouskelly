@@ -94,11 +94,16 @@ async function generateWithReplicate(prompt: string, apiKey: string): Promise<st
       output_quality: 90,
       num_inference_steps: 28,
     },
-  });
+  }) as any;
 
-  // Output is array of URLs
-  const urls = output as string[];
-  return urls[0];
+  // Handle Replicate SDK FileOutput objects - use String() to get URL
+  if (Array.isArray(output) && output.length > 0) {
+    const urlStr = String(output[0]);
+    if (urlStr && urlStr.startsWith('http')) {
+      return urlStr;
+    }
+  }
+  throw new Error('No valid image URL in Replicate output');
 }
 
 /**
@@ -287,3 +292,5 @@ generateRange(startDay, endDay, track, provider, apiKey).catch(console.error);
 
 // Export for use in other scripts
 export { generateVisual, buildPrompt, KELLY_LORA, PHASE_PROMPTS };
+
+

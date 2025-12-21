@@ -286,29 +286,44 @@ async function processDays(): Promise<void> {
     log(`\n📅 DAY ${day}/${endDay}`);
     log('─'.repeat(50));
 
-    const { data: lesson, error: lessonError } = await supabase
+    // Handle multiple lessons per day (some days have duplicates)
+    const { data: lessons, error: lessonError } = await supabase
       .from('core_lessons')
       .select('id, day_number, topic')
-      .eq('day_number', day)
-      .single();
+      .eq('day_number', day);
 
-    if (lessonError || !lesson) {
+    if (lessonError || !lessons || lessons.length === 0) {
       log(`  ⚠️ Day ${day}: No lesson found`);
       continue;
     }
 
-    const { data: atoms, error: atomsError } = await supabase
-      .from('lesson_atoms')
-      .select('id, core_lesson_id, archetype, phase, content')
-      .eq('core_lesson_id', lesson.id);
+    // Process all lessons for this day
+    let allAtoms: LessonAtom[] = [];
+    let topicNames: string[] = [];
+    
+    for (const lesson of lessons) {
+      const { data: atoms, error: atomsError } = await supabase
+        .from('lesson_atoms')
+        .select('id, core_lesson_id, archetype, phase, content')
+        .eq('core_lesson_id', lesson.id);
+      
+      if (!atomsError && atoms) {
+        allAtoms = allAtoms.concat(atoms as LessonAtom[]);
+        if (atoms.length > 0) {
+          topicNames.push(lesson.topic);
+        }
+      }
+    }
 
-    if (atomsError || !atoms) {
-      log(`  ❌ Day ${day}: Error fetching atoms`);
-      state.totalErrors++;
+    if (allAtoms.length === 0) {
+      log(`  ⚠️ Day ${day}: No atoms found`);
       continue;
     }
 
-    log(`  📚 Topic: ${lesson.topic}`);
+    const atoms = allAtoms;
+    const topic = topicNames[0] || lessons[0].topic;
+
+    log(`  📚 Topic: ${topic}${topicNames.length > 1 ? ` (+${topicNames.length - 1} more)` : ''}`);
     log(`  🔢 Atoms: ${atoms.length}`);
 
     let dayProcessed = 0;
@@ -393,6 +408,8 @@ async function processDays(): Promise<void> {
 }
 
 processDays().catch(console.error);
+
+
 
 
 
