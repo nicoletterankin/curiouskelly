@@ -384,10 +384,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
   if (isSupabaseConfigured()) {
     try {
       const supabase = getSupabaseAdmin();
+      // Default to 'learn' track to avoid multiple-row error
       const { data: lesson, error } = await supabase
         .from('core_lessons')
         .select('id, day_number, topic, universal_truth, marketing_headline, marketing_tagline, marketing_pitch')
         .eq('day_number', dayNumber)
+        .eq('track', 'learn')
         .single();
 
       if (!error && lesson) {

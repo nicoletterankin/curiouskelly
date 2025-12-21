@@ -98,11 +98,12 @@ async function getLearnContent(dayNumber: number) {
   try {
     const supabase = createClient(supabaseUrl, supabaseKey);
     
-    // Get core lesson
+    // Get core lesson (default to 'learn' track)
     const { data: lesson } = await supabase
       .from('core_lessons')
       .select('*')
       .eq('day_number', dayNumber)
+      .eq('track', 'learn')
       .single();
 
     if (!lesson) {

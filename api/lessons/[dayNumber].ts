@@ -77,10 +77,13 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     try {
       const db = getSupabaseAdmin();
 
+      // Filter by track (default 'learn') to avoid multiple-row error
+      const track = (query.track as string) || 'learn';
       const { data: lesson, error: lessonError } = await db
         .from('core_lessons')
         .select('*')
         .eq('day_number', day)
+        .eq('track', track)
         .single();
 
       if (lessonError || !lesson) {

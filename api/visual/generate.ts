@@ -63,6 +63,7 @@ async function getLessonDetails(dayNumber: number): Promise<{ topic: string; uni
     .from('core_lessons')
     .select('topic, universal_truth, facts')
     .eq('day_number', dayNumber)
+    .eq('track', 'learn')  // Default to learn track
     .maybeSingle();
   
   if (!data) return null;
