@@ -124,10 +124,16 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       
       // Create checkout session
       const session = await stripe.checkout.sessions.create({
+        locale:
+          (Array.isArray(req.headers['accept-language'])
+            ? req.headers['accept-language'][0]
+            : req.headers['accept-language'])
+            ?.split(',')[0]
+            ?.split('-')[0] || 'auto',
         payment_method_types: ['card'],
         line_items: [{
           price_data: {
-            currency: 'usd',
+            currency: req.query.currency?.toString().toLowerCase() || 'usd',
             product_data: {
               name: `Daily Lesson: Day ${dayNumber}`,
               description: `Permanent access to Day ${dayNumber} lesson`,

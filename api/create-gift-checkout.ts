@@ -122,6 +122,12 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
     const session = await stripe.checkout.sessions.create({
       mode: 'payment',
       ui_mode: 'embedded',
+      locale:
+        (Array.isArray(req.headers['accept-language'])
+          ? req.headers['accept-language'][0]
+          : req.headers['accept-language'])
+          ?.split(',')[0]
+          ?.split('-')[0] || 'auto',
       return_url: returnUrl,
 
       line_items: [{ price: priceId, quantity: 1 }],
