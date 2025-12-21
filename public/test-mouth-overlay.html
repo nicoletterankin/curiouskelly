@@ -1,0 +1,291 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Kelly Mouth Overlay Test</title>
+  <style>
+    body { 
+      background: #1a1a2e; 
+      color: white; 
+      font-family: system-ui; 
+      margin: 0;
+      padding: 20px;
+    }
+    
+    .kelly-container {
+      position: relative;
+      width: 400px;
+      height: 500px;
+      margin: 20px auto;
+    }
+    
+    .kelly-face {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      border-radius: 12px;
+    }
+    
+    /* Mouth overlay - positioned over Kelly's mouth */
+    .mouth-overlay {
+      position: absolute;
+      bottom: 32%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 80px;
+      height: 40px;
+      border-radius: 50%;
+      transition: all 0.05s ease;
+      pointer-events: none;
+    }
+    
+    /* Viseme mouth shapes */
+    .mouth-closed { 
+      background: #c4a484;
+      height: 8px;
+      border-radius: 4px;
+    }
+    .mouth-aa { 
+      background: #8b0000;
+      height: 35px;
+      width: 60px;
+      border-radius: 50%;
+    }
+    .mouth-ee { 
+      background: #8b0000;
+      height: 20px;
+      width: 70px;
+      border-radius: 40%;
+    }
+    .mouth-oh { 
+      background: #8b0000;
+      height: 40px;
+      width: 45px;
+      border-radius: 50%;
+    }
+    .mouth-oo { 
+      background: #8b0000;
+      height: 30px;
+      width: 30px;
+      border-radius: 50%;
+    }
+    .mouth-ff { 
+      background: linear-gradient(to bottom, #c4a484 40%, #8b0000 40%);
+      height: 15px;
+      width: 60px;
+      border-radius: 4px;
+    }
+    .mouth-mm { 
+      background: #c4a484;
+      height: 6px;
+      width: 55px;
+      border-radius: 3px;
+    }
+    
+    .controls { 
+      text-align: center; 
+      margin: 20px; 
+    }
+    
+    button { 
+      padding: 15px 30px; 
+      font-size: 18px; 
+      cursor: pointer; 
+      margin: 5px;
+      background: #4a4a8a;
+      color: white;
+      border: none;
+      border-radius: 8px;
+    }
+    
+    button:hover {
+      background: #6a6aaa;
+    }
+    
+    .log { 
+      background: #000; 
+      padding: 10px; 
+      margin: 20px auto;
+      max-width: 600px;
+      height: 150px; 
+      overflow-y: auto; 
+      font-family: monospace; 
+      font-size: 11px;
+      border-radius: 8px;
+    }
+    
+    .status {
+      text-align: center;
+      padding: 10px;
+      margin: 10px auto;
+      max-width: 400px;
+      border-radius: 8px;
+      background: #2a2a4a;
+    }
+    
+    .current-viseme {
+      text-align: center;
+      font-size: 24px;
+      margin: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1 style="text-align:center">🗣️ Kelly Mouth Overlay Test</h1>
+  
+  <div class="status" id="status">Ready - Click "Load & Play" to test</div>
+  <div class="current-viseme">Current: <span id="viseme-display">none</span></div>
+  
+  <div class="kelly-container">
+    <img class="kelly-face" src="/images/kelly-hero-4k.png" alt="Kelly">
+    <div class="mouth-overlay mouth-closed" id="mouth"></div>
+  </div>
+  
+  <div class="controls">
+    <button onclick="testMouthShapes()">Test All Shapes</button>
+    <button onclick="loadAndPlay()">🚀 Load & Play Motion</button>
+    <button onclick="stopAnimation()">Stop</button>
+  </div>
+  
+  <div class="log" id="log"></div>
+
+  <script>
+    let motionData = null;
+    let animationRunning = false;
+    let animationFrame = null;
+    
+    const mouth = document.getElementById('mouth');
+    const visemeDisplay = document.getElementById('viseme-display');
+    
+    // Map viseme codes to CSS classes
+    const visemeMap = {
+      'sil': 'mouth-closed',
+      'PP': 'mouth-mm',      // p, b, m
+      'FF': 'mouth-ff',      // f, v
+      'TH': 'mouth-ee',      // th
+      'DD': 'mouth-ee',      // d, t, n
+      'kk': 'mouth-oh',      // k, g
+      'CH': 'mouth-ee',      // ch, j, sh
+      'SS': 'mouth-ee',      // s, z
+      'nn': 'mouth-ee',      // n, l
+      'RR': 'mouth-oh',      // r
+      'aa': 'mouth-aa',      // a (father)
+      'E': 'mouth-ee',       // e (bed)
+      'I': 'mouth-ee',       // i (bit)
+      'O': 'mouth-oh',       // o (boat)
+      'U': 'mouth-oo',       // u (boot)
+      'default': 'mouth-closed'
+    };
+    
+    function log(msg) {
+      const logDiv = document.getElementById('log');
+      const time = new Date().toLocaleTimeString();
+      logDiv.innerHTML += `[${time}] ${msg}<br>`;
+      logDiv.scrollTop = logDiv.scrollHeight;
+      console.log(msg);
+    }
+    
+    function setMouth(viseme) {
+      const cssClass = visemeMap[viseme] || visemeMap['default'];
+      mouth.className = 'mouth-overlay ' + cssClass;
+      visemeDisplay.textContent = viseme || 'none';
+    }
+    
+    function setStatus(msg) {
+      document.getElementById('status').textContent = msg;
+    }
+    
+    // Test all mouth shapes in sequence
+    async function testMouthShapes() {
+      log('Testing all mouth shapes...');
+      setStatus('Testing shapes...');
+      
+      const shapes = ['sil', 'aa', 'E', 'O', 'U', 'FF', 'PP', 'mm'];
+      
+      for (const shape of shapes) {
+        setMouth(shape);
+        log(`Shape: ${shape}`);
+        await new Promise(r => setTimeout(r, 500));
+      }
+      
+      setMouth('sil');
+      setStatus('Shape test complete');
+      log('Shape test complete');
+    }
+    
+    // Load motion data and play
+    async function loadAndPlay() {
+      setStatus('Loading motion data...');
+      log('Fetching motion JSON...');
+      
+      try {
+        const response = await fetch('/kelly-motion/explorer_adult_hook_unity.json');
+        if (!response.ok) throw new Error('Failed to load');
+        
+        motionData = await response.json();
+        log(`✅ Loaded: ${motionData.visemes?.length || 0} visemes, ${motionData.duration}s`);
+        
+        // Start animation
+        playVisemes();
+        
+      } catch (e) {
+        log(`❌ Error: ${e.message}`);
+        setStatus('Failed to load motion data');
+      }
+    }
+    
+    function playVisemes() {
+      if (!motionData || !motionData.visemes) {
+        log('No viseme data');
+        return;
+      }
+      
+      animationRunning = true;
+      setStatus('Playing animation...');
+      log(`Starting playback of ${motionData.visemes.length} visemes`);
+      
+      const startTime = performance.now();
+      const visemes = motionData.visemes;
+      let currentIndex = 0;
+      
+      function animate() {
+        if (!animationRunning) return;
+        
+        const elapsed = (performance.now() - startTime) / 1000;
+        
+        // Find current viseme based on time
+        while (currentIndex < visemes.length && visemes[currentIndex].time <= elapsed) {
+          const v = visemes[currentIndex];
+          setMouth(v.viseme || v.value || 'sil');
+          currentIndex++;
+        }
+        
+        // Check if done
+        if (elapsed >= motionData.duration || currentIndex >= visemes.length) {
+          setMouth('sil');
+          setStatus('Animation complete');
+          log('✅ Playback complete');
+          animationRunning = false;
+          return;
+        }
+        
+        animationFrame = requestAnimationFrame(animate);
+      }
+      
+      animate();
+    }
+    
+    function stopAnimation() {
+      animationRunning = false;
+      if (animationFrame) cancelAnimationFrame(animationFrame);
+      setMouth('sil');
+      setStatus('Stopped');
+      log('Animation stopped');
+    }
+    
+    // Init
+    log('Page loaded. Kelly image: /images/kelly-hero-4k.png');
+    log('Mouth overlay system ready');
+  </script>
+</body>
+</html>
+
