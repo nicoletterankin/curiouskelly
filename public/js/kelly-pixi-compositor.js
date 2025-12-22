@@ -24,7 +24,7 @@
  */
 (() => {
   // ALWAYS log script load (critical for debugging)
-  console.log('[Pixi] 🎭 kelly-pixi-compositor.js LOADED, v=20251222f - mouth at 56% from live test');
+  console.log('[Pixi] 🎭 kelly-pixi-compositor.js LOADED, v=20251222g - ABSOLUTE MOUTH POSITION');
   
   const DEBUG =
     (typeof window !== 'undefined' && !!window.__KELLY_PIXI_DEBUG) ||
@@ -510,11 +510,13 @@
       const w = baseW + stretch * 30 * s - pucker * 20 * s;
       const h = Math.max(6 * s, openH);
 
-      // Mouth position offsets relative to anchor
-      // Uses mouthOffsetY from anchor preset (percentage of viewport height)
-      const mouthOffsetY = this.anchor.mouthOffsetY || 0.14;
-      const mx = ax;
-      const my = ay + (mouthOffsetY * r.height); // mouth offset from anchor
+      // Mouth position - ABSOLUTE percentage of viewport height
+      // Based on visual analysis of kelly_explorer_head.png:
+      // Kelly's mouth/smile is at 56% from top of frame
+      // Using ABSOLUTE position to avoid anchor offset confusion
+      const MOUTH_Y_ABSOLUTE = 0.56;  // 56% from top = Kelly's mouth
+      const mx = ax;  // horizontal center (from anchor)
+      const my = MOUTH_Y_ABSOLUTE * r.height;  // ABSOLUTE vertical position
 
       // Draw mouth interior (very subtle - blend with video)
       const mouthInterior = this._mouthInterior;
