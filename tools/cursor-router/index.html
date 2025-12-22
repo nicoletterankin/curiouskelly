@@ -1,0 +1,1465 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>✨ Cursor Router — Your AI Conversation Command Center</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --void: #08080c;
+      --midnight: #0d0d14;
+      --obsidian: #14141e;
+      --charcoal: #1c1c28;
+      --slate: #2a2a3a;
+      --steel: #3d3d52;
+      --silver: #7a7a94;
+      --pearl: #c8c8dc;
+      --snow: #f0f0f8;
+      
+      --kelly-gold: #ffd43b;
+      --kelly-coral: #ff6b6b;
+      --kelly-ruby: #e03131;
+      --kelly-sky: #4dabf7;
+      --kelly-mint: #40c057;
+      --kelly-violet: #9775fa;
+      --kelly-orange: #fd7e14;
+      
+      --opus-color: #9775fa;
+      --sonnet-color: #4dabf7;
+      --haiku-color: #40c057;
+      
+      --danger-bg: rgba(224, 49, 49, 0.12);
+      --warning-bg: rgba(255, 212, 59, 0.12);
+      --success-bg: rgba(64, 192, 87, 0.12);
+      --info-bg: rgba(77, 171, 247, 0.12);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', -apple-system, sans-serif;
+      background: var(--void);
+      color: var(--pearl);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: 
+        radial-gradient(ellipse at 20% 0%, rgba(151, 117, 250, 0.08) 0%, transparent 50%),
+        radial-gradient(ellipse at 80% 100%, rgba(77, 171, 247, 0.06) 0%, transparent 50%);
+      pointer-events: none;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 1000px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+      padding-bottom: 1.5rem;
+      border-bottom: 1px solid var(--slate);
+    }
+
+    .logo {
+      font-size: 2.5rem;
+      margin-bottom: 0.5rem;
+    }
+
+    h1 {
+      font-size: 1.6rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--kelly-gold), var(--opus-color));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+
+    .subtitle {
+      font-size: 0.9rem;
+      color: var(--silver);
+      margin-top: 0.25rem;
+    }
+
+    /* Model Cards */
+    .model-section {
+      margin-bottom: 2rem;
+    }
+
+    .section-label {
+      font-size: 0.75rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.1em;
+      color: var(--silver);
+      margin-bottom: 0.75rem;
+    }
+
+    .model-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 1rem;
+    }
+
+    .model-card {
+      padding: 1.25rem;
+      background: var(--obsidian);
+      border: 2px solid var(--slate);
+      border-radius: 0.75rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    .model-card:hover {
+      transform: translateY(-2px);
+    }
+
+    .model-card.opus { border-color: var(--opus-color); }
+    .model-card.opus:hover, .model-card.opus.selected { 
+      background: rgba(151, 117, 250, 0.1);
+      box-shadow: 0 0 20px rgba(151, 117, 250, 0.2);
+    }
+
+    .model-card.sonnet { border-color: var(--sonnet-color); }
+    .model-card.sonnet:hover, .model-card.sonnet.selected { 
+      background: rgba(77, 171, 247, 0.1);
+      box-shadow: 0 0 20px rgba(77, 171, 247, 0.2);
+    }
+
+    .model-card.haiku { border-color: var(--haiku-color); }
+    .model-card.haiku:hover, .model-card.haiku.selected { 
+      background: rgba(64, 192, 87, 0.1);
+      box-shadow: 0 0 20px rgba(64, 192, 87, 0.2);
+    }
+
+    .model-card.gpt5 { border-color: #10a37f; }
+    .model-card.gpt5:hover, .model-card.gpt5.selected { 
+      background: rgba(16, 163, 127, 0.1);
+      box-shadow: 0 0 20px rgba(16, 163, 127, 0.2);
+    }
+
+    .model-card.o1 { border-color: #ff6b35; }
+    .model-card.o1:hover, .model-card.o1.selected { 
+      background: rgba(255, 107, 53, 0.1);
+      box-shadow: 0 0 20px rgba(255, 107, 53, 0.2);
+    }
+
+    .model-card.gpt4o { border-color: #74aa9c; }
+    .model-card.gpt4o:hover, .model-card.gpt4o.selected { 
+      background: rgba(116, 170, 156, 0.1);
+      box-shadow: 0 0 20px rgba(116, 170, 156, 0.2);
+    }
+
+    .model-card.recommended {
+      position: relative;
+    }
+
+    .model-card.recommended::before {
+      content: '★ RECOMMENDED';
+      position: absolute;
+      top: -10px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 0.6rem;
+      font-weight: 700;
+      padding: 0.15rem 0.5rem;
+      background: var(--kelly-gold);
+      color: var(--void);
+      border-radius: 0.25rem;
+      letter-spacing: 0.05em;
+    }
+
+    .model-icon {
+      font-size: 1.75rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .model-name {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--snow);
+    }
+
+    .model-desc {
+      font-size: 0.75rem;
+      color: var(--silver);
+      margin-top: 0.25rem;
+    }
+
+    .model-cost {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      margin-top: 0.5rem;
+      padding: 0.25rem 0.5rem;
+      background: var(--charcoal);
+      border-radius: 0.25rem;
+      display: inline-block;
+    }
+
+    /* Task Type Grid */
+    .task-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
+      gap: 0.75rem;
+      margin-bottom: 2rem;
+    }
+
+    .task-card {
+      padding: 1rem;
+      background: var(--obsidian);
+      border: 2px solid var(--slate);
+      border-radius: 0.75rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    .task-card:hover {
+      border-color: var(--kelly-sky);
+      transform: translateY(-2px);
+    }
+
+    .task-card.selected {
+      border-color: var(--kelly-gold);
+      background: var(--warning-bg);
+    }
+
+    .task-card.high-risk {
+      border-color: var(--kelly-coral);
+    }
+
+    .task-card.high-risk.selected {
+      background: var(--danger-bg);
+      border-color: var(--kelly-coral);
+    }
+
+    .task-icon {
+      font-size: 1.5rem;
+      margin-bottom: 0.25rem;
+    }
+
+    .task-name {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: var(--pearl);
+    }
+
+    /* Pipeline Display */
+    .pipeline-panel {
+      background: var(--obsidian);
+      border: 1px solid var(--slate);
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .pipeline-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 1rem;
+    }
+
+    .pipeline-icon {
+      font-size: 1.25rem;
+    }
+
+    .pipeline-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--snow);
+    }
+
+    .pipeline-docs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+    }
+
+    .doc-tag {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      padding: 0.375rem 0.75rem;
+      background: var(--charcoal);
+      border: 1px solid var(--slate);
+      border-radius: 0.375rem;
+      color: var(--kelly-sky);
+      cursor: default;
+      transition: all 0.2s ease;
+    }
+
+    .doc-tag:hover {
+      background: var(--slate);
+    }
+
+    .doc-tag.primary {
+      background: var(--info-bg);
+      border-color: var(--kelly-sky);
+    }
+
+    .doc-tag.script {
+      color: var(--kelly-mint);
+      border-color: var(--kelly-mint);
+    }
+
+    .doc-tag.script.primary {
+      background: var(--success-bg);
+    }
+
+    /* Request Input */
+    .request-section {
+      background: var(--obsidian);
+      border: 1px solid var(--slate);
+      border-radius: 0.75rem;
+      padding: 1.5rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .input-label {
+      display: block;
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--pearl);
+      margin-bottom: 0.5rem;
+    }
+
+    textarea {
+      width: 100%;
+      min-height: 120px;
+      padding: 1rem;
+      background: var(--charcoal);
+      border: 1px solid var(--slate);
+      border-radius: 0.5rem;
+      color: var(--snow);
+      font-family: 'DM Sans', sans-serif;
+      font-size: 0.95rem;
+      resize: vertical;
+      transition: all 0.3s ease;
+    }
+
+    textarea:focus {
+      outline: none;
+      border-color: var(--kelly-sky);
+      box-shadow: 0 0 0 3px var(--info-bg);
+    }
+
+    textarea::placeholder {
+      color: var(--steel);
+    }
+
+    .input-hint {
+      font-size: 0.8rem;
+      color: var(--silver);
+      margin-top: 0.5rem;
+      font-style: italic;
+    }
+
+    /* Quick Context Toggles */
+    .context-toggles {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 0.5rem;
+      margin-top: 1rem;
+      padding-top: 1rem;
+      border-top: 1px solid var(--slate);
+    }
+
+    .context-toggle {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      background: var(--charcoal);
+      border: 1px solid var(--slate);
+      border-radius: 0.375rem;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      font-size: 0.8rem;
+      color: var(--silver);
+    }
+
+    .context-toggle:hover {
+      border-color: var(--kelly-sky);
+    }
+
+    .context-toggle.active {
+      background: var(--info-bg);
+      border-color: var(--kelly-sky);
+      color: var(--kelly-sky);
+    }
+
+    .context-toggle input {
+      display: none;
+    }
+
+    /* Validation Panel */
+    .validation-panel {
+      background: var(--obsidian);
+      border: 1px solid var(--slate);
+      border-radius: 0.75rem;
+      padding: 1.25rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .validation-panel.warning {
+      border-color: var(--kelly-gold);
+      background: var(--warning-bg);
+    }
+
+    .validation-panel.error {
+      border-color: var(--kelly-coral);
+      background: var(--danger-bg);
+    }
+
+    .validation-panel.success {
+      border-color: var(--kelly-mint);
+      background: var(--success-bg);
+    }
+
+    .validation-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .validation-icon {
+      font-size: 1.25rem;
+    }
+
+    .validation-title {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--snow);
+    }
+
+    .validation-list {
+      list-style: none;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+    }
+
+    .validation-list li {
+      padding: 0.4rem 0;
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    /* Generated Output */
+    .output-section {
+      background: var(--midnight);
+      border: 2px solid var(--opus-color);
+      border-radius: 1rem;
+      overflow: hidden;
+      margin-top: 2rem;
+    }
+
+    .output-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1rem 1.5rem;
+      background: var(--obsidian);
+      border-bottom: 1px solid var(--slate);
+    }
+
+    .output-title {
+      font-size: 1rem;
+      font-weight: 600;
+      color: var(--opus-color);
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .output-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .output-content {
+      padding: 1.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.7;
+      white-space: pre-wrap;
+      color: var(--pearl);
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 0.625rem 1.25rem;
+      border: none;
+      border-radius: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--opus-color), var(--kelly-sky));
+      color: white;
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 15px rgba(151, 117, 250, 0.4);
+    }
+
+    .btn-secondary {
+      background: var(--slate);
+      color: var(--pearl);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--steel);
+    }
+
+    .btn-copy {
+      background: var(--charcoal);
+      border: 1px solid var(--opus-color);
+      color: var(--opus-color);
+    }
+
+    .btn-copy:hover:not(:disabled) {
+      background: var(--opus-color);
+      color: white;
+    }
+
+    .btn-copy.copied {
+      background: var(--kelly-mint);
+      border-color: var(--kelly-mint);
+      color: white;
+    }
+
+    /* Action Row */
+    .action-row {
+      display: flex;
+      gap: 1rem;
+      justify-content: center;
+      margin-top: 1.5rem;
+    }
+
+    /* Checklist */
+    .mini-checklist {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 0.5rem;
+      margin-top: 1rem;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 0.75rem;
+      background: var(--charcoal);
+      border: 1px solid var(--slate);
+      border-radius: 0.375rem;
+      font-size: 0.8rem;
+      color: var(--silver);
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+
+    .check-item:hover {
+      border-color: var(--kelly-sky);
+    }
+
+    .check-item.checked {
+      background: var(--success-bg);
+      border-color: var(--kelly-mint);
+      color: var(--kelly-mint);
+    }
+
+    .check-item input {
+      accent-color: var(--kelly-mint);
+    }
+
+    /* Hidden */
+    .hidden { display: none !important; }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      padding: 1rem 1.5rem;
+      background: var(--kelly-mint);
+      color: var(--void);
+      border-radius: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 600;
+      box-shadow: 0 4px 20px rgba(64, 192, 87, 0.4);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width: 6px; height: 6px; }
+    ::-webkit-scrollbar-track { background: var(--obsidian); }
+    ::-webkit-scrollbar-thumb { background: var(--slate); border-radius: 3px; }
+    ::-webkit-scrollbar-thumb:hover { background: var(--steel); }
+
+    /* Responsive */
+    @media (max-width: 700px) {
+      .model-grid { grid-template-columns: 1fr; }
+      .task-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">🎯</div>
+      <h1>Cursor Router</h1>
+      <p class="subtitle">Route your request to the right model, pipeline, and context</p>
+    </header>
+
+    <!-- Task Type Selection -->
+    <div class="section-label">What are you trying to do?</div>
+    <div class="task-grid" id="task-grid">
+      <div class="task-card" data-task="understand" data-complexity="low">
+        <div class="task-icon">🔍</div>
+        <div class="task-name">Understand</div>
+      </div>
+      <div class="task-card" data-task="debug" data-complexity="medium">
+        <div class="task-icon">🐛</div>
+        <div class="task-name">Debug</div>
+      </div>
+      <div class="task-card" data-task="fix" data-complexity="medium">
+        <div class="task-icon">🔧</div>
+        <div class="task-name">Fix Bug</div>
+      </div>
+      <div class="task-card" data-task="enhance" data-complexity="medium">
+        <div class="task-icon">✨</div>
+        <div class="task-name">Enhance</div>
+      </div>
+      <div class="task-card" data-task="generate" data-complexity="high">
+        <div class="task-icon">⚡</div>
+        <div class="task-name">Generate</div>
+      </div>
+      <div class="task-card high-risk" data-task="create" data-complexity="high">
+        <div class="task-icon">🆕</div>
+        <div class="task-name">Create New</div>
+      </div>
+      <div class="task-card high-risk" data-task="refactor" data-complexity="high">
+        <div class="task-icon">🔄</div>
+        <div class="task-name">Refactor</div>
+      </div>
+      <div class="task-card high-risk" data-task="deploy" data-complexity="high">
+        <div class="task-icon">🚀</div>
+        <div class="task-name">Deploy</div>
+      </div>
+    </div>
+
+    <!-- Model Selection -->
+    <div class="model-section">
+      <div class="section-label">Anthropic Models</div>
+      <div class="model-grid" id="model-grid">
+        <div class="model-card opus" data-model="opus">
+          <div class="model-icon">🧠</div>
+          <div class="model-name">Claude Opus 4.5</div>
+          <div class="model-desc">Complex reasoning, architecture, multi-step</div>
+          <div class="model-cost">$$$</div>
+        </div>
+        <div class="model-card sonnet" data-model="sonnet">
+          <div class="model-icon">⚡</div>
+          <div class="model-name">Claude Sonnet 4</div>
+          <div class="model-desc">Balanced power and speed</div>
+          <div class="model-cost">$$</div>
+        </div>
+        <div class="model-card haiku" data-model="haiku">
+          <div class="model-icon">🌿</div>
+          <div class="model-name">Claude Haiku 3.5</div>
+          <div class="model-desc">Quick tasks, simple fixes</div>
+          <div class="model-cost">$</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- OpenAI Models -->
+    <div class="model-section">
+      <div class="section-label">OpenAI Models</div>
+      <div class="model-grid" id="model-grid-openai">
+        <div class="model-card gpt5" data-model="gpt5">
+          <div class="model-icon">🚀</div>
+          <div class="model-name">GPT-5.2</div>
+          <div class="model-desc">Next-gen reasoning, tools, multimodal</div>
+          <div class="model-cost">$$$</div>
+        </div>
+        <div class="model-card o1" data-model="o1">
+          <div class="model-icon">🔮</div>
+          <div class="model-name">o1 / o1-pro</div>
+          <div class="model-desc">Deep reasoning, complex problem solving</div>
+          <div class="model-cost">$$$$</div>
+        </div>
+        <div class="model-card gpt4o" data-model="gpt4o">
+          <div class="model-icon">💚</div>
+          <div class="model-name">GPT-4o</div>
+          <div class="model-desc">Fast, multimodal, great for code</div>
+          <div class="model-cost">$$</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pipeline/Docs Panel -->
+    <div class="pipeline-panel" id="pipeline-panel">
+      <div class="pipeline-header">
+        <span class="pipeline-icon">📚</span>
+        <span class="pipeline-title">Relevant Context & Pipeline</span>
+      </div>
+      <div class="pipeline-docs" id="pipeline-docs">
+        <span class="doc-tag primary">CLAUDE.md</span>
+        <span class="doc-tag">Select a task to see relevant docs...</span>
+      </div>
+    </div>
+
+    <!-- Request Input -->
+    <div class="request-section">
+      <label class="input-label" for="request-input">Describe your request:</label>
+      <textarea 
+        id="request-input" 
+        placeholder="Be specific. What exactly do you want to accomplish?&#10;&#10;Example: 'I need to fix the video player - it's not loading Kelly's response videos after the user selects an answer'"
+      ></textarea>
+      <div class="input-hint">💡 The more specific you are, the better the AI can help</div>
+
+      <div class="context-toggles">
+        <label class="context-toggle" data-context="cost">
+          <input type="checkbox">
+          <span>💰 Cost-sensitive</span>
+        </label>
+        <label class="context-toggle" data-context="quality">
+          <input type="checkbox">
+          <span>✨ Quality-critical</span>
+        </label>
+        <label class="context-toggle" data-context="fast">
+          <input type="checkbox">
+          <span>⏰ Need it fast</span>
+        </label>
+        <label class="context-toggle" data-context="nobreak">
+          <input type="checkbox">
+          <span>🚫 Don't break existing</span>
+        </label>
+        <label class="context-toggle" data-context="approval">
+          <input type="checkbox">
+          <span>✅ Ask before acting</span>
+        </label>
+      </div>
+    </div>
+
+    <!-- Validation -->
+    <div class="validation-panel hidden" id="validation-panel">
+      <div class="validation-header">
+        <span class="validation-icon" id="validation-icon">⚠️</span>
+        <span class="validation-title" id="validation-title">Checking existing implementations...</span>
+      </div>
+      <ul class="validation-list" id="validation-list"></ul>
+    </div>
+
+    <!-- Quick Checklist -->
+    <div class="section-label">Quick Pre-Flight Check</div>
+    <div class="mini-checklist" id="mini-checklist">
+      <label class="check-item">
+        <input type="checkbox" data-check="plan">
+        <span>I have a plan reference for this work</span>
+      </label>
+      <label class="check-item">
+        <input type="checkbox" data-check="existing">
+        <span>I've checked for existing implementations</span>
+      </label>
+      <label class="check-item">
+        <input type="checkbox" data-check="naming">
+        <span>I'll follow naming conventions</span>
+      </label>
+      <label class="check-item">
+        <input type="checkbox" data-check="test">
+        <span>I'll test before considering done</span>
+      </label>
+    </div>
+
+    <!-- Action Buttons -->
+    <div class="action-row">
+      <button class="btn btn-secondary" onclick="resetForm()">🔄 Reset</button>
+      <button class="btn btn-primary" id="btn-generate" onclick="generatePrompt()" disabled>
+        🎯 Generate Cursor Prompt
+      </button>
+    </div>
+
+    <!-- Output -->
+    <div class="output-section hidden" id="output-section">
+      <div class="output-header">
+        <span class="output-title">
+          <span id="output-model-icon">🧠</span>
+          <span id="output-model-name">Ready for Cursor</span>
+        </span>
+        <div class="output-actions">
+          <button class="btn btn-copy" id="btn-copy" onclick="copyPrompt()">
+            📋 Copy to Clipboard
+          </button>
+        </div>
+      </div>
+      <pre class="output-content" id="output-content"></pre>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">✓ Copied! Paste in Cursor chat</div>
+
+  <script>
+    // ═══════════════════════════════════════════════════════════════
+    // STATE
+    // ═══════════════════════════════════════════════════════════════
+    
+    const state = {
+      task: null,
+      complexity: null,
+      model: null,
+      request: '',
+      context: [],
+      checks: {},
+      validationResults: []
+    };
+
+    // ═══════════════════════════════════════════════════════════════
+    // PIPELINE MAPPINGS
+    // ═══════════════════════════════════════════════════════════════
+    
+    const PIPELINES = {
+      video: {
+        name: 'Video Generation Pipeline',
+        docs: ['LESSON_GENERATION_SPEC.md', 'KELLY_VIDEO_PERFECTION_PLAN.md', 'docs/kelly-video-system/'],
+        scripts: ['scripts/kelly-video-factory/hd-golden-lesson-pipeline.ts'],
+        model: 'opus'
+      },
+      audio: {
+        name: 'Audio Generation Pipeline',
+        docs: ['docs/ELEVENLABS_OPTIMAL_SETUP.md', 'docs/LIPSYNC_INTEGRATION_GUIDE.md'],
+        scripts: ['generate_lesson_audio_for_iclone.py'],
+        model: 'sonnet'
+      },
+      lesson: {
+        name: 'Lesson System',
+        docs: ['LESSON_PLAYER_ARCHITECTURE.md', 'LESSON_GENERATION_SPEC.md', 'docs/phasedna/'],
+        scripts: ['public/learn.html', 'public/js/lesson-system.js'],
+        model: 'opus'
+      },
+      player: {
+        name: 'Lesson Player',
+        docs: ['LESSON_PLAYER_ARCHITECTURE.md', 'docs/UI_AUDIT_2025-12-20.md'],
+        scripts: ['public/learn.html'],
+        model: 'sonnet'
+      },
+      social: {
+        name: 'Social Media Pipeline',
+        docs: ['docs/social-media/SOCIAL_MEDIA_STRATEGY.md', 'docs/social-media/SOCIAL_MEDIA_BRAND_GUIDELINES.md'],
+        scripts: ['tools/social-media-automation/'],
+        model: 'sonnet'
+      },
+      deploy: {
+        name: 'Deployment Pipeline',
+        docs: ['docs/deployment/DEPLOYMENT_CHECKLIST.md', 'vercel.json'],
+        scripts: ['deployment/'],
+        model: 'opus'
+      },
+      billing: {
+        name: 'Billing & Payments',
+        docs: ['docs/billing/GLOBAL_ROADMAP.md', 'docs/backend/SUPABASE_SCHEMA.md'],
+        scripts: ['functions/stripe-webhook/', 'api/create-checkout-session.ts'],
+        model: 'opus'
+      },
+      database: {
+        name: 'Database & Backend',
+        docs: ['docs/backend/SUPABASE_SCHEMA.md', 'docs/backend/SUPABASE_MCP_SETUP.md'],
+        scripts: ['supabase/', 'api/'],
+        model: 'sonnet'
+      },
+      infographic: {
+        name: 'Infographic Generation',
+        docs: ['docs/COMPLETE_VISUAL_ASSET_MANIFEST.md'],
+        scripts: ['scripts/kelly-phase-visuals/batch-infographics-from-db.ts'],
+        model: 'sonnet'
+      },
+      ui: {
+        name: 'UI/Frontend',
+        docs: ['docs/UI_AUDIT_2025-12-20.md', 'docs/experience/'],
+        scripts: ['public/', 'daily-lesson-marketing/'],
+        model: 'sonnet'
+      },
+      general: {
+        name: 'General',
+        docs: ['CLAUDE.md', 'CURIOUS_KELLLY_EXECUTION_PLAN.md'],
+        scripts: [],
+        model: 'sonnet'
+      }
+    };
+
+    const KEYWORD_TO_PIPELINE = {
+      'video': 'video',
+      'lipsync': 'video',
+      'motion': 'video',
+      'sync labs': 'video',
+      'minimax': 'video',
+      'audio': 'audio',
+      'elevenlabs': 'audio',
+      'tts': 'audio',
+      'voice': 'audio',
+      'lesson': 'lesson',
+      'phase': 'lesson',
+      'dna': 'lesson',
+      'player': 'player',
+      'learn.html': 'player',
+      'ui': 'ui',
+      'frontend': 'ui',
+      'css': 'ui',
+      'social': 'social',
+      'twitter': 'social',
+      'instagram': 'social',
+      'deploy': 'deploy',
+      'vercel': 'deploy',
+      'production': 'deploy',
+      'stripe': 'billing',
+      'payment': 'billing',
+      'billing': 'billing',
+      'checkout': 'billing',
+      'supabase': 'database',
+      'database': 'database',
+      'api': 'database',
+      'infographic': 'infographic',
+      'thumbnail': 'infographic',
+      'image': 'infographic'
+    };
+
+    const EXISTING_IMPLEMENTATIONS = {
+      'thumbnail': ['generate_lesson_thumbnails.py', 'scripts/kelly-phase-visuals/'],
+      'audio': ['generate_lesson_audio_for_iclone.py'],
+      'video': ['scripts/kelly-video-factory/hd-golden-lesson-pipeline.ts'],
+      'lesson': ['public/learn.html', 'content/'],
+      'infographic': ['scripts/kelly-phase-visuals/batch-infographics-from-db.ts'],
+      'kelly': ['tools/kelly-cop/', 'tools/kelly-forge/'],
+      'social': ['tools/social-media-automation/'],
+      'dashboard': ['tools/mission-control/dashboard.html'],
+      'deploy': ['deployment/', 'vercel.json'],
+      'stripe': ['api/create-checkout-session.ts', 'functions/stripe-webhook/']
+    };
+
+    const MODEL_RECOMMENDATIONS = {
+      understand: 'haiku',
+      debug: 'sonnet',
+      fix: 'sonnet',
+      enhance: 'sonnet',
+      generate: 'opus',
+      create: 'opus',
+      refactor: 'opus',
+      deploy: 'opus'
+    };
+    
+    // Model-specific strengths
+    const MODEL_STRENGTHS = {
+      opus: ['Complex multi-step tasks', 'Architecture decisions', 'Code understanding', 'Long context'],
+      sonnet: ['Balanced speed/quality', 'Standard development', 'Code reviews', 'Bug fixes'],
+      haiku: ['Quick lookups', 'Simple questions', 'Fast iterations', 'Low cost'],
+      gpt5: ['Advanced tool use', 'Multimodal tasks', 'Latest capabilities', 'Strong reasoning'],
+      o1: ['Deep reasoning chains', 'Complex problem decomposition', 'Mathematical proofs', 'Hard debugging'],
+      gpt4o: ['Fast responses', 'Multimodal (images)', 'Good at code', 'Cost-effective']
+    };
+
+    // ═══════════════════════════════════════════════════════════════
+    // EVENT HANDLERS
+    // ═══════════════════════════════════════════════════════════════
+    
+    // Task selection
+    document.querySelectorAll('.task-card').forEach(card => {
+      card.addEventListener('click', () => {
+        document.querySelectorAll('.task-card').forEach(c => c.classList.remove('selected'));
+        card.classList.add('selected');
+        state.task = card.dataset.task;
+        state.complexity = card.dataset.complexity;
+        
+        // Auto-recommend model
+        const recommendedModel = MODEL_RECOMMENDATIONS[state.task] || 'sonnet';
+        selectModel(recommendedModel, true);
+        
+        updatePipeline();
+        validateRequest();
+        updateGenerateButton();
+      });
+    });
+
+    // Model selection
+    document.querySelectorAll('.model-card').forEach(card => {
+      card.addEventListener('click', () => {
+        selectModel(card.dataset.model, false);
+      });
+    });
+
+    function selectModel(model, isRecommendation) {
+      document.querySelectorAll('.model-card').forEach(c => {
+        c.classList.remove('selected', 'recommended');
+      });
+      
+      const selectedCard = document.querySelector(`.model-card.${model}`);
+      if (selectedCard) {
+        selectedCard.classList.add('selected');
+        if (isRecommendation) {
+          selectedCard.classList.add('recommended');
+        }
+      }
+      
+      state.model = model;
+    }
+    
+    // Model metadata
+    const MODEL_INFO = {
+      // Anthropic
+      opus: { name: 'Claude Opus 4.5', icon: '🧠', provider: 'Anthropic', tier: 'premium' },
+      sonnet: { name: 'Claude Sonnet 4', icon: '⚡', provider: 'Anthropic', tier: 'balanced' },
+      haiku: { name: 'Claude Haiku 3.5', icon: '🌿', provider: 'Anthropic', tier: 'fast' },
+      // OpenAI
+      gpt5: { name: 'GPT-5.2', icon: '🚀', provider: 'OpenAI', tier: 'premium' },
+      o1: { name: 'o1 / o1-pro', icon: '🔮', provider: 'OpenAI', tier: 'reasoning' },
+      gpt4o: { name: 'GPT-4o', icon: '💚', provider: 'OpenAI', tier: 'balanced' }
+    };
+
+    // Request input
+    document.getElementById('request-input').addEventListener('input', (e) => {
+      state.request = e.target.value;
+      updatePipeline();
+      validateRequest();
+      updateGenerateButton();
+    });
+
+    // Context toggles
+    document.querySelectorAll('.context-toggle').forEach(toggle => {
+      toggle.addEventListener('click', () => {
+        toggle.classList.toggle('active');
+        const context = toggle.dataset.context;
+        if (toggle.classList.contains('active')) {
+          state.context.push(context);
+        } else {
+          state.context = state.context.filter(c => c !== context);
+        }
+      });
+    });
+
+    // Checklist
+    document.querySelectorAll('.check-item input').forEach(checkbox => {
+      checkbox.addEventListener('change', (e) => {
+        const item = e.target.closest('.check-item');
+        const check = e.target.dataset.check;
+        state.checks[check] = e.target.checked;
+        
+        if (e.target.checked) {
+          item.classList.add('checked');
+        } else {
+          item.classList.remove('checked');
+        }
+        
+        updateGenerateButton();
+      });
+    });
+
+    // ═══════════════════════════════════════════════════════════════
+    // PIPELINE DETECTION
+    // ═══════════════════════════════════════════════════════════════
+    
+    function detectPipeline() {
+      const text = state.request.toLowerCase();
+      
+      for (const [keyword, pipeline] of Object.entries(KEYWORD_TO_PIPELINE)) {
+        if (text.includes(keyword)) {
+          return pipeline;
+        }
+      }
+      
+      return 'general';
+    }
+
+    function updatePipeline() {
+      const pipelineId = detectPipeline();
+      const pipeline = PIPELINES[pipelineId];
+      
+      const docsContainer = document.getElementById('pipeline-docs');
+      
+      let html = '';
+      
+      // Primary docs
+      pipeline.docs.forEach((doc, i) => {
+        html += `<span class="doc-tag ${i === 0 ? 'primary' : ''}">${doc}</span>`;
+      });
+      
+      // Scripts
+      pipeline.scripts.forEach((script, i) => {
+        html += `<span class="doc-tag script ${i === 0 ? 'primary' : ''}">${script}</span>`;
+      });
+      
+      docsContainer.innerHTML = html || '<span class="doc-tag">CLAUDE.md</span>';
+      
+      // Update model recommendation based on pipeline
+      if (pipeline.model && !state.model) {
+        selectModel(pipeline.model, true);
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // VALIDATION
+    // ═══════════════════════════════════════════════════════════════
+    
+    function validateRequest() {
+      const panel = document.getElementById('validation-panel');
+      const list = document.getElementById('validation-list');
+      const icon = document.getElementById('validation-icon');
+      const title = document.getElementById('validation-title');
+      
+      if (!state.request || state.request.length < 10) {
+        panel.classList.add('hidden');
+        state.validationResults = [];
+        return;
+      }
+      
+      const text = state.request.toLowerCase();
+      const results = [];
+      
+      // Check for existing implementations
+      Object.entries(EXISTING_IMPLEMENTATIONS).forEach(([keyword, files]) => {
+        if (text.includes(keyword)) {
+          results.push({
+            type: 'existing',
+            keyword,
+            files,
+            message: `Found existing "${keyword}" implementations`
+          });
+        }
+      });
+      
+      // Check for high-risk patterns
+      const dangerousPatterns = ['delete', 'remove', 'drop', 'truncate', 'reset'];
+      dangerousPatterns.forEach(pattern => {
+        if (text.includes(pattern)) {
+          results.push({
+            type: 'danger',
+            message: `Contains "${pattern}" - high-risk action, verify carefully`
+          });
+        }
+      });
+      
+      state.validationResults = results;
+      
+      if (results.length === 0) {
+        panel.classList.remove('hidden', 'warning', 'error');
+        panel.classList.add('success');
+        icon.textContent = '✅';
+        title.textContent = 'No conflicts detected';
+        list.innerHTML = '<li>✓ Looks good to proceed</li>';
+      } else {
+        const hasDanger = results.some(r => r.type === 'danger');
+        panel.classList.remove('hidden', 'success');
+        panel.classList.toggle('error', hasDanger);
+        panel.classList.toggle('warning', !hasDanger);
+        
+        icon.textContent = hasDanger ? '🚨' : '⚠️';
+        title.textContent = hasDanger ? 'High-risk action detected!' : 'Check existing implementations';
+        
+        list.innerHTML = results.map(r => {
+          if (r.type === 'existing') {
+            return `<li>📁 <strong>${r.keyword}</strong>: ${r.files.join(', ')}</li>`;
+          } else {
+            return `<li>⚠️ ${r.message}</li>`;
+          }
+        }).join('');
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // GENERATE BUTTON STATE
+    // ═══════════════════════════════════════════════════════════════
+    
+    function updateGenerateButton() {
+      const btn = document.getElementById('btn-generate');
+      const canGenerate = 
+        state.task && 
+        state.model && 
+        state.request.length >= 10;
+      
+      btn.disabled = !canGenerate;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // GENERATE PROMPT
+    // ═══════════════════════════════════════════════════════════════
+    
+    function generatePrompt() {
+      const pipelineId = detectPipeline();
+      const pipeline = PIPELINES[pipelineId];
+      
+      const lines = [];
+      
+      // Header
+      lines.push('╔══════════════════════════════════════════════════════════════════╗');
+      lines.push('║  CURSOR ROUTER — Validated Request Brief                         ║');
+      lines.push('╚══════════════════════════════════════════════════════════════════╝');
+      lines.push('');
+      
+      // Model & Task
+      const modelInfo = MODEL_INFO[state.model] || { name: state.model, icon: '🤖', provider: 'Unknown' };
+      const taskNames = {
+        understand: 'Understand/Explore',
+        debug: 'Debug Issue',
+        fix: 'Fix Bug',
+        enhance: 'Enhance Feature',
+        generate: 'Generate Content',
+        create: 'Create New',
+        refactor: 'Refactor/Restructure',
+        deploy: 'Deploy/Release'
+      };
+      
+      lines.push(`🎯 TASK: ${taskNames[state.task]}`);
+      lines.push(`${modelInfo.icon} MODEL: ${modelInfo.name} (${modelInfo.provider})`);
+      lines.push(`📁 PIPELINE: ${pipeline.name}`);
+      
+      // Add model strengths
+      const strengths = MODEL_STRENGTHS[state.model];
+      if (strengths) {
+        lines.push(`💪 WHY THIS MODEL: ${strengths.slice(0, 2).join(', ')}`);
+      }
+      lines.push('');
+      
+      // Context docs
+      lines.push('📚 RELEVANT CONTEXT (read these first):');
+      lines.push('─'.repeat(60));
+      pipeline.docs.forEach(doc => lines.push(`  • ${doc}`));
+      if (pipeline.scripts.length > 0) {
+        lines.push('');
+        lines.push('🔧 RELEVANT SCRIPTS/FILES:');
+        pipeline.scripts.forEach(script => lines.push(`  • ${script}`));
+      }
+      lines.push('');
+      
+      // Validation notes
+      if (state.validationResults.length > 0) {
+        lines.push('⚠️ VALIDATION NOTES:');
+        lines.push('─'.repeat(60));
+        state.validationResults.forEach(r => {
+          if (r.type === 'existing') {
+            lines.push(`  CHECK EXISTING: ${r.files.join(', ')}`);
+          } else {
+            lines.push(`  ${r.message.toUpperCase()}`);
+          }
+        });
+        lines.push('');
+      }
+      
+      // Context flags
+      if (state.context.length > 0) {
+        lines.push('🚦 CONSTRAINTS:');
+        lines.push('─'.repeat(60));
+        const contextLabels = {
+          cost: '💰 Minimize API costs',
+          quality: '✨ Quality is critical - must be perfect',
+          fast: '⏰ Time-sensitive - need quick solution',
+          nobreak: '🚫 Do not break existing functionality',
+          approval: '✅ Ask before making changes'
+        };
+        state.context.forEach(c => lines.push(`  • ${contextLabels[c]}`));
+        lines.push('');
+      }
+      
+      // Pre-flight checks
+      const checkedItems = Object.entries(state.checks).filter(([k, v]) => v).map(([k]) => k);
+      if (checkedItems.length > 0) {
+        lines.push('✓ PRE-FLIGHT CONFIRMED:');
+        const checkLabels = {
+          plan: 'Has plan reference',
+          existing: 'Checked for existing implementations',
+          naming: 'Will follow naming conventions',
+          test: 'Will test before done'
+        };
+        checkedItems.forEach(c => lines.push(`  [✓] ${checkLabels[c]}`));
+        lines.push('');
+      }
+      
+      // The actual request
+      lines.push('═'.repeat(60));
+      lines.push('REQUEST:');
+      lines.push('═'.repeat(60));
+      lines.push('');
+      lines.push(state.request);
+      lines.push('');
+      lines.push('═'.repeat(60));
+      
+      // Instructions
+      lines.push('');
+      lines.push('INSTRUCTIONS FOR AI:');
+      lines.push('─'.repeat(60));
+      
+      if (state.task === 'understand') {
+        lines.push('1. Search codebase thoroughly before answering');
+        lines.push('2. Read the relevant docs listed above');
+        lines.push('3. Provide specific file references and line numbers');
+      } else if (state.task === 'debug' || state.task === 'fix') {
+        lines.push('1. Reproduce/understand the issue first');
+        lines.push('2. Check existing solutions in codebase');
+        lines.push('3. Fix root cause, not symptoms');
+        lines.push('4. Verify fix doesn\'t break other functionality');
+      } else if (state.task === 'enhance') {
+        lines.push('1. Review existing implementation first');
+        lines.push('2. Follow established patterns and conventions');
+        lines.push('3. Make minimal changes to achieve goal');
+      } else if (state.task === 'generate') {
+        lines.push('1. Use the pipeline scripts listed above');
+        lines.push('2. Follow existing generation patterns');
+        lines.push('3. Validate output quality before completing');
+      } else if (state.task === 'create') {
+        lines.push('1. VERIFY no existing implementation serves this purpose');
+        lines.push('2. Follow naming conventions strictly');
+        lines.push('3. Add to appropriate existing directory structure');
+        lines.push('4. Document in relevant files');
+        lines.push('5. Seek approval before finalizing');
+      } else if (state.task === 'refactor') {
+        lines.push('1. List ALL affected files before starting');
+        lines.push('2. Check for dependencies');
+        lines.push('3. Update all references');
+        lines.push('4. Run tests after changes');
+      } else if (state.task === 'deploy') {
+        lines.push('1. Follow DEPLOYMENT_CHECKLIST.md strictly');
+        lines.push('2. Verify all pre-deploy requirements');
+        lines.push('3. Test on staging before production');
+        lines.push('4. Monitor after deployment');
+      }
+      
+      // Model-specific tips
+      lines.push('');
+      lines.push(`💡 ${modelInfo.name.toUpperCase()} TIPS:`);
+      lines.push('─'.repeat(60));
+      
+      if (state.model === 'opus') {
+        lines.push('• Best for complex reasoning - give it the full context');
+        lines.push('• Can handle long files - read entire files when needed');
+        lines.push('• Strong at architecture decisions - ask for design rationale');
+      } else if (state.model === 'sonnet') {
+        lines.push('• Balanced speed and quality - good for most dev tasks');
+        lines.push('• Fast enough for iterative work');
+        lines.push('• Ask for explanations if the solution is complex');
+      } else if (state.model === 'haiku') {
+        lines.push('• Optimized for speed - keep prompts focused');
+        lines.push('• Best for quick questions and simple fixes');
+        lines.push('• May need to break complex tasks into steps');
+      } else if (state.model === 'gpt5') {
+        lines.push('• Excellent tool use - can run commands and browse effectively');
+        lines.push('• Strong multimodal - can analyze images/screenshots');
+        lines.push('• Latest reasoning capabilities - good for novel problems');
+      } else if (state.model === 'o1') {
+        lines.push('• Deep reasoning model - give it time to think');
+        lines.push('• Best for complex problem decomposition');
+        lines.push('• Excellent for debugging hard issues');
+        lines.push('• May be slower but more thorough');
+      } else if (state.model === 'gpt4o') {
+        lines.push('• Fast and capable - good for most coding tasks');
+        lines.push('• Can analyze images - useful for UI debugging');
+        lines.push('• Cost-effective for iterative development');
+      }
+      
+      lines.push('');
+      lines.push('─'.repeat(60));
+      lines.push('Generated by Cursor Router • ' + new Date().toLocaleString());
+      
+      // Display output
+      document.getElementById('output-content').textContent = lines.join('\n');
+      document.getElementById('output-section').classList.remove('hidden');
+      
+      // Update model display
+      document.getElementById('output-model-icon').textContent = modelInfo.icon;
+      document.getElementById('output-model-name').textContent = `Ready for ${modelInfo.name}`;
+      
+      // Scroll to output
+      document.getElementById('output-section').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function copyPrompt() {
+      const content = document.getElementById('output-content').textContent;
+      navigator.clipboard.writeText(content).then(() => {
+        const btn = document.getElementById('btn-copy');
+        btn.classList.add('copied');
+        btn.innerHTML = '✓ Copied!';
+        
+        showToast();
+        
+        setTimeout(() => {
+          btn.classList.remove('copied');
+          btn.innerHTML = '📋 Copy to Clipboard';
+        }, 2000);
+      });
+    }
+
+    function showToast() {
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2500);
+    }
+
+    function resetForm() {
+      // Reset state
+      state.task = null;
+      state.complexity = null;
+      state.model = null;
+      state.request = '';
+      state.context = [];
+      state.checks = {};
+      state.validationResults = [];
+      
+      // Reset UI
+      document.querySelectorAll('.task-card').forEach(c => c.classList.remove('selected'));
+      document.querySelectorAll('.model-card').forEach(c => c.classList.remove('selected', 'recommended'));
+      document.getElementById('request-input').value = '';
+      document.querySelectorAll('.context-toggle').forEach(t => t.classList.remove('active'));
+      document.querySelectorAll('.check-item').forEach(c => {
+        c.classList.remove('checked');
+        c.querySelector('input').checked = false;
+      });
+      
+      // Reset panels
+      document.getElementById('validation-panel').classList.add('hidden');
+      document.getElementById('output-section').classList.add('hidden');
+      document.getElementById('pipeline-docs').innerHTML = 
+        '<span class="doc-tag primary">CLAUDE.md</span><span class="doc-tag">Select a task to see relevant docs...</span>';
+      
+      // Reset button
+      document.getElementById('btn-generate').disabled = true;
+      
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>
+

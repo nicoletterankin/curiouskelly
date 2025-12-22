@@ -1,0 +1,1407 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>✨ Kelly Request Validator - Stop Before You Wreck</title>
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --midnight: #0d0d12;
+      --obsidian: #15151d;
+      --charcoal: #1e1e28;
+      --slate: #2a2a38;
+      --steel: #4a4a5e;
+      --silver: #8b8b9e;
+      --pearl: #d4d4e0;
+      --snow: #f0f0f5;
+      
+      --kelly-gold: #ffd43b;
+      --kelly-coral: #ff6b6b;
+      --kelly-ruby: #e03131;
+      --kelly-sky: #4dabf7;
+      --kelly-mint: #51cf66;
+      --kelly-violet: #9775fa;
+      
+      --danger-bg: rgba(224, 49, 49, 0.12);
+      --danger-border: rgba(224, 49, 49, 0.4);
+      --warning-bg: rgba(255, 212, 59, 0.12);
+      --warning-border: rgba(255, 212, 59, 0.4);
+      --success-bg: rgba(81, 207, 102, 0.12);
+      --success-border: rgba(81, 207, 102, 0.4);
+      --info-bg: rgba(77, 171, 247, 0.12);
+      --info-border: rgba(77, 171, 247, 0.4);
+    }
+
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    body {
+      font-family: 'DM Sans', -apple-system, BlinkMacSystemFont, sans-serif;
+      background: var(--midnight);
+      color: var(--pearl);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    body::before {
+      content: '';
+      position: fixed;
+      inset: 0;
+      background: 
+        radial-gradient(ellipse at 15% 0%, rgba(255, 212, 59, 0.06) 0%, transparent 45%),
+        radial-gradient(ellipse at 85% 100%, rgba(151, 117, 250, 0.05) 0%, transparent 45%),
+        linear-gradient(180deg, var(--midnight) 0%, var(--obsidian) 100%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    .container {
+      position: relative;
+      z-index: 1;
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 2rem;
+    }
+
+    /* Header */
+    header {
+      text-align: center;
+      margin-bottom: 3rem;
+      padding-bottom: 2rem;
+      border-bottom: 1px solid var(--slate);
+    }
+
+    .logo {
+      font-size: 3rem;
+      margin-bottom: 0.5rem;
+      animation: float 3s ease-in-out infinite;
+    }
+
+    @keyframes float {
+      0%, 100% { transform: translateY(0); }
+      50% { transform: translateY(-8px); }
+    }
+
+    h1 {
+      font-size: 1.8rem;
+      font-weight: 700;
+      background: linear-gradient(135deg, var(--kelly-gold), var(--kelly-coral));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      font-size: 0.95rem;
+      color: var(--silver);
+      font-style: italic;
+    }
+
+    /* Phase Indicator */
+    .phases {
+      display: flex;
+      justify-content: center;
+      gap: 0.5rem;
+      margin: 2rem 0;
+    }
+
+    .phase {
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+      padding: 0.5rem 1rem;
+      background: var(--charcoal);
+      border: 1px solid var(--slate);
+      border-radius: 2rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.75rem;
+      color: var(--silver);
+      transition: all 0.3s ease;
+    }
+
+    .phase.active {
+      background: var(--info-bg);
+      border-color: var(--info-border);
+      color: var(--kelly-sky);
+    }
+
+    .phase.complete {
+      background: var(--success-bg);
+      border-color: var(--success-border);
+      color: var(--kelly-mint);
+    }
+
+    .phase.blocked {
+      background: var(--danger-bg);
+      border-color: var(--danger-border);
+      color: var(--kelly-coral);
+    }
+
+    .phase-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    /* Form Sections */
+    .section {
+      background: var(--obsidian);
+      border: 1px solid var(--slate);
+      border-radius: 1rem;
+      padding: 2rem;
+      margin-bottom: 1.5rem;
+      transition: all 0.3s ease;
+    }
+
+    .section.locked {
+      opacity: 0.5;
+      pointer-events: none;
+      filter: grayscale(0.5);
+    }
+
+    .section.validated {
+      border-color: var(--success-border);
+      box-shadow: 0 0 20px var(--success-bg);
+    }
+
+    .section.warning {
+      border-color: var(--warning-border);
+      box-shadow: 0 0 20px var(--warning-bg);
+    }
+
+    .section.error {
+      border-color: var(--danger-border);
+      box-shadow: 0 0 20px var(--danger-bg);
+    }
+
+    .section-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+    }
+
+    .section-icon {
+      font-size: 1.5rem;
+    }
+
+    .section-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--snow);
+    }
+
+    .section-status {
+      margin-left: auto;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      padding: 0.25rem 0.75rem;
+      border-radius: 1rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+    }
+
+    .status-pending { background: var(--slate); color: var(--silver); }
+    .status-valid { background: var(--success-bg); color: var(--kelly-mint); border: 1px solid var(--success-border); }
+    .status-warning { background: var(--warning-bg); color: var(--kelly-gold); border: 1px solid var(--warning-border); }
+    .status-error { background: var(--danger-bg); color: var(--kelly-coral); border: 1px solid var(--danger-border); }
+
+    /* Form Elements */
+    .field {
+      margin-bottom: 1.5rem;
+    }
+
+    .field:last-child {
+      margin-bottom: 0;
+    }
+
+    label {
+      display: block;
+      font-size: 0.9rem;
+      color: var(--pearl);
+      margin-bottom: 0.5rem;
+    }
+
+    .field-hint {
+      font-size: 0.8rem;
+      color: var(--silver);
+      font-style: italic;
+      margin-top: 0.25rem;
+    }
+
+    input[type="text"],
+    textarea,
+    select {
+      width: 100%;
+      padding: 0.875rem 1rem;
+      background: var(--charcoal);
+      border: 1px solid var(--slate);
+      border-radius: 0.5rem;
+      color: var(--snow);
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.9rem;
+      transition: all 0.3s ease;
+    }
+
+    input:focus,
+    textarea:focus,
+    select:focus {
+      outline: none;
+      border-color: var(--kelly-sky);
+      box-shadow: 0 0 0 3px var(--info-bg);
+    }
+
+    textarea {
+      min-height: 100px;
+      resize: vertical;
+    }
+
+    select {
+      cursor: pointer;
+    }
+
+    /* Request Type Cards */
+    .type-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+    }
+
+    .type-card {
+      padding: 1.25rem;
+      background: var(--charcoal);
+      border: 2px solid var(--slate);
+      border-radius: 0.75rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      text-align: center;
+    }
+
+    .type-card:hover {
+      border-color: var(--kelly-sky);
+      transform: translateY(-2px);
+    }
+
+    .type-card.selected {
+      border-color: var(--kelly-gold);
+      background: var(--warning-bg);
+    }
+
+    .type-card.dangerous {
+      border-color: var(--kelly-coral);
+    }
+
+    .type-card.dangerous:hover {
+      border-color: var(--kelly-ruby);
+      background: var(--danger-bg);
+    }
+
+    .type-icon {
+      font-size: 2rem;
+      margin-bottom: 0.5rem;
+    }
+
+    .type-name {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: var(--pearl);
+      margin-bottom: 0.25rem;
+    }
+
+    .type-risk {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.7rem;
+      color: var(--silver);
+    }
+
+    .type-risk.high { color: var(--kelly-coral); }
+    .type-risk.medium { color: var(--kelly-gold); }
+    .type-risk.low { color: var(--kelly-mint); }
+
+    /* Validation Results */
+    .validation-panel {
+      margin-top: 1.5rem;
+      padding: 1.25rem;
+      background: var(--charcoal);
+      border-radius: 0.75rem;
+      border-left: 4px solid var(--slate);
+    }
+
+    .validation-panel.success {
+      border-left-color: var(--kelly-mint);
+      background: var(--success-bg);
+    }
+
+    .validation-panel.warning {
+      border-left-color: var(--kelly-gold);
+      background: var(--warning-bg);
+    }
+
+    .validation-panel.error {
+      border-left-color: var(--kelly-coral);
+      background: var(--danger-bg);
+    }
+
+    .validation-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      margin-bottom: 0.75rem;
+    }
+
+    .validation-icon {
+      font-size: 1.25rem;
+    }
+
+    .validation-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--snow);
+    }
+
+    .validation-list {
+      list-style: none;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+    }
+
+    .validation-list li {
+      padding: 0.5rem 0;
+      border-bottom: 1px solid rgba(255,255,255,0.05);
+      display: flex;
+      align-items: flex-start;
+      gap: 0.5rem;
+    }
+
+    .validation-list li:last-child {
+      border-bottom: none;
+    }
+
+    .check-icon {
+      flex-shrink: 0;
+    }
+
+    /* Existing Patterns Display */
+    .patterns-box {
+      margin-top: 1rem;
+      padding: 1rem;
+      background: var(--midnight);
+      border-radius: 0.5rem;
+      max-height: 200px;
+      overflow-y: auto;
+    }
+
+    .pattern-item {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      background: var(--charcoal);
+      border-radius: 0.25rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.8rem;
+    }
+
+    .pattern-item:last-child {
+      margin-bottom: 0;
+    }
+
+    .pattern-file {
+      color: var(--kelly-sky);
+    }
+
+    .pattern-match {
+      color: var(--kelly-mint);
+      margin-left: auto;
+    }
+
+    /* CLAUDE.md Checklist */
+    .checklist {
+      display: grid;
+      gap: 0.75rem;
+    }
+
+    .check-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 0.75rem;
+      padding: 0.75rem 1rem;
+      background: var(--charcoal);
+      border: 1px solid var(--slate);
+      border-radius: 0.5rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+    }
+
+    .check-item:hover {
+      border-color: var(--kelly-sky);
+    }
+
+    .check-item.checked {
+      border-color: var(--success-border);
+      background: var(--success-bg);
+    }
+
+    .check-item.failed {
+      border-color: var(--danger-border);
+      background: var(--danger-bg);
+    }
+
+    .check-item input[type="checkbox"] {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      accent-color: var(--kelly-mint);
+    }
+
+    .check-label {
+      font-size: 0.85rem;
+      color: var(--pearl);
+      flex: 1;
+    }
+
+    .check-required {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.65rem;
+      color: var(--kelly-coral);
+      padding: 0.125rem 0.5rem;
+      background: var(--danger-bg);
+      border-radius: 0.25rem;
+    }
+
+    /* Picky Nicky Warning */
+    .picky-nicky {
+      margin-top: 1.5rem;
+      padding: 1.5rem;
+      background: linear-gradient(135deg, rgba(255, 107, 107, 0.1), rgba(224, 49, 49, 0.15));
+      border: 2px dashed var(--kelly-coral);
+      border-radius: 1rem;
+      text-align: center;
+    }
+
+    .picky-nicky-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      color: var(--kelly-coral);
+      margin-bottom: 0.5rem;
+    }
+
+    .picky-nicky-message {
+      font-size: 0.9rem;
+      color: var(--pearl);
+      font-style: italic;
+    }
+
+    /* Generated Brief */
+    .brief-section {
+      background: var(--midnight);
+      border: 2px solid var(--kelly-gold);
+      border-radius: 1rem;
+      padding: 2rem;
+      margin-top: 2rem;
+    }
+
+    .brief-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 1.5rem;
+    }
+
+    .brief-title {
+      font-size: 1.25rem;
+      font-weight: 700;
+      color: var(--kelly-gold);
+    }
+
+    .brief-actions {
+      display: flex;
+      gap: 0.5rem;
+    }
+
+    .brief-content {
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      line-height: 1.8;
+      white-space: pre-wrap;
+      color: var(--pearl);
+      background: var(--charcoal);
+      padding: 1.5rem;
+      border-radius: 0.5rem;
+      max-height: 500px;
+      overflow-y: auto;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 0.75rem 1.5rem;
+      border: none;
+      border-radius: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.3s ease;
+      display: inline-flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+
+    .btn:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--kelly-gold), var(--kelly-coral));
+      color: var(--midnight);
+    }
+
+    .btn-primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 20px rgba(255, 212, 59, 0.3);
+    }
+
+    .btn-secondary {
+      background: var(--slate);
+      color: var(--pearl);
+    }
+
+    .btn-secondary:hover:not(:disabled) {
+      background: var(--steel);
+    }
+
+    .btn-danger {
+      background: var(--kelly-coral);
+      color: white;
+    }
+
+    .btn-danger:hover:not(:disabled) {
+      background: var(--kelly-ruby);
+    }
+
+    .btn-copy {
+      background: var(--info-bg);
+      border: 1px solid var(--info-border);
+      color: var(--kelly-sky);
+    }
+
+    .btn-copy:hover:not(:disabled) {
+      background: var(--kelly-sky);
+      color: var(--midnight);
+    }
+
+    /* Button Row */
+    .button-row {
+      display: flex;
+      gap: 1rem;
+      margin-top: 2rem;
+      justify-content: center;
+    }
+
+    /* Toast Notification */
+    .toast {
+      position: fixed;
+      bottom: 2rem;
+      right: 2rem;
+      padding: 1rem 1.5rem;
+      background: var(--kelly-mint);
+      color: var(--midnight);
+      border-radius: 0.5rem;
+      font-family: 'JetBrains Mono', monospace;
+      font-size: 0.85rem;
+      font-weight: 600;
+      box-shadow: 0 4px 20px rgba(81, 207, 102, 0.4);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s ease;
+      z-index: 1000;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    /* Hidden State */
+    .hidden {
+      display: none !important;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar {
+      width: 6px;
+      height: 6px;
+    }
+
+    ::-webkit-scrollbar-track {
+      background: var(--obsidian);
+    }
+
+    ::-webkit-scrollbar-thumb {
+      background: var(--slate);
+      border-radius: 3px;
+    }
+
+    ::-webkit-scrollbar-thumb:hover {
+      background: var(--steel);
+    }
+
+    /* Responsive */
+    @media (max-width: 600px) {
+      .container { padding: 1rem; }
+      .section { padding: 1.5rem; }
+      .phases { flex-wrap: wrap; }
+      .type-grid { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="logo">🛡️</div>
+      <h1>Request Validator</h1>
+      <p class="subtitle">"Stop before you wreck" — Force discipline, prevent havoc</p>
+    </header>
+
+    <!-- Phase Progress -->
+    <div class="phases">
+      <div class="phase active" id="phase1"><span class="phase-dot"></span> Classify</div>
+      <div class="phase" id="phase2"><span class="phase-dot"></span> Validate</div>
+      <div class="phase" id="phase3"><span class="phase-dot"></span> Checklist</div>
+      <div class="phase" id="phase4"><span class="phase-dot"></span> Generate</div>
+    </div>
+
+    <!-- SECTION 1: Request Classification -->
+    <div class="section" id="section-classify">
+      <div class="section-header">
+        <span class="section-icon">🎯</span>
+        <span class="section-title">What are you trying to do?</span>
+        <span class="section-status status-pending" id="status-classify">Required</span>
+      </div>
+
+      <div class="type-grid" id="type-grid">
+        <div class="type-card" data-type="investigate" data-risk="low">
+          <div class="type-icon">🔍</div>
+          <div class="type-name">Investigate / Understand</div>
+          <div class="type-risk low">LOW RISK</div>
+        </div>
+        <div class="type-card" data-type="fix" data-risk="medium">
+          <div class="type-icon">🔧</div>
+          <div class="type-name">Fix / Debug</div>
+          <div class="type-risk medium">MEDIUM RISK</div>
+        </div>
+        <div class="type-card" data-type="enhance" data-risk="medium">
+          <div class="type-icon">✨</div>
+          <div class="type-name">Enhance Existing</div>
+          <div class="type-risk medium">MEDIUM RISK</div>
+        </div>
+        <div class="type-card dangerous" data-type="create" data-risk="high">
+          <div class="type-icon">🆕</div>
+          <div class="type-name">Create New</div>
+          <div class="type-risk high">HIGH RISK</div>
+        </div>
+        <div class="type-card dangerous" data-type="rename" data-risk="high">
+          <div class="type-icon">📝</div>
+          <div class="type-name">Rename / Move</div>
+          <div class="type-risk high">HIGH RISK</div>
+        </div>
+        <div class="type-card dangerous" data-type="delete" data-risk="high">
+          <div class="type-icon">🗑️</div>
+          <div class="type-name">Delete / Remove</div>
+          <div class="type-risk high">HIGH RISK</div>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top: 1.5rem;">
+        <label for="request-summary">Describe your request in one sentence:</label>
+        <input type="text" id="request-summary" placeholder="e.g., 'Create a new script to generate thumbnails'">
+        <div class="field-hint">Be specific. What exactly do you want?</div>
+      </div>
+    </div>
+
+    <!-- SECTION 2: Validation -->
+    <div class="section locked" id="section-validate">
+      <div class="section-header">
+        <span class="section-icon">🔎</span>
+        <span class="section-title">Does this already exist?</span>
+        <span class="section-status status-pending" id="status-validate">Locked</span>
+      </div>
+
+      <div id="validation-results">
+        <!-- Populated by JS -->
+      </div>
+
+      <div class="field" style="margin-top: 1.5rem;">
+        <label for="target-name">If creating something new, what will you name it?</label>
+        <input type="text" id="target-name" placeholder="e.g., 'thumbnail-generator.ts' or 'LESSON_THUMBNAIL_SPEC.md'">
+        <div class="field-hint">Follow existing naming conventions. Check patterns above.</div>
+      </div>
+
+      <div id="naming-validation">
+        <!-- Populated by JS -->
+      </div>
+    </div>
+
+    <!-- SECTION 3: CLAUDE.md Checklist -->
+    <div class="section locked" id="section-checklist">
+      <div class="section-header">
+        <span class="section-icon">✅</span>
+        <span class="section-title">Pre-Flight Checklist (from CLAUDE.md)</span>
+        <span class="section-status status-pending" id="status-checklist">Locked</span>
+      </div>
+
+      <div class="checklist" id="checklist">
+        <div class="check-item" data-required="true">
+          <input type="checkbox" id="check-1">
+          <label class="check-label" for="check-1">Is there an approved plan reference (file/section) for this change?</label>
+          <span class="check-required">REQUIRED</span>
+        </div>
+        <div class="check-item">
+          <input type="checkbox" id="check-2">
+          <label class="check-label" for="check-2">Are languages precomputed and schemas defined/validated?</label>
+        </div>
+        <div class="check-item" data-required="true">
+          <input type="checkbox" id="check-3">
+          <label class="check-label" for="check-3">Will any step increase costs or touch production configs? (requires approval)</label>
+          <span class="check-required">FLAG IF YES</span>
+        </div>
+        <div class="check-item">
+          <input type="checkbox" id="check-4">
+          <label class="check-label" for="check-4">Are GPU/driver requirements satisfied for A2F/iClone tasks?</label>
+        </div>
+        <div class="check-item">
+          <input type="checkbox" id="check-5">
+          <label class="check-label" for="check-5">Do you have caching/batching to avoid duplicates and cost loops?</label>
+        </div>
+        <div class="check-item">
+          <input type="checkbox" id="check-6">
+          <label class="check-label" for="check-6">Do tests, linters, and media validators pass locally?</label>
+        </div>
+        <div class="check-item">
+          <input type="checkbox" id="check-7">
+          <label class="check-label" for="check-7">Does the outcome help daily use: faster entry, resume state, progress/streak integrity?</label>
+        </div>
+      </div>
+
+      <div class="field" style="margin-top: 1.5rem;">
+        <label for="plan-reference">Reference document/section for this work:</label>
+        <input type="text" id="plan-reference" placeholder="e.g., 'BUILD_PLAN.md → Phase 2' or 'CURIOUS_KELLLY_EXECUTION_PLAN.md → Sprint 1'">
+        <div class="field-hint">Link to the authoritative doc that approves this work.</div>
+      </div>
+    </div>
+
+    <!-- Picky Nicky Warning (shown for dangerous actions) -->
+    <div class="picky-nicky hidden" id="picky-nicky">
+      <div class="picky-nicky-title">⚠️ Picky Nicky Mode Activated</div>
+      <div class="picky-nicky-message">
+        This action has HIGH havoc potential. I will verify this against existing patterns, 
+        check for duplicates, validate naming, and ensure we're not breaking something we don't want to break.
+      </div>
+    </div>
+
+    <!-- Button Row -->
+    <div class="button-row">
+      <button class="btn btn-secondary" onclick="resetForm()">🔄 Reset</button>
+      <button class="btn btn-primary" id="btn-generate" onclick="generateBrief()" disabled>
+        🚀 Generate Validated Brief
+      </button>
+    </div>
+
+    <!-- Generated Brief -->
+    <div class="brief-section hidden" id="brief-section">
+      <div class="brief-header">
+        <span class="brief-title">📋 Validated Request Brief</span>
+        <div class="brief-actions">
+          <button class="btn btn-copy" onclick="copyBrief()">📋 Copy to Clipboard</button>
+        </div>
+      </div>
+      <pre class="brief-content" id="brief-content"></pre>
+    </div>
+  </div>
+
+  <div class="toast" id="toast">✓ Copied to clipboard!</div>
+
+  <script>
+    // ═══════════════════════════════════════════════════════════════
+    // STATE
+    // ═══════════════════════════════════════════════════════════════
+    
+    const state = {
+      type: null,
+      risk: null,
+      summary: '',
+      targetName: '',
+      planReference: '',
+      checklist: {},
+      validationResults: [],
+      namingWarnings: []
+    };
+
+    // ═══════════════════════════════════════════════════════════════
+    // KNOWN PATTERNS (This would ideally be loaded from the codebase)
+    // ═══════════════════════════════════════════════════════════════
+    
+    const KNOWN_PATTERNS = {
+      scripts: [
+        'scripts/kelly-video-factory/*.ts',
+        'scripts/kelly-phase-visuals/*.ts',
+        'tools/*.py',
+        'tools/social-media-automation/*.py'
+      ],
+      docs: [
+        'docs/*.md - SCREAMING_SNAKE_CASE.md',
+        'docs/{category}/*.md - Context-specific docs',
+        'CLAUDE.md - Root-level operating rules'
+      ],
+      tools: [
+        'tools/mission-control/*.html',
+        'tools/kelly-cop/*.py',
+        'tools/social-media-automation/*.py'
+      ],
+      generators: [
+        'generate_*.py - Python generators',
+        '*-pipeline.ts - TypeScript pipelines',
+        'batch-*.ts - Batch processors'
+      ]
+    };
+
+    const NAMING_RULES = {
+      md: 'Use SCREAMING_SNAKE_CASE for docs (e.g., BUILD_PLAN.md)',
+      ts: 'Use kebab-case for TypeScript files (e.g., hd-golden-lesson-pipeline.ts)',
+      py: 'Use snake_case for Python files (e.g., generate_thumbnails.py)',
+      html: 'Use kebab-case for HTML files (e.g., request-validator.html)',
+      folders: 'Use kebab-case for folders (e.g., kelly-video-factory/)'
+    };
+
+    const DANGEROUS_WORDS = [
+      'new', 'create', 'add', 'make', 'build', 'generate',
+      'rename', 'move', 'refactor', 'restructure',
+      'delete', 'remove', 'clean', 'purge'
+    ];
+
+    const EXISTING_IMPLEMENTATIONS = {
+      'thumbnail': ['generate_lesson_thumbnails.py', 'scripts/kelly-phase-visuals/'],
+      'audio': ['generate_lesson_audio_for_iclone.py', 'scripts/kelly-video-factory/'],
+      'video': ['scripts/kelly-video-factory/hd-golden-lesson-pipeline.ts'],
+      'lesson': ['lessons/', 'content/', 'LESSON_GENERATION_SPEC.md'],
+      'infographic': ['scripts/kelly-phase-visuals/batch-infographics-from-db.ts'],
+      'kelly': ['tools/kelly-cop/', 'tools/kelly-forge/', 'docs/KELLY_*.md'],
+      'social': ['tools/social-media-automation/', 'docs/social-media/'],
+      'dashboard': ['tools/mission-control/dashboard.html'],
+      'validator': ['tools/request-validator/'],
+      'deploy': ['deployment/', 'vercel.json'],
+      'stripe': ['docs/billing/', 'functions/stripe-webhook'],
+      'supabase': ['supabase/', 'docs/backend/SUPABASE_*.md']
+    };
+
+    // ═══════════════════════════════════════════════════════════════
+    // TYPE SELECTION
+    // ═══════════════════════════════════════════════════════════════
+    
+    document.querySelectorAll('.type-card').forEach(card => {
+      card.addEventListener('click', () => {
+        // Deselect all
+        document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+        
+        // Select this one
+        card.classList.add('selected');
+        state.type = card.dataset.type;
+        state.risk = card.dataset.risk;
+        
+        // Update status
+        updateClassifyStatus();
+        
+        // Show/hide Picky Nicky
+        const pickyNicky = document.getElementById('picky-nicky');
+        if (state.risk === 'high') {
+          pickyNicky.classList.remove('hidden');
+        } else {
+          pickyNicky.classList.add('hidden');
+        }
+        
+        // Unlock validation section
+        unlockSection('validate');
+        runValidation();
+      });
+    });
+
+    // ═══════════════════════════════════════════════════════════════
+    // INPUT HANDLERS
+    // ═══════════════════════════════════════════════════════════════
+    
+    document.getElementById('request-summary').addEventListener('input', (e) => {
+      state.summary = e.target.value;
+      updateClassifyStatus();
+      if (state.type) {
+        runValidation();
+      }
+    });
+
+    document.getElementById('target-name').addEventListener('input', (e) => {
+      state.targetName = e.target.value;
+      validateNaming();
+      updateValidateStatus();
+    });
+
+    document.getElementById('plan-reference').addEventListener('input', (e) => {
+      state.planReference = e.target.value;
+      updateChecklistStatus();
+    });
+
+    // Checklist handlers
+    document.querySelectorAll('.check-item input').forEach(checkbox => {
+      checkbox.addEventListener('change', (e) => {
+        const item = e.target.closest('.check-item');
+        state.checklist[e.target.id] = e.target.checked;
+        
+        if (e.target.checked) {
+          item.classList.add('checked');
+          item.classList.remove('failed');
+        } else {
+          item.classList.remove('checked');
+        }
+        
+        updateChecklistStatus();
+      });
+    });
+
+    // ═══════════════════════════════════════════════════════════════
+    // VALIDATION LOGIC
+    // ═══════════════════════════════════════════════════════════════
+    
+    function runValidation() {
+      const results = [];
+      const summary = state.summary.toLowerCase();
+      
+      // Check for existing implementations
+      Object.entries(EXISTING_IMPLEMENTATIONS).forEach(([keyword, files]) => {
+        if (summary.includes(keyword)) {
+          results.push({
+            type: 'existing',
+            keyword,
+            files,
+            message: `Found existing "${keyword}" implementations`
+          });
+        }
+      });
+
+      // Check for dangerous words
+      DANGEROUS_WORDS.forEach(word => {
+        if (summary.includes(word) && state.risk !== 'low') {
+          results.push({
+            type: 'warning',
+            keyword: word,
+            message: `Contains "${word}" - verify this doesn't duplicate existing work`
+          });
+        }
+      });
+
+      state.validationResults = results;
+      renderValidationResults();
+    }
+
+    function renderValidationResults() {
+      const container = document.getElementById('validation-results');
+      
+      if (state.validationResults.length === 0) {
+        container.innerHTML = `
+          <div class="validation-panel success">
+            <div class="validation-header">
+              <span class="validation-icon">✅</span>
+              <span class="validation-title">No conflicts detected</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--silver);">
+              This appears to be a new area. Proceed with caution and document your work.
+            </p>
+          </div>
+        `;
+        return;
+      }
+
+      const existingResults = state.validationResults.filter(r => r.type === 'existing');
+      const warningResults = state.validationResults.filter(r => r.type === 'warning');
+
+      let html = '';
+
+      if (existingResults.length > 0) {
+        html += `
+          <div class="validation-panel warning">
+            <div class="validation-header">
+              <span class="validation-icon">⚠️</span>
+              <span class="validation-title">Existing implementations found!</span>
+            </div>
+            <p style="font-size: 0.85rem; color: var(--pearl); margin-bottom: 0.75rem;">
+              Before creating something new, review these existing files:
+            </p>
+            <div class="patterns-box">
+              ${existingResults.map(r => `
+                ${r.files.map(f => `
+                  <div class="pattern-item">
+                    <span>📁</span>
+                    <span class="pattern-file">${f}</span>
+                    <span class="pattern-match">${r.keyword}</span>
+                  </div>
+                `).join('')}
+              `).join('')}
+            </div>
+          </div>
+        `;
+      }
+
+      if (warningResults.length > 0 && state.risk === 'high') {
+        html += `
+          <div class="validation-panel error" style="margin-top: 1rem;">
+            <div class="validation-header">
+              <span class="validation-icon">🚨</span>
+              <span class="validation-title">High-risk action detected</span>
+            </div>
+            <ul class="validation-list">
+              ${warningResults.map(r => `
+                <li>
+                  <span class="check-icon">⚡</span>
+                  <span>${r.message}</span>
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+        `;
+      }
+
+      container.innerHTML = html;
+    }
+
+    function validateNaming() {
+      const name = state.targetName;
+      state.namingWarnings = [];
+
+      if (!name) {
+        document.getElementById('naming-validation').innerHTML = '';
+        return;
+      }
+
+      const ext = name.split('.').pop();
+      
+      // Check naming conventions
+      if (ext === 'md' && name !== name.toUpperCase() && !name.includes('/')) {
+        state.namingWarnings.push('Markdown docs should use SCREAMING_SNAKE_CASE (e.g., MY_DOC.md)');
+      }
+
+      if (ext === 'ts' && name.includes('_')) {
+        state.namingWarnings.push('TypeScript files should use kebab-case (e.g., my-file.ts)');
+      }
+
+      if (ext === 'py' && name.includes('-')) {
+        state.namingWarnings.push('Python files should use snake_case (e.g., my_file.py)');
+      }
+
+      // Check for overly generic names
+      const genericNames = ['utils', 'helpers', 'misc', 'stuff', 'test', 'temp', 'new'];
+      genericNames.forEach(g => {
+        if (name.toLowerCase().includes(g)) {
+          state.namingWarnings.push(`Avoid generic names like "${g}" - be specific`);
+        }
+      });
+
+      renderNamingValidation();
+    }
+
+    function renderNamingValidation() {
+      const container = document.getElementById('naming-validation');
+
+      if (state.namingWarnings.length === 0 && state.targetName) {
+        container.innerHTML = `
+          <div class="validation-panel success" style="margin-top: 1rem;">
+            <div class="validation-header">
+              <span class="validation-icon">✅</span>
+              <span class="validation-title">Naming looks good</span>
+            </div>
+          </div>
+        `;
+        return;
+      }
+
+      if (state.namingWarnings.length > 0) {
+        container.innerHTML = `
+          <div class="validation-panel warning" style="margin-top: 1rem;">
+            <div class="validation-header">
+              <span class="validation-icon">⚠️</span>
+              <span class="validation-title">Naming suggestions</span>
+            </div>
+            <ul class="validation-list">
+              ${state.namingWarnings.map(w => `
+                <li>
+                  <span class="check-icon">📝</span>
+                  <span>${w}</span>
+                </li>
+              `).join('')}
+            </ul>
+          </div>
+        `;
+      }
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // STATUS UPDATES
+    // ═══════════════════════════════════════════════════════════════
+    
+    function updateClassifyStatus() {
+      const status = document.getElementById('status-classify');
+      const phase = document.getElementById('phase1');
+      
+      if (state.type && state.summary.length > 10) {
+        status.textContent = 'Complete';
+        status.className = 'section-status status-valid';
+        phase.className = 'phase complete';
+        document.getElementById('phase2').classList.add('active');
+      } else {
+        status.textContent = 'Required';
+        status.className = 'section-status status-pending';
+        phase.className = 'phase active';
+      }
+      
+      updateGenerateButton();
+    }
+
+    function updateValidateStatus() {
+      const status = document.getElementById('status-validate');
+      const section = document.getElementById('section-validate');
+      const phase = document.getElementById('phase2');
+
+      const hasWarnings = state.validationResults.filter(r => r.type === 'existing').length > 0;
+      const hasNamingIssues = state.namingWarnings.length > 0;
+
+      if (hasWarnings || hasNamingIssues) {
+        status.textContent = 'Warnings';
+        status.className = 'section-status status-warning';
+        section.classList.add('warning');
+        section.classList.remove('validated');
+      } else if (state.summary) {
+        status.textContent = 'Validated';
+        status.className = 'section-status status-valid';
+        section.classList.add('validated');
+        section.classList.remove('warning');
+        phase.className = 'phase complete';
+        unlockSection('checklist');
+        document.getElementById('phase3').classList.add('active');
+      }
+
+      updateGenerateButton();
+    }
+
+    function updateChecklistStatus() {
+      const status = document.getElementById('status-checklist');
+      const phase = document.getElementById('phase3');
+      
+      const requiredChecks = ['check-1'];
+      const allRequiredMet = requiredChecks.every(id => state.checklist[id]);
+      const hasPlanRef = state.planReference.length > 5;
+      
+      if (allRequiredMet && hasPlanRef) {
+        status.textContent = 'Complete';
+        status.className = 'section-status status-valid';
+        phase.className = 'phase complete';
+        document.getElementById('phase4').classList.add('active');
+      } else if (Object.keys(state.checklist).some(k => state.checklist[k])) {
+        status.textContent = 'Partial';
+        status.className = 'section-status status-warning';
+      } else {
+        status.textContent = 'Pending';
+        status.className = 'section-status status-pending';
+      }
+
+      updateGenerateButton();
+    }
+
+    function unlockSection(id) {
+      const section = document.getElementById(`section-${id}`);
+      const status = document.getElementById(`status-${id}`);
+      section.classList.remove('locked');
+      status.textContent = 'Pending';
+    }
+
+    function updateGenerateButton() {
+      const btn = document.getElementById('btn-generate');
+      const canGenerate = 
+        state.type && 
+        state.summary.length > 10 && 
+        state.checklist['check-1'] &&
+        state.planReference.length > 5;
+      
+      btn.disabled = !canGenerate;
+    }
+
+    // ═══════════════════════════════════════════════════════════════
+    // BRIEF GENERATION
+    // ═══════════════════════════════════════════════════════════════
+    
+    function generateBrief() {
+      const brief = [];
+      const timestamp = new Date().toISOString();
+      
+      brief.push('═'.repeat(70));
+      brief.push('VALIDATED REQUEST BRIEF');
+      brief.push(`Generated: ${new Date().toLocaleString()}`);
+      brief.push('═'.repeat(70));
+      brief.push('');
+      
+      brief.push('📋 REQUEST SUMMARY');
+      brief.push('─'.repeat(70));
+      brief.push(`Type: ${state.type.toUpperCase()}`);
+      brief.push(`Risk Level: ${state.risk.toUpperCase()}`);
+      brief.push(`Description: ${state.summary}`);
+      if (state.targetName) {
+        brief.push(`Target: ${state.targetName}`);
+      }
+      brief.push('');
+      
+      if (state.validationResults.length > 0) {
+        brief.push('⚠️ VALIDATION NOTES');
+        brief.push('─'.repeat(70));
+        state.validationResults.forEach(r => {
+          if (r.type === 'existing') {
+            brief.push(`EXISTING: Check ${r.files.join(', ')} before proceeding`);
+          } else {
+            brief.push(`WARNING: ${r.message}`);
+          }
+        });
+        brief.push('');
+      }
+      
+      if (state.namingWarnings.length > 0) {
+        brief.push('📝 NAMING NOTES');
+        brief.push('─'.repeat(70));
+        state.namingWarnings.forEach(w => {
+          brief.push(`• ${w}`);
+        });
+        brief.push('');
+      }
+      
+      brief.push('✅ CHECKLIST STATUS');
+      brief.push('─'.repeat(70));
+      brief.push(`Reference: ${state.planReference}`);
+      const checkLabels = {
+        'check-1': 'Approved plan reference',
+        'check-2': 'Languages/schemas validated',
+        'check-3': 'Cost/production impact reviewed',
+        'check-4': 'GPU requirements checked',
+        'check-5': 'Caching/batching in place',
+        'check-6': 'Tests/linters passing',
+        'check-7': 'Helps daily use'
+      };
+      Object.entries(state.checklist).forEach(([id, checked]) => {
+        brief.push(`[${checked ? '✓' : ' '}] ${checkLabels[id]}`);
+      });
+      brief.push('');
+      
+      brief.push('🎯 INSTRUCTIONS FOR AI');
+      brief.push('─'.repeat(70));
+      
+      if (state.type === 'investigate') {
+        brief.push('1. Search codebase thoroughly before answering');
+        brief.push('2. Read relevant documentation first');
+        brief.push('3. Provide specific file references');
+      } else if (state.type === 'fix') {
+        brief.push('1. Identify root cause before implementing fix');
+        brief.push('2. Check for existing solutions in codebase');
+        brief.push('3. Verify fix doesn\'t break other functionality');
+      } else if (state.type === 'enhance') {
+        brief.push('1. Review existing implementation first');
+        brief.push('2. Follow established patterns and conventions');
+        brief.push('3. Document changes in appropriate files');
+      } else if (state.type === 'create') {
+        brief.push('1. VERIFY no existing implementation serves this purpose');
+        brief.push('2. Follow naming conventions strictly');
+        brief.push('3. Add to appropriate existing directory structure');
+        brief.push('4. Document in relevant index/readme files');
+        brief.push('5. Seek approval before finalizing');
+      } else if (state.type === 'rename' || state.type === 'delete') {
+        brief.push('1. List ALL affected files and references');
+        brief.push('2. Check for dependencies before proceeding');
+        brief.push('3. Update all documentation references');
+        brief.push('4. Require explicit approval for each change');
+      }
+      
+      brief.push('');
+      brief.push('═'.repeat(70));
+      brief.push('PASTE THIS BRIEF AT THE START OF YOUR MESSAGE TO THE AI');
+      brief.push('═'.repeat(70));
+      
+      document.getElementById('brief-content').textContent = brief.join('\n');
+      document.getElementById('brief-section').classList.remove('hidden');
+      document.getElementById('phase4').classList.add('complete');
+      
+      // Scroll to brief
+      document.getElementById('brief-section').scrollIntoView({ behavior: 'smooth' });
+    }
+
+    function copyBrief() {
+      const brief = document.getElementById('brief-content').textContent;
+      navigator.clipboard.writeText(brief).then(() => {
+        showToast();
+      });
+    }
+
+    function showToast() {
+      const toast = document.getElementById('toast');
+      toast.classList.add('show');
+      setTimeout(() => toast.classList.remove('show'), 2000);
+    }
+
+    function resetForm() {
+      // Reset state
+      state.type = null;
+      state.risk = null;
+      state.summary = '';
+      state.targetName = '';
+      state.planReference = '';
+      state.checklist = {};
+      state.validationResults = [];
+      state.namingWarnings = [];
+      
+      // Reset UI
+      document.querySelectorAll('.type-card').forEach(c => c.classList.remove('selected'));
+      document.getElementById('request-summary').value = '';
+      document.getElementById('target-name').value = '';
+      document.getElementById('plan-reference').value = '';
+      document.querySelectorAll('.check-item input').forEach(c => {
+        c.checked = false;
+        c.closest('.check-item').classList.remove('checked', 'failed');
+      });
+      
+      // Reset sections
+      document.getElementById('section-validate').classList.add('locked');
+      document.getElementById('section-checklist').classList.add('locked');
+      document.getElementById('section-validate').classList.remove('validated', 'warning');
+      
+      // Reset phases
+      document.querySelectorAll('.phase').forEach(p => p.classList.remove('active', 'complete'));
+      document.getElementById('phase1').classList.add('active');
+      
+      // Reset statuses
+      ['classify', 'validate', 'checklist'].forEach(id => {
+        document.getElementById(`status-${id}`).textContent = id === 'classify' ? 'Required' : 'Locked';
+        document.getElementById(`status-${id}`).className = 'section-status status-pending';
+      });
+      
+      // Reset validations
+      document.getElementById('validation-results').innerHTML = '';
+      document.getElementById('naming-validation').innerHTML = '';
+      
+      // Hide brief and picky nicky
+      document.getElementById('brief-section').classList.add('hidden');
+      document.getElementById('picky-nicky').classList.add('hidden');
+      
+      // Reset button
+      document.getElementById('btn-generate').disabled = true;
+      
+      // Scroll to top
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    }
+  </script>
+</body>
+</html>
+
