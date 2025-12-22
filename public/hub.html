@@ -531,13 +531,68 @@
           lessonCache.set(dayNumber, lesson);
           return lesson;
         } catch (err) {
-          console.warn(`Failed to fetch lesson ${dayNumber} from Supabase:`, err.message);
+          console.warn(`Failed to fetch lesson ${dayNumber} from Supabase, trying curriculum files...`);
+          // Try curriculum files as fallback
+          const curriculumLesson = await fetchFromCurriculum(dayNumber);
+          if (curriculumLesson) {
+            lessonCache.set(dayNumber, curriculumLesson);
+            return curriculumLesson;
+          }
           // Return fallback
           return FALLBACK_CURRICULUM[dayNumber] || {
             topic: '📚 Daily Wisdom',
             objective: 'Learn something new today'
           };
         }
+      }
+      
+      // Curriculum file cache
+      const curriculumFileCache = {};
+      
+      // Fetch lesson from curriculum files (bulletproof)
+      async function fetchFromCurriculum(dayNumber) {
+        const months = ['january', 'february', 'march', 'april', 'may', 'june', 
+                        'july', 'august', 'september', 'october', 'november', 'december'];
+        const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+        
+        // Calculate month from day number
+        let dayCount = 0;
+        let monthIndex = 0;
+        for (let i = 0; i < 12; i++) {
+          if (dayNumber <= dayCount + daysInMonth[i]) {
+            monthIndex = i;
+            break;
+          }
+          dayCount += daysInMonth[i];
+        }
+        
+        const monthKey = months[monthIndex];
+        
+        // Check cache
+        if (!curriculumFileCache[monthKey]) {
+          try {
+            const res = await fetch(`/data/curriculum/year1-foundations/${monthKey}_curriculum.json`);
+            if (res.ok) {
+              curriculumFileCache[monthKey] = await res.json();
+            }
+          } catch (e) {
+            console.warn('Failed to load curriculum file:', e);
+            return null;
+          }
+        }
+        
+        const curriculum = curriculumFileCache[monthKey];
+        const lesson = curriculum?.days?.find(d => d.day === dayNumber);
+        
+        if (!lesson) return null;
+        
+        return {
+          id: `curriculum-${dayNumber}`,
+          topic: lesson.title,
+          objective: lesson.learning_objective || lesson.title,
+          headline: lesson.title,
+          tagline: lesson.category || ''
+        };
       }
       
       /**

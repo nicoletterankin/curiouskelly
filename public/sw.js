@@ -1,7 +1,7 @@
 // Curious Kelly Service Worker
 // App-shell caching + (optional) push notifications
 
-const CACHE_NAME = 'curious-kelly-app-v8'; // 2025-12-22: force CDN refresh for KellyVisualSystem fix
+const CACHE_NAME = 'curious-kelly-app-v9'; // 2025-12-22: offline-first lesson architecture
 
 const APP_SHELL = [
   '/learn.html',
@@ -12,6 +12,8 @@ const APP_SHELL = [
   '/js/kelly-calendar.js',
   '/js/kelly-lesson.js',
   '/js/kelly-presence.js',
+  '/js/kelly-lesson-loader.js',
+  '/data/support-lessons.js',
   '/assets/kelly/kelly-personas-manifest.json',
   '/images/brand/android-chrome-192.png',
   '/images/brand/android-chrome-512.png',

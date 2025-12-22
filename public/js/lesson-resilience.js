@@ -226,7 +226,7 @@ const LessonResilience = {
   fromEmergency(dayNumber) {
     if (__RESILIENCE_DEBUG) console.log(`🔍 [L4] Emergency Fallback: Day ${dayNumber}`);
     
-    // Use window.EMERGENCY_LESSONS if available (loaded from emergency-lessons.js)
+    // Use window.SUPPORT_LESSONS if available (loaded from support-lessons.js)
     const emergency = window.EMERGENCY_LESSONS?.[dayNumber] || this.HARDCODED_LESSONS[dayNumber % 7 + 1] || this.HARDCODED_LESSONS[1];
     
     this.metrics.emergencyHits++;

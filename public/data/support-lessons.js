@@ -1,7 +1,8 @@
-// Emergency fallback lessons - used when ALL data sources fail
-// These are hardcoded and always available
+// Support Lessons - FAQ/help content for Kelly to explain features
+// Played in settings panel when user needs help understanding the app
+// NOT used for daily lessons - those use the 365 LOCAL_PACKS
 
-const EMERGENCY_LESSONS = {
+const SUPPORT_LESSONS = {
   1: {
     day_number: 1,
     title: "The Power of Curiosity",
@@ -281,25 +282,33 @@ We'll be back with your full lesson soon. Thank you for your patience! 💛`,
   hero_image_url: "/images/fallback-lesson.png"
 };
 
-// Get emergency lesson by day number
-function getEmergencyLesson(dayNumber) {
-  if (EMERGENCY_LESSONS[dayNumber]) {
-    return { ...EMERGENCY_LESSONS[dayNumber], source: 'emergency' };
+// Get support lesson by ID (for FAQ/help playback in settings)
+function getSupportLesson(lessonId) {
+  if (SUPPORT_LESSONS[lessonId]) {
+    return { ...SUPPORT_LESSONS[lessonId], source: 'support' };
   }
   return { 
     ...GENERIC_FALLBACK, 
-    day_number: dayNumber,
-    source: 'generic-fallback' 
+    id: lessonId,
+    source: 'support-fallback' 
   };
 }
 
+// Legacy aliases for backwards compatibility
+const EMERGENCY_LESSONS = SUPPORT_LESSONS;
+function getEmergencyLesson(dayNumber) {
+  return getSupportLesson(dayNumber);
+}
+
 // Export for use
-window.EMERGENCY_LESSONS = EMERGENCY_LESSONS;
+window.SUPPORT_LESSONS = SUPPORT_LESSONS;
+window.EMERGENCY_LESSONS = SUPPORT_LESSONS; // Legacy alias
 window.GENERIC_FALLBACK = GENERIC_FALLBACK;
-window.getEmergencyLesson = getEmergencyLesson;
+window.getSupportLesson = getSupportLesson;
+window.getEmergencyLesson = getEmergencyLesson; // Legacy alias
 
 if (typeof location !== 'undefined' && location.search.includes('debug')) {
-  console.log('🆘 Emergency lessons loaded (7 lessons + generic fallback)');
+  console.log('📚 Support lessons loaded (FAQ/help content for settings panel)');
 }
 
 

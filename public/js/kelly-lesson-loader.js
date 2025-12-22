@@ -222,28 +222,20 @@ const KellyLessonLoader = {
         const localPacks = window?.CURIOUS_KELLY?.LOCAL_PACKS;
         const localPack = localPacks?.[packKey] || localPacks?.[dayNum] || localPacks?.[String(dayNum)];
         if (localPack && (localPack.lesson || localPack.atoms)) {
-          const meta = localPack.meta || {};
-          const version = String(meta.version || '').toLowerCase();
-          const isSkeleton = !!meta.is_skeleton || version.includes('skeleton');
-
           const rawAtoms = Array.isArray(localPack.atoms) ? localPack.atoms : [];
           const atoms = rawAtoms.filter((a) => !a?.archetype || a.archetype === normalizedArchetype);
 
-          // If the local pack is a skeleton, skip it and fall through to the seed lessons.
-          // This is the "gap-filler pipeline": skeleton → full (at runtime).
-          if (!isSkeleton) {
-            __kellyLoaderDebugLog(`[Loader] Using local pack for day ${dayNum}`);
-            const tmp = { lesson: localPack.lesson || null, atoms, shards: [] };
-            const processed = this.ensureMvpLessonShape(tmp, { dayNum, archetype: normalizedArchetype, region: targetRegion });
-            return {
-              lesson: processed?.lesson || localPack.lesson || null,
-              atoms: processed?.atoms || atoms,
-              shards: [],
-              source: 'local_pack',
-            };
-          }
-
-          __kellyLoaderDebugLog(`[Loader] Local pack is skeleton for day ${dayNum}; using seed lessons instead`);
+          // OFFLINE-FIRST: Always use LOCAL_PACKS content - skeletons have real lessons!
+          // This ensures lessons work without internet. Network enrichment is optional.
+          __kellyLoaderDebugLog(`[Loader] Using local pack for day ${dayNum} (offline-first)`);
+          const tmp = { lesson: localPack.lesson || null, atoms, shards: [] };
+          const processed = this.ensureMvpLessonShape(tmp, { dayNum, archetype: normalizedArchetype, region: targetRegion });
+          return {
+            lesson: processed?.lesson || localPack.lesson || null,
+            atoms: processed?.atoms || atoms,
+            shards: [],
+            source: 'local_pack',
+          };
         }
       } catch (_) {
         // Non-fatal: fall through to normal loader logic.
@@ -1054,7 +1046,7 @@ const KellyLessonLoader = {
       }
       
       const script = document.createElement('script');
-      script.src = '/data/emergency-lessons.js';
+      script.src = '/data/support-lessons.js';
       script.async = true;
       script.onload = () => resolve(window.EMERGENCY_LESSONS || {});
       script.onerror = () => {
@@ -1374,6 +1366,17 @@ const KellyLessonLoader = {
       return staticResult;
     }
     
+    // Try curriculum files (BULLETPROOF - always has correct titles)
+    try {
+      const curriculumResult = await this.tryCurriculumFiles(dayNumber);
+      if (curriculumResult) {
+        __kellyLoaderDebugLog(`✅ Using curriculum file for day ${dayNumber}`);
+        return curriculumResult;
+      }
+    } catch (e) {
+      __kellyLoaderDebugWarn(`⚠️ Curriculum files failed: ${e.message}`);
+    }
+    
     // Use emergency lessons as last resort
     __kellyLoaderDebugLog(`🆘 Using emergency fallback for day ${dayNumber}`);
     
@@ -1388,6 +1391,72 @@ const KellyLessonLoader = {
     const entry = (emergencyLessons && emergencyLessons[dayNumber]) || {};
     
     return this.formatEmergencyLesson(entry, dayNumber);
+  },
+  
+  /**
+   * Try loading lesson topic from curriculum files (year1-foundations or year2-ai-fluency)
+   * This is the most reliable source for lesson titles.
+   */
+  async tryCurriculumFiles(dayNumber, track = 'learn') {
+    const months = ['january', 'february', 'march', 'april', 'may', 'june', 
+                    'july', 'august', 'september', 'october', 'november', 'december'];
+    
+    // Calculate month from day number
+    const daysInMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
+    let dayCount = 0;
+    let monthIndex = 0;
+    for (let i = 0; i < 12; i++) {
+      if (dayNumber <= dayCount + daysInMonth[i]) {
+        monthIndex = i;
+        break;
+      }
+      dayCount += daysInMonth[i];
+    }
+    
+    const monthKey = months[monthIndex];
+    const basePath = track === 'grow' 
+      ? '/data/curriculum/year2-ai-fluency' 
+      : '/data/curriculum/year1-foundations';
+    
+    const res = await fetch(`${basePath}/${monthKey}_curriculum.json`, {
+      signal: AbortSignal.timeout(2000)
+    });
+    if (!res.ok) return null;
+    
+    const data = await res.json();
+    const lesson = data?.days?.find(d => d.day === dayNumber);
+    
+    if (!lesson) return null;
+    
+    // Build a proper lesson result from curriculum data
+    const lessonObj = {
+      id: `curriculum-${dayNumber}`,
+      day_number: dayNumber,
+      topic: lesson.title,
+      universal_truth: lesson.learning_objective || lesson.title,
+      marketing_headline: lesson.title,
+      marketing_tagline: lesson.category || '',
+      emoji: lesson.icon || '📚'
+    };
+    
+    // Build minimal atoms for display
+    const atoms = this.MVP_PHASE_ORDER.map(phase => ({
+      id: `curriculum-${dayNumber}-${phase}`,
+      phase,
+      archetype: 'The Scientist',
+      content: {
+        script: `Today we explore: ${lesson.title}`,
+        options: this.buildDefaultOptionsForPhase(phase, 'The Scientist')
+      },
+      visual_url: this.MVP_DEFAULT_VISUAL_URL
+    }));
+    
+    return this.buildResult(lessonObj, atoms, [], {
+      dayNumber,
+      archetype: 'The Scientist',
+      region: 'adult',
+      _source: 'curriculum'
+    });
   },
 
   /**

@@ -1516,10 +1516,52 @@
             }));
             console.log(`✅ Loaded ${allLessons.length} lessons from Supabase`);
           } else {
-            await loadFromLocalCalendar();
+            await loadFromCurriculumFiles();
           }
         } catch (e) {
           console.error('❌ Failed to load from Supabase:', e);
+          await loadFromCurriculumFiles();
+        }
+      }
+
+      // Load from curriculum files (bulletproof - always has correct titles)
+      async function loadFromCurriculumFiles() {
+        try {
+          const months = ['january', 'february', 'march', 'april', 'may', 'june', 
+                          'july', 'august', 'september', 'october', 'november', 'december'];
+          
+          // Load all months in parallel
+          const monthPromises = months.map(month => 
+            fetch(`/data/curriculum/year1-foundations/${month}_curriculum.json`)
+              .then(r => r.ok ? r.json() : null)
+              .catch(() => null)
+          );
+          
+          const monthData = await Promise.all(monthPromises);
+          allLessons = [];
+          
+          monthData.forEach(data => {
+            if (data?.days) {
+              data.days.forEach(lesson => {
+                allLessons.push({
+                  id: `curriculum-${lesson.day}`,
+                  day: lesson.day,
+                  date: dayNumberToDate(lesson.day),
+                  title: lesson.title,
+                  learning_objective: lesson.learning_objective || '',
+                  subtitle: lesson.category || ''
+                });
+              });
+            }
+          });
+          
+          if (allLessons.length > 0) {
+            console.log(`✅ Loaded ${allLessons.length} lessons from curriculum files`);
+          } else {
+            await loadFromLocalCalendar();
+          }
+        } catch (e) {
+          console.error('❌ Failed to load from curriculum files:', e);
           await loadFromLocalCalendar();
         }
       }

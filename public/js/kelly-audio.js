@@ -211,6 +211,9 @@ class KellyAudio {
 
   /**
    * ElevenLabs TTS via secure API proxy
+   * 
+   * BYOK Enhancement: If user has their own ElevenLabs key, use it directly.
+   * This gives them faster, unlimited TTS using their own credits.
    */
   async _speakWithElevenLabs(text, options) {
     if (window.__KELLY_TTS_DISABLED || this.ttsAvailable === false) {
@@ -223,7 +226,25 @@ class KellyAudio {
       return this._playAudioBuffer(this.audioCache.get(cacheKey));
     }
 
-    // Call our secure API endpoint (not ElevenLabs directly)
+    // BYOK: Try user's ElevenLabs key first (direct to ElevenLabs API)
+    if (window.BYOKManager?.hasProvider('elevenlabs')) {
+      try {
+        const userKey = window.BYOKManager.getKey('elevenlabs');
+        if (userKey) {
+          console.log('[KellyAudio] 🔑 Using BYOK ElevenLabs key');
+          const result = await this._speakWithByokElevenLabs(text, userKey, options);
+          if (result) {
+            // Show BYOK indicator
+            this._showByokIndicator('elevenlabs');
+            return result;
+          }
+        }
+      } catch (byokError) {
+        console.warn('[KellyAudio] BYOK ElevenLabs failed, falling back to platform:', byokError.message);
+      }
+    }
+
+    // Fallback: Platform API (uses platform's ElevenLabs key)
     const response = await fetch('/api/tts', {
       method: 'POST',
       headers: {
@@ -249,6 +270,96 @@ class KellyAudio {
     this.audioCache.set(cacheKey, audioBuffer);
 
     return this._playAudioBuffer(audioBuffer);
+  }
+
+  /**
+   * Direct ElevenLabs TTS using user's BYOK key
+   * @private
+   */
+  async _speakWithByokElevenLabs(text, apiKey, options) {
+    const voiceId = this.options.kellyVoiceId; // wAdymQH5YucAkXwmrdL0
+    
+    const response = await fetch(`https://api.elevenlabs.io/v1/text-to-speech/${voiceId}`, {
+      method: 'POST',
+      headers: {
+        'xi-api-key': apiKey,
+        'Content-Type': 'application/json',
+        'Accept': 'audio/mpeg'
+      },
+      body: JSON.stringify({
+        text: text,
+        model_id: 'eleven_multilingual_v2',
+        voice_settings: {
+          stability: 0.45,
+          similarity_boost: 0.8,
+          style: 0.4,
+          use_speaker_boost: true
+        }
+      })
+    });
+
+    if (!response.ok) {
+      const errorText = await response.text().catch(() => 'Unknown error');
+      throw new Error(`BYOK ElevenLabs error: ${response.status} - ${errorText.slice(0, 100)}`);
+    }
+
+    const audioBuffer = await response.arrayBuffer();
+    
+    // Cache with BYOK prefix
+    const cacheKey = `byok-${text}-${options.language || 'en'}`;
+    this.audioCache.set(cacheKey, audioBuffer);
+
+    return this._playAudioBuffer(audioBuffer);
+  }
+
+  /**
+   * Show a subtle indicator that BYOK was used
+   * @private
+   */
+  _showByokIndicator(provider) {
+    if (typeof document === 'undefined') return;
+    
+    // Debounce - don't spam indicators
+    if (this._lastByokIndicator && Date.now() - this._lastByokIndicator < 10000) return;
+    this._lastByokIndicator = Date.now();
+
+    const providerEmoji = window.BYOKManager?.providers?.[provider]?.emoji || '🔑';
+    const providerName = window.BYOKManager?.providers?.[provider]?.name || provider;
+
+    const indicator = document.createElement('div');
+    indicator.className = 'byok-used-indicator';
+    indicator.innerHTML = `${providerEmoji} Powered by your ${providerName} key`;
+    indicator.style.cssText = `
+      position: fixed;
+      bottom: 80px;
+      right: 20px;
+      background: rgba(34, 197, 94, 0.15);
+      color: #22c55e;
+      padding: 8px 16px;
+      border-radius: 20px;
+      font-size: 12px;
+      z-index: 1000;
+      backdrop-filter: blur(8px);
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      animation: byokFadeIn 0.3s ease;
+      pointer-events: none;
+    `;
+
+    // Add animation keyframes if not already present
+    if (!document.getElementById('byok-indicator-styles')) {
+      const style = document.createElement('style');
+      style.id = 'byok-indicator-styles';
+      style.textContent = `
+        @keyframes byokFadeIn {
+          from { opacity: 0; transform: translateY(10px); }
+          to { opacity: 1; transform: translateY(0); }
+        }
+      `;
+      document.head.appendChild(style);
+    }
+
+    document.body.appendChild(indicator);
+    setTimeout(() => indicator.remove(), 3000);
   }
 
   /**
