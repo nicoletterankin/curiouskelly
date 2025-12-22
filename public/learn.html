@@ -93,7 +93,7 @@
   <!-- ═══════════════════════════════════════════════════════════════════════ -->
   <!-- PixiJS compositor (WebGL overlay layer) -->
   <script src="https://cdn.jsdelivr.net/npm/pixi.js@8/dist/pixi.min.js"></script>
-  <script src="/js/kelly-pixi-compositor.js?v=20251222b"></script>
+  <script src="/js/kelly-pixi-compositor.js?v=20251222d"></script>
   <script src="/js/kelly-lipsync.js"></script>
   <script src="/js/kelly-expression-bridge.js"></script>
   <script src="/js/kelly-alignment-player.js"></script>
@@ -1379,6 +1379,98 @@
     
     .kelly-reaction-btn:active {
       transform: scale(0.98);
+    }
+    
+    /* Grow Track Content Display */
+    .kelly-panel-grow-track {
+      border-bottom: 1px solid rgba(255, 255, 255, 0.06);
+    }
+    
+    .grow-track-toggle {
+      width: 100%;
+      padding: 16px;
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.08) 0%, rgba(37, 99, 235, 0.08) 100%);
+      border: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .grow-track-toggle:hover {
+      background: linear-gradient(135deg, rgba(139, 92, 246, 0.12) 0%, rgba(37, 99, 235, 0.12) 100%);
+    }
+    
+    .grow-track-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      text-align: left;
+    }
+    
+    .grow-track-emoji {
+      font-size: 1.5rem;
+      flex-shrink: 0;
+    }
+    
+    .grow-track-text {
+      flex: 1;
+    }
+    
+    .grow-track-title {
+      font-size: 0.95rem;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+    
+    .grow-track-subtitle {
+      font-size: 0.75rem;
+      color: var(--text-muted);
+    }
+    
+    .grow-track-arrow {
+      font-size: 0.8rem;
+      color: var(--text-secondary);
+      transition: transform 0.2s ease;
+    }
+    
+    .grow-track-toggle.expanded .grow-track-arrow {
+      transform: rotate(180deg);
+    }
+    
+    .grow-track-content {
+      padding: 16px;
+      background: rgba(0, 0, 0, 0.2);
+    }
+    
+    .grow-track-section {
+      margin-bottom: 16px;
+    }
+    
+    .grow-track-section:last-child {
+      margin-bottom: 0;
+    }
+    
+    .grow-track-label {
+      font-size: 0.7rem;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--kelly-purple, #8b5cf6);
+      margin-bottom: 6px;
+    }
+    
+    .grow-track-objective,
+    .grow-track-activity {
+      font-size: 0.9rem;
+      line-height: 1.5;
+      color: var(--text-primary);
+    }
+    
+    .grow-track-activity {
+      padding: 12px;
+      background: rgba(139, 92, 246, 0.1);
+      border-left: 3px solid var(--kelly-purple, #8b5cf6);
+      border-radius: 6px;
     }
     
     /* Practice with AI (Grow Track + BYOK) */
@@ -8493,6 +8585,30 @@
               </button>
             </div>
             
+            <!-- GROW TRACK CONTENT: Shows when Grow track is selected -->
+            <div class="kelly-panel-grow-track" id="kelly-panel-grow-track" style="display: none;">
+              <button class="grow-track-toggle" id="grow-track-toggle">
+                <div class="grow-track-header">
+                  <span class="grow-track-emoji" id="grow-track-emoji">🍁</span>
+                  <div class="grow-track-text">
+                    <div class="grow-track-title" id="grow-track-title">Fresh Start - Setting Intentions</div>
+                    <div class="grow-track-subtitle">Click to expand</div>
+                  </div>
+                  <span class="grow-track-arrow" id="grow-track-arrow">▼</span>
+                </div>
+              </button>
+              <div class="grow-track-content" id="grow-track-content" style="display: none;">
+                <div class="grow-track-section">
+                  <div class="grow-track-label">Learning Objective</div>
+                  <div class="grow-track-objective" id="grow-track-objective">Create a meaningful intention for your learning journey</div>
+                </div>
+                <div class="grow-track-section">
+                  <div class="grow-track-label">Today's Activity</div>
+                  <div class="grow-track-activity" id="grow-track-activity">Write down one thing you want to learn or become better at this year. Put it somewhere you'll see it daily. Tomorrow, we'll build on this foundation.</div>
+                </div>
+              </div>
+            </div>
+            
             <!-- PRACTICE WITH AI: Only shows for Grow track (BYOK powered) -->
             <div class="kelly-panel-practice" id="kelly-panel-practice" style="display: none;">
               <div class="practice-header">
@@ -12821,6 +12937,7 @@
       // Use PHASE-SPECIFIC archetype (contextual Kelly architecture)
       const personaId = getPhaseArchetype(phaseKey) || 'scientist';
       const HYBRID_DEMO = __URL_PARAMS.get('hybrid') === '1';
+      const TALKING_PHOTO = __URL_PARAMS.get('talkingPhoto') === '1';
 
       const requestKey = `${state.currentDay || ''}|${state.currentPhase}|${personaId}|${ageBucket}|${phaseKey}`;
       // If the exact same phase media is already active, don't restart it.
@@ -12843,7 +12960,12 @@
       let resolvedVideo = null;
       let resolvedSource = null;
 
-      if (HYBRID_DEMO) {
+      if (TALKING_PHOTO) {
+        // Talking Photo Mode: Skip video, use static head image with PixiJS overlays
+        resolvedVideo = null;
+        resolvedSource = 'talking_photo';
+        if (DEBUG) console.log('📸 TALKING PHOTO mode: using static head image for', personaId);
+      } else if (HYBRID_DEMO) {
         resolvedVideo = '/kelly/videos/001/welcome.mp4';
         resolvedSource = 'hybrid_ground_truth';
       } else {
@@ -12878,6 +13000,50 @@
           console.warn('Failed to send motion clip to Unity:', e);
         }
         await kellyAudio.speak(dbPhase, script);
+        return true;
+      }
+
+      // TALKING PHOTO MODE: Static image + PixiJS overlays + TTS audio
+      if (TALKING_PHOTO && resolvedSource === 'talking_photo') {
+        const container = document.getElementById('kelly-stage');
+        const v = getKellyVideoEl();
+        const img = document.getElementById('lesson-kelly-img');
+        
+        // Hide video, show static image container
+        if (v) { v.hidden = true; v.classList.add('hidden'); }
+        if (img) img.style.display = 'none';
+        
+        // Initialize Pixi compositor with static image
+        if (window.KellyPixiCompositor) {
+          try {
+            if (!window.KellyPixiCompositor.isInitialized) {
+              await window.KellyPixiCompositor.init({ containerEl: container });
+            }
+            await window.KellyPixiCompositor.attachImage(personaId);
+            window.KellyPixiCompositor.setEnabled(true);
+            
+            // Connect lip-sync to compositor
+            if (window.KellyLipSync) {
+              if (!window.KellyLipSync.isInitialized) window.KellyLipSync.init();
+              window.KellyLipSync.onBlendshapesUpdate = (blendshapes) => {
+                try { window.KellyPixiCompositor.setBlendshapes(blendshapes); } catch (_) {}
+              };
+            }
+            
+            if (DEBUG) console.log('📸 [Talking Photo] Compositor ready for', personaId);
+          } catch (err) {
+            console.error('📸 [Talking Photo] Failed to init compositor:', err);
+          }
+        }
+        
+        // Play TTS audio (this drives the lip-sync)
+        setKellySpeaking(true);
+        syncPlayPauseUI();
+        
+        await kellyAudio.speak(dbPhase, script);
+        
+        setKellySpeaking(false);
+        syncPlayPauseUI();
         return true;
       }
 
@@ -13416,10 +13582,48 @@
     function updatePhaseBar() {
       const segments = document.querySelectorAll('.phase-segment');
       if (!segments || segments.length === 0) return;
+      
+      const lang = state.language || 'en';
+      const phaseKeys = ['hook', 'cliff', 'q1', 'q2', 'q3', 'wisdom', 'outro'];
+      
       segments.forEach((seg, i) => {
         seg.classList.remove('active', 'completed');
         if (i === state.currentPhase) seg.classList.add('active');
         else if (i < state.currentPhase) seg.classList.add('completed');
+        
+        // Update phase name and tooltip with actual lesson data
+        if (lessonAtoms && lessonAtoms[i]) {
+          const atom = lessonAtoms[i];
+          const phaseKey = phaseKeys[i];
+          
+          // Get phase title from lesson data
+          let phaseTitle = PHASES[i]?.name || 'Phase';
+          if (currentLesson?.phases?.[phaseKey]?.title) {
+            phaseTitle = currentLesson.phases[phaseKey].title[lang] || 
+                        currentLesson.phases[phaseKey].title.en || 
+                        phaseTitle;
+          }
+          
+          // Update phase name in segment
+          const nameEl = seg.querySelector('.phase-name');
+          if (nameEl) {
+            nameEl.textContent = phaseTitle;
+          }
+          
+          // Update tooltip title
+          const tooltipTitle = seg.querySelector('.phase-tooltip-title');
+          if (tooltipTitle) {
+            const icon = PHASES[i]?.icon || '📚';
+            tooltipTitle.textContent = `${icon} ${phaseTitle}`;
+          }
+          
+          // Update tooltip description with script preview
+          const tooltipDesc = seg.querySelector('.phase-tooltip-desc');
+          if (tooltipDesc && atom.script) {
+            const preview = atom.script.substring(0, 80) + (atom.script.length > 80 ? '...' : '');
+            tooltipDesc.textContent = preview;
+          }
+        }
       });
     }
     
@@ -13813,6 +14017,17 @@
       learnBtn?.classList.toggle('active', track === 'learn');
       growBtn?.classList.toggle('active', track === 'grow');
       
+      // Show/hide Grow Track content section
+      const growTrackSection = document.getElementById('kelly-panel-grow-track');
+      if (growTrackSection) {
+        growTrackSection.style.display = (track === 'grow') ? 'block' : 'none';
+        
+        // Update grow track content from current lesson
+        if (track === 'grow') {
+          updateGrowTrackContent();
+        }
+      }
+      
       // Show/hide Practice with AI section for Grow track
       const practiceSection = document.getElementById('kelly-panel-practice');
       if (practiceSection) {
@@ -13865,6 +14080,41 @@
       if (tryBtn && addKeyBtn) {
         tryBtn.style.display = hasKeys ? 'flex' : 'none';
         addKeyBtn.style.display = hasKeys ? 'none' : 'flex';
+      }
+    }
+    
+    function updateGrowTrackContent() {
+      // Update grow track content from current lesson's growTrack data
+      const lang = state.language || 'en';
+      const growTrack = currentLesson?.growTrack;
+      
+      if (!growTrack) {
+        console.log('No grow track data for this lesson');
+        return;
+      }
+      
+      // Update emoji
+      const emojiEl = document.getElementById('grow-track-emoji');
+      if (emojiEl && growTrack.emoji) {
+        emojiEl.textContent = growTrack.emoji;
+      }
+      
+      // Update title
+      const titleEl = document.getElementById('grow-track-title');
+      if (titleEl && growTrack.title) {
+        titleEl.textContent = growTrack.title[lang] || growTrack.title.en || 'Grow Track Activity';
+      }
+      
+      // Update learning objective
+      const objectiveEl = document.getElementById('grow-track-objective');
+      if (objectiveEl && growTrack.learning_objective) {
+        objectiveEl.textContent = growTrack.learning_objective[lang] || growTrack.learning_objective.en || '';
+      }
+      
+      // Update activity
+      const activityEl = document.getElementById('grow-track-activity');
+      if (activityEl && growTrack.activity) {
+        activityEl.textContent = growTrack.activity[lang] || growTrack.activity.en || '';
       }
     }
     
@@ -14589,6 +14839,27 @@
         });
       });
       
+      // Grow track toggle (expand/collapse)
+      const growTrackToggle = document.getElementById('grow-track-toggle');
+      if (growTrackToggle) {
+        growTrackToggle.addEventListener('click', () => {
+          const content = document.getElementById('grow-track-content');
+          const arrow = document.getElementById('grow-track-arrow');
+          
+          if (content) {
+            const isExpanded = content.style.display !== 'none';
+            content.style.display = isExpanded ? 'none' : 'block';
+            growTrackToggle.classList.toggle('expanded', !isExpanded);
+            
+            // Update subtitle
+            const subtitle = growTrackToggle.querySelector('.grow-track-subtitle');
+            if (subtitle) {
+              subtitle.textContent = isExpanded ? 'Click to expand' : 'Click to collapse';
+            }
+          }
+        });
+      }
+      
       // Phase navigation
       document.querySelectorAll('.kelly-phase-btn').forEach(btn => {
         btn.addEventListener('click', () => {
@@ -14694,6 +14965,32 @@
       if (taglineEl && lesson) {
         taglineEl.textContent = lesson.marketing_tagline || lesson.headline || 'Learn something amazing today';
       }
+      
+      // Update Kelly Panel phase button names with actual phase titles
+      const lang = state.language || 'en';
+      const phaseKeys = ['hook', 'cliff', 'q1', 'q2', 'q3', 'wisdom', 'outro'];
+      const phaseButtons = document.querySelectorAll('.kelly-phase-btn');
+      
+      phaseButtons.forEach((btn, i) => {
+        const phaseKey = phaseKeys[i];
+        const phaseNameEl = btn.querySelector('.phase-name');
+        
+        if (phaseNameEl && lesson?.phases?.[phaseKey]?.title) {
+          const title = lesson.phases[phaseKey].title[lang] || 
+                       lesson.phases[phaseKey].title.en || 
+                       phaseNameEl.textContent;
+          phaseNameEl.textContent = title;
+        }
+        
+        // Update hint with script preview if available
+        const phaseHintEl = btn.querySelector('.phase-hint');
+        if (phaseHintEl && lesson?.phases?.[phaseKey]?.script) {
+          const script = lesson.phases[phaseKey].script[lang] || 
+                        lesson.phases[phaseKey].script.en || '';
+          const preview = script.substring(0, 60) + (script.length > 60 ? '...' : '');
+          phaseHintEl.textContent = preview;
+        }
+      });
     }
     
     function updateKellyPanelPhase(phaseIndex) {

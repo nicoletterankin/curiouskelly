@@ -1,24 +1,30 @@
 /**
  * Kelly Pixi Compositor (WebGL overlay layer)
- * - Renders a procedural mouth + blink overlay on top of the HeyGen full-frame video (white background).
+ * - Renders a procedural mouth + blink overlay on top of Kelly (video OR static image).
  * - Uses static face anchors (demo-safe). No segmentation required.
+ * - Supports "talking photo" mode with static head images.
  *
  * Requirements:
  * - pixi.js v7 OR v8 available as global `PIXI` (loaded via CDN in learn.html)
  *
  * API:
  * - KellyPixiCompositor.init({ containerEl, width, height }) - returns Promise in v8
- * - KellyPixiCompositor.attachVideo(videoEl)
+ * - KellyPixiCompositor.attachVideo(videoEl) - for video base layer
+ * - KellyPixiCompositor.attachImage(imgPath, archetype) - for static image base layer
  * - KellyPixiCompositor.setFaceAnchor({ x, y, scale, rotation })
  * - KellyPixiCompositor.setBlendshapes(blendshapes)
  * - KellyPixiCompositor.setEnabled(true/false)
+ *
+ * Modes:
+ * - VIDEO mode: overlays on top of playing video element
+ * - IMAGE mode: overlays on top of static Kelly head image (talking photo)
  *
  * Debug:
  * - Add `?pixiDebug=1` to render a red anchor dot so you can visually confirm overlays are rendering.
  */
 (() => {
   // ALWAYS log script load (critical for debugging)
-  console.log('[Pixi] 🎭 kelly-pixi-compositor.js LOADED, v=20251222c');
+  console.log('[Pixi] 🎭 kelly-pixi-compositor.js LOADED, v=20251222d - static image support');
   
   const DEBUG =
     (typeof window !== 'undefined' && !!window.__KELLY_PIXI_DEBUG) ||
@@ -29,19 +35,35 @@
   const dlog = (...args) => { if (DEBUG) console.log(...args); };
   const dwarn = (...args) => { if (DEBUG) console.warn(...args); };
   
-  const DEFAULT_ANCHOR = {
-    // Normalized coordinates (0..1) in the video frame
-    // Calibrated for `public/kelly/videos/001/welcome.mp4` (white background talking head)
-    // Based on screenshot analysis 2025-12-21:
-    // - Eyes at ~38% from top
-    // - Face center at ~42%
-    // - Mouth at ~56%
-    // Anchor is set to face center; mouth/eye offsets are relative to this.
-    x: 0.5,     // Horizontal center (Kelly is centered)
-    y: 0.42,    // Vertical face center (between eyes and nose)
-    scale: 0.8, // Slightly smaller overlays for subtlety
-    rotation: 0,
+  // Face anchor presets for different Kelly assets
+  // All 1024x1024 head images use the same calibration (consistent face position)
+  const ANCHOR_PRESETS = {
+    // For 1024x1024 static head images (all archetypes)
+    // Calibrated from kelly_storyteller_head.png 2025-12-22:
+    // - Eyes at ~30% from top
+    // - Face center at ~36% from top  
+    // - Nose tip at ~46% from top
+    // - Mouth at ~55% from top
+    head_image: {
+      x: 0.5,      // Horizontal center
+      y: 0.36,     // Face center (between eyes and nose)
+      scale: 1.0,  // Full size for 1024x1024
+      rotation: 0,
+      mouthOffsetY: 0.19,  // Mouth is 19% below face center
+      eyeOffsetY: -0.06,   // Eyes are 6% above face center
+    },
+    // For HeyGen welcome.mp4 video
+    video_heygen: {
+      x: 0.5,
+      y: 0.42,
+      scale: 0.8,
+      rotation: 0,
+      mouthOffsetY: 0.14,
+      eyeOffsetY: -0.04,
+    },
   };
+  
+  const DEFAULT_ANCHOR = { ...ANCHOR_PRESETS.head_image };
 
   function clamp01(n) {
     const v = Number(n);
@@ -58,8 +80,12 @@
   const KellyPixiCompositor = {
     isInitialized: false,
     isEnabled: true,
+    mode: 'none',       // 'none' | 'video' | 'image'
     containerEl: null,
     videoEl: null,
+    imageEl: null,      // For static image mode
+    imageSprite: null,  // PixiJS sprite for image
+    archetype: null,    // Current archetype (for head image selection)
     app: null,
     overlayRoot: null,
     mouth: null,
@@ -268,7 +294,72 @@
 
     attachVideo(videoEl) {
       this.videoEl = videoEl || null;
+      this.mode = videoEl ? 'video' : 'none';
+      this.anchor = { ...ANCHOR_PRESETS.video_heygen };
+      console.log('[Pixi] Attached video, mode:', this.mode);
       return this;
+    },
+
+    /**
+     * Attach a static Kelly head image (talking photo mode).
+     * @param {string} archetype - e.g. 'storyteller', 'scientist', 'explorer'
+     * @returns {Promise<this>}
+     */
+    async attachImage(archetype = 'default') {
+      const imagePath = `/kelly/heads/kelly_${archetype}_head.png`;
+      console.log('[Pixi] Attaching image:', imagePath);
+      
+      try {
+        // Create image element
+        const img = new Image();
+        img.crossOrigin = 'anonymous';
+        
+        await new Promise((resolve, reject) => {
+          img.onload = resolve;
+          img.onerror = reject;
+          img.src = imagePath;
+        });
+        
+        this.imageEl = img;
+        this.archetype = archetype;
+        this.mode = 'image';
+        this.anchor = { ...ANCHOR_PRESETS.head_image };
+        
+        // If PixiJS is initialized, add the image as a sprite
+        if (this.app && this.app.stage) {
+          // Remove existing image sprite
+          if (this.imageSprite) {
+            this.app.stage.removeChild(this.imageSprite);
+          }
+          
+          // Create texture and sprite
+          const texture = window.PIXI.Texture.from(img);
+          this.imageSprite = new window.PIXI.Sprite(texture);
+          
+          // Scale to fit container
+          const scale = Math.min(
+            this.app.renderer.width / img.width,
+            this.app.renderer.height / img.height
+          );
+          this.imageSprite.scale.set(scale);
+          
+          // Center the image
+          this.imageSprite.x = (this.app.renderer.width - img.width * scale) / 2;
+          this.imageSprite.y = (this.app.renderer.height - img.height * scale) / 2;
+          
+          // Add as first child (behind overlays)
+          this.app.stage.addChildAt(this.imageSprite, 0);
+          
+          console.log('[Pixi] Image sprite added, scale:', scale);
+        }
+        
+        console.log('[Pixi] Attached image, mode:', this.mode, 'archetype:', archetype);
+        return this;
+        
+      } catch (err) {
+        console.error('[Pixi] Failed to attach image:', err);
+        return this;
+      }
     },
 
     setEnabled(enabled) {
@@ -419,11 +510,10 @@
       const h = Math.max(6 * s, openH);
 
       // Mouth position offsets relative to anchor
-      // Calibrated: mouth is ~14% below face center in Kelly's video
-      // For 1000px viewport: anchor at 42% = 420px, mouth at 56% = 560px
-      // Offset = 140px at scale 1.0, so 175px base * scale
+      // Uses mouthOffsetY from anchor preset (percentage of viewport height)
+      const mouthOffsetY = this.anchor.mouthOffsetY || 0.14;
       const mx = ax;
-      const my = ay + 175 * s; // mouth sits below the anchor center
+      const my = ay + (mouthOffsetY * r.height); // mouth offset from anchor
 
       // Draw mouth interior (very subtle - blend with video)
       const mouthInterior = this._mouthInterior;
@@ -473,11 +563,10 @@
       const eyeW = 60 * s;
 
       // Left/right eye positions relative to anchor
-      // Calibrated: eyes are ~4% above face center in Kelly's video
-      // For 1000px viewport: anchor at 42% = 420px, eyes at 38% = 380px
-      // Offset = -40px at scale 1.0, so -50px base * scale
-      const eyeY = ay - 50 * s;
-      const eyeDX = 85 * s; // Eye horizontal spacing (reduced for realistic proportion)
+      // Uses eyeOffsetY from anchor preset (percentage of viewport height)
+      const eyeOffsetY = this.anchor.eyeOffsetY || -0.04;
+      const eyeY = ay + (eyeOffsetY * r.height); // eyes offset from anchor
+      const eyeDX = 85 * s; // Eye horizontal spacing
 
       this.blinkLeft.clear();
       this.blinkRight.clear();
