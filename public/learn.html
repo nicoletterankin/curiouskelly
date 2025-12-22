@@ -12232,6 +12232,11 @@
         reflectionPrompts: lesson.reflection_prompts || [],
         shards: shards,
         kellyContext: null,
+        // Preserve full phases and growTrack from seed lesson for UI access
+        phases: lesson.phases || null,
+        growTrack: lesson.growTrack || null,
+        emoji: lesson.emoji || '📚',
+        category: lesson.category || '',
       };
 
       lessonAtoms = PHASES.map(phase => {
@@ -13598,12 +13603,19 @@
           const atom = lessonAtoms[i];
           const phaseKey = phaseKeys[i];
           
-          // Get phase title from lesson data
+          // Get phase title - priority: lessonAtom.title > currentLesson.phases > default
           let phaseTitle = PHASES[i]?.name || 'Phase';
-          if (currentLesson?.phases?.[phaseKey]?.title) {
-            phaseTitle = currentLesson.phases[phaseKey].title[lang] || 
-                        currentLesson.phases[phaseKey].title.en || 
-                        phaseTitle;
+          
+          // First check atom.title (populated from seedToAtoms → content.title)
+          if (atom.title && atom.title !== phaseTitle) {
+            phaseTitle = atom.title;
+          }
+          // Fallback to currentLesson.phases (from seed JSON)
+          else if (currentLesson?.phases?.[phaseKey]?.title) {
+            const titleObj = currentLesson.phases[phaseKey].title;
+            phaseTitle = (typeof titleObj === 'string') 
+              ? titleObj 
+              : (titleObj[lang] || titleObj.en || phaseTitle);
           }
           
           // Update phase name in segment
@@ -14976,20 +14988,42 @@
       phaseButtons.forEach((btn, i) => {
         const phaseKey = phaseKeys[i];
         const phaseNameEl = btn.querySelector('.phase-name');
+        const phaseHintEl = btn.querySelector('.phase-hint');
         
-        if (phaseNameEl && lesson?.phases?.[phaseKey]?.title) {
-          const title = lesson.phases[phaseKey].title[lang] || 
-                       lesson.phases[phaseKey].title.en || 
-                       phaseNameEl.textContent;
-          phaseNameEl.textContent = title;
+        // Get phase title - priority: lessonAtoms[i].title > lesson.phases > default
+        let phaseTitle = PHASES[i]?.name || 'Phase';
+        let phaseScript = '';
+        
+        // First check lessonAtoms (most reliable source)
+        if (lessonAtoms && lessonAtoms[i]) {
+          if (lessonAtoms[i].title && lessonAtoms[i].title !== phaseTitle) {
+            phaseTitle = lessonAtoms[i].title;
+          }
+          phaseScript = lessonAtoms[i].script || '';
         }
         
-        // Update hint with script preview if available
-        const phaseHintEl = btn.querySelector('.phase-hint');
-        if (phaseHintEl && lesson?.phases?.[phaseKey]?.script) {
-          const script = lesson.phases[phaseKey].script[lang] || 
-                        lesson.phases[phaseKey].script.en || '';
-          const preview = script.substring(0, 60) + (script.length > 60 ? '...' : '');
+        // Fallback to lesson.phases (from seed JSON)
+        if (phaseTitle === (PHASES[i]?.name || 'Phase') && lesson?.phases?.[phaseKey]?.title) {
+          const titleObj = lesson.phases[phaseKey].title;
+          phaseTitle = (typeof titleObj === 'string') 
+            ? titleObj 
+            : (titleObj[lang] || titleObj.en || phaseTitle);
+        }
+        if (!phaseScript && lesson?.phases?.[phaseKey]?.script) {
+          const scriptObj = lesson.phases[phaseKey].script;
+          phaseScript = (typeof scriptObj === 'string') 
+            ? scriptObj 
+            : (scriptObj[lang] || scriptObj.en || '');
+        }
+        
+        // Update phase name
+        if (phaseNameEl) {
+          phaseNameEl.textContent = phaseTitle;
+        }
+        
+        // Update hint with script preview
+        if (phaseHintEl && phaseScript) {
+          const preview = phaseScript.substring(0, 60) + (phaseScript.length > 60 ? '...' : '');
           phaseHintEl.textContent = preview;
         }
       });

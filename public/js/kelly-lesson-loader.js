@@ -642,6 +642,10 @@ const KellyLessonLoader = {
       marketing_tagline: '',
       category: seed?.meta?.category || '',
       emoji: seed?.meta?.emoji || '📚',
+      // Preserve full phases object for UI access to phase titles
+      phases: seed?.phases || null,
+      // Preserve growTrack data for Grow track UI
+      growTrack: seed?.growTrack || null,
     };
   },
 
@@ -689,6 +693,8 @@ const KellyLessonLoader = {
     return phaseEntries.map(([phaseKey, phaseNode]) => {
       const phaseName = this.MVP_PHASE_KEY_MAP[String(phaseKey)] || String(phaseKey);
 
+      // Extract phase title (topic-specific, e.g., "The 66-Day Truth" instead of generic "Fact 1")
+      const title = getText(phaseNode?.title);
       const script = voiceWrap(String(phaseKey), getText(phaseNode?.script));
       const prompt = getText(phaseNode?.prompt);
       const options = Array.isArray(phaseNode?.options) ? phaseNode.options : [];
@@ -708,6 +714,7 @@ const KellyLessonLoader = {
         phase: phaseName,
         archetype: archetype,
         content: {
+          title: title || undefined, // Topic-specific phase title from lesson JSON
           script: script || `Today: ${seed?.meta?.topic?.en || seed?.meta?.topic || 'a new idea'}.`,
           prompt: prompt || undefined,
           options: normalizedOptions,
