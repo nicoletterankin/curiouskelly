@@ -13030,18 +13030,28 @@
           // PixiJS v8 uses async init, so we wrap in an async IIFE.
           (async () => {
             try {
+              const stageEl = document.getElementById('kelly-stage');
+              if (DEBUG) console.log('🎨 [Hybrid] Pixi init attempt, container:', stageEl, 'Compositor:', !!window.KellyPixiCompositor, 'PIXI:', !!window.PIXI);
+              
               if (window.KellyPixiCompositor) {
-                await window.KellyPixiCompositor.init({ containerEl: document.getElementById('kelly-stage') });
+                await window.KellyPixiCompositor.init({ containerEl: stageEl });
                 window.KellyPixiCompositor.attachVideo(v);
                 window.KellyPixiCompositor.setEnabled(true);
+                if (DEBUG) console.log('🎨 [Hybrid] Pixi compositor attached and enabled');
+                
                 // Hook blendshape stream to compositor
                 if (window.KellyLipSync) {
                   window.KellyLipSync.onBlendshapesUpdate = (blendshapes) => {
                     try { window.KellyPixiCompositor.setBlendshapes(blendshapes); } catch (_) {}
                   };
+                  if (DEBUG) console.log('🎨 [Hybrid] Blendshape callback connected');
                 }
+              } else {
+                if (DEBUG) console.warn('🎨 [Hybrid] KellyPixiCompositor not found on window');
               }
-            } catch (_) {}
+            } catch (e) {
+              console.error('🎨 [Hybrid] Pixi init FAILED:', e);
+            }
           })();
           
           // If video has baked-in audio, connect lip-sync to it

@@ -143,21 +143,63 @@ const DEFAULT_ANCHOR = {
 
 ## 📋 NEXT DIRECTIVE (FOR AI)
 
-### Phase 2: Overlay Fine-Tuning
+### Phase 2: FIX PIXI INITIALIZATION (BLOCKING)
 
-1. **Observe current static image position** - Kelly's face center and mouth position
-2. **Adjust face anchor** - Tune `x`, `y` to match actual Kelly face in `welcome.mp4`
-3. **Calibrate mouth size** - Adjust `baseW`, `baseH` in `_renderOverlaysFromBlendshapes()`
-4. **Test blink timing** - Verify 4-6 second blink intervals feel natural
-5. **Remove debug marker** - Once calibrated, remove red dot for production
+**Status:** The Pixi compositor code is deployed but not executing. Console never shows `[KellyPixiCompositor] Initialized`.
 
-### Phase 3: Expression System
+**Root Cause:** The init call is inside an async IIFE with a silent `catch (_) {}` block. Any failure is invisible.
+
+**Required Fix (in `public/learn.html` and `public/js/kelly-pixi-compositor.js`):**
+
+1. **Add explicit error logging to learn.html:**
+```javascript
+// Replace silent catch:
+} catch (_) {}
+// With:
+} catch (e) { console.error('[Hybrid] Pixi init failed:', e); }
+```
+
+2. **Add pre-init logging to learn.html:**
+```javascript
+console.log('[Hybrid] Attempting Pixi init, container:', document.getElementById('kelly-stage'));
+if (window.KellyPixiCompositor) {
+  await window.KellyPixiCompositor.init({ ... });
+}
+```
+
+3. **Add debug logging to kelly-pixi-compositor.js init():**
+```javascript
+init(options = {}) {
+  console.log('[KellyPixiCompositor] init() called with:', options);
+  if (this.isInitialized) { console.log('[KellyPixiCompositor] Already initialized'); return Promise.resolve(this); }
+  // ... rest of init
+}
+```
+
+4. **Add backup init trigger after TTS success:**
+In the TTS success handler, if Pixi isn't initialized yet, try initializing it there as a fallback.
+
+**Validation:** Console must show `[KellyPixiCompositor] Initialized` when loading `?hybrid=1&pixiDebug=1`.
+
+**Why This Matters:** Without Pixi overlays, Kelly's mouth doesn't move with TTS audio. The video is muted and the TTS plays separately, so there's no visible lip-sync. The overlay IS the feature that makes hybrid mode valuable.
+
+---
+
+### Phase 3: Overlay Visual Tuning (After Phase 2)
+
+1. **Observe red debug marker position** - Confirm it's on Kelly's face center
+2. **Verify mouth overlay reaches actual mouth** - Should be at ~56% from top
+3. **Test blink timing** - 4-6 second intervals should feel natural
+4. **Adjust opacity if too visible** - Overlays should blend, not cover
+5. **Remove debug marker for production** - Once calibrated
+
+### Phase 4: Expression System
 
 1. **Map phases to expressions** - Hook = curious, Teach = engaged, Review = thoughtful
 2. **Add eyebrow overlays** - Raised for questions, furrowed for emphasis
 3. **Add smile/frown transitions** - Based on lesson emotional arc
 
-### Phase 4: Production Polish
+### Phase 5: Production Polish
 
 1. **Test iOS Safari** - Verify autoplay constraints handled gracefully
 2. **Test low-bandwidth** - Confirm fallback to cached audio works

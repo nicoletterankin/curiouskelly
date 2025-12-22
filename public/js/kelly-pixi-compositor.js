@@ -69,13 +69,23 @@
      * Always returns a Promise for consistent API.
      */
     init(options = {}) {
-      if (this.isInitialized) return Promise.resolve(this);
-      if (this._initPromise) return this._initPromise;
-
-      if (typeof window === 'undefined' || !window.PIXI) {
-        console.warn('[KellyPixiCompositor] PIXI not found; compositor disabled');
+      console.log('[KellyPixiCompositor] init() called, options:', options);
+      
+      if (this.isInitialized) {
+        console.log('[KellyPixiCompositor] Already initialized, returning');
         return Promise.resolve(this);
       }
+      if (this._initPromise) {
+        console.log('[KellyPixiCompositor] Init already in progress, returning promise');
+        return this._initPromise;
+      }
+
+      if (typeof window === 'undefined' || !window.PIXI) {
+        console.warn('[KellyPixiCompositor] PIXI not found; compositor disabled. window.PIXI =', window.PIXI);
+        return Promise.resolve(this);
+      }
+      
+      console.log('[KellyPixiCompositor] PIXI found, version info:', window.PIXI.VERSION || 'unknown');
 
       this.containerEl =
         options.containerEl ||
@@ -156,18 +166,24 @@
      */
     async _createApp(options) {
       const PIXI = window.PIXI;
+      console.log('[KellyPixiCompositor] _createApp called with options:', options);
       
       // Check if this is PixiJS v8 (has async init method)
       const app = new PIXI.Application();
+      console.log('[KellyPixiCompositor] Created Application instance, has init():', typeof app.init === 'function');
       
       if (typeof app.init === 'function') {
         // PixiJS v8: async init
+        console.log('[KellyPixiCompositor] Using PixiJS v8 async init...');
         await app.init(options);
+        console.log('[KellyPixiCompositor] PixiJS v8 init complete');
         this.app = app;
       } else {
         // PixiJS v7: constructor takes options directly
         // Need to recreate with options
+        console.log('[KellyPixiCompositor] Using PixiJS v7 sync init...');
         this.app = new PIXI.Application(options);
+        console.log('[KellyPixiCompositor] PixiJS v7 init complete');
       }
     },
 
