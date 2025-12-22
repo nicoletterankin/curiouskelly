@@ -13027,19 +13027,22 @@
           syncPlayPauseUI();
 
           // Ensure compositor is enabled and receiving blendshapes.
-          try {
-            if (window.KellyPixiCompositor) {
-              window.KellyPixiCompositor.init({ containerEl: document.getElementById('kelly-stage') });
-              window.KellyPixiCompositor.attachVideo(v);
-              window.KellyPixiCompositor.setEnabled(true);
-              // Hook blendshape stream to compositor
-              if (window.KellyLipSync) {
-                window.KellyLipSync.onBlendshapesUpdate = (blendshapes) => {
-                  try { window.KellyPixiCompositor.setBlendshapes(blendshapes); } catch (_) {}
-                };
+          // PixiJS v8 uses async init, so we wrap in an async IIFE.
+          (async () => {
+            try {
+              if (window.KellyPixiCompositor) {
+                await window.KellyPixiCompositor.init({ containerEl: document.getElementById('kelly-stage') });
+                window.KellyPixiCompositor.attachVideo(v);
+                window.KellyPixiCompositor.setEnabled(true);
+                // Hook blendshape stream to compositor
+                if (window.KellyLipSync) {
+                  window.KellyLipSync.onBlendshapesUpdate = (blendshapes) => {
+                    try { window.KellyPixiCompositor.setBlendshapes(blendshapes); } catch (_) {}
+                  };
+                }
               }
-            }
-          } catch (_) {}
+            } catch (_) {}
+          })();
           
           // If video has baked-in audio, connect lip-sync to it
           if (videoHasAudio && window.KellyLipSync) {
