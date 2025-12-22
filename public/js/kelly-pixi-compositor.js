@@ -119,40 +119,40 @@
         resolution: Math.min(2, window.devicePixelRatio || 1),
       };
 
-      this._initPromise = this._createApp(pixiOptions).then(() => {
-        dlog('[KellyPixiCompositor] _createApp resolved, this.app =', this.app);
+      this._initPromise = this._createApp(pixiOptions).then((canvas) => {
+        console.log('[Pixi] _createApp resolved, canvas:', canvas, 'this.app:', this.app);
         
         if (!this.app) {
-          console.error('[KellyPixiCompositor] this.app is undefined after _createApp!');
+          console.error('[Pixi] FATAL: this.app is undefined after _createApp!');
           return this;
         }
         
-        // Put canvas on top of the video (pointer-events none)
-        const view = this.app.canvas || this.app.view; // v8 uses .canvas, v7 uses .view
-        dlog('[KellyPixiCompositor] View element:', view);
-        
-        if (!view) {
-          dwarn('[KellyPixiCompositor] No canvas/view found on app');
+        if (!canvas) {
+          console.error('[Pixi] FATAL: No canvas returned from _createApp!');
           return this;
         }
-        view.style.position = 'absolute';
-        view.style.inset = '0';
-        view.style.width = '100%';
-        view.style.height = '100%';
-        view.style.pointerEvents = 'none';
-        view.style.zIndex = '20';
+        
+        // Style the canvas for overlay positioning
+        canvas.style.position = 'absolute';
+        canvas.style.inset = '0';
+        canvas.style.width = '100%';
+        canvas.style.height = '100%';
+        canvas.style.pointerEvents = 'none';
+        canvas.style.zIndex = '20';
 
         // Ensure container is positioned
         const cs = window.getComputedStyle(this.containerEl);
         if (cs.position === 'static') {
           this.containerEl.style.position = 'relative';
         }
-        this.containerEl.appendChild(view);
+        this.containerEl.appendChild(canvas);
+        console.log('[Pixi] Canvas appended to container');
 
         this.overlayRoot = new window.PIXI.Container();
         this.app.stage.addChild(this.overlayRoot);
 
         this._buildOverlays();
+        console.log('[Pixi] Overlays built');
 
         // Animation loop
         this.app.ticker.add((delta) => {
@@ -167,12 +167,11 @@
         } catch (_) {}
 
         this.isInitialized = true;
-        // Use warn so it's visible in demo console logs.
-      dlog('[KellyPixiCompositor] Initialized');
+        console.log('[Pixi] ✅ Compositor READY - Kelly\'s mouth can now move!');
         try { window.__KELLY_PIXI_READY = true; } catch (_) {}
         return this;
       }).catch((err) => {
-        console.error('[KellyPixiCompositor] Init failed:', err);
+        console.error('[Pixi] Compositor init FAILED:', err);
         return this;
       });
 
@@ -181,27 +180,86 @@
 
     /**
      * Create PIXI.Application - handles both v7 (sync) and v8 (async) APIs.
+     * Returns the canvas element on success.
      */
-    async _createApp(options) {
+    async _createApp(options = {}) {
       const PIXI = window.PIXI;
-      dlog('[KellyPixiCompositor] _createApp called with options:', options);
       
-      // Check if this is PixiJS v8 (has async init method)
-      const app = new PIXI.Application();
-      dlog('[KellyPixiCompositor] Created Application instance, has init():', typeof app.init === 'function');
+      // Always log init attempt (critical for debugging)
+      console.log('[Pixi] _createApp called, PIXI version:', PIXI.VERSION || 'unknown');
+      console.log('[Pixi] Options:', JSON.stringify(options));
       
-      if (typeof app.init === 'function') {
-        // PixiJS v8: async init
-        dlog('[KellyPixiCompositor] Using PixiJS v8 async init...');
-        await app.init(options);
-        dlog('[KellyPixiCompositor] PixiJS v8 init complete');
-        this.app = app;
-      } else {
-        // PixiJS v7: constructor takes options directly
-        // Need to recreate with options
-        dlog('[KellyPixiCompositor] Using PixiJS v7 sync init...');
-        this.app = new PIXI.Application(options);
-        dlog('[KellyPixiCompositor] PixiJS v7 init complete');
+      try {
+        // PixiJS v8 requires async init
+        const app = new PIXI.Application();
+        
+        if (typeof app.init === 'function') {
+          // PixiJS v8 path
+          console.log('[Pixi] Using PixiJS v8 async init...');
+          
+          const initOptions = {
+            width: options.width || 1920,
+            height: options.height || 1080,
+            backgroundAlpha: 0,
+            antialias: true,
+            autoDensity: true,
+            resolution: Math.min(2, window.devicePixelRatio || 1),
+            ...options
+          };
+          
+          await app.init(initOptions);
+          
+          // CRITICAL: Set this.app AFTER successful init
+          this.app = app;
+          
+          console.log('[Pixi] v8 init SUCCESS');
+          console.log('[Pixi] Canvas:', this.app.canvas);
+          
+          if (!this.app.canvas) {
+            throw new Error('PixiJS v8 init succeeded but canvas is null');
+          }
+          
+          return this.app.canvas;
+          
+        } else {
+          // PixiJS v7 path (sync constructor)
+          console.log('[Pixi] Using PixiJS v7 sync init...');
+          
+          this.app = new PIXI.Application({
+            width: options.width || 1920,
+            height: options.height || 1080,
+            backgroundAlpha: 0,
+            antialias: true,
+            autoDensity: true,
+            resolution: Math.min(2, window.devicePixelRatio || 1),
+            ...options
+          });
+          
+          console.log('[Pixi] v7 init SUCCESS');
+          console.log('[Pixi] View:', this.app.view);
+          
+          return this.app.view;
+        }
+        
+      } catch (error) {
+        console.error('[Pixi] Primary init FAILED:', error);
+        
+        // Fallback: try legacy sync pattern for older Pixi versions
+        try {
+          console.log('[Pixi] Attempting legacy sync fallback...');
+          this.app = new PIXI.Application({
+            width: options.width || 1920,
+            height: options.height || 1080,
+            backgroundAlpha: 0,
+            antialias: true,
+            ...options
+          });
+          console.log('[Pixi] Legacy fallback SUCCESS');
+          return this.app.view || this.app.canvas;
+        } catch (legacyError) {
+          console.error('[Pixi] Legacy fallback also FAILED:', legacyError);
+          throw legacyError;
+        }
       }
     },
 
@@ -212,7 +270,8 @@
 
     setEnabled(enabled) {
       this.isEnabled = !!enabled;
-      if (this.app?.view) this.app.view.style.display = this.isEnabled ? '' : 'none';
+      const canvas = this.app?.canvas || this.app?.view;
+      if (canvas) canvas.style.display = this.isEnabled ? '' : 'none';
       return this;
     },
 
