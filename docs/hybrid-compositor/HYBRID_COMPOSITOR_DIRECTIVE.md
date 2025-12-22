@@ -212,10 +212,11 @@ In the TTS success handler, if Pixi isn't initialized yet, try initializing it t
 
 | Issue | Status | Notes |
 |-------|--------|-------|
-| Pixi init not firing in prod | 🔄 Investigating | May be learn.html cache; v8 async fix deployed |
+| Pixi init not firing in prod | ✅ FIXED | v8 async init fix deployed 2025-12-22 |
 | Emergency fallback for Day 1 | ⚠️ Expected | Supabase data not populated for demo |
 | Face anchor calibrated | ✅ Complete | Tuned to Kelly's actual face position |
 | Overlay subtlety | ✅ Complete | Reduced opacity and size for natural blending |
+| Face anchor needs recalibration | 🔄 Next | Red dot currently on nose, should be higher |
 
 ---
 
@@ -234,8 +235,9 @@ In the TTS success handler, if Pixi isn't initialized yet, try initializing it t
 | TTS latency | < 2s | ~1.2s ✅ |
 | Audio size | < 100KB | ~50KB ✅ |
 | Lip-sync connect | 100% | 100% ✅ |
-| Pixi overlay render | 100% | Code deployed, awaiting cache clear |
-| Face anchor calibrated | ✅ | y=0.42, scale=0.8 |
+| Pixi overlay render | 100% | ✅ WORKING - Canvas visible, debug dot renders |
+| Blendshape callback | 100% | ✅ Connected to lip-sync |
+| Face anchor calibrated | 🔄 | Needs adjustment (dot on nose, should be higher) |
 | Overlay subtlety | ✅ | Opacity 5-35%, natural proportions |
 | iOS Safari support | 100% | Not tested |
 
@@ -265,5 +267,8 @@ When Apple Education reviews Curious Kelly, they see:
 | 2025-12-21 | Documentation created | AI Assistant |
 | 2025-12-21 | Face anchor calibrated (y=0.42, scale=0.8) | AI Assistant |
 | 2025-12-21 | Overlay subtlety tuned (low opacity, small size) | AI Assistant |
+| 2025-12-22 | **🎉 BREAKTHROUGH: PixiJS canvas now renders!** | AI Assistant |
+| 2025-12-22 | Fixed _createApp to return canvas, proper error handling | AI Assistant |
+| 2025-12-22 | Debug dot visible, blendshape callback connected | AI Assistant |
 
 
