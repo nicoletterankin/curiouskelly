@@ -17,7 +17,14 @@
  * - Add `?pixiDebug=1` to render a red anchor dot so you can visually confirm overlays are rendering.
  */
 (() => {
-  console.log('[KellyPixiCompositor] Script loaded, version: 2025-12-21-v2');
+  const DEBUG =
+    (typeof window !== 'undefined' && !!window.__KELLY_PIXI_DEBUG) ||
+    (typeof location !== 'undefined' && (location.search.includes('pixiDebug=1') || location.search.includes('hybridDebug=1')));
+
+  const dlog = (...args) => { if (DEBUG) console.log(...args); };
+  const dwarn = (...args) => { if (DEBUG) console.warn(...args); };
+
+  dlog('[KellyPixiCompositor] Script loaded, version: 2025-12-21-v2');
   
   const DEFAULT_ANCHOR = {
     // Normalized coordinates (0..1) in the video frame
@@ -71,30 +78,30 @@
      * Always returns a Promise for consistent API.
      */
     init(options = {}) {
-      console.log('[KellyPixiCompositor] init() called, options:', options);
+      dlog('[KellyPixiCompositor] init() called, options:', options);
       
       if (this.isInitialized) {
-        console.log('[KellyPixiCompositor] Already initialized, returning');
+        dlog('[KellyPixiCompositor] Already initialized, returning');
         return Promise.resolve(this);
       }
       if (this._initPromise) {
-        console.log('[KellyPixiCompositor] Init already in progress, returning promise');
+        dlog('[KellyPixiCompositor] Init already in progress, returning promise');
         return this._initPromise;
       }
 
       if (typeof window === 'undefined' || !window.PIXI) {
-        console.warn('[KellyPixiCompositor] PIXI not found; compositor disabled. window.PIXI =', window.PIXI);
+        dwarn('[KellyPixiCompositor] PIXI not found; compositor disabled. window.PIXI =', window.PIXI);
         return Promise.resolve(this);
       }
       
-      console.log('[KellyPixiCompositor] PIXI found, version info:', window.PIXI.VERSION || 'unknown');
+      dlog('[KellyPixiCompositor] PIXI found, version info:', window.PIXI.VERSION || 'unknown');
 
       this.containerEl =
         options.containerEl ||
         (typeof document !== 'undefined' ? document.getElementById('kelly-stage') : null);
 
       if (!this.containerEl) {
-        console.warn('[KellyPixiCompositor] container not found');
+        dwarn('[KellyPixiCompositor] container not found');
         return Promise.resolve(this);
       }
 
@@ -113,7 +120,7 @@
       };
 
       this._initPromise = this._createApp(pixiOptions).then(() => {
-        console.log('[KellyPixiCompositor] _createApp resolved, this.app =', this.app);
+        dlog('[KellyPixiCompositor] _createApp resolved, this.app =', this.app);
         
         if (!this.app) {
           console.error('[KellyPixiCompositor] this.app is undefined after _createApp!');
@@ -122,10 +129,10 @@
         
         // Put canvas on top of the video (pointer-events none)
         const view = this.app.canvas || this.app.view; // v8 uses .canvas, v7 uses .view
-        console.log('[KellyPixiCompositor] View element:', view);
+        dlog('[KellyPixiCompositor] View element:', view);
         
         if (!view) {
-          console.warn('[KellyPixiCompositor] No canvas/view found on app');
+          dwarn('[KellyPixiCompositor] No canvas/view found on app');
           return this;
         }
         view.style.position = 'absolute';
@@ -161,7 +168,7 @@
 
         this.isInitialized = true;
         // Use warn so it's visible in demo console logs.
-        console.warn('[KellyPixiCompositor] Initialized');
+      dlog('[KellyPixiCompositor] Initialized');
         try { window.__KELLY_PIXI_READY = true; } catch (_) {}
         return this;
       }).catch((err) => {
@@ -177,24 +184,24 @@
      */
     async _createApp(options) {
       const PIXI = window.PIXI;
-      console.log('[KellyPixiCompositor] _createApp called with options:', options);
+      dlog('[KellyPixiCompositor] _createApp called with options:', options);
       
       // Check if this is PixiJS v8 (has async init method)
       const app = new PIXI.Application();
-      console.log('[KellyPixiCompositor] Created Application instance, has init():', typeof app.init === 'function');
+      dlog('[KellyPixiCompositor] Created Application instance, has init():', typeof app.init === 'function');
       
       if (typeof app.init === 'function') {
         // PixiJS v8: async init
-        console.log('[KellyPixiCompositor] Using PixiJS v8 async init...');
+        dlog('[KellyPixiCompositor] Using PixiJS v8 async init...');
         await app.init(options);
-        console.log('[KellyPixiCompositor] PixiJS v8 init complete');
+        dlog('[KellyPixiCompositor] PixiJS v8 init complete');
         this.app = app;
       } else {
         // PixiJS v7: constructor takes options directly
         // Need to recreate with options
-        console.log('[KellyPixiCompositor] Using PixiJS v7 sync init...');
+        dlog('[KellyPixiCompositor] Using PixiJS v7 sync init...');
         this.app = new PIXI.Application(options);
-        console.log('[KellyPixiCompositor] PixiJS v7 init complete');
+        dlog('[KellyPixiCompositor] PixiJS v7 init complete');
       }
     },
 
