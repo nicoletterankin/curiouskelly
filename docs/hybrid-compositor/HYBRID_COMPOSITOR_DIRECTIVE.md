@@ -143,40 +143,39 @@ const DEFAULT_ANCHOR = {
 
 ## 📋 NEXT DIRECTIVE (FOR AI)
 
-### Phase 2: FIX PIXI INITIALIZATION (BLOCKING)
+### ✅ Phase 2: PIXI INITIALIZATION - COMPLETE
 
-**Status:** The Pixi compositor code is deployed but not executing. Console never shows `[KellyPixiCompositor] Initialized`.
+PixiJS v8 async init is now working. Canvas renders, debug dot visible, blendshapes connected.
 
-**Root Cause:** The init call is inside an async IIFE with a silent `catch (_) {}` block. Any failure is invisible.
+### Phase 3: TALKING PHOTO MODE (IN PROGRESS)
 
-**Required Fix (in `public/learn.html` and `public/js/kelly-pixi-compositor.js`):**
+**Status:** Code deployed, awaiting CDN cache propagation.
 
-1. **Add explicit error logging to learn.html:**
-```javascript
-// Replace silent catch:
-} catch (_) {}
-// With:
-} catch (e) { console.error('[Hybrid] Pixi init failed:', e); }
-```
+**Test URL:** `https://curiouskelly.com/learn.html?talkingPhoto=1&pixiDebug=1&debug=1&day=1`
 
-2. **Add pre-init logging to learn.html:**
-```javascript
-console.log('[Hybrid] Attempting Pixi init, container:', document.getElementById('kelly-stage'));
-if (window.KellyPixiCompositor) {
-  await window.KellyPixiCompositor.init({ ... });
-}
-```
+**Expected behavior:**
+1. Console shows: `📸 TALKING PHOTO mode: using static head image for {archetype}`
+2. No video element - only static `kelly_{archetype}_head.png` image
+3. PixiJS overlays mouth/eye animations on the static image
+4. TTS audio plays and drives lip-sync
 
-3. **Add debug logging to kelly-pixi-compositor.js init():**
-```javascript
-init(options = {}) {
-  console.log('[KellyPixiCompositor] init() called with:', options);
-  if (this.isInitialized) { console.log('[KellyPixiCompositor] Already initialized'); return Promise.resolve(this); }
-  // ... rest of init
-}
-```
+**If not working:**
+- Clear browser cache or use incognito window
+- Verify `TALKING_PHOTO` constant exists in deployed learn.html
+- Check that `resolvedSource === 'talking_photo'` branch executes
 
-4. **Add backup init trigger after TTS success:**
+### Phase 4: FACE ANCHOR CALIBRATION FOR HEAD IMAGES
+
+**Once talking photo works:**
+
+1. Observe debug dot position on `kelly_storyteller_head.png`
+2. Adjust `ANCHOR_PRESETS.head_image` values:
+   - `y: 0.36` - face center (between eyes and nose)
+   - `mouthOffsetY: 0.19` - mouth is 19% below face center
+   - `eyeOffsetY: -0.06` - eyes are 6% above face center
+3. Test all archetypes have consistent face positions
+
+### Phase 5: PRODUCTION POLISH
 In the TTS success handler, if Pixi isn't initialized yet, try initializing it there as a fallback.
 
 **Validation:** Console must show `[KellyPixiCompositor] Initialized` when loading `?hybrid=1&pixiDebug=1`.
@@ -270,5 +269,8 @@ When Apple Education reviews Curious Kelly, they see:
 | 2025-12-22 | **🎉 BREAKTHROUGH: PixiJS canvas now renders!** | AI Assistant |
 | 2025-12-22 | Fixed _createApp to return canvas, proper error handling | AI Assistant |
 | 2025-12-22 | Debug dot visible, blendshape callback connected | AI Assistant |
+| 2025-12-22 | **TALKING PHOTO mode added**: `?talkingPhoto=1` uses static head image | AI Assistant |
+| 2025-12-22 | Added `attachImage(archetype)` for static Kelly heads | AI Assistant |
+| 2025-12-22 | Added ANCHOR_PRESETS for head_image vs video calibration | AI Assistant |
 
 
