@@ -20481,7 +20481,23 @@ Style requirements:
       // Initialize Kelly Animation Systems
       if (window.KellyLipSync) window.KellyLipSync.init();
       if (window.KellyExpressionBridge) window.KellyExpressionBridge.init();
-      if (window.KellyVisualSystem) window.KellyVisualSystem.init();
+      // Visual system: support both legacy init() and direct constructor
+      try {
+        if (window.KellyVisualSystem) {
+          if (typeof window.KellyVisualSystem.init === 'function') {
+            window.KellyVisualSystem.init();
+          } else if (typeof window.KellyVisualSystem === 'function') {
+            // Some cached builds export the class but not the init() helper.
+            window.kellyVisualSystem = new window.KellyVisualSystem(
+              document.getElementById('kelly-stage') ||
+                document.getElementById('scene-lesson') ||
+                document.body
+            );
+          }
+        }
+      } catch (e) {
+        console.warn('[KellyVisualSystem] boot failed:', e);
+      }
       console.log('[Kelly Animation] Systems initialized');
     });
   </script>

@@ -486,6 +486,24 @@ visualSystemStyles.textContent = `
 `;
 document.head.appendChild(visualSystemStyles);
 
+// Backward-compatible initializer (some pages call window.KellyVisualSystem.init()).
+// Creates a singleton instance attached to window.kellyVisualSystem.
+KellyVisualSystem.init = function init(container, options = {}) {
+  try {
+    const resolvedContainer =
+      container ||
+      document.getElementById('kelly-stage') ||
+      document.getElementById('scene-lesson') ||
+      document.body;
+
+    window.kellyVisualSystem = new KellyVisualSystem(resolvedContainer, options);
+    return window.kellyVisualSystem;
+  } catch (err) {
+    console.warn('[KellyVisualSystem] init() failed:', err);
+    return null;
+  }
+};
+
 // Export globally
 window.KellyVisualSystem = KellyVisualSystem;
 
