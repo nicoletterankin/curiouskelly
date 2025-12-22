@@ -1,0 +1,386 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Kelly Proof of Life</title>
+  <script src="https://pixijs.download/v8.0.0/pixi.min.js"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    body { 
+      background: #0a0a0f; 
+      color: #fff; 
+      font-family: system-ui; 
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px;
+    }
+    h1 { margin-bottom: 20px; }
+    .stage { 
+      position: relative; 
+      width: 400px; 
+      height: 400px; 
+      background: #1a1a2e;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .kelly-video {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+    #pixi-overlay {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      pointer-events: none;
+    }
+    .controls { margin: 20px; }
+    button { 
+      padding: 15px 30px; 
+      font-size: 16px; 
+      margin: 5px;
+      cursor: pointer;
+      background: #4a9eff;
+      color: white;
+      border: none;
+      border-radius: 8px;
+    }
+    button:hover { background: #3a8eef; }
+    button:disabled { background: #333; cursor: not-allowed; }
+    .status {
+      padding: 15px 25px;
+      background: #1a1a2e;
+      border-radius: 8px;
+      margin: 10px;
+      min-width: 300px;
+      text-align: center;
+    }
+    .success { background: #1b4332; }
+    .error { background: #5c1a1a; }
+    .log {
+      width: 100%;
+      max-width: 600px;
+      height: 200px;
+      background: #000;
+      border-radius: 8px;
+      padding: 10px;
+      margin-top: 20px;
+      overflow-y: auto;
+      font-family: monospace;
+      font-size: 12px;
+    }
+    .mouth-indicator {
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      padding: 20px;
+      background: #1a1a2e;
+      border-radius: 8px;
+      text-align: center;
+    }
+    .mouth-shape {
+      font-size: 48px;
+      margin: 10px 0;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 Kelly Proof of Life Test</h1>
+  
+  <div class="status" id="status">Ready to test</div>
+  
+  <div class="stage">
+    <video id="kelly-video" class="kelly-video" loop muted playsinline>
+      <source src="/kelly/videos/001/welcome.mp4" type="video/mp4">
+    </video>
+    <div id="pixi-overlay"></div>
+  </div>
+  
+  <div class="controls">
+    <button onclick="step1_initPixi()">Step 1: Init PixiJS</button>
+    <button onclick="step2_loadVisemes()" id="btn2" disabled>Step 2: Load Visemes</button>
+    <button onclick="step3_testShapes()" id="btn3" disabled>Step 3: Test Shapes</button>
+    <button onclick="step4_playSync()" id="btn4" disabled>Step 4: Play Synced</button>
+  </div>
+  
+  <div class="mouth-indicator">
+    <div>Current Viseme</div>
+    <div class="mouth-shape" id="mouth-display">😶</div>
+    <div id="viseme-name">none</div>
+  </div>
+  
+  <div class="log" id="log"></div>
+
+  <script>
+    // State
+    let pixiApp = null;
+    let mouthGraphics = null;
+    let visemeData = null;
+    let audioContext = null;
+    
+    // Mouth shapes (emoji representation + draw function)
+    const MOUTH_SHAPES = {
+      'sil':      { emoji: '😶', draw: (g) => drawMouth(g, 0.1, 0.3) },
+      'PP':       { emoji: '😗', draw: (g) => drawMouth(g, 0.2, 0.2) },
+      'FF':       { emoji: '😬', draw: (g) => drawMouth(g, 0.1, 0.5) },
+      'TH':       { emoji: '😛', draw: (g) => drawMouth(g, 0.3, 0.4) },
+      'DD':       { emoji: '😃', draw: (g) => drawMouth(g, 0.3, 0.4) },
+      'kk':       { emoji: '😮', draw: (g) => drawMouth(g, 0.4, 0.3) },
+      'CH':       { emoji: '😄', draw: (g) => drawMouth(g, 0.2, 0.5) },
+      'SS':       { emoji: '😁', draw: (g) => drawMouth(g, 0.15, 0.5) },
+      'nn':       { emoji: '😐', draw: (g) => drawMouth(g, 0.1, 0.4) },
+      'RR':       { emoji: '😯', draw: (g) => drawMouth(g, 0.35, 0.35) },
+      'aa':       { emoji: '😮', draw: (g) => drawMouth(g, 0.5, 0.4) },
+      'E':        { emoji: '😃', draw: (g) => drawMouth(g, 0.3, 0.5) },
+      'I':        { emoji: '😁', draw: (g) => drawMouth(g, 0.2, 0.5) },
+      'O':        { emoji: '😲', draw: (g) => drawMouth(g, 0.45, 0.35) },
+      'U':        { emoji: '😗', draw: (g) => drawMouth(g, 0.3, 0.25) },
+      'viseme_sil':  { emoji: '😶', draw: (g) => drawMouth(g, 0.1, 0.3) },
+      'viseme_PP':   { emoji: '😗', draw: (g) => drawMouth(g, 0.2, 0.2) },
+      'viseme_FF':   { emoji: '😬', draw: (g) => drawMouth(g, 0.1, 0.5) },
+      'viseme_TH':   { emoji: '😛', draw: (g) => drawMouth(g, 0.3, 0.4) },
+      'viseme_DD':   { emoji: '😃', draw: (g) => drawMouth(g, 0.3, 0.4) },
+      'viseme_kk':   { emoji: '😮', draw: (g) => drawMouth(g, 0.4, 0.3) },
+      'viseme_CH':   { emoji: '😄', draw: (g) => drawMouth(g, 0.2, 0.5) },
+      'viseme_SS':   { emoji: '😁', draw: (g) => drawMouth(g, 0.15, 0.5) },
+      'viseme_nn':   { emoji: '😐', draw: (g) => drawMouth(g, 0.1, 0.4) },
+      'viseme_RR':   { emoji: '😯', draw: (g) => drawMouth(g, 0.35, 0.35) },
+      'viseme_aa':   { emoji: '😮', draw: (g) => drawMouth(g, 0.5, 0.4) },
+      'viseme_E':    { emoji: '😃', draw: (g) => drawMouth(g, 0.3, 0.5) },
+      'viseme_I':    { emoji: '😁', draw: (g) => drawMouth(g, 0.2, 0.5) },
+      'viseme_O':    { emoji: '😲', draw: (g) => drawMouth(g, 0.45, 0.35) },
+      'viseme_U':    { emoji: '😗', draw: (g) => drawMouth(g, 0.3, 0.25) },
+    };
+    
+    function log(msg, isError = false) {
+      const logEl = document.getElementById('log');
+      const time = new Date().toLocaleTimeString();
+      const color = isError ? '#ff6b6b' : '#4ecdc4';
+      logEl.innerHTML += `<span style="color:${color}">[${time}]</span> ${msg}<br>`;
+      logEl.scrollTop = logEl.scrollHeight;
+      console.log(msg);
+    }
+    
+    function setStatus(msg, type = '') {
+      const el = document.getElementById('status');
+      el.textContent = msg;
+      el.className = 'status ' + type;
+    }
+    
+    function setMouth(viseme) {
+      const shape = MOUTH_SHAPES[viseme] || MOUTH_SHAPES['sil'];
+      document.getElementById('mouth-display').textContent = shape.emoji;
+      document.getElementById('viseme-name').textContent = viseme || 'none';
+      
+      if (mouthGraphics && shape.draw) {
+        mouthGraphics.clear();
+        shape.draw(mouthGraphics);
+      }
+    }
+    
+    function drawMouth(g, openness, width) {
+      const cx = 200;  // center x
+      const cy = 280;  // center y (lower on face)
+      const w = width * 100;
+      const h = openness * 60;
+      
+      // Outer lips
+      g.fill({ color: 0xcc7777 });
+      g.ellipse(cx, cy, w, h + 5);
+      
+      // Inner mouth (dark)
+      g.fill({ color: 0x330000 });
+      g.ellipse(cx, cy, w * 0.8, h);
+      
+      // Teeth hint (if mouth open enough)
+      if (openness > 0.2) {
+        g.fill({ color: 0xffffff, alpha: 0.8 });
+        g.ellipse(cx, cy - h * 0.3, w * 0.6, h * 0.3);
+      }
+    }
+    
+    // STEP 1: Initialize PixiJS
+    async function step1_initPixi() {
+      setStatus('Initializing PixiJS...', '');
+      log('Step 1: Creating PixiJS Application...');
+      
+      try {
+        const container = document.getElementById('pixi-overlay');
+        
+        // PixiJS v8 async initialization
+        pixiApp = new PIXI.Application();
+        
+        log('Calling app.init()...');
+        await pixiApp.init({
+          width: 400,
+          height: 400,
+          backgroundAlpha: 0,
+          antialias: true,
+        });
+        
+        log('app.init() completed');
+        log(`Canvas: ${pixiApp.canvas ? 'EXISTS' : 'NULL'}`);
+        
+        if (!pixiApp.canvas) {
+          throw new Error('PixiJS created but canvas is null!');
+        }
+        
+        container.appendChild(pixiApp.canvas);
+        log('Canvas appended to DOM');
+        
+        // Create mouth graphics
+        mouthGraphics = new PIXI.Graphics();
+        pixiApp.stage.addChild(mouthGraphics);
+        log('Mouth graphics layer created');
+        
+        // Draw initial closed mouth
+        setMouth('sil');
+        
+        setStatus('✅ PixiJS initialized!', 'success');
+        log('✅ STEP 1 COMPLETE: PixiJS is ready');
+        
+        document.getElementById('btn2').disabled = false;
+        
+      } catch (error) {
+        setStatus('❌ PixiJS FAILED: ' + error.message, 'error');
+        log('❌ ERROR: ' + error.message, true);
+        log('Stack: ' + error.stack, true);
+      }
+    }
+    
+    // STEP 2: Load viseme data
+    async function step2_loadVisemes() {
+      setStatus('Loading viseme data...', '');
+      log('Step 2: Fetching viseme JSON...');
+      
+      const paths = [
+        '/kelly-motion/explorer_adult_hook_unity.json',
+        '/kelly-motion/scientist_adult_q1_unity.json',
+        '/kelly-motion/personas/explorer/explorer_adult_hook_unity.json',
+      ];
+      
+      for (const path of paths) {
+        try {
+          log(`Trying: ${path}`);
+          const resp = await fetch(path);
+          
+          if (!resp.ok) {
+            log(`  → ${resp.status} ${resp.statusText}`);
+            continue;
+          }
+          
+          const data = await resp.json();
+          log(`  → Loaded! Duration: ${data.duration}s, FPS: ${data.fps}`);
+          
+          const visemeCount = data.visemes?.length || 0;
+          log(`  → Viseme count: ${visemeCount}`);
+          
+          if (visemeCount === 0) {
+            log('  → WARNING: Visemes array is EMPTY!', true);
+            continue;
+          }
+          
+          log(`  → First viseme: ${JSON.stringify(data.visemes[0])}`);
+          visemeData = data;
+          
+          setStatus(`✅ Loaded ${visemeCount} visemes!`, 'success');
+          log('✅ STEP 2 COMPLETE: Viseme data loaded');
+          
+          document.getElementById('btn3').disabled = false;
+          document.getElementById('btn4').disabled = false;
+          return;
+          
+        } catch (e) {
+          log(`  → Error: ${e.message}`, true);
+        }
+      }
+      
+      setStatus('❌ No viseme data found!', 'error');
+      log('❌ STEP 2 FAILED: Could not load any viseme JSON', true);
+      log('The viseme extraction may not have been deployed.', true);
+    }
+    
+    // STEP 3: Test mouth shapes
+    async function step3_testShapes() {
+      setStatus('Testing mouth shapes...', '');
+      log('Step 3: Cycling through all viseme shapes...');
+      
+      const shapes = ['sil', 'PP', 'FF', 'TH', 'DD', 'kk', 'CH', 'SS', 'nn', 'RR', 'aa', 'E', 'I', 'O', 'U'];
+      
+      for (const shape of shapes) {
+        setMouth(shape);
+        log(`  Shape: ${shape}`);
+        await new Promise(r => setTimeout(r, 300));
+      }
+      
+      setMouth('sil');
+      setStatus('✅ All shapes rendered!', 'success');
+      log('✅ STEP 3 COMPLETE: Mouth shapes work');
+    }
+    
+    // STEP 4: Play synced to viseme data
+    async function step4_playSync() {
+      if (!visemeData || !visemeData.visemes?.length) {
+        setStatus('❌ No viseme data!', 'error');
+        return;
+      }
+      
+      setStatus('Playing synced animation...', '');
+      log('Step 4: Playing viseme timeline...');
+      
+      const video = document.getElementById('kelly-video');
+      video.currentTime = 0;
+      video.muted = false;
+      video.play();
+      
+      const startTime = performance.now();
+      const duration = visemeData.duration * 1000; // convert to ms
+      
+      function animate() {
+        const elapsed = performance.now() - startTime;
+        const currentTime = elapsed / 1000; // back to seconds
+        
+        // Find current viseme
+        let currentViseme = 'sil';
+        for (let i = 0; i < visemeData.visemes.length; i++) {
+          const v = visemeData.visemes[i];
+          const nextTime = visemeData.visemes[i + 1]?.time ?? Infinity;
+          
+          if (currentTime >= v.time && currentTime < nextTime) {
+            currentViseme = v.viseme || v.value || 'sil';
+            break;
+          }
+        }
+        
+        setMouth(currentViseme);
+        
+        if (elapsed < duration) {
+          requestAnimationFrame(animate);
+        } else {
+          setMouth('sil');
+          setStatus('✅ Playback complete!', 'success');
+          log('✅ STEP 4 COMPLETE: Synced playback finished');
+          log('');
+          log('========================================');
+          log('🎉 PROOF OF LIFE: SUCCESS');
+          log('The animation pipeline WORKS.');
+          log('Kelly\'s mouth CAN move.');
+          log('Now integrate into learn.html.');
+          log('========================================');
+        }
+      }
+      
+      animate();
+    }
+    
+    // Initialize
+    log('Kelly Proof of Life Test');
+    log('Click buttons 1-4 in order.');
+    log('');
+  </script>
+</body>
+</html>
+
