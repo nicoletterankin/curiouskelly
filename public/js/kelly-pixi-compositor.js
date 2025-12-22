@@ -24,7 +24,7 @@
  */
 (() => {
   // ALWAYS log script load (critical for debugging)
-  console.log('[Pixi] 🎭 kelly-pixi-compositor.js LOADED, v=20251222d - static image support');
+  console.log('[Pixi] 🎭 kelly-pixi-compositor.js LOADED, v=20251222e - recalibrated face anchor');
   
   const DEBUG =
     (typeof window !== 'undefined' && !!window.__KELLY_PIXI_DEBUG) ||
@@ -39,18 +39,19 @@
   // All 1024x1024 head images use the same calibration (consistent face position)
   const ANCHOR_PRESETS = {
     // For 1024x1024 static head images (all archetypes)
-    // Calibrated from kelly_storyteller_head.png 2025-12-22:
-    // - Eyes at ~30% from top
-    // - Face center at ~36% from top  
-    // - Nose tip at ~46% from top
-    // - Mouth at ~55% from top
+    // Re-calibrated from kelly_explorer_head.png 2025-12-22:
+    // Explorer has goggles pushing face position down slightly
+    // - Eyes at ~40% from top
+    // - Face center at ~45% from top
+    // - Nose tip at ~52% from top  
+    // - Mouth at ~60% from top
     head_image: {
       x: 0.5,      // Horizontal center
-      y: 0.36,     // Face center (between eyes and nose)
+      y: 0.45,     // Face center (between eyes and nose)
       scale: 1.0,  // Full size for 1024x1024
       rotation: 0,
-      mouthOffsetY: 0.19,  // Mouth is 19% below face center
-      eyeOffsetY: -0.06,   // Eyes are 6% above face center
+      mouthOffsetY: 0.15,  // Mouth is 15% below face center (at ~60%)
+      eyeOffsetY: -0.05,   // Eyes are 5% above face center (at ~40%)
     },
     // For HeyGen welcome.mp4 video
     video_heygen: {
