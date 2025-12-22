@@ -12366,56 +12366,93 @@
     // ============================================
     // LOAD WEEK LESSONS FROM SUPABASE
     // ============================================
-    async function loadWeekLessons(startDay) {
-      // Canonical: use KellyLessonLoader (it will choose local pack / Supabase / API / static / emergency)
-      try {
-        if (!window.KellyLessonLoader) throw new Error('KellyLessonLoader missing');
-
-        // Use default archetype (contextual Kelly - no user selection)
-        const archetype = 'The Scientist';
-        const region = getEffectiveAgeBucket();
-
-        const results = await Promise.all(
-          Array.from({ length: 7 }, async (_, i) => {
-            const dayNum = startDay + i;
-            const payload = await window.KellyLessonLoader.loadLesson(dayNum, { archetype, age: state.age, region });
-            const lesson = payload?.lesson || {};
-            const result = {
-              day_number: dayNum,
-              topic: lesson?.topic || 'Loading...',
-              marketing_headline: lesson?.marketing_headline || lesson?.headline || lesson?.topic || ''
-            };
-            // Cache the lesson for future lookups
-            if (lesson?.topic) {
-              lessonsCache[dayNum] = lesson;
-            }
-            return result;
-          })
-        );
-
-        return results;
-      } catch (e) {
-        debugWarn('Week lessons load failed:', e);
-        // Fallback: local API per day (non-fatal)
-        const results = await Promise.all(
-          Array.from({ length: 7 }, async (_, i) => {
-            const dayNum = startDay + i;
-            const apiPayload = await loadLessonFromApi(dayNum);
-            const lesson = apiPayload?.lesson;
-            const result = {
-              day_number: dayNum,
-              topic: lesson?.topic || 'Loading...',
-              marketing_headline: lesson?.marketing_headline || lesson?.topic || ''
-            };
-            // Cache the lesson for future lookups
-            if (lesson?.topic) {
-              lessonsCache[dayNum] = lesson;
-            }
-            return result;
-          })
-        );
-        return results;
+    async function loadWeekLessons(startDay, count = 7) {
+      // Use curriculum files directly (reliable, static data)
+      // This mirrors the working loadTodaysDuo approach
+      const months = ['january', 'february', 'march', 'april', 'may', 'june', 
+                      'july', 'august', 'september', 'october', 'november', 'december'];
+      const currentTrack = state.track || state.currentTrack || 'learn';
+      const trackPath = currentTrack === 'grow' ? 'year2-ai-fluency' : 'year1-foundations';
+      
+      // Determine which months we need to load
+      const startMonth = getMonthFromDayNumber(startDay);
+      const endMonth = getMonthFromDayNumber(Math.min(365, startDay + count - 1));
+      const monthsToLoad = new Set();
+      for (let m = startMonth; m <= endMonth; m++) {
+        monthsToLoad.add(months[m]);
       }
+      
+      // Load all needed month curriculum files
+      const curriculumData = {};
+      try {
+        await Promise.all([...monthsToLoad].map(async (monthKey) => {
+          const url = `/data/curriculum/${trackPath}/${monthKey}_curriculum.json`;
+          const response = await fetch(url);
+          if (response.ok) {
+            curriculumData[monthKey] = await response.json();
+          }
+        }));
+      } catch (e) {
+        debugWarn('Curriculum fetch failed:', e);
+      }
+      
+      // Build results from curriculum data
+      const results = [];
+      for (let i = 0; i < count; i++) {
+        const dayNum = startDay + i;
+        if (dayNum > 365) break;
+        
+        const monthIndex = getMonthFromDayNumber(dayNum);
+        const monthKey = months[monthIndex];
+        const monthData = curriculumData[monthKey];
+        const dayData = monthData?.days?.find(d => d.day === dayNum);
+        
+        const result = {
+          day_number: dayNum,
+          topic: dayData?.title || '',
+          marketing_headline: dayData?.learning_objective || ''
+        };
+        
+        // Cache the lesson for future lookups
+        if (dayData?.title) {
+          lessonsCache[dayNum] = {
+            topic: dayData.title,
+            marketing_headline: dayData.learning_objective,
+            icon: dayData.icon
+          };
+        }
+        
+        results.push(result);
+      }
+      
+      // If curriculum files failed, try KellyLessonLoader as fallback
+      if (results.every(r => !r.topic)) {
+        try {
+          if (window.KellyLessonLoader) {
+            const archetype = 'The Scientist';
+            const region = getEffectiveAgeBucket();
+            
+            const fallbackResults = await Promise.all(
+              Array.from({ length: count }, async (_, i) => {
+                const dayNum = startDay + i;
+                if (dayNum > 365) return null;
+                const payload = await window.KellyLessonLoader.loadLesson(dayNum, { archetype, age: state.age, region });
+                const lesson = payload?.lesson || {};
+                return {
+                  day_number: dayNum,
+                  topic: lesson?.topic || '',
+                  marketing_headline: lesson?.marketing_headline || lesson?.headline || ''
+                };
+              })
+            );
+            return fallbackResults.filter(Boolean);
+          }
+        } catch (fallbackError) {
+          debugWarn('Fallback lesson load failed:', fallbackError);
+        }
+      }
+      
+      return results;
     }
     
     // ============================================
@@ -13795,12 +13832,17 @@
       updateTrackUI(track);
       
       // Update header CTA to show track info
-      const trackName = track === 'grow' ? '🤖 AI Fluency' : '📚 Learn';
+      const trackName = track === 'grow' ? '🧠 AI Fluency' : '🌟 Learn';
       updateNavTopic(currentLesson?.topic || 'Today\'s Lesson', `${trackName} Track`);
       
       // Reload lesson with new track content
       console.log('Switched to track:', track);
       loadLessonRuntime(state.currentDay);
+      
+      // Refresh journey panel if it's open (shows track-specific lessons)
+      if (currentPanelId === 'journey') {
+        populateJourneyPanel();
+      }
     }
     
     function updateTrackUI(track) {
@@ -13915,9 +13957,11 @@
       document.getElementById(`panel-${panelId}`)?.classList.add('active');
       
       // Update panel title
+      const currentTrackForTitle = state.track || state.currentTrack || 'learn';
+      const journeyTitle = currentTrackForTitle === 'grow' ? 'Your Journey (🧠 Grow)' : 'Your Journey (🌟 Learn)';
       const titles = {
         search: 'Search',
-        journey: 'Your Journey',
+        journey: journeyTitle,
         profile: 'Profile',
         settings: 'Settings'
       };
@@ -13954,14 +13998,17 @@
       // Show more days with lesson titles
       const startDay = Math.max(1, today - 3);
       const endDay = Math.min(365, today + 7);
+      const dayCount = endDay - startDay + 1;
       
-      // Show loading state first
+      // Show loading state first with track indicator
+      const currentTrack = state.track || state.currentTrack || 'learn';
+      const trackLabel = currentTrack === 'grow' ? '🧠 Grow Track' : '🌟 Learn Track';
       weekView.innerHTML = '<div class="journey-lesson-list"><div style="text-align: center; padding: 20px; opacity: 0.5;">Loading lessons...</div></div>';
       
       // Fetch lessons asynchronously from Supabase/cache
       let lessons = [];
       try {
-        lessons = await loadWeekLessons(startDay);
+        lessons = await loadWeekLessons(startDay, dayCount);
       } catch (e) {
         console.warn('populateWeekView: failed to load lessons', e);
       }

@@ -130,7 +130,13 @@ export default {
     // Accept both camelCase and snake_case for compatibility with existing clients/scripts.
     // - `voiceId` is used by the Kelly web app
     // - `voice_id` is used by some scripts and older payloads
-    const voiceId = String(payload?.voiceId || payload?.voice_id || '').trim();
+    // Also accept a friendly alias: voice_id="kelly" -> default Kelly voice id.
+    const voiceIdRaw = String(payload?.voiceId || payload?.voice_id || payload?.voice || '').trim();
+    const voiceId = !voiceIdRaw
+      ? ''
+      : (/^kelly$/i.test(voiceIdRaw)
+          ? String(env?.ELEVENLABS_VOICE_ID || env?.DEFAULT_VOICE_ID || 'wAdymQH5YucAkXwmrdL0')
+          : voiceIdRaw);
     const language = safeLang(payload?.language || 'en');
     const phase = safePhase(payload?.phase || '');
     const day = Number.isFinite(Number(payload?.day)) ? Number(payload.day) : null;
