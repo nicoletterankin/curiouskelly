@@ -348,6 +348,209 @@
             font-weight: 500;
         }
 
+        /* Lesson Modal */
+        .lesson-modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            z-index: 10000;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 24px;
+        }
+
+        .modal-overlay {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(0, 0, 0, 0.85);
+            backdrop-filter: blur(8px);
+        }
+
+        .modal-content {
+            position: relative;
+            width: 100%;
+            max-width: 800px;
+            max-height: 90vh;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            display: flex;
+            flex-direction: column;
+            box-shadow: 
+                0 0 0 1px rgba(255,255,255,0.05),
+                0 40px 80px -20px rgba(0,0,0,0.8);
+        }
+
+        .modal-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 20px 24px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 16px;
+            right: 16px;
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            font-size: 32px;
+            line-height: 1;
+            cursor: pointer;
+            padding: 8px;
+            transition: color 0.2s;
+        }
+
+        .modal-close:hover {
+            color: var(--text-primary);
+        }
+
+        .modal-nav {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 0 auto;
+        }
+
+        .modal-nav-btn {
+            background: var(--bg-subtle);
+            border: 1px solid var(--border);
+            color: var(--text-primary);
+            width: 40px;
+            height: 40px;
+            border-radius: 8px;
+            cursor: pointer;
+            font-size: 18px;
+            transition: all 0.2s;
+        }
+
+        .modal-nav-btn:hover {
+            background: var(--bg-elevated);
+            border-color: var(--accent);
+        }
+
+        .modal-nav-btn:disabled {
+            opacity: 0.3;
+            cursor: not-allowed;
+        }
+
+        .modal-day-indicator {
+            font-size: 14px;
+            color: var(--text-secondary);
+            font-weight: 600;
+            min-width: 120px;
+            text-align: center;
+        }
+
+        .modal-body {
+            flex: 1;
+            overflow-y: auto;
+            padding: 32px 24px;
+        }
+
+        .modal-loading {
+            text-align: center;
+            color: var(--text-secondary);
+            padding: 60px 24px;
+        }
+
+        .lesson-content {
+            max-width: 600px;
+            margin: 0 auto;
+        }
+
+        .lesson-header {
+            text-align: center;
+            margin-bottom: 32px;
+        }
+
+        .lesson-icon {
+            font-size: 48px;
+            margin-bottom: 16px;
+        }
+
+        .lesson-topic {
+            font-family: 'Instrument Serif', serif;
+            font-size: 32px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 8px;
+        }
+
+        .lesson-category {
+            font-size: 14px;
+            color: var(--accent);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .lesson-section {
+            margin-bottom: 32px;
+        }
+
+        .lesson-section-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 12px;
+        }
+
+        .lesson-text {
+            font-size: 16px;
+            line-height: 1.7;
+            color: var(--text-secondary);
+            margin-bottom: 16px;
+        }
+
+        .lesson-facts {
+            list-style: none;
+            padding: 0;
+        }
+
+        .lesson-facts li {
+            padding: 12px 16px;
+            background: var(--bg-subtle);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            margin-bottom: 8px;
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .lesson-facts li::before {
+            content: "💡 ";
+            margin-right: 8px;
+        }
+
+        .modal-footer {
+            padding: 20px 24px;
+            border-top: 1px solid var(--border);
+            text-align: center;
+        }
+
+        @media (max-width: 768px) {
+            .lesson-modal {
+                padding: 0;
+            }
+
+            .modal-content {
+                max-height: 100vh;
+                border-radius: 0;
+            }
+
+            .lesson-topic {
+                font-size: 24px;
+            }
+        }
+
         /* ═══════════════════════════════════════════════════════════════════
            FEATURES - The actual product
            ═══════════════════════════════════════════════════════════════════ */
@@ -891,6 +1094,27 @@
         </div>
     </footer>
 
+    <!-- Lesson Modal -->
+    <div id="lesson-modal" class="lesson-modal" style="display: none;">
+        <div class="modal-overlay"></div>
+        <div class="modal-content">
+            <div class="modal-header">
+                <button class="modal-close" aria-label="Close">&times;</button>
+                <div class="modal-nav">
+                    <button class="modal-nav-btn" id="prev-lesson" aria-label="Previous lesson">←</button>
+                    <span class="modal-day-indicator" id="modal-day-indicator">Day 1 of 365</span>
+                    <button class="modal-nav-btn" id="next-lesson" aria-label="Next lesson">→</button>
+                </div>
+            </div>
+            <div class="modal-body" id="modal-body">
+                <div class="modal-loading">Loading lesson...</div>
+            </div>
+            <div class="modal-footer">
+                <a href="#" class="btn btn-primary" id="start-lesson-btn">Start This Lesson in App →</a>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Load lesson metadata and generate interactive calendar
         (async function() {
@@ -1067,26 +1291,213 @@
             }
         }
         
-        // Show full lesson preview (Sprint 2)
-        function showLessonPreview(day, lessonsData) {
-            if (!lessonsData || !lessonsData[day - 1]) {
-                alert(`Lesson ${day} preview coming soon!`);
-                return;
-            }
+        // Show full lesson preview modal
+        async function showLessonPreview(day, lessonsData) {
+            const modal = document.getElementById('lesson-modal');
+            const modalBody = document.getElementById('modal-body');
+            const dayIndicator = document.getElementById('modal-day-indicator');
+            const startBtn = document.getElementById('start-lesson-btn');
+            const prevBtn = document.getElementById('prev-lesson');
+            const nextBtn = document.getElementById('next-lesson');
             
-            const lesson = lessonsData[day - 1];
+            if (!modal) return;
             
-            // For now, just show an alert. Sprint 2 will add modal.
-            alert(`📚 Day ${day}: ${lesson.topic}\n\n${lesson.hook}\n\nCategory: ${lesson.category}\nDuration: ${lesson.duration} seconds\n\n[Full lesson modal coming in Sprint 2]`);
+            // Update day indicator
+            dayIndicator.textContent = `Day ${day} of 365`;
             
-            // Track click
-            if (window.gtag) {
-                gtag('event', 'lesson_preview_click', {
-                    day: day,
-                    topic: lesson.topic
-                });
+            // Update nav buttons
+            prevBtn.disabled = day <= 1;
+            nextBtn.disabled = day >= 365;
+            
+            // Update start button
+            startBtn.href = `/learn.html?day=${day}`;
+            
+            // Show modal
+            modal.style.display = 'flex';
+            document.body.style.overflow = 'hidden';
+            
+            // Update URL
+            const url = new URL(window.location);
+            url.searchParams.set('day', day);
+            window.history.pushState({day}, '', url);
+            
+            // Show loading
+            modalBody.innerHTML = '<div class="modal-loading">Loading lesson...</div>';
+            
+            // Load lesson content
+            try {
+                const response = await fetch(`/lessons/day-${day}.json`);
+                const lessonData = await response.json();
+                
+                // Render lesson
+                renderLesson(lessonData, day);
+                
+                // Track view
+                if (window.gtag) {
+                    gtag('event', 'lesson_preview_view', {
+                        day: day,
+                        topic: lessonData.meta.topic.en || lessonData.meta.topic
+                    });
+                }
+            } catch (err) {
+                console.error('Error loading lesson:', err);
+                modalBody.innerHTML = `
+                    <div class="lesson-content">
+                        <div class="lesson-header">
+                            <div class="lesson-icon">📚</div>
+                            <h2 class="lesson-topic">Lesson ${day}</h2>
+                        </div>
+                        <p class="lesson-text" style="text-align: center; color: var(--text-muted);">
+                            Could not load lesson content. Please try again.
+                        </p>
+                    </div>
+                `;
             }
         }
+        
+        // Render lesson content in modal
+        function renderLesson(lessonData, day) {
+            const modalBody = document.getElementById('modal-body');
+            const meta = lessonData.meta;
+            const topic = typeof meta.topic === 'string' ? meta.topic : meta.topic.en;
+            const headline = typeof lessonData.headline === 'string' ? lessonData.headline : lessonData.headline.en;
+            const universalTruth = typeof lessonData.universal_truth === 'string' ? lessonData.universal_truth : lessonData.universal_truth.en;
+            const funFacts = lessonData.fun_facts || [];
+            const phases = lessonData.phases || {};
+            
+            let html = `
+                <div class="lesson-content">
+                    <div class="lesson-header">
+                        <div class="lesson-icon">${meta.emoji || '📚'}</div>
+                        <h2 class="lesson-topic">${topic}</h2>
+                        <div class="lesson-category">${meta.category || 'General'}</div>
+                    </div>
+            `;
+            
+            // Headline
+            if (headline) {
+                html += `
+                    <div class="lesson-section">
+                        <p class="lesson-text" style="font-size: 18px; font-weight: 500; text-align: center;">
+                            ${headline}
+                        </p>
+                    </div>
+                `;
+            }
+            
+            // Hook phase
+            if (phases.hook && phases.hook.script) {
+                const hookScript = typeof phases.hook.script === 'string' ? phases.hook.script : phases.hook.script.en;
+                html += `
+                    <div class="lesson-section">
+                        <h3 class="lesson-section-title">Introduction</h3>
+                        <p class="lesson-text">${hookScript}</p>
+                    </div>
+                `;
+            }
+            
+            // Universal truth
+            if (universalTruth) {
+                html += `
+                    <div class="lesson-section">
+                        <h3 class="lesson-section-title">Key Insight</h3>
+                        <p class="lesson-text" style="font-style: italic; border-left: 3px solid var(--accent); padding-left: 16px;">
+                            ${universalTruth}
+                        </p>
+                    </div>
+                `;
+            }
+            
+            // Fun facts
+            if (funFacts.length > 0) {
+                html += `
+                    <div class="lesson-section">
+                        <h3 class="lesson-section-title">Did You Know?</h3>
+                        <ul class="lesson-facts">
+                `;
+                funFacts.slice(0, 3).forEach(fact => {
+                    const factText = typeof fact === 'string' ? fact : fact.en;
+                    html += `<li>${factText}</li>`;
+                });
+                html += `
+                        </ul>
+                    </div>
+                `;
+            }
+            
+            // CTA
+            html += `
+                <div class="lesson-section" style="text-align: center; padding-top: 24px;">
+                    <p class="lesson-text" style="color: var(--text-muted);">
+                        This is a preview. Start the full interactive lesson in the app to explore questions, 
+                        choose your own path, and unlock deeper insights.
+                    </p>
+                </div>
+            `;
+            
+            html += `</div>`;
+            
+            modalBody.innerHTML = html;
+        }
+        
+        // Modal controls
+        document.addEventListener('DOMContentLoaded', function() {
+            const modal = document.getElementById('lesson-modal');
+            const closeBtn = document.querySelector('.modal-close');
+            const overlay = document.querySelector('.modal-overlay');
+            const prevBtn = document.getElementById('prev-lesson');
+            const nextBtn = document.getElementById('next-lesson');
+            
+            // Close modal
+            function closeModal() {
+                modal.style.display = 'none';
+                document.body.style.overflow = '';
+                
+                // Update URL
+                const url = new URL(window.location);
+                url.searchParams.delete('day');
+                window.history.pushState({}, '', url);
+            }
+            
+            closeBtn?.addEventListener('click', closeModal);
+            overlay?.addEventListener('click', closeModal);
+            
+            // Keyboard navigation
+            document.addEventListener('keydown', function(e) {
+                if (modal.style.display === 'none') return;
+                
+                if (e.key === 'Escape') {
+                    closeModal();
+                } else if (e.key === 'ArrowLeft' && !prevBtn.disabled) {
+                    const currentDay = parseInt(document.getElementById('modal-day-indicator').textContent.match(/\d+/)[0]);
+                    showLessonPreview(currentDay - 1, window.__lessonsData);
+                } else if (e.key === 'ArrowRight' && !nextBtn.disabled) {
+                    const currentDay = parseInt(document.getElementById('modal-day-indicator').textContent.match(/\d+/)[0]);
+                    showLessonPreview(currentDay + 1, window.__lessonsData);
+                }
+            });
+            
+            // Nav buttons
+            prevBtn?.addEventListener('click', function() {
+                const currentDay = parseInt(document.getElementById('modal-day-indicator').textContent.match(/\d+/)[0]);
+                showLessonPreview(currentDay - 1, window.__lessonsData);
+            });
+            
+            nextBtn?.addEventListener('click', function() {
+                const currentDay = parseInt(document.getElementById('modal-day-indicator').textContent.match(/\d+/)[0]);
+                showLessonPreview(currentDay + 1, window.__lessonsData);
+            });
+            
+            // Check URL for day parameter on load
+            const urlParams = new URLSearchParams(window.location.search);
+            const dayParam = urlParams.get('day');
+            if (dayParam && window.__lessonsData) {
+                const day = parseInt(dayParam);
+                if (day >= 1 && day <= 365) {
+                    showLessonPreview(day, window.__lessonsData);
+                }
+            }
+        });
 
         // Track start click
         document.getElementById('start-btn')?.addEventListener('click', function() {
