@@ -1,7 +1,7 @@
 // Curious Kelly Service Worker
 // App-shell caching + (optional) push notifications
 
-const CACHE_NAME = 'curious-kelly-app-v5'; // Bumped: Clean Kelly + TTS system
+const CACHE_NAME = 'curious-kelly-app-v6'; // Bumped: pick up KellyVisualSystem init fix + latest app shell
 
 const APP_SHELL = [
   '/learn.html',
@@ -49,7 +49,16 @@ self.addEventListener('fetch', (event) => {
     url.pathname.endsWith('.html')
   ) {
     event.respondWith(
-      fetch(req).catch(() => caches.match(req))
+      fetch(req)
+        .then((res) => {
+          // Keep the cached app shell fresh for HTML navigations.
+          if (url.origin === self.location.origin && url.pathname.endsWith('.html')) {
+            const copy = res.clone();
+            caches.open(CACHE_NAME).then((cache) => cache.put(req, copy)).catch(() => {});
+          }
+          return res;
+        })
+        .catch(() => caches.match(req))
     );
     return;
   }
