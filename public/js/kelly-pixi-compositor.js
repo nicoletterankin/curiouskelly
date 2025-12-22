@@ -17,14 +17,17 @@
  * - Add `?pixiDebug=1` to render a red anchor dot so you can visually confirm overlays are rendering.
  */
 (() => {
+  // ALWAYS log script load (critical for debugging)
+  console.log('[Pixi] 🎭 kelly-pixi-compositor.js LOADED, v=20251222c');
+  
   const DEBUG =
     (typeof window !== 'undefined' && !!window.__KELLY_PIXI_DEBUG) ||
     (typeof location !== 'undefined' && (location.search.includes('pixiDebug=1') || location.search.includes('hybridDebug=1')));
 
+  console.log('[Pixi] DEBUG mode:', DEBUG);
+  
   const dlog = (...args) => { if (DEBUG) console.log(...args); };
   const dwarn = (...args) => { if (DEBUG) console.warn(...args); };
-
-  dlog('[KellyPixiCompositor] Script loaded, version: 2025-12-21-v2');
   
   const DEFAULT_ANCHOR = {
     // Normalized coordinates (0..1) in the video frame
