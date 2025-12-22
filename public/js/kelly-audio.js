@@ -33,7 +33,7 @@ class KellyAudio {
     this.ttsDisabledReason = null;
     this.textOnlyBanner = null;
 
-    // Voice is always available via /api/tts endpoint
+    // Voice is available via a configured TTS endpoint (see `_getTtsEndpoint()`).
     // ⚠️ NO BROWSER TTS - EVER
     this.hasVoice = true;
     
@@ -244,8 +244,9 @@ class KellyAudio {
       }
     }
 
-    // Fallback: Platform API (uses platform's ElevenLabs key)
-    const response = await fetch('/api/tts', {
+    // Fallback: Platform TTS endpoint (may be a Cloudflare Worker in production)
+    const ttsEndpoint = this._getTtsEndpoint();
+    const response = await fetch(ttsEndpoint, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json'
@@ -270,6 +271,32 @@ class KellyAudio {
     this.audioCache.set(cacheKey, audioBuffer);
 
     return this._playAudioBuffer(audioBuffer);
+  }
+
+  /**
+   * Resolve the correct TTS endpoint.
+   * Priority: URL param -> window.KELLY_CONFIG.ttsEndpoint -> legacy /api/tts
+   * @private
+   */
+  _getTtsEndpoint() {
+    // 1) URL param override (useful for demos without redeploy)
+    try {
+      if (typeof location !== 'undefined') {
+        const url = new URL(location.href);
+        const override = url.searchParams.get('ttsEndpoint');
+        if (override) return override;
+      }
+    } catch (_) {}
+
+    // 2) config.js
+    try {
+      const cfg = (typeof window !== 'undefined' && window.KELLY_CONFIG) ? window.KELLY_CONFIG : null;
+      const endpoint = cfg?.ttsEndpoint;
+      if (typeof endpoint === 'string' && endpoint.trim()) return endpoint.trim();
+    } catch (_) {}
+
+    // 3) Legacy fallback (may be disabled depending on deployment)
+    return '/api/tts';
   }
 
   /**

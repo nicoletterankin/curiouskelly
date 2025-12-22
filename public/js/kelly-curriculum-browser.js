@@ -205,6 +205,22 @@ const KellyCurriculumBrowser = (function() {
   }
 
   /**
+   * Get thumbnail URL for a lesson
+   */
+  function getThumbnailUrl(dayNumber, topic) {
+    // 1. Try generic generated path (served by static files if they exist)
+    // We don't check existence here (too expensive), but we use the convention
+    // that might be handled by service worker or fallback
+    
+    // 2. Use Kelly Thumbnail Generator API if available (simulated here with path)
+    // In a real app we might check if file exists, but here we'll default to a solid fallback
+    // if we know specific ranges exist.
+    
+    // For now, use the hero image as a safe default for all lessons
+    return '/images/kelly-hero-4k.webp';
+  }
+
+  /**
    * Render days with both Learn + Grow topics side by side
    */
   function renderDaysDuo(learnDays, growDays, month) {
@@ -224,6 +240,9 @@ const KellyCurriculumBrowser = (function() {
       const isToday = dayNum === getTodayDayNumber();
       const isCompleted = window.state?.completedLessons?.includes(dayNum) || false;
       
+      const learnThumb = getThumbnailUrl(dayNum, learnDay.title);
+      const growThumb = getThumbnailUrl(dayNum, growDay.title);
+      
       html += `
         <div class="duo-day-card ${isToday ? 'today' : ''} ${isCompleted ? 'completed' : ''}" 
              data-day="${dayNum}">
@@ -234,6 +253,9 @@ const KellyCurriculumBrowser = (function() {
           </div>
           <div class="duo-day-tracks">
             <div class="duo-track learn-track" onclick="KellyCurriculumBrowser.selectDay(${dayNum}, 'learn')">
+              <div class="track-thumb" style="width: 48px; height: 48px; border-radius: 6px; overflow: hidden; margin-right: 12px; flex-shrink: 0;">
+                <img src="${learnThumb}" alt="${learnDay.title || ''}" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy" onerror="this.src='/images/kelly-hero-4k.webp'">
+              </div>
               <div class="track-icon" style="background: ${TRACKS.learn.color}">${TRACKS.learn.icon}</div>
               <div class="track-content">
                 <div class="track-label">Learn</div>
@@ -242,6 +264,9 @@ const KellyCurriculumBrowser = (function() {
               <div class="track-play">▶</div>
             </div>
             <div class="duo-track grow-track" onclick="KellyCurriculumBrowser.selectDay(${dayNum}, 'grow')">
+              <div class="track-thumb" style="width: 48px; height: 48px; border-radius: 6px; overflow: hidden; margin-right: 12px; flex-shrink: 0;">
+                <img src="${growThumb}" alt="${growDay.title || ''}" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy" onerror="this.src='/images/kelly-hero-4k.webp'">
+              </div>
               <div class="track-icon" style="background: ${TRACKS.grow.color}">${TRACKS.grow.icon}</div>
               <div class="track-content">
                 <div class="track-label">Grow</div>

@@ -448,6 +448,22 @@ const KellyLessonLoader = {
     } catch (staticError) {
       __kellyLoaderDebugWarn(`⚠️ [L3] Static JSON failed: ${staticError.message}`);
     }
+
+    // LAYER 3.5: Seed lessons bundled with the app (dash/underscore variants)
+    if (normalizedTrack === 'learn') {
+      try {
+        __kellyLoaderDebugLog(`🔄 [L3.5] Trying bundled seed lesson for day ${dayNum}...`);
+        const seedResult = await this.trySeedLessons(dayNum, normalizedArchetype, targetRegion);
+        if (seedResult) {
+          const processed = this.ensureMvpLessonShape(seedResult, { dayNum, archetype: normalizedArchetype, region: targetRegion });
+          this.cache.set(cacheKey, processed);
+          __kellyLoaderDebugLog(`✅ [L3.5] Seed lesson success`);
+          return processed;
+        }
+      } catch (seedErr) {
+        __kellyLoaderDebugWarn(`⚠️ [L3.5] Seed lesson failed: ${seedErr?.message || seedErr}`);
+      }
+    }
     
     // LAYER 4: Emergency Fallback (NEVER FAILS)
     __kellyLoaderDebugLog(`🚨 [L4] Emergency Fallback for day ${dayNum}`);
@@ -603,6 +619,32 @@ const KellyLessonLoader = {
   },
 
   /**
+   * Try bundled seed lessons directly from /public/lessons
+   */
+  async trySeedLesson(dayNumber) {
+    const base = this.SEED_LESSONS_BASE_URL || '/lessons';
+    const paths = [
+      `${base}/day-${dayNumber}.json`,
+      `${base}/day_${dayNumber}.json`,
+      `${base}/${dayNumber}.json`,
+    ];
+    
+    for (const path of paths) {
+      try {
+        const resp = await fetch(path);
+        if (resp.ok) {
+          const data = await resp.json();
+          __kellyLoaderDebugLog(`[Seed] Loaded from ${path}`);
+          return data;
+        }
+      } catch (_) {
+        __kellyLoaderDebugLog(`[Seed] ${path} failed`);
+      }
+    }
+    return null;
+  },
+
+  /**
    * Load canonical seed lesson JSON shipped with the app:
    *   GET /lessons/day-<N>.json
    *
@@ -610,11 +652,8 @@ const KellyLessonLoader = {
    */
   async trySeedLessons(dayNumber, archetype, region) {
     try {
-      const url = `${this.SEED_LESSONS_BASE_URL}/day-${dayNumber}.json`;
-      const response = await fetch(url, { signal: AbortSignal.timeout(this.STATIC_TIMEOUT) });
-      if (!response.ok) return null;
-
-      const seed = await response.json();
+      const seed = await this.trySeedLesson(dayNumber);
+      if (!seed) return null;
       const lesson = this.seedToLesson(seed, dayNumber);
       const atoms = this.seedToAtoms(seed, dayNumber, archetype, region);
 
