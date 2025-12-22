@@ -1,7 +1,7 @@
 // Curious Kelly Service Worker
 // App-shell caching + (optional) push notifications
 
-const CACHE_NAME = 'curious-kelly-app-v6'; // Bumped: pick up KellyVisualSystem init fix + latest app shell
+const CACHE_NAME = 'curious-kelly-app-v7'; // Force refresh: ensure latest learn.html with fixed init call
 
 const APP_SHELL = [
   '/learn.html',
