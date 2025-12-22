@@ -24,7 +24,7 @@
  */
 (() => {
   // ALWAYS log script load (critical for debugging)
-  console.log('[Pixi] 🎭 kelly-pixi-compositor.js LOADED, v=20251222e - recalibrated face anchor');
+  console.log('[Pixi] 🎭 kelly-pixi-compositor.js LOADED, v=20251222f - mouth at 56% from live test');
   
   const DEBUG =
     (typeof window !== 'undefined' && !!window.__KELLY_PIXI_DEBUG) ||
@@ -39,19 +39,19 @@
   // All 1024x1024 head images use the same calibration (consistent face position)
   const ANCHOR_PRESETS = {
     // For 1024x1024 static head images (all archetypes)
-    // Re-calibrated from kelly_explorer_head.png 2025-12-22:
-    // Explorer has goggles pushing face position down slightly
-    // - Eyes at ~40% from top
-    // - Face center at ~45% from top
-    // - Nose tip at ~52% from top  
-    // - Mouth at ~60% from top
+    // Calibrated from kelly_explorer_head.png live test 2025-12-22:
+    // VISUAL OBSERVATION:
+    // - Nose (where red dot was): ~36% from top
+    // - Actual mouth/smile: ~56% from top
+    // - Chin (where overlay was): ~60% from top
+    // SOLUTION: Move anchor to 40%, mouth offset to 16% = 56% total
     head_image: {
       x: 0.5,      // Horizontal center
-      y: 0.45,     // Face center (between eyes and nose)
+      y: 0.40,     // Anchor at mid-face (between nose and mouth)
       scale: 1.0,  // Full size for 1024x1024
       rotation: 0,
-      mouthOffsetY: 0.15,  // Mouth is 15% below face center (at ~60%)
-      eyeOffsetY: -0.05,   // Eyes are 5% above face center (at ~40%)
+      mouthOffsetY: 0.16,  // Mouth at 56% from top (40% + 16%)
+      eyeOffsetY: -0.02,   // Eyes slightly above anchor
     },
     // For HeyGen welcome.mp4 video
     video_heygen: {
