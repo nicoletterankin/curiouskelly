@@ -17,6 +17,8 @@
  * - Add `?pixiDebug=1` to render a red anchor dot so you can visually confirm overlays are rendering.
  */
 (() => {
+  console.log('[KellyPixiCompositor] Script loaded, version: 2025-12-21-v2');
+  
   const DEFAULT_ANCHOR = {
     // Normalized coordinates (0..1) in the video frame
     // Calibrated for `public/kelly/videos/001/welcome.mp4` (white background talking head)
@@ -111,8 +113,17 @@
       };
 
       this._initPromise = this._createApp(pixiOptions).then(() => {
+        console.log('[KellyPixiCompositor] _createApp resolved, this.app =', this.app);
+        
+        if (!this.app) {
+          console.error('[KellyPixiCompositor] this.app is undefined after _createApp!');
+          return this;
+        }
+        
         // Put canvas on top of the video (pointer-events none)
         const view = this.app.canvas || this.app.view; // v8 uses .canvas, v7 uses .view
+        console.log('[KellyPixiCompositor] View element:', view);
+        
         if (!view) {
           console.warn('[KellyPixiCompositor] No canvas/view found on app');
           return this;
