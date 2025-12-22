@@ -263,6 +263,14 @@
             border-radius: 3px;
             background: var(--bg-elevated);
             transition: all 0.15s;
+            cursor: pointer;
+            position: relative;
+        }
+
+        .day-dot:hover {
+            transform: scale(1.3);
+            z-index: 10;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
         }
 
         .day-dot.completed {
@@ -276,6 +284,68 @@
 
         .day-dot.future {
             background: var(--border);
+        }
+
+        /* Lesson Tooltip */
+        .lesson-tooltip {
+            position: absolute;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            max-width: 320px;
+            box-shadow: 
+                0 0 0 1px rgba(255,255,255,0.05),
+                0 20px 40px -10px rgba(0,0,0,0.6);
+            z-index: 1000;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .tooltip-header {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 8px;
+        }
+
+        .tooltip-icon {
+            font-size: 20px;
+        }
+
+        .tooltip-day {
+            font-size: 11px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+            font-weight: 600;
+        }
+
+        .tooltip-topic {
+            font-size: 16px;
+            font-weight: 600;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+
+        .tooltip-category {
+            font-size: 12px;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+
+        .tooltip-hook {
+            font-size: 13px;
+            color: var(--text-secondary);
+            line-height: 1.5;
+            margin-bottom: 12px;
+        }
+
+        .tooltip-cta {
+            font-size: 12px;
+            color: var(--text-muted);
+            font-weight: 500;
         }
 
         /* ═══════════════════════════════════════════════════════════════════
@@ -822,8 +892,8 @@
     </footer>
 
     <script>
-        // Generate calendar grid
-        (function() {
+        // Load lesson metadata and generate interactive calendar
+        (async function() {
             const months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
             const daysPerMonth = [31, 28, 31, 30, 31, 30, 31, 31, 30, 31, 30, 31];
             const today = new Date();
@@ -831,6 +901,17 @@
             
             const container = document.getElementById('calendar-demo');
             if (!container) return;
+            
+            // Load lesson metadata
+            let lessonsData = null;
+            try {
+                const response = await fetch('/data/lessons-metadata.json');
+                const data = await response.json();
+                lessonsData = data.lessons;
+                window.__lessonsData = lessonsData; // Store globally for tooltips
+            } catch (err) {
+                console.warn('Could not load lesson metadata:', err);
+            }
             
             let dayCounter = 1;
             
@@ -842,6 +923,16 @@
                 for (let d = 0; d < daysPerMonth[i]; d++) {
                     const dot = document.createElement('div');
                     dot.className = 'day-dot';
+                    dot.dataset.day = dayCounter;
+                    
+                    // Add lesson metadata if available
+                    if (lessonsData && lessonsData[dayCounter - 1]) {
+                        const lesson = lessonsData[dayCounter - 1];
+                        dot.dataset.topic = lesson.topic;
+                        dot.dataset.hook = lesson.hook;
+                        dot.dataset.category = lesson.category;
+                        dot.dataset.icon = lesson.icon;
+                    }
                     
                     if (dayCounter < currentDayOfYear) {
                         // Random completion (demo)
@@ -852,13 +943,150 @@
                         dot.classList.add('future');
                     }
                     
+                    // Click handler
+                    dot.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        const day = this.dataset.day;
+                        showLessonPreview(day, lessonsData);
+                    });
+                    
                     col.appendChild(dot);
                     dayCounter++;
                 }
                 
                 container.appendChild(col);
             });
+            
+            // Add hover tooltips
+            addTooltips();
         })();
+        
+        // Show lesson preview tooltip on hover/tap
+        function addTooltips() {
+            const dots = document.querySelectorAll('.day-dot');
+            let tooltip = null;
+            let activeTooltipDot = null;
+            
+            // Detect if touch device
+            const isTouchDevice = 'ontouchstart' in window || navigator.maxTouchPoints > 0;
+            
+            function showTooltip(dot) {
+                const topic = dot.dataset.topic;
+                const hook = dot.dataset.hook;
+                const category = dot.dataset.category;
+                const icon = dot.dataset.icon;
+                const day = dot.dataset.day;
+                
+                if (!topic) return;
+                
+                // Remove existing tooltip
+                if (tooltip) tooltip.remove();
+                
+                // Create tooltip
+                tooltip = document.createElement('div');
+                tooltip.className = 'lesson-tooltip';
+                tooltip.innerHTML = `
+                    <div class="tooltip-header">
+                        <span class="tooltip-icon">${icon}</span>
+                        <span class="tooltip-day">Day ${day}</span>
+                    </div>
+                    <div class="tooltip-topic">${topic}</div>
+                    <div class="tooltip-category">${category}</div>
+                    <div class="tooltip-hook">${hook}</div>
+                    <div class="tooltip-cta">${isTouchDevice ? 'Tap again to read full lesson →' : 'Click to read full lesson →'}</div>
+                `;
+                
+                document.body.appendChild(tooltip);
+                
+                // Position tooltip
+                const rect = dot.getBoundingClientRect();
+                const tooltipRect = tooltip.getBoundingClientRect();
+                
+                let left = rect.left + rect.width / 2 - tooltipRect.width / 2;
+                let top = rect.top - tooltipRect.height - 12;
+                
+                // Keep tooltip on screen
+                if (left < 10) left = 10;
+                if (left + tooltipRect.width > window.innerWidth - 10) {
+                    left = window.innerWidth - tooltipRect.width - 10;
+                }
+                if (top < 10) {
+                    top = rect.bottom + 12; // Show below if no room above
+                }
+                
+                tooltip.style.left = left + 'px';
+                tooltip.style.top = top + window.scrollY + 'px';
+                tooltip.style.opacity = '1';
+                
+                activeTooltipDot = dot;
+            }
+            
+            function hideTooltip() {
+                if (tooltip) {
+                    tooltip.remove();
+                    tooltip = null;
+                }
+                activeTooltipDot = null;
+            }
+            
+            dots.forEach(dot => {
+                if (isTouchDevice) {
+                    // Mobile: tap to show tooltip, tap again to open
+                    dot.addEventListener('touchstart', function(e) {
+                        e.preventDefault();
+                        
+                        if (activeTooltipDot === this) {
+                            // Second tap - show full lesson
+                            hideTooltip();
+                            const day = this.dataset.day;
+                            showLessonPreview(day, window.__lessonsData);
+                        } else {
+                            // First tap - show tooltip
+                            showTooltip(this);
+                        }
+                    });
+                } else {
+                    // Desktop: hover to show tooltip
+                    dot.addEventListener('mouseenter', function() {
+                        showTooltip(this);
+                    });
+                    
+                    dot.addEventListener('mouseleave', function() {
+                        hideTooltip();
+                    });
+                }
+            });
+            
+            // Click outside to close tooltip on mobile
+            if (isTouchDevice) {
+                document.addEventListener('touchstart', function(e) {
+                    if (tooltip && !e.target.closest('.day-dot')) {
+                        hideTooltip();
+                    }
+                });
+            }
+        }
+        
+        // Show full lesson preview (Sprint 2)
+        function showLessonPreview(day, lessonsData) {
+            if (!lessonsData || !lessonsData[day - 1]) {
+                alert(`Lesson ${day} preview coming soon!`);
+                return;
+            }
+            
+            const lesson = lessonsData[day - 1];
+            
+            // For now, just show an alert. Sprint 2 will add modal.
+            alert(`📚 Day ${day}: ${lesson.topic}\n\n${lesson.hook}\n\nCategory: ${lesson.category}\nDuration: ${lesson.duration} seconds\n\n[Full lesson modal coming in Sprint 2]`);
+            
+            // Track click
+            if (window.gtag) {
+                gtag('event', 'lesson_preview_click', {
+                    day: day,
+                    topic: lesson.topic
+                });
+            }
+        }
 
         // Track start click
         document.getElementById('start-btn')?.addEventListener('click', function() {
