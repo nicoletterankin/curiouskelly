@@ -165,6 +165,10 @@
 - [ ] Audio playback works
 - [ ] Avatar rendering works
 - [ ] User interactions functional
+- [ ] Settings panel opens and does not cover Kelly/video
+- [ ] Settings → Support opens Contact and `mailto:hello@curiouskelly.com` works
+- [ ] Settings → Billing opens embedded checkout panel (and plan switching works)
+- [ ] Preferences toggles persist and stay in sync (Auto-play, Captions)
 
 ### API Endpoints
 - [ ] `/api/lead` endpoint responds
