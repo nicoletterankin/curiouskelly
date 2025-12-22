@@ -19,10 +19,15 @@
 (() => {
   const DEFAULT_ANCHOR = {
     // Normalized coordinates (0..1) in the video frame
-    // Tuned for `public/kelly/videos/001/welcome.mp4` (white background talking head)
-    x: 0.5,
-    y: 0.54,
-    scale: 1.0,
+    // Calibrated for `public/kelly/videos/001/welcome.mp4` (white background talking head)
+    // Based on screenshot analysis 2025-12-21:
+    // - Eyes at ~38% from top
+    // - Face center at ~42%
+    // - Mouth at ~56%
+    // Anchor is set to face center; mouth/eye offsets are relative to this.
+    x: 0.5,     // Horizontal center (Kelly is centered)
+    y: 0.42,    // Vertical face center (between eyes and nose)
+    scale: 0.8, // Slightly smaller overlays for subtlety
     rotation: 0,
   };
 
@@ -309,45 +314,49 @@
       const pucker = clamp((bs.mouthPucker ?? 0) / 100, 0, 1);
       const stretch = clamp(((bs.mouthStretchLeft ?? 0) + (bs.mouthStretchRight ?? 0)) / 200, 0, 1);
 
-      // Mouth size in pixels (tuned visually)
-      const baseW = 150 * s;
-      const baseH = 60 * s;
-      const openH = baseH + jawOpen * 120 * s;
-      const w = baseW + stretch * 80 * s - pucker * 40 * s;
-      const h = Math.max(12 * s, openH);
+      // Mouth size in pixels (calibrated for subtlety - blend with video)
+      // Kelly's actual mouth is approximately 80-100px wide in the video
+      const baseW = 90 * s;
+      const baseH = 25 * s;
+      const openH = baseH + jawOpen * 50 * s;
+      const w = baseW + stretch * 30 * s - pucker * 20 * s;
+      const h = Math.max(6 * s, openH);
 
       // Mouth position offsets relative to anchor
+      // Calibrated: mouth is ~14% below face center in Kelly's video
+      // For 1000px viewport: anchor at 42% = 420px, mouth at 56% = 560px
+      // Offset = 140px at scale 1.0, so 175px base * scale
       const mx = ax;
-      const my = ay + 80 * s; // mouth sits below the anchor center
+      const my = ay + 175 * s; // mouth sits below the anchor center
 
-      // Draw mouth interior
+      // Draw mouth interior (very subtle - blend with video)
       const mouthInterior = this._mouthInterior;
       mouthInterior.clear();
-      mouthInterior.beginFill(0x5b0c0c, 0.88);
-      mouthInterior.drawRoundedRect(-w / 2, -h / 2, w, h, 18 * s);
+      mouthInterior.beginFill(0x3d1515, 0.35); // Darker, lower opacity
+      mouthInterior.drawRoundedRect(-w / 2, -h / 2, w, h, 8 * s);
       mouthInterior.endFill();
 
-      // Teeth (only when somewhat open)
+      // Teeth hint (only when mouth is quite open)
       this.teeth.clear();
-      if (jawOpen > 0.18) {
-        this.teeth.beginFill(0xffffff, 0.22);
-        this.teeth.drawRoundedRect(-w * 0.28, -h * 0.35, w * 0.56, h * 0.18, 8 * s);
+      if (jawOpen > 0.35) {
+        this.teeth.beginFill(0xf5f0f0, 0.12); // Very subtle teeth
+        this.teeth.drawRoundedRect(-w * 0.25, -h * 0.3, w * 0.5, h * 0.15, 4 * s);
         this.teeth.endFill();
       }
 
-      // Lips (subtle)
-      const lipAlpha = 0.28 + funnel * 0.12;
-      const lipColor = 0xa86b6b;
+      // Lips (very subtle highlight - should barely be noticeable)
+      const lipAlpha = 0.08 + funnel * 0.06; // Much lower opacity
+      const lipColor = 0xc99a9a; // Lighter, more natural lip color
       const upper = this.upperLip;
       upper.clear();
       upper.beginFill(lipColor, lipAlpha);
-      upper.drawRoundedRect(-w / 2, -h / 2 - 10 * s, w, 18 * s, 10 * s);
+      upper.drawRoundedRect(-w / 2, -h / 2 - 4 * s, w, 8 * s, 4 * s);
       upper.endFill();
 
       const lower = this.lowerLip;
       lower.clear();
       lower.beginFill(lipColor, lipAlpha);
-      lower.drawRoundedRect(-w / 2, h / 2 - 8 * s, w, 18 * s, 10 * s);
+      lower.drawRoundedRect(-w / 2, h / 2 - 3 * s, w, 8 * s, 4 * s);
       lower.endFill();
 
       // Place mouth container
@@ -360,25 +369,31 @@
         this._debugMarker.y = ay;
       }
 
-      // Blink overlays: draw two semi-transparent eyelid bands
+      // Blink overlays: very subtle eyelid bands (should barely be visible)
       const blink = this._getBlinkAmount();
-      const blinkOpacity = 0.18 + blink * 0.6;
-      const eyelidH = (4 + blink * 40) * s;
-      const eyeW = 120 * s;
+      const blinkOpacity = 0.05 + blink * 0.25; // Much more subtle
+      // Eye overlay size (calibrated for subtlety)
+      const eyelidH = (2 + blink * 20) * s;
+      const eyeW = 60 * s;
 
       // Left/right eye positions relative to anchor
-      const eyeY = ay - 10 * s;
-      const eyeDX = 110 * s;
+      // Calibrated: eyes are ~4% above face center in Kelly's video
+      // For 1000px viewport: anchor at 42% = 420px, eyes at 38% = 380px
+      // Offset = -40px at scale 1.0, so -50px base * scale
+      const eyeY = ay - 50 * s;
+      const eyeDX = 85 * s; // Eye horizontal spacing (reduced for realistic proportion)
 
       this.blinkLeft.clear();
       this.blinkRight.clear();
-      if (blink > 0.01) {
-        this.blinkLeft.beginFill(0xffffff, blinkOpacity);
-        this.blinkLeft.drawRoundedRect(ax - eyeDX - eyeW / 2, eyeY - eyelidH / 2, eyeW, eyelidH, 10 * s);
+      if (blink > 0.02) {
+        // Use skin tone for eyelids (Kelly's skin tone)
+        const skinColor = 0xe8d4c4;
+        this.blinkLeft.beginFill(skinColor, blinkOpacity);
+        this.blinkLeft.drawRoundedRect(ax - eyeDX - eyeW / 2, eyeY - eyelidH / 2, eyeW, eyelidH, 4 * s);
         this.blinkLeft.endFill();
 
-        this.blinkRight.beginFill(0xffffff, blinkOpacity);
-        this.blinkRight.drawRoundedRect(ax + eyeDX - eyeW / 2, eyeY - eyelidH / 2, eyeW, eyelidH, 10 * s);
+        this.blinkRight.beginFill(skinColor, blinkOpacity);
+        this.blinkRight.drawRoundedRect(ax + eyeDX - eyeW / 2, eyeY - eyelidH / 2, eyeW, eyelidH, 4 * s);
         this.blinkRight.endFill();
       }
     },
