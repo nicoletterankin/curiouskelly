@@ -409,6 +409,9 @@ const KellyLipSync = {
       return;
     }
     
+    // CRITICAL: Always request next frame to keep loop running
+    this.animationFrameId = requestAnimationFrame(() => this.processFrame());
+    
     // Only skip analysis if not active and not streaming
     const shouldAnalyze = this.isActive || this.isStreaming;
     
