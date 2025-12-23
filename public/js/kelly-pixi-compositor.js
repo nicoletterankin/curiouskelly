@@ -24,7 +24,7 @@
  */
 (() => {
   // ALWAYS log script load (critical for debugging)
-  console.log('[Pixi] 🎭 kelly-pixi-compositor.js LOADED, v=20251222h - debug marker on mouth');
+  console.log('[Pixi] 🎭 kelly-pixi-compositor.js LOADED, v=20251222i - opacity presets added');
   
   const DEBUG =
     (typeof window !== 'undefined' && !!window.__KELLY_PIXI_DEBUG) ||
@@ -65,6 +65,19 @@
   };
   
   const DEFAULT_ANCHOR = { ...ANCHOR_PRESETS.head_image };
+
+  // Overlay opacity presets (tuned for subtle blending with Kelly's face)
+  // Values are 0.0 (transparent) to 1.0 (opaque)
+  // These can be adjusted based on visual testing with real learners
+  const OPACITY_PRESETS = {
+    mouthInterior: 0.35,      // Mouth opening (35% - visible but subtle)
+    teeth: 0.12,               // Teeth hint when mouth open (12% - very subtle)
+    lipBase: 0.08,             // Base lip opacity (8% - barely visible)
+    lipMax: 0.14,              // Max lip opacity when funneled (14%)
+    blinkMin: 0.05,            // Minimum blink opacity (5% - very subtle)
+    blinkMax: 0.30,            // Maximum blink opacity (30% - noticeable but natural)
+    debugMarker: 0.9,          // Debug red dot (90% - highly visible for calibration)
+  };
 
   function clamp01(n) {
     const v = Number(n);
@@ -443,7 +456,7 @@
         if (isDebug) {
           const marker = new window.PIXI.Graphics();
           marker.name = 'debugMarker';
-          marker.beginFill(0xff3b30, 0.9);
+          marker.beginFill(0xff3b30, OPACITY_PRESETS.debugMarker);
           marker.drawCircle(0, 0, 10);
           marker.endFill();
           this._debugMarker = marker;
@@ -521,20 +534,20 @@
       // Draw mouth interior (very subtle - blend with video)
       const mouthInterior = this._mouthInterior;
       mouthInterior.clear();
-      mouthInterior.beginFill(0x3d1515, 0.35); // Darker, lower opacity
+      mouthInterior.beginFill(0x3d1515, OPACITY_PRESETS.mouthInterior);
       mouthInterior.drawRoundedRect(-w / 2, -h / 2, w, h, 8 * s);
       mouthInterior.endFill();
 
       // Teeth hint (only when mouth is quite open)
       this.teeth.clear();
       if (jawOpen > 0.35) {
-        this.teeth.beginFill(0xf5f0f0, 0.12); // Very subtle teeth
+        this.teeth.beginFill(0xf5f0f0, OPACITY_PRESETS.teeth);
         this.teeth.drawRoundedRect(-w * 0.25, -h * 0.3, w * 0.5, h * 0.15, 4 * s);
         this.teeth.endFill();
       }
 
       // Lips (very subtle highlight - should barely be noticeable)
-      const lipAlpha = 0.08 + funnel * 0.06; // Much lower opacity
+      const lipAlpha = OPACITY_PRESETS.lipBase + funnel * (OPACITY_PRESETS.lipMax - OPACITY_PRESETS.lipBase);
       const lipColor = 0xc99a9a; // Lighter, more natural lip color
       const upper = this.upperLip;
       upper.clear();
@@ -561,7 +574,7 @@
 
       // Blink overlays: very subtle eyelid bands (should barely be visible)
       const blink = this._getBlinkAmount();
-      const blinkOpacity = 0.05 + blink * 0.25; // Much more subtle
+      const blinkOpacity = OPACITY_PRESETS.blinkMin + blink * (OPACITY_PRESETS.blinkMax - OPACITY_PRESETS.blinkMin);
       // Eye overlay size (calibrated for subtlety)
       const eyelidH = (2 + blink * 20) * s;
       const eyeW = 60 * s;
