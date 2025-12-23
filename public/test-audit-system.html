@@ -1,0 +1,414 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Audit System Test - Curious Kelly</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body {
+            font-family: system-ui, -apple-system, sans-serif;
+            background: #09090b;
+            color: #fafafa;
+            padding: 24px;
+            line-height: 1.6;
+        }
+        .test-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        h1 { margin-bottom: 24px; }
+        .test-section {
+            background: #18181b;
+            border-radius: 8px;
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+        .test-section h2 {
+            margin-bottom: 16px;
+            color: #2563eb;
+        }
+        .test-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+        .test-day-btn {
+            padding: 12px;
+            background: rgba(37, 99, 235, 0.1);
+            border: 1px solid rgba(37, 99, 235, 0.3);
+            border-radius: 6px;
+            color: #fafafa;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        .test-day-btn:hover {
+            background: rgba(37, 99, 235, 0.2);
+            border-color: #2563eb;
+        }
+        .test-results {
+            margin-top: 24px;
+            padding: 16px;
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            font-family: 'Courier New', monospace;
+            font-size: 13px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+        .test-result-item {
+            margin-bottom: 8px;
+            padding: 8px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 4px;
+        }
+        .test-result-item.success { border-left: 3px solid #22c55e; }
+        .test-result-item.error { border-left: 3px solid #ef4444; }
+        .test-result-item.warning { border-left: 3px solid #eab308; }
+        .status-badge {
+            display: inline-block;
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 600;
+            margin-left: 8px;
+        }
+        .status-success { background: rgba(34, 197, 94, 0.2); color: #22c55e; }
+        .status-error { background: rgba(239, 68, 68, 0.2); color: #ef4444; }
+        .status-warning { background: rgba(234, 179, 8, 0.2); color: #eab308; }
+        button {
+            padding: 12px 24px;
+            background: #2563eb;
+            color: white;
+            border: none;
+            border-radius: 6px;
+            cursor: pointer;
+            font-weight: 600;
+            margin-right: 12px;
+            margin-bottom: 12px;
+        }
+        button:hover { background: #1d4ed8; }
+        button:disabled {
+            background: rgba(255, 255, 255, 0.1);
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="test-container">
+        <h1>🔍 Lesson Inspector - Full System Test</h1>
+        
+        <div class="test-section">
+            <h2>1. Inspector Availability</h2>
+            <div id="inspector-status" class="test-results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>2. Quick Test Days</h2>
+            <div class="test-grid" id="quick-test-days"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>3. Comprehensive Audit Test</h2>
+            <button onclick="runComprehensiveTest()">Run Full Test Suite</button>
+            <button onclick="testAllDays()">Test All 365 Days (Long)</button>
+            <div id="comprehensive-results" class="test-results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>4. Asset Discovery Test</h2>
+            <button onclick="testAssetDiscovery()">Test Asset Discovery</button>
+            <div id="asset-results" class="test-results"></div>
+        </div>
+        
+        <div class="test-section">
+            <h2>5. Performance Test</h2>
+            <button onclick="testPerformance()">Test Load Times</button>
+            <div id="performance-results" class="test-results"></div>
+        </div>
+    </div>
+    
+    <!-- Load inspector script -->
+    <script src="/js/kelly-lesson-audit.js"></script>
+    <script src="/js/kelly-time.js"></script>
+    
+    <script>
+        const TEST_DAYS = [1, 17, 100, 200, 300, 365];
+        const RESULTS = {
+            inspector: [],
+            quick: [],
+            comprehensive: [],
+            assets: [],
+            performance: []
+        };
+        
+        function log(section, message, type = 'info') {
+            const timestamp = new Date().toLocaleTimeString();
+            const item = { timestamp, message, type };
+            RESULTS[section].push(item);
+            updateResults(section);
+        }
+        
+        function updateResults(section) {
+            const container = document.getElementById(`${section}-results`) || document.getElementById(`${section}-status`);
+            if (!container) return;
+            
+            const items = RESULTS[section];
+            container.innerHTML = items.map(item => {
+                const badge = item.type !== 'info' 
+                    ? `<span class="status-badge status-${item.type}">${item.type.toUpperCase()}</span>`
+                    : '';
+                return `
+                    <div class="test-result-item ${item.type}">
+                        <strong>[${item.timestamp}]</strong> ${item.message} ${badge}
+                    </div>
+                `;
+            }).join('');
+            container.scrollTop = container.scrollHeight;
+        }
+        
+        // Test 1: Inspector Availability
+        function testInspectorAvailability() {
+            log('inspector', 'Testing inspector availability...');
+            
+            if (window.LessonInspector) {
+                log('inspector', '✅ LessonInspector found', 'success');
+            } else {
+                log('inspector', '❌ LessonInspector not found', 'error');
+            }
+            
+            if (window.LessonAudit) {
+                log('inspector', '✅ LessonAudit found (backward compat)', 'success');
+            }
+            
+            if (window.KellyTime) {
+                log('inspector', '✅ KellyTime found', 'success');
+            } else {
+                log('inspector', '⚠️ KellyTime not found (date calculations may fail)', 'warning');
+            }
+            
+            // Test Supabase initialization
+            if (window.LessonInspector) {
+                const hasSupabase = window.LessonInspector.initSupabase();
+                if (hasSupabase) {
+                    log('inspector', '✅ Supabase client initialized', 'success');
+                } else {
+                    log('inspector', '⚠️ Supabase client not available (some features disabled)', 'warning');
+                }
+            }
+        }
+        
+        // Test 2: Quick Test Days
+        function setupQuickTestDays() {
+            const container = document.getElementById('quick-test-days');
+            TEST_DAYS.forEach(day => {
+                const btn = document.createElement('button');
+                btn.className = 'test-day-btn';
+                btn.textContent = `Day ${day}`;
+                btn.onclick = () => testSingleDay(day);
+                container.appendChild(btn);
+            });
+        }
+        
+        async function testSingleDay(dayNumber) {
+            log('quick', `Testing Day ${dayNumber}...`);
+            
+            if (!window.LessonInspector) {
+                log('quick', `❌ Inspector not available`, 'error');
+                return;
+            }
+            
+            try {
+                const startTime = performance.now();
+                const audit = await window.LessonInspector.getFullAudit(dayNumber);
+                const duration = Math.round(performance.now() - startTime);
+                
+                log('quick', `✅ Day ${dayNumber} audit completed in ${duration}ms`, 'success');
+                log('quick', `   - Videos: ${audit.assets.videos.total}`, 'info');
+                log('quick', `   - Audio: ${audit.assets.audio.total}`, 'info');
+                log('quick', `   - Images: ${audit.assets.images.total}`, 'info');
+                log('quick', `   - Languages: ${audit.variants.languages.length}`, 'info');
+                log('quick', `   - Tracks: ${audit.variants.tracks.join(', ') || 'None'}`, 'info');
+                
+                if (audit.errors.length > 0) {
+                    audit.errors.forEach(err => log('quick', `   ⚠️ Error: ${err}`, 'warning'));
+                }
+                
+                if (audit.warnings.length > 0) {
+                    audit.warnings.forEach(warn => log('quick', `   ⚠️ Warning: ${warn}`, 'warning'));
+                }
+                
+                // Open inspector
+                window.LessonInspector.showInspector(dayNumber);
+                
+            } catch (error) {
+                log('quick', `❌ Day ${dayNumber} failed: ${error.message}`, 'error');
+            }
+        }
+        
+        // Test 3: Comprehensive Test
+        async function runComprehensiveTest() {
+            log('comprehensive', 'Starting comprehensive test suite...');
+            
+            const testCases = [
+                { day: 1, name: 'First day' },
+                { day: 17, name: 'Day with known assets' },
+                { day: 100, name: 'Mid-year' },
+                { day: 365, name: 'Last day' }
+            ];
+            
+            for (const testCase of testCases) {
+                log('comprehensive', `Testing ${testCase.name} (Day ${testCase.day})...`);
+                
+                try {
+                    const audit = await window.LessonInspector.getFullAudit(testCase.day);
+                    
+                    // Check JSON source
+                    if (audit.sources.json) {
+                        log('comprehensive', `  ✅ JSON source found`, 'success');
+                    } else {
+                        log('comprehensive', `  ❌ JSON source missing`, 'error');
+                    }
+                    
+                    // Check Grow track
+                    if (audit.assets.growTrack || audit.assets.growTrackSupabase) {
+                        log('comprehensive', `  ✅ Grow track found`, 'success');
+                    } else {
+                        log('comprehensive', `  ⚠️ Grow track not found`, 'warning');
+                    }
+                    
+                    // Check assets
+                    const hasAssets = audit.assets.videos.total > 0 || 
+                                     audit.assets.audio.total > 0 || 
+                                     audit.assets.images.total > 0;
+                    
+                    if (hasAssets) {
+                        log('comprehensive', `  ✅ Assets found (${audit.assets.videos.total} videos, ${audit.assets.audio.total} audio, ${audit.assets.images.total} images)`, 'success');
+                    } else {
+                        log('comprehensive', `  ⚠️ No assets found`, 'warning');
+                    }
+                    
+                    // Check variants
+                    if (audit.variants.languages.length > 0) {
+                        log('comprehensive', `  ✅ Languages: ${audit.variants.languages.join(', ')}`, 'success');
+                    }
+                    
+                    if (audit.variants.tracks.length > 0) {
+                        log('comprehensive', `  ✅ Tracks: ${audit.variants.tracks.join(', ')}`, 'success');
+                    }
+                    
+                } catch (error) {
+                    log('comprehensive', `  ❌ Test failed: ${error.message}`, 'error');
+                }
+            }
+            
+            log('comprehensive', 'Comprehensive test complete!');
+        }
+        
+        // Test 4: Asset Discovery
+        async function testAssetDiscovery() {
+            log('assets', 'Testing asset discovery...');
+            
+            const testDay = 1; // Day 1 should have the most assets
+            const audit = await window.LessonInspector.getFullAudit(testDay);
+            
+            log('assets', `Day ${testDay} Asset Discovery:`, 'info');
+            log('assets', `  Videos (Supabase): ${audit.assets.videos.supabase.length}`, 'info');
+            log('assets', `  Videos (Local): ${audit.assets.videos.local.length}`, 'info');
+            log('assets', `  Audio (JSON): ${audit.assets.audio.json.length}`, 'info');
+            log('assets', `  Thumbnails: ${audit.assets.images.thumbnails.length}`, 'info');
+            log('assets', `  Infographics: ${audit.assets.images.infographics.length}`, 'info');
+            log('assets', `  Visual Commons: ${audit.assets.images.visuals.length}`, 'info');
+            log('assets', `  Local Files Found: ${audit.sources.localFiles.length}`, 'info');
+            
+            // List all local files
+            if (audit.sources.localFiles.length > 0) {
+                log('assets', '  Local Files:', 'info');
+                audit.sources.localFiles.forEach(file => {
+                    log('assets', `    - ${file}`, 'info');
+                });
+            }
+        }
+        
+        // Test 5: Performance
+        async function testPerformance() {
+            log('performance', 'Testing performance...');
+            
+            const testDays = [1, 17, 100];
+            const results = [];
+            
+            for (const day of testDays) {
+                const startTime = performance.now();
+                try {
+                    await window.LessonInspector.getFullAudit(day);
+                    const duration = performance.now() - startTime;
+                    results.push({ day, duration, success: true });
+                    log('performance', `Day ${day}: ${Math.round(duration)}ms`, 'success');
+                } catch (error) {
+                    const duration = performance.now() - startTime;
+                    results.push({ day, duration, success: false });
+                    log('performance', `Day ${day}: Failed in ${Math.round(duration)}ms`, 'error');
+                }
+            }
+            
+            const avgDuration = results.reduce((sum, r) => sum + r.duration, 0) / results.length;
+            log('performance', `Average audit time: ${Math.round(avgDuration)}ms`, 'info');
+            
+            if (avgDuration > 3000) {
+                log('performance', '⚠️ Performance warning: Average time > 3s', 'warning');
+            } else {
+                log('performance', '✅ Performance acceptable', 'success');
+            }
+        }
+        
+        // Test all 365 days (long test)
+        async function testAllDays() {
+            log('comprehensive', 'Starting 365-day test (this will take a while)...');
+            
+            let successCount = 0;
+            let errorCount = 0;
+            const errors = [];
+            
+            for (let day = 1; day <= 365; day++) {
+                try {
+                    const audit = await window.LessonInspector.getFullAudit(day);
+                    if (audit.sources.json) {
+                        successCount++;
+                    } else {
+                        errorCount++;
+                        errors.push({ day, reason: 'No JSON source' });
+                    }
+                    
+                    if (day % 50 === 0) {
+                        log('comprehensive', `Progress: ${day}/365 (${successCount} success, ${errorCount} errors)`, 'info');
+                    }
+                } catch (error) {
+                    errorCount++;
+                    errors.push({ day, reason: error.message });
+                }
+            }
+            
+            log('comprehensive', `365-day test complete: ${successCount} success, ${errorCount} errors`, 
+                errorCount > 0 ? 'warning' : 'success');
+            
+            if (errors.length > 0) {
+                log('comprehensive', 'Days with errors:', 'warning');
+                errors.slice(0, 10).forEach(err => {
+                    log('comprehensive', `  Day ${err.day}: ${err.reason}`, 'warning');
+                });
+                if (errors.length > 10) {
+                    log('comprehensive', `  ... and ${errors.length - 10} more`, 'warning');
+                }
+            }
+        }
+        
+        // Initialize
+        window.addEventListener('DOMContentLoaded', () => {
+            testInspectorAvailability();
+            setupQuickTestDays();
+        });
+    </script>
+</body>
+</html>
+

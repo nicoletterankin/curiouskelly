@@ -14,10 +14,42 @@ interface CreateCheckoutRequest {
   customerEmail?: string;
   userId?: string;
   returnUrl?: string;
+  country?: string; // Country code (US, DE, IN, etc.)
+  currency?: string; // Currency code (USD, EUR, INR, etc.)
 }
 
 function isValidEmail(email: string): boolean {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email.trim().toLowerCase());
+}
+
+/**
+ * Get Stripe locale from currency/country
+ * Stripe supports: auto, bg, cs, da, de, el, en, es, et, fi, fr, hu, id, it, ja, lt, lv, ms, mt, nb, nl, pl, pt, ro, ru, sk, sl, sv, tr, zh
+ */
+function getStripeLocale(currency: string, country: string): string {
+  const localeMap: Record<string, string> = {
+    'EUR': 'de', // Default EU to German
+    'GBP': 'en',
+    'CAD': 'en',
+    'AUD': 'en',
+    'INR': 'en', // Stripe doesn't support Hindi UI, use English
+    'BRL': 'pt',
+    'MXN': 'es',
+    'PLN': 'pl',
+  };
+  
+  const countryLocaleMap: Record<string, string> = {
+    'DE': 'de',
+    'FR': 'fr',
+    'ES': 'es',
+    'IT': 'it',
+    'NL': 'nl',
+    'PL': 'pl',
+    'BR': 'pt',
+    'MX': 'es',
+  };
+  
+  return countryLocaleMap[country] || localeMap[currency] || 'auto';
 }
 
 export default async function handler(req: VercelRequest, res: VercelResponse) {
@@ -51,18 +83,35 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       return res.status(422).json({ error: 'invalid_plan_type' });
     }
 
-    // Map planType -> configured price ids
-    const priceIds: Record<PlanType, string | undefined> = {
-      monthly: process.env.STRIPE_PRICE_MONTHLY,
-      annual: process.env.STRIPE_PRICE_ANNUAL,
-      family: process.env.STRIPE_PRICE_FAMILY,
-      lifetime: process.env.STRIPE_PRICE_LIFETIME,
+    // Get currency from request or default to USD
+    const currency = (body.currency || 'USD').toUpperCase();
+    const country = body.country || 'US';
+    
+    // Map planType + currency -> configured price ids
+    // TODO: STRIPE_I18N_BACKLOG - After Stripe batch work is complete, these env vars will exist
+    // For now, fallback to USD prices if currency-specific price not found
+    const getPriceId = (plan: PlanType, curr: string): string | undefined => {
+      // Try currency-specific price first (e.g., STRIPE_PRICE_MONTHLY_EUR)
+      const currencySpecific = process.env[`STRIPE_PRICE_${plan.toUpperCase()}_${curr}`];
+      if (currencySpecific) return currencySpecific;
+      
+      // Fallback to USD prices
+      const usdPrices: Record<PlanType, string | undefined> = {
+        monthly: process.env.STRIPE_PRICE_MONTHLY,
+        annual: process.env.STRIPE_PRICE_ANNUAL,
+        family: process.env.STRIPE_PRICE_FAMILY,
+        lifetime: process.env.STRIPE_PRICE_LIFETIME,
+      };
+      return usdPrices[plan];
     };
-    const priceId = priceIds[planType];
+    
+    const priceId = getPriceId(planType, currency);
     if (!priceId) {
       return res.status(503).json({
         error: 'price_not_configured',
-        message: `Missing STRIPE_PRICE_${planType.toUpperCase()} in environment`,
+        message: `Missing STRIPE_PRICE_${planType.toUpperCase()}_${currency} or STRIPE_PRICE_${planType.toUpperCase()} in environment`,
+        // Flag for backlog: This will work once Stripe batch work is complete
+        _backlog_flag: 'STRIPE_I18N_BACKLOG',
       });
     }
 
@@ -82,20 +131,22 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
     const mode = planType === 'lifetime' ? 'payment' : 'subscription';
 
+    // Determine Stripe locale from currency/country
+    const stripeLocale = getStripeLocale(currency, country);
+    
     const session = await stripe.checkout.sessions.create({
       mode,
       ui_mode: 'embedded',
-      locale:
-        (Array.isArray(req.headers['accept-language'])
-          ? req.headers['accept-language'][0]
-          : req.headers['accept-language'])
-          ?.split(',')[0]
-          ?.split('-')[0] || 'auto',
+      locale: stripeLocale,
       return_url: returnUrl,
       line_items: [{ price: priceId, quantity: 1 }],
       ...(customerEmail ? { customer_email: customerEmail } : {}),
       allow_promotion_codes: true,
-      metadata,
+      metadata: {
+        ...metadata,
+        country,
+        currency,
+      },
       ...(mode === 'subscription'
         ? {
             subscription_data: {

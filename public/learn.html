@@ -48,6 +48,10 @@
   <script src="/js/i18n/language-selector.js"></script>
   <!-- Geo-pricing: Loads localized prices based on user's country -->
   <script src="/js/geo-pricing.js"></script>
+  <!-- Universal Switcher: Language + Country/Currency switcher -->
+  <script src="/js/i18n/universal-switcher.js"></script>
+  <!-- Universal Badge: Shows lesson variants (language, age, tone) -->
+  <script src="/js/i18n/universal-badge.js"></script>
   <!-- Note: Vercel Insights scripts removed to avoid console MIME errors
        when deployed outside Vercel (those endpoints return HTML/404). -->
   <!-- Supabase SDK -->
@@ -8236,6 +8240,9 @@
         <span class="nav-date" id="nav-date">Loading...</span>
       </div>
       
+      <!-- Universal Switcher (Language + Country) -->
+      <div id="universal-switcher-container" style="display: flex; align-items: center; margin-right: 12px;"></div>
+      
       <!-- Quick Actions -->
       <div class="nav-quick-actions">
         <button class="nav-action-btn" data-panel="search" title="Search 730 lessons">
@@ -11427,9 +11434,26 @@
       return __stripePublishableKey;
     }
 
-    function renderCheckoutPanel() {
+    async function renderCheckoutPanel() {
       const slot = document.getElementById('panel-checkout-slot');
       if (!slot) return;
+
+      // Get current pricing
+      const pricingData = window.KellyGeoPricing?.getData() || {
+        country: 'US',
+        currency: 'USD',
+        symbol: '$',
+        prices: {
+          monthly: '$7.99',
+          annual: '$49.99',
+          family: '$99.99',
+          lifetime: '$199.99',
+        },
+        isPPP: false,
+      };
+
+      const currentCountry = window.UniversalSwitcher?.getCountry() || 'US';
+      const supportedCountries = window.UniversalSwitcher?.getSupportedCountries() || [];
 
       slot.innerHTML = `
         <div class="checkout-panel">
@@ -11438,32 +11462,64 @@
             <div class="checkout-subtitle">Contributing is learning — time, talent, or tokens. Stripe handles secure checkout.</div>
           </div>
 
+          <!-- Country Switcher -->
+          <div class="checkout-country-switcher" style="margin-bottom: 20px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px;">
+            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">💰 Change Country:</div>
+            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
+              ${supportedCountries.slice(0, 8).map(c => `
+                <button 
+                  class="country-flag-btn ${c.code === currentCountry ? 'active' : ''}" 
+                  data-country="${c.code}"
+                  onclick="UniversalSwitcher.setCountry('${c.code}').then(() => renderCheckoutPanel())"
+                  style="
+                    padding: 6px 10px;
+                    border-radius: 6px;
+                    border: 1px solid ${c.code === currentCountry ? 'var(--kelly-blue)' : 'rgba(255,255,255,0.2)'};
+                    background: ${c.code === currentCountry ? 'rgba(37,99,235,0.2)' : 'transparent'};
+                    color: white;
+                    font-size: 12px;
+                    cursor: pointer;
+                    transition: all 0.2s;
+                  "
+                  title="${c.name} (${c.currency})"
+                >
+                  ${c.flag} ${c.code}
+                </button>
+              `).join('')}
+            </div>
+            ${pricingData.isPPP ? `
+              <div style="margin-top: 8px; padding: 6px 10px; background: rgba(245,158,11,0.2); border-radius: 6px; font-size: 11px; color: var(--gold-wisdom);">
+                ✨ ${pricingData.pppDiscount || 50}% off for your region
+              </div>
+            ` : ''}
+          </div>
+
           <div class="checkout-plans" id="checkout-plans">
             <button class="checkout-plan ${__selectedPlanType === 'annual' ? 'selected' : ''}" data-plan="annual" type="button">
               <div class="row">
                 <div class="name">Annual</div>
-                <div class="price">$49.99/yr</div>
+                <div class="price" data-price-annual>${pricingData.prices.annual || '$49.99'}/yr</div>
               </div>
               <div class="note">Best value</div>
             </button>
             <button class="checkout-plan ${__selectedPlanType === 'monthly' ? 'selected' : ''}" data-plan="monthly" type="button">
               <div class="row">
                 <div class="name">Monthly</div>
-                <div class="price">$7.99/mo</div>
+                <div class="price" data-price-monthly>${pricingData.prices.monthly || '$7.99'}/mo</div>
               </div>
               <div class="note">Cancel anytime</div>
             </button>
             <button class="checkout-plan ${__selectedPlanType === 'family' ? 'selected' : ''}" data-plan="family" type="button">
               <div class="row">
                 <div class="name">Family</div>
-                <div class="price">$99.99/yr</div>
+                <div class="price" data-price-family>${pricingData.prices.family || '$99.99'}/yr</div>
               </div>
               <div class="note">Up to 6 members</div>
             </button>
             <button class="checkout-plan ${__selectedPlanType === 'lifetime' ? 'selected' : ''}" data-plan="lifetime" type="button">
               <div class="row">
                 <div class="name">Lifetime</div>
-                <div class="price">$199.99</div>
+                <div class="price" data-price-lifetime>${pricingData.prices.lifetime || '$199.99'}</div>
               </div>
               <div class="note">One-time</div>
             </button>
@@ -11738,16 +11794,26 @@
           (typeof window.getReferralCode === 'function' ? window.getReferralCode() : null) ||
           (localStorage.getItem('kelly_referrer') || null);
 
-        const resp = await fetch('/api/create-checkout', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({
-            planType: __selectedPlanType,
-            customerEmail: email,
-            userId: userId,
-            referralCode: referralCode || undefined,
-          }),
-        });
+            // Get country and currency from UniversalSwitcher or GeoPricing
+            const country = window.UniversalSwitcher?.getCountry() || 
+                           window.KellyGeoPricing?.getCountry() || 
+                           'US';
+            const currency = window.KellyGeoPricing?.getCurrency() || 
+                           (window.UniversalSwitcher?.getSupportedCountries()?.find(c => c.code === country)?.currency) ||
+                           'USD';
+            
+            const resp = await fetch('/api/create-checkout', {
+              method: 'POST',
+              headers: { 'Content-Type': 'application/json' },
+              body: JSON.stringify({
+                planType: __selectedPlanType,
+                customerEmail: email,
+                userId: userId,
+                country: country,
+                currency: currency,
+                referralCode: referralCode || undefined,
+              }),
+            });
         const json = await resp.json();
         if (!resp.ok || !json?.clientSecret) throw new Error(json?.message || json?.error || 'checkout_failed');
 
@@ -12382,6 +12448,21 @@
       if (window.LessonVisualDisplay) {
         window.LessonVisualDisplay.show(dayNumber, 'hook');
       }
+      
+      // Render universal badge showing available variants
+      if (window.UniversalBadge) {
+        const dayBadge = document.getElementById('day-badge');
+        if (dayBadge) {
+          // Remove existing badge if present
+          const existingBadge = dayBadge.querySelector('.universal-lesson-badge');
+          if (existingBadge) existingBadge.remove();
+          
+          // Render new badge
+          const badgeContainer = document.createElement('div');
+          dayBadge.appendChild(badgeContainer);
+          window.UniversalBadge.render(lesson, badgeContainer);
+        }
+      }
 
       return currentLesson;
     }
@@ -12405,11 +12486,17 @@
           const archetype = 'The Scientist';
           const ageBucket = getEffectiveAgeBucket();
           const track = state.currentTrack || 'learn'; // Learn or Grow track
+          // Get current language from UniversalSwitcher
+          const currentLanguage = window.UniversalSwitcher?.getLanguage() || 
+                                  window.KellyI18n?.getLanguage() || 
+                                  'en';
+          
           const payload = await window.KellyLessonLoader.loadLesson(dayNumber, {
             archetype,
             age: state.age,
             region: ageBucket,
-            track: track
+            track: track,
+            language: currentLanguage
           });
           if (payload?.lesson) return applyLoadedLesson(dayNumber, payload);
         } catch (e) {
