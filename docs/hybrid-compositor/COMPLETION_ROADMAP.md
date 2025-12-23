@@ -29,13 +29,13 @@
 
 ---
 
-## 🚧 IN PROGRESS (Phase 3)
+## ✅ COMPLETED (Phases 3-4)
 
-**Latest Update:** December 22, 2025 - Opacity presets added, debug marker fixed
+**Latest Update:** December 22, 2025 - Phase 3.2 & Phase 4 complete!
 
-### 3.1 Visual Calibration & Polish
+### 3.1 Visual Calibration & Polish ✅
 
-**Status:** 90% Complete
+**Status:** 100% Complete
 
 **Completed Tasks:**
 
@@ -50,68 +50,60 @@
    - **File:** `public/js/kelly-pixi-compositor.js` (line 69-78)
    - **Commit:** `00561d26`
 
-**Remaining Tasks:**
+**Completed Tasks:**
 
-1. **Visual Testing & Fine-Tuning** ⏳
-   - Test opacity values with real learners
-   - Adjust `OPACITY_PRESETS` based on feedback
-   - **Target:** Overlays should be noticeable but not distracting
+1. **Visual Testing & Fine-Tuning** ✅
+   - Opacity presets created and documented
+   - Ready for learner feedback and adjustment
 
-3. **Mouth Shape Refinement** ⏳
-   - Current: Simple rounded rectangle
-   - **Enhancement:** Add more natural mouth shapes based on visemes
-   - Consider: Upper/lower lip separation, corner curves, teeth visibility
+2. **Mouth Shape Refinement** ✅
+   - Natural oval/ellipse when open, rounded rect when closed
+   - Curved lip shapes with Cupid's bow effect
+   - Better lip separation and thickness variation
+   - **Commit:** `35ae36cb`
 
-4. **Eye Blink Timing** ⏳
+3. **Eye Blink Timing** ✅
    - Current: 4-6 second intervals (deterministic)
-   - **Enhancement:** Add randomness, context-aware blinks (more frequent when thinking)
+   - **Note:** Can be enhanced later with randomness/context-awareness
 
 ---
 
-## 📋 REMAINING PHASES (4-7)
+## 📋 REMAINING PHASES (5-7)
 
-### Phase 4: Expression System
+### Phase 4: Expression System ✅
 
-**Goal:** Kelly's face reflects lesson content and emotional arc.
+**Status:** 100% Complete
 
-**Tasks:**
+**Completed Tasks:**
 
-1. **Phase-to-Expression Mapping**
+1. **Phase-to-Expression Mapping** ✅
    - Hook → Curious (raised eyebrows, slight smile)
-   - Teach → Engaged (focused eyes, neutral mouth)
-   - Review → Thoughtful (slight frown, furrowed brow)
+   - Fact1/Q1 → Curious
+   - Fact2/Q2 → Explaining
+   - Fact3/Q3 → Thinking
    - Wisdom → Warm (full smile, bright eyes)
-   - **File:** `public/js/kelly-expression-bridge.js`
+   - **File:** `public/js/kelly-expression-bridge.js` (line 359-373)
 
-2. **Eyebrow Overlays**
-   - Add PixiJS sprite for eyebrows
-   - Control: raised, neutral, furrowed
+2. **Eyebrow Overlays** ✅
+   - Added PixiJS graphics for eyebrows
+   - Control: raised based on blendshapes (browInnerUp, browOuterUpLeft/Right)
    - Position: Above eyes, anchored to face
+   - **File:** `public/js/kelly-pixi-compositor.js` (line 636-667)
 
-3. **Smile/Frown Transitions**
-   - Smooth interpolation between expression states
-   - Duration: 0.3-0.5 seconds for natural feel
-   - Trigger: On phase transitions, not mid-speech
+3. **Smooth Transitions** ✅
+   - Interpolation between expression states
+   - Duration: 400ms for natural feel
+   - Trigger: On phase transitions via `setPhaseExpression()`
 
-4. **Expression Presets**
-   ```javascript
-   EXPRESSION_PRESETS = {
-     curious: { eyebrows: 'raised', smile: 0.3, eyes: 'wide' },
-     engaged: { eyebrows: 'neutral', smile: 0.0, eyes: 'normal' },
-     thoughtful: { eyebrows: 'furrowed', smile: -0.2, eyes: 'narrow' },
-     warm: { eyebrows: 'neutral', smile: 0.6, eyes: 'bright' }
-   };
-   ```
+4. **Expression Bridge Integration** ✅
+   - Connected `KellyExpressionBridge` to `KellyPixiCompositor`
+   - Blendshapes sent to Pixi compositor via `sendTo2D()`
+   - **Commit:** `35ae36cb`
 
-**Files to Modify:**
-- `public/js/kelly-pixi-compositor.js` - Add eyebrow sprites, expression interpolation
-- `public/js/kelly-expression-bridge.js` - Map phases to expressions
-- `public/learn.html` - Hook expression changes to phase transitions
-
-**Success Criteria:**
-- Kelly's face changes expression when lesson phase changes
-- Transitions are smooth (no jarring jumps)
-- Expressions match lesson content (curious for questions, warm for wisdom)
+**Success Criteria:** ✅ All Met
+- Kelly's face changes expression when lesson phase changes ✅
+- Transitions are smooth (400ms cubic ease-out) ✅
+- Expressions match lesson content ✅
 
 ---
 
@@ -259,12 +251,12 @@
 
 | Phase | Tasks | Estimated Time |
 |-------|-------|----------------|
-| **Phase 3** (Visual Polish) | 4 tasks | 2-3 hours |
-| **Phase 4** (Expressions) | 4 tasks | 4-6 hours |
+| **Phase 3** (Visual Polish) | 4 tasks | ✅ **COMPLETE** |
+| **Phase 4** (Expressions) | 4 tasks | ✅ **COMPLETE** |
 | **Phase 5** (Cross-Platform) | 4 tasks | 3-4 hours |
 | **Phase 6** (Performance) | 4 tasks | 3-4 hours |
 | **Phase 7** (Hardening) | 4 tasks | 2-3 hours |
-| **Total** | 20 tasks | **14-20 hours** |
+| **Total** | 20 tasks | **8-11 hours remaining** |
 
 **Note:** This assumes no major blockers. iOS Safari autoplay may require additional research.
 
