@@ -24,7 +24,7 @@
  */
 (() => {
   // ALWAYS log script load (critical for debugging)
-  console.log('[Pixi] 🎭 kelly-pixi-compositor.js LOADED, v=20251222g - ABSOLUTE MOUTH POSITION');
+  console.log('[Pixi] 🎭 kelly-pixi-compositor.js LOADED, v=20251222h - debug marker on mouth');
   
   const DEBUG =
     (typeof window !== 'undefined' && !!window.__KELLY_PIXI_DEBUG) ||
@@ -553,9 +553,10 @@
       this.mouth.y = my;
       this.mouth.rotation = this.anchor.rotation || 0;
 
+      // Debug marker shows MOUTH position (not anchor) for visual verification
       if (this._debugMarker) {
-        this._debugMarker.x = ax;
-        this._debugMarker.y = ay;
+        this._debugMarker.x = mx;  // Mouth x (horizontal center)
+        this._debugMarker.y = my;  // Mouth y (56% absolute - Kelly's actual mouth)
       }
 
       // Blink overlays: very subtle eyelid bands (should barely be visible)
