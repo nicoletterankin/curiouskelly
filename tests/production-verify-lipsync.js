@@ -21,7 +21,8 @@ console.log('');
 
 const browser = await puppeteer.launch({
   headless: false, // Show browser so we can see what's happening
-  args: ['--no-sandbox', '--disable-setuid-sandbox']
+  args: ['--no-sandbox', '--disable-setuid-sandbox'],
+  protocolTimeout: 60000 // Increase timeout
 });
 
 const page = await browser.newPage();
@@ -35,7 +36,7 @@ page.on('console', msg => {
   consoleMessages.push({ type: msg.type(), text });
   
   // Log important messages
-  if (text.includes('Audio') || text.includes('LipSync') || text.includes('blendshapes') || text.includes('mouth')) {
+  if (text.includes('Audio') || text.includes('LipSync') || text.includes('blendshapes') || text.includes('mouth') || text.includes('TTS')) {
     console.log(`[${msg.type()}] ${text}`);
   }
 });
@@ -53,118 +54,142 @@ try {
   });
 
   console.log('⏳ Waiting for page to initialize...');
-  await new Promise(r => setTimeout(r, 3000));
+  await new Promise(r => setTimeout(r, 5000));
 
   // Check if scripts loaded
   console.log('\n📦 Checking script loading...');
-  const pixiLoaded = await page.evaluate(() => {
-    return !!window.KellyPixiCompositor && window.KellyPixiCompositor.isInitialized;
+  const scriptsLoaded = await page.evaluate(() => {
+    return {
+      pixiCompositor: !!window.KellyPixiCompositor && window.KellyPixiCompositor.isInitialized,
+      lipSync: !!window.KellyLipSync && window.KellyLipSync.isInitialized,
+      audioSystem: !!window.kellyAudio,
+      pixi: !!window.PIXI
+    };
   });
-  console.log(`  ✅ Pixi Compositor: ${pixiLoaded ? 'LOADED' : 'NOT LOADED'}`);
-
-  const lipSyncLoaded = await page.evaluate(() => {
-    return !!window.KellyLipSync && window.KellyLipSync.isInitialized;
-  });
-  console.log(`  ✅ Lip-Sync: ${lipSyncLoaded ? 'LOADED' : 'NOT LOADED'}`);
-
-  const audioLoaded = await page.evaluate(() => {
-    return !!window.kellyAudio;
-  });
-  console.log(`  ✅ Audio System: ${audioLoaded ? 'LOADED' : 'NOT LOADED'}`);
+  
+  console.log(`  ${scriptsLoaded.pixiCompositor ? '✅' : '❌'} Pixi Compositor: ${scriptsLoaded.pixiCompositor ? 'LOADED' : 'NOT LOADED'}`);
+  console.log(`  ${scriptsLoaded.lipSync ? '✅' : '❌'} Lip-Sync: ${scriptsLoaded.lipSync ? 'LOADED' : 'NOT LOADED'}`);
+  console.log(`  ${scriptsLoaded.audioSystem ? '✅' : '❌'} Audio System: ${scriptsLoaded.audioSystem ? 'LOADED' : 'NOT LOADED'}`);
+  console.log(`  ${scriptsLoaded.pixi ? '✅' : '❌'} PixiJS: ${scriptsLoaded.pixi ? 'LOADED' : 'NOT LOADED'}`);
 
   // Unlock audio context (required for autoplay)
   console.log('\n🔓 Unlocking audio context...');
   await page.click('body'); // Click to unlock audio
-  await new Promise(r => setTimeout(r, 500));
+  await new Promise(r => setTimeout(r, 1000));
 
-  // Try to trigger audio playback
-  console.log('\n🎵 Triggering audio playback...');
-  const audioStarted = await page.evaluate(async () => {
-    try {
-      if (window.kellyAudio && window.playPhaseMedia) {
-        // Try to play phase media
-        await window.playPhaseMedia();
-        await new Promise(r => setTimeout(r, 1000));
-        
-        // Check if audio is playing
-        const audio = window.kellyAudio.audio;
-        return {
-          playing: !audio.paused && !audio.ended,
-          currentTime: audio.currentTime,
-          src: audio.src?.substring(0, 50) || 'none',
-          readyState: audio.readyState
-        };
-      }
-      return null;
-    } catch (e) {
-      return { error: e.message };
-    }
-  });
-
-  if (audioStarted) {
-    console.log('  📊 Audio state:', audioStarted);
-  }
-
-  // Wait for audio to play and lip-sync to analyze
-  console.log('\n⏳ Waiting for lip-sync analysis (10 seconds)...');
-  await new Promise(r => setTimeout(r, 10000));
-
-  // Check blendshapes
-  console.log('\n🎭 Checking blendshapes...');
-  const blendshapes = await page.evaluate(() => {
-    if (window.KellyLipSync) {
-      return window.KellyLipSync.currentBlendshapes || {};
-    }
-    return null;
-  });
-
-  if (blendshapes) {
-    console.log('  📊 Current blendshapes:', {
-      jawOpen: blendshapes.jawOpen?.toFixed(2) || 0,
-      mouthOpen: blendshapes.mouthOpen?.toFixed(2) || 0,
-      mouthFunnel: blendshapes.mouthFunnel?.toFixed(2) || 0
+  // Monitor for 15 seconds - check if audio starts playing naturally
+  console.log('\n⏳ Monitoring production behavior (15 seconds)...');
+  console.log('   (Waiting for natural audio playback to start...)');
+  
+  let audioDetected = false;
+  let blendshapesDetected = false;
+  let maxJawOpen = 0;
+  
+  for (let i = 0; i < 30; i++) {
+    await new Promise(r => setTimeout(r, 500));
+    
+    const state = await page.evaluate(() => {
+      const audio = document.querySelector('audio');
+      return {
+        audioPlaying: audio ? !audio.paused && !audio.ended && audio.currentTime > 0 : false,
+        audioSrc: audio?.src || '',
+        audioCurrentTime: audio?.currentTime || 0,
+        kellyAudioPlaying: window.kellyAudio?.isPlaying || false,
+        lipSyncActive: window.KellyLipSync?.isActive || false,
+        lipSyncInitialized: window.KellyLipSync?.isInitialized || false,
+        blendshapes: window.KellyLipSync?.currentBlendshapes || {},
+        compositorBlendshapes: window.KellyPixiCompositor?.lastBlendshapes || {},
+        compositorEnabled: window.KellyPixiCompositor?.isEnabled || false
+      };
     });
     
-    const jawOpenVarying = blendshapes.jawOpen > 0.1;
-    console.log(`  ${jawOpenVarying ? '✅' : '❌'} JawOpen varying: ${jawOpenVarying ? 'YES (lip-sync working!)' : 'NO (lip-sync not working)'}`);
-  } else {
-    console.log('  ❌ No blendshapes found');
+    if ((state.audioPlaying || state.kellyAudioPlaying) && !audioDetected) {
+      audioDetected = true;
+      console.log(`\n  ✅ Audio detected at ${i * 0.5}s:`);
+      console.log(`     - Audio element: ${state.audioPlaying ? 'playing' : 'not playing'}`);
+      console.log(`     - KellyAudio: ${state.kellyAudioPlaying ? 'playing' : 'not playing'}`);
+      console.log(`     - Audio src: ${state.audioSrc.substring(0, 60)}...`);
+      console.log(`     - Current time: ${state.audioCurrentTime.toFixed(2)}s`);
+    }
+    
+    if (state.blendshapes.jawOpen > 0.1 || state.compositorBlendshapes.jawOpen > 0.1) {
+      const jawOpen = state.blendshapes.jawOpen || state.compositorBlendshapes.jawOpen || 0;
+      if (jawOpen > maxJawOpen) maxJawOpen = jawOpen;
+      
+      if (!blendshapesDetected) {
+        blendshapesDetected = true;
+        console.log(`\n  ✅ Blendshapes detected at ${i * 0.5}s:`);
+        console.log(`     - jawOpen: ${jawOpen.toFixed(2)}`);
+        console.log(`     - Lip-sync active: ${state.lipSyncActive}`);
+        console.log(`     - Compositor enabled: ${state.compositorEnabled}`);
+      }
+    }
+    
+    // Show progress every 5 seconds
+    if (i % 10 === 0 && i > 0) {
+      console.log(`  ⏳ ${i * 0.5}s elapsed...`);
+    }
   }
 
-  // Check compositor state
-  console.log('\n🎨 Checking compositor state...');
-  const compositorState = await page.evaluate(() => {
-    if (window.KellyPixiCompositor) {
-      return {
-        initialized: window.KellyPixiCompositor.isInitialized,
-        enabled: window.KellyPixiCompositor.isEnabled,
-        mode: window.KellyPixiCompositor.mode,
-        hasBlendshapes: Object.keys(window.KellyPixiCompositor.lastBlendshapes || {}).length > 0,
-        lastJawOpen: window.KellyPixiCompositor.lastBlendshapes?.jawOpen || 0
-      };
-    }
-    return null;
+  // Final state check
+  console.log('\n🔍 Final state check...');
+  const finalState = await page.evaluate(() => {
+    const audio = document.querySelector('audio');
+    return {
+      audio: {
+        found: !!audio,
+        playing: audio ? !audio.paused && !audio.ended : false,
+        currentTime: audio?.currentTime || 0,
+        duration: audio?.duration || 0,
+        readyState: audio?.readyState || 0
+      },
+      kellyAudio: {
+        playing: window.kellyAudio?.isPlaying || false,
+        currentText: window.kellyAudio?.currentText || ''
+      },
+      lipSync: {
+        initialized: window.KellyLipSync?.isInitialized || false,
+        active: window.KellyLipSync?.isActive || false,
+        blendshapes: window.KellyLipSync?.currentBlendshapes || {}
+      },
+      compositor: {
+        initialized: window.KellyPixiCompositor?.isInitialized || false,
+        enabled: window.KellyPixiCompositor?.isEnabled || false,
+        mode: window.KellyPixiCompositor?.mode || 'none',
+        blendshapes: window.KellyPixiCompositor?.lastBlendshapes || {}
+      }
+    };
+  });
+  
+  console.log('\n📊 Final State:');
+  console.log('  Audio:', JSON.stringify(finalState.audio, null, 2));
+  console.log('  KellyAudio:', JSON.stringify(finalState.kellyAudio, null, 2));
+  console.log('  LipSync:', {
+    initialized: finalState.lipSync.initialized,
+    active: finalState.lipSync.active,
+    jawOpen: finalState.lipSync.blendshapes.jawOpen?.toFixed(2) || 0
+  });
+  console.log('  Compositor:', {
+    initialized: finalState.compositor.initialized,
+    enabled: finalState.compositor.enabled,
+    mode: finalState.compositor.mode,
+    jawOpen: finalState.compositor.blendshapes.jawOpen?.toFixed(2) || 0
   });
 
-  if (compositorState) {
-    console.log('  📊 Compositor state:', compositorState);
-    console.log(`  ${compositorState.hasBlendshapes ? '✅' : '❌'} Receiving blendshapes: ${compositorState.hasBlendshapes ? 'YES' : 'NO'}`);
-    console.log(`  ${compositorState.lastJawOpen > 0.1 ? '✅' : '❌'} JawOpen > 0.1: ${compositorState.lastJawOpen > 0.1 ? 'YES (mouth should be moving!)' : 'NO'}`);
-  }
-
   // Check console logs for key messages
-  console.log('\n📋 Key console messages:');
+  console.log('\n📋 Key console messages (last 30):');
   const keyMessages = consoleMessages.filter(m => 
     m.text.includes('Audio') || 
     m.text.includes('LipSync') || 
     m.text.includes('blendshapes') || 
     m.text.includes('mouth') ||
-    m.text.includes('TTS')
+    m.text.includes('TTS') ||
+    m.text.includes('Compositor')
   );
   
-  keyMessages.slice(-20).forEach(m => {
+  keyMessages.slice(-30).forEach(m => {
     const icon = m.type === 'error' ? '❌' : m.type === 'warning' ? '⚠️' : 'ℹ️';
-    console.log(`  ${icon} ${m.text.substring(0, 100)}`);
+    console.log(`  ${icon} ${m.text.substring(0, 120)}`);
   });
 
   // Final verdict
@@ -172,21 +197,21 @@ try {
   console.log('📊 PRODUCTION VERIFICATION RESULTS:');
   console.log('='.repeat(60));
   
-  const audioWorking = audioStarted?.playing || false;
-  const lipSyncWorking = blendshapes?.jawOpen > 0.1 || false;
-  const compositorReceiving = compositorState?.hasBlendshapes || false;
+  const audioWorking = audioDetected || finalState.audio.playing || finalState.kellyAudio.playing;
+  const lipSyncWorking = blendshapesDetected || maxJawOpen > 0.1;
+  const compositorReceiving = finalState.compositor.blendshapes.jawOpen > 0.1;
   
   console.log(`  ${audioWorking ? '✅' : '❌'} Audio playing: ${audioWorking ? 'YES' : 'NO'}`);
-  console.log(`  ${lipSyncWorking ? '✅' : '❌'} Lip-sync analyzing: ${lipSyncWorking ? 'YES' : 'NO'}`);
+  console.log(`  ${lipSyncWorking ? '✅' : '❌'} Lip-sync analyzing: ${lipSyncWorking ? `YES (max jawOpen: ${maxJawOpen.toFixed(2)})` : 'NO'}`);
   console.log(`  ${compositorReceiving ? '✅' : '❌'} Compositor receiving blendshapes: ${compositorReceiving ? 'YES' : 'NO'}`);
   
   if (audioWorking && lipSyncWorking && compositorReceiving) {
     console.log('\n🎉 SUCCESS: All systems working! Mouth should be moving!');
   } else {
     console.log('\n⚠️ ISSUES DETECTED:');
-    if (!audioWorking) console.log('  - Audio is not playing');
-    if (!lipSyncWorking) console.log('  - Lip-sync is not analyzing audio');
-    if (!compositorReceiving) console.log('  - Compositor is not receiving blendshapes');
+    if (!audioWorking) console.log('  - Audio is not playing (check TTS endpoint, autoplay, or audio loading)');
+    if (!lipSyncWorking) console.log('  - Lip-sync is not analyzing audio (check audio connection to analyser)');
+    if (!compositorReceiving) console.log('  - Compositor is not receiving blendshapes (check onBlendshapesUpdate callback)');
   }
   
   console.log('='.repeat(60));
@@ -194,8 +219,7 @@ try {
 } catch (error) {
   console.error('❌ Test failed:', error);
 } finally {
-  console.log('\n⏳ Keeping browser open for 5 seconds for inspection...');
-  await new Promise(r => setTimeout(r, 5000));
+  console.log('\n⏳ Keeping browser open for 10 seconds for inspection...');
+  await new Promise(r => setTimeout(r, 10000));
   await browser.close();
 }
-

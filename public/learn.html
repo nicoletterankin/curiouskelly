@@ -21684,6 +21684,26 @@ Style requirements:
       syncPlayPauseUI();
       syncAutoAdvanceUI();
       
+      // CRITICAL: Auto-start audio in hybrid mode (for production demo)
+      const HYBRID_DEMO = __URL_PARAMS.get('hybrid') === '1';
+      if (HYBRID_DEMO) {
+        // Wait for everything to initialize, then auto-play first phase
+        setTimeout(async () => {
+          try {
+            const currentPhase = state.currentPhase || 'hook';
+            const script = lessonAtoms?.[0]?.script || 'Hello, I am Kelly. Welcome to today\'s lesson.';
+            if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+              console.log('🎬 [HYBRID] Auto-starting audio playback for demo...');
+            }
+            await playPhaseMedia({ dbPhase: currentPhase, script });
+          } catch (e) {
+            if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+              console.warn('[HYBRID] Auto-start failed:', e);
+            }
+          }
+        }, 2000); // Wait 2 seconds for initialization
+      }
+      
       // Initialize track UI from saved state or URL param
       const urlParams = new URLSearchParams(window.location.search);
       const urlTrack = urlParams.get('track');
