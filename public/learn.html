@@ -13079,27 +13079,47 @@
         const USE_TEST_AUDIO = __URL_PARAMS.get('testAudio') === '1' || __URL_PARAMS.get('talkingPhoto') === '1';
         if (USE_TEST_AUDIO) {
           try {
-            // Use the ground-truth HeyGen video audio as test audio
-            const testAudioUrl = '/kelly/videos/001/welcome.mp4';
+            // CRITICAL: Use a blob URL from TTS or create a test audio
+            // Video files may not have CORS headers, so we'll try TTS first, then fallback
             if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
-              console.log('🔊 Using test audio fallback:', testAudioUrl);
+              console.log('🔊 Test audio mode: attempting TTS first...');
             }
             
-            // Create audio element from video file
-            const testAudio = new Audio(testAudioUrl);
-            testAudio.preload = 'auto';
+            // Try TTS first (even if it failed before, retry with simple text)
+            const simpleText = 'Hello, I am Kelly. Welcome to today\'s lesson.';
+            const ttsUrl = await generateTTS(simpleText);
             
-            // Wait for audio to be ready
-            await new Promise((resolve, reject) => {
-              testAudio.oncanplaythrough = resolve;
-              testAudio.onerror = reject;
-              testAudio.load();
-              setTimeout(resolve, 1000); // Timeout after 1s
-            });
+            if (ttsUrl) {
+              // TTS succeeded - use it (has CORS)
+              if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+                console.log('🔊 Using TTS audio for test:', ttsUrl.substring(0, 50));
+              }
+              if (await this.play(ttsUrl)) {
+                return true;
+              }
+            }
             
-            // Play test audio
+            // Fallback: Use video file (may not work due to CORS, but worth trying)
+            const testAudioUrl = '/kelly/videos/001/welcome.mp4';
+            if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+              console.log('🔊 TTS failed, using video audio fallback:', testAudioUrl);
+              console.warn('⚠️ Video may not have CORS headers - lip-sync may not work');
+            }
+            
+            // Set CORS BEFORE setting src
+            this.audio.crossOrigin = 'anonymous';
             this.audio.src = testAudioUrl;
             this.audio.playbackRate = state.voiceSpeed === 'slow' ? 0.8 : state.voiceSpeed === 'fast' ? 1.2 : 1.0;
+            
+            // Wait for audio to load
+            await new Promise((resolve) => {
+              if (this.audio.readyState >= 2) {
+                resolve();
+              } else {
+                this.audio.addEventListener('canplay', resolve, { once: true });
+                setTimeout(resolve, 2000); // Timeout after 2s
+              }
+            });
             
             if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
               console.log('🔊 Playing test audio...');
@@ -13114,7 +13134,7 @@
             return true;
           } catch (e) {
             if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
-              console.warn('🔊 Test audio fallback failed:', e);
+              console.error('🔊 Test audio fallback failed:', e);
             }
           }
         }
