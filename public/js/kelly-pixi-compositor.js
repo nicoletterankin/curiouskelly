@@ -24,7 +24,11 @@
  */
 (() => {
   // ALWAYS log script load (critical for debugging)
-  console.log('[Pixi] 🎭 kelly-pixi-compositor.js LOADED, v=20251222m - production hardened');
+  console.log('[Pixi] 🎭 kelly-pixi-compositor.js LOADED, v=20251222n - enhanced debugging');
+  console.log('[Pixi] 🔍 PIXI available:', typeof window.PIXI !== 'undefined');
+  console.log('[Pixi] 🔍 PIXI version:', typeof window.PIXI !== 'undefined' ? window.PIXI.VERSION : 'N/A');
+  console.log('[Pixi] 📍 Script location:', typeof location !== 'undefined' ? location.href : 'unknown');
+  console.log('[Pixi] 📍 Timestamp:', new Date().toISOString());
   
   const DEBUG =
     (typeof window !== 'undefined' && !!window.__KELLY_PIXI_DEBUG) ||
@@ -227,7 +231,25 @@
 
         this.isInitialized = true;
         console.log('[Pixi] ✅ Compositor READY - Kelly\'s mouth can now move!');
-        try { window.__KELLY_PIXI_READY = true; } catch (_) {}
+        console.log('[Pixi] 📊 State:', {
+          initialized: this.isInitialized,
+          enabled: this.isEnabled,
+          mode: this.mode,
+          hasApp: !!this.app,
+          hasCanvas: !!this.app?.canvas,
+          canvasWidth: this.app?.canvas?.width,
+          canvasHeight: this.app?.canvas?.height
+        });
+        try { 
+          window.__KELLY_PIXI_READY = true;
+          window.__KELLY_PIXI_STATE = {
+            initialized: this.isInitialized,
+            enabled: this.isEnabled,
+            mode: this.mode,
+            hasApp: !!this.app,
+            hasCanvas: !!this.app?.canvas
+          };
+        } catch (_) {}
         return this;
       }).catch((err) => {
         console.error('[Pixi] Compositor init FAILED:', err);
@@ -412,7 +434,18 @@
 
     setBlendshapes(blendshapes) {
       try {
+        const prevCount = Object.keys(this.lastBlendshapes || {}).length;
         this.lastBlendshapes = blendshapes || {};
+        const newCount = Object.keys(this.lastBlendshapes).length;
+        
+        if (DEBUG || newCount > 0) {
+          console.log('[Pixi] setBlendshapes:', {
+            prevCount,
+            newCount,
+            keys: Object.keys(this.lastBlendshapes).slice(0, 5),
+            sample: Object.fromEntries(Object.entries(this.lastBlendshapes).slice(0, 3))
+          });
+        }
       } catch (e) {
         console.warn('[Pixi] setBlendshapes error:', e);
         this.lastBlendshapes = {};
@@ -497,7 +530,14 @@
     },
 
     _tick(delta) {
-      if (!this.isEnabled || !this.app) return;
+      if (!this.isEnabled) {
+        if (DEBUG) console.log('[Pixi] _tick skipped: not enabled');
+        return;
+      }
+      if (!this.app) {
+        if (DEBUG) console.warn('[Pixi] _tick skipped: no app');
+        return;
+      }
       
       // Performance: Skip rendering if blendshapes haven't changed significantly
       // This reduces unnecessary redraws when audio is silent
