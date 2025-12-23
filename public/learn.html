@@ -13061,6 +13061,19 @@
         setKellySpeaking(true);
         syncPlayPauseUI();
         
+        // CRITICAL: Log audio element state for debugging
+        if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+          console.log('🔊 [Audio] onSpeakStart() called');
+          console.log('🔊 [Audio] Audio element:', {
+            exists: !!this.audio,
+            src: this.audio?.src || 'none',
+            paused: this.audio?.paused,
+            ended: this.audio?.ended,
+            currentTime: this.audio?.currentTime,
+            duration: this.audio?.duration
+          });
+        }
+        
         // ═══════════════════════════════════════════════════════════════════
         // INITIALIZE COMPOSITOR: Ensure PixiJS overlay layer is ready
         // This enables real-time mouth/eye animations on Kelly's face
@@ -13110,13 +13123,26 @@
                     if (DEBUG) console.warn('[Compositor] setBlendshapes error:', e);
                   }
                 };
-                if (DEBUG) console.log('👄 Lip-sync → Compositor pipeline connected');
+                if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+                  console.log('👄 Lip-sync → Compositor pipeline connected');
+                }
               }
               
-              if (DEBUG) console.log('👄 Lip-sync connected to audio');
-            }).catch(() => {});
+              if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+                console.log('👄 Lip-sync connected to audio element');
+              }
+            }).catch((err) => {
+              if (DEBUG) console.warn('Lip-sync resume failed:', err);
+            });
           } catch (e) {
             if (DEBUG) console.warn('Lip-sync init failed:', e);
+          }
+        } else {
+          if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+            console.warn('👄 Lip-sync NOT connected:', {
+              lipSyncAvailable: !!window.KellyLipSync,
+              audioElementExists: !!this.audio
+            });
           }
         }
         

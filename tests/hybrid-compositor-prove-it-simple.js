@@ -103,21 +103,31 @@ async function proveIt() {
       
       const state = await page.evaluate(() => {
         const audio = document.querySelector('audio');
+        const kellyAudio = window.kellyAudio;
         return {
-          audioPlaying: audio ? !audio.paused : false,
+          audioElementFound: !!audio,
+          audioPlaying: audio ? !audio.paused && !audio.ended : false,
           audioSrc: audio?.src || '',
+          audioCurrentTime: audio?.currentTime || 0,
+          audioDuration: audio?.duration || 0,
+          kellyAudioPlaying: kellyAudio?.isPlaying || false,
+          kellyAudioCurrentText: kellyAudio?.currentText || '',
           compositorInitialized: window.KellyPixiCompositor?.isInitialized || false,
           compositorEnabled: window.KellyPixiCompositor?.isEnabled || false,
           hasBlendshapes: Object.keys(window.KellyPixiCompositor?.lastBlendshapes || {}).length > 0,
           blendshapeCount: Object.keys(window.KellyPixiCompositor?.lastBlendshapes || {}).length,
           lipSyncActive: window.KellyLipSync?.isActive || false,
+          lipSyncInitialized: window.KellyLipSync?.isInitialized || false,
           hasCanvas: !!window.KellyPixiCompositor?.app?.canvas
         };
       });
       
-      if (state.audioPlaying && !audioStarted) {
+      if ((state.audioPlaying || state.kellyAudioPlaying) && !audioStarted) {
         audioStarted = true;
-        console.log(`  ✅ Audio started (${state.audioSrc.substring(0, 50)}...)`);
+        const audioInfo = state.audioSrc ? state.audioSrc.substring(0, 50) : (state.kellyAudioCurrentText ? 'TTS audio' : 'unknown');
+        console.log(`  ✅ Audio started (${audioInfo}...)`);
+        console.log(`     Audio element: ${state.audioElementFound ? 'found' : 'not found'}, playing: ${state.audioPlaying}`);
+        console.log(`     KellyAudio: playing: ${state.kellyAudioPlaying}, text: ${state.kellyAudioCurrentText.substring(0, 50)}`);
         evidence.timing.audioStart = Date.now() - startTime;
       }
       
