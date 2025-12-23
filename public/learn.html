@@ -107,6 +107,36 @@
   <script src="/js/kelly-alignment-player.js"></script>
   <script src="/js/kelly-visual-system.js"></script>
   <script>
+    // FALLBACK: Auto-initialize compositor if talkingPhoto mode is active
+    // This ensures compositor initializes even if playPhaseMedia() doesn't run
+    (function() {
+      const urlParams = new URLSearchParams(window.location.search);
+      const talkingPhoto = urlParams.get('talkingPhoto') === '1';
+      
+      if (talkingPhoto) {
+        const initCompositor = () => {
+          const container = document.getElementById('kelly-stage');
+          if (container && window.KellyPixiCompositor && !window.KellyPixiCompositor.isInitialized) {
+            console.log('[FALLBACK] Auto-initializing compositor for talkingPhoto mode');
+            window.KellyPixiCompositor.init({ containerEl: container }).then(() => {
+              console.log('[FALLBACK] Compositor initialized:', window.KellyPixiCompositor.isInitialized);
+            }).catch(err => {
+              console.error('[FALLBACK] Compositor init failed:', err);
+            });
+          }
+        };
+        
+        // Try immediately, then on DOM ready, then after a delay
+        if (document.readyState === 'complete' || document.readyState === 'interactive') {
+          setTimeout(initCompositor, 100);
+        } else {
+          document.addEventListener('DOMContentLoaded', () => setTimeout(initCompositor, 100));
+        }
+        setTimeout(initCompositor, 2000); // Fallback delay
+      }
+    })();
+  </script>
+  <script>
     // Compatibility shim: some deployments exposed `getLesson()` but not `loadLesson()`.
     // The curriculum view (and other flows) call `window.KellyLessonLoader.loadLesson(...)`.
     (function () {
