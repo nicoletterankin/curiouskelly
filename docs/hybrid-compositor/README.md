@@ -6,7 +6,8 @@ This folder contains documentation for the **Kelly Hybrid Compositor** - a brows
 
 | File | Purpose |
 |------|---------|
-| [HYBRID_COMPOSITOR_DIRECTIVE.md](./HYBRID_COMPOSITOR_DIRECTIVE.md) | Main directive, architecture, testing, and next steps |
+| [HYBRID_COMPOSITOR_DIRECTIVE.md](./HYBRID_COMPOSITOR_DIRECTIVE.md) | Main directive, architecture, testing, and current status |
+| [COMPLETION_ROADMAP.md](./COMPLETION_ROADMAP.md) | **End-to-end completion plan** - phases 3-7, timeline, success criteria |
 
 ## Quick Start
 

@@ -143,11 +143,15 @@ const DEFAULT_ANCHOR = {
 
 ## 📋 NEXT DIRECTIVE (FOR AI)
 
+**👉 See [COMPLETION_ROADMAP.md](./COMPLETION_ROADMAP.md) for full end-to-end completion plan.**
+
 ### ✅ Phase 2: PIXI INITIALIZATION - COMPLETE
 
 PixiJS v8 async init is now working. Canvas renders, debug dot visible, blendshapes connected.
 
-### Phase 3: TALKING PHOTO MODE (IN PROGRESS)
+### ✅ Phase 3: TALKING PHOTO MODE - COMPLETE
+
+Talking Photo mode operational. Mouth position calibrated (56% absolute). Debug marker fixed.
 
 **Status:** Code deployed, awaiting CDN cache propagation.
 
@@ -272,5 +276,8 @@ When Apple Education reviews Curious Kelly, they see:
 | 2025-12-22 | **TALKING PHOTO mode added**: `?talkingPhoto=1` uses static head image | AI Assistant |
 | 2025-12-22 | Added `attachImage(archetype)` for static Kelly heads | AI Assistant |
 | 2025-12-22 | Added ANCHOR_PRESETS for head_image vs video calibration | AI Assistant |
+| 2025-12-22 | **Mouth position fixed**: ABSOLUTE positioning at 56% from top | AI Assistant |
+| 2025-12-22 | **Debug marker fixed**: Now shows mouth position, not anchor | AI Assistant |
+| 2025-12-22 | **Completion roadmap created**: See COMPLETION_ROADMAP.md | AI Assistant |
 
 
