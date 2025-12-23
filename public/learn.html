@@ -13214,10 +13214,16 @@
               window.KellyLipSync.init();
             }
             
-            // CRITICAL: Connect lip-sync BEFORE resuming (ensures audio analysis starts)
-            window.KellyLipSync.startFromAudioElement(this.audio);
+            // Enable debug mode if pixiDebug is on
+            if (__URL_PARAMS.get('pixiDebug') === '1') {
+              window.KellyLipSync.updateConfig({ debug: true });
+            }
             
+            // CRITICAL: Resume audio context FIRST (required for Web Audio API)
             window.KellyLipSync.resume().then(() => {
+              // CRITICAL: Connect lip-sync to audio element (creates analyser connection)
+              window.KellyLipSync.startFromAudioElement(this.audio);
+              
               // Connect blendshapes to compositor (CRITICAL: This makes mouth move)
               if (window.KellyPixiCompositor) {
                 window.KellyLipSync.onBlendshapesUpdate = (blendshapes) => {
@@ -13226,7 +13232,7 @@
                     if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
                       // Log jawOpen to verify lip-sync is working
                       if (blendshapes.jawOpen > 0.1) {
-                        console.log(`👄 Lip-sync ACTIVE: jawOpen=${blendshapes.jawOpen.toFixed(2)}`);
+                        console.log(`👄 Lip-sync ACTIVE: jawOpen=${blendshapes.jawOpen.toFixed(2)}, mouthOpen=${blendshapes.mouthOpen?.toFixed(2) || 0}`);
                       }
                     }
                   } catch (e) {
@@ -13242,10 +13248,17 @@
               
               if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
                 console.log('👄 Lip-sync connected and resumed - analyzing audio');
+                console.log('👄 Audio element state:', {
+                  paused: this.audio.paused,
+                  ended: this.audio.ended,
+                  currentTime: this.audio.currentTime,
+                  duration: this.audio.duration,
+                  readyState: this.audio.readyState
+                });
               }
             }).catch((err) => {
               if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
-                console.warn('Lip-sync resume failed:', err);
+                console.error('Lip-sync resume failed:', err);
               }
             });
           } catch (e) {

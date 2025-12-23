@@ -308,11 +308,20 @@ const KellyLipSync = {
     
     // Create media element source (only once per element)
     if (!audioElement._lipSyncConnected) {
-      const source = this.audioContext.createMediaElementSource(audioElement);
-      source.connect(this.analyser);
-      audioElement._lipSyncConnected = true;
-      audioElement._lipSyncSource = source;
+      try {
+        const source = this.audioContext.createMediaElementSource(audioElement);
+        source.connect(this.analyser);
+        audioElement._lipSyncConnected = true;
+        audioElement._lipSyncSource = source;
+        console.log('[KellyLipSync] Created media element source and connected to analyser');
+      } catch (e) {
+        console.error('[KellyLipSync] Failed to create media element source:', e);
+        // CORS or other issue - try to continue anyway
+      }
     }
+    
+    // CRITICAL: Check if audio is already playing and start analysis immediately
+    const isCurrentlyPlaying = !audioElement.paused && !audioElement.ended && audioElement.currentTime > 0;
     
     // Event handlers
     const handlePlay = () => {
@@ -320,6 +329,7 @@ const KellyLipSync = {
       if (!this.animationFrameId) {
         this.lastUpdateTime = performance.now();
         this.processFrame();
+        console.log('[KellyLipSync] Audio play event - started processFrame loop');
       }
     };
     
@@ -335,6 +345,14 @@ const KellyLipSync = {
       }, 500);
     };
     
+    // Remove old handlers if they exist
+    if (audioElement._lipSyncHandlers) {
+      const { handlePlay: oldPlay, handlePause: oldPause, handleEnded: oldEnded } = audioElement._lipSyncHandlers;
+      audioElement.removeEventListener('play', oldPlay);
+      audioElement.removeEventListener('pause', oldPause);
+      audioElement.removeEventListener('ended', oldEnded);
+    }
+    
     audioElement.addEventListener('play', handlePlay);
     audioElement.addEventListener('pause', handlePause);
     audioElement.addEventListener('ended', handleEnded);
@@ -342,7 +360,22 @@ const KellyLipSync = {
     // Store for cleanup
     audioElement._lipSyncHandlers = { handlePlay, handlePause, handleEnded };
     
-    console.log('[KellyLipSync] Connected to audio element');
+    // CRITICAL: If audio is already playing, start analysis immediately
+    if (isCurrentlyPlaying) {
+      this.isActive = true;
+      if (!this.animationFrameId) {
+        this.lastUpdateTime = performance.now();
+        this.processFrame();
+        console.log('[KellyLipSync] Audio already playing - started processFrame loop immediately');
+      }
+    }
+    
+    console.log('[KellyLipSync] Connected to audio element', {
+      isPlaying: isCurrentlyPlaying,
+      currentTime: audioElement.currentTime,
+      duration: audioElement.duration,
+      src: audioElement.src.substring(0, 50)
+    });
     return this;
   },
   
@@ -416,12 +449,36 @@ const KellyLipSync = {
    * @private
    */
   analyzeAudio() {
+    // CRITICAL: Verify analyser is connected and receiving data
+    if (!this.analyser || !this.timeDomainData || !this.frequencyData) {
+      if (LIPSYNC_CONFIG.debug) {
+        console.warn('[KellyLipSync] Analyser not ready:', {
+          hasAnalyser: !!this.analyser,
+          hasTimeData: !!this.timeDomainData,
+          hasFreqData: !!this.frequencyData
+        });
+      }
+      return this.restingFace;
+    }
+    
     // Calculate RMS amplitude
     let sum = 0;
+    let maxSample = 0;
     for (let i = 0; i < this.timeDomainData.length; i++) {
-      sum += this.timeDomainData[i] * this.timeDomainData[i];
+      const sample = Math.abs(this.timeDomainData[i]);
+      sum += sample * sample;
+      maxSample = Math.max(maxSample, sample);
     }
     const rms = Math.sqrt(sum / this.timeDomainData.length);
+    
+    // Debug: Log audio analysis if enabled
+    if (LIPSYNC_CONFIG.debug && rms > 0.01) {
+      console.log('[KellyLipSync] Audio analysis:', {
+        rms: rms.toFixed(4),
+        maxSample: maxSample.toFixed(4),
+        isActive: this.isActive
+      });
+    }
     
     // Track energy history
     this.energyHistory.push(rms);
