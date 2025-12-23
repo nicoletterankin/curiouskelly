@@ -227,16 +227,18 @@
         } catch (_) {}
 
         this.isInitialized = true;
-        console.log('[Pixi] ✅ Compositor READY - Kelly\'s mouth can now move!');
-        console.log('[Pixi] 📊 State:', {
-          initialized: this.isInitialized,
-          enabled: this.isEnabled,
-          mode: this.mode,
-          hasApp: !!this.app,
-          hasCanvas: !!this.app?.canvas,
-          canvasWidth: this.app?.canvas?.width,
-          canvasHeight: this.app?.canvas?.height
-        });
+        if (DEBUG) {
+          console.log('[Pixi] ✅ Compositor READY - Kelly\'s mouth can now move!');
+          console.log('[Pixi] 📊 State:', {
+            initialized: this.isInitialized,
+            enabled: this.isEnabled,
+            mode: this.mode,
+            hasApp: !!this.app,
+            hasCanvas: !!this.app?.canvas,
+            canvasWidth: this.app?.canvas?.width,
+            canvasHeight: this.app?.canvas?.height
+          });
+        }
         try { 
           window.__KELLY_PIXI_READY = true;
           window.__KELLY_PIXI_STATE = {
