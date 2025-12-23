@@ -31,20 +31,30 @@
 
 ## 🚧 IN PROGRESS (Phase 3)
 
+**Latest Update:** December 22, 2025 - Opacity presets added, debug marker fixed
+
 ### 3.1 Visual Calibration & Polish
 
-**Status:** 80% Complete
+**Status:** 90% Complete
+
+**Completed Tasks:**
+
+1. **Debug Marker Conditional** ✅
+   - Debug marker only shows when `?pixiDebug=1` (already implemented)
+   - Marker positioned at mouth location (56% from top) for visual verification
+   - **File:** `public/js/kelly-pixi-compositor.js` (line 442-452, 556-559)
+
+2. **Opacity Presets Created** ✅
+   - Created `OPACITY_PRESETS` object for easy tuning
+   - Current values: mouth 35%, teeth 12%, lips 8-14%, blink 5-30%
+   - **File:** `public/js/kelly-pixi-compositor.js` (line 69-78)
+   - **Commit:** `00561d26`
 
 **Remaining Tasks:**
 
-1. **Remove Debug Marker for Production** ⏳
-   - Add `?pixiDebug=0` or remove debug mode entirely
-   - Keep debug mode available for future calibration
-   - **File:** `public/js/kelly-pixi-compositor.js` (line 556-559)
-
-2. **Fine-Tune Overlay Opacity** ⏳
-   - Current: 5-35% opacity (may be too subtle or too visible)
-   - Test with real learners, adjust based on feedback
+1. **Visual Testing & Fine-Tuning** ⏳
+   - Test opacity values with real learners
+   - Adjust `OPACITY_PRESETS` based on feedback
    - **Target:** Overlays should be noticeable but not distracting
 
 3. **Mouth Shape Refinement** ⏳
