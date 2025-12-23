@@ -13046,14 +13046,62 @@
       }
       
       async play(audioUrl) {
-        if (!audioUrl) return false;
+        if (!audioUrl) {
+          if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+            console.warn('🔊 play() called with no audioUrl');
+          }
+          return false;
+        }
         try {
+          // CRITICAL: Set CORS BEFORE setting src (required for Web Audio API)
+          this.audio.crossOrigin = 'anonymous';
           this.audio.src = audioUrl;
           this.audio.playbackRate = state.voiceSpeed === 'slow' ? 0.8 :
                                    state.voiceSpeed === 'fast' ? 1.2 : 1.0;
+          
+          // Wait for audio to load (required for blob URLs)
+          if (this.audio.readyState < 2) {
+            await new Promise((resolve, reject) => {
+              const timeout = setTimeout(() => {
+                reject(new Error('Audio load timeout'));
+              }, 5000);
+              
+              this.audio.addEventListener('canplay', () => {
+                clearTimeout(timeout);
+                resolve();
+              }, { once: true });
+              
+              this.audio.addEventListener('error', (e) => {
+                clearTimeout(timeout);
+                reject(new Error(`Audio load error: ${e.message || 'unknown'}`));
+              }, { once: true });
+            });
+          }
+          
           await this.audio.play();
+          
+          if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+            console.log('🔊 ✅ Audio.play() succeeded:', {
+              src: audioUrl.substring(0, 50),
+              readyState: this.audio.readyState,
+              paused: this.audio.paused,
+              currentTime: this.audio.currentTime
+            });
+          }
+          
           return true;
         } catch (e) {
+          if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+            console.error('🔊 ❌ Audio playback failed:', e);
+            console.error('🔊 Error details:', {
+              message: e.message,
+              name: e.name,
+              audioSrc: this.audio.src?.substring(0, 50),
+              audioReadyState: this.audio.readyState,
+              audioPaused: this.audio.paused,
+              audioError: this.audio.error
+            });
+          }
           debugWarn('Audio playback failed:', e);
           return false;
         }
