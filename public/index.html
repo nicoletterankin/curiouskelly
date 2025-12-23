@@ -206,6 +206,15 @@
             border-radius: 12px;
         }
         
+        .hero-track-primary {
+            background: rgba(37, 99, 235, 0.15);
+            border-color: rgba(37, 99, 235, 0.3);
+        }
+        
+        .hero-track-bonus {
+            opacity: 0.8;
+        }
+        
         .hero-track-badge .track-icon {
             font-size: 1.5em;
             display: inline-flex;
@@ -415,18 +424,18 @@
         .day-dot {
             aspect-ratio: 1;
             border-radius: 4px;
-            background: var(--bg-elevated);
+            background: rgba(37, 99, 235, 0.2);
             transition: all 0.15s;
             cursor: pointer;
             position: relative;
-            border: 1px solid transparent;
+            border: 1px solid rgba(37, 99, 235, 0.3);
             display: flex;
             flex-direction: column;
             align-items: center;
             justify-content: center;
             padding: 2px;
             font-size: 9px;
-            color: var(--text-muted);
+            color: var(--text);
             font-weight: 500;
         }
 
@@ -440,53 +449,29 @@
         .day-dot .day-number {
             font-size: 9px;
             line-height: 1;
-            margin-bottom: 2px;
-        }
-
-        .day-dot .track-badges {
-            display: flex;
-            gap: 2px;
-            align-items: center;
-            justify-content: center;
-        }
-
-        .day-dot .track-badge {
-            width: 8px;
-            height: 8px;
-            border-radius: 50%;
-            display: block;
-        }
-
-        .day-dot .track-badge.learn {
-            background: linear-gradient(135deg, #fbbf24, #f59e0b);
-        }
-
-        .day-dot .track-badge.grow {
-            background: linear-gradient(135deg, #a855f7, #8b5cf6);
         }
 
         .day-dot.completed {
-            background: var(--accent);
+            background: rgba(37, 99, 235, 0.4);
+            border-color: rgba(37, 99, 235, 0.6);
             color: #fff;
         }
 
         .day-dot.today {
-            background: #22c55e;
+            background: rgba(37, 99, 235, 0.6);
             color: #fff;
-            border-color: #16a34a;
+            border-color: rgba(37, 99, 235, 0.8);
             font-weight: 600;
+            box-shadow: 0 0 8px rgba(37, 99, 235, 0.4);
         }
 
         .day-dot.today .day-number {
             color: #fff;
         }
 
-        .day-dot.today {
-            box-shadow: 0 0 8px rgba(34, 197, 94, 0.4);
-        }
-
         .day-dot.future {
-            background: var(--border);
+            background: rgba(37, 99, 235, 0.1);
+            border-color: rgba(37, 99, 235, 0.2);
         }
         
         /* Completeness color coding */
@@ -1191,18 +1176,18 @@
 
     <!-- Hero -->
     <section class="hero">
-        <h1>Two tracks. Every day.<br>365 days a year.</h1>
-        <p>A daily learning habit for the whole family. Learn something new about the world, then grow your ability to learn better with AI.</p>
+        <h1>One lesson a day.<br>365 days a year.</h1>
+        <p>A daily learning habit for the whole family. Learn something new about the world every day. When you want to dive deeper, continue with our AI fluency track.</p>
         <div class="hero-tracks">
-            <div class="hero-track-badge">
+            <div class="hero-track-badge hero-track-primary">
                 <span class="track-icon"><img src="/images/brand/icon-learn-track.svg" alt="Learn" style="width: 1.2em; height: 1.2em; vertical-align: middle;" /></span>
-                <span class="track-name">Learn</span>
-                <span class="track-desc">365 lessons</span>
+                <span class="track-name">Today's Lesson</span>
+                <span class="track-desc">365 daily topics</span>
             </div>
-            <div class="hero-track-badge">
+            <div class="hero-track-badge hero-track-bonus">
                 <span class="track-icon"><img src="/images/brand/icon-grow-track.svg" alt="Grow" style="width: 1.2em; height: 1.2em; vertical-align: middle;" /></span>
-                <span class="track-name">Grow</span>
-                <span class="track-desc">AI Fluency</span>
+                <span class="track-name">Continue Learning</span>
+                <span class="track-desc">AI fluency bonus</span>
             </div>
         </div>
         <div class="hero-cta">
@@ -1539,21 +1524,8 @@
                             const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
                             dot.title = metadata.topic ? `${metadata.topic} • ${dateStr}` : dateStr;
                             
-                            // Update track badges
-                            const hasLearn = metadata.hasLearn;
-                            const hasGrow = metadata.hasGrow;
-                            let innerHTML = `<span class="day-number">${dayOfMonth}</span>`;
-                            if (hasLearn || hasGrow) {
-                                innerHTML += '<div class="track-badges">';
-                                if (hasLearn) {
-                                    innerHTML += '<span class="track-badge learn" title="Learn Track"></span>';
-                                }
-                                if (hasGrow) {
-                                    innerHTML += '<span class="track-badge grow" title="Grow Track"></span>';
-                                }
-                                innerHTML += '</div>';
-                            }
-                            dot.innerHTML = innerHTML;
+                            // Simple day number display (no track badges - clean design)
+                            dot.innerHTML = `<span class="day-number">${dayOfMonth}</span>`;
                         }).catch(() => {
                             // Fallback to static data
                             const lesson = lessonsData[dayCounter];
@@ -1611,8 +1583,7 @@
                     dot.dataset.completeness = completeness;
                     dot.dataset.completenessStatus = completenessStatus;
                     
-                    // Track badges will be set by unified service callback above
-                    // Temporary display until metadata loads
+                    // Simple day number display (clean design)
                     dot.innerHTML = `<span class="day-number">${dayOfMonth}</span>`;
                     
                     if (dayCounter < currentDayOfYear) {
