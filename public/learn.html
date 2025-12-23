@@ -13025,35 +13025,95 @@
       async speak(phaseDbName, fallbackText) {
         // Priority chain:
         // 1) Pre-generated audio from `kelly_video_assets`
-        // 2) Real-time TTS via /api/tts
-        // 3) Text-only (no audio)
-        if (DEBUG) console.log(`🔊 KellyAudio.speak() called for phase "${phaseDbName}", text length: ${fallbackText?.length || 0}`);
+        // 2) Real-time TTS via configured endpoint
+        // 3) Test audio fallback (for demo/proof)
+        // 4) Text-only (no audio)
+        if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+          console.log(`🔊 KellyAudio.speak() called for phase "${phaseDbName}", text length: ${fallbackText?.length || 0}`);
+        }
         
         try {
           const ageBucket = getEffectiveAgeBucket();
           const pregen = await getAudioUrl(state.currentDay, phaseDbName, state.kellyId, ageBucket, state.language);
-          if (DEBUG) console.log(`🔊 Pre-generated audio lookup: ${pregen ? pregen : 'none found'}`);
+          if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+            console.log(`🔊 Pre-generated audio lookup: ${pregen ? pregen : 'none found'}`);
+          }
           if (pregen && await this.play(pregen)) {
-            if (DEBUG) console.log('🔊 ✅ Playing pre-generated audio');
+            if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+              console.log('🔊 ✅ Playing pre-generated audio');
+            }
             return true;
           }
         } catch (e) {
           debugWarn('Pre-generated audio lookup failed:', e);
         }
 
-        if (DEBUG) console.log(`🔊 TTS enabled: ${ENABLE_RUNTIME_TTS}, static-only mode: ${STATIC_ONLY_MODE}`);
+        if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+          console.log(`🔊 TTS enabled: ${ENABLE_RUNTIME_TTS}, static-only mode: ${STATIC_ONLY_MODE}`);
+        }
         try {
           const ttsUrl = await generateTTS(fallbackText);
-          if (DEBUG) console.log(`🔊 TTS result: ${ttsUrl ? 'generated blob URL' : 'null (TTS disabled or failed)'}`);
+          if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+            console.log(`🔊 TTS result: ${ttsUrl ? 'generated blob URL' : 'null (TTS disabled or failed)'}`);
+          }
           if (ttsUrl && await this.play(ttsUrl)) {
-            if (DEBUG) console.log('🔊 ✅ Playing TTS audio');
+            if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+              console.log('🔊 ✅ Playing TTS audio');
+            }
             return true;
           }
         } catch (e) {
           debugWarn('TTS fallback failed:', e);
         }
 
-        if (DEBUG) console.log('🔊 ❌ No audio available - Kelly will be silent');
+        // TEST AUDIO FALLBACK: Use a known-good audio file to prove the system works
+        // This ensures lip-sync can be tested even if TTS fails
+        const USE_TEST_AUDIO = __URL_PARAMS.get('testAudio') === '1' || __URL_PARAMS.get('talkingPhoto') === '1';
+        if (USE_TEST_AUDIO) {
+          try {
+            // Use the ground-truth HeyGen video audio as test audio
+            const testAudioUrl = '/kelly/videos/001/welcome.mp4';
+            if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+              console.log('🔊 Using test audio fallback:', testAudioUrl);
+            }
+            
+            // Create audio element from video file
+            const testAudio = new Audio(testAudioUrl);
+            testAudio.preload = 'auto';
+            
+            // Wait for audio to be ready
+            await new Promise((resolve, reject) => {
+              testAudio.oncanplaythrough = resolve;
+              testAudio.onerror = reject;
+              testAudio.load();
+              setTimeout(resolve, 1000); // Timeout after 1s
+            });
+            
+            // Play test audio
+            this.audio.src = testAudioUrl;
+            this.audio.playbackRate = state.voiceSpeed === 'slow' ? 0.8 : state.voiceSpeed === 'fast' ? 1.2 : 1.0;
+            
+            if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+              console.log('🔊 Playing test audio...');
+            }
+            
+            await this.audio.play();
+            
+            if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+              console.log('🔊 ✅ Test audio playing - lip-sync should activate');
+            }
+            
+            return true;
+          } catch (e) {
+            if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+              console.warn('🔊 Test audio fallback failed:', e);
+            }
+          }
+        }
+
+        if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+          console.log('🔊 ❌ No audio available - Kelly will be silent');
+        }
         return false;
       }
       
