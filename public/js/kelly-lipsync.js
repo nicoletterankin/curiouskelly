@@ -447,9 +447,18 @@ const KellyLipSync = {
             this.sendTo2D();
           }
           
-          // Callback
+          // Callback (CRITICAL: This sends blendshapes to compositor)
           if (this.onBlendshapesUpdate) {
             this.onBlendshapesUpdate(this.currentBlendshapes);
+            // Debug: Log when jawOpen is actually varying (proves lip-sync is working)
+            if (LIPSYNC_CONFIG.debug && this.currentBlendshapes.jawOpen > 0.1) {
+              console.log(`[KellyLipSync] ✅ Sent blendshapes to compositor: jawOpen=${this.currentBlendshapes.jawOpen.toFixed(2)}`);
+            }
+          } else if (LIPSYNC_CONFIG.debug) {
+            // Warn if callback not set (mouth won't move!)
+            if (Math.random() < 0.1) { // Log 10% of frames to avoid spam
+              console.warn('[KellyLipSync] ⚠️ onBlendshapesUpdate callback NOT SET - mouth will NOT move!');
+            }
           }
         } catch (e) {
           if (LIPSYNC_CONFIG.debug) {
