@@ -43,24 +43,41 @@ self.addEventListener('fetch', (event) => {
   const url = new URL(req.url);
 
   // Network-first for API, Supabase, and runtime config (avoid stale keys)
+  // CRITICAL: Never cache HTML files - always fetch fresh
   if (
     url.pathname.startsWith('/api/') ||
     url.hostname.includes('supabase') ||
     url.pathname === '/config.js' ||
-    url.pathname === '/sw.js' ||
-    url.pathname.endsWith('.html')
+    url.pathname === '/sw.js'
   ) {
     event.respondWith(
       fetch(req)
         .then((res) => {
-          // Keep the cached app shell fresh for HTML navigations.
-          if (url.origin === self.location.origin && url.pathname.endsWith('.html')) {
-            const copy = res.clone();
-            caches.open(CACHE_NAME).then((cache) => cache.put(req, copy)).catch(() => {});
-          }
           return res;
         })
         .catch(() => caches.match(req))
+    );
+    return;
+  }
+  
+  // HTML files: ALWAYS fetch fresh, never cache
+  if (url.pathname.endsWith('.html')) {
+    event.respondWith(
+      fetch(req, { cache: 'no-store' })
+        .then((res) => {
+          // Don't cache HTML - always get fresh version
+          return res;
+        })
+        .catch(() => {
+          // Only use cache as absolute last resort
+          return caches.match(req).then(cached => {
+            if (cached) {
+              // Still fetch fresh in background
+              fetch(req, { cache: 'no-store' }).catch(() => {});
+            }
+            return cached || new Response('Network error', { status: 503 });
+          });
+        })
     );
     return;
   }

@@ -10362,10 +10362,24 @@
       }
 
       if (lessonSlot && journeySlot && settingsSlot && checkoutSlot) {
+        // Remove inline display styles to allow CSS/JS control
+        lessonSlot.removeAttribute('style');
+        journeySlot.removeAttribute('style');
+        settingsSlot.removeAttribute('style');
+        checkoutSlot.removeAttribute('style');
+        
+        // Set display based on active panel
         lessonSlot.style.display = open === 'lesson' ? '' : 'none';
         journeySlot.style.display = open === 'journey' ? '' : 'none';
         settingsSlot.style.display = open === 'settings' ? '' : 'none';
         checkoutSlot.style.display = open === 'checkout' ? '' : 'none';
+        
+        // Force checkout slot visibility when checkout panel is open
+        if (open === 'checkout') {
+          checkoutSlot.style.display = '';
+          checkoutSlot.style.visibility = 'visible';
+          checkoutSlot.style.opacity = '1';
+        }
       }
       
       // Sync lesson guide with current phase when lesson panel is open
