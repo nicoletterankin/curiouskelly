@@ -54,8 +54,9 @@ const LIPSYNC_CONFIG = {
   // Send to 2D avatar
   sendTo2D: true,
   
-  // Debug logging
-  debug: false,
+  // Debug logging (enable via URL param ?pixiDebug=1)
+  debug: typeof window !== 'undefined' && 
+         new URLSearchParams(window.location.search).get('pixiDebug') === '1',
 };
 
 // =============================================================================
@@ -402,7 +403,14 @@ const KellyLipSync = {
    * @private
    */
   processFrame() {
-    if (!this.isActive && !this.isStreaming) return;
+    // CRITICAL: Always continue the loop if initialized (even if not active yet)
+    // This ensures we're ready when audio starts
+    if (!this.isInitialized) {
+      return;
+    }
+    
+    // Only skip analysis if not active and not streaming
+    const shouldAnalyze = this.isActive || this.isStreaming;
     
     const now = performance.now();
     const elapsed = now - this.lastUpdateTime;
@@ -411,32 +419,49 @@ const KellyLipSync = {
     if (elapsed >= this.frameInterval) {
       this.lastUpdateTime = now - (elapsed % this.frameInterval);
       
-      // Get audio data
-      this.analyser.getFloatTimeDomainData(this.timeDomainData);
-      this.analyser.getFloatFrequencyData(this.frequencyData);
-      
-      // Analyze and generate blendshapes
-      const newBlendshapes = this.analyzeAudio();
-      
-      // Smooth transition
-      this.currentBlendshapes = this.smoothBlendshapes(
-        this.currentBlendshapes,
-        newBlendshapes
-      );
-      
-      // Send to Unity
-      if (LIPSYNC_CONFIG.sendToUnity) {
-        this.sendToUnity();
-      }
-      
-      // Send to 2D avatar
-      if (LIPSYNC_CONFIG.sendTo2D) {
-        this.sendTo2D();
-      }
-      
-      // Callback
-      if (this.onBlendshapesUpdate) {
-        this.onBlendshapesUpdate(this.currentBlendshapes);
+      if (shouldAnalyze && this.analyser) {
+        try {
+          // Get audio data
+          this.analyser.getFloatTimeDomainData(this.timeDomainData);
+          this.analyser.getFloatFrequencyData(this.frequencyData);
+          
+          // Analyze and generate blendshapes
+          const newBlendshapes = this.analyzeAudio();
+          
+          // Smooth transition
+          this.currentBlendshapes = this.smoothBlendshapes(
+            this.currentBlendshapes,
+            newBlendshapes
+          );
+          
+          // Send to Unity
+          if (LIPSYNC_CONFIG.sendToUnity) {
+            this.sendToUnity();
+          }
+          
+          // Send to 2D avatar
+          if (LIPSYNC_CONFIG.sendTo2D) {
+            this.sendTo2D();
+          }
+          
+          // Callback
+          if (this.onBlendshapesUpdate) {
+            this.onBlendshapesUpdate(this.currentBlendshapes);
+          }
+        } catch (e) {
+          if (LIPSYNC_CONFIG.debug) {
+            console.warn('[KellyLipSync] Error in processFrame:', e);
+          }
+        }
+      } else if (LIPSYNC_CONFIG.debug && !shouldAnalyze) {
+        // Debug: Log when we're not analyzing
+        if (Math.random() < 0.01) { // Log 1% of frames to avoid spam
+          console.log('[KellyLipSync] processFrame running but not analyzing:', {
+            isActive: this.isActive,
+            isStreaming: this.isStreaming,
+            hasAnalyser: !!this.analyser
+          });
+        }
       }
     }
     
