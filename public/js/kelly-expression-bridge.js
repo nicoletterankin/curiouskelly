@@ -317,8 +317,33 @@ const KellyExpressionBridge = {
    */
   sendTo2D(blendshapes) {
     // Send blendshapes to Pixi compositor (for eyebrow overlays and expressions)
-    if (window.KellyPixiCompositor && window.KellyPixiCompositor.isInitialized) {
-      window.KellyPixiCompositor.setBlendshapes(blendshapes);
+    // This merges expression blendshapes (eyebrows, eyes) with lip-sync (mouth)
+    if (window.KellyPixiCompositor) {
+      // Auto-initialize compositor if not already initialized
+      if (!window.KellyPixiCompositor.isInitialized) {
+        const container = document.getElementById('kelly-stage');
+        if (container) {
+          window.KellyPixiCompositor.init({ containerEl: container }).then(() => {
+            // Attach video or image after init
+            const videoEl = document.getElementById('kelly-video');
+            if (videoEl && !videoEl.hidden) {
+              window.KellyPixiCompositor.attachVideo(videoEl);
+            } else {
+              // Use talking photo mode
+              const personaId = this.currentArchetype?.toLowerCase().replace('the ', '') || 'explorer';
+              window.KellyPixiCompositor.attachImage(personaId);
+            }
+            window.KellyPixiCompositor.setEnabled(true);
+            window.KellyPixiCompositor.setBlendshapes(blendshapes);
+          }).catch(() => {});
+          return; // Wait for init before sending blendshapes
+        }
+      }
+      
+      // Send blendshapes if compositor is ready
+      if (window.KellyPixiCompositor.isInitialized) {
+        window.KellyPixiCompositor.setBlendshapes(blendshapes);
+      }
     }
     
     // Update KellyPoseManager expression

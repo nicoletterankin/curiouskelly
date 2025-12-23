@@ -285,7 +285,7 @@
     .kelly-home-link {
       display: flex;
       align-items: center;
-      gap: 0.5rem;
+      gap: 0.75rem;
       color: var(--text-primary);
       text-decoration: none;
       font-weight: 600;
@@ -300,20 +300,11 @@
       opacity: 0.8;
     }
 
-    .nav-link-header {
-      color: var(--text-secondary);
-      text-decoration: none;
-      font-size: 14px;
-      font-weight: 500;
-      padding: 6px 12px;
-      border-radius: 8px;
-      transition: all 0.15s ease;
-      white-space: nowrap;
-    }
-
-    .nav-link-header:hover {
+    .kelly-logo-text {
+      font-size: 16px;
+      font-weight: 600;
       color: var(--text-primary);
-      background: rgba(255, 255, 255, 0.08);
+      white-space: nowrap;
     }
 
     .kelly-logo-img {
@@ -577,12 +568,8 @@
         padding-right: 8px;
       }
       
-      .nav-left-section {
-        gap: 8px;
-      }
-      
-      .nav-link-header {
-        display: none; /* Hide Home/Pricing links on mobile to save space */
+      .kelly-logo-text {
+        display: none; /* Hide "Curious Kelly" text on mobile to save space */
       }
       
       .nav-topic-display {
@@ -8302,14 +8289,11 @@
 
   <!-- Unified top navigation - Kelly is a Learning Calendar -->
   <nav class="kelly-top-nav">
-    <!-- LEFT: Kelly Logo + Navigation Links -->
-    <div class="nav-left-section">
-      <a href="/" class="kelly-home-link" title="Home" id="kelly-logo-btn">
-        <img src="/images/brand/kelly-mark-circle-64.png" alt="Kelly" class="kelly-logo-img">
-      </a>
-      <a href="/" class="nav-link-header">Home</a>
-      <a href="/pricing.html" class="nav-link-header">Pricing</a>
-    </div>
+    <!-- LEFT: Kelly Logo with "Curious Kelly" text -->
+    <a href="/" class="kelly-home-link" title="Home" id="kelly-logo-btn">
+      <img src="/images/brand/kelly-mark-circle-64.png" alt="Kelly" class="kelly-logo-img">
+      <span class="kelly-logo-text">Curious Kelly</span>
+    </a>
     
     <!-- CENTER: Today's Lesson CTA (the star of the show) -->
     <div class="nav-lesson-cta" id="nav-lesson-cta">
@@ -13001,6 +12985,34 @@
         syncPlayPauseUI();
         
         // ═══════════════════════════════════════════════════════════════════
+        // INITIALIZE COMPOSITOR: Ensure PixiJS overlay layer is ready
+        // This enables real-time mouth/eye animations on Kelly's face
+        // ═══════════════════════════════════════════════════════════════════
+        (async () => {
+          try {
+            const container = document.getElementById('kelly-stage');
+            if (container && window.KellyPixiCompositor && !window.KellyPixiCompositor.isInitialized) {
+              await window.KellyPixiCompositor.init({ containerEl: container });
+              
+              // Attach video if present, otherwise use talking photo mode
+              const videoEl = getKellyVideoEl();
+              if (videoEl && !videoEl.hidden) {
+                await window.KellyPixiCompositor.attachVideo(videoEl);
+              } else {
+                // Use talking photo mode with current archetype
+                const personaId = getPhaseArchetype(state.currentPhase || 'hook') || 'explorer';
+                await window.KellyPixiCompositor.attachImage(personaId);
+              }
+              
+              window.KellyPixiCompositor.setEnabled(true);
+              if (DEBUG) console.log('🎨 [Compositor] Auto-initialized for audio playback');
+            }
+          } catch (e) {
+            if (DEBUG) console.warn('[Compositor] Auto-init failed (non-fatal):', e);
+          }
+        })();
+        
+        // ═══════════════════════════════════════════════════════════════════
         // WIRE LIP-SYNC: Connect audio element to real-time animation system
         // This analyzes audio frequencies and drives Kelly's mouth movements
         // ═══════════════════════════════════════════════════════════════════
@@ -13011,6 +13023,19 @@
             }
             window.KellyLipSync.resume().then(() => {
               window.KellyLipSync.startFromAudioElement(this.audio);
+              
+              // Connect blendshapes to compositor (CRITICAL: This makes mouth move)
+              if (window.KellyPixiCompositor) {
+                window.KellyLipSync.onBlendshapesUpdate = (blendshapes) => {
+                  try {
+                    window.KellyPixiCompositor.setBlendshapes(blendshapes);
+                  } catch (e) {
+                    if (DEBUG) console.warn('[Compositor] setBlendshapes error:', e);
+                  }
+                };
+                if (DEBUG) console.log('👄 Lip-sync → Compositor pipeline connected');
+              }
+              
               if (DEBUG) console.log('👄 Lip-sync connected to audio');
             }).catch(() => {});
           } catch (e) {
@@ -14672,11 +14697,54 @@
       weekView.innerHTML = '<div class="journey-lesson-list"><div style="text-align: center; padding: 20px; opacity: 0.5;">Loading lessons...</div></div>';
       
       // Fetch lessons asynchronously from static files
+      // Priority: LOCAL_PACKS (day-XXX-complete.js) → curriculum JSON → Supabase
       let lessons = [];
       try {
-        lessons = await loadWeekLessons(startDay);
+        // First, try to get topics from LOCAL_PACKS (static hardcoded lessons)
+        const localPacks = window.CURIOUS_KELLY?.LOCAL_PACKS || {};
+        for (let d = startDay; d <= endDay; d++) {
+          const pack = localPacks[`day-${String(d).padStart(3, '0')}`] || localPacks[d] || localPacks[String(d)];
+          if (pack?.lesson) {
+            lessons.push({
+              day_number: d,
+              learnTopic: pack.lesson.topic || pack.lesson.title || 'Loading...',
+              growTopic: pack.grow?.topic || 'Loading...',
+              topic: pack.lesson.topic || pack.lesson.title || 'Loading...',
+              emoji: pack.lesson.emoji || '📚',
+              category: pack.lesson.category || ''
+            });
+          }
+        }
+        
+        // Fallback to curriculum JSON files if LOCAL_PACKS missing some days
+        if (lessons.length < (endDay - startDay + 1)) {
+          const curriculumLessons = await loadWeekLessons(startDay);
+          curriculumLessons.forEach(curriculumLesson => {
+            const existing = lessons.find(l => l.day_number === curriculumLesson.day_number);
+            if (!existing) {
+              lessons.push(curriculumLesson);
+            } else {
+              // Merge: prefer LOCAL_PACKS but fill in missing fields
+              if (!existing.learnTopic && curriculumLesson.learnTopic) {
+                existing.learnTopic = curriculumLesson.learnTopic;
+              }
+              if (!existing.growTopic && curriculumLesson.growTopic) {
+                existing.growTopic = curriculumLesson.growTopic;
+              }
+            }
+          });
+        }
+        
+        // Sort by day number
+        lessons.sort((a, b) => a.day_number - b.day_number);
       } catch (e) {
-        console.warn('populateWeekView: failed to load lessons', e);
+        console.warn('populateJourneyPanel: failed to load lessons', e);
+        // Fallback to curriculum JSON
+        try {
+          lessons = await loadWeekLessons(startDay);
+        } catch (e2) {
+          console.warn('populateJourneyPanel: curriculum fallback also failed', e2);
+        }
       }
       
       // Fetch asset availability from Supabase (for preview thumbnails)

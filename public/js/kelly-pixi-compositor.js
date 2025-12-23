@@ -24,11 +24,8 @@
  */
 (() => {
   // ALWAYS log script load (critical for debugging)
-  console.log('[Pixi] 🎭 kelly-pixi-compositor.js LOADED, v=20251222n - enhanced debugging');
-  console.log('[Pixi] 🔍 PIXI available:', typeof window.PIXI !== 'undefined');
-  console.log('[Pixi] 🔍 PIXI version:', typeof window.PIXI !== 'undefined' ? window.PIXI.VERSION : 'N/A');
-  console.log('[Pixi] 📍 Script location:', typeof location !== 'undefined' ? location.href : 'unknown');
-  console.log('[Pixi] 📍 Timestamp:', new Date().toISOString());
+  // Production logging: Only log script load, not verbose debug info
+  console.log('[Pixi] 🎭 kelly-pixi-compositor.js LOADED, v=20251223 - production ready');
   
   const DEBUG =
     (typeof window !== 'undefined' && !!window.__KELLY_PIXI_DEBUG) ||
@@ -434,20 +431,14 @@
 
     setBlendshapes(blendshapes) {
       try {
-        const prevCount = Object.keys(this.lastBlendshapes || {}).length;
         this.lastBlendshapes = blendshapes || {};
-        const newCount = Object.keys(this.lastBlendshapes).length;
-        
-        if (DEBUG || newCount > 0) {
-          console.log('[Pixi] setBlendshapes:', {
-            prevCount,
-            newCount,
-            keys: Object.keys(this.lastBlendshapes).slice(0, 5),
-            sample: Object.fromEntries(Object.entries(this.lastBlendshapes).slice(0, 3))
-          });
+        // Force render on next tick (don't wait for natural tick)
+        if (this.isEnabled && this.app && this.app.ticker.started) {
+          // Blendshapes updated - ensure rendering happens
+          this._hasBlendshapesChanged = true;
         }
       } catch (e) {
-        console.warn('[Pixi] setBlendshapes error:', e);
+        if (DEBUG) console.warn('[Pixi] setBlendshapes error:', e);
         this.lastBlendshapes = {};
       }
       return this;
@@ -530,26 +521,18 @@
     },
 
     _tick(delta) {
-      if (!this.isEnabled) {
-        if (DEBUG) console.log('[Pixi] _tick skipped: not enabled');
-        return;
-      }
-      if (!this.app) {
-        if (DEBUG) console.warn('[Pixi] _tick skipped: no app');
-        return;
-      }
+      if (!this.isEnabled || !this.app) return;
       
-      // Performance: Skip rendering if blendshapes haven't changed significantly
-      // This reduces unnecessary redraws when audio is silent
-      const hasBlendshapes = Object.keys(this.lastBlendshapes || {}).length > 0;
-      if (!hasBlendshapes && this._blinkState === 0) {
-        // Only update blink timer, skip rendering
-        this._updateBlink(delta);
-        return;
-      }
-      
+      // Always update blink (needed for natural eye movement)
       this._updateBlink(delta);
-      this._renderOverlaysFromBlendshapes(this.lastBlendshapes || {});
+      
+      // Render overlays if we have blendshapes OR if blink is active
+      const hasBlendshapes = Object.keys(this.lastBlendshapes || {}).length > 0;
+      const blinkActive = this._blinkState !== 0;
+      
+      if (hasBlendshapes || blinkActive) {
+        this._renderOverlaysFromBlendshapes(this.lastBlendshapes || {});
+      }
     },
 
     _updateBlink(delta) {
