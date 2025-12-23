@@ -606,10 +606,15 @@
       const cornerRadius = (8 + (1 - jawOpen) * 4) * s; // 8-12px radius
       const mouthShape = jawOpen > 0.1 ? 'ellipse' : 'roundedRect'; // Ellipse when open, rounded rect when closed
 
-      // Draw mouth interior (very subtle - blend with video)
+      // Draw mouth interior (VISIBLE when mouth moves)
       const mouthInterior = this._mouthInterior;
       mouthInterior.clear();
-      mouthInterior.beginFill(0x3d1515, OPACITY_PRESETS.mouthInterior);
+      // CRITICAL: Increase opacity when mouth is open so movement is VISIBLE
+      // Base opacity 0.35, increase to 0.6 when jawOpen > 0.1
+      const mouthOpacity = jawOpen > 0.1 
+        ? Math.max(OPACITY_PRESETS.mouthInterior, 0.6) 
+        : OPACITY_PRESETS.mouthInterior;
+      mouthInterior.beginFill(0x3d1515, mouthOpacity);
       if (mouthShape === 'ellipse') {
         // More natural oval shape when mouth is open
         mouthInterior.drawEllipse(0, 0, w / 2, h / 2);
