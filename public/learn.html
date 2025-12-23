@@ -12990,10 +12990,18 @@
     class KellyAudio {
       constructor() {
         this.audio = new Audio();
+        // CRITICAL: Enable CORS for Web Audio API analysis (lip-sync)
+        this.audio.crossOrigin = 'anonymous';
+        this.audio.preload = 'auto';
         this.audio.addEventListener('play', () => this.onSpeakStart());
         this.audio.addEventListener('ended', () => this.onSpeakEnd());
         this.audio.addEventListener('pause', () => this.onPause());
-        this.audio.addEventListener('error', () => this.onError());
+        this.audio.addEventListener('error', (e) => {
+          if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+            console.error('🔊 [Audio] Error:', e.message || 'Unknown error');
+          }
+          this.onError();
+        });
       }
 
       get isPlaying() {
@@ -13121,6 +13129,14 @@
         setKellySpeaking(true);
         syncPlayPauseUI();
         
+        // CRITICAL: Enable CORS on audio element for Web Audio API analysis
+        if (this.audio && !this.audio.crossOrigin) {
+          this.audio.crossOrigin = 'anonymous';
+          if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+            console.log('🔊 [Audio] Enabled CORS on audio element for lip-sync');
+          }
+        }
+        
         // CRITICAL: Log audio element state for debugging
         if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
           console.log('🔊 [Audio] onSpeakStart() called');
@@ -13130,7 +13146,8 @@
             paused: this.audio?.paused,
             ended: this.audio?.ended,
             currentTime: this.audio?.currentTime,
-            duration: this.audio?.duration
+            duration: this.audio?.duration,
+            crossOrigin: this.audio?.crossOrigin
           });
         }
         
@@ -13155,32 +13172,47 @@
               }
               
               window.KellyPixiCompositor.setEnabled(true);
-              if (DEBUG) console.log('🎨 [Compositor] Auto-initialized for audio playback');
+              if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+                console.log('🎨 [Compositor] Auto-initialized for audio playback');
+              }
             }
           } catch (e) {
-            if (DEBUG) console.warn('[Compositor] Auto-init failed (non-fatal):', e);
+            if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+              console.warn('[Compositor] Auto-init failed (non-fatal):', e);
+            }
           }
         })();
         
         // ═══════════════════════════════════════════════════════════════════
         // WIRE LIP-SYNC: Connect audio element to real-time animation system
         // This analyzes audio frequencies and drives Kelly's mouth movements
+        // CRITICAL: Must connect BEFORE audio plays or immediately after
         // ═══════════════════════════════════════════════════════════════════
         if (window.KellyLipSync && this.audio) {
           try {
             if (!window.KellyLipSync.isInitialized) {
               window.KellyLipSync.init();
             }
+            
+            // CRITICAL: Connect lip-sync BEFORE resuming (ensures audio analysis starts)
+            window.KellyLipSync.startFromAudioElement(this.audio);
+            
             window.KellyLipSync.resume().then(() => {
-              window.KellyLipSync.startFromAudioElement(this.audio);
-              
               // Connect blendshapes to compositor (CRITICAL: This makes mouth move)
               if (window.KellyPixiCompositor) {
                 window.KellyLipSync.onBlendshapesUpdate = (blendshapes) => {
                   try {
                     window.KellyPixiCompositor.setBlendshapes(blendshapes);
+                    if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+                      // Log jawOpen to verify lip-sync is working
+                      if (blendshapes.jawOpen > 0.1) {
+                        console.log(`👄 Lip-sync ACTIVE: jawOpen=${blendshapes.jawOpen.toFixed(2)}`);
+                      }
+                    }
                   } catch (e) {
-                    if (DEBUG) console.warn('[Compositor] setBlendshapes error:', e);
+                    if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+                      console.warn('[Compositor] setBlendshapes error:', e);
+                    }
                   }
                 };
                 if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
@@ -13189,13 +13221,17 @@
               }
               
               if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
-                console.log('👄 Lip-sync connected to audio element');
+                console.log('👄 Lip-sync connected and resumed - analyzing audio');
               }
             }).catch((err) => {
-              if (DEBUG) console.warn('Lip-sync resume failed:', err);
+              if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+                console.warn('Lip-sync resume failed:', err);
+              }
             });
           } catch (e) {
-            if (DEBUG) console.warn('Lip-sync init failed:', e);
+            if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+              console.error('Lip-sync init/connect failed:', e);
+            }
           }
         } else {
           if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
