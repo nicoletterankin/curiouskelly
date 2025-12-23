@@ -13883,10 +13883,10 @@
         v.src = resolvedVideo;
         try {
           await v.play();
-          // Only use separate TTS for motion clips (no baked-in audio),
-          // OR hybrid demo (video is visual base; live ElevenLabs provides voice).
+          // CRITICAL: In HYBRID mode, ALWAYS use TTS (video is muted)
+          // Hybrid demo: video is visual base; live ElevenLabs provides voice
           if (needsSeparateTTS || HYBRID_DEMO) {
-            if (DEBUG) console.log('🎤 Starting TTS for motion clip...');
+            if (DEBUG) console.log('🎤 Starting TTS for hybrid mode (video muted, using live TTS)...');
             kellyAudio.speak(dbPhase, script).catch(() => {});
           }
           return true;
@@ -13898,8 +13898,9 @@
             v.setAttribute('muted', '');
             await v.play();
             if (DEBUG) console.log('🎬 [Video] Muted play SUCCEEDED');
-            // If we had to mute a video that had audio, now we need TTS
+            // CRITICAL: In HYBRID mode, ALWAYS use TTS (video is muted)
             if (videoHasAudio || needsSeparateTTS || HYBRID_DEMO) {
+              if (DEBUG && HYBRID_DEMO) console.log('🎤 Starting TTS for hybrid mode (video muted, using live TTS)...');
               kellyAudio.speak(dbPhase, script).catch(() => {});
             }
             return true;
