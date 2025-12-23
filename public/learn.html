@@ -16296,7 +16296,7 @@ The learner is on phase ${state.currentPhase + 1} of 7. Be helpful and make lear
       
       if (hasChoices) {
         // Universal choice UI for ANY phase with choice content
-        enterPhaseWithChoices(currentAtom);
+        enterPhaseWithChoices(currentAtom).catch(() => {});
         return;
       }
 
@@ -16319,12 +16319,23 @@ The learner is on phase ${state.currentPhase + 1} of 7. Be helpful and make lear
         const dbPhase = atom?.dbPhase || state.currentPhase;
         
         if (text) {
-          typewriterEffect(document.getElementById('caption-text'), text);
+          // ENHANCEMENT: Add visual reference if visualUrl exists
+          // Kelly can reference visuals naturally: "Look at this image on your screen..."
+          const visualRef = atom?.visualUrl ? "Look at this image on your screen - " : "";
+          const scriptWithVisual = visualRef ? `${visualRef}${text}` : text;
+          
+          typewriterEffect(document.getElementById('caption-text'), scriptWithVisual);
           playPhaseMedia({
             dbPhase: dbPhase,
-            script: text,
+            script: scriptWithVisual,
             videoUrl: atom?.videoUrl,
           }).catch(() => {});
+          
+          // Display visual if available using existing visual display system
+          if (atom?.visualUrl && window.LessonVisualDisplay) {
+            const phaseKey = getPhaseKeyFromDbPhase(dbPhase);
+            window.LessonVisualDisplay.show(state.currentDay, phaseKey);
+          }
         }
       }
     }
@@ -16370,7 +16381,7 @@ The learner is on phase ${state.currentPhase + 1} of 7. Be helpful and make lear
       }
     }
 
-    function enterPhaseWithChoices(atom) {
+    async function enterPhaseWithChoices(atom) {
       const phase = PHASES[state.currentPhase];
       
       // Reset UI + state
@@ -16398,8 +16409,10 @@ The learner is on phase ${state.currentPhase + 1} of 7. Be helpful and make lear
       // Update descriptions (only for object format)
       const descAEl = document.getElementById('cliff-desc-a');
       const descBEl = document.getElementById('cliff-desc-b');
-      if (descAEl) descAEl.textContent = typeof atom.option_a === 'object' ? (atom.option_a?.description || '') : '';
-      if (descBEl) descBEl.textContent = typeof atom.option_b === 'object' ? (atom.option_b?.description || '') : '';
+      const optADesc = typeof atom.option_a === 'object' ? (atom.option_a?.description || '') : '';
+      const optBDesc = typeof atom.option_b === 'object' ? (atom.option_b?.description || '') : '';
+      if (descAEl) descAEl.textContent = optADesc;
+      if (descBEl) descBEl.textContent = optBDesc;
 
       // Load choice visuals from Visual Commons or generate placeholders
       const imgA = document.getElementById('cliff-visual-a');
@@ -16417,7 +16430,38 @@ The learner is on phase ${state.currentPhase + 1} of 7. Be helpful and make lear
         setChoiceVisual(imgB, `/generated-images/day-017/${key}_option_b.svg`);
       }
 
-      // Show container
+      // Store atom for choice handler
+      window.__currentChoiceAtom = atom;
+
+      // Kelly speaks the intro
+      const introScript = atom.choice_intro || 'Make your choice...';
+      typewriterEffect(document.getElementById('caption-text'), introScript);
+      
+      // Play intro narration
+      await playPhaseMedia({
+        dbPhase: phase?.dbName || phase?.name,
+        script: atom.script || introScript,
+      }).catch(() => {});
+      
+      // ENHANCEMENT: Kelly narrates the options BEFORE showing buttons
+      // Build narration from existing option_a and option_b fields (already extracted above)
+      // Wait a moment for intro to finish
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Kelly narrates what the options are
+      const optionsNarration = `On your screen, you'll see two options appear in just a moment. Option A says "${optAText}"${optADesc ? ` - that's ${optADesc}` : ''}. Option B says "${optBText}"${optBDesc ? ` - that's ${optBDesc}` : ''}. Which one resonates more with you? Take your time to think about it.`;
+      
+      typewriterEffect(document.getElementById('caption-text'), optionsNarration);
+      await playPhaseMedia({
+        dbPhase: phase?.dbName || phase?.name,
+        script: optionsNarration,
+      }).catch(() => {});
+      
+      // Wait for narration to finish before showing buttons (estimate: ~50ms per character, min 3 seconds)
+      const narrationDuration = Math.max(optionsNarration.length * 50, 3000);
+      await new Promise(resolve => setTimeout(resolve, narrationDuration));
+
+      // NOW show the buttons (after narration completes)
       const container = document.getElementById('cliff-container');
       if (container) {
         container.hidden = false;
@@ -16426,16 +16470,6 @@ The learner is on phase ${state.currentPhase + 1} of 7. Be helpful and make lear
 
       // Stealth observation: track that options are now visible
       window.__lessonObserver?.onOptionsShown();
-
-      // Store atom for choice handler
-      window.__currentChoiceAtom = atom;
-
-      // Kelly speaks the intro
-      typewriterEffect(document.getElementById('caption-text'), atom.choice_intro || 'Make your choice...');
-      playPhaseMedia({
-        dbPhase: phase?.dbName || phase?.name,
-        script: atom.script || atom.choice_intro,
-      }).catch(() => {});
 
       // Start timeout for auto-select
       state.cliffTimeout = setTimeout(() => {
