@@ -108,6 +108,15 @@ class KellyAudio {
    */
   _playAudioUrl(url) {
     return new Promise((resolve, reject) => {
+      // Check if autoplay is unlocked (iOS Safari requirement)
+      if (window.KellyAutoplayHandler && !window.KellyAutoplayHandler.isUnlocked()) {
+        // Wait for unlock
+        window.KellyAutoplayHandler.onUnlock(() => {
+          this._playAudioUrl(url).then(resolve).catch(reject);
+        });
+        return;
+      }
+
       this.currentAudio = new Audio(url);
       this.currentAudio.volume = this.isMuted ? 0 : 1;
 
@@ -128,7 +137,20 @@ class KellyAudio {
         reject(e);
       };
 
-      this.currentAudio.play().catch(reject);
+      this.currentAudio.play().catch((e) => {
+        // If play fails, check if it's an autoplay issue
+        if (e.name === 'NotAllowedError' && window.KellyAutoplayHandler) {
+          console.warn('[KellyAudio] Autoplay blocked - waiting for user interaction');
+          window.KellyAutoplayHandler.onUnlock(() => {
+            this.currentAudio.play().then(() => {
+              this.isPlaying = true;
+              this._notifySpeakingStart();
+            }).catch(reject);
+          });
+        } else {
+          reject(e);
+        }
+      });
     });
   }
   

@@ -24,7 +24,7 @@
  */
 (() => {
   // ALWAYS log script load (critical for debugging)
-  console.log('[Pixi] 🎭 kelly-pixi-compositor.js LOADED, v=20251222k - phase expressions connected');
+  console.log('[Pixi] 🎭 kelly-pixi-compositor.js LOADED, v=20251222l - performance optimized');
   
   const DEBUG =
     (typeof window !== 'undefined' && !!window.__KELLY_PIXI_DEBUG) ||
@@ -199,10 +199,24 @@
         this._buildOverlays();
         console.log('[Pixi] Overlays built');
 
-        // Animation loop
+        // Animation loop (throttled for performance)
+        // Only update when compositor is enabled and visible
         this.app.ticker.add((delta) => {
-          this._tick(delta);
+          if (this.isEnabled && this.isInitialized) {
+            this._tick(delta);
+          }
         });
+        
+        // Performance: Stop rendering when tab is hidden
+        if (typeof document !== 'undefined') {
+          document.addEventListener('visibilitychange', () => {
+            if (document.hidden) {
+              this.app.ticker.stop();
+            } else {
+              this.app.ticker.start();
+            }
+          });
+        }
 
         // Resize observer: keep canvas sized to container
         try {
@@ -479,6 +493,16 @@
 
     _tick(delta) {
       if (!this.isEnabled || !this.app) return;
+      
+      // Performance: Skip rendering if blendshapes haven't changed significantly
+      // This reduces unnecessary redraws when audio is silent
+      const hasBlendshapes = Object.keys(this.lastBlendshapes || {}).length > 0;
+      if (!hasBlendshapes && this._blinkState === 0) {
+        // Only update blink timer, skip rendering
+        this._updateBlink(delta);
+        return;
+      }
+      
       this._updateBlink(delta);
       this._renderOverlaysFromBlendshapes(this.lastBlendshapes || {});
     },
