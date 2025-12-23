@@ -11491,7 +11491,17 @@
         }).catch(() => {});
       }
 
-      slot.querySelector('#checkout-cta')?.addEventListener('click', startEmbeddedCheckoutFlow);
+      const ctaButton = slot.querySelector('#checkout-cta');
+      if (ctaButton) {
+        ctaButton.addEventListener('click', (e) => {
+          e.preventDefault();
+          e.stopPropagation();
+          console.log('[checkout] Continue button clicked');
+          startEmbeddedCheckoutFlow();
+        });
+      } else {
+        console.error('[checkout] Continue button (#checkout-cta) not found!');
+      }
       slot.querySelector('#checkout-back')?.addEventListener('click', () => {
         destroyEmbeddedCheckout();
         slot.querySelector('#checkout-plans')?.classList.remove('hidden');
@@ -11757,8 +11767,19 @@
         __embeddedCheckout.mount('#stripe-embedded-checkout');
         console.log('[checkout] Checkout mounted successfully');
       } catch (e) {
-        console.error('[checkout] failed:', e);
-        showToast('Could not start checkout. Please try again.');
+        console.error('[checkout] ❌ Failed:', e);
+        console.error('[checkout] Error stack:', e.stack);
+        const errorMessage = e instanceof Error ? e.message : String(e);
+        showToast(`Checkout error: ${errorMessage}`);
+        
+        // Show error in UI for debugging
+        const slot = document.getElementById('panel-checkout-slot');
+        if (slot) {
+          const errorDiv = document.createElement('div');
+          errorDiv.style.cssText = 'padding: 16px; margin-top: 16px; background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.3); border-radius: 8px; color: #ef4444; font-size: 13px;';
+          errorDiv.innerHTML = `<strong>Error:</strong> ${errorMessage}<br><small>Check console for details</small>`;
+          slot.appendChild(errorDiv);
+        }
       } finally {
         if (cta) { cta.textContent = 'Continue'; cta.disabled = false; }
       }
