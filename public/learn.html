@@ -11519,18 +11519,44 @@
     }
 
     async function openCheckoutPanel(defaultPlanType = 'annual') {
+      console.log('[openCheckoutPanel] Opening checkout panel for plan:', defaultPlanType);
+      
       // Handle gift purchases with dedicated panel
       if (defaultPlanType.startsWith('gift-')) {
         __selectedGiftDuration = defaultPlanType.replace('gift-', '');
         openPanel('checkout');
+        // Small delay to ensure panel is visible
+        await new Promise(resolve => setTimeout(resolve, 100));
         renderGiftCheckoutPanel();
         try { closePaywall(); } catch (_) {}
         return;
       }
       
       __selectedPlanType = (defaultPlanType === 'yearly' ? 'annual' : defaultPlanType) || 'annual';
+      
+      // Open the panel first
       openPanel('checkout');
+      
+      // Ensure panel and slot are visible
+      const rightPanel = document.getElementById('right-panel');
+      const checkoutSlot = document.getElementById('panel-checkout-slot');
+      
+      console.log('[openCheckoutPanel] Panel state:', {
+        rightPanelOpen: rightPanel?.classList.contains('open'),
+        checkoutSlotDisplay: checkoutSlot?.style.display,
+        checkoutSlotExists: !!checkoutSlot
+      });
+      
+      // Force slot visibility
+      if (checkoutSlot) {
+        checkoutSlot.style.display = '';
+      }
+      
+      // Small delay to ensure panel is visible before rendering
+      await new Promise(resolve => setTimeout(resolve, 150));
+      
       renderCheckoutPanel();
+      
       // Also close the legacy paywall overlay if it's open.
       try { closePaywall(); } catch (_) {}
     }
@@ -11680,12 +11706,25 @@
     }
 
     async function startEmbeddedCheckoutFlow() {
+      console.log('[checkout] startEmbeddedCheckoutFlow called');
+      
       const slot = document.getElementById('panel-checkout-slot');
+      console.log('[checkout] Slot found:', !!slot, 'Display:', slot?.style.display);
+      
+      if (!slot) {
+        showToast('Checkout panel not found. Please try opening billing again.');
+        return;
+      }
+      
+      // Ensure slot is visible
+      slot.style.display = '';
+      
       const cta = slot?.querySelector('#checkout-cta');
       if (cta) { cta.textContent = 'Loading…'; cta.disabled = true; }
 
       try {
         // Check if Stripe.js is loaded
+        console.log('[checkout] Checking Stripe.js:', typeof window.Stripe);
         if (!window.Stripe) {
           throw new Error('Stripe.js not loaded. Please refresh the page.');
         }
@@ -11740,24 +11779,64 @@
           throw new Error(json?.message || json?.error || 'checkout_failed');
         }
 
+        // Ensure right panel is open
+        const rightPanel = document.getElementById('right-panel');
+        if (rightPanel && !rightPanel.classList.contains('open')) {
+          console.log('[checkout] Right panel not open, opening now...');
+          openPanel('checkout');
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+        
+        // Ensure slot is visible
+        slot.style.display = '';
+        
         // Swap UI - ensure panel is visible first
         const plansEl = slot?.querySelector('#checkout-plans');
         const embeddedEl = slot?.querySelector('#checkout-embedded');
         const checkoutContainer = slot?.querySelector('#stripe-embedded-checkout');
         
+        console.log('[checkout] UI elements:', {
+          plansEl: !!plansEl,
+          embeddedEl: !!embeddedEl,
+          checkoutContainer: !!checkoutContainer,
+          slotDisplay: slot.style.display
+        });
+        
         if (!checkoutContainer) {
-          throw new Error('Checkout container element not found');
+          throw new Error('Checkout container element (#stripe-embedded-checkout) not found in slot');
         }
 
         if (plansEl) plansEl.classList.add('hidden');
-        if (embeddedEl) embeddedEl.classList.remove('hidden');
+        if (embeddedEl) {
+          embeddedEl.classList.remove('hidden');
+          embeddedEl.style.display = 'block';
+        }
 
         // Ensure container is visible and has dimensions before mounting
-        checkoutContainer.style.minHeight = '400px';
+        checkoutContainer.style.minHeight = '500px';
         checkoutContainer.style.width = '100%';
+        checkoutContainer.style.display = 'block';
+        checkoutContainer.style.visibility = 'visible';
+        checkoutContainer.style.opacity = '1';
 
-        // Small delay to ensure DOM is updated
-        await new Promise(resolve => setTimeout(resolve, 100));
+        // Wait for browser to recalculate layout
+        await new Promise(resolve => setTimeout(resolve, 200));
+        
+        // Verify container is actually visible
+        const rect = checkoutContainer.getBoundingClientRect();
+        console.log('[checkout] Container dimensions after show:', {
+          width: rect.width,
+          height: rect.height,
+          top: rect.top,
+          left: rect.left
+        });
+        
+        if (rect.width === 0 || rect.height === 0) {
+          console.warn('[checkout] Container still has zero dimensions, forcing visibility');
+          checkoutContainer.style.position = 'relative';
+          checkoutContainer.style.minHeight = '600px';
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
 
         destroyEmbeddedCheckout();
         
