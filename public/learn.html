@@ -11586,6 +11586,11 @@
       // Pre-fill email from localStorage or session
       const emailInput = slot.querySelector('#checkout-email');
       if (emailInput) {
+        // Ensure email input is visible
+        emailInput.style.display = 'block';
+        emailInput.style.visibility = 'visible';
+        emailInput.style.opacity = '1';
+        
         const storedEmail = localStorage.getItem('kelly_user_email') || '';
         emailInput.value = storedEmail;
         // Also try to get from session asynchronously
@@ -11594,6 +11599,15 @@
             emailInput.value = session.user.email;
           }
         }).catch(() => {});
+        
+        // Focus email input after panel opens
+        setTimeout(() => {
+          if (document.getElementById('panel-checkout-slot')?.style.display !== 'none') {
+            emailInput.focus();
+          }
+        }, 300);
+      } else {
+        console.error('[checkout] Email input (#checkout-email) not found!');
       }
 
       const ctaButton = slot.querySelector('#checkout-cta');
@@ -11602,6 +11616,33 @@
           e.preventDefault();
           e.stopPropagation();
           console.log('[checkout] Continue button clicked');
+          
+          // Validate email before proceeding
+          if (emailInput) {
+            const emailValue = emailInput.value.trim();
+            if (!emailValue) {
+              emailInput.focus();
+              emailInput.style.borderColor = '#ef4444';
+              showToast('Please enter your email address');
+              setTimeout(() => {
+                if (emailInput) emailInput.style.borderColor = '';
+              }, 2000);
+              return;
+            }
+            
+            // Basic email validation
+            const emailRegex = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+            if (!emailRegex.test(emailValue)) {
+              emailInput.focus();
+              emailInput.style.borderColor = '#ef4444';
+              showToast('Please enter a valid email address');
+              setTimeout(() => {
+                if (emailInput) emailInput.style.borderColor = '';
+              }, 2000);
+              return;
+            }
+          }
+          
           startEmbeddedCheckoutFlow();
         });
       } else {
