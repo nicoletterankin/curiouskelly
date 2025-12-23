@@ -1427,6 +1427,8 @@
 
     <!-- Kelly Time Authority (for date calculations) -->
     <script src="/js/kelly-time.js"></script>
+    <!-- Unified Lesson Service (Single Source of Truth) -->
+    <script src="/js/kelly-unified-lesson-service.js"></script>
     <!-- Calendar Export -->
     <script src="/js/kelly-calendar-export.js"></script>
     <!-- Lesson Audit System -->
@@ -1527,18 +1529,60 @@
                     dot.dataset.day = dayCounter;
                     dot.dataset.date = date.toISOString().split('T')[0];
                     
-                    // Add lesson metadata if available
-                    const lesson = lessonsData[dayCounter];
-                    if (lesson) {
-                        dot.dataset.topic = lesson.topic;
-                        dot.dataset.headline = lesson.headline || '';
-                        dot.dataset.category = lesson.category || '';
-                        dot.dataset.emoji = lesson.emoji || '📚';
-                        const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                    dot.title = lesson.topic ? `${lesson.topic} • ${dateStr}` : dateStr;
+                    // Use unified service for metadata (ensures coherency)
+                    if (window.KellyUnifiedLessonService) {
+                        window.KellyUnifiedLessonService.getMetadata(dayCounter).then(metadata => {
+                            dot.dataset.topic = metadata.topic;
+                            dot.dataset.headline = metadata.headline || '';
+                            dot.dataset.category = metadata.category || '';
+                            dot.dataset.emoji = metadata.emoji || '📚';
+                            const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                            dot.title = metadata.topic ? `${metadata.topic} • ${dateStr}` : dateStr;
+                            
+                            // Update track badges
+                            const hasLearn = metadata.hasLearn;
+                            const hasGrow = metadata.hasGrow;
+                            let innerHTML = `<span class="day-number">${dayOfMonth}</span>`;
+                            if (hasLearn || hasGrow) {
+                                innerHTML += '<div class="track-badges">';
+                                if (hasLearn) {
+                                    innerHTML += '<span class="track-badge learn" title="Learn Track"></span>';
+                                }
+                                if (hasGrow) {
+                                    innerHTML += '<span class="track-badge grow" title="Grow Track"></span>';
+                                }
+                                innerHTML += '</div>';
+                            }
+                            dot.innerHTML = innerHTML;
+                        }).catch(() => {
+                            // Fallback to static data
+                            const lesson = lessonsData[dayCounter];
+                            if (lesson) {
+                                dot.dataset.topic = lesson.topic;
+                                dot.dataset.headline = lesson.headline || '';
+                                dot.dataset.category = lesson.category || '';
+                                dot.dataset.emoji = lesson.emoji || '📚';
+                                const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                dot.title = lesson.topic ? `${lesson.topic} • ${dateStr}` : dateStr;
+                            } else {
+                                const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                                dot.title = dateStr;
+                            }
+                        });
                     } else {
-                        const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
-                        dot.title = dateStr;
+                        // Fallback: Use static lesson data
+                        const lesson = lessonsData[dayCounter];
+                        if (lesson) {
+                            dot.dataset.topic = lesson.topic;
+                            dot.dataset.headline = lesson.headline || '';
+                            dot.dataset.category = lesson.category || '';
+                            dot.dataset.emoji = lesson.emoji || '📚';
+                            const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                            dot.title = lesson.topic ? `${lesson.topic} • ${dateStr}` : dateStr;
+                        } else {
+                            const dateStr = date.toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+                            dot.title = dateStr;
+                        }
                     }
                     
                     // Calculate completeness and add visual indicators
@@ -1567,23 +1611,9 @@
                     dot.dataset.completeness = completeness;
                     dot.dataset.completenessStatus = completenessStatus;
                     
-                    // Add track badges
-                    const hasLearn = lesson?.hasLearn || false;
-                    const hasGrow = lesson?.hasGrow || false;
-                    
-                    // Build inner HTML with date number and track badges
-                    let innerHTML = `<span class="day-number">${dayOfMonth}</span>`;
-                    if (hasLearn || hasGrow) {
-                        innerHTML += '<div class="track-badges">';
-                        if (hasLearn) {
-                            innerHTML += '<span class="track-badge learn" title="Learn Track"></span>';
-                        }
-                        if (hasGrow) {
-                            innerHTML += '<span class="track-badge grow" title="Grow Track"></span>';
-                        }
-                        innerHTML += '</div>';
-                    }
-                    dot.innerHTML = innerHTML;
+                    // Track badges will be set by unified service callback above
+                    // Temporary display until metadata loads
+                    dot.innerHTML = `<span class="day-number">${dayOfMonth}</span>`;
                     
                     if (dayCounter < currentDayOfYear) {
                         // Check completion status from localStorage
