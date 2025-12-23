@@ -48,10 +48,6 @@
   <script src="/js/i18n/language-selector.js"></script>
   <!-- Geo-pricing: Loads localized prices based on user's country -->
   <script src="/js/geo-pricing.js"></script>
-  <!-- Universal Switcher: Language + Country/Currency switcher -->
-  <script src="/js/i18n/universal-switcher.js"></script>
-  <!-- Universal Badge: Shows lesson variants (language, age, tone) -->
-  <script src="/js/i18n/universal-badge.js"></script>
   <!-- Note: Vercel Insights scripts removed to avoid console MIME errors
        when deployed outside Vercel (those endpoints return HTML/404). -->
   <!-- Supabase SDK -->
@@ -85,9 +81,11 @@
   
   <!-- Lesson loader with fallback support -->
   <script src="/js/kelly-lesson-loader.js"></script>
-  <!-- Lesson Audit System - Shows all assets for a lesson -->
-  <script src="/js/kelly-lesson-audit.js"></script>
+  <!-- Curriculum Knowledge Base: LLM system trained on all 365 lessons -->
   <script src="/js/kelly-curriculum-knowledge-base.js"></script>
+  <!-- Curriculum Integration: Tracks learning, updates stats -->
+  <script src="/js/kelly-curriculum-integration.js"></script>
+  <!-- BYOK Prompt Generator: Generate curriculum-aware prompts -->
   <script src="/js/kelly-byok-prompt-generator.js"></script>
   <!-- BYOK Manager: Bring Your Own Key Flywheel -->
   <script src="/js/byok-manager.js"></script>
@@ -101,7 +99,7 @@
   <!-- ═══════════════════════════════════════════════════════════════════════ -->
   <!-- PixiJS compositor (WebGL overlay layer) -->
   <script src="https://cdn.jsdelivr.net/npm/pixi.js@8/dist/pixi.min.js"></script>
-  <script src="/js/kelly-pixi-compositor.js?v=20251222k"></script>
+  <script src="/js/kelly-pixi-compositor.js?v=20251222g"></script>
   <script src="/js/kelly-lipsync.js"></script>
   <script src="/js/kelly-expression-bridge.js"></script>
   <script src="/js/kelly-alignment-player.js"></script>
@@ -1937,14 +1935,9 @@
       padding: 14px 16px;
       font-weight: 800;
       cursor: pointer;
-      background: var(--kelly-blue, #2563eb);
+      background: var(--kelly-color);
       color: #fff;
       margin-top: 6px;
-      transition: all 0.2s ease;
-    }
-    .checkout-cta:hover:not(:disabled) {
-      background: var(--kelly-blue-dark, #1d4ed8);
-      transform: translateY(-1px);
     }
     .checkout-cta:disabled { opacity: 0.75; cursor: not-allowed; }
     .checkout-terms {
@@ -8206,18 +8199,10 @@
 
   <!-- Unified top navigation - Kelly is a Learning Calendar -->
   <nav class="kelly-top-nav">
-    <!-- LEFT: Kelly Logo (navigates to homepage) -->
-    <a href="/" class="kelly-home-link" title="Home" id="kelly-logo-btn" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit;">
+    <!-- LEFT: Kelly Logo (opens Kelly Panel) -->
+    <button type="button" class="kelly-home-link" title="Today's Lesson" id="kelly-logo-btn">
       <img src="/images/brand/kelly-mark-circle-64.png" alt="Kelly" class="kelly-logo-img">
-      <span style="font-weight: 600; font-size: 15px;">Curious Kelly</span>
-    </a>
-    
-    <!-- CENTER NAV: Quick links -->
-    <div class="nav-center-links" style="display: flex; gap: 20px; align-items: center; margin-left: 24px;">
-      <a href="/" style="color: var(--text-secondary, #999); text-decoration: none; font-size: 14px; transition: color 0.2s;">Home</a>
-      <a href="/learn.html" style="color: var(--text-primary, #fff); text-decoration: none; font-size: 14px; font-weight: 600;">Learn</a>
-      <a href="/pricing.html" style="color: var(--text-secondary, #999); text-decoration: none; font-size: 14px; transition: color 0.2s;">Pricing</a>
-    </div>
+    </button>
     
     <!-- CENTER: Today's Lesson CTA (the star of the show) -->
     <div class="nav-lesson-cta" id="nav-lesson-cta">
@@ -8241,9 +8226,6 @@
         <span class="nav-time" id="nav-time">--:--</span>
         <span class="nav-date" id="nav-date">Loading...</span>
       </div>
-      
-      <!-- Universal Switcher (Language + Country) -->
-      <div id="universal-switcher-container" style="display: flex; align-items: center; margin-right: 12px;"></div>
       
       <!-- Quick Actions -->
       <div class="nav-quick-actions">
@@ -8972,6 +8954,11 @@
             <div class="value" id="subscription-status">Included</div>
             <div class="arrow">›</div>
           </div>
+          <div class="settings-item" id="btn-ask-kelly" onclick="openAskKellyPanel()">
+            <div class="label">Ask Kelly</div>
+            <div class="value" style="font-size: 12px; color: var(--text-secondary);">Curriculum-trained AI</div>
+            <div class="arrow">›</div>
+          </div>
         </div>
         
         <!-- ACCOUNT -->
@@ -9392,14 +9379,14 @@
                 </div>
                 
                 <div class="contribution-options" style="display: flex; flex-direction: column; gap: 12px;">
-                  <button class="btn-primary" onclick="openCheckoutPanel('monthly');" style="width: 100%; background: var(--kelly-blue); border: none; color: white; font-weight: 600; padding: 14px 20px; border-radius: 12px; cursor: pointer; transition: all 0.2s ease;">
-                    💳 Monthly — $7.99/mo
+                  <button class="btn-primary" onclick="openCheckoutPanel('monthly');" style="width: 100%;">
+                    Monthly — $7.99/mo
                   </button>
-                  <button class="btn-primary" onclick="openCheckoutPanel('annual');" style="width: 100%; background: var(--kelly-blue); border: none; color: white; font-weight: 600; padding: 14px 20px; border-radius: 12px; cursor: pointer; transition: all 0.2s ease;">
-                    💜 Annual — $49.99/yr
+                  <button class="btn-secondary" onclick="openCheckoutPanel('annual');" style="width: 100%;">
+                    Annual — $49.99/yr
                   </button>
-                  <button class="btn-primary" onclick="openCheckoutPanel('lifetime');" style="width: 100%; background: var(--kelly-blue); border: none; color: white; font-weight: 600; padding: 14px 20px; border-radius: 12px; cursor: pointer; transition: all 0.2s ease;">
-                    🏆 Lifetime — $199.99
+                  <button class="btn-secondary" onclick="openCheckoutPanel('lifetime');" style="width: 100%;">
+                    Lifetime — $199.99
                   </button>
                 </div>
                 
@@ -10307,18 +10294,8 @@
 
     function openPanel(name) {
       // Enforce: one panel at a time.
-      console.log('[openPanel] Opening panel:', name);
       document.documentElement.setAttribute('data-panel-open', name);
       syncSacredPanels();
-      
-      // Verify panel opened (for debugging)
-      setTimeout(() => {
-        const panel = document.getElementById('right-panel');
-        const slot = document.getElementById(`panel-${name}-slot`);
-        console.log('[openPanel] Right panel open:', panel?.classList.contains('open'));
-        console.log('[openPanel] Panel slot exists:', !!slot);
-        console.log('[openPanel] Panel slot visible:', slot?.style.display !== 'none');
-      }, 100);
     }
 
     function closePanel() {
@@ -11436,26 +11413,9 @@
       return __stripePublishableKey;
     }
 
-    async function renderCheckoutPanel() {
+    function renderCheckoutPanel() {
       const slot = document.getElementById('panel-checkout-slot');
       if (!slot) return;
-
-      // Get current pricing
-      const pricingData = window.KellyGeoPricing?.getData() || {
-        country: 'US',
-        currency: 'USD',
-        symbol: '$',
-        prices: {
-          monthly: '$7.99',
-          annual: '$49.99',
-          family: '$99.99',
-          lifetime: '$199.99',
-        },
-        isPPP: false,
-      };
-
-      const currentCountry = window.UniversalSwitcher?.getCountry() || 'US';
-      const supportedCountries = window.UniversalSwitcher?.getSupportedCountries() || [];
 
       slot.innerHTML = `
         <div class="checkout-panel">
@@ -11464,64 +11424,32 @@
             <div class="checkout-subtitle">Contributing is learning — time, talent, or tokens. Stripe handles secure checkout.</div>
           </div>
 
-          <!-- Country Switcher -->
-          <div class="checkout-country-switcher" style="margin-bottom: 20px; padding: 12px; background: rgba(255,255,255,0.05); border-radius: 8px;">
-            <div style="font-size: 12px; color: var(--text-secondary); margin-bottom: 8px;">💰 Change Country:</div>
-            <div style="display: flex; gap: 6px; flex-wrap: wrap;">
-              ${supportedCountries.slice(0, 8).map(c => `
-                <button 
-                  class="country-flag-btn ${c.code === currentCountry ? 'active' : ''}" 
-                  data-country="${c.code}"
-                  onclick="UniversalSwitcher.setCountry('${c.code}').then(() => renderCheckoutPanel())"
-                  style="
-                    padding: 6px 10px;
-                    border-radius: 6px;
-                    border: 1px solid ${c.code === currentCountry ? 'var(--kelly-blue)' : 'rgba(255,255,255,0.2)'};
-                    background: ${c.code === currentCountry ? 'rgba(37,99,235,0.2)' : 'transparent'};
-                    color: white;
-                    font-size: 12px;
-                    cursor: pointer;
-                    transition: all 0.2s;
-                  "
-                  title="${c.name} (${c.currency})"
-                >
-                  ${c.flag} ${c.code}
-                </button>
-              `).join('')}
-            </div>
-            ${pricingData.isPPP ? `
-              <div style="margin-top: 8px; padding: 6px 10px; background: rgba(245,158,11,0.2); border-radius: 6px; font-size: 11px; color: var(--gold-wisdom);">
-                ✨ ${pricingData.pppDiscount || 50}% off for your region
-              </div>
-            ` : ''}
-          </div>
-
           <div class="checkout-plans" id="checkout-plans">
             <button class="checkout-plan ${__selectedPlanType === 'annual' ? 'selected' : ''}" data-plan="annual" type="button">
               <div class="row">
                 <div class="name">Annual</div>
-                <div class="price" data-price-annual>${pricingData.prices.annual || '$49.99'}/yr</div>
+                <div class="price">$49.99/yr</div>
               </div>
               <div class="note">Best value</div>
             </button>
             <button class="checkout-plan ${__selectedPlanType === 'monthly' ? 'selected' : ''}" data-plan="monthly" type="button">
               <div class="row">
                 <div class="name">Monthly</div>
-                <div class="price" data-price-monthly>${pricingData.prices.monthly || '$7.99'}/mo</div>
+                <div class="price">$7.99/mo</div>
               </div>
               <div class="note">Cancel anytime</div>
             </button>
             <button class="checkout-plan ${__selectedPlanType === 'family' ? 'selected' : ''}" data-plan="family" type="button">
               <div class="row">
                 <div class="name">Family</div>
-                <div class="price" data-price-family>${pricingData.prices.family || '$99.99'}/yr</div>
+                <div class="price">$99.99/yr</div>
               </div>
               <div class="note">Up to 6 members</div>
             </button>
             <button class="checkout-plan ${__selectedPlanType === 'lifetime' ? 'selected' : ''}" data-plan="lifetime" type="button">
               <div class="row">
                 <div class="name">Lifetime</div>
-                <div class="price" data-price-lifetime>${pricingData.prices.lifetime || '$199.99'}</div>
+                <div class="price">$199.99</div>
               </div>
               <div class="note">One-time</div>
             </button>
@@ -11579,43 +11507,20 @@
     }
 
     async function openCheckoutPanel(defaultPlanType = 'annual') {
-      console.log('[openCheckoutPanel] Called with plan:', defaultPlanType);
-      try {
-        // Handle gift purchases with dedicated panel
-        if (defaultPlanType.startsWith('gift-')) {
-          __selectedGiftDuration = defaultPlanType.replace('gift-', '');
-          console.log('[openCheckoutPanel] Opening gift checkout for:', __selectedGiftDuration);
-          openPanel('checkout');
-          renderGiftCheckoutPanel();
-          try { closePaywall(); } catch (_) {}
-          return;
-        }
-        
-        __selectedPlanType = (defaultPlanType === 'yearly' ? 'annual' : defaultPlanType) || 'annual';
-        console.log('[openCheckoutPanel] Selected plan type:', __selectedPlanType);
-        
-        // Open the right panel first
-        console.log('[openCheckoutPanel] Opening checkout panel...');
+      // Handle gift purchases with dedicated panel
+      if (defaultPlanType.startsWith('gift-')) {
+        __selectedGiftDuration = defaultPlanType.replace('gift-', '');
         openPanel('checkout');
-        
-        // Small delay to ensure panel is visible before rendering
-        setTimeout(() => {
-          console.log('[openCheckoutPanel] Rendering checkout panel content...');
-          renderCheckoutPanel();
-          
-          // Verify panel is visible
-          const slot = document.getElementById('panel-checkout-slot');
-          const panel = document.getElementById('right-panel');
-          console.log('[openCheckoutPanel] Panel slot exists:', !!slot);
-          console.log('[openCheckoutPanel] Right panel open:', panel?.classList.contains('open'));
-        }, 50);
-        
-        // Also close the legacy paywall overlay if it's open.
+        renderGiftCheckoutPanel();
         try { closePaywall(); } catch (_) {}
-      } catch (error) {
-        console.error('[openCheckoutPanel] Error:', error);
-        showToast('Could not open checkout. Please try again.');
+        return;
       }
+      
+      __selectedPlanType = (defaultPlanType === 'yearly' ? 'annual' : defaultPlanType) || 'annual';
+      openPanel('checkout');
+      renderCheckoutPanel();
+      // Also close the legacy paywall overlay if it's open.
+      try { closePaywall(); } catch (_) {}
     }
 
     // ============================================
@@ -11768,9 +11673,20 @@
       if (cta) { cta.textContent = 'Loading…'; cta.disabled = true; }
 
       try {
+        // Check if Stripe.js is loaded
+        if (!window.Stripe) {
+          throw new Error('Stripe.js not loaded. Please refresh the page.');
+        }
+
         const publishableKey = await fetchStripePublicKey();
+        if (!publishableKey) {
+          throw new Error('Stripe publishable key not available');
+        }
+
         const stripe = window.Stripe(publishableKey);
-        if (!stripe?.initEmbeddedCheckout) throw new Error('stripe_embedded_checkout_unavailable');
+        if (!stripe?.initEmbeddedCheckout) {
+          throw new Error('Stripe Embedded Checkout not available. Please ensure you are using Stripe.js v3.0.0 or later.');
+        }
 
         const session = await getSupabaseSession();
         const userId = session?.user?.id || '';
@@ -11796,36 +11712,48 @@
           (typeof window.getReferralCode === 'function' ? window.getReferralCode() : null) ||
           (localStorage.getItem('kelly_referrer') || null);
 
-            // Get country and currency from UniversalSwitcher or GeoPricing
-            const country = window.UniversalSwitcher?.getCountry() || 
-                           window.KellyGeoPricing?.getCountry() || 
-                           'US';
-            const currency = window.KellyGeoPricing?.getCurrency() || 
-                           (window.UniversalSwitcher?.getSupportedCountries()?.find(c => c.code === country)?.currency) ||
-                           'USD';
-            
-            const resp = await fetch('/api/create-checkout', {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                planType: __selectedPlanType,
-                customerEmail: email,
-                userId: userId,
-                country: country,
-                currency: currency,
-                referralCode: referralCode || undefined,
-              }),
-            });
+        const resp = await fetch('/api/create-checkout', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            planType: __selectedPlanType,
+            customerEmail: email,
+            userId: userId,
+            referralCode: referralCode || undefined,
+          }),
+        });
         const json = await resp.json();
-        if (!resp.ok || !json?.clientSecret) throw new Error(json?.message || json?.error || 'checkout_failed');
+        if (!resp.ok || !json?.clientSecret) {
+          console.error('[checkout] API error:', json);
+          throw new Error(json?.message || json?.error || 'checkout_failed');
+        }
 
-        // Swap UI
-        slot?.querySelector('#checkout-plans')?.classList.add('hidden');
-        slot?.querySelector('#checkout-embedded')?.classList.remove('hidden');
+        // Swap UI - ensure panel is visible first
+        const plansEl = slot?.querySelector('#checkout-plans');
+        const embeddedEl = slot?.querySelector('#checkout-embedded');
+        const checkoutContainer = slot?.querySelector('#stripe-embedded-checkout');
+        
+        if (!checkoutContainer) {
+          throw new Error('Checkout container element not found');
+        }
+
+        if (plansEl) plansEl.classList.add('hidden');
+        if (embeddedEl) embeddedEl.classList.remove('hidden');
+
+        // Ensure container is visible and has dimensions before mounting
+        checkoutContainer.style.minHeight = '400px';
+        checkoutContainer.style.width = '100%';
+
+        // Small delay to ensure DOM is updated
+        await new Promise(resolve => setTimeout(resolve, 100));
 
         destroyEmbeddedCheckout();
+        
+        console.log('[checkout] Initializing Stripe embedded checkout...');
         __embeddedCheckout = await stripe.initEmbeddedCheckout({ clientSecret: json.clientSecret });
+        console.log('[checkout] Mounting checkout to #stripe-embedded-checkout');
         __embeddedCheckout.mount('#stripe-embedded-checkout');
+        console.log('[checkout] Checkout mounted successfully');
       } catch (e) {
         console.error('[checkout] failed:', e);
         showToast('Could not start checkout. Please try again.');
@@ -11880,9 +11808,7 @@
     // Auto-open checkout panel if ?checkout=plan param is present
     const autoCheckoutPlan = urlParams.get('checkout');
     if (autoCheckoutPlan && autoCheckoutPlan !== 'success') {
-      console.log('[Auto-checkout] URL param detected:', autoCheckoutPlan);
       setTimeout(() => {
-        console.log('[Auto-checkout] Opening checkout panel for:', autoCheckoutPlan);
         openCheckoutPanel(autoCheckoutPlan);
       }, 500);
     }
@@ -12450,21 +12376,6 @@
       if (window.LessonVisualDisplay) {
         window.LessonVisualDisplay.show(dayNumber, 'hook');
       }
-      
-      // Render universal badge showing available variants
-      if (window.UniversalBadge) {
-        const dayBadge = document.getElementById('day-badge');
-        if (dayBadge) {
-          // Remove existing badge if present
-          const existingBadge = dayBadge.querySelector('.universal-lesson-badge');
-          if (existingBadge) existingBadge.remove();
-          
-          // Render new badge
-          const badgeContainer = document.createElement('div');
-          dayBadge.appendChild(badgeContainer);
-          window.UniversalBadge.render(lesson, badgeContainer);
-        }
-      }
 
       return currentLesson;
     }
@@ -12488,17 +12399,11 @@
           const archetype = 'The Scientist';
           const ageBucket = getEffectiveAgeBucket();
           const track = state.currentTrack || 'learn'; // Learn or Grow track
-          // Get current language from UniversalSwitcher
-          const currentLanguage = window.UniversalSwitcher?.getLanguage() || 
-                                  window.KellyI18n?.getLanguage() || 
-                                  'en';
-          
           const payload = await window.KellyLessonLoader.loadLesson(dayNumber, {
             archetype,
             age: state.age,
             region: ageBucket,
-            track: track,
-            language: currentLanguage
+            track: track
           });
           if (payload?.lesson) return applyLoadedLesson(dayNumber, payload);
         } catch (e) {
@@ -14022,10 +13927,10 @@
       });
       
       // Header click behaviors
-      // Kelly logo -> navigate to homepage
+      // Kelly logo -> opens chat/comments panel
       document.querySelector('.kelly-home-link')?.addEventListener('click', (e) => {
         e.preventDefault();
-        window.location.href = '/';
+        openPanel('left');
       });
       
       // Time/Date display -> opens journey panel
@@ -14056,19 +13961,6 @@
       
       // LEARN/GROW toggle
       setupTrackToggle();
-      
-      // LESSON INSPECTOR - Press Ctrl+Shift+A to inspect current lesson
-      document.addEventListener('keydown', (e) => {
-        if (e.ctrlKey && e.shiftKey && e.key === 'A') {
-          e.preventDefault();
-          const currentDay = state.currentDay || getTodayDayNumber();
-          if (window.LessonInspector) {
-            window.LessonInspector.showInspector(currentDay);
-          } else if (window.LessonAudit) {
-            window.LessonAudit.showInspector(currentDay);
-          }
-        }
-      });
     }
     
     // ============================================
@@ -21134,15 +21026,6 @@ Style requirements:
 
   <script>
     document.addEventListener('DOMContentLoaded', async () => {
-      // Initialize Universal Switcher early
-      if (window.UniversalSwitcher && typeof window.UniversalSwitcher.init === 'function') {
-        try {
-          await window.UniversalSwitcher.init();
-        } catch (e) {
-          console.warn('[learn.html] UniversalSwitcher init failed:', e);
-        }
-      }
-      
       const staticOnly =
         (location.hostname === 'localhost' || location.hostname === '127.0.0.1') &&
         String(location.port || '') === '3000';
