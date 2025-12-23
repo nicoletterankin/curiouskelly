@@ -87,6 +87,7 @@
             z-index: 100;
             padding: 16px 24px;
             background: rgba(9, 9, 11, 0.8);
+            -webkit-backdrop-filter: blur(12px);
             backdrop-filter: blur(12px);
             border-bottom: 1px solid var(--border);
         }
@@ -186,6 +187,47 @@
             margin: 0 auto 32px;
         }
 
+        .hero-tracks {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+            margin-top: 24px;
+            margin-bottom: 24px;
+            flex-wrap: wrap;
+        }
+        
+        .hero-track-badge {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            padding: 12px 20px;
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 12px;
+        }
+        
+        .hero-track-badge .track-icon {
+            font-size: 1.5em;
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .hero-track-badge .track-icon img {
+            width: 1.2em;
+            height: 1.2em;
+            object-fit: contain;
+        }
+        
+        .hero-track-badge .track-name {
+            font-weight: 600;
+            color: var(--text);
+        }
+        
+        .hero-track-badge .track-desc {
+            font-size: 0.85em;
+            color: var(--text-secondary);
+        }
+        
         .hero-cta {
             display: flex;
             gap: 12px;
@@ -285,6 +327,66 @@
         .day-dot.future {
             background: var(--border);
         }
+        
+        /* Completeness color coding */
+        .day-dot.completeness-production {
+            background: #10b981;
+            opacity: 0.9;
+        }
+        
+        .day-dot.completeness-complete {
+            background: #3b82f6;
+            opacity: 0.8;
+        }
+        
+        .day-dot.completeness-basic {
+            background: #f59e0b;
+            opacity: 0.7;
+        }
+        
+        .day-dot.completeness-skeleton {
+            background: #6b7280;
+            opacity: 0.5;
+        }
+        
+        .day-dot.completeness-missing {
+            background: var(--bg-elevated);
+            opacity: 0.4;
+        }
+        
+        /* Track badges */
+        .day-dot::after {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            right: 2px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: transparent;
+            transition: all 0.2s;
+        }
+        
+        .day-dot[data-has-learn="true"]::after {
+            background: #f59e0b;
+            box-shadow: 0 0 0 1px rgba(245, 158, 11, 0.3);
+        }
+        
+        .day-dot[data-has-grow="true"]::before {
+            content: '';
+            position: absolute;
+            bottom: 2px;
+            left: 2px;
+            width: 6px;
+            height: 6px;
+            border-radius: 50%;
+            background: #8b5cf6;
+            box-shadow: 0 0 0 1px rgba(139, 92, 246, 0.3);
+        }
+        
+        .day-dot[data-has-learn="true"][data-has-grow="true"]::after {
+            background: linear-gradient(135deg, #f59e0b 50%, #8b5cf6 50%);
+        }
 
         /* Lesson Tooltip */
         .lesson-tooltip {
@@ -369,6 +471,7 @@
             right: 0;
             bottom: 0;
             background: rgba(0, 0, 0, 0.85);
+            -webkit-backdrop-filter: blur(8px);
             backdrop-filter: blur(8px);
         }
 
@@ -916,8 +1019,20 @@
 
     <!-- Hero -->
     <section class="hero">
-        <h1>One lesson a day.<br>365 days a year.</h1>
-        <p>A daily learning habit for the whole family. Science, history, art, math — one minute at a time.</p>
+        <h1>Two tracks. Every day.<br>365 days a year.</h1>
+        <p>A daily learning habit for the whole family. Learn something new about the world, then grow your ability to learn better with AI.</p>
+        <div class="hero-tracks">
+            <div class="hero-track-badge">
+                <span class="track-icon"><img src="/images/brand/icon-learn-track.svg" alt="Learn" style="width: 1.2em; height: 1.2em; vertical-align: middle;" /></span>
+                <span class="track-name">Learn</span>
+                <span class="track-desc">365 lessons</span>
+            </div>
+            <div class="hero-track-badge">
+                <span class="track-icon"><img src="/images/brand/icon-grow-track.svg" alt="Grow" style="width: 1.2em; height: 1.2em; vertical-align: middle;" /></span>
+                <span class="track-name">Grow</span>
+                <span class="track-desc">AI Fluency</span>
+            </div>
+        </div>
         <div class="hero-cta">
             <a href="/learn.html" class="btn" id="start-btn">Start Learning</a>
             <a href="/pricing.html" class="btn btn-ghost">View Pricing</a>
@@ -992,7 +1107,7 @@
             <div class="byok-visual">
                 <div class="byok-visual-header">Your API Key</div>
                 <div class="key-input-demo">
-                    <input type="text" value="sk-••••••••••••••••" readonly>
+                    <input type="text" value="sk-••••••••••••••••" readonly aria-label="API Key Input" title="API Key Input">
                     <button class="btn">Connect</button>
                 </div>
                 <p style="font-size: 0.75rem; color: var(--text-muted); margin-top: 12px;">🔒 Stored locally in your browser only</p>
@@ -1117,6 +1232,10 @@
 
     <!-- Lesson Audit System -->
     <script src="/js/kelly-lesson-audit.js"></script>
+    <!-- Lesson Preview Popup (Compact Completeness Display) -->
+    <script src="/js/lesson-preview-popup.js"></script>
+    <!-- Lesson Audit Panel (Right-Side Panel with Dual Views) -->
+    <script src="/js/lesson-audit-panel.js"></script>
     
     <script>
         // Load lesson metadata and generate interactive calendar
@@ -1190,9 +1309,59 @@
                         dot.title = `${lesson.topic}${lesson.category ? ' • ' + lesson.category : ''}`;
                     }
                     
+                    // Calculate completeness and add visual indicators
+                    let completeness = 0;
+                    let completenessStatus = 'missing';
+                    if (window.LessonPreviewPopup) {
+                        const comp = window.LessonPreviewPopup.calculateCompleteness(dayCounter);
+                        completeness = comp.completeness || 0;
+                        completenessStatus = comp.status || 'missing';
+                    }
+                    
+                    // Add completeness class for color coding
+                    if (completeness >= 80) {
+                        dot.classList.add('completeness-production');
+                    } else if (completeness >= 60) {
+                        dot.classList.add('completeness-complete');
+                    } else if (completeness >= 40) {
+                        dot.classList.add('completeness-basic');
+                    } else if (completeness > 0) {
+                        dot.classList.add('completeness-skeleton');
+                    } else {
+                        dot.classList.add('completeness-missing');
+                    }
+                    
+                    // Store completeness data
+                    dot.dataset.completeness = completeness;
+                    dot.dataset.completenessStatus = completenessStatus;
+                    
+                    // Add track badges if available
+                    const pack = window.CURIOUS_KELLY?.LOCAL_PACKS?.[dayCounter] ||
+                                 window.CURIOUS_KELLY?.LOCAL_PACKS?.[`day-${String(dayCounter).padStart(3, '0')}`] ||
+                                 window.CURIOUS_KELLY?.LOCAL_PACKS?.[String(dayCounter)];
+                    if (pack?.lesson?.topic) {
+                        dot.dataset.hasLearn = 'true';
+                    }
+                    if (pack?.grow?.topic) {
+                        dot.dataset.hasGrow = 'true';
+                    }
+                    
                     if (dayCounter < currentDayOfYear) {
-                        // Random completion (demo)
-                        if (Math.random() > 0.3) dot.classList.add('completed');
+                        // Check completion status from localStorage
+                        try {
+                            const kellyState = localStorage.getItem('kellyState');
+                            if (kellyState) {
+                                const state = JSON.parse(kellyState);
+                                const completed = state.completedLessons;
+                                if (Array.isArray(completed) && completed.includes(dayCounter)) {
+                                    dot.classList.add('completed');
+                                } else if (completed?.learn?.includes(dayCounter) || completed?.grow?.includes(dayCounter)) {
+                                    dot.classList.add('completed');
+                                }
+                            }
+                        } catch (e) {
+                            // Silent fail
+                        }
                     } else if (dayCounter === currentDayOfYear) {
                         dot.classList.add('today');
                     } else {
@@ -1207,22 +1376,29 @@
                         if (day < 1 || day > 365) return;
 
                         if (clickTimer) {
-                            // Double click - navigate to lesson
+                            // Double click - show compact preview popup
                             clearTimeout(clickTimer);
                             clickTimer = null;
-                            window.location.href = `/learn.html?day=${day}`;
-                        } else {
-                            // Single click - show audit
-                            clickTimer = setTimeout(() => {
-                                clickTimer = null;
-                            if (window.LessonInspector) {
-                                window.LessonInspector.showInspector(day);
-                            } else if (window.LessonAudit) {
-                                window.LessonAudit.showInspector(day);
+                            if (window.LessonPreviewPopup) {
+                                window.LessonPreviewPopup.show(day);
                             } else {
-                                // Fallback: navigate if inspector not loaded
+                                // Fallback: navigate if preview not loaded
                                 window.location.href = `/learn.html?day=${day}`;
                             }
+                        } else {
+                            // Single click - show audit panel (right-side panel)
+                            clickTimer = setTimeout(() => {
+                                clickTimer = null;
+                                if (window.LessonAuditPanel) {
+                                    window.LessonAuditPanel.show(day);
+                                } else if (window.LessonInspector) {
+                                    window.LessonInspector.showInspector(day);
+                                } else if (window.LessonAudit) {
+                                    window.LessonAudit.showInspector(day);
+                                } else {
+                                    // Fallback: navigate if inspector not loaded
+                                    window.location.href = `/learn.html?day=${day}`;
+                                }
                             }, 300);
                         }
                     });
@@ -1252,9 +1428,28 @@
                 const hook = dot.dataset.hook;
                 const category = dot.dataset.category;
                 const icon = dot.dataset.icon;
-                const day = dot.dataset.day;
+                const day = parseInt(dot.dataset.day);
                 
                 if (!topic) return;
+                
+                // Check completion status for both tracks
+                let learnCompleted = false;
+                let growCompleted = false;
+                try {
+                    const kellyState = localStorage.getItem('kellyState');
+                    if (kellyState) {
+                        const state = JSON.parse(kellyState);
+                        if (Array.isArray(state.completedLessons)) {
+                            // Old format - assume learn track
+                            learnCompleted = state.completedLessons.includes(day);
+                        } else {
+                            learnCompleted = state.completedLessons?.learn?.includes(day) || false;
+                            growCompleted = state.completedLessons?.grow?.includes(day) || false;
+                        }
+                    }
+                } catch (e) {
+                    // Silent fail
+                }
                 
                 // Remove existing tooltip
                 if (tooltip) tooltip.remove();
@@ -1263,6 +1458,20 @@
                 tooltip = document.createElement('div');
                 tooltip.className = 'lesson-tooltip';
                 const emoji = dot.dataset.emoji || '📚';
+                
+                // Build completion badges
+                let completionBadges = '';
+                if (learnCompleted || growCompleted) {
+                    completionBadges = '<div class="tooltip-completion">';
+                    if (learnCompleted) {
+                        completionBadges += '<span class="completion-badge learn">✓ Learn</span>';
+                    }
+                    if (growCompleted) {
+                        completionBadges += '<span class="completion-badge grow">✓ Grow</span>';
+                    }
+                    completionBadges += '</div>';
+                }
+                
                 tooltip.innerHTML = `
                     <div class="tooltip-header">
                         <span class="tooltip-icon">${emoji}</span>
@@ -1270,7 +1479,8 @@
                     </div>
                     <div class="tooltip-topic">${topic}</div>
                     ${category ? `<div class="tooltip-category">${category}</div>` : ''}
-                    <div class="tooltip-cta">${isTouchDevice ? 'Tap to audit • Double-tap for lesson →' : 'Click to audit • Double-click for lesson →'}</div>
+                    ${completionBadges}
+                    <div class="tooltip-cta">${isTouchDevice ? 'Tap to preview • Double-tap for lesson →' : 'Click to preview • Double-click for lesson →'}</div>
                 `;
                 
                 document.body.appendChild(tooltip);
@@ -1313,10 +1523,14 @@
                         e.preventDefault();
                         
                         if (activeTooltipDot === this) {
-                            // Second tap - show audit or navigate
+                            // Second tap - show compact preview popup
                             hideTooltip();
                             const day = parseInt(this.dataset.day);
-                            if (window.LessonInspector) {
+                            if (window.LessonPreviewPopup) {
+                                window.LessonPreviewPopup.show(day);
+                            } else if (window.LessonAuditPanel) {
+                                window.LessonAuditPanel.show(day);
+                            } else if (window.LessonInspector) {
                                 window.LessonInspector.showInspector(day);
                             } else if (window.LessonAudit) {
                                 window.LessonAudit.showInspector(day);

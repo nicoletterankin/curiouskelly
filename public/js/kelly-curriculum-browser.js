@@ -23,7 +23,8 @@ const KellyCurriculumBrowser = (function() {
       fullName: 'Learn Track',
       slug: 'year1-foundations',
       description: 'What the world IS',
-      icon: '🌟',
+      icon: '/images/brand/icon-learn-track.svg',
+      iconEmoji: '🌟', // Fallback for text contexts
       color: '#f59e0b'
     },
     grow: {
@@ -32,7 +33,8 @@ const KellyCurriculumBrowser = (function() {
       fullName: 'Grow Track',
       slug: 'year2-ai-fluency',
       description: 'How to LEARN',
-      icon: '🧠',
+      icon: '/images/brand/icon-grow-track.svg',
+      iconEmoji: '🧠', // Fallback for text contexts
       color: '#8b5cf6'
     }
   };
@@ -125,7 +127,7 @@ const KellyCurriculumBrowser = (function() {
             <span class="duo-icon">📚</span>
             <div>
               <h2>365 Days of Learning</h2>
-              <p class="duo-subtitle">Every day, two lessons: <span style="color: ${TRACKS.learn.color}">${TRACKS.learn.icon} ${TRACKS.learn.name}</span> + <span style="color: ${TRACKS.grow.color}">${TRACKS.grow.icon} ${TRACKS.grow.name}</span></p>
+              <p class="duo-subtitle">Every day, two lessons: <span style="color: ${TRACKS.learn.color}"><img src="${TRACKS.learn.icon}" alt="${TRACKS.learn.name}" style="width: 1em; height: 1em; vertical-align: middle;" /> ${TRACKS.learn.name}</span> + <span style="color: ${TRACKS.grow.color}"><img src="${TRACKS.grow.icon}" alt="${TRACKS.grow.name}" style="width: 1em; height: 1em; vertical-align: middle;" /> ${TRACKS.grow.name}</span></p>
             </div>
           </div>
           <div class="duo-stats">
@@ -137,10 +139,10 @@ const KellyCurriculumBrowser = (function() {
         <!-- Track Legend -->
         <div class="track-legend">
           <div class="track-badge learn-badge" style="background: ${TRACKS.learn.color}20; border-color: ${TRACKS.learn.color}">
-            ${TRACKS.learn.icon} <strong>${TRACKS.learn.name}</strong> — ${TRACKS.learn.description}
+            <img src="${TRACKS.learn.icon}" alt="${TRACKS.learn.name}" style="width: 1.2em; height: 1.2em; vertical-align: middle;" /> <strong>${TRACKS.learn.name}</strong> — ${TRACKS.learn.description}
           </div>
           <div class="track-badge grow-badge" style="background: ${TRACKS.grow.color}20; border-color: ${TRACKS.grow.color}">
-            ${TRACKS.grow.icon} <strong>${TRACKS.grow.name}</strong> — ${TRACKS.grow.description}
+            <img src="${TRACKS.grow.icon}" alt="${TRACKS.grow.name}" style="width: 1.2em; height: 1.2em; vertical-align: middle;" /> <strong>${TRACKS.grow.name}</strong> — ${TRACKS.grow.description}
           </div>
         </div>
 
@@ -176,8 +178,8 @@ const KellyCurriculumBrowser = (function() {
           <div class="curriculum-month-header" onclick="KellyCurriculumBrowser.toggleMonth('${month.name}')">
             <div class="month-left">
               <div class="month-duo-icons">
-                <span class="mini-icon learn" style="background: ${TRACKS.learn.color}">${TRACKS.learn.icon}</span>
-                <span class="mini-icon grow" style="background: ${TRACKS.grow.color}">${TRACKS.grow.icon}</span>
+                <span class="mini-icon learn" style="background: ${TRACKS.learn.color}"><img src="${TRACKS.learn.icon}" alt="${TRACKS.learn.name}" style="width: 16px; height: 16px;" /></span>
+                <span class="mini-icon grow" style="background: ${TRACKS.grow.color}"><img src="${TRACKS.grow.icon}" alt="${TRACKS.grow.name}" style="width: 16px; height: 16px;" /></span>
               </div>
               <div class="month-info">
                 <h3>${month.name}</h3>
@@ -256,7 +258,7 @@ const KellyCurriculumBrowser = (function() {
               <div class="track-thumb" style="width: 48px; height: 48px; border-radius: 6px; overflow: hidden; margin-right: 12px; flex-shrink: 0;">
                 <img src="${learnThumb}" alt="${learnDay.title || ''}" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy" onerror="this.src='/images/kelly-hero-4k.webp'">
               </div>
-              <div class="track-icon" style="background: ${TRACKS.learn.color}">${TRACKS.learn.icon}</div>
+              <div class="track-icon" style="background: ${TRACKS.learn.color}"><img src="${TRACKS.learn.icon}" alt="${TRACKS.learn.name}" style="width: 20px; height: 20px;" /></div>
               <div class="track-content">
                 <div class="track-label">Learn</div>
                 <div class="track-title">${learnDay.title || 'Loading...'}</div>
@@ -267,7 +269,7 @@ const KellyCurriculumBrowser = (function() {
               <div class="track-thumb" style="width: 48px; height: 48px; border-radius: 6px; overflow: hidden; margin-right: 12px; flex-shrink: 0;">
                 <img src="${growThumb}" alt="${growDay.title || ''}" style="width: 100%; height: 100%; object-fit: cover;" loading="lazy" onerror="this.src='/images/kelly-hero-4k.webp'">
               </div>
-              <div class="track-icon" style="background: ${TRACKS.grow.color}">${TRACKS.grow.icon}</div>
+              <div class="track-icon" style="background: ${TRACKS.grow.color}"><img src="${TRACKS.grow.icon}" alt="${TRACKS.grow.name}" style="width: 20px; height: 20px;" /></div>
               <div class="track-content">
                 <div class="track-label">Grow</div>
                 <div class="track-title">${growDay.title || 'Loading...'}</div>
