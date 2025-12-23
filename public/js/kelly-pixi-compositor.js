@@ -24,7 +24,7 @@
  */
 (() => {
   // ALWAYS log script load (critical for debugging)
-  console.log('[Pixi] 🎭 kelly-pixi-compositor.js LOADED, v=20251222l - performance optimized');
+  console.log('[Pixi] 🎭 kelly-pixi-compositor.js LOADED, v=20251222m - production hardened');
   
   const DEBUG =
     (typeof window !== 'undefined' && !!window.__KELLY_PIXI_DEBUG) ||
@@ -411,7 +411,12 @@
     },
 
     setBlendshapes(blendshapes) {
-      this.lastBlendshapes = blendshapes || {};
+      try {
+        this.lastBlendshapes = blendshapes || {};
+      } catch (e) {
+        console.warn('[Pixi] setBlendshapes error:', e);
+        this.lastBlendshapes = {};
+      }
       return this;
     },
 
@@ -537,8 +542,9 @@
     },
 
     _renderOverlaysFromBlendshapes(bs) {
-      const r = this.app.renderer;
-      if (!r) return;
+      try {
+        const r = this.app.renderer;
+        if (!r) return;
 
       // Anchor in pixels
       const ax = this.anchor.x * r.width;
@@ -701,6 +707,10 @@
       } else if (this.eyebrowLeft && this.eyebrowRight) {
         this.eyebrowLeft.clear();
         this.eyebrowRight.clear();
+      }
+      } catch (e) {
+        console.warn('[Pixi] Render error (non-fatal):', e);
+        // Continue rendering - don't break the entire system
       }
     },
 
