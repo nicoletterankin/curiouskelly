@@ -13147,8 +13147,10 @@
 
       if (TALKING_PHOTO) {
         // Talking Photo Mode: Skip video, use static head image with PixiJS overlays
+        console.log('[DEBUG] 📸 TALKING_PHOTO mode detected, setting resolvedSource');
         resolvedVideo = null;
         resolvedSource = 'talking_photo';
+        console.log('[DEBUG] 📸 resolvedSource set to:', resolvedSource);
         if (DEBUG) console.log('📸 TALKING PHOTO mode: using static head image for', personaId);
       } else if (HYBRID_DEMO) {
         resolvedVideo = '/kelly/videos/001/welcome.mp4';
@@ -13190,7 +13192,15 @@
 
       // TALKING PHOTO MODE: Static image + PixiJS overlays + TTS audio
       if (TALKING_PHOTO && resolvedSource === 'talking_photo') {
+        console.log('[DEBUG] 📸 TALKING PHOTO branch executing');
+        console.log('[DEBUG] 📸 TALKING_PHOTO:', TALKING_PHOTO);
+        console.log('[DEBUG] 📸 resolvedSource:', resolvedSource);
+        console.log('[DEBUG] 📸 KellyPixiCompositor available:', typeof window.KellyPixiCompositor !== 'undefined');
+        console.log('[DEBUG] 📸 PIXI available:', typeof window.PIXI !== 'undefined');
+        
         const container = document.getElementById('kelly-stage');
+        console.log('[DEBUG] 📸 kelly-stage container:', !!container, container ? container.id : 'not found');
+        
         const v = getKellyVideoEl();
         const img = document.getElementById('lesson-kelly-img');
         
@@ -13201,11 +13211,19 @@
         // Initialize Pixi compositor with static image
         if (window.KellyPixiCompositor) {
           try {
+            console.log('[DEBUG] 📸 Compositor init check - isInitialized:', window.KellyPixiCompositor.isInitialized);
             if (!window.KellyPixiCompositor.isInitialized) {
+              console.log('[DEBUG] 📸 Calling init()...');
               await window.KellyPixiCompositor.init({ containerEl: container });
+              console.log('[DEBUG] 📸 Init complete - isInitialized:', window.KellyPixiCompositor.isInitialized);
+            } else {
+              console.log('[DEBUG] 📸 Compositor already initialized');
             }
+            
+            console.log('[DEBUG] 📸 Attaching image for persona:', personaId);
             await window.KellyPixiCompositor.attachImage(personaId);
             window.KellyPixiCompositor.setEnabled(true);
+            console.log('[DEBUG] 📸 Compositor enabled');
             
             // Connect lip-sync to compositor
             if (window.KellyLipSync) {
@@ -13213,12 +13231,16 @@
               window.KellyLipSync.onBlendshapesUpdate = (blendshapes) => {
                 try { window.KellyPixiCompositor.setBlendshapes(blendshapes); } catch (_) {}
               };
+              console.log('[DEBUG] 📸 Lip-sync callback connected');
             }
             
             if (DEBUG) console.log('📸 [Talking Photo] Compositor ready for', personaId);
           } catch (err) {
             console.error('📸 [Talking Photo] Failed to init compositor:', err);
+            console.error('📸 [Talking Photo] Error stack:', err.stack);
           }
+        } else {
+          console.error('[DEBUG] 📸 KellyPixiCompositor NOT FOUND on window!');
         }
         
         // Play TTS audio (this drives the lip-sync)
