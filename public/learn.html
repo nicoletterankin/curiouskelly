@@ -13215,8 +13215,9 @@
               if (videoEl && !videoEl.hidden) {
                 await window.KellyPixiCompositor.attachVideo(videoEl);
               } else {
-                // Use talking photo mode with current archetype
-                const personaId = getPhaseArchetype(state.currentPhase || 'hook') || 'explorer';
+                // Use talking photo mode with base/neutral archetype (matches HeyGen avatar)
+                // CRITICAL: Use 'default' or 'storyteller' to match HeyGen avatar ID, not 'explorer'
+                const personaId = getPhaseArchetype(state.currentPhase || 'hook') || 'storyteller';
                 await window.KellyPixiCompositor.attachImage(personaId);
               }
               
@@ -13722,8 +13723,11 @@
               console.log('[DEBUG] 📸 Compositor already initialized');
             }
             
-            console.log('[DEBUG] 📸 Attaching image for persona:', personaId);
-            await window.KellyPixiCompositor.attachImage(personaId);
+            // CRITICAL: Use base/neutral archetype that matches HeyGen avatar
+            // Don't use 'explorer' - use 'storyteller' or 'default' to match the HeyGen video
+            const basePersonaId = personaId === 'explorer' ? 'storyteller' : personaId;
+            console.log('[DEBUG] 📸 Attaching image for persona:', basePersonaId, '(original:', personaId, ')');
+            await window.KellyPixiCompositor.attachImage(basePersonaId);
             window.KellyPixiCompositor.setEnabled(true);
             console.log('[DEBUG] 📸 Compositor enabled');
             

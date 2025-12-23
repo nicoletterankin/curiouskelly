@@ -528,12 +528,15 @@
       // Always update blink (needed for natural eye movement)
       this._updateBlink(delta);
       
-      // Render overlays if we have blendshapes OR if blink is active
+      // CRITICAL: Always render if compositor is enabled (even if blendshapes are static)
+      // This ensures mouth is visible and ready when audio starts
       const hasBlendshapes = Object.keys(this.lastBlendshapes || {}).length > 0;
       const blinkActive = this._blinkState !== 0;
+      const shouldRender = hasBlendshapes || blinkActive || this._hasBlendshapesChanged;
       
-      if (hasBlendshapes || blinkActive) {
+      if (shouldRender) {
         this._renderOverlaysFromBlendshapes(this.lastBlendshapes || {});
+        this._hasBlendshapesChanged = false; // Reset flag after render
       }
     },
 
