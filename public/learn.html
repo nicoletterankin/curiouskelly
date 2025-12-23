@@ -2909,8 +2909,19 @@
       flex-shrink: 0;
     }
 
-    .duo-track-preview.learn .track-name { color: #f59e0b; }
-    .duo-track-preview.grow .track-name { color: #8b5cf6; }
+    .duo-track-preview.learn .track-name { color: #60a5fa; }
+    .duo-track-preview.grow .track-name { color: #a78bfa; }
+    
+    .duo-track-primary {
+      background: rgba(37, 99, 235, 0.1);
+      border: 1px solid rgba(37, 99, 235, 0.2);
+    }
+    
+    .duo-track-bonus {
+      opacity: 0.8;
+      background: rgba(139, 92, 246, 0.05);
+      border: 1px solid rgba(139, 92, 246, 0.15);
+    }
 
     .duo-track-preview .track-topic {
       flex: 1;
@@ -16943,30 +16954,30 @@ The learner is on phase ${state.currentPhase + 1} of 7. Be helpful and make lear
             <div class="hero-scene-content">
               <h1 class="hero-scene-title">✨ Curious Kelly</h1>
               <p class="hero-scene-tagline">
-                Two lessons, every day. Learn something new about the world, 
-                then grow your ability to learn better.
+                One lesson a day. Learn something new about the world every day. 
+                When you want to dive deeper, continue with our AI fluency track.
               </p>
               
-              <!-- Today's Duo -->
+              <!-- Today's Lesson -->
               <div class="todays-duo" id="todays-duo">
-                <div class="duo-label">Day ${day} — Today's Learning</div>
+                <div class="duo-label">Day ${day} — Today's Lesson</div>
                 <div class="duo-tracks-preview">
-                  <div class="duo-track-preview learn" id="duo-learn-preview">
-                    <span class="track-icon-sm" style="background: #f59e0b"><img src="/images/brand/icon-learn-track.svg" alt="Learn" /></span>
-                    <span class="track-name">Learn</span>
+                  <div class="duo-track-preview learn duo-track-primary" id="duo-learn-preview">
+                    <span class="track-icon-sm" style="background: rgba(37, 99, 235, 0.2)"><img src="/images/brand/icon-learn-track.svg" alt="Learn" /></span>
+                    <span class="track-name">Today's Lesson</span>
                     <span class="track-topic" id="learn-topic-today">Loading...</span>
                   </div>
-                  <div class="duo-track-preview grow" id="duo-grow-preview">
-                    <span class="track-icon-sm" style="background: #8b5cf6"><img src="/images/brand/icon-grow-track.svg" alt="Grow" /></span>
-                    <span class="track-name">Grow</span>
-                    <span class="track-topic" id="grow-topic-today">Loading...</span>
+                  <div class="duo-track-preview grow duo-track-bonus" id="duo-grow-preview">
+                    <span class="track-icon-sm" style="background: rgba(139, 92, 246, 0.15)"><img src="/images/brand/icon-grow-track.svg" alt="Grow" /></span>
+                    <span class="track-name">Continue Learning</span>
+                    <span class="track-topic" id="grow-topic-today">AI fluency bonus</span>
                   </div>
                 </div>
               </div>
               
               <div class="hero-cta-group">
                 <button class="hero-cta-primary" onclick="startTodaysLesson()">
-                  Start Day ${day} →
+                  Start Today's Lesson →
                 </button>
                 <button class="hero-cta-secondary" onclick="goToHomeScene(1)">
                   See Plans
@@ -16975,8 +16986,8 @@ The learner is on phase ${state.currentPhase + 1} of 7. Be helpful and make lear
               
               <div class="hero-scene-stats">
                 <div class="hero-stat">
-                  <div class="hero-stat-value">730</div>
-                  <div class="hero-stat-label">Topics/Year</div>
+                  <div class="hero-stat-value">365</div>
+                  <div class="hero-stat-label">Lessons/Year</div>
                 </div>
                 <div class="hero-stat">
                   <div class="hero-stat-value">🔥 ${streak}</div>
@@ -17302,7 +17313,11 @@ The learner is on phase ${state.currentPhase + 1} of 7. Be helpful and make lear
           learnEl.textContent = learnLesson.title;
         }
         if (growEl && growLesson) {
+          // Show Grow topic, but keep it positioned as bonus
           growEl.textContent = growLesson.title;
+        } else if (growEl) {
+          // Keep "AI fluency bonus" as fallback
+          growEl.textContent = 'AI fluency bonus';
         }
       } catch (error) {
         console.warn('[TodaysDuo] Could not load topics:', error);
