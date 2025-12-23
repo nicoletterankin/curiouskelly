@@ -11,9 +11,9 @@
  * Run: node tests/hybrid-compositor-test.js
  */
 
-const puppeteer = require('puppeteer');
-const fs = require('fs');
-const path = require('path');
+import puppeteer from 'puppeteer';
+import fs from 'fs';
+import path from 'path';
 
 const TEST_URL = process.env.TEST_URL || 'https://curiouskelly.com/learn.html?talkingPhoto=1&pixiDebug=1&day=1';
 const TIMEOUT = 30000;
@@ -71,7 +71,7 @@ async function testHybridCompositor() {
     });
 
     // Wait for page to stabilize
-    await page.waitForTimeout(3000);
+    await new Promise(resolve => setTimeout(resolve, 3000));
 
     // Take initial screenshot
     const screenshot1 = await page.screenshot({ path: 'test-screenshot-1-initial.png', fullPage: true });
@@ -103,21 +103,41 @@ async function testHybridCompositor() {
     });
     console.log(`   PIXI available: ${pixiAvailable}`);
 
-    // Test 4: Check if compositor initialized
+    // Test 4: Check if compositor initialized (wait for it)
     console.log('\n📋 Test 4: Compositor Initialization Status');
+    await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for init
     const compositorStatus = await page.evaluate(() => {
       if (!window.KellyPixiCompositor) {
         return { initialized: false, error: 'KellyPixiCompositor not found' };
       }
-      return {
+      const state = {
         initialized: window.KellyPixiCompositor.isInitialized || false,
         enabled: window.KellyPixiCompositor.isEnabled || false,
         hasApp: !!window.KellyPixiCompositor.app,
         hasCanvas: !!window.KellyPixiCompositor.app?.canvas,
-        mode: window.KellyPixiCompositor.mode || 'none'
+        mode: window.KellyPixiCompositor.mode || 'none',
+        containerEl: !!window.KellyPixiCompositor.containerEl,
+        _initPromise: !!window.KellyPixiCompositor._initPromise
       };
+      
+      // Check for global state marker
+      state.__KELLY_PIXI_READY = window.__KELLY_PIXI_READY || false;
+      state.__KELLY_PIXI_STATE = window.__KELLY_PIXI_STATE || null;
+      
+      return state;
     });
     console.log(`   Status:`, JSON.stringify(compositorStatus, null, 2));
+    
+    // If not initialized, check why
+    if (!compositorStatus.initialized) {
+      console.log(`   ⚠️  Compositor NOT initialized! Checking logs...`);
+      const initLogs = logs.filter(log => 
+        log.text.includes('init') || 
+        log.text.includes('FAILED') ||
+        log.text.includes('error')
+      );
+      initLogs.forEach(log => console.log(`      [${log.type}] ${log.text}`));
+    }
 
     // Test 5: Check for canvas element
     console.log('\n📋 Test 5: Canvas Element');
@@ -230,7 +250,7 @@ async function testHybridCompositor() {
 
     // Test 12: Check TTS audio
     console.log('\n📋 Test 12: TTS Audio');
-    await page.waitForTimeout(2000); // Wait for audio to potentially start
+    await new Promise(resolve => setTimeout(resolve, 2000)); // Wait for audio to potentially start
     const audioStatus = await page.evaluate(() => {
       const audioEl = document.querySelector('audio');
       return {
@@ -260,9 +280,33 @@ async function testHybridCompositor() {
       };
     });
     console.log(`   Versions:`, JSON.stringify(scriptVersions, null, 2));
+    
+    // Test 15: Check if playPhaseMedia was called
+    console.log('\n📋 Test 15: playPhaseMedia Execution');
+    const playPhaseLogs = logs.filter(log => 
+      log.text.includes('TALKING PHOTO') ||
+      log.text.includes('playPhaseMedia') ||
+      log.text.includes('📸') ||
+      log.text.includes('[DEBUG]')
+    );
+    console.log(`   Found ${playPhaseLogs.length} relevant logs:`);
+    playPhaseLogs.forEach(log => console.log(`   - [${log.type}] ${log.text}`));
+    
+    // Test 16: Check if kelly-stage container exists
+    console.log('\n📋 Test 16: Container Element');
+    const containerInfo = await page.evaluate(() => {
+      const container = document.getElementById('kelly-stage');
+      return {
+        found: !!container,
+        visible: container ? window.getComputedStyle(container).display !== 'none' : false,
+        hasChildren: container ? container.children.length : 0,
+        innerHTML: container ? container.innerHTML.substring(0, 200) : null
+      };
+    });
+    console.log(`   Container:`, JSON.stringify(containerInfo, null, 2));
 
     // Take final screenshot
-    await page.waitForTimeout(2000);
+    await new Promise(resolve => setTimeout(resolve, 2000));
     const screenshot2 = await page.screenshot({ path: 'test-screenshot-2-final.png', fullPage: true });
     screenshots.push('test-screenshot-2-final.png');
     console.log('✅ Screenshot 2: Final state');
