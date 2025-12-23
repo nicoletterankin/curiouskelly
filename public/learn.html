@@ -11689,6 +11689,14 @@
       
       __selectedPlanType = (defaultPlanType === 'yearly' ? 'annual' : defaultPlanType) || 'annual';
       
+      // Close Settings/Journey panels if open (they conflict with checkout panel)
+      try {
+        if (document.documentElement.getAttribute('data-panel-open')) {
+          closePanel();
+          await new Promise(resolve => setTimeout(resolve, 100));
+        }
+      } catch (_) {}
+      
       // Open the panel first
       openPanel('checkout');
       
@@ -11699,16 +11707,34 @@
       console.log('[openCheckoutPanel] Panel state:', {
         rightPanelOpen: rightPanel?.classList.contains('open'),
         checkoutSlotDisplay: checkoutSlot?.style.display,
-        checkoutSlotExists: !!checkoutSlot
+        checkoutSlotExists: !!checkoutSlot,
+        rightPanelExists: !!rightPanel
       });
+      
+      // Force right panel visibility
+      if (rightPanel) {
+        rightPanel.classList.add('open');
+        rightPanel.setAttribute('aria-hidden', 'false');
+        rightPanel.style.display = '';
+      }
       
       // Force slot visibility
       if (checkoutSlot) {
         checkoutSlot.style.display = '';
+        checkoutSlot.style.visibility = 'visible';
+        checkoutSlot.style.opacity = '1';
       }
       
       // Small delay to ensure panel is visible before rendering
-      await new Promise(resolve => setTimeout(resolve, 150));
+      await new Promise(resolve => setTimeout(resolve, 200));
+      
+      // Re-check slot exists before rendering
+      const slotAfterDelay = document.getElementById('panel-checkout-slot');
+      if (!slotAfterDelay) {
+        console.error('[openCheckoutPanel] Slot still not found after delay!');
+        showToast('Checkout panel not available. Please refresh the page.');
+        return;
+      }
       
       renderCheckoutPanel();
       
