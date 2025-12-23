@@ -403,6 +403,41 @@
       white-space: nowrap;
     }
     
+    .cta-track-toggle {
+      display: flex;
+      gap: 4px;
+      margin-left: 12px;
+      padding-left: 12px;
+      border-left: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .cta-track-btn {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 6px;
+      padding: 4px 8px;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .cta-track-btn:hover {
+      background: rgba(255, 255, 255, 0.1);
+      border-color: rgba(255, 255, 255, 0.2);
+    }
+    
+    .cta-track-btn.active {
+      background: rgba(37, 99, 235, 0.2);
+      border-color: rgba(37, 99, 235, 0.4);
+    }
+    
+    .cta-track-icon {
+      font-size: 14px;
+      line-height: 1;
+    }
+    
     /* RIGHT cluster: time + actions */
     .nav-right-cluster {
       display: flex;
@@ -8305,6 +8340,15 @@
         <span class="cta-topic" id="nav-cta-topic">Loading...</span>
         <span class="cta-tagline" id="nav-cta-tagline">5 min • Learn something new</span>
       </div>
+      <!-- Track Toggle in Header -->
+      <div class="cta-track-toggle" id="cta-track-toggle">
+        <button class="cta-track-btn active" data-track="learn" title="Switch to Learn track">
+          <span class="cta-track-icon">📚</span>
+        </button>
+        <button class="cta-track-btn" data-track="grow" title="Switch to Grow track">
+          <span class="cta-track-icon">🤖</span>
+        </button>
+      </div>
     </div>
     
     <!-- SPACER: Push right items to the right -->
@@ -11148,7 +11192,7 @@
       showCaptions: true,
       reducedMotion: false,
       streak: 0,
-      completedLessons: [],
+      completedLessons: { learn: [], grow: [] }, // Track-specific completion
       bookmarks: [],
       unlockedBadges: ['first-lesson'],
       reminderEnabled: false,
@@ -12279,8 +12323,9 @@
         }
         
         // Sync completed lessons to user_progress table
-        if (state.completedLessons.length > 0) {
-          const progressRecords = state.completedLessons.map(dayNumber => ({
+        const allCompleted = getAllCompletedLessons();
+        if (allCompleted.length > 0) {
+          const progressRecords = allCompleted.map(dayNumber => ({
             user_id: userId,
             day_number: dayNumber,
             status: 'completed',
@@ -12314,13 +12359,21 @@
       try {
         const kellyProgress = JSON.parse(localStorage.getItem('kelly_progress') || '{}');
         
-        // Merge completedLessons arrays (union)
-        const fromCalendar = kellyProgress.completedLessons || [];
-        const fromLearn = state.completedLessons || [];
-        const merged = [...new Set([...fromCalendar, ...fromLearn])];
+        // Handle migration: ensure state.completedLessons is track-specific
+        if (Array.isArray(state.completedLessons)) {
+          const oldArray = state.completedLessons;
+          state.completedLessons = { learn: [...oldArray], grow: [] };
+        }
         
-        // Update both systems
-        state.completedLessons = merged;
+        // Merge with calendar (calendar may still use old array format)
+        const fromCalendar = kellyProgress.completedLessons || [];
+        const calendarArray = Array.isArray(fromCalendar) ? fromCalendar : 
+                             (fromCalendar.learn || []).concat(fromCalendar.grow || []);
+        
+        // Merge into learn track (calendar doesn't distinguish tracks yet)
+        const learnCompleted = state.completedLessons.learn || [];
+        const mergedLearn = [...new Set([...learnCompleted, ...calendarArray])];
+        state.completedLessons.learn = mergedLearn;
         
         // Calculate streak info
         const today = new Date().toISOString().split('T')[0];
@@ -12329,8 +12382,11 @@
           best: Math.max(kellyProgress.streaks?.best || 0, state.streak || 0)
         };
         
+        // Save to calendar format (union of all tracks for backward compatibility)
+        const allCompleted = getAllCompletedLessons();
         const updatedProgress = {
-          completedLessons: merged,
+          completedLessons: allCompleted, // Calendar still expects array
+          completedLessonsByTrack: state.completedLessons, // New track-specific format
           streak: state.streak,
           streaks: streaks,
           lastVisit: today,
@@ -12352,10 +12408,25 @@
     function loadProgressFromCalendar() {
       try {
         const kellyProgress = JSON.parse(localStorage.getItem('kelly_progress') || '{}');
-        if (kellyProgress.completedLessons?.length > 0) {
-          // Merge with existing state
-          const merged = [...new Set([...(state.completedLessons || []), ...kellyProgress.completedLessons])];
-          state.completedLessons = merged;
+        
+        // Migrate state to track-specific format if needed
+        if (Array.isArray(state.completedLessons)) {
+          const oldArray = state.completedLessons;
+          state.completedLessons = { learn: [...oldArray], grow: [] };
+        }
+        
+        // Check for new track-specific format first
+        if (kellyProgress.completedLessonsByTrack) {
+          const learn = kellyProgress.completedLessonsByTrack.learn || [];
+          const grow = kellyProgress.completedLessonsByTrack.grow || [];
+          state.completedLessons.learn = [...new Set([...(state.completedLessons.learn || []), ...learn])];
+          state.completedLessons.grow = [...new Set([...(state.completedLessons.grow || []), ...grow])];
+        } else if (kellyProgress.completedLessons?.length > 0) {
+          // Legacy array format - merge into learn track
+          const fromCalendar = Array.isArray(kellyProgress.completedLessons) ? 
+                              kellyProgress.completedLessons : [];
+          const learn = state.completedLessons.learn || [];
+          state.completedLessons.learn = [...new Set([...learn, ...fromCalendar])];
           
           // Use the higher streak
           if (kellyProgress.streak > state.streak) {
@@ -12673,6 +12744,12 @@
       // Show phase-appropriate visual from Visual Commons (starts with hook)
       if (window.LessonVisualDisplay) {
         window.LessonVisualDisplay.show(dayNumber, 'hook');
+      }
+      
+      // Update Grow track content if on Grow track
+      if (state.track === 'grow') {
+        updateGrowTrackContent();
+        updatePracticePrompt();
       }
 
       return currentLesson;
@@ -13084,6 +13161,8 @@
     }
     
     const kellyAudio = new KellyAudio();
+    // Expose kellyAudio to window for testing/debugging
+    window.kellyAudio = kellyAudio;
 
     function syncPlayPauseUI() {
       const icon = document.getElementById('play-pause-icon');
@@ -13354,6 +13433,8 @@
     const phaseMediaInflight = Object.create(null);
 
     async function playPhaseMedia({ dbPhase, script, videoUrl } = {}) {
+      // Expose to window for testing/debugging
+      window.playPhaseMedia = playPhaseMedia;
       const ageBucket = getEffectiveAgeBucket();
       const phaseKey = getPhaseKeyFromDbPhase(dbPhase);
       // Use PHASE-SPECIFIC archetype (contextual Kelly architecture)
@@ -14464,20 +14545,117 @@
     }
     
     // ============================================
+    // TRACK-SPECIFIC COMPLETION HELPERS
+    // ============================================
+    function isLessonCompleted(dayNumber, track = null) {
+      const currentTrack = track || state.track || 'learn';
+      // Handle migration from old array format
+      if (Array.isArray(state.completedLessons)) {
+        return state.completedLessons.includes(dayNumber);
+      }
+      // New track-specific format
+      return state.completedLessons?.[currentTrack]?.includes(dayNumber) || false;
+    }
+    
+    function markLessonComplete(dayNumber, track = null) {
+      const currentTrack = track || state.track || 'learn';
+      // Migrate old array format to new object format
+      if (Array.isArray(state.completedLessons)) {
+        const oldArray = state.completedLessons;
+        state.completedLessons = { learn: [...oldArray], grow: [] };
+      }
+      // Ensure structure exists
+      if (!state.completedLessons[currentTrack]) {
+        state.completedLessons[currentTrack] = [];
+      }
+      // Add if not already completed
+      if (!state.completedLessons[currentTrack].includes(dayNumber)) {
+        state.completedLessons[currentTrack].push(dayNumber);
+        state.completedLessons[currentTrack].sort((a, b) => a - b);
+      }
+    }
+    
+    function getCompletedCount(track = null) {
+      const currentTrack = track || state.track || 'learn';
+      if (Array.isArray(state.completedLessons)) {
+        return state.completedLessons.length;
+      }
+      return state.completedLessons?.[currentTrack]?.length || 0;
+    }
+    
+    function getAllCompletedLessons() {
+      // Return union of all completed lessons across tracks
+      if (Array.isArray(state.completedLessons)) {
+        return state.completedLessons;
+      }
+      const learn = state.completedLessons?.learn || [];
+      const grow = state.completedLessons?.grow || [];
+      return [...new Set([...learn, ...grow])];
+    }
+    
+    // ============================================
     // LEARN/GROW TRACK TOGGLE
     // ============================================
     function setupTrackToggle() {
       const learnBtn = document.getElementById('track-learn');
       const growBtn = document.getElementById('track-grow');
       
-      if (!learnBtn || !growBtn) return;
+      if (learnBtn) learnBtn.addEventListener('click', () => switchTrack('learn'));
+      if (growBtn) growBtn.addEventListener('click', () => switchTrack('grow'));
       
-      learnBtn.addEventListener('click', () => switchTrack('learn'));
-      growBtn.addEventListener('click', () => switchTrack('grow'));
+      // Header CTA track toggle
+      document.querySelectorAll('#cta-track-toggle [data-track]').forEach(btn => {
+        btn.addEventListener('click', () => switchTrack(btn.dataset.track));
+      });
+      
+      // Kelly panel track buttons
+      document.getElementById('kelly-track-learn')?.addEventListener('click', () => switchTrack('learn'));
+      document.getElementById('kelly-track-grow')?.addEventListener('click', () => switchTrack('grow'));
+      
+      // Journey panel track buttons
+      document.querySelectorAll('.journey-track-btn').forEach(btn => {
+        btn.addEventListener('click', () => {
+          const track = btn.dataset.track;
+          switchTrack(track);
+          // Filter journey panel by track
+          filterJourneyByTrack(track);
+        });
+      });
       
       // Initialize from state
       const currentTrack = state.track || 'learn';
       updateTrackUI(currentTrack);
+    }
+    
+    function filterJourneyByTrack(track) {
+      // Filter journey panel items by track
+      const items = document.querySelectorAll('.journey-lesson-item');
+      items.forEach(item => {
+        const day = parseInt(item.dataset.day);
+        if (!day) return;
+        
+        // Check if this track is completed for this day
+        const isCompleted = state.completedLessons?.[track]?.includes(day) || false;
+        
+        // For now, show all items but highlight completed ones
+        // TODO: Add actual filtering if needed
+        item.classList.toggle('track-completed', isCompleted);
+      });
+      
+      // Update journey stats
+      updateJourneyStats();
+    }
+    
+    function updateJourneyStats() {
+      const currentTrack = state.track || 'learn';
+      const completed = state.completedLessons?.[currentTrack]?.length || 0;
+      const total = 365;
+      
+      // Update any journey stats displays
+      const statsEl = document.querySelector('.journey-stats');
+      if (statsEl) {
+        statsEl.textContent = `${completed}/${total} completed`;
+      }
     }
     
     function switchTrack(track) {
@@ -14485,6 +14663,11 @@
       state.currentTrack = track; // Sync both state properties
       saveState();
       updateTrackUI(track);
+      
+      // Update URL to reflect track
+      const newUrl = new URL(window.location);
+      newUrl.searchParams.set('track', track);
+      window.history.replaceState({}, '', newUrl);
       
       // Update header CTA to show track info
       const trackName = track === 'grow' ? '🤖 AI Fluency' : '📚 Learn';
@@ -14527,6 +14710,11 @@
       // Update Kelly track buttons in Kelly Panel
       document.getElementById('kelly-track-learn')?.classList.toggle('active', track === 'learn');
       document.getElementById('kelly-track-grow')?.classList.toggle('active', track === 'grow');
+      
+      // Update journey panel track buttons
+      document.querySelectorAll('.journey-track-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.dataset.track === track);
+      });
     }
     
     function updatePracticePrompt() {
@@ -15968,14 +16156,21 @@ The learner is on phase ${state.currentPhase + 1} of 7. Be helpful and make lear
       }
 
       // Default phases: update caption + play media (video-first, audio fallback)
-      if (lessonAtoms[state.currentPhase]) {
-        const text = lessonAtoms[state.currentPhase].script;
-        typewriterEffect(document.getElementById('caption-text'), text);
-        playPhaseMedia({
-          dbPhase: lessonAtoms[state.currentPhase].dbPhase,
-          script: text,
-          videoUrl: lessonAtoms[state.currentPhase].videoUrl,
-        }).catch(() => {});
+      // CRITICAL: For TALKING_PHOTO mode, ensure playPhaseMedia is called even if lessonAtoms is empty
+      const TALKING_PHOTO = __URL_PARAMS.get('talkingPhoto') === '1';
+      if (lessonAtoms[state.currentPhase] || TALKING_PHOTO) {
+        const atom = lessonAtoms[state.currentPhase];
+        const text = atom?.script || (TALKING_PHOTO ? 'Hello, I am Kelly. Welcome to today\'s lesson. Let\'s learn something amazing together!' : '');
+        const dbPhase = atom?.dbPhase || state.currentPhase;
+        
+        if (text) {
+          typewriterEffect(document.getElementById('caption-text'), text);
+          playPhaseMedia({
+            dbPhase: dbPhase,
+            script: text,
+            videoUrl: atom?.videoUrl,
+          }).catch(() => {});
+        }
       }
     }
     
@@ -16302,7 +16497,7 @@ The learner is on phase ${state.currentPhase + 1} of 7. Be helpful and make lear
       }
       
       // Check if we have an incomplete lesson for current day
-      if (state.currentDay && state.currentPhase === 0 && !state.completedLessons.includes(state.currentDay)) {
+      if (state.currentDay && state.currentPhase === 0 && !isLessonCompleted(state.currentDay)) {
         // Start/continue current day's lesson
         debugLog('[SMART PLAY] Starting lesson for day', state.currentDay);
         showLoading(true);
@@ -16314,7 +16509,7 @@ The learner is on phase ${state.currentPhase + 1} of 7. Be helpful and make lear
       }
       
       // Check if today's lesson not started
-      if (!state.completedLessons.includes(today)) {
+      if (!isLessonCompleted(today)) {
         debugLog('[SMART PLAY] Starting today\'s lesson', today);
         state.currentDay = today;
         state.currentPhase = 0;
@@ -18900,7 +19095,7 @@ Style requirements:
       if (!btn || !indicator) return;
       
       const today = getTodayDayNumber();
-      const todayCompleted = state.completedLessons.includes(today);
+      const todayCompleted = isLessonCompleted(today);
       const hasProgress = state.currentPhase > 0 && state.currentPhase < PHASES.length;
       
       // Remove all state classes
@@ -18937,10 +19132,10 @@ Style requirements:
       // Ensure media stops when moving to completion.
       stopAllMedia();
       
-      const wasFirstTime = !state.completedLessons.includes(state.currentDay);
+      const wasFirstTime = !isLessonCompleted(state.currentDay);
       
       if (wasFirstTime) {
-        state.completedLessons.push(state.currentDay);
+        markLessonComplete(state.currentDay);
         state.streak++;
         state.totalMinutes += 5;
         haptic('celebration');
@@ -18950,17 +19145,17 @@ Style requirements:
           topic: currentLesson?.topic || 'Unknown',
           is_first_time: true,
           streak: state.streak,
-          total_completed: state.completedLessons.length
+          total_completed: getCompletedCount()
         }, state.currentDay);
         
         // Check for badge unlocks
-        if (state.completedLessons.length === 1 && !state.unlockedBadges.includes('first-lesson')) {
+        if (getCompletedCount() === 1 && !state.unlockedBadges.includes('first-lesson')) {
           state.unlockedBadges.push('first-lesson');
         }
         if (state.streak >= 7 && !state.unlockedBadges.includes('week-streak')) {
           state.unlockedBadges.push('week-streak');
         }
-        if (state.completedLessons.length >= 10 && !state.unlockedBadges.includes('bookworm')) {
+        if (getCompletedCount() >= 10 && !state.unlockedBadges.includes('bookworm')) {
           state.unlockedBadges.push('bookworm');
         }
         
@@ -19064,7 +19259,7 @@ Style requirements:
       hideCliffUI({ resetSelection: true });
 
       const tomorrowTitle = await getTomorrowTitleForOutro();
-      const projectedStreak = state.completedLessons.includes(state.currentDay) ? state.streak : (state.streak + 1);
+      const projectedStreak = isLessonCompleted(state.currentDay) ? state.streak : (state.streak + 1);
       const outroText = `${projectedStreak} days in a row! Tomorrow, we explore ${tomorrowTitle}...`;
 
       typewriterEffect(document.getElementById('caption-text'), outroText);
@@ -19193,7 +19388,7 @@ Style requirements:
         if (dayNum > 365) break;
         
         const lesson = lessonMap[dayNum] || { topic: `Lesson for ${getDisplayDate(dayNum)}`, marketing_headline: '' };
-        const isCompleted = state.completedLessons.includes(dayNum);
+        const isCompleted = isLessonCompleted(dayNum);
         const isCurrent = dayNum === state.currentDay;
         // Testing mode: all days unlocked
         const isLocked = (TESTING_MODE || bypassTesting) ? false : (dayNum > state.currentDay + 1);
@@ -19292,7 +19487,7 @@ Style requirements:
           cell.className = 'day-cell';
           cell.title = getDisplayDate(dayCounter);
           
-          const isCompleted = state.completedLessons.includes(dayCounter);
+          const isCompleted = isLessonCompleted(dayCounter);
           const isCurrent = dayCounter === state.currentDay;
           // Testing mode: all days unlocked
           const isLocked = (TESTING_MODE || bypassTesting) ? false : (dayCounter > state.currentDay + 1);
@@ -19354,7 +19549,7 @@ Style requirements:
     
     function updateJourneyStats() {
       document.getElementById('stat-streak').textContent = state.streak;
-      document.getElementById('stat-completed').textContent = state.completedLessons.length;
+      document.getElementById('stat-completed').textContent = getCompletedCount();
       document.getElementById('stat-time').textContent = `${state.totalMinutes}m`;
     }
     
@@ -19567,7 +19762,7 @@ Style requirements:
           // Add lessons
           const lessonsContainer = categoryEl.querySelector('.curriculum-category-lessons');
           lessons.forEach(lesson => {
-            const isCompleted = state.completedLessons.includes(lesson.day_number);
+            const isCompleted = isLessonCompleted(lesson.day_number);
             const lessonEl = document.createElement('div');
             lessonEl.className = `curriculum-lesson ${isCompleted ? 'completed' : ''}`;
             lessonEl.innerHTML = `
@@ -21167,11 +21362,24 @@ Style requirements:
       syncPlayPauseUI();
       syncAutoAdvanceUI();
       
-      // Initialize track UI from saved state
-      const savedTrack = state.track || state.currentTrack || 'learn';
+      // Initialize track UI from saved state or URL param
+      const urlParams = new URLSearchParams(window.location.search);
+      const urlTrack = urlParams.get('track');
+      const savedTrack = urlTrack || state.track || state.currentTrack || 'learn';
       state.track = savedTrack;
       state.currentTrack = savedTrack;
       updateTrackUI(savedTrack);
+      
+      // Update URL to reflect track (without reload)
+      if (urlTrack && urlTrack !== savedTrack) {
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.set('track', savedTrack);
+        window.history.replaceState({}, '', newUrl);
+      } else if (!urlTrack && savedTrack !== 'learn') {
+        const newUrl = new URL(window.location);
+        newUrl.searchParams.set('track', savedTrack);
+        window.history.replaceState({}, '', newUrl);
+      }
       
       // ============================================
       // DEV MODE: Apply URL parameter overrides
@@ -21207,7 +21415,7 @@ Style requirements:
         day: state.currentDay,
         phase: state.currentPhase,
         kelly: state.kellyId,
-        completed: state.completedLessons.length,
+        completed: getCompletedCount(),
         testingMode: TESTING_MODE || bypassTesting,
         devAutoplay: DEV_AUTOPLAY,
         devStartPhase: DEV_START_PHASE,

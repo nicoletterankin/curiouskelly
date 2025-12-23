@@ -55,10 +55,26 @@ async function proveIt() {
     // Directly trigger audio playback
     console.log('\n🎤 Triggering audio playback directly...');
     const audioTriggered = await page.evaluate(async () => {
-      // Get kellyAudio instance
+      // Try to trigger via playPhaseMedia (proper way)
+      if (typeof window.playPhaseMedia === 'function') {
+        try {
+          const currentPhase = window.state?.currentPhase || 'hook';
+          const script = window.lessonAtoms?.[currentPhase]?.script || 'Hello, I am Kelly. This is a test of the hybrid compositor system.';
+          
+          console.log('[TEST] Calling playPhaseMedia()...');
+          await window.playPhaseMedia({
+            dbPhase: currentPhase,
+            script: script
+          });
+          return { success: true, method: 'playPhaseMedia' };
+        } catch (e) {
+          return { success: false, error: e.message };
+        }
+      }
+      
+      // Fallback: direct kellyAudio.speak
       if (window.kellyAudio && typeof window.kellyAudio.speak === 'function') {
         try {
-          // Get current phase
           const currentPhase = window.state?.currentPhase || 'hook';
           const script = window.lessonAtoms?.[currentPhase]?.script || 'Hello, I am Kelly. This is a test of the hybrid compositor system.';
           
@@ -69,7 +85,8 @@ async function proveIt() {
           return { success: false, error: e.message };
         }
       }
-      return { success: false, error: 'kellyAudio not found' };
+      
+      return { success: false, error: 'Neither playPhaseMedia nor kellyAudio found' };
     });
     
     console.log(`  Audio trigger: ${audioTriggered.success ? '✅' : '❌'} ${audioTriggered.method || audioTriggered.error}`);
