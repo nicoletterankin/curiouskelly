@@ -11522,7 +11522,16 @@
 
     function renderCheckoutPanel() {
       const slot = document.getElementById('panel-checkout-slot');
-      if (!slot) return;
+      if (!slot) {
+        console.error('[renderCheckoutPanel] Slot not found!');
+        showToast('Checkout panel not available. Please refresh the page.');
+        return;
+      }
+      
+      // Force slot visibility before rendering
+      slot.style.display = '';
+      slot.style.visibility = 'visible';
+      slot.style.opacity = '1';
 
       slot.innerHTML = `
         <div class="checkout-panel">
@@ -12061,6 +12070,14 @@
       }, 500);
     }
 
+    // Handle ?section=pricing from pricing page redirect
+    const sectionParam = urlParams.get('section');
+    if (sectionParam === 'pricing' || sectionParam === 'plans') {
+      setTimeout(() => {
+        openCheckoutPanel('annual'); // Default to annual plan
+      }, 800);
+    }
+
     // Handle gift purchases - never leave Kelly!
     const giftDuration = urlParams.get('gift');
     if (giftDuration && giftDuration !== 'success') {
@@ -12073,6 +12090,11 @@
     if (giftDuration === 'success') {
       showToast('🎁 Gift purchased! The recipient will receive an email with their gift code.');
     }
+    
+    // Define showCheckout() function that Settings panel calls
+    window.showCheckout = function(planType) {
+      openCheckoutPanel(planType || 'annual');
+    };
     
     // Lesson cache
     let currentLesson = null;
