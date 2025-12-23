@@ -357,8 +357,13 @@
      * @returns {Promise<this>}
      */
     async attachImage(archetype = 'default') {
+      // CRITICAL: Never use 'explorer' - it doesn't match HeyGen avatar
+      if (archetype === 'explorer') {
+        console.warn('🚨 [Pixi] BLOCKED: "explorer" archetype does not match HeyGen avatar! Using "storyteller" instead.');
+        archetype = 'storyteller';
+      }
       const imagePath = `/kelly/heads/kelly_${archetype}_head.png`;
-      console.log('[Pixi] Attaching image:', imagePath);
+      console.log('[Pixi] Attaching image:', imagePath, '(archetype:', archetype, ')');
       
       try {
         // Create image element

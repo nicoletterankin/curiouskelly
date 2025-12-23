@@ -13093,11 +13093,32 @@
           if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
             console.log(`🔊 TTS result: ${ttsUrl ? 'generated blob URL' : 'null (TTS disabled or failed)'}`);
           }
-          if (ttsUrl && await this.play(ttsUrl)) {
-            if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
-              console.log('🔊 ✅ Playing TTS audio');
+          if (ttsUrl) {
+            // CRITICAL: Try to play TTS audio
+            try {
+              const playResult = await this.play(ttsUrl);
+              if (playResult) {
+                if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+                  console.log('🔊 ✅ Playing TTS audio:', ttsUrl.substring(0, 50));
+                }
+                return true;
+              } else {
+                if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+                  console.warn('🔊 ⚠️ TTS audio play() returned false - audio may not be playing');
+                }
+              }
+            } catch (playError) {
+              if (DEBUG || __URL_PARAMS.get('pixiDebug') === '1') {
+                console.error('🔊 ❌ TTS audio play() FAILED:', playError);
+                console.error('🔊 Error details:', {
+                  message: playError.message,
+                  name: playError.name,
+                  audioSrc: this.audio.src?.substring(0, 50),
+                  audioReadyState: this.audio.readyState,
+                  audioPaused: this.audio.paused
+                });
+              }
             }
-            return true;
           }
         } catch (e) {
           debugWarn('TTS fallback failed:', e);
