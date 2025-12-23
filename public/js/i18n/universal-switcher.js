@@ -158,7 +158,10 @@
         } catch (e) {}
 
         // Trigger pricing update
-        if (window.KellyGeoPricing.applyPricing) {
+        if (window.KellyGeoPricing.setPricingData) {
+          window.KellyGeoPricing.setPricingData(pricingData);
+        } else if (window.KellyGeoPricing.applyPricing) {
+          // Fallback: try to update internal state if setPricingData not available
           window.KellyGeoPricing._pricingData = pricingData;
           window.KellyGeoPricing.applyPricing();
         }

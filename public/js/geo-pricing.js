@@ -60,12 +60,9 @@
     return _loadPromise;
   }
 
-  async function fetchPricing(countryOverride = null) {
+  async function fetchPricing() {
     try {
-      const url = countryOverride 
-        ? `/api/geo-pricing?force_country=${countryOverride}`
-        : '/api/geo-pricing';
-      const response = await fetch(url, {
+      const response = await fetch('/api/geo-pricing', {
         method: 'GET',
         headers: { 'Accept': 'application/json' },
       });
@@ -193,29 +190,16 @@
     return load();
   }
 
-  /**
-   * Set country and reload pricing
-   */
-  async function setCountry(countryCode) {
-    _loadPromise = null;
-    const data = await fetchPricing(countryCode);
-    _pricingData = data;
-    applyPricing();
-    return data;
-  }
-
   // Expose API
   window.KellyGeoPricing = {
     load,
     refresh,
-    setCountry,
     getPrices,
     getData,
     getCurrency,
     getCountry,
     isPPP,
     applyPricing,
-    _pricingData: null, // Expose for UniversalSwitcher
   };
 
   // Auto-load on DOMContentLoaded

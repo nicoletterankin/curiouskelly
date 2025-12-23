@@ -264,7 +264,6 @@ const KellyLessonLoader = {
       age = 30,
       region = null,
       track = 'learn', // 'learn' (traditional) or 'grow' (AI fluency)
-      language = null, // Language code (en, es, pt) - defaults to UniversalSwitcher or 'en'
       useCache = true,
       // Launch hardening:
       // - Prevent recursive preloading from expanding to all 365 days.
@@ -273,18 +272,12 @@ const KellyLessonLoader = {
       _isPreload = false,
     } = options;
     
-    // Get language from options, UniversalSwitcher, or default to 'en'
-    const targetLanguage = language || 
-                          (window.UniversalSwitcher?.getLanguage()) || 
-                          (window.KellyI18n?.getLanguage()) || 
-                          'en';
-    
     const normalizedArchetype = this.normalizeArchetype(archetype);
     const targetRegion = region || this.ageToRegion(age);
     const normalizedTrack = (track === 'grow') ? 'grow' : 'learn';
     const dayNum = Math.max(1, Math.min(365, parseInt(dayNumber) || 1));
     
-    const cacheKey = `${normalizedTrack}-${dayNum}-${normalizedArchetype}-${targetRegion}-${targetLanguage}`;
+    const cacheKey = `${normalizedTrack}-${dayNum}-${normalizedArchetype}-${targetRegion}`;
     
     // Check cache
     if (useCache && this.cache.has(cacheKey)) {
@@ -329,13 +322,9 @@ const KellyLessonLoader = {
     // Skip seed lessons for Grow track - they only exist for Learn
     if (preferSeedLessons && normalizedTrack === 'learn') {
       try {
-        const seedResult = await this.trySeedLessons(dayNum, normalizedArchetype, targetRegion, targetLanguage);
+        const seedResult = await this.trySeedLessons(dayNum, normalizedArchetype, targetRegion);
         if (seedResult) {
-          const processed = this.ensureMvpLessonShape(seedResult, { dayNum, archetype: normalizedArchetype, region: targetRegion, language: targetLanguage });
-          // Store language in lesson for badge
-          if (processed?.lesson) {
-            processed.lesson.language = targetLanguage;
-          }
+          const processed = this.ensureMvpLessonShape(seedResult, { dayNum, archetype: normalizedArchetype, region: targetRegion });
           this.cache.set(cacheKey, processed);
           if (preloadAdjacent && !_isPreload) this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
           return processed;
@@ -631,39 +620,21 @@ const KellyLessonLoader = {
 
   /**
    * Try bundled seed lessons directly from /public/lessons
-   * Supports language-specific paths: /lessons/{lang}/day-XXX.json
    */
-  async trySeedLesson(dayNumber, language = 'en') {
+  async trySeedLesson(dayNumber) {
     const base = this.SEED_LESSONS_BASE_URL || '/lessons';
-    const paddedDay = String(dayNumber).padStart(3, '0');
-    
-    // Try language-specific path first (e.g., /lessons/es/day-001.json)
-    const langPaths = language !== 'en' ? [
-      `${base}/${language}/day-${paddedDay}.json`,
-      `${base}/${language}/day-${dayNumber}.json`,
-    ] : [];
-    
-    // English fallback paths
-    const fallbackPaths = [
+    const paths = [
       `${base}/day-${dayNumber}.json`,
       `${base}/day_${dayNumber}.json`,
       `${base}/${dayNumber}.json`,
     ];
     
-    const allPaths = [...langPaths, ...fallbackPaths];
-    
-    for (const path of allPaths) {
+    for (const path of paths) {
       try {
         const resp = await fetch(path);
         if (resp.ok) {
           const data = await resp.json();
           __kellyLoaderDebugLog(`[Seed] Loaded from ${path}`);
-          
-          // If we fell back to English, log it
-          if (language !== 'en' && fallbackPaths.includes(path)) {
-            __kellyLoaderDebugWarn(`⚠️ Language '${language}' not available for day ${dayNumber}, using English`);
-          }
-          
           return data;
         }
       } catch (_) {
@@ -675,23 +646,21 @@ const KellyLessonLoader = {
 
   /**
    * Load canonical seed lesson JSON shipped with the app:
-   *   GET /lessons/day-<N>.json or /lessons/{lang}/day-<N>.json
+   *   GET /lessons/day-<N>.json
    *
    * This is the reliable 365-day MVP source of truth.
-   * Supports multi-language with graceful fallback to English.
    */
-  async trySeedLessons(dayNumber, archetype, region, language = 'en') {
+  async trySeedLessons(dayNumber, archetype, region) {
     try {
-      const seed = await this.trySeedLesson(dayNumber, language);
+      const seed = await this.trySeedLesson(dayNumber);
       if (!seed) return null;
-      const lesson = this.seedToLesson(seed, dayNumber, language);
-      const atoms = this.seedToAtoms(seed, dayNumber, archetype, region, language);
+      const lesson = this.seedToLesson(seed, dayNumber);
+      const atoms = this.seedToAtoms(seed, dayNumber, archetype, region);
 
       return this.buildResult(lesson, atoms, [], {
         dayNumber,
         archetype,
         region,
-        language,
         _source: 'seed-lessons'
       });
     } catch (e) {
@@ -699,45 +668,30 @@ const KellyLessonLoader = {
     }
   },
 
-  seedToLesson(seed, dayNumber, language = 'en') {
-    // Extract text in requested language with fallback to English
-    const getLocalized = (obj, key) => {
-      if (!obj) return '';
-      if (typeof obj === 'string') return obj;
-      if (obj[key] && obj[key] !== '[NEEDS TRANSLATION]') return obj[key];
-      return obj.en || obj[key] || '';
-    };
-    
-    const topic = getLocalized(seed?.meta?.topic, language) || 
-                  getLocalized(seed?.topic, language) || 
-                  'Loading...';
-    const truth = getLocalized(seed?.universal_truth, language) || 
-                  getLocalized(seed?.meta?.universalTruth, language) || '';
-    const headline = getLocalized(seed?.headline, language) || topic;
-    
+  seedToLesson(seed, dayNumber) {
+    const topicEn = seed?.meta?.topic?.en || seed?.meta?.topic || seed?.topic?.en || seed?.topic || 'Loading...';
+    const truthEn = seed?.universal_truth?.en || seed?.universal_truth || seed?.meta?.universalTruth || '';
+    const headlineEn = seed?.headline?.en || seed?.headline || '';
     return {
       id: `seed-${dayNumber}`,
       day_number: dayNumber,
-      topic,
-      universal_truth: truth,
-      marketing_headline: headline,
+      topic: topicEn,
+      universal_truth: truthEn,
+      marketing_headline: headlineEn || topicEn,
       marketing_tagline: '',
       category: seed?.meta?.category || '',
       emoji: seed?.meta?.emoji || '📚',
-      language, // Store language for UI badge
       // Preserve full phases object for UI access to phase titles
       phases: seed?.phases || null,
       // Preserve growTrack data for Grow track UI
       growTrack: seed?.growTrack || null,
-      // Preserve meta for universal badge
-      meta: seed?.meta || {},
     };
   },
 
-  seedToAtoms(seed, dayNumber, archetype, region, language = 'en') {
+  seedToAtoms(seed, dayNumber, archetype, region) {
     const phases = seed?.phases || {};
-    // Use explicit language parameter, fallback to region-based detection
-    const lang = language || ((region === 'es' || region === 'pt') ? region : 'en');
+    const pickLang = (region === 'es' || region === 'pt') ? region : 'en';
+    const lang = (pickLang === 'pt') ? 'pt' : (pickLang === 'es') ? 'es' : 'en';
 
     const getText = (node) => {
       if (!node) return '';
@@ -1835,4 +1789,3 @@ __kellyLoaderDebugLog('📚 Kelly Lesson Loader ready');
   if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', ensureBound);
   else ensureBound();
 })();
-
