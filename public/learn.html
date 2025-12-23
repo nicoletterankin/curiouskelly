@@ -13772,10 +13772,14 @@
 
         // Determine if video has baked-in audio (HeyGen talking heads) or needs separate TTS (motion clips)
         // Hybrid demo uses the video as a visual base only; audio comes from live ElevenLabs.
+        // ═══════════════════════════════════════════════════════════════════
+        // HYBRID MODE: HeyGen video is ALWAYS muted (we use TTS audio)
+        // Non-hybrid mode: Use video audio if available
+        // ═══════════════════════════════════════════════════════════════════
         const videoHasAudio = (resolvedSource === 'atom' || resolvedSource === 'kelly_video_assets') && !HYBRID_DEMO;
-        const needsSeparateTTS = resolvedSource === 'kelly_motion_library';
+        const needsSeparateTTS = resolvedSource === 'kelly_motion_library' || HYBRID_DEMO;
         
-        if (DEBUG) console.log(`▶️ Playing: ${personaId}_${ageBucket}_${phaseKey} | source: ${resolvedSource} | hasAudio: ${videoHasAudio}`);
+        if (DEBUG) console.log(`▶️ Playing: ${personaId}_${ageBucket}_${phaseKey} | source: ${resolvedSource} | HYBRID_DEMO: ${HYBRID_DEMO} | needsTTS: ${needsSeparateTTS}`);
 
         // Configure video playback
         try {
@@ -13786,15 +13790,22 @@
           v.setAttribute('playsinline', '');
           v.preload = 'auto';
           
-          // AUDIO DECISION: Unmute HeyGen videos (they have audio), mute motion clips
-          if (videoHasAudio) {
-            // HeyGen talking head - UNMUTE to hear the baked-in audio
+          // CRITICAL: In HYBRID mode, HeyGen video is MUTED (we use TTS for audio)
+          // This is the core architecture: video provides body motion, TTS provides voice
+          if (HYBRID_DEMO || needsSeparateTTS) {
+            // Hybrid mode: MUTE video, use TTS audio
+            v.muted = true;
+            v.defaultMuted = true;
+            v.setAttribute('muted', '');
+            if (DEBUG) console.log('🔇 Video MUTED (hybrid mode - using TTS audio)');
+          } else if (videoHasAudio) {
+            // Non-hybrid: HeyGen talking head with baked audio - UNMUTE
             v.muted = false;
             v.defaultMuted = false;
             v.removeAttribute('muted');
             if (DEBUG) console.log('🔊 Video UNMUTED (HeyGen talking head with audio)');
           } else {
-            // Motion clip - MUTE (no audio in video, will use TTS)
+            // Motion clip or other - MUTE (will use TTS)
             v.muted = true;
             v.defaultMuted = true;
             v.setAttribute('muted', '');
