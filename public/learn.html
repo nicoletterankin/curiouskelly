@@ -13215,8 +13215,12 @@
               if (videoEl && !videoEl.hidden) {
                 await window.KellyPixiCompositor.attachVideo(videoEl);
               } else {
-                // Use talking photo mode with base/neutral archetype (matches HeyGen avatar)
-                // CRITICAL: Use 'default' or 'storyteller' to match HeyGen avatar ID, not 'explorer'
+                // CRITICAL: In HYBRID mode, we should NEVER use talking photo mode
+                // HYBRID mode = HeyGen VIDEO (muted) + TTS audio + PixiJS overlays
+                // If we're here, something is wrong - log it
+                console.error('🚨 [HYBRID] ERROR: No video element found but HYBRID_DEMO is active!');
+                console.error('🚨 [HYBRID] This should not happen - hybrid mode requires video, not image!');
+                // Fallback: use storyteller image (but this is wrong for hybrid mode)
                 const personaId = getPhaseArchetype(state.currentPhase || 'hook') || 'storyteller';
                 await window.KellyPixiCompositor.attachImage(personaId);
               }

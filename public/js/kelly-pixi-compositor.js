@@ -25,7 +25,7 @@
 (() => {
   // ALWAYS log script load (critical for debugging)
   // Production logging: Only log script load, not verbose debug info
-  console.log('[Pixi] 🎭 kelly-pixi-compositor.js LOADED, v=20251223 - production ready');
+  console.log('[Pixi] 🎭 kelly-pixi-compositor.js LOADED, v=20251223b - FIXED AVATAR + MOUTH VISIBILITY');
   
   const DEBUG =
     (typeof window !== 'undefined' && !!window.__KELLY_PIXI_DEBUG) ||
