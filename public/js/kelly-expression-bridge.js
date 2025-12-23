@@ -316,6 +316,11 @@ const KellyExpressionBridge = {
    * Send to 2D avatar systems
    */
   sendTo2D(blendshapes) {
+    // Send blendshapes to Pixi compositor (for eyebrow overlays and expressions)
+    if (window.KellyPixiCompositor && window.KellyPixiCompositor.isInitialized) {
+      window.KellyPixiCompositor.setBlendshapes(blendshapes);
+    }
+    
     // Update KellyPoseManager expression
     if (window.KellyPoseManager) {
       // Map expression to pose
@@ -357,17 +362,26 @@ const KellyExpressionBridge = {
    * @param {string} phase - Phase name (welcome, q1, q2, q3, wisdom)
    */
   setPhaseExpression(phase) {
+    // Normalize phase name (handle variations like 'Hook', 'hook', 'Fact1', etc.)
+    const normalizedPhase = String(phase || '').toLowerCase().replace(/[^a-z0-9]/g, '');
+    
     const phaseExpressions = {
+      'hook': 'curious',        // Hook phase: curious expression
       'welcome': 'excited',
       'question': 'curious',
       'q1': 'curious',
+      'fact1': 'curious',       // Fact1 = Q1
       'q2': 'explaining',
+      'fact2': 'explaining',    // Fact2 = Q2
       'q3': 'thinking',
-      'wisdom': 'wisdom',
+      'fact3': 'thinking',      // Fact3 = Q3
+      'wisdom': 'warm',         // Wisdom phase: warm expression (changed from 'wisdom' to 'warm')
       'celebrating': 'celebrating',
+      'cliff': 'curious',       // Cliff phase: curious
+      'outro': 'warm',          // Outro: warm
     };
     
-    const expression = phaseExpressions[phase] || 'neutral';
+    const expression = phaseExpressions[normalizedPhase] || 'neutral';
     this.setExpression(expression, { duration: 400 });
     return this;
   },

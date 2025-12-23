@@ -24,7 +24,7 @@
  */
 (() => {
   // ALWAYS log script load (critical for debugging)
-  console.log('[Pixi] 🎭 kelly-pixi-compositor.js LOADED, v=20251222i - opacity presets added');
+  console.log('[Pixi] 🎭 kelly-pixi-compositor.js LOADED, v=20251222k - phase expressions connected');
   
   const DEBUG =
     (typeof window !== 'undefined' && !!window.__KELLY_PIXI_DEBUG) ||
@@ -108,6 +108,8 @@
     teeth: null,
     blinkLeft: null,
     blinkRight: null,
+    eyebrowLeft: null,
+    eyebrowRight: null,
     anchor: { ...DEFAULT_ANCHOR },
     lastBlendshapes: {},
     _blinkTimer: 0,
@@ -446,8 +448,18 @@
       this.blinkLeft = blinkLeft;
       this.blinkRight = blinkRight;
 
+      // Eyebrow overlays (for expression system)
+      const eyebrowLeft = new window.PIXI.Graphics();
+      const eyebrowRight = new window.PIXI.Graphics();
+      eyebrowLeft.name = 'eyebrowLeft';
+      eyebrowRight.name = 'eyebrowRight';
+      this.eyebrowLeft = eyebrowLeft;
+      this.eyebrowRight = eyebrowRight;
+
       this.overlayRoot.addChild(blinkLeft);
       this.overlayRoot.addChild(blinkRight);
+      this.overlayRoot.addChild(eyebrowLeft);
+      this.overlayRoot.addChild(eyebrowRight);
       this.overlayRoot.addChild(mouth);
 
       // Optional debug marker to prove overlay is rendering (opt-in)
@@ -531,11 +543,22 @@
       const mx = ax;  // horizontal center (from anchor)
       const my = MOUTH_Y_ABSOLUTE * r.height;  // ABSOLUTE vertical position
 
+      // Enhanced mouth shape: more natural oval/ellipse instead of rectangle
+      // Corner radius varies with mouth state (more rounded when closed, sharper when open)
+      const cornerRadius = (8 + (1 - jawOpen) * 4) * s; // 8-12px radius
+      const mouthShape = jawOpen > 0.1 ? 'ellipse' : 'roundedRect'; // Ellipse when open, rounded rect when closed
+
       // Draw mouth interior (very subtle - blend with video)
       const mouthInterior = this._mouthInterior;
       mouthInterior.clear();
       mouthInterior.beginFill(0x3d1515, OPACITY_PRESETS.mouthInterior);
-      mouthInterior.drawRoundedRect(-w / 2, -h / 2, w, h, 8 * s);
+      if (mouthShape === 'ellipse') {
+        // More natural oval shape when mouth is open
+        mouthInterior.drawEllipse(0, 0, w / 2, h / 2);
+      } else {
+        // Rounded rectangle when mouth is closed
+        mouthInterior.drawRoundedRect(-w / 2, -h / 2, w, h, cornerRadius);
+      }
       mouthInterior.endFill();
 
       // Teeth hint (only when mouth is quite open)
@@ -547,18 +570,30 @@
       }
 
       // Lips (very subtle highlight - should barely be noticeable)
+      // Enhanced: curved lip shapes with better separation
       const lipAlpha = OPACITY_PRESETS.lipBase + funnel * (OPACITY_PRESETS.lipMax - OPACITY_PRESETS.lipBase);
       const lipColor = 0xc99a9a; // Lighter, more natural lip color
+      const lipThickness = (4 + jawOpen * 2) * s; // Thicker when mouth opens
+      const lipCurve = 2 * s; // Subtle curve for natural lip shape
+      
       const upper = this.upperLip;
       upper.clear();
       upper.beginFill(lipColor, lipAlpha);
-      upper.drawRoundedRect(-w / 2, -h / 2 - 4 * s, w, 8 * s, 4 * s);
+      // Upper lip: curved shape with slight dip in center (Cupid's bow effect)
+      upper.moveTo(-w / 2, -h / 2);
+      upper.quadraticCurveTo(-w / 4, -h / 2 - lipCurve, 0, -h / 2); // Left curve
+      upper.quadraticCurveTo(w / 4, -h / 2 - lipCurve, w / 2, -h / 2); // Right curve
+      upper.lineTo(w / 2, -h / 2 + lipThickness);
+      upper.quadraticCurveTo(w / 4, -h / 2 + lipThickness + lipCurve, 0, -h / 2 + lipThickness);
+      upper.quadraticCurveTo(-w / 4, -h / 2 + lipThickness + lipCurve, -w / 2, -h / 2 + lipThickness);
+      upper.closePath();
       upper.endFill();
 
       const lower = this.lowerLip;
       lower.clear();
       lower.beginFill(lipColor, lipAlpha);
-      lower.drawRoundedRect(-w / 2, h / 2 - 3 * s, w, 8 * s, 4 * s);
+      // Lower lip: fuller, more rounded shape
+      lower.drawRoundedRect(-w / 2, h / 2 - lipThickness, w, lipThickness, 4 * s);
       lower.endFill();
 
       // Place mouth container
@@ -598,6 +633,64 @@
         this.blinkRight.drawRoundedRect(ax + eyeDX - eyeW / 2, eyeY - eyelidH / 2, eyeW, eyelidH, 4 * s);
         this.blinkRight.endFill();
       }
+
+      // Eyebrow overlays (for expression system)
+      // Get eyebrow raise from blendshapes (0-100 range, normalized to 0-1)
+      const eyebrowRaise = clamp(
+        Math.max(
+          (bs.browInnerUp ?? 0) / 100,
+          (bs.browOuterUpLeft ?? 0) / 100,
+          (bs.browOuterUpRight ?? 0) / 100
+        ),
+        0,
+        1
+      );
+      if (eyebrowRaise > 0.01 && this.eyebrowLeft && this.eyebrowRight) {
+        const eyebrowColor = 0x8b6f5e; // Brown eyebrow color
+        const eyebrowW = 50 * s;
+        const eyebrowH = 4 * s;
+        const eyebrowY = eyeY - 35 * s; // Above eyes
+        const eyebrowRaiseAmount = eyebrowRaise * 8 * s; // Raise up to 8px when raised
+        const eyebrowOpacity = 0.4 + eyebrowRaise * 0.3; // 40-70% opacity
+
+        this.eyebrowLeft.clear();
+        this.eyebrowLeft.beginFill(eyebrowColor, eyebrowOpacity);
+        this.eyebrowLeft.drawRoundedRect(
+          ax - eyeDX - eyebrowW / 2,
+          eyebrowY - eyebrowRaiseAmount - eyebrowH / 2,
+          eyebrowW,
+          eyebrowH,
+          2 * s
+        );
+        this.eyebrowLeft.endFill();
+
+        this.eyebrowRight.clear();
+        this.eyebrowRight.beginFill(eyebrowColor, eyebrowOpacity);
+        this.eyebrowRight.drawRoundedRect(
+          ax + eyeDX - eyebrowW / 2,
+          eyebrowY - eyebrowRaiseAmount - eyebrowH / 2,
+          eyebrowW,
+          eyebrowH,
+          2 * s
+        );
+        this.eyebrowRight.endFill();
+      } else if (this.eyebrowLeft && this.eyebrowRight) {
+        this.eyebrowLeft.clear();
+        this.eyebrowRight.clear();
+      }
+    },
+
+    /**
+     * Set expression (for phase-to-expression mapping)
+     * @param {string} expressionName - e.g. 'curious', 'engaged', 'warm'
+     */
+    setExpression(expressionName) {
+      // Expression system will be handled by KellyExpressionBridge
+      // This method is a placeholder for future direct expression control
+      if (window.KellyExpressionBridge && window.KellyExpressionBridge.isInitialized) {
+        window.KellyExpressionBridge.setExpression(expressionName);
+      }
+      return this;
     },
   };
 
