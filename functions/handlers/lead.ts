@@ -218,7 +218,7 @@ export async function leadHandler(request: Request, context: HandlerContext): Pr
     const verification = await verifyTurnstile(body.turnstile_token, turnstileSecret);
     if (!verification.success) {
       return jsonResponse<LeadErrorResponse>(
-        { status: 'error', message: verification.message, requestId },
+        { status: 'error', message: verification.message ?? 'turnstile_verification_failed', requestId },
         { status: 400 }
       );
     }
@@ -226,7 +226,7 @@ export async function leadHandler(request: Request, context: HandlerContext): Pr
     const verification = await verifyRecaptcha(body.recaptcha_token, recaptchaSecret);
     if (!verification.success) {
       return jsonResponse<LeadErrorResponse>(
-        { status: 'error', message: verification.message, requestId },
+        { status: 'error', message: verification.message ?? 'recaptcha_verification_failed', requestId },
         { status: 400 }
       );
     }

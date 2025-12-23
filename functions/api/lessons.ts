@@ -8,6 +8,10 @@
  * Query params: archetype, ageBucket
  */
 
+// Minimal type to keep TS happy in non-Cloudflare environments.
+// In Cloudflare runtime this is provided by Workers types.
+type D1Database = any;
+
 export interface Env {
   DB: D1Database;
 }
@@ -77,12 +81,12 @@ export async function onRequest(context: { request: Request; env: Env; params: {
     }
     
     // Fetch lesson from D1
-    const lesson = await env.DB.prepare(`
+    const lesson = (await env.DB.prepare(`
       SELECT id, day_number, topic, universal_truth, 
              marketing_headline, marketing_tagline, marketing_pitch
       FROM core_lessons
       WHERE day_number = ?
-    `).bind(dayNumber).first<LessonRow>();
+    `).bind(dayNumber).first()) as LessonRow | null;
     
     if (!lesson) {
       return new Response(JSON.stringify({
@@ -95,27 +99,27 @@ export async function onRequest(context: { request: Request; env: Env; params: {
     }
     
     // Fetch atoms for this lesson and archetype
-    const atoms = await env.DB.prepare(`
+    const atoms = (await env.DB.prepare(`
       SELECT id, core_lesson_id, archetype, phase, content, hd_video_url, visual_url
       FROM lesson_atoms
       WHERE core_lesson_id = ? AND archetype = ?
       ORDER BY phase
-    `).bind(lesson.id, archetype).all<AtomRow>();
+    `).bind(lesson.id, archetype).all()) as { results?: AtomRow[] };
     
     // Fetch shards for this lesson and archetype
-    const shards = await env.DB.prepare(`
+    const shards = (await env.DB.prepare(`
       SELECT id, core_lesson_id, archetype, region, age, script_content
       FROM lesson_shards
       WHERE core_lesson_id = ? AND archetype = ?
-    `).bind(lesson.id, archetype).all<ShardRow>();
+    `).bind(lesson.id, archetype).all()) as { results?: ShardRow[] };
     
     // Parse JSON content fields
-    const parsedAtoms = (atoms.results || []).map(atom => ({
+    const parsedAtoms = (atoms.results || []).map((atom: AtomRow) => ({
       ...atom,
       content: typeof atom.content === 'string' ? JSON.parse(atom.content) : atom.content
     }));
     
-    const parsedShards = (shards.results || []).map(shard => ({
+    const parsedShards = (shards.results || []).map((shard: ShardRow) => ({
       ...shard,
       script_content: typeof shard.script_content === 'string' ? JSON.parse(shard.script_content) : shard.script_content
     }));

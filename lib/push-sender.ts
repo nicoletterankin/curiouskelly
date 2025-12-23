@@ -18,6 +18,9 @@
 
 import webpush from 'web-push';
 import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+type AnySupabaseClient = SupabaseClient<any, any, any, any, any>;
 
 // Types
 export interface PushPayload {
@@ -441,7 +444,7 @@ async function getFirebaseAccessToken(
 export async function sendPushNotification(
   token: PushToken,
   payload: PushPayload,
-  supabase?: ReturnType<typeof createClient>
+  supabase?: AnySupabaseClient
 ): Promise<SendResult> {
   let result: SendResult;
 
@@ -538,7 +541,7 @@ export async function sendPushNotification(
 export async function sendToUser(
   userId: string,
   payload: PushPayload,
-  supabase: ReturnType<typeof createClient>
+  supabase: AnySupabaseClient
 ): Promise<{ sent: number; failed: number; results: SendResult[] }> {
   // Get all active tokens for user
   const { data: tokens, error } = await supabase
@@ -567,7 +570,7 @@ export async function sendToUser(
 export async function sendToUsers(
   userIds: string[],
   payload: PushPayload,
-  supabase: ReturnType<typeof createClient>
+  supabase: AnySupabaseClient
 ): Promise<{ totalSent: number; totalFailed: number; userResults: Map<string, SendResult[]> }> {
   const userResults = new Map<string, SendResult[]>();
   let totalSent = 0;

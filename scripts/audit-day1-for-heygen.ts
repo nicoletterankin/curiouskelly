@@ -72,7 +72,7 @@ async function countKellyVideoAssets(day: number) {
     const { count, error } = await supabase
       .from('kelly_video_assets')
       .select('*', { count: 'exact', head: true })
-      // @ts-expect-error - schema varies
+      // @ts-ignore - schema varies across environments
       .eq('day_number', day);
 
     if (!error) return { dayColumn: 'day_number' as const, count: count || 0 };
@@ -83,7 +83,7 @@ async function countKellyVideoAssets(day: number) {
     const { count, error } = await supabase
       .from('kelly_video_assets')
       .select('*', { count: 'exact', head: true })
-      // @ts-expect-error - schema varies
+      // @ts-ignore - schema varies across environments
       .eq('lesson_day', day);
 
     if (!error) return { dayColumn: 'lesson_day' as const, count: count || 0 };

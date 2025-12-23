@@ -78,7 +78,9 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       const db = getSupabaseAdmin();
 
       // Filter by track (default 'learn') to avoid multiple-row error
-      const track = (query.track as string) || 'learn';
+      const trackParam = req.query.track;
+      const track =
+        (Array.isArray(trackParam) ? trackParam[0] : (trackParam as string | undefined)) || 'learn';
       const { data: lesson, error: lessonError } = await db
         .from('core_lessons')
         .select('*')

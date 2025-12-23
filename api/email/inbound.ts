@@ -14,9 +14,12 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import { classifyEmail, quickClassify, shouldEscalate, EmailClassification } from '../../lib/email/classifier';
 import { generateResponse, GeneratedResponse } from '../../lib/email/response-generator';
 import { sendEscalationNotification } from '../../lib/email/escalation';
+
+type AnySupabaseClient = SupabaseClient<any, any, any, any, any>;
 
 const RESEND_API_URL = 'https://api.resend.com/emails';
 
@@ -499,7 +502,7 @@ async function sendEmail(
 }
 
 async function logAction(
-  supabase: ReturnType<typeof createClient>,
+  supabase: AnySupabaseClient,
   threadId: string,
   action: string,
   actor: string,

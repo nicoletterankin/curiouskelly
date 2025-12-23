@@ -1,4 +1,4 @@
-import { leadHandler } from '../../handlers/lead';
+import { leadHandler } from '../handlers/lead';
 
 type CloudflareContext = {
   request: Request;

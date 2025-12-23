@@ -69,7 +69,7 @@ export async function stripeSessionHandler(
   }
 
   const stripe = new Stripe(stripeKey, {
-    apiVersion: '2024-11-20.acacia',
+    apiVersion: '2023-10-16',
   });
 
   // Get session_id from URL query params

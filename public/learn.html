@@ -81,6 +81,8 @@
   
   <!-- Lesson loader with fallback support -->
   <script src="/js/kelly-lesson-loader.js"></script>
+  <!-- Lesson Audit System - Shows all assets for a lesson -->
+  <script src="/js/kelly-lesson-audit.js"></script>
   <!-- BYOK Manager: Bring Your Own Key Flywheel -->
   <script src="/js/byok-manager.js"></script>
   <!-- Generation Queue: Community pooling for batch lessons -->
@@ -604,8 +606,8 @@
     }
     
     .scene-header {
-      padding: 16px 20px;
-      padding-top: calc(16px + var(--safe-top));
+      padding: 10px 16px;
+      padding-top: calc(10px + var(--safe-top));
       display: flex;
       align-items: center;
       justify-content: space-between;
@@ -688,7 +690,7 @@
       justify-content: center;
       align-items: center;
       text-align: center;
-      padding: 40px 20px;
+      padding: 24px 16px;
     }
     
     .home-hero {
@@ -736,9 +738,9 @@
     .home-today-preview {
       background: rgba(37, 99, 235, 0.1);
       border: 1px solid rgba(37, 99, 235, 0.2);
-      border-radius: 12px;
-      padding: 12px 20px;
-      margin-top: 16px;
+      border-radius: 10px;
+      padding: 10px 16px;
+      margin-top: 12px;
     }
     
     .today-label {
@@ -1929,9 +1931,14 @@
       padding: 14px 16px;
       font-weight: 800;
       cursor: pointer;
-      background: var(--kelly-color);
+      background: var(--kelly-blue, #2563eb);
       color: #fff;
       margin-top: 6px;
+      transition: all 0.2s ease;
+    }
+    .checkout-cta:hover:not(:disabled) {
+      background: var(--kelly-blue-dark, #1d4ed8);
+      transform: translateY(-1px);
     }
     .checkout-cta:disabled { opacity: 0.75; cursor: not-allowed; }
     .checkout-terms {
@@ -4831,12 +4838,19 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 8px;
-      font-size: 12px;
+      gap: 6px;
+      font-size: 11px;
+      font-weight: 600;
       text-transform: uppercase;
-      letter-spacing: 2px;
-      opacity: 0.5;
-      margin-bottom: 12px;
+      letter-spacing: 1.5px;
+      color: rgba(255, 255, 255, 0.7);
+      margin-bottom: 8px;
+      padding: 4px 12px;
+      background: rgba(0, 0, 0, 0.4);
+      border-radius: 6px;
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
     }
     
     .caption-text {
@@ -6104,12 +6118,13 @@
     
     .settings-item {
       background: var(--bg-card);
-      padding: 16px 20px;
+      padding: 10px 14px;
       display: flex;
       align-items: center;
-      gap: 16px;
+      gap: 10px;
       cursor: pointer;
       transition: background 0.2s ease;
+      font-size: 14px;
     }
     
     .settings-item:first-child {
@@ -6133,14 +6148,7 @@
     }
     
     .settings-item .icon {
-      width: 32px;
-      height: 32px;
-      border-radius: 8px;
-      background: rgba(255,255,255,0.1);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 16px;
+      display: none;
     }
     
     .settings-item .label {
@@ -6865,24 +6873,20 @@
        ============================================ */
     .everything-button {
       position: fixed;
-      bottom: calc(24px + var(--safe-bottom));
-      right: clamp(16px, 3vw, 24px);
-      top: auto;
-      bottom: auto;
-      left: auto;
-      transform-origin: top right;
+      bottom: calc(16px + var(--safe-bottom));
+      right: 16px;
       display: flex;
       align-items: center;
-      gap: 4px;
-      padding: 6px;
-      background: rgba(15, 15, 22, 0.8);
-      -webkit-backdrop-filter: blur(24px);
-      backdrop-filter: blur(24px);
-      border-radius: 36px;
-      border: 1px solid rgba(255, 255, 255, 0.12);
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.35), 0 0 0 1px rgba(255, 255, 255, 0.04) inset;
-      opacity: 0.38;
-      transition: opacity 0.25s ease, box-shadow 0.25s ease, transform 0.25s ease;
+      gap: 2px;
+      padding: 4px;
+      background: rgba(15, 15, 22, 0.85);
+      -webkit-backdrop-filter: blur(20px);
+      backdrop-filter: blur(20px);
+      border-radius: 24px;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 2px 12px rgba(0, 0, 0, 0.3);
+      opacity: 0.5;
+      transition: opacity 0.2s ease;
       z-index: 200;
     }
 
@@ -6915,27 +6919,27 @@
     /* Previous/Next buttons */
     .everything-btn.btn-prev,
     .everything-btn.btn-next {
-      width: 44px;
-      height: 44px;
+      width: 32px;
+      height: 32px;
       border-radius: 50%;
-      background: rgba(255, 255, 255, 0.08);
+      background: rgba(255, 255, 255, 0.06);
     }
     
     .everything-btn.btn-prev:hover,
     .everything-btn.btn-next:hover {
-      background: rgba(255, 255, 255, 0.15);
+      background: rgba(255, 255, 255, 0.12);
     }
     
     .everything-btn.btn-prev svg,
     .everything-btn.btn-next svg {
-      width: 20px;
-      height: 20px;
+      width: 14px;
+      height: 14px;
     }
     
-    /* Giant Play/Pause button */
+    /* Play/Pause button */
     .everything-btn.btn-play {
-      width: 64px;
-      height: 64px;
+      width: 40px;
+      height: 40px;
       border-radius: 50%;
       background: linear-gradient(135deg, var(--kelly-blue, #3b82f6) 0%, #6366f1 100%);
       box-shadow: 0 4px 20px rgba(99, 102, 241, 0.5);
@@ -6948,9 +6952,9 @@
     }
     
     .everything-btn.btn-play svg {
-      width: 28px;
-      height: 28px;
-      margin-left: 3px; /* Visual centering for play icon */
+      width: 18px;
+      height: 18px;
+      margin-left: 2px;
     }
     
     .everything-btn.btn-play.paused svg {
@@ -7414,7 +7418,7 @@
     }
     
     .settings-section-header .settings-icon {
-      font-size: 18px;
+      display: none;
     }
     
     .settings-section-content {
@@ -7480,7 +7484,7 @@
     }
     
     .provider-icon {
-      font-size: 1.2rem;
+      display: none;
     }
     
     .provider-name {
@@ -8196,10 +8200,18 @@
 
   <!-- Unified top navigation - Kelly is a Learning Calendar -->
   <nav class="kelly-top-nav">
-    <!-- LEFT: Kelly Logo (opens Kelly Panel) -->
-    <button type="button" class="kelly-home-link" title="Today's Lesson" id="kelly-logo-btn">
+    <!-- LEFT: Kelly Logo (navigates to homepage) -->
+    <a href="/" class="kelly-home-link" title="Home" id="kelly-logo-btn" style="display: flex; align-items: center; gap: 8px; text-decoration: none; color: inherit;">
       <img src="/images/brand/kelly-mark-circle-64.png" alt="Kelly" class="kelly-logo-img">
-    </button>
+      <span style="font-weight: 600; font-size: 15px;">Curious Kelly</span>
+    </a>
+    
+    <!-- CENTER NAV: Quick links -->
+    <div class="nav-center-links" style="display: flex; gap: 20px; align-items: center; margin-left: 24px;">
+      <a href="/" style="color: var(--text-secondary, #999); text-decoration: none; font-size: 14px; transition: color 0.2s;">Home</a>
+      <a href="/learn.html" style="color: var(--text-primary, #fff); text-decoration: none; font-size: 14px; font-weight: 600;">Learn</a>
+      <a href="/pricing.html" style="color: var(--text-secondary, #999); text-decoration: none; font-size: 14px; transition: color 0.2s;">Pricing</a>
+    </div>
     
     <!-- CENTER: Today's Lesson CTA (the star of the show) -->
     <div class="nav-lesson-cta" id="nav-lesson-cta">
@@ -8757,7 +8769,6 @@
           </div>
           
           <div class="caption-phase" id="caption-phase">
-            <span class="phase-icon">🪝</span>
             <span class="phase-name">Hook</span>
           </div>
           <div class="caption-text" id="caption-text">
@@ -8920,12 +8931,10 @@
         <div class="settings-section">
           <div class="settings-section-title">Preferences</div>
           <div class="settings-item" id="btn-playback">
-            <div class="icon">▶️</div>
             <div class="label">Auto-Play</div>
             <div class="toggle-switch" id="toggle-autoplay"></div>
           </div>
           <div class="settings-item" id="btn-captions">
-            <div class="icon">💬</div>
             <div class="label">Show Captions</div>
             <div class="toggle-switch active" id="toggle-captions"></div>
           </div>
@@ -8935,7 +8944,6 @@
         <div class="settings-section">
           <div class="settings-section-title">Language</div>
           <div class="settings-item" id="btn-language" onclick="openLanguageSettings()">
-            <div class="icon">🌍</div>
             <div class="label">Display Language</div>
             <div class="value" id="current-language-display">English</div>
             <div class="arrow">›</div>
@@ -8946,13 +8954,11 @@
         <div class="settings-section">
           <div class="settings-section-title">Your Learning</div>
           <div class="settings-item" id="btn-journey-insights">
-            <div class="icon">📊</div>
             <div class="label">Learning Journey</div>
             <div class="value" id="journey-lessons-count">—</div>
             <div class="arrow">›</div>
           </div>
           <div class="settings-item" id="btn-subscription">
-            <div class="icon">💎</div>
             <div class="label">Billing</div>
             <div class="value" id="subscription-status">Included</div>
             <div class="arrow">›</div>
@@ -8963,7 +8969,6 @@
         <div class="settings-section">
           <div class="settings-section-title">Account</div>
           <div class="settings-item" id="btn-profile">
-            <div class="icon">👤</div>
             <div class="label">Profile</div>
             <div class="value" id="profile-value">Guest</div>
             <div class="arrow">›</div>
@@ -8974,12 +8979,10 @@
         <div class="settings-section">
           <div class="settings-section-title">Support</div>
           <div class="settings-item" id="btn-help">
-            <div class="icon">❓</div>
             <div class="label">Email support</div>
             <div class="arrow">›</div>
           </div>
           <div class="settings-item" id="btn-feedback">
-            <div class="icon">✉️</div>
             <div class="label">Contact</div>
             <div class="arrow">›</div>
           </div>
@@ -8989,25 +8992,21 @@
         <div class="settings-section">
           <div class="settings-section-title">Legal & Privacy</div>
           <div class="settings-item" id="btn-privacy">
-            <div class="icon">🔐</div>
             <div class="label">Privacy</div>
             <div class="arrow">›</div>
           </div>
           <div class="settings-item" id="btn-terms">
-            <div class="icon">📄</div>
             <div class="label">Terms</div>
             <div class="arrow">›</div>
           </div>
           <div class="settings-item" id="btn-data-controls">
-            <div class="icon">🗂️</div>
             <div class="label">Your Data</div>
             <div class="arrow">›</div>
           </div>
         </div>
         
         <div class="footer">
-          Curious Kelly v1.0.0<br>
-          Made with 💜 by Lesson of the Day PBC
+          Curious Kelly · Lesson of the Day PBC
         </div>
       </div>
       
@@ -9088,7 +9087,7 @@
             </div>
             <p style="font-size: 12px; color: var(--text-muted);">When off, Kelly won't collect learning patterns.</p>
             
-            <a href="/privacy.html" target="_blank" rel="noopener noreferrer" class="legal-link">Read full privacy policy →</a>
+            <a href="mailto:hello@curiouskelly.com?subject=Privacy%20Question" class="legal-link">Have a privacy question? Email us →</a>
           </div>
         </div>
       </div>
@@ -9110,7 +9109,7 @@
             <h4>Content</h4>
             <p>Lessons are for personal learning. Please don't redistribute or commercially use our content.</p>
             
-            <a href="/terms.html" target="_blank" rel="noopener noreferrer" class="legal-link">Read full terms →</a>
+            <a href="mailto:hello@curiouskelly.com?subject=Terms%20Question" class="legal-link">Have a terms question? Email us →</a>
           </div>
         </div>
       </div>
@@ -9359,11 +9358,10 @@
             <!-- Help Section -->
             <details class="settings-section">
               <summary class="settings-section-header">
-                <span class="settings-icon">❓</span>
                 <span>Help & Support</span>
               </summary>
               <div class="settings-section-content">
-                <a href="/help.html" class="settings-link" style="display: block; margin-bottom: 12px;">📚 Help Center & FAQ →</a>
+                <a href="/help.html" class="settings-link" style="display: block; margin-bottom: 12px;">Help Center & FAQ →</a>
                 <p style="margin-bottom: 8px;">Questions about billing, account, or technical issues? Check our FAQ first.</p>
                 <p style="margin-bottom: 12px; color: var(--text-muted); font-size: 12px;">Can't find your answer? Email us directly:</p>
                 <a href="mailto:hello@curiouskelly.com" class="settings-link">hello@curiouskelly.com →</a>
@@ -9373,12 +9371,11 @@
             <!-- Contribution Section - Never Gate -->
             <details class="settings-section" id="contribution-section">
               <summary class="settings-section-header">
-                <span class="settings-icon">💜</span>
                 <span>Billing</span>
               </summary>
               <div class="settings-section-content">
-                <div class="contribution-philosophy" style="background: linear-gradient(135deg, rgba(147, 51, 234, 0.1), rgba(37, 99, 235, 0.1)); border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 1px solid rgba(147, 51, 234, 0.2);">
-                  <h4 style="margin: 0 0 8px; color: var(--text-primary); font-size: 15px;">✨ Contributing is learning</h4>
+                <div class="contribution-philosophy" style="background: rgba(255, 255, 255, 0.03); border-radius: 10px; padding: 14px; margin-bottom: 14px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                  <h4 style="margin: 0 0 8px; color: var(--text-primary); font-size: 15px;">Contributing is learning</h4>
                   <p style="margin: 0; font-size: 13px; color: var(--text-secondary); line-height: 1.5;">
                     You can contribute your <strong>time</strong>, <strong>talent</strong>, or <strong>tokens</strong>:
                     time is showing up daily with Kelly, talent is helping make Kelly better for others, and tokens are paying with your API keys from third‑party providers or with money via Stripe.
@@ -9386,13 +9383,13 @@
                 </div>
                 
                 <div class="contribution-options" style="display: flex; flex-direction: column; gap: 12px;">
-                  <button class="btn-primary" onclick="openCheckoutPanel('monthly');" style="width: 100%; background: linear-gradient(135deg, #9333ea, #2563eb);">
+                  <button class="btn-primary" onclick="openCheckoutPanel('monthly');" style="width: 100%; background: var(--kelly-blue); border: none; color: white; font-weight: 600; padding: 14px 20px; border-radius: 12px; cursor: pointer; transition: all 0.2s ease;">
                     💳 Monthly — $7.99/mo
                   </button>
-                  <button class="btn-secondary" onclick="openCheckoutPanel('annual');" style="width: 100%;">
+                  <button class="btn-primary" onclick="openCheckoutPanel('annual');" style="width: 100%; background: var(--kelly-blue); border: none; color: white; font-weight: 600; padding: 14px 20px; border-radius: 12px; cursor: pointer; transition: all 0.2s ease;">
                     💜 Annual — $49.99/yr
                   </button>
-                  <button class="btn-secondary" onclick="openCheckoutPanel('lifetime');" style="width: 100%;">
+                  <button class="btn-primary" onclick="openCheckoutPanel('lifetime');" style="width: 100%; background: var(--kelly-blue); border: none; color: white; font-weight: 600; padding: 14px 20px; border-radius: 12px; cursor: pointer; transition: all 0.2s ease;">
                     🏆 Lifetime — $199.99
                   </button>
                 </div>
@@ -9406,7 +9403,6 @@
             <!-- Preferences Section -->
             <details class="settings-section">
               <summary class="settings-section-header">
-                <span class="settings-icon">🎚️</span>
                 <span>Preferences</span>
               </summary>
               <div class="settings-section-content">
@@ -9424,20 +9420,19 @@
             <!-- BYOK Hub: Bring Your Own Keys -->
             <details class="settings-section" id="byok-hub-section">
               <summary class="settings-section-header">
-                <span class="settings-icon">🔑</span>
                 <span>Power Kelly</span>
                 <span class="byok-status-badge" id="byok-hub-badge">0 connected</span>
               </summary>
               <div class="settings-section-content byok-hub">
-                <div class="byok-hero" style="background: linear-gradient(135deg, rgba(99, 102, 241, 0.1), rgba(168, 85, 247, 0.1)); border-radius: 12px; padding: 16px; margin-bottom: 16px; border: 1px solid rgba(99, 102, 241, 0.2);">
-                  <p style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 0 0 8px;">✨ Tokens can be API keys, too.</p>
+                <div class="byok-hero" style="background: rgba(255, 255, 255, 0.03); border-radius: 10px; padding: 12px; margin-bottom: 12px; border: 1px solid rgba(255, 255, 255, 0.08);">
+                  <p style="font-size: 14px; font-weight: 600; color: var(--text-primary); margin: 0 0 8px;">Tokens can be API keys, too.</p>
                   <p style="font-size: 12px; color: var(--text-secondary); margin: 0; line-height: 1.5;">
                     Got API credits sitting unused? Many providers include starter credits that often go to waste.
                     Add your keys here and Kelly turns them into lessons for curious minds who can't afford AI tutoring.
                   </p>
                 </div>
                 <p class="byok-intro" style="font-size: 11px; color: var(--text-muted); margin-bottom: 12px;">
-                  🔒 Keys stay on YOUR device. Kelly uses them for YOUR lessons first. Excess capacity helps the community.
+                  Keys stay on YOUR device. Kelly uses them for YOUR lessons first. Excess capacity helps the community.
                 </p>
                 
                 <!-- Provider Cards -->
@@ -9563,36 +9558,38 @@
                 
                 <!-- Starter Credits Guide -->
                 <div style="margin-top: 12px; padding: 12px; background: rgba(255,255,255,0.04); border-radius: 8px; border: 1px solid var(--border-default);">
-                  <div style="font-size: 11px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">💡 Don’t have API keys yet?</div>
+                  <div style="font-size: 11px; font-weight: 600; color: var(--text-primary); margin-bottom: 8px;">Don't have API keys yet?</div>
                   <div style="font-size: 11px; color: var(--text-secondary); line-height: 1.6;">
                     Start with the provider you already use, then create an API key in their dashboard.
                   </div>
                 </div>
                 
-                <p class="byok-privacy">🔒 Keys stored locally in your browser. Never sent to our servers.</p>
+                <p class="byok-privacy">Keys stored locally in your browser. Never sent to our servers.</p>
               </div>
             </details>
             
             <!-- Privacy Section -->
             <details class="settings-section">
               <summary class="settings-section-header">
-                <span class="settings-icon">🔒</span>
                 <span>Privacy</span>
               </summary>
               <div class="settings-section-content">
-                <p style="font-size: 13px; color: var(--text-muted);">Your data stays on your device. We don't sell or share personal information.</p>
-                <a href="/privacy" class="settings-link">Privacy Policy →</a>
+                <p style="font-size: 13px; color: var(--text-muted); margin-bottom: 10px;">Your data stays on your device. We don't sell or share personal information.</p>
+                <p style="font-size: 12px; color: var(--text-muted); line-height: 1.6;">
+                  <strong>What we collect:</strong> Usage patterns to improve lessons (opt-out above).<br>
+                  <strong>What we don't:</strong> We never sell data. Period.<br>
+                  <strong>Questions?</strong> Email hello@curiouskelly.com
+                </p>
               </div>
             </details>
             
             <!-- About Section -->
             <details class="settings-section">
               <summary class="settings-section-header">
-                <span class="settings-icon">ℹ️</span>
                 <span>About Kelly</span>
               </summary>
               <div class="settings-section-content">
-                <p style="font-size: 13px; margin-bottom: 8px;"><strong>✨ Curious Kelly</strong></p>
+                <p style="font-size: 13px; margin-bottom: 8px;"><strong>Curious Kelly</strong></p>
                 <p style="font-size: 12px; color: var(--text-secondary); line-height: 1.5; margin-bottom: 10px;">
                   Built by a solo mom who loves playing with AI and being outside. 
                   730 lessons. Zero paywalls. Community-powered.
@@ -9602,18 +9599,13 @@
                   California Public Benefit Corporation<br>
                   hello@curiouskelly.com
                 </p>
-                <div style="display: flex; gap: 12px; flex-wrap: wrap;">
-                  <a href="/terms" class="settings-link">Terms →</a>
-                  <a href="/privacy" class="settings-link">Privacy →</a>
-                  <a href="/contribute" class="settings-link">Contribute →</a>
-                </div>
+                <a href="mailto:hello@curiouskelly.com" class="settings-link">Contact us →</a>
               </div>
             </details>
             
             <!-- Contact Section -->
             <details class="settings-section">
               <summary class="settings-section-header">
-                <span class="settings-icon">✉️</span>
                 <span>Contact Kelly</span>
               </summary>
               <div class="settings-section-content">
@@ -10306,8 +10298,18 @@
 
     function openPanel(name) {
       // Enforce: one panel at a time.
+      console.log('[openPanel] Opening panel:', name);
       document.documentElement.setAttribute('data-panel-open', name);
       syncSacredPanels();
+      
+      // Verify panel opened (for debugging)
+      setTimeout(() => {
+        const panel = document.getElementById('right-panel');
+        const slot = document.getElementById(`panel-${name}-slot`);
+        console.log('[openPanel] Right panel open:', panel?.classList.contains('open'));
+        console.log('[openPanel] Panel slot exists:', !!slot);
+        console.log('[openPanel] Panel slot visible:', slot?.style.display !== 'none');
+      }, 100);
     }
 
     function closePanel() {
@@ -10762,21 +10764,41 @@
     function getTodayDayNumber() {
       // Prefer the canonical time authority (KellyTime/KellyLesson) when present.
       try {
-        if (window.KellyLesson?.getTodayLessonKey) {
-          return window.KellyLesson.getTodayLessonKey({
-            utcMillis: NOW_CTX.utcMillis,
-            timeZone: NOW_CTX.timeZone
-          }).dayNumber;
+        if (window.KellyTime?.getLessonDayForTimeZone) {
+          const dayNum = window.KellyTime.getLessonDayForTimeZone(
+            NOW_CTX.utcMillis || Date.now(),
+            NOW_CTX.timeZone || window.KellyTime?.getUserTimeZone?.() || 'UTC'
+          );
+          if (dayNum >= 1 && dayNum <= 365) return dayNum;
         }
-      } catch (_) {}
+        if (window.KellyLesson?.getTodayLessonKey) {
+          const result = window.KellyLesson.getTodayLessonKey({
+            utcMillis: NOW_CTX.utcMillis || Date.now(),
+            timeZone: NOW_CTX.timeZone || window.KellyTime?.getUserTimeZone?.() || 'UTC'
+          });
+          if (result?.dayNumber >= 1 && result?.dayNumber <= 365) return result.dayNumber;
+        }
+      } catch (e) {
+        console.warn('[getTodayDayNumber] KellyTime/KellyLesson failed, using fallback:', e);
+      }
 
       // Fallback: compute day-of-year using UTC midnight math (DST-safe).
-      const now = new Date();
-      const y = now.getFullYear();
-      const m = now.getMonth();
-      const d = now.getDate();
-      const day =
-        Math.floor((Date.UTC(y, m, d) - Date.UTC(y, 0, 1)) / 86400000) + 1;
+      // This ensures Day 1 = January 1st of the current year
+      const now = new Date(NOW_CTX.utcMillis || Date.now());
+      const y = now.getUTCFullYear();
+      const m = now.getUTCMonth();
+      const d = now.getUTCDate();
+      
+      // Calculate day-of-year: days since Jan 1
+      const jan1 = Date.UTC(y, 0, 1);
+      const current = Date.UTC(y, m, d);
+      const day = Math.floor((current - jan1) / 86400000) + 1;
+      
+      // Handle leap years: Feb 29 maps to day 60 (same as March 1)
+      const isLeap = (y % 4 === 0 && y % 100 !== 0) || (y % 400 === 0);
+      if (isLeap && m === 1 && d === 29) return 60;
+      if (isLeap && day > 59) return day - 1; // Compress after Feb 29
+      
       return Math.max(1, Math.min(365, day || 1));
     }
 
@@ -11446,6 +11468,10 @@
               <div class="note">One-time</div>
             </button>
 
+            <div class="checkout-email-row" style="margin-top: 16px;">
+              <label for="checkout-email" style="display: block; font-size: 13px; color: var(--text-secondary); margin-bottom: 6px;">Email for receipt</label>
+              <input type="email" id="checkout-email" placeholder="your@email.com" style="width: 100%; padding: 12px 14px; border-radius: 8px; border: 1px solid var(--border-default); background: var(--surface-elevated); color: var(--text-primary); font-size: 15px; outline: none;" />
+            </div>
             <button class="checkout-cta" id="checkout-cta" type="button">Continue</button>
             <div class="checkout-terms">Subscriptions include 7 days to explore. No card numbers are stored by Lesson of the Day PBC.</div>
           </div>
@@ -11463,6 +11489,19 @@
           renderCheckoutPanel();
         });
       });
+
+      // Pre-fill email from localStorage or session
+      const emailInput = slot.querySelector('#checkout-email');
+      if (emailInput) {
+        const storedEmail = localStorage.getItem('kelly_user_email') || '';
+        emailInput.value = storedEmail;
+        // Also try to get from session asynchronously
+        getSupabaseSession().then(session => {
+          if (session?.user?.email && !emailInput.value) {
+            emailInput.value = session.user.email;
+          }
+        }).catch(() => {});
+      }
 
       slot.querySelector('#checkout-cta')?.addEventListener('click', startEmbeddedCheckoutFlow);
       slot.querySelector('#checkout-back')?.addEventListener('click', () => {
@@ -11482,20 +11521,43 @@
     }
 
     async function openCheckoutPanel(defaultPlanType = 'annual') {
-      // Handle gift purchases with dedicated panel
-      if (defaultPlanType.startsWith('gift-')) {
-        __selectedGiftDuration = defaultPlanType.replace('gift-', '');
+      console.log('[openCheckoutPanel] Called with plan:', defaultPlanType);
+      try {
+        // Handle gift purchases with dedicated panel
+        if (defaultPlanType.startsWith('gift-')) {
+          __selectedGiftDuration = defaultPlanType.replace('gift-', '');
+          console.log('[openCheckoutPanel] Opening gift checkout for:', __selectedGiftDuration);
+          openPanel('checkout');
+          renderGiftCheckoutPanel();
+          try { closePaywall(); } catch (_) {}
+          return;
+        }
+        
+        __selectedPlanType = (defaultPlanType === 'yearly' ? 'annual' : defaultPlanType) || 'annual';
+        console.log('[openCheckoutPanel] Selected plan type:', __selectedPlanType);
+        
+        // Open the right panel first
+        console.log('[openCheckoutPanel] Opening checkout panel...');
         openPanel('checkout');
-        renderGiftCheckoutPanel();
+        
+        // Small delay to ensure panel is visible before rendering
+        setTimeout(() => {
+          console.log('[openCheckoutPanel] Rendering checkout panel content...');
+          renderCheckoutPanel();
+          
+          // Verify panel is visible
+          const slot = document.getElementById('panel-checkout-slot');
+          const panel = document.getElementById('right-panel');
+          console.log('[openCheckoutPanel] Panel slot exists:', !!slot);
+          console.log('[openCheckoutPanel] Right panel open:', panel?.classList.contains('open'));
+        }, 50);
+        
+        // Also close the legacy paywall overlay if it's open.
         try { closePaywall(); } catch (_) {}
-        return;
+      } catch (error) {
+        console.error('[openCheckoutPanel] Error:', error);
+        showToast('Could not open checkout. Please try again.');
       }
-      
-      __selectedPlanType = (defaultPlanType === 'yearly' ? 'annual' : defaultPlanType) || 'annual';
-      openPanel('checkout');
-      renderCheckoutPanel();
-      // Also close the legacy paywall overlay if it's open.
-      try { closePaywall(); } catch (_) {}
     }
 
     // ============================================
@@ -11654,10 +11716,22 @@
 
         const session = await getSupabaseSession();
         const userId = session?.user?.id || '';
-        const email = session?.user?.email || localStorage.getItem('kelly_user_email') || '';
+        
+        // Get email from: 1) session, 2) localStorage, 3) checkout form input
+        const checkoutEmailInput = document.getElementById('checkout-email');
+        const formEmail = checkoutEmailInput?.value?.trim() || '';
+        const email = session?.user?.email || localStorage.getItem('kelly_user_email') || formEmail;
 
         if (!email) {
-          throw new Error('missing_email');
+          showToast('Please enter your email to continue.');
+          checkoutEmailInput?.focus();
+          if (cta) { cta.textContent = 'Continue'; cta.disabled = false; }
+          return;
+        }
+        
+        // Save email for future use
+        if (formEmail && !localStorage.getItem('kelly_user_email')) {
+          localStorage.setItem('kelly_user_email', formEmail);
         }
 
         const referralCode =
@@ -11738,7 +11812,9 @@
     // Auto-open checkout panel if ?checkout=plan param is present
     const autoCheckoutPlan = urlParams.get('checkout');
     if (autoCheckoutPlan && autoCheckoutPlan !== 'success') {
+      console.log('[Auto-checkout] URL param detected:', autoCheckoutPlan);
       setTimeout(() => {
+        console.log('[Auto-checkout] Opening checkout panel for:', autoCheckoutPlan);
         openCheckoutPanel(autoCheckoutPlan);
       }, 500);
     }
@@ -12240,7 +12316,13 @@
       };
 
       lessonAtoms = PHASES.map(phase => {
-        const atom = atoms.find(a => a.phase === phase.dbName) || atoms.find(a => a.phase === phase.name);
+        // Match atom by phase key (lowercase), dbName (PascalCase), or name (PascalCase)
+        const atom = atoms.find(a => 
+          a.phase === phase.key || 
+          a.phase === phase.dbName || 
+          a.phase === phase.name ||
+          a.phase?.toLowerCase() === phase.key
+        );
         const content = atom?.content || {};
         
         // v5.0-full-choices: Support both old format (choice_intro, option_a, option_b)
@@ -13851,10 +13933,10 @@
       });
       
       // Header click behaviors
-      // Kelly logo -> opens chat/comments panel
+      // Kelly logo -> navigate to homepage
       document.querySelector('.kelly-home-link')?.addEventListener('click', (e) => {
         e.preventDefault();
-        openPanel('left');
+        window.location.href = '/';
       });
       
       // Time/Date display -> opens journey panel
@@ -13871,10 +13953,12 @@
       document.getElementById('nav-lesson-cta')?.addEventListener('click', () => {
         // If in home scene, start learning
         if (document.documentElement.getAttribute('data-ui-mode') === 'home') {
-          startLearning();
+          // Use same logic as goToLessonFromJourney for consistency
+          const todayDay = kellyTime ? kellyTime.getDayNumber() : getTodayDayNumber();
+          goToLessonFromJourney(todayDay);
         } else {
-          // Already in lesson - play/pause
-          togglePlayPause();
+          // Already in lesson - open left panel to see lesson details
+          toggleUnifiedPanel('kelly');
         }
       });
       
@@ -13883,6 +13967,19 @@
       
       // LEARN/GROW toggle
       setupTrackToggle();
+      
+      // LESSON INSPECTOR - Press Ctrl+Shift+A to inspect current lesson
+      document.addEventListener('keydown', (e) => {
+        if (e.ctrlKey && e.shiftKey && e.key === 'A') {
+          e.preventDefault();
+          const currentDay = state.currentDay || getTodayDayNumber();
+          if (window.LessonInspector) {
+            window.LessonInspector.showInspector(currentDay);
+          } else if (window.LessonAudit) {
+            window.LessonAudit.showInspector(currentDay);
+          }
+        }
+      });
     }
     
     // ============================================
@@ -13924,34 +14021,65 @@
       }
     }
     
-    function performSearch(query, container) {
-      const results = [];
+    async function performSearch(query, container) {
+      container.innerHTML = '<p style="color: var(--text-muted); text-align: center; padding: 40px 0;">Searching...</p>';
       
-      // Search through manifest lessons
-      if (manifest?.lessons) {
-        for (let dayNum = 1; dayNum <= 365; dayNum++) {
-          const lesson = manifest.lessons[dayNum];
-          if (!lesson) continue;
+      const results = [];
+      const queryLower = query.toLowerCase();
+      
+      // Search through static lesson files (public/lessons/day-X.json)
+      // Fetch lessons in batches to avoid overwhelming the API
+      const batchSize = 50;
+      const maxResults = 20;
+      
+      for (let batchStart = 1; batchStart <= 365 && results.length < maxResults; batchStart += batchSize) {
+        const batchEnd = Math.min(batchStart + batchSize - 1, 365);
+        const batchPromises = [];
+        
+        for (let dayNum = batchStart; dayNum <= batchEnd; dayNum++) {
+          batchPromises.push(
+            fetch(`/api/lessons/${dayNum}?archetype=The%20Scientist&ageBucket=adult`, { cache: 'force-cache' })
+              .then(res => res.ok ? res.json() : null)
+              .catch(() => null)
+          );
+        }
+        
+        const batchResults = await Promise.all(batchPromises);
+        
+        for (let i = 0; i < batchResults.length; i++) {
+          const dayNum = batchStart + i;
+          const payload = batchResults[i];
+          if (!payload?.lesson) continue;
           
+          const lesson = payload.lesson;
           const topic = (lesson.topic || '').toLowerCase();
+          const headline = (lesson.marketing_headline || lesson.headline || '').toLowerCase();
+          const universalTruth = (lesson.universal_truth || '').toLowerCase();
           const category = (lesson.category || '').toLowerCase();
+          const dayStr = dayNum.toString();
           
-          if (topic.includes(query) || category.includes(query) || dayNum.toString() === query) {
+          // Search in topic, headline, universal truth, category, or day number
+          if (topic.includes(queryLower) || 
+              headline.includes(queryLower) || 
+              universalTruth.includes(queryLower) ||
+              category.includes(queryLower) || 
+              dayStr === query) {
             results.push({
               day: dayNum,
               topic: lesson.topic || `Day ${dayNum}`,
+              headline: lesson.marketing_headline || lesson.headline || '',
               category: lesson.category || '',
               emoji: lesson.emoji || '📚'
             });
+            
+            if (results.length >= maxResults) break;
           }
-          
-          if (results.length >= 20) break; // Limit results
         }
-      }
-      
-      // Also search through loaded lesson atoms if available
-      if (window.lessonAtoms) {
-        // Search in current lesson content
+        
+        // Update UI with partial results as we search
+        if (results.length > 0) {
+          renderSearchResults(results, container);
+        }
       }
       
       if (results.length === 0) {
@@ -13959,6 +14087,10 @@
         return;
       }
       
+      renderSearchResults(results, container);
+    }
+    
+    function renderSearchResults(results, container) {
       let html = '<div class="search-results-list">';
       results.forEach(r => {
         const date = window.KellyTime?.dayNumberToDate(r.day);
@@ -14952,9 +15084,9 @@
           }
         }
         
-        // No visual found - try generated assets folder
+        // No visual found - try generated visuals folder
         const dayPadded = String(dayNumber).padStart(3, '0');
-        const fallbackUrl = `/generated-assets/day-${dayPadded}-${phase}.png`;
+        const fallbackUrl = `/generated-visuals/day-${dayPadded}/${phase === 'hook' ? 'thumbnail' : 'infographic-1'}.png`;
         imgEl.src = fallbackUrl;
         imgEl.onerror = () => {
           imgEl.style.display = 'none';
@@ -15426,10 +15558,7 @@ The learner is on phase ${state.currentPhase + 1} of 7. Be helpful and make lear
       const phase = PHASES[state.currentPhase];
       const phaseLabel = document.getElementById('phase-label');
       if (phaseLabel) phaseLabel.textContent = String(phase?.name || '').toUpperCase();
-      document.getElementById('caption-phase').innerHTML = `
-        <span class="phase-icon">${phase.icon}</span>
-        <span class="phase-name">${phase.name}</span>
-      `;
+      document.getElementById('caption-phase').innerHTML = `<span class="phase-name">${phase.name.toUpperCase()}</span>`;
 
       // Social simulation: keep phase-synced comments running during lessons.
       syncSimulatedCommentsForPhase();

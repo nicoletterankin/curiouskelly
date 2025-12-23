@@ -1,4 +1,4 @@
-import { stripeSessionHandler } from '../../handlers/stripe-session';
+import { stripeSessionHandler } from '../handlers/stripe-session';
 
 type CloudflareContext = {
   request: Request;

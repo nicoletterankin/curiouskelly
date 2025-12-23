@@ -190,7 +190,9 @@ async function tryExternalAlignment(
 
     // Call Gentle API
     const formData = new FormData();
-    formData.append('audio', new Blob([audioBuffer]), 'audio.wav');
+    // BlobPart typing in TS libdom doesn't include Node.js Buffer directly.
+    // Convert to a Uint8Array view so this works in Node (Undici) and type-checks cleanly.
+    formData.append('audio', new Blob([new Uint8Array(audioBuffer)]), 'audio.wav');
     formData.append('transcript', transcript);
 
     const response = await fetch(`${gentleUrl}/transcriptions?async=false`, {

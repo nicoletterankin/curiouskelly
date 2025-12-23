@@ -1,5 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+type AnySupabaseClient = SupabaseClient<any, any, any, any, any>;
 
 /**
  * ElevenLabs Omnihuman 1.5 Video Generation API
@@ -460,7 +463,7 @@ async function pollForVideoCompletion(
  * Helper to update video status in database
  */
 async function updateVideoStatus(
-  supabase: ReturnType<typeof createClient>,
+  supabase: AnySupabaseClient,
   lessonDay: number,
   phase: string,
   ageBucket: string,

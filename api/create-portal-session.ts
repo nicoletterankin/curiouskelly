@@ -52,7 +52,8 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
 
   const supabaseAuthClient = createClient(supabaseUrl, supabaseAnonKey);
   const supabaseAdmin = createClient(supabaseUrl, supabaseServiceKey);
-  const stripe = new Stripe(stripeKey, { apiVersion: '2024-11-20.acacia' as const });
+  // Keep this pinned to the Stripe SDK's supported type union for our installed version.
+  const stripe = new Stripe(stripeKey, { apiVersion: '2023-10-16' });
 
   try {
     const { data, error } = await supabaseAuthClient.auth.getUser(token);

@@ -8,9 +8,12 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 import Stripe from 'stripe';
 import { Buffer } from 'node:buffer';
 import { sendGiftEmail, sendRenewalReminderEmail } from '../lib/email';
+
+type AnySupabaseClient = SupabaseClient<any, any, any, any, any>;
 
 const supabaseUrl = process.env.PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -48,7 +51,7 @@ function generateGiftCode(): string {
  * EARN TO LEARN: Commission rates based on referrer's learning progress
  */
 async function recordCommissionIfReferred(
-  supabase: ReturnType<typeof createClient>,
+  supabase: AnySupabaseClient,
   customerEmail: string | null,
   amountCents: number,
   transactionType: 'initial_subscription' | 'subscription_renewal' | 'gift_purchase' | 'lifetime_purchase',
@@ -138,7 +141,7 @@ async function recordCommissionIfReferred(
  * Clawback commission when a refund occurs
  */
 async function clawbackCommission(
-  supabase: ReturnType<typeof createClient>,
+  supabase: AnySupabaseClient,
   stripePaymentIntentId: string,
   refundAmountCents: number
 ): Promise<void> {
@@ -203,7 +206,7 @@ async function clawbackCommission(
 }
 
 async function recordRevenueEvent(
-  supabase: ReturnType<typeof createClient>,
+  supabase: AnySupabaseClient,
   eventType: string,
   data: {
     user_id?: string;
@@ -235,7 +238,7 @@ async function recordRevenueEvent(
 }
 
 async function bestEffortSyncUserFromSubscription(
-  supabase: ReturnType<typeof createClient>,
+  supabase: AnySupabaseClient,
   subscription: Stripe.Subscription
 ): Promise<void> {
   const userId = subscription.metadata?.user_id;
@@ -264,7 +267,7 @@ async function bestEffortSyncUserFromSubscription(
 }
 
 async function bestEffortSyncUserFromCheckoutSession(
-  supabase: ReturnType<typeof createClient>,
+  supabase: AnySupabaseClient,
   session: Stripe.Checkout.Session
 ): Promise<void> {
   const userId = session.metadata?.user_id;
@@ -294,7 +297,8 @@ export default async function handler(
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  const stripe = new Stripe(stripeKey, { apiVersion: '2024-11-20.acacia' as const });
+  // Keep this pinned to the Stripe SDK's supported type union for our installed version.
+  const stripe = new Stripe(stripeKey, { apiVersion: '2023-10-16' });
   const supabase = createClient(supabaseUrl, supabaseServiceKey);
 
   // Verify webhook signature
@@ -511,18 +515,22 @@ export default async function handler(
               
               // Log user event
               if (userId && userId !== 'anonymous') {
-                await supabase.from('user_events').insert({
-                  user_id: userId,
-                  event_type: 'purchase.completed',
-                  event_category: 'learner_action',
-                  payload: {
-                    product_type: 'single_lesson',
+                try {
+                  await supabase.from('user_events').insert({
+                    user_id: userId,
+                    event_type: 'purchase.completed',
+                    event_category: 'learner_action',
+                    payload: {
+                      product_type: 'single_lesson',
+                      day_number: dayNumber,
+                      amount: (session.amount_total || 0) / 100,
+                      stripe_session_id: session.id,
+                    },
                     day_number: dayNumber,
-                    amount: (session.amount_total || 0) / 100,
-                    stripe_session_id: session.id
-                  },
-                  day_number: dayNumber
-                }).catch(() => {}); // Don't fail on event logging
+                  });
+                } catch {
+                  // Don't fail on event logging
+                }
               }
             }
           } else if (paymentType.startsWith('gift_')) {

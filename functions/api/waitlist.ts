@@ -1,4 +1,4 @@
-import { waitlistHandler } from '../../handlers/waitlist';
+import { waitlistHandler } from '../handlers/waitlist';
 
 type CloudflareContext = {
   request: Request;

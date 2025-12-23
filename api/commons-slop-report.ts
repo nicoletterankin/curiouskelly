@@ -43,19 +43,19 @@ export default async function handler(req: any, res: any) {
     }
 
     // Get summary stats
-    const { data: criticalCount } = await supabase
+    const { count: criticalCount } = await supabase
       .from('content_validation_results')
       .select('id', { count: 'exact', head: true })
       .is('resolved_at', null)
       .eq('severity', 'critical');
 
-    const { data: warningCount } = await supabase
+    const { count: warningCount } = await supabase
       .from('content_validation_results')
       .select('id', { count: 'exact', head: true })
       .is('resolved_at', null)
       .eq('severity', 'warning');
 
-    const { data: infoCount } = await supabase
+    const { count: infoCount } = await supabase
       .from('content_validation_results')
       .select('id', { count: 'exact', head: true })
       .is('resolved_at', null)
@@ -64,7 +64,7 @@ export default async function handler(req: any, res: any) {
     // Get resolution stats for the past 7 days
     const sevenDaysAgo = new Date(Date.now() - 7 * 24 * 60 * 60 * 1000).toISOString();
     
-    const { data: recentResolved } = await supabase
+    const { count: recentResolved } = await supabase
       .from('content_validation_results')
       .select('id', { count: 'exact', head: true })
       .gte('resolved_at', sevenDaysAgo);

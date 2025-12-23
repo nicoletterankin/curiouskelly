@@ -1,5 +1,8 @@
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+type AnySupabaseClient = SupabaseClient<any, any, any, any, any>;
 
 const supabaseUrl = process.env.PUBLIC_SUPABASE_URL || process.env.NEXT_PUBLIC_SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
@@ -40,7 +43,7 @@ const STREAK_MILESTONES = [7, 30, 100, 365, 1000];
 const LESSON_MILESTONES = [50, 100, 200, 365];
 
 async function checkAndAwardMilestones(
-  supabase: ReturnType<typeof createClient>,
+  supabase: AnySupabaseClient,
   userId: string,
   currentStreak: number,
   uniqueLessons: number,

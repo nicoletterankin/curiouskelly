@@ -1115,6 +1115,9 @@
         </div>
     </div>
 
+    <!-- Lesson Audit System -->
+    <script src="/js/kelly-lesson-audit.js"></script>
+    
     <script>
         // Load lesson metadata and generate interactive calendar
         (async function() {
@@ -1126,16 +1129,43 @@
             const container = document.getElementById('calendar-demo');
             if (!container) return;
             
-            // Load lesson metadata
-            let lessonsData = null;
-            try {
-                const response = await fetch('/data/lessons-metadata.json');
-                const data = await response.json();
-                lessonsData = data.lessons;
-                window.__lessonsData = lessonsData; // Store globally for tooltips
-            } catch (err) {
-                console.warn('Could not load lesson metadata:', err);
+            // Load lesson metadata directly from JSON files (faster than API)
+            let lessonsData = {};
+            const loadLessonPromises = [];
+            
+            // Load lessons in parallel batches (50 at a time for performance)
+            for (let day = 1; day <= 365; day++) {
+                loadLessonPromises.push(
+                    fetch(`/lessons/day-${day}.json`)
+                        .then(res => res.ok ? res.json() : null)
+                        .then(data => {
+                            if (data?.meta) {
+                                const topic = typeof data.meta.topic === 'object' 
+                                    ? data.meta.topic.en || data.meta.topic 
+                                    : data.meta.topic;
+                                lessonsData[day] = {
+                                    topic: topic || `Day ${day}`,
+                                    headline: typeof data.headline === 'object' 
+                                        ? data.headline.en || data.headline 
+                                        : data.headline || '',
+                                    category: data.meta.category || '',
+                                    emoji: data.meta.emoji || '📚',
+                                    day: day
+                                };
+                            }
+                            return null;
+                        })
+                        .catch(() => null)
+                );
+                
+                // Process in batches of 50
+                if (loadLessonPromises.length >= 50 || day === 365) {
+                    await Promise.all(loadLessonPromises);
+                    loadLessonPromises.length = 0;
+                }
             }
+            
+            window.__lessonsData = lessonsData; // Store globally for tooltips
             
             let dayCounter = 1;
             
@@ -1150,12 +1180,14 @@
                     dot.dataset.day = dayCounter;
                     
                     // Add lesson metadata if available
-                    if (lessonsData && lessonsData[dayCounter - 1]) {
-                        const lesson = lessonsData[dayCounter - 1];
+                    const lesson = lessonsData[dayCounter];
+                    if (lesson) {
                         dot.dataset.topic = lesson.topic;
-                        dot.dataset.hook = lesson.hook;
-                        dot.dataset.category = lesson.category;
-                        dot.dataset.icon = lesson.icon;
+                        dot.dataset.headline = lesson.headline || '';
+                        dot.dataset.category = lesson.category || '';
+                        dot.dataset.emoji = lesson.emoji || '📚';
+                        dot.dataset.day = dayCounter;
+                        dot.title = `${lesson.topic}${lesson.category ? ' • ' + lesson.category : ''}`;
                     }
                     
                     if (dayCounter < currentDayOfYear) {
@@ -1167,11 +1199,32 @@
                         dot.classList.add('future');
                     }
                     
-                    // Click handler
+                    // Click handler - show audit panel or navigate
+                    let clickTimer = null;
                     dot.addEventListener('click', function(e) {
                         e.preventDefault();
-                        const day = this.dataset.day;
-                        showLessonPreview(day, lessonsData);
+                        const day = parseInt(this.dataset.day);
+                        if (day < 1 || day > 365) return;
+
+                        if (clickTimer) {
+                            // Double click - navigate to lesson
+                            clearTimeout(clickTimer);
+                            clickTimer = null;
+                            window.location.href = `/learn.html?day=${day}`;
+                        } else {
+                            // Single click - show audit
+                            clickTimer = setTimeout(() => {
+                                clickTimer = null;
+                            if (window.LessonInspector) {
+                                window.LessonInspector.showInspector(day);
+                            } else if (window.LessonAudit) {
+                                window.LessonAudit.showInspector(day);
+                            } else {
+                                // Fallback: navigate if inspector not loaded
+                                window.location.href = `/learn.html?day=${day}`;
+                            }
+                            }, 300);
+                        }
                     });
                     
                     col.appendChild(dot);
@@ -1209,15 +1262,15 @@
                 // Create tooltip
                 tooltip = document.createElement('div');
                 tooltip.className = 'lesson-tooltip';
+                const emoji = dot.dataset.emoji || '📚';
                 tooltip.innerHTML = `
                     <div class="tooltip-header">
-                        <span class="tooltip-icon">${icon}</span>
+                        <span class="tooltip-icon">${emoji}</span>
                         <span class="tooltip-day">Day ${day}</span>
                     </div>
                     <div class="tooltip-topic">${topic}</div>
-                    <div class="tooltip-category">${category}</div>
-                    <div class="tooltip-hook">${hook}</div>
-                    <div class="tooltip-cta">${isTouchDevice ? 'Tap again to read full lesson →' : 'Click to read full lesson →'}</div>
+                    ${category ? `<div class="tooltip-category">${category}</div>` : ''}
+                    <div class="tooltip-cta">${isTouchDevice ? 'Tap to audit • Double-tap for lesson →' : 'Click to audit • Double-click for lesson →'}</div>
                 `;
                 
                 document.body.appendChild(tooltip);
@@ -1260,10 +1313,16 @@
                         e.preventDefault();
                         
                         if (activeTooltipDot === this) {
-                            // Second tap - show full lesson
+                            // Second tap - show audit or navigate
                             hideTooltip();
-                            const day = this.dataset.day;
-                            showLessonPreview(day, window.__lessonsData);
+                            const day = parseInt(this.dataset.day);
+                            if (window.LessonInspector) {
+                                window.LessonInspector.showInspector(day);
+                            } else if (window.LessonAudit) {
+                                window.LessonAudit.showInspector(day);
+                            } else {
+                                window.location.href = `/learn.html?day=${day}`;
+                            }
                         } else {
                             // First tap - show tooltip
                             showTooltip(this);

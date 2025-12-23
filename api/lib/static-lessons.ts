@@ -64,13 +64,27 @@ export interface StaticLessonPack {
 const lessonCache = new Map<number, StaticLessonPack>();
 
 /**
- * Convert phases format (v5.0) to atoms format for compatibility
+ * Extract text from i18n object (supports { en: "...", es: "..." } format)
  */
-function convertPhasesToAtoms(phases: Record<string, any>, dayNumber: number): LessonAtom[] {
+function extractI18n(value: any, lang = 'en'): string {
+  if (!value) return '';
+  if (typeof value === 'string') return value;
+  if (typeof value === 'object') return value[lang] || value.en || '';
+  return '';
+}
+
+/**
+ * Convert phases format (v5.0 with i18n) to atoms format for compatibility
+ */
+function convertPhasesToAtoms(phases: Record<string, any>, dayNumber: number, lang = 'en'): LessonAtom[] {
   const atoms: LessonAtom[] = [];
   
   for (const [phaseName, phase] of Object.entries(phases)) {
     if (!phase || typeof phase !== 'object') continue;
+    
+    // Handle i18n script format: { script: { en: "...", es: "..." } }
+    const script = extractI18n(phase.talk?.script || phase.script, lang);
+    const prompt = extractI18n(phase.prompt, lang);
     
     atoms.push({
       id: `static-${dayNumber}-${phaseName}`,
@@ -78,15 +92,16 @@ function convertPhasesToAtoms(phases: Record<string, any>, dayNumber: number): L
       archetype: 'The Explorer',
       phase: phaseName,
       content: {
-        script: phase.talk?.script || phase.script || '',
+        script,
         options: phase.options?.map((opt: any) => ({
-          text: opt.text,
+          text: extractI18n(opt.text, lang),
           letter: opt.letter,
           quality: opt.quality || 'good',
-          response: phase.responses?.[opt.letter]?.script || ''
+          response: extractI18n(opt.response || phase.responses?.[opt.letter]?.script, lang)
         })),
         kellyPose: phase.talk?.kellyPose,
         kellyEmotion: phase.talk?.kellyEmotion,
+        prompt,
       }
     });
   }
@@ -95,11 +110,18 @@ function convertPhasesToAtoms(phases: Record<string, any>, dayNumber: number): L
 }
 
 /**
- * Get the path to a static lesson file
+ * Get the path to a static lesson JSON file
+ */
+function getLessonJsonPath(dayNumber: number): string {
+  // Try multiple naming patterns
+  return path.join(process.cwd(), 'public', 'lessons', `day-${dayNumber}.json`);
+}
+
+/**
+ * Get the path to a static lesson file (legacy JS format)
  */
 function getLessonFilePath(dayNumber: number): string {
   const paddedDay = dayNumber.toString().padStart(3, '0');
-  // In Vercel, public/ is at the root
   return path.join(process.cwd(), 'public', 'data', `day-${paddedDay}-complete.js`);
 }
 
@@ -143,6 +165,42 @@ function parseLessonFile(content: string, dayNumber: number): StaticLessonPack |
 }
 
 /**
+ * Parse JSON lesson file (v5.0 i18n format from public/lessons/)
+ */
+function parseJsonLessonFile(content: string, dayNumber: number): StaticLessonPack | null {
+  try {
+    const data = JSON.parse(content);
+    
+    // Build the lesson core
+    const lesson: LessonCore = {
+      day_number: dayNumber,
+      topic: extractI18n(data.meta?.topic || data.topic, 'en'),
+      headline: extractI18n(data.headline, 'en'),
+      universal_truth: extractI18n(data.universal_truth, 'en'),
+      emoji: data.meta?.emoji || data.emoji,
+      category: data.meta?.category,
+      thumbnail_url: `/generated-visuals/day-${dayNumber.toString().padStart(3, '0')}/thumbnail.png`,
+    };
+    
+    // Convert phases to atoms
+    const atoms = data.phases ? convertPhasesToAtoms(data.phases, dayNumber, 'en') : [];
+    
+    return {
+      meta: {
+        created_at: new Date().toISOString(),
+        day_number: dayNumber,
+        version: data.meta?.version || 'v5.0',
+      },
+      lesson,
+      atoms,
+    };
+  } catch (e) {
+    console.warn(`[static-lessons] Failed to parse JSON for day ${dayNumber}:`, e);
+    return null;
+  }
+}
+
+/**
  * Load a lesson from static files
  * Returns null if not found (caller should fall back to Supabase or emergency data)
  */
@@ -152,16 +210,39 @@ export function loadStaticLesson(dayNumber: number): StaticLessonPack | null {
     return lessonCache.get(dayNumber)!;
   }
   
-  const filePath = getLessonFilePath(dayNumber);
-  
-  // Check if file exists
-  if (!fs.existsSync(filePath)) {
-    // Try non-padded version (some files might be day-17 vs day-017)
-    const altPath = path.join(process.cwd(), 'public', 'data', `day-${dayNumber}-complete.js`);
-    if (!fs.existsSync(altPath)) {
-      return null;
+  // PRIORITY 1: Try JSON files in public/lessons/ (the actual content location)
+  const jsonPath = getLessonJsonPath(dayNumber);
+  if (fs.existsSync(jsonPath)) {
+    try {
+      const content = fs.readFileSync(jsonPath, 'utf-8');
+      const parsed = parseJsonLessonFile(content, dayNumber);
+      if (parsed && parsed.atoms.length > 0) {
+        lessonCache.set(dayNumber, parsed);
+        return parsed;
+      }
+    } catch (e) {
+      console.warn(`[static-lessons] Failed to read JSON ${jsonPath}:`, e);
     }
-    // Use alternative path
+  }
+  
+  // PRIORITY 2: Try legacy JS files in public/data/
+  const filePath = getLessonFilePath(dayNumber);
+  if (fs.existsSync(filePath)) {
+    try {
+      const content = fs.readFileSync(filePath, 'utf-8');
+      const parsed = parseLessonFile(content, dayNumber);
+      if (parsed) {
+        lessonCache.set(dayNumber, parsed);
+        return parsed;
+      }
+    } catch (e) {
+      console.warn(`[static-lessons] Failed to read ${filePath}:`, e);
+    }
+  }
+  
+  // Try non-padded JS version
+  const altPath = path.join(process.cwd(), 'public', 'data', `day-${dayNumber}-complete.js`);
+  if (fs.existsSync(altPath)) {
     try {
       const content = fs.readFileSync(altPath, 'utf-8');
       const parsed = parseLessonFile(content, dayNumber);
@@ -171,21 +252,10 @@ export function loadStaticLesson(dayNumber: number): StaticLessonPack | null {
       return parsed;
     } catch (e) {
       console.warn(`[static-lessons] Failed to read ${altPath}:`, e);
-      return null;
     }
   }
   
-  try {
-    const content = fs.readFileSync(filePath, 'utf-8');
-    const parsed = parseLessonFile(content, dayNumber);
-    if (parsed) {
-      lessonCache.set(dayNumber, parsed);
-    }
-    return parsed;
-  } catch (e) {
-    console.warn(`[static-lessons] Failed to read ${filePath}:`, e);
-    return null;
-  }
+  return null;
 }
 
 /**

@@ -6,16 +6,19 @@
  * Every failure is reported.
  */
 
-import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
 
 // ═══════════════════════════════════════════════════════════════════
 // CONSTANTS
 // ═══════════════════════════════════════════════════════════════════
 
-export const ALLOWED_RECIPIENTS = ['nicoletterankin@gmail.com'] as const;
+// Email communications must use hello@curiouskelly.com (repo invariant).
+export const ALLOWED_RECIPIENTS = ['hello@curiouskelly.com'] as const;
 export const ALLOWED_SENDERS = ['hello@curiouskelly.com'] as const;
 export const MAX_EMAILS_PER_HOUR = 10;
 export const MAX_DB_WRITES_PER_MINUTE = 100;
+
+type AnySupabaseClient = SupabaseClient<any, any, any, any, any>;
 
 // ═══════════════════════════════════════════════════════════════════
 // CRON AUTHENTICATION
@@ -132,7 +135,7 @@ export interface AuditEntry {
 }
 
 export async function logAudit(
-  supabase: ReturnType<typeof createClient>,
+  supabase: AnySupabaseClient,
   entry: Omit<AuditEntry, 'timestamp'>
 ): Promise<void> {
   try {

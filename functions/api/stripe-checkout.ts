@@ -1,4 +1,4 @@
-import { stripeCheckoutHandler } from '../../handlers/stripe-checkout';
+import { stripeCheckoutHandler } from '../handlers/stripe-checkout';
 
 type CloudflareContext = {
   request: Request;

@@ -20,6 +20,9 @@
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
+import type { SupabaseClient } from '@supabase/supabase-js';
+
+type AnySupabaseClient = SupabaseClient<any, any, any, any, any>;
 
 const RESEND_API_URL = 'https://api.resend.com/emails';
 
@@ -215,7 +218,7 @@ ${new Date().toISOString()}
 }
 
 async function uploadToSupabase(
-  supabase: ReturnType<typeof createClient>,
+  supabase: AnySupabaseClient,
   attachment: Attachment,
   submissionId: string
 ): Promise<StoredAttachment | null> {

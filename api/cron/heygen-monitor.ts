@@ -4,7 +4,7 @@
  * Checks HeyGen video status every 4 hours and logs performance metrics.
  * Runs via Vercel Cron.
  * 
- * Schedule: Every 4 hours (0 */4 * * *)
+ * Schedule: Every 4 hours (cron: 0 *\/4 * * *)
  */
 
 import { createClient } from '@supabase/supabase-js';

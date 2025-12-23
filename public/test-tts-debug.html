@@ -98,7 +98,7 @@
   <!-- Test 1: API Endpoint Availability -->
   <div class="test-section">
     <h2>Test 1: API Endpoint Check</h2>
-    <p>Checks if <code>/api/tts</code> endpoint exists and responds.</p>
+    <p>Checks the configured TTS endpoint and reports status.</p>
     <button onclick="runTest1()">Run Test</button>
     <span id="test1-status" class="status status-pending">Pending</span>
     <div id="test1-log" class="log" style="margin-top: 15px;"></div>
@@ -144,6 +144,25 @@
   </div>
 
   <script>
+    // Resolve TTS endpoint (matches learn.html priority)
+    function getTtsEndpoint() {
+      // Highest priority: URL param override (?ttsEndpoint=...)
+      try {
+        const url = new URL(location.href);
+        const override = url.searchParams.get('ttsEndpoint');
+        if (override) return override;
+      } catch (_) {}
+
+      // Next: config.js (window.KELLY_CONFIG.ttsEndpoint)
+      try {
+        const cfg = window.KELLY_CONFIG || {};
+        if (typeof cfg.ttsEndpoint === 'string' && cfg.ttsEndpoint.trim()) return cfg.ttsEndpoint.trim();
+      } catch (_) {}
+
+      // Legacy fallback (may be disabled by static deploy rules)
+      return '/api/tts';
+    }
+
     // Logging helper
     function log(elementId, message, type = 'info') {
       const el = document.getElementById(elementId);
@@ -170,18 +189,19 @@
       setStatus('test1-status', 'running');
       
       log('test1-log', 'Testing API endpoint availability...', 'info');
-      log('test1-log', 'Endpoint: /api/tts', 'info');
+      const endpoint = getTtsEndpoint();
+      log('test1-log', `Endpoint: ${endpoint}`, 'info');
       
       try {
         // First try OPTIONS (preflight)
         log('test1-log', 'Sending OPTIONS request (preflight check)...', 'info');
-        const optionsRes = await fetch('/api/tts', { method: 'OPTIONS' });
+        const optionsRes = await fetch(endpoint, { method: 'OPTIONS' });
         log('test1-log', `OPTIONS Response: ${optionsRes.status} ${optionsRes.statusText}`, 
             optionsRes.ok ? 'success' : 'warn');
         
         // Try GET (should return 405 Method Not Allowed)
         log('test1-log', 'Sending GET request (should be 405)...', 'info');
-        const getRes = await fetch('/api/tts', { method: 'GET' });
+        const getRes = await fetch(endpoint, { method: 'GET' });
         const getData = await getRes.json().catch(() => ({}));
         log('test1-log', `GET Response: ${getRes.status} ${getRes.statusText}`, 
             getRes.status === 405 ? 'success' : 'error');
@@ -191,7 +211,7 @@
           log('test1-log', '✅ API endpoint exists and correctly rejects GET requests', 'success');
           setStatus('test1-status', 'success');
         } else if (getRes.status === 404) {
-          log('test1-log', '❌ API endpoint not found (404) - endpoint may not be deployed', 'error');
+          log('test1-log', '❌ Endpoint not found (404) - endpoint may not be deployed', 'error');
           setStatus('test1-status', 'error');
         } else {
           log('test1-log', `⚠️ Unexpected response: ${getRes.status}`, 'warn');
@@ -232,7 +252,8 @@
       
       log('test2-log', '', 'info');
       log('test2-log', '--- REQUEST ---', 'info');
-      log('test2-log', `URL: ${window.location.origin}/api/tts`, 'data');
+      const endpoint = getTtsEndpoint();
+      log('test2-log', `URL: ${endpoint.startsWith('http') ? endpoint : (window.location.origin + endpoint)}`, 'data');
       log('test2-log', `Method: POST`, 'data');
       log('test2-log', `Headers: Content-Type: application/json`, 'data');
       log('test2-log', `Body: ${JSON.stringify(requestBody, null, 2)}`, 'data');
@@ -243,7 +264,7 @@
         log('test2-log', '', 'info');
         log('test2-log', 'Sending request...', 'info');
         
-        const response = await fetch('/api/tts', {
+        const response = await fetch(endpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json'
@@ -329,8 +350,8 @@
             log('test2-log', '  → Wait and try again or upgrade plan', 'error');
           } else if (response.status === 404) {
             log('test2-log', '❌ Endpoint Not Found:', 'error');
-            log('test2-log', '  → /api/tts endpoint may not be deployed', 'error');
-            log('test2-log', '  → Check Vercel deployment', 'error');
+            log('test2-log', '  → endpoint may not be deployed / reachable', 'error');
+            log('test2-log', '  → Check Cloudflare Worker route or static deploy rewrites', 'error');
           }
           
           setStatus('test2-status', 'error');
@@ -361,8 +382,9 @@
       log('test3-log', 'Checking CORS configuration...', 'info');
       
       try {
+        const endpoint = getTtsEndpoint();
         // Send a request and check response headers
-        const response = await fetch('/api/tts', {
+        const response = await fetch(endpoint, {
           method: 'POST',
           headers: {
             'Content-Type': 'application/json',
@@ -401,7 +423,7 @@
         
         log('test3-log', '', 'info');
         log('test3-log', `Current Origin: ${window.location.origin}`, 'info');
-        log('test3-log', `API URL: ${window.location.origin}/api/tts`, 'info');
+        log('test3-log', `API URL: ${endpoint.startsWith('http') ? endpoint : (window.location.origin + endpoint)}`, 'info');
         
         if (window.location.origin.includes('localhost') || 
             window.location.origin.includes('127.0.0.1')) {

@@ -138,16 +138,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .eq('id', gift.id);
 
       // Log event
-      await supabase.from('user_events').insert({
-        user_id: existingUser.id,
-        event_type: 'gift.redeemed',
-        event_category: 'learner_action',
-        payload: {
-          gift_id: gift.id,
-          duration_months: durationMonths,
-          new_expiry: newExpiry.toISOString()
-        }
-      }).catch(() => {});
+      try {
+        await supabase.from('user_events').insert({
+          user_id: existingUser.id,
+          event_type: 'gift.redeemed',
+          event_category: 'learner_action',
+          payload: {
+            gift_id: gift.id,
+            duration_months: durationMonths,
+            new_expiry: newExpiry.toISOString(),
+          },
+        });
+      } catch {
+        // Non-critical event logging (network issues, etc.) should not block redemption.
+      }
 
       return res.status(200).json({
         success: true,
@@ -198,16 +202,20 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
         .eq('id', gift.id);
 
       // Log event
-      await supabase.from('user_events').insert({
-        user_id: userId,
-        event_type: 'gift.redeemed',
-        event_category: 'learner_action',
-        payload: {
-          gift_id: gift.id,
-          duration_months: durationMonths,
-          new_account: true
-        }
-      }).catch(() => {});
+      try {
+        await supabase.from('user_events').insert({
+          user_id: userId,
+          event_type: 'gift.redeemed',
+          event_category: 'learner_action',
+          payload: {
+            gift_id: gift.id,
+            duration_months: durationMonths,
+            new_account: true,
+          },
+        });
+      } catch {
+        // Non-critical event logging
+      }
 
       return res.status(200).json({
         success: true,

@@ -159,7 +159,10 @@ export async function alert(type: AlertType, payload: AlertPayload = {}): Promis
 }
 
 // CLI usage: npx tsx scripts/alert.ts TYPE [JSON_PAYLOAD]
-const isMainModule = import.meta.url === `file://${process.argv[1].replace(/\\/g, '/')}`;
+// tsconfig in this repo targets CommonJS, so `import.meta` is not available here.
+// Node-style main-module detection works reliably for scripts.
+// eslint-disable-next-line @typescript-eslint/no-var-requires
+const isMainModule = require.main === module;
 
 if (isMainModule) {
   const [, , type, payloadJson] = process.argv;
@@ -202,6 +205,7 @@ Examples:
     console.log('Alert sent.');
   });
 }
+
 
 
 

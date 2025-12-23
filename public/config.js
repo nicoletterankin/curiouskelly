@@ -23,6 +23,12 @@ window.KELLY_CONFIG = {
   // Fallback endpoints
   d1ApiUrl: '/api/lessons',           // Cloudflare D1 mirror (or local API fallback)
   staticLessonsUrl: '/generated/lessons',  // Pre-exported static JSON
+
+  // TTS endpoint
+  // NOTE: This repo’s `vercel.json` disables `/api/*` in static deployments, so
+  // runtime voice must NOT depend on `/api/tts` in production.
+  // Use the Cloudflare Worker route (see `infrastructure/cloudflare/tts-worker/`).
+  ttsEndpoint: 'https://tts.curiouskelly.com/tts',
   
   // Timeout configuration (never hang forever)
   timeouts: {

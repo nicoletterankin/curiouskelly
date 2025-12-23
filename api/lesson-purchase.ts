@@ -157,16 +157,18 @@ export default async function handler(req: VercelRequest, res: VercelResponse) {
       if (isSupabaseConfigured() && userId) {
         try {
           const supabase = getSupabaseAdmin();
-          await supabase.from('lesson_purchases').insert({
-            user_id: userId,
-            day_number: dayNumber,
-            purchase_price: DEFAULT_LESSON_PRICE / 100,
-            currency: 'USD',
-            stripe_checkout_session_id: session.id,
-            status: 'pending'
-          }).catch(() => {
-            // Table might not exist yet
-          });
+          try {
+            await supabase.from('lesson_purchases').insert({
+              user_id: userId,
+              day_number: dayNumber,
+              purchase_price: DEFAULT_LESSON_PRICE / 100,
+              currency: 'USD',
+              stripe_checkout_session_id: session.id,
+              status: 'pending',
+            });
+          } catch {
+            // Table might not exist yet, or network error. Non-critical.
+          }
         } catch {
           // Non-critical, continue
         }

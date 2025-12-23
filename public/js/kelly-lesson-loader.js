@@ -50,9 +50,9 @@ const KellyLessonLoader = {
   // D1 Mirror endpoint
   D1_ENDPOINT: '/api/lessons',
   
-  // Cloudflare D1 API endpoint (set after deployment)
-  // Update this after deploying the worker
-  D1_API_URL: 'https://curiouskelly-lessons.pages.dev',
+  // Cloudflare D1 API endpoint (DISABLED - returning HTML instead of JSON)
+  // TODO: Fix the D1 worker and re-enable
+  D1_API_URL: null, // Disabled until fixed: 'https://curiouskelly-lessons.pages.dev',
 
   // Local API fallback (Vercel functions) — always available in this repo
   LOCAL_API_ENDPOINT: '/api/lessons',
@@ -966,6 +966,11 @@ const KellyLessonLoader = {
    * @returns {Object|null} - Lesson data or null if failed
    */
   async tryCloudflareD1(dayNumber, archetype, region) {
+    // Skip if D1 is disabled
+    if (!this.D1_API_URL) {
+      __kellyLoaderDebugLog(`[D1] Skipped - endpoint disabled`);
+      return null;
+    }
     try {
       const url = `${this.D1_API_URL}/lesson/${dayNumber}?archetype=${encodeURIComponent(archetype)}&region=${encodeURIComponent(region)}`;
       
@@ -974,6 +979,12 @@ const KellyLessonLoader = {
       });
       
       if (response.ok) {
+        // Validate response is JSON, not HTML
+        const contentType = response.headers.get('content-type') || '';
+        if (!contentType.includes('application/json')) {
+          __kellyLoaderDebugWarn(`⚠️ D1 returned non-JSON: ${contentType}`);
+          return null;
+        }
         const data = await response.json();
         __kellyLoaderDebugLog(`✅ Loaded day ${dayNumber} from Cloudflare D1`);
         return data;
@@ -1052,7 +1063,7 @@ const KellyLessonLoader = {
         if (lesson.hero_image_url) return lesson.hero_image_url;
         if (lesson.thumbnail_url) return lesson.thumbnail_url;
         const paddedDay = String(dayNumber).padStart(3, '0');
-        return `/generated-assets/day-${paddedDay}/infographic.png`;
+        return `/generated-visuals/day-${paddedDay}/thumbnail.png`;
       },
       
       get audioUrl() { return lesson.audio_url || null; },
@@ -1185,7 +1196,7 @@ const KellyLessonLoader = {
         if (lesson.thumbnail_url) return lesson.thumbnail_url;
         // Try generated assets path
         const paddedDay = String(dayNumber).padStart(3, '0');
-        return `/generated-assets/day-${paddedDay}/infographic.png`;
+        return `/generated-visuals/day-${paddedDay}/thumbnail.png`;
       },
       
       get audioUrl() {

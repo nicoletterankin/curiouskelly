@@ -1,4 +1,4 @@
-import { rumHandler } from '../../handlers/rum';
+import { rumHandler } from '../handlers/rum';
 
 type CloudflareContext = {
   request: Request;

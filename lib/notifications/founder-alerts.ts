@@ -1,7 +1,7 @@
 /**
  * FOUNDER ALERTS
  * 
- * Email notifications to nicoletterankin@gmail.com for:
+ * Email notifications to hello@curiouskelly.com for:
  * - 🎉 Happy learner events (celebrations)
  * - 🚨 Critical issues requiring intervention
  * - 📊 Weekly digest of platform health
@@ -12,7 +12,7 @@
 
 import { createClient, SupabaseClient } from '@supabase/supabase-js';
 
-const FOUNDER_EMAIL = 'nicoletterankin@gmail.com';
+const FOUNDER_EMAIL = 'hello@curiouskelly.com';
 const FROM_EMAIL = 'hello@curiouskelly.com';
 const SENDGRID_API_KEY = process.env.SENDGRID_API_KEY!;
 
