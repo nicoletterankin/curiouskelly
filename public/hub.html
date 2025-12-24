@@ -511,27 +511,32 @@
           return lessonCache.get(dayNumber);
         }
         
+        // ARCHITECTURE FIX: Use API endpoint instead of direct Supabase access
         try {
-          const { data, error } = await supabase
-            .from('core_lessons')
-            .select('id, day_number, topic, universal_truth, marketing_headline, marketing_tagline')
-            .eq('day_number', dayNumber)
-            .single();
+          const response = await fetch(`/api/lessons/${dayNumber}?archetype=The%20Scientist&track=learn`);
           
-          if (error) throw error;
+          if (!response.ok) {
+            throw new Error(`API returned ${response.status}`);
+          }
+          
+          const data = await response.json();
+          
+          if (!data?.lesson) {
+            throw new Error('No lesson data in API response');
+          }
           
           const lesson = {
-            id: data.id,
-            topic: data.topic || 'Daily Discovery',
-            objective: data.universal_truth || data.marketing_headline || 'Learn something new today',
-            headline: data.marketing_headline,
-            tagline: data.marketing_tagline
+            id: data.lesson.id || `day-${dayNumber}`,
+            topic: data.lesson.topic || 'Daily Discovery',
+            objective: data.lesson.universal_truth || data.lesson.marketing_headline || 'Learn something new today',
+            headline: data.lesson.marketing_headline,
+            tagline: data.lesson.marketing_tagline || ''
           };
           
           lessonCache.set(dayNumber, lesson);
           return lesson;
         } catch (err) {
-          console.warn(`Failed to fetch lesson ${dayNumber} from Supabase, trying curriculum files...`);
+          console.warn(`Failed to fetch lesson ${dayNumber} from API, trying curriculum files...`, err);
           // Try curriculum files as fallback
           const curriculumLesson = await fetchFromCurriculum(dayNumber);
           if (curriculumLesson) {
@@ -604,24 +609,37 @@
         const startDayNum = getDayOfYear(firstDayOfMonth);
         const endDayNum = getDayOfYear(lastDayOfMonth);
         
+        // ARCHITECTURE FIX: Use API endpoints instead of direct Supabase batch query
+        // TODO: Create batch API endpoint (/api/lessons/batch?days=1,2,3...) for better performance
         try {
-          const { data } = await supabase
-            .from('core_lessons')
-            .select('id, day_number, topic, universal_truth, marketing_headline')
-            .gte('day_number', startDayNum)
-            .lte('day_number', endDayNum);
-          
-          if (data) {
-            data.forEach(lesson => {
-              lessonCache.set(lesson.day_number, {
-                id: lesson.id,
-                topic: lesson.topic || 'Daily Discovery',
-                objective: lesson.universal_truth || lesson.marketing_headline || 'Learn something new',
-                headline: lesson.marketing_headline
-              });
-            });
-            console.log(`📚 Preloaded ${data.length} lessons for month ${month + 1}`);
+          const promises = [];
+          for (let day = startDayNum; day <= endDayNum; day++) {
+            promises.push(
+              fetch(`/api/lessons/${day}?archetype=The%20Scientist&track=learn`)
+                .then(res => res.ok ? res.json() : null)
+                .then(data => {
+                  if (data?.lesson) {
+                    lessonCache.set(day, {
+                      id: data.lesson.id || `day-${day}`,
+                      topic: data.lesson.topic || 'Daily Discovery',
+                      objective: data.lesson.universal_truth || data.lesson.marketing_headline || 'Learn something new',
+                      headline: data.lesson.marketing_headline
+                    });
+                  }
+                })
+                .catch(() => {}) // Silent fail for individual lessons
+            );
           }
+          
+          // Wait for all with timeout to avoid blocking
+          await Promise.race([
+            Promise.all(promises),
+            new Promise(resolve => setTimeout(resolve, 5000)) // 5 second timeout
+          ]);
+          
+          const loadedCount = Array.from({ length: endDayNum - startDayNum + 1 }, (_, i) => startDayNum + i)
+            .filter(day => lessonCache.has(day)).length;
+          console.log(`📚 Preloaded ${loadedCount} lessons for month ${month + 1}`);
         } catch (err) {
           console.warn('Failed to preload month lessons:', err.message);
         }
