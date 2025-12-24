@@ -1496,18 +1496,21 @@
 
       async function loadAllLessons() {
         try {
-          console.log('📡 Loading lessons from Supabase core_lessons...');
+          console.log('📡 Loading lessons from API...');
 
-          const { data, error } = await supabase
-            .from('core_lessons')
-            .select('id, day_number, topic, universal_truth, marketing_headline, marketing_tagline')
-            .order('day_number', { ascending: true });
-
-          if (error) throw error;
-
-          if (data && data.length > 0) {
-            allLessons = data.map((lesson) => ({
-              id: lesson.id,
+          // ARCHITECTURE FIX: Use API endpoints instead of direct Supabase access
+          // Load lessons sequentially (TODO: create batch endpoint for better performance)
+          allLessons = [];
+          const promises = [];
+          
+          for (let day = 1; day <= 365; day++) {
+            promises.push(
+              fetch(`/api/lessons/${day}?archetype=The%20Scientist&track=learn`)
+                .then(res => res.ok ? res.json() : null)
+                .then(data => {
+                  if (data?.lesson) {
+                    allLessons.push({
+                      id: data.lesson.id || `day-${day}`,
               day: lesson.day_number,
               date: dayNumberToDate(lesson.day_number),
               title: lesson.topic,
@@ -1776,34 +1779,10 @@
 
       async function loadLessonAtomsForPreview(lessonId, archetype, age) {
         try {
-          // First, try to get rich content from core_lessons
-          const { data: lessonData, error: lessonError } = await supabase
-            .from('core_lessons')
-            .select(
-              `
-                        topic,
-                        universal_truth,
-                        extended_explanation,
-                        fun_facts,
-                        discussion_questions,
-                        quick_quiz_questions,
-                        challenge_questions,
-                        common_misconceptions,
-                        learning_objectives,
-                        hands_on_activities
-                    `
-            )
-            .eq('id', lessonId)
-            .maybeSingle();
-
-          if (lessonData) {
-            // Build phases from rich content
-            createPhasesFromRichContent(lessonData);
-            console.log('✅ Built phases from core_lessons rich content');
-            return;
-          }
-
-          // Fallback: Try lesson_atoms
+          // ARCHITECTURE FIX: Use API endpoint instead of direct Supabase access
+          // Extract day number from lessonId (format: day-123 or just number)
+          const dayNumber = parseInt(lessonId.toString().replace('day-', '')) || parseInt(lessonId) || 1;
+          
           const archetypeMap = {
             curious: 'The Scientist',
             playful: 'The Artist',
@@ -1811,16 +1790,34 @@
           };
           const targetArchetype = archetypeMap[archetype] || 'The Scientist';
 
-          const { data, error } = await supabase
-            .from('lesson_atoms')
-            .select('phase, content, archetype')
-            .eq('core_lesson_id', lessonId);
-
-          if (error) throw error;
-
-          lessonAtoms = data?.filter((a) => a.archetype === targetArchetype) || [];
-          if (lessonAtoms.length === 0) lessonAtoms = data || [];
-          if (lessonAtoms.length === 0) createFallbackContent();
+          const response = await fetch(`/api/lessons/${dayNumber}?archetype=${encodeURIComponent(targetArchetype)}&track=learn`);
+          
+          if (!response.ok) {
+            throw new Error(`API returned ${response.status}`);
+          }
+          
+          const data = await response.json();
+          
+          if (data?.lesson && data?.atoms) {
+            // Use atoms from API response
+            lessonAtoms = data.atoms.filter((a) => a.archetype === targetArchetype) || [];
+            if (lessonAtoms.length === 0) lessonAtoms = data.atoms || [];
+            
+            // Also try to build from rich content if available
+            if (data.lesson.extended_explanation || data.lesson.fun_facts) {
+              createPhasesFromRichContent(data.lesson);
+              console.log('✅ Built phases from API rich content');
+              return;
+            }
+            
+            if (lessonAtoms.length > 0) {
+              console.log(`✅ Loaded ${lessonAtoms.length} atoms from API`);
+              return;
+            }
+          }
+          
+          // Fallback
+          createFallbackContent();
         } catch (e) {
           console.warn('Using fallback content:', e);
           createFallbackContent();
@@ -2602,22 +2599,26 @@
 
           console.log(`📚 Loading atoms for lesson ${lessonId}, archetype: ${targetArchetype}`);
 
-          const { data, error } = await supabase
-            .from('lesson_atoms')
-            .select('phase, content, archetype')
-            .eq('core_lesson_id', lessonId);
-
-          if (error) throw error;
+          // ARCHITECTURE FIX: Use API endpoint instead of direct Supabase access
+          const dayNumber = parseInt(lessonId.toString().replace('day-', '')) || parseInt(lessonId) || 1;
+          
+          const response = await fetch(`/api/lessons/${dayNumber}?archetype=${encodeURIComponent(targetArchetype)}&track=learn`);
+          
+          if (!response.ok) {
+            throw new Error(`API returned ${response.status}`);
+          }
+          
+          const data = await response.json();
 
           // Filter for our archetype, fallback to any available
-          lessonAtoms = data.filter((a) => a.archetype === targetArchetype);
+          lessonAtoms = (data?.atoms || []).filter((a) => a.archetype === targetArchetype);
 
           if (lessonAtoms.length === 0) {
             // Fallback to any archetype
-            lessonAtoms = data;
+            lessonAtoms = data?.atoms || [];
           }
 
-          console.log(`✅ Loaded ${lessonAtoms.length} atoms`);
+          console.log(`✅ Loaded ${lessonAtoms.length} atoms from API`);
         } catch (e) {
           console.error('❌ Failed to load atoms:', e);
           // Create fallback content - all 5 phases with 2 options each
