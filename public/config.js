@@ -1,11 +1,14 @@
 // Kelly OS Configuration
 // BULLETPROOF LESSON LOADING - THE LESSON ALWAYS PLAYS
 //
-// Cascading fallback system:
-//   1. Supabase (Primary) - 5s timeout
+// API-First Architecture (Cascading Fallback System):
+//   1. Standard API (/api/lessons/[dayNumber]) - Primary data source
 //   2. Cloudflare D1 (Mirror) - 3s timeout  
 //   3. Static JSON (Pre-exported) - 2s timeout
-//   4. Emergency Fallback (Hardcoded) - instant
+//   4. Seed Lessons (Bundled) - Instant
+//   5. Emergency Fallback (Hardcoded) - instant
+//
+// NOTE: Direct Supabase access disabled - all lesson data goes through API layer.
 
 // Supabase credentials (client-side safe - anon key only)
 // This is the CORRECT project with 365 lessons in core_lessons table
@@ -15,10 +18,11 @@ window.KELLY_CONFIG = {
   // (If this is wrong, the frontend will 401 with "Invalid API key")
   supabaseKey: 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR2amFseHhzeXJ5anBoa2Zvcmp2Iiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM1NjM5MTksImV4cCI6MjA3OTEzOTkxOX0.VFrBs9sWkIgfFNpavQHxo0vSy6tkICpSbuj_TWvGHxI',
   
-  // CRITICAL: Enable browser-direct Supabase reads
-  // The /api/ serverless fallback was failing because SUPABASE_SERVICE_ROLE_KEY
-  // might not be set in Vercel. Browser-direct uses the anon key (above) which is safer.
-  enableSupabaseClient: true,
+  // ARCHITECTURE FIX: Disable browser-direct Supabase reads
+  // All lesson loading now goes through API endpoints (/api/lessons/[dayNumber]).
+  // API layer provides: caching, rate limiting, security, optimization.
+  // Supabase client kept only for: auth, user progress (requires auth API endpoints - TODO)
+  enableSupabaseClient: false, // DISABLED - Use API endpoints instead
   
   // Fallback endpoints
   d1ApiUrl: '/api/lessons',           // Cloudflare D1 mirror (or local API fallback)
