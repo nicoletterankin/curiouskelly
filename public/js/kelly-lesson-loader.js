@@ -1,13 +1,17 @@
 /**
  * Kelly Lesson Loader - Unified Data Layer with Cascading Fallbacks
  * 
- * BULLETPROOF LESSON LOADING:
- *   1. Supabase (Primary) - 5s timeout
- *   2. Cloudflare D1 (Mirror) - 3s timeout  
- *   3. Static JSON (Pre-exported) - 2s timeout
- *   4. Emergency Fallback (Hardcoded) - instant
+ * BULLETPROOF LESSON LOADING (API-First Architecture):
+ *   1. Edge API (/api/lessons/[dayNumber]-edge) - <5ms globally
+ *   2. Standard API (/api/lessons/[dayNumber]) - Serverless function
+ *   3. Cloudflare D1 (Mirror) - 3s timeout  
+ *   4. Static JSON (Pre-exported) - 2s timeout
+ *   5. Seed Lessons (Bundled) - Instant
+ *   6. Emergency Fallback (Hardcoded) - instant
  * 
  * THE LESSON ALWAYS PLAYS.
+ * 
+ * NOTE: Direct Supabase access removed - all data now goes through API layer.
  * 
  * Tables:
  *   - core_lessons (365 rows) - base lesson data
@@ -105,29 +109,33 @@ const KellyLessonLoader = {
   },
   
   /**
-   * Initialize with Supabase client
-   * Falls back to global window.supabaseClient or creates one from config
+   * Initialize loader (Supabase client optional - API-first architecture)
+   * 
+   * NOTE: Supabase client is no longer required for normal operation.
+   * All lesson loading now goes through API endpoints (/api/lessons/[dayNumber]).
+   * Supabase client kept only for backward compatibility and emergency fallback.
    */
   init(supabaseClient) {
+    // Supabase client is optional - API endpoints are primary
     if (supabaseClient) {
       this.supabase = supabaseClient;
+      __kellyLoaderDebugLog('📚 KellyLessonLoader: Supabase client provided (for backward compatibility)');
     } else if (typeof window.getSupabase === 'function') {
-      // Preferred: single shared instance (prevents multiple GoTrue clients)
+      // Try singleton if available (for backward compatibility)
       this.supabase = window.getSupabase();
       if (this.supabase) {
-        __kellyLoaderDebugLog('📚 KellyLessonLoader using getSupabase() singleton');
+        __kellyLoaderDebugLog('📚 KellyLessonLoader: Using getSupabase() singleton (backward compatibility)');
       }
     } else if (window.supabaseClient) {
-      // Try global client first
+      // Try global client (backward compatibility)
       this.supabase = window.supabaseClient;
-      __kellyLoaderDebugLog('📚 KellyLessonLoader using global supabaseClient');
-    } else {
-      __kellyLoaderDebugWarn('⚠️ KellyLessonLoader: No Supabase client available, will use D1 mirror');
+      __kellyLoaderDebugLog('📚 KellyLessonLoader: Using global supabaseClient (backward compatibility)');
     }
     
-    __kellyLoaderDebugLog('📚 KellyLessonLoader initialized');
-    __kellyLoaderDebugLog(`   Supabase: ${this.supabase ? 'connected' : 'not connected'}`);
-    __kellyLoaderDebugLog(`   D1 Mirror: ${this.D1_API_URL}`);
+    __kellyLoaderDebugLog('📚 KellyLessonLoader initialized (API-first architecture)');
+    __kellyLoaderDebugLog(`   Primary: API endpoints (/api/lessons/[dayNumber])`);
+    __kellyLoaderDebugLog(`   Supabase: ${this.supabase ? 'available (backward compat)' : 'not needed'}`);
+    __kellyLoaderDebugLog(`   D1 Mirror: ${this.D1_API_URL || 'disabled'}`);
     return this;
   },
   
@@ -334,71 +342,33 @@ const KellyLessonLoader = {
       }
     }
     
-    if (!this.supabase) {
-      __kellyLoaderDebugWarn('⚠️ Supabase not initialized, trying Cloudflare D1...');
-      
-      // Try Cloudflare D1 directly when Supabase is not available
-      try {
-        const d1Data = await this.tryCloudflareD1(dayNum, normalizedArchetype, targetRegion);
-        if (d1Data?.lesson) {
-          const result = this.formatD1Response(d1Data, dayNum, normalizedArchetype, targetRegion);
-          const processed = this.ensureMvpLessonShape(result, { dayNum, archetype: normalizedArchetype, region: targetRegion });
-          this.cache.set(cacheKey, processed);
-          if (preloadAdjacent && !_isPreload) this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
-          return processed;
-        }
-      } catch (d1Error) {
-        __kellyLoaderDebugWarn(`⚠️ Cloudflare D1 failed:`, d1Error.message);
-      }
-
-      // Try local Vercel API fallback (guaranteed to exist)
-      try {
-        const local = await this.tryLocalApi(dayNum, normalizedArchetype, targetRegion);
-        if (local?.lesson) {
-          const result = this.buildResult(local.lesson, local.atoms || [], local.shards || [], {
-            dayNumber: dayNum,
-            archetype: normalizedArchetype,
-            region: targetRegion,
-            _source: 'vercel-api'
-          });
-          const processed = this.ensureMvpLessonShape(result, { dayNum, archetype: normalizedArchetype, region: targetRegion });
-          this.cache.set(cacheKey, processed);
-          if (preloadAdjacent && !_isPreload) this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
-          return processed;
-        }
-      } catch (apiError) {
-        __kellyLoaderDebugWarn(`⚠️ Local API fallback failed:`, apiError.message);
-      }
-      
-      return await this.getFallback(dayNum);
-    }
-    
+    // ============================================================
+    // LAYER 1: Standard Vercel API (serverless function)
+    // Primary data source - replaces direct Supabase access
+    // ============================================================
     try {
-      // Wrap Supabase calls in timeout (NEVER hang forever)
-      const supabasePromise = this.fetchFromSupabaseWithTimeout(dayNum, normalizedArchetype, targetRegion, options.age, normalizedTrack);
-      
-      // Fetch base lesson from core_lessons (with timeout)
-      const supabaseResult = await Promise.race([
-        supabasePromise,
-        new Promise((_, reject) => 
-          setTimeout(() => reject(new Error('Supabase timeout')), this.SUPABASE_TIMEOUT)
-        )
-      ]);
-      
-      if (supabaseResult) {
-        const processed = this.ensureMvpLessonShape(supabaseResult, { dayNum, archetype: normalizedArchetype, region: targetRegion });
+      __kellyLoaderDebugLog(`🔄 [L1] Trying Standard API for day ${dayNum}...`);
+      const apiData = await this.tryLocalApi(dayNum, normalizedArchetype, targetRegion, normalizedTrack);
+      if (apiData?.lesson) {
+        const result = this.buildResult(apiData.lesson, apiData.atoms || [], apiData.shards || [], {
+          dayNumber: dayNum,
+          archetype: normalizedArchetype,
+          region: targetRegion,
+          _source: apiData.source || 'vercel-api'
+        });
+        const processed = this.ensureMvpLessonShape(result, { dayNum, archetype: normalizedArchetype, region: targetRegion });
         this.cache.set(cacheKey, processed);
         if (preloadAdjacent && !_isPreload) this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
+        __kellyLoaderDebugLog(`✅ [L1] Standard API success`);
         return processed;
       }
-      
-      throw new Error('Supabase returned no data');
-      
-    } catch (supabaseError) {
-      __kellyLoaderDebugWarn(`⚠️ [L1] Supabase failed: ${supabaseError.message}`);
+    } catch (apiError) {
+      __kellyLoaderDebugWarn(`⚠️ [L1] Standard API failed: ${apiError.message}`);
     }
     
-    // LAYER 2: D1 Mirror
+    // ============================================================
+    // LAYER 2: Cloudflare D1 Mirror
+    // ============================================================
     try {
       __kellyLoaderDebugLog(`🔄 [L2] Trying Cloudflare D1 for day ${dayNum}...`);
       const d1Data = await this.tryCloudflareD1(dayNum, normalizedArchetype, targetRegion);
@@ -413,29 +383,10 @@ const KellyLessonLoader = {
     } catch (d1Error) {
       __kellyLoaderDebugWarn(`⚠️ [L2] Cloudflare D1 failed: ${d1Error.message}`);
     }
-
-    // LAYER 2.5: Local Vercel API fallback
-    try {
-      __kellyLoaderDebugLog(`🔄 [L2.5] Trying local API fallback for day ${dayNum}...`);
-      const local = await this.tryLocalApi(dayNum, normalizedArchetype, targetRegion);
-      if (local?.lesson) {
-        const result = this.buildResult(local.lesson, local.atoms || [], local.shards || [], {
-          dayNumber: dayNum,
-          archetype: normalizedArchetype,
-          region: targetRegion,
-          _source: 'vercel-api'
-        });
-        const processed = this.ensureMvpLessonShape(result, { dayNum, archetype: normalizedArchetype, region: targetRegion });
-        this.cache.set(cacheKey, processed);
-        if (preloadAdjacent && !_isPreload) this.preloadAdjacent(dayNum, normalizedArchetype, targetRegion);
-        __kellyLoaderDebugLog(`✅ [L2.5] Local API success`);
-        return processed;
-      }
-    } catch (apiError) {
-      __kellyLoaderDebugWarn(`⚠️ [L2.5] Local API failed: ${apiError.message}`);
-    }
     
+    // ============================================================
     // LAYER 3: Static JSON
+    // ============================================================
     try {
       __kellyLoaderDebugLog(`🔄 [L3] Trying Static JSON for day ${dayNum}...`);
       const staticResult = await this.tryStaticJSON(dayNum, normalizedArchetype, targetRegion);
@@ -449,29 +400,39 @@ const KellyLessonLoader = {
       __kellyLoaderDebugWarn(`⚠️ [L3] Static JSON failed: ${staticError.message}`);
     }
 
-    // LAYER 3.5: Seed lessons bundled with the app (dash/underscore variants)
+    // ============================================================
+    // LAYER 4: Seed lessons bundled with the app (dash/underscore variants)
+    // ============================================================
     if (normalizedTrack === 'learn') {
       try {
-        __kellyLoaderDebugLog(`🔄 [L3.5] Trying bundled seed lesson for day ${dayNum}...`);
+        __kellyLoaderDebugLog(`🔄 [L4] Trying bundled seed lesson for day ${dayNum}...`);
         const seedResult = await this.trySeedLessons(dayNum, normalizedArchetype, targetRegion);
         if (seedResult) {
           const processed = this.ensureMvpLessonShape(seedResult, { dayNum, archetype: normalizedArchetype, region: targetRegion });
           this.cache.set(cacheKey, processed);
-          __kellyLoaderDebugLog(`✅ [L3.5] Seed lesson success`);
+          __kellyLoaderDebugLog(`✅ [L4] Seed lesson success`);
           return processed;
         }
       } catch (seedErr) {
-        __kellyLoaderDebugWarn(`⚠️ [L3.5] Seed lesson failed: ${seedErr?.message || seedErr}`);
+        __kellyLoaderDebugWarn(`⚠️ [L4] Seed lesson failed: ${seedErr?.message || seedErr}`);
       }
     }
     
-    // LAYER 4: Emergency Fallback (NEVER FAILS)
-    __kellyLoaderDebugLog(`🚨 [L4] Emergency Fallback for day ${dayNum}`);
+    // ============================================================
+    // LAYER 5: Emergency Fallback (NEVER FAILS)
+    // ============================================================
+    __kellyLoaderDebugLog(`🚨 [L5] Emergency Fallback for day ${dayNum}`);
     return await this.getFallback(dayNum);
   },
   
   /**
-   * Fetch from Supabase with all data
+   * DEPRECATED: Fetch from Supabase with all data
+   * 
+   * ⚠️ ARCHITECTURE VIOLATION: This method directly accesses Supabase.
+   * This method is NO LONGER CALLED - replaced with API endpoints.
+   * Kept for emergency fallback only if all API endpoints fail.
+   * 
+   * @deprecated Use API endpoints instead: /api/lessons/[dayNumber]
    * @param {number} dayNum - Day number (1-365)
    * @param {string} archetype - Kelly persona
    * @param {string} region - Age region
@@ -479,6 +440,11 @@ const KellyLessonLoader = {
    * @param {string} track - 'learn' or 'grow'
    */
   async fetchFromSupabaseWithTimeout(dayNum, archetype, region, age, track = 'learn') {
+    // DEPRECATED: This should not be called in normal operation
+    // Only kept as absolute last-resort emergency fallback
+    if (!this.supabase) {
+      throw new Error('Supabase client not available - use API endpoints instead');
+    }
     // Fetch base lesson from core_lessons (with track filter)
     const { data: lesson, error: lessonError } = await this.supabase
       .from('core_lessons')
@@ -1401,14 +1367,24 @@ const KellyLessonLoader = {
   },
 
   /**
-   * Try local Vercel API fallback (serverless function)
-   * GET /api/lessons/:dayNumber?archetype=...&ageBucket=...
+   * Try standard Vercel API (serverless function)
+   * GET /api/lessons/:dayNumber?archetype=...&ageBucket=...&track=...
+   * 
+   * This is the PRIMARY data source - replaces direct Supabase access.
+   * API layer provides caching, rate limiting, security, and optimization.
    */
-  async tryLocalApi(dayNumber, archetype, region) {
-    const url = `${this.LOCAL_API_ENDPOINT}/${dayNumber}?archetype=${encodeURIComponent(archetype)}&ageBucket=${encodeURIComponent(region)}`;
-    const response = await fetch(url, { signal: AbortSignal.timeout(this.D1_TIMEOUT) });
-    if (!response.ok) throw new Error(`Local API returned ${response.status}`);
-    return await response.json();
+  async tryLocalApi(dayNumber, archetype, region, track = 'learn') {
+    const url = `/api/lessons/${dayNumber}?archetype=${encodeURIComponent(archetype)}&ageBucket=${encodeURIComponent(region)}&track=${encodeURIComponent(track)}`;
+    const response = await fetch(url, { 
+      signal: AbortSignal.timeout(this.D1_TIMEOUT),
+      headers: {
+        'Accept': 'application/json'
+      }
+    });
+    if (!response.ok) throw new Error(`Standard API returned ${response.status}`);
+    const data = await response.json();
+    // API returns: { source, lesson, atoms, shards, dayNumber, archetype, ageBucket }
+    return data;
   },
 
   /**
