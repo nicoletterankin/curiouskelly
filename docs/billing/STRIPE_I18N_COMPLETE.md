@@ -144,3 +144,4 @@ The code is i18n-ready. The following **requires manual Stripe Dashboard work**:
 
 *Documentation created: December 21, 2025*
 
+

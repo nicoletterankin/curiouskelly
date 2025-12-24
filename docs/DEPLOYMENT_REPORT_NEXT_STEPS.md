@@ -339,3 +339,4 @@ scripts/kelly-phase-visuals/batch-infographics-from-db.ts
 **Priority:** Content generation (videos + Grow track)  
 **Timeline:** 2-3 months for full year content
 
+

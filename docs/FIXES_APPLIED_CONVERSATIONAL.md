@@ -126,3 +126,4 @@ const scriptWithVisual = visualRef ? `${visualRef}${text}` : text;
 **Status:** ✅ Fixes applied, ready for testing  
 **Risk:** Low (enhancements only, no breaking changes)
 
+

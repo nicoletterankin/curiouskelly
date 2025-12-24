@@ -177,3 +177,4 @@ const lesson = await day1Detailed.json();
 **Grow Track Topics:** 365/365 defined  
 **Detailed Lessons:** 1/365 complete
 
+

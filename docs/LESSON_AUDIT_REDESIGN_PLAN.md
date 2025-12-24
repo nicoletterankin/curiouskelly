@@ -373,3 +373,4 @@ LessonAuditPanel = {
 - Tooltip system (`index.html` line ~1257)
 - Completeness calculation (reuse from `lesson-preview-popup.js`)
 
+
