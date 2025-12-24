@@ -1,13 +1,15 @@
 /**
  * Lesson Resilience Layer - BULLETPROOF LESSON LOADING
  * 
- * Cascading fallback system:
- *   1. Supabase (Primary) - 5s timeout
+ * API-First Architecture (Cascading Fallback System):
+ *   1. Standard API (/api/lessons/[dayNumber]) - Primary data source
  *   2. Cloudflare D1 (Mirror) - 3s timeout
  *   3. Static JSON (Pre-exported) - 2s timeout
  *   4. Emergency Fallback (Hardcoded) - instant
  * 
  * THE LESSON ALWAYS PLAYS.
+ * 
+ * NOTE: Direct Supabase access removed - all lesson data goes through API layer.
  */
 
 // Debug mode - only log when ?debug=true or localStorage.kellyDebug=1
@@ -18,17 +20,18 @@ const __RESILIENCE_DEBUG = (
 
 const LessonResilience = {
   // Configuration
-  SUPABASE_TIMEOUT: 5000,   // 5 seconds
+  API_TIMEOUT: 5000,        // 5 seconds (Standard API)
   D1_TIMEOUT: 3000,         // 3 seconds
   STATIC_TIMEOUT: 2000,     // 2 seconds
   
-  // D1 Mirror endpoint (Cloudflare Worker)
-  D1_ENDPOINT: '/api/lessons',  // Will be Cloudflare Worker in prod
+  // API endpoints
+  API_ENDPOINT: '/api/lessons',  // Standard Vercel API
+  D1_ENDPOINT: '/api/lessons',   // Cloudflare D1 Mirror (or local API fallback)
   
   // Metrics
   metrics: {
-    supabaseHits: 0,
-    supabaseTimeouts: 0,
+    apiHits: 0,
+    apiTimeouts: 0,
     d1Hits: 0,
     d1Timeouts: 0,
     staticHits: 0,
@@ -61,59 +64,41 @@ const LessonResilience = {
   },
   
   /**
-   * Layer 1: Supabase (Primary)
+   * Layer 1: Standard API (Primary)
+   * ARCHITECTURE FIX: Replaced direct Supabase access with API endpoint
    */
-  async fromSupabase(dayNumber, options = {}) {
-    const { supabase, archetype = 'The Scientist', ageBucket = 'adult', track = 'learn' } = options;
+  async fromAPI(dayNumber, options = {}) {
+    const { archetype = 'The Scientist', ageBucket = 'adult', track = 'learn' } = options;
     
-    if (!supabase) {
-      throw new Error('Supabase not initialized');
-    }
-    
-    if (__RESILIENCE_DEBUG) console.log(`🔍 [L1] Supabase: Day ${dayNumber}, track=${track}`);
+    if (__RESILIENCE_DEBUG) console.log(`🔍 [L1] Standard API: Day ${dayNumber}, track=${track}`);
     
     const fetchPromise = (async () => {
-      // Fetch core lesson (with track filter - required as we have both 'learn' and 'grow' tracks)
-      const { data: lesson, error: lessonError } = await supabase
-        .from('core_lessons')
-        .select('*')
-        .eq('day_number', dayNumber)
-        .eq('track', track)
-        .single();
+      const response = await fetch(`${this.API_ENDPOINT}/${dayNumber}?archetype=${encodeURIComponent(archetype)}&track=${encodeURIComponent(track)}&ageBucket=${encodeURIComponent(ageBucket)}`);
       
-      if (lessonError || !lesson) {
-        throw new Error(`Lesson ${dayNumber} not found: ${lessonError?.message}`);
+      if (!response.ok) {
+        throw new Error(`API returned ${response.status}`);
       }
       
-      // Fetch atoms (parallel with shards)
-      const [atomsResult, shardsResult] = await Promise.all([
-        supabase
-          .from('lesson_atoms')
-          .select('*')
-          .eq('core_lesson_id', lesson.id)
-          .eq('archetype', archetype)
-          .order('phase'),
-        supabase
-          .from('lesson_shards')
-          .select('*')
-          .eq('core_lesson_id', lesson.id)
-          .eq('archetype', archetype)
-      ]);
+      const data = await response.json();
+      
+      if (!data?.lesson) {
+        throw new Error(`Lesson ${dayNumber} not found in API response`);
+      }
       
       return {
-        source: 'supabase',
-        lesson,
-        atoms: atomsResult.data || [],
-        shards: shardsResult.data || [],
+        source: data.source || 'api',
+        lesson: data.lesson,
+        atoms: data.atoms || [],
+        shards: data.shards || [],
         dayNumber,
         archetype,
         ageBucket
       };
     })();
     
-    const result = await this.fetchWithTimeout(fetchPromise, this.SUPABASE_TIMEOUT, 'Supabase');
-    this.metrics.supabaseHits++;
-    this.metrics.lastSource = 'supabase';
+    const result = await this.fetchWithTimeout(fetchPromise, this.API_TIMEOUT, 'Standard API');
+    this.metrics.apiHits++;
+    this.metrics.lastSource = 'api';
     return result;
   },
   
@@ -317,17 +302,15 @@ const LessonResilience = {
     const startTime = Date.now();
     let lastError = null;
     
-    // Layer 1: Supabase
-    if (options.supabase) {
-      try {
-        const result = await this.fromSupabase(dayNumber, options);
-        if (__RESILIENCE_DEBUG) console.log(`✅ [L1] Supabase success in ${Date.now() - startTime}ms`);
-        return result;
-      } catch (error) {
-        this.metrics.supabaseTimeouts++;
-        lastError = error;
-        if (__RESILIENCE_DEBUG) console.warn(`⚠️ [L1] Supabase failed, trying D1...`);
-      }
+    // Layer 1: Standard API (Primary)
+    try {
+      const result = await this.fromAPI(dayNumber, options);
+      if (__RESILIENCE_DEBUG) console.log(`✅ [L1] Standard API success in ${Date.now() - startTime}ms`);
+      return result;
+    } catch (error) {
+      this.metrics.apiTimeouts++;
+      lastError = error;
+      if (__RESILIENCE_DEBUG) console.warn(`⚠️ [L1] Standard API failed, trying D1...`);
     }
     
     // Layer 2: D1 Mirror
@@ -365,7 +348,7 @@ const LessonResilience = {
     return {
       ...this.metrics,
       successRate: {
-        supabase: this.metrics.supabaseHits / (this.metrics.supabaseHits + this.metrics.supabaseTimeouts) || 0,
+        api: this.metrics.apiHits / (this.metrics.apiHits + this.metrics.apiTimeouts) || 0,
         d1: this.metrics.d1Hits / (this.metrics.d1Hits + this.metrics.d1Timeouts) || 0,
         static: this.metrics.staticHits / (this.metrics.staticHits + this.metrics.staticTimeouts) || 0
       }
@@ -377,8 +360,8 @@ const LessonResilience = {
    */
   resetMetrics() {
     this.metrics = {
-      supabaseHits: 0,
-      supabaseTimeouts: 0,
+      apiHits: 0,
+      apiTimeouts: 0,
       d1Hits: 0,
       d1Timeouts: 0,
       staticHits: 0,
