@@ -1,6 +1,8 @@
 # 🚀 Setup Vercel Edge - Copy & Paste Guide
 **Follow these exact steps. Everything is copy-paste ready.**
 
+**⚠️ AGENT DIRECTIVE:** This task is assigned to **Infrastructure Agent**. Follow `BOSS_OPERATIONAL_MANUAL.md` for operational rules. Report completion and any blockers.
+
 ---
 
 ## ✅ STEP 1: Open Vercel Dashboard
@@ -243,3 +245,40 @@ npx tsx scripts/migrate-to-blob.ts --dry-run
 
 **That's it! You're done! 🎉**
 
+---
+
+## 📋 COMPLETION REPORT (Infrastructure Agent)
+
+**After completing all steps, fill this out:**
+
+- [ ] All checklist items completed
+- [ ] Sync test successful (365 lessons synced)
+- [ ] No errors or blockers encountered
+- [ ] All environment variables verified
+- [ ] Ready for Boss approval
+
+**Report Format:**
+```
+✅ VERCEL EDGE SETUP COMPLETE
+
+Agent: Infrastructure Agent
+Completed: [Date/Time]
+Status: SUCCESS / PARTIAL / BLOCKED
+
+Completed Steps:
+- [ ] Step 1: Dashboard access
+- [ ] Step 2: Edge Config created
+- [ ] Step 3: Blob buckets created (3/3)
+- [ ] Step 4: Environment variables set (2/2)
+- [ ] Step 5: Verification successful
+
+Issues/Blockers:
+- [List any issues or deviations]
+
+Next Steps:
+- [What should happen next?]
+
+Ready for: [Migration / Testing / Boss Review]
+```
+
+---

@@ -578,3 +578,4 @@ CREATE TRIGGER on_lesson_completed
 
 
 
+
