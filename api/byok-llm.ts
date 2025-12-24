@@ -173,3 +173,4 @@ async function callGoogle(model: string, apiKey: string, prompt: string): Promis
   return data.candidates[0]?.content?.parts[0]?.text || 'No response generated';
 }
 
+
