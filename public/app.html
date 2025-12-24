@@ -1511,18 +1511,34 @@
                   if (data?.lesson) {
                     allLessons.push({
                       id: data.lesson.id || `day-${day}`,
-              day: lesson.day_number,
-              date: dayNumberToDate(lesson.day_number),
-              title: lesson.topic,
-              learning_objective: lesson.universal_truth || '',
-              subtitle: lesson.marketing_tagline || ''
-            }));
-            console.log(`✅ Loaded ${allLessons.length} lessons from Supabase`);
+                      day: data.lesson.day_number || day,
+                      date: dayNumberToDate(data.lesson.day_number || day),
+                      title: data.lesson.topic || 'Daily Discovery',
+                      learning_objective: data.lesson.universal_truth || '',
+                      subtitle: data.lesson.marketing_tagline || ''
+                    });
+                  }
+                })
+                .catch(() => {}) // Silent fail for individual lessons
+            );
+          }
+          
+          // Wait for all with timeout
+          await Promise.race([
+            Promise.all(promises),
+            new Promise(resolve => setTimeout(resolve, 10000)) // 10 second timeout
+          ]);
+          
+          // Sort by day number
+          allLessons.sort((a, b) => a.day - b.day);
+          
+          if (allLessons.length > 0) {
+            console.log(`✅ Loaded ${allLessons.length} lessons from API`);
           } else {
             await loadFromCurriculumFiles();
           }
         } catch (e) {
-          console.error('❌ Failed to load from Supabase:', e);
+          console.error('❌ Failed to load from API:', e);
           await loadFromCurriculumFiles();
         }
       }
