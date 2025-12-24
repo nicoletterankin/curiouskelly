@@ -10717,12 +10717,19 @@
     }
     
     // ============================================
-    // SUPABASE CLIENTS
+    // SUPABASE CLIENTS (DEPRECATED - API-First Architecture)
     // ============================================
+    // ARCHITECTURE NOTE: Direct Supabase access is deprecated.
+    // All lesson loading now goes through API endpoints (/api/lessons/[dayNumber]).
+    // Supabase client kept only for:
+    // - User authentication (requires direct Supabase auth)
+    // - User progress tracking (requires auth - TODO: create API endpoint)
+    // - Audit mode (debugging only)
+    // 
     // IMPORTANT:
     // - We use ONE singleton client per browser context to avoid:
     //   "Multiple GoTrueClient instances detected in the same browser context"
-    // - Lesson reads + auth/progress share the same instance.
+    // - Auth/progress share the same instance.
     // - Named `_db` to avoid conflict with global `window.supabase` from CDN.
     let _db = null;
     function ensureSupabaseClient() {
@@ -10742,9 +10749,11 @@
       return false;
     }
     try {
-      if (!ensureSupabaseClient()) throw new Error('Supabase config missing');
+      if (!ensureSupabaseClient()) {
+        debugWarn('Supabase client not available - API endpoints will be used for lesson loading');
+      }
     } catch (e) {
-      debugWarn('Supabase not available, using fallback data');
+      debugWarn('Supabase not available, using API endpoints and fallback data');
     }
 
     // ============================================
@@ -11044,17 +11053,46 @@
     
     async function loadSupabaseThumbnails() {
       if (SUPABASE_THUMBNAIL_CACHE) return SUPABASE_THUMBNAIL_CACHE;
-      if (!window.supabase) return {};
+      
+      // ARCHITECTURE FIX: Use API endpoint instead of direct Supabase access
+      // Load thumbnails via API calls (batch loading for efficiency)
       try {
-        const { data, error } = await window.supabase
-          .from('core_lessons')
-          .select('day_number, thumbnail_url')
-          .not('thumbnail_url', 'is', null);
-        if (error || !data) return {};
         SUPABASE_THUMBNAIL_CACHE = {};
-        data.forEach(d => { SUPABASE_THUMBNAIL_CACHE[d.day_number] = d.thumbnail_url; });
+        
+        // Load thumbnails for first 30 days (most commonly viewed)
+        // TODO: Create batch thumbnail API endpoint for better performance
+        const promises = [];
+        for (let day = 1; day <= 30; day++) {
+          promises.push(
+            fetch(`/api/lessons/${day}?archetype=The%20Scientist&track=learn`)
+              .then(res => res.ok ? res.json() : null)
+              .then(data => {
+                if (data?.lesson?.thumbnail_url) {
+                  SUPABASE_THUMBNAIL_CACHE[day] = data.lesson.thumbnail_url;
+                }
+              })
+              .catch(() => {}) // Silent fail - thumbnails are optional
+          );
+        }
+        
+        // Wait for first batch, then continue loading rest in background
+        await Promise.all(promises);
+        
+        // Load remaining days in background (non-blocking)
+        for (let day = 31; day <= 365; day++) {
+          fetch(`/api/lessons/${day}?archetype=The%20Scientist&track=learn`)
+            .then(res => res.ok ? res.json() : null)
+            .then(data => {
+              if (data?.lesson?.thumbnail_url) {
+                SUPABASE_THUMBNAIL_CACHE[day] = data.lesson.thumbnail_url;
+              }
+            })
+            .catch(() => {}); // Silent fail
+        }
+        
         return SUPABASE_THUMBNAIL_CACHE;
       } catch (e) {
+        console.warn('Thumbnail loading failed (non-critical):', e);
         return {};
       }
     }
@@ -15219,46 +15257,43 @@
         }
       }
       
-      // Fetch asset availability from Supabase (for preview thumbnails)
+      // ARCHITECTURE FIX: Fetch asset availability via API (for preview thumbnails)
+      // This is optional UI enhancement - graceful failure if API unavailable
       let dayAssetsMap = {};
       try {
-        if (window.supabase) {
-          // Get lesson IDs for the range
-          const { data: coreLessons } = await window.supabase
-            .from('core_lessons')
-            .select('id, day_number')
-            .gte('day_number', startDay)
-            .lte('day_number', endDay)
-            .eq('track', 'learn');
-          
-          if (coreLessons && coreLessons.length > 0) {
-            const lessonIds = coreLessons.map(l => l.id);
-            const lessonIdToDay = {};
-            coreLessons.forEach(l => lessonIdToDay[l.id] = l.day_number);
-            
-            // Get assets for these lessons
-            const { data: assets } = await window.supabase
-              .from('lesson_atoms')
-              .select('core_lesson_id, phase, visual_url, hd_video_url')
-              .in('core_lesson_id', lessonIds)
-              .eq('archetype', 'The Scientist')
-              .or('visual_url.not.is.null,hd_video_url.not.is.null');
-            
-            if (assets) {
-              assets.forEach(a => {
-                const dayNum = lessonIdToDay[a.core_lesson_id];
-                if (!dayAssetsMap[dayNum]) dayAssetsMap[dayNum] = [];
-                dayAssetsMap[dayNum].push({
-                  phase: a.phase,
-                  visual: a.visual_url,
-                  video: a.hd_video_url
-                });
-              });
-            }
-          }
+        // Load assets for each day in range via API
+        // TODO: Create batch asset API endpoint for better performance
+        const assetPromises = [];
+        for (let day = startDay; day <= endDay; day++) {
+          assetPromises.push(
+            fetch(`/api/lessons/${day}?archetype=The%20Scientist&track=learn`)
+              .then(res => res.ok ? res.json() : null)
+              .then(data => {
+                if (data?.atoms) {
+                  const dayAssets = data.atoms
+                    .filter(a => a.visual_url || a.hd_video_url)
+                    .map(a => ({
+                      phase: a.phase,
+                      visual: a.visual_url,
+                      video: a.hd_video_url
+                    }));
+                  if (dayAssets.length > 0) {
+                    dayAssetsMap[day] = dayAssets;
+                  }
+                }
+              })
+              .catch(() => {}) // Silent fail - asset previews are optional
+          );
         }
+        
+        // Wait for asset loading (with timeout to avoid blocking)
+        await Promise.race([
+          Promise.all(assetPromises),
+          new Promise(resolve => setTimeout(resolve, 2000)) // 2 second timeout
+        ]);
       } catch (e) {
-        console.warn('Could not load asset previews:', e);
+        console.warn('Could not load asset previews (non-critical):', e);
+        // Continue without asset previews - UI still works
       }
       
       const lessonMap = {};
