@@ -1,0 +1,1339 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Ziggurat — 7 Layers of Wonder</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: #000;
+            color: #fff;
+            min-height: 100vh;
+            overflow-x: hidden;
+        }
+        
+        .viewer {
+            position: relative;
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: radial-gradient(ellipse at 50% 40%, #0a1628 0%, #000 70%);
+        }
+        
+        #canvas {
+            max-width: 100%;
+            max-height: 100%;
+            box-shadow: 0 0 100px rgba(0,0,0,0.8);
+        }
+        
+        /* Layer info panel */
+        .layer-panel {
+            position: fixed;
+            right: 0;
+            top: 0;
+            bottom: 0;
+            width: 400px;
+            background: linear-gradient(180deg, rgba(0,0,0,0.98) 0%, rgba(5,10,20,0.98) 100%);
+            border-left: 1px solid rgba(255,255,255,0.08);
+            padding: 30px;
+            overflow-y: auto;
+            transform: translateX(100%);
+            transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+            z-index: 50;
+        }
+        
+        .layer-panel.visible {
+            transform: translateX(0);
+        }
+        
+        .layer-panel h2 {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: rgba(255,255,255,0.3);
+            margin-bottom: 24px;
+            font-weight: 500;
+        }
+        
+        .layer-card {
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 20px;
+            margin-bottom: 10px;
+            cursor: pointer;
+            transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .layer-card::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: var(--layer-color, #e85d04);
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+        
+        .layer-card:hover {
+            background: rgba(255,255,255,0.04);
+            border-color: rgba(255,255,255,0.1);
+            transform: translateX(-4px);
+        }
+        
+        .layer-card:hover::before {
+            opacity: 0.5;
+        }
+        
+        .layer-card.active {
+            border-color: var(--layer-color, #e85d04);
+            background: linear-gradient(135deg, rgba(var(--layer-rgb), 0.15) 0%, rgba(var(--layer-rgb), 0.05) 100%);
+            box-shadow: 0 0 40px rgba(var(--layer-rgb), 0.1);
+        }
+        
+        .layer-card.active::before {
+            opacity: 1;
+        }
+        
+        .layer-card .layer-num {
+            font-size: 10px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            color: var(--layer-color, #e85d04);
+            margin-bottom: 6px;
+            text-transform: uppercase;
+        }
+        
+        .layer-card .layer-name {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 6px;
+            letter-spacing: -0.3px;
+        }
+        
+        .layer-card .layer-desc {
+            font-size: 13px;
+            color: rgba(255,255,255,0.5);
+            line-height: 1.6;
+        }
+        
+        .layer-card .layer-meta {
+            margin-top: 12px;
+            padding-top: 12px;
+            border-top: 1px solid rgba(255,255,255,0.06);
+            display: flex;
+            gap: 16px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.35);
+        }
+        
+        .layer-card .layer-meta span {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        /* Day display */
+        .day-display {
+            position: fixed;
+            top: 40px;
+            left: 40px;
+            z-index: 10;
+        }
+        
+        .day-display .day-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: rgba(255,255,255,0.3);
+            margin-bottom: 8px;
+        }
+        
+        .day-display .day-num {
+            font-size: 72px;
+            font-weight: 800;
+            line-height: 1;
+            background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.7) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -3px;
+        }
+        
+        .day-display .day-title {
+            font-size: 24px;
+            font-weight: 600;
+            color: #c026d3;
+            margin-top: 12px;
+            letter-spacing: -0.5px;
+        }
+        
+        .day-display .day-category {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: rgba(192, 38, 211, 0.6);
+            margin-top: 4px;
+        }
+        
+        .day-display .day-truth {
+            font-size: 16px;
+            color: rgba(255,255,255,0.5);
+            font-style: italic;
+            margin-top: 16px;
+            max-width: 320px;
+            line-height: 1.5;
+        }
+        
+        /* Control buttons */
+        .controls {
+            position: fixed;
+            right: 20px;
+            top: 20px;
+            z-index: 100;
+            display: flex;
+            gap: 10px;
+        }
+        
+        .control-btn {
+            background: rgba(255,255,255,0.06);
+            border: 1px solid rgba(255,255,255,0.1);
+            color: #fff;
+            padding: 12px 20px;
+            border-radius: 10px;
+            cursor: pointer;
+            font-size: 13px;
+            font-weight: 500;
+            transition: all 0.2s;
+            backdrop-filter: blur(10px);
+        }
+        
+        .control-btn:hover {
+            background: rgba(255,255,255,0.1);
+            border-color: rgba(255,255,255,0.2);
+        }
+        
+        .control-btn.active {
+            background: rgba(255,255,255,0.15);
+            border-color: rgba(255,255,255,0.3);
+        }
+        
+        /* Live stats */
+        .live-stats {
+            position: fixed;
+            bottom: 40px;
+            left: 40px;
+            display: flex;
+            gap: 40px;
+        }
+        
+        .stat {
+            text-align: left;
+        }
+        
+        .stat-value {
+            font-size: 32px;
+            font-weight: 700;
+            background: linear-gradient(135deg, #e85d04 0%, #fbbf24 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -1px;
+        }
+        
+        .stat-label {
+            font-size: 11px;
+            color: rgba(255,255,255,0.35);
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-top: 4px;
+        }
+        
+        /* Mode indicator */
+        .mode-indicator {
+            position: fixed;
+            bottom: 40px;
+            right: 40px;
+            background: rgba(0,0,0,0.6);
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 12px;
+            padding: 16px 24px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .mode-indicator .mode-label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            color: rgba(255,255,255,0.3);
+            margin-bottom: 6px;
+        }
+        
+        .mode-indicator .mode-name {
+            font-size: 14px;
+            font-weight: 600;
+            color: #22c55e;
+        }
+        
+        /* Scrolling names for Layer 1 */
+        .names-scroll {
+            position: fixed;
+            bottom: 100px;
+            left: 0;
+            right: 0;
+            height: 30px;
+            overflow: hidden;
+            opacity: 0;
+            transition: opacity 0.5s;
+            pointer-events: none;
+        }
+        
+        .names-scroll.visible {
+            opacity: 1;
+        }
+        
+        .names-track {
+            display: flex;
+            gap: 40px;
+            animation: scrollNames 30s linear infinite;
+            white-space: nowrap;
+        }
+        
+        .names-track span {
+            font-size: 13px;
+            color: rgba(232, 93, 4, 0.6);
+            letter-spacing: 1px;
+        }
+        
+        @keyframes scrollNames {
+            0% { transform: translateX(0); }
+            100% { transform: translateX(-50%); }
+        }
+        
+        /* Export modal */
+        .export-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.9);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 200;
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+        
+        .export-modal.visible {
+            opacity: 1;
+            pointer-events: auto;
+        }
+        
+        .export-content {
+            background: #111;
+            border: 1px solid rgba(255,255,255,0.1);
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 500px;
+            text-align: center;
+        }
+        
+        .export-content h3 {
+            font-size: 24px;
+            margin-bottom: 16px;
+        }
+        
+        .export-content p {
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 24px;
+        }
+        
+        .export-content canvas {
+            border-radius: 8px;
+            margin-bottom: 24px;
+            max-width: 100%;
+        }
+        
+        .export-content .btn-row {
+            display: flex;
+            gap: 12px;
+            justify-content: center;
+        }
+        
+        .export-content button {
+            padding: 14px 28px;
+            border-radius: 10px;
+            font-size: 14px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .export-content .btn-primary {
+            background: #e85d04;
+            border: none;
+            color: #fff;
+        }
+        
+        .export-content .btn-primary:hover {
+            background: #f97316;
+        }
+        
+        .export-content .btn-secondary {
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.2);
+            color: #fff;
+        }
+        
+        .export-content .btn-secondary:hover {
+            border-color: rgba(255,255,255,0.4);
+        }
+    </style>
+</head>
+<body>
+    <div class="viewer">
+        <canvas id="canvas"></canvas>
+    </div>
+    
+    <div class="day-display">
+        <div class="day-label">Today's Lesson</div>
+        <div class="day-num">24</div>
+        <div class="day-title">Why Humans Tell Stories</div>
+        <div class="day-category">Culture</div>
+        <div class="day-truth">"We don't just tell stories—we are stories"</div>
+    </div>
+    
+    <div class="controls">
+        <button class="control-btn" id="toggleBefore">Before</button>
+        <button class="control-btn active" id="toggleAfter">After</button>
+        <button class="control-btn" id="togglePanel">Layers</button>
+        <button class="control-btn" id="exportBtn">Export 4K</button>
+    </div>
+    
+    <div class="layer-panel" id="layerPanel">
+        <h2>7 Layers of Wonder</h2>
+        
+        <div class="layer-card" data-layer="7" style="--layer-color: #ffffff; --layer-rgb: 255,255,255">
+            <div class="layer-num">Layer 7 — The Crown</div>
+            <div class="layer-name">Universal Truth</div>
+            <div class="layer-desc">Eternal beacon. Pure light. The North Star of learning visible for miles.</div>
+            <div class="layer-meta">
+                <span>⚡ Static</span>
+                <span>380 ft</span>
+            </div>
+        </div>
+        
+        <div class="layer-card" data-layer="6" style="--layer-color: #818cf8; --layer-rgb: 129,140,248">
+            <div class="layer-num">Layer 6 — The Calendar</div>
+            <div class="layer-name">365 Days of Wonder</div>
+            <div class="layer-desc">Every lesson visible at once. Today glows brightest. A rainbow roadmap of curiosity.</div>
+            <div class="layer-meta">
+                <span>📅 Annual</span>
+                <span>580 ft</span>
+            </div>
+        </div>
+        
+        <div class="layer-card active" data-layer="5" style="--layer-color: #c026d3; --layer-rgb: 192,38,211">
+            <div class="layer-num">Layer 5 — Today's Lesson</div>
+            <div class="layer-name">Why Humans Tell Stories</div>
+            <div class="layer-desc">Today's topic illuminates the night. Changes at midnight. Category: Culture.</div>
+            <div class="layer-meta">
+                <span>🔄 Daily</span>
+                <span>820 ft</span>
+            </div>
+        </div>
+        
+        <div class="layer-card" data-layer="4" style="--layer-color: #fbbf24; --layer-rgb: 251,191,36">
+            <div class="layer-num">Layer 4 — Wonder Hall</div>
+            <div class="layer-name">Achievements</div>
+            <div class="layer-desc">Public celebration. Streaks, completions, breakthroughs. Your moment in the light.</div>
+            <div class="layer-meta">
+                <span>🏆 Daily</span>
+                <span>1,060 ft</span>
+            </div>
+        </div>
+        
+        <div class="layer-card" data-layer="3" style="--layer-color: #22c55e; --layer-rgb: 34,197,94">
+            <div class="layer-num">Layer 3 — The Pulse</div>
+            <div class="layer-name">Live Activity</div>
+            <div class="layer-desc">Real-time heartbeat of the community. Who's learning right now, right here.</div>
+            <div class="layer-meta">
+                <span>💚 Real-time</span>
+                <span>1,310 ft</span>
+            </div>
+        </div>
+        
+        <div class="layer-card" data-layer="2" style="--layer-color: #00d4ff; --layer-rgb: 0,212,255">
+            <div class="layer-num">Layer 2 — The Journey</div>
+            <div class="layer-name">Learning Progress</div>
+            <div class="layer-desc">Collective progress visualization. The wave of curiosity circling the globe.</div>
+            <div class="layer-meta">
+                <span>🌊 Weekly</span>
+                <span>1,580 ft</span>
+            </div>
+        </div>
+        
+        <div class="layer-card" data-layer="1" style="--layer-color: #e85d04; --layer-rgb: 232,93,4">
+            <div class="layer-num">Layer 1 — The Foundation</div>
+            <div class="layer-name">8 Billion Learners</div>
+            <div class="layer-desc">Every human has a place. Permanent. Sacred. Your coordinate exists whether you look or not.</div>
+            <div class="layer-meta">
+                <span>♾️ Eternal</span>
+                <span>1,580 ft</span>
+            </div>
+        </div>
+    </div>
+    
+    <div class="live-stats">
+        <div class="stat">
+            <div class="stat-value" id="liveCount">4,729</div>
+            <div class="stat-label">Learning Now</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="completedCount">847</div>
+            <div class="stat-label">Completed Today</div>
+        </div>
+        <div class="stat">
+            <div class="stat-value" id="streakCount">23</div>
+            <div class="stat-label">Streaks Hit</div>
+        </div>
+    </div>
+    
+    <div class="mode-indicator">
+        <div class="mode-label">Display Mode</div>
+        <div class="mode-name" id="modeName">All Layers Active</div>
+    </div>
+    
+    <div class="names-scroll" id="namesScroll">
+        <div class="names-track" id="namesTrack"></div>
+    </div>
+    
+    <div class="export-modal" id="exportModal">
+        <div class="export-content">
+            <h3>Export 4K Mockup</h3>
+            <p>High-resolution render for presentations</p>
+            <canvas id="exportCanvas" width="400" height="300"></canvas>
+            <div class="btn-row">
+                <button class="btn-secondary" id="closeExport">Cancel</button>
+                <button class="btn-primary" id="downloadExport">Download PNG</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // Simulated learner names for Layer 1
+        const sampleNames = [
+            "Maria S. • São Paulo", "James K. • London", "Yuki T. • Tokyo", "Ahmed R. • Cairo",
+            "Lisa M. • New York", "Chen W. • Beijing", "Sophie L. • Paris", "Raj P. • Mumbai",
+            "Anna K. • Moscow", "Miguel R. • Mexico City", "Emma J. • Sydney", "Klaus M. • Berlin",
+            "Fatima A. • Dubai", "John D. • Chicago", "Priya S. • Bangalore", "David L. • Toronto"
+        ];
+        
+        // CORRECTED coordinates - building spans x: 0.21-0.68, y: 0.34-0.50
+        const layers = [
+            { 
+                level: 7, name: "Crown", purpose: "beacon",
+                left: [0.358, 0.343], right: [0.492, 0.340], height: 0.010,
+                color: '#ffffff', linearFt: 380
+            },
+            { 
+                level: 6, name: "Calendar", purpose: "calendar",
+                left: [0.335, 0.365], right: [0.518, 0.361], height: 0.012,
+                color: null, linearFt: 580
+            },
+            { 
+                level: 5, name: "Today", purpose: "lesson",
+                left: [0.310, 0.388], right: [0.548, 0.383], height: 0.014,
+                color: '#c026d3', linearFt: 820
+            },
+            { 
+                level: 4, name: "Wonder Hall", purpose: "achievements",
+                left: [0.285, 0.412], right: [0.580, 0.407], height: 0.016,
+                color: '#fbbf24', linearFt: 1060
+            },
+            { 
+                level: 3, name: "Pulse", purpose: "live",
+                left: [0.260, 0.438], right: [0.615, 0.432], height: 0.018,
+                color: '#22c55e', linearFt: 1310
+            },
+            { 
+                level: 2, name: "Journey", purpose: "progress",
+                left: [0.235, 0.465], right: [0.650, 0.458], height: 0.020,
+                color: '#00d4ff', linearFt: 1580
+            },
+            { 
+                level: 1, name: "Foundation", purpose: "learners",
+                left: [0.210, 0.495], right: [0.680, 0.485], height: 0.022,
+                color: '#e85d04', linearFt: 1580
+            },
+        ];
+        
+        let img = new Image();
+        let animFrame = 0;
+        let highlightedLayer = 5;
+        let showBefore = false;
+        let pulsePhase = 0;
+        let achievementScroll = 0;
+        
+        // Load today's lesson from curriculum
+        let todayLesson = null;
+        
+        async function loadTodayLesson() {
+            const today = new Date();
+            const startOfYear = new Date(today.getFullYear(), 0, 0);
+            const dayOfYear = Math.floor((today - startOfYear) / (1000 * 60 * 60 * 24));
+            
+            try {
+                const response = await fetch(`../lessons/day-${dayOfYear}.json`);
+                if (response.ok) {
+                    todayLesson = await response.json();
+                    
+                    // Update UI with real lesson data
+                    document.querySelector('.day-display .day-num').textContent = dayOfYear;
+                    document.querySelector('.day-display .day-title').textContent = todayLesson.meta.topic.en;
+                    document.querySelector('.day-display .day-category').textContent = todayLesson.meta.category;
+                    document.querySelector('.day-display .day-truth').textContent = '"' + todayLesson.universal_truth.en + '"';
+                    
+                    // Update Layer 5 card
+                    const layer5Card = document.querySelector('[data-layer="5"]');
+                    if (layer5Card) {
+                        layer5Card.querySelector('.layer-name').textContent = todayLesson.meta.topic.en;
+                        layer5Card.querySelector('.layer-desc').textContent = 
+                            `Today's topic illuminates the night. Category: ${todayLesson.meta.category}.`;
+                    }
+                    
+                    // Update layer 5 color based on category
+                    const categoryColors = {
+                        "Wonder": "#e85d04", "Physics": "#00d4ff", "Nature": "#22c55e",
+                        "Mind": "#a855f7", "Art": "#f472b6", "Weather": "#60a5fa",
+                        "Biology": "#34d399", "Chemistry": "#fbbf24", "Cosmos": "#818cf8",
+                        "Wisdom": "#f59e0b", "Math": "#06b6d4", "Earth": "#78716c",
+                        "Milestone": "#f43f5e", "Tech": "#10b981", "Reflection": "#8b5cf6",
+                        "Culture": "#c026d3", "Beginnings": "#f97316", "History": "#f43f5e"
+                    };
+                    
+                    const lessonColor = categoryColors[todayLesson.meta.category] || '#c026d3';
+                    layers[2].color = lessonColor; // Layer 5 is index 2
+                    
+                    console.log(`Loaded Day ${dayOfYear}: ${todayLesson.meta.topic.en} (${todayLesson.meta.category})`);
+                }
+            } catch (e) {
+                console.log('Could not load lesson, using defaults');
+            }
+        }
+        
+        // Initialize
+        async function init() {
+            await loadTodayLesson();
+            
+            img.onload = () => {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                animate();
+            };
+            img.src = 'aerial.jpg';
+        }
+        
+        init();
+        
+        function animate() {
+            animFrame++;
+            pulsePhase += 0.03;
+            achievementScroll += 0.5;
+            render();
+            requestAnimationFrame(animate);
+        }
+        
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Base image
+            ctx.drawImage(img, 0, 0);
+            
+            if (showBefore) {
+                // Just show the original image with light grading
+                ctx.save();
+                ctx.globalCompositeOperation = 'multiply';
+                ctx.fillStyle = 'rgba(40, 50, 70, 0.3)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.restore();
+                return;
+            }
+            
+            // Night grading - deep cinematic blue
+            applyNightGrading();
+            
+            // Draw each layer with full effects
+            layers.forEach((layer, i) => {
+                const isHighlighted = layer.level === highlightedLayer;
+                const intensity = isHighlighted ? 1.0 : 0.65;
+                drawLayer(layer, intensity, i);
+            });
+            
+            // Combined atmospheric effects
+            applySkyGlow();
+            applyAtmosphere();
+        }
+        
+        function applyNightGrading() {
+            ctx.save();
+            
+            // Deep blue night
+            ctx.globalCompositeOperation = 'multiply';
+            ctx.fillStyle = 'rgba(12, 18, 35, 0.92)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Subtle blue overlay
+            ctx.globalCompositeOperation = 'overlay';
+            ctx.fillStyle = 'rgba(20, 35, 70, 0.35)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Slight desaturation
+            ctx.globalCompositeOperation = 'saturation';
+            ctx.fillStyle = 'rgba(128, 128, 128, 0.2)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            ctx.restore();
+        }
+        
+        function applySkyGlow() {
+            const buildingCenterX = canvas.width * 0.46;
+            const buildingTopY = canvas.height * 0.35;
+            
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            
+            // Multi-color sky glow from all layers
+            const glowColors = [
+                { color: 'rgba(192, 38, 211, 0.04)', y: 0.38 },  // Magenta from today
+                { color: 'rgba(255, 255, 255, 0.03)', y: 0.36 }, // White from crown
+                { color: 'rgba(232, 93, 4, 0.025)', y: 0.55 },   // Orange from foundation
+            ];
+            
+            glowColors.forEach(({ color, y }) => {
+                const glow = ctx.createRadialGradient(
+                    buildingCenterX, canvas.height * y, 0,
+                    buildingCenterX, canvas.height * (y - 0.15), canvas.height * 0.5
+                );
+                glow.addColorStop(0, color);
+                glow.addColorStop(0.5, color.replace(/[\d.]+\)$/, '0.015)'));
+                glow.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = glow;
+                ctx.fillRect(0, 0, canvas.width, canvas.height * 0.6);
+            });
+            
+            ctx.restore();
+        }
+        
+        function applyAtmosphere() {
+            // Vignette
+            const vignetteGrad = ctx.createRadialGradient(
+                canvas.width * 0.5, canvas.height * 0.42, canvas.height * 0.25,
+                canvas.width * 0.5, canvas.height * 0.42, canvas.height * 1.1
+            );
+            vignetteGrad.addColorStop(0, 'rgba(0,0,0,0)');
+            vignetteGrad.addColorStop(0.5, 'rgba(0,0,0,0.05)');
+            vignetteGrad.addColorStop(0.75, 'rgba(0,0,0,0.25)');
+            vignetteGrad.addColorStop(1, 'rgba(0,0,0,0.55)');
+            ctx.fillStyle = vignetteGrad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Subtle film grain
+            if (animFrame % 3 === 0) {
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const data = imageData.data;
+                for (let i = 0; i < data.length; i += 16) {
+                    const noise = (Math.random() - 0.5) * 8;
+                    data[i] = Math.min(255, Math.max(0, data[i] + noise));
+                    data[i + 1] = Math.min(255, Math.max(0, data[i + 1] + noise));
+                    data[i + 2] = Math.min(255, Math.max(0, data[i + 2] + noise));
+                }
+                ctx.putImageData(imageData, 0, 0);
+            }
+        }
+        
+        function drawLayer(layer, intensity, index) {
+            const w = canvas.width;
+            const h = canvas.height;
+            const x1 = layer.left[0] * w;
+            const y1 = layer.left[1] * h;
+            const x2 = layer.right[0] * w;
+            const y2 = layer.right[1] * h;
+            const pH = layer.height * h;
+            
+            // Special handlers for different layer types
+            switch (layer.purpose) {
+                case 'calendar':
+                    drawCalendarLayer(layer, intensity, x1, y1, x2, y2, pH);
+                    return;
+                case 'learners':
+                    drawFoundationLayer(layer, intensity, x1, y1, x2, y2, pH);
+                    return;
+                case 'live':
+                    drawPulseLayer(layer, intensity, x1, y1, x2, y2, pH);
+                    return;
+                case 'achievements':
+                    drawAchievementsLayer(layer, intensity, x1, y1, x2, y2, pH);
+                    return;
+                case 'progress':
+                    drawProgressLayer(layer, intensity, x1, y1, x2, y2, pH);
+                    return;
+            }
+            
+            // Standard layer rendering
+            const color = layer.color;
+            const rgb = hexToRgb(color);
+            
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            
+            // Multi-pass bloom
+            for (let pass = 0; pass < 6; pass++) {
+                const blur = (70 - pass * 10) * intensity;
+                const alpha = 0.025 + pass * 0.01;
+                ctx.shadowColor = color;
+                ctx.shadowBlur = blur;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.lineTo(x2, y2 + pH);
+                ctx.lineTo(x1, y1 + pH);
+                ctx.closePath();
+                ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha * intensity})`;
+                ctx.fill();
+            }
+            
+            // Core gradient
+            ctx.shadowBlur = 0;
+            const coreGrad = ctx.createLinearGradient(x1, y1, x1, y1 + pH);
+            coreGrad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.85 * intensity})`);
+            coreGrad.addColorStop(0.4, `rgba(${Math.min(255, rgb.r + 60)}, ${Math.min(255, rgb.g + 60)}, ${Math.min(255, rgb.b + 60)}, ${intensity})`);
+            coreGrad.addColorStop(0.6, `rgba(${Math.min(255, rgb.r + 60)}, ${Math.min(255, rgb.g + 60)}, ${Math.min(255, rgb.b + 60)}, ${intensity})`);
+            coreGrad.addColorStop(1, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.8 * intensity})`);
+            
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.lineTo(x2, y2 + pH);
+            ctx.lineTo(x1, y1 + pH);
+            ctx.closePath();
+            ctx.fillStyle = coreGrad;
+            ctx.fill();
+            
+            // White-hot center
+            const hotY1 = y1 + pH * 0.45;
+            const hotY2 = y2 + pH * 0.45;
+            ctx.beginPath();
+            ctx.moveTo(x1, hotY1);
+            ctx.lineTo(x2, hotY2);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${0.7 * intensity})`;
+            ctx.lineWidth = pH * 0.25;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+            
+            // Surface spill downward
+            const spillH = pH * 4;
+            const spillGrad = ctx.createLinearGradient(x1, y1 + pH, x1, y1 + pH + spillH);
+            spillGrad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.18 * intensity})`);
+            spillGrad.addColorStop(0.15, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.08 * intensity})`);
+            spillGrad.addColorStop(0.5, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.02 * intensity})`);
+            spillGrad.addColorStop(1, 'rgba(0,0,0,0)');
+            
+            ctx.beginPath();
+            ctx.moveTo(x1 - pH * 0.5, y1 + pH);
+            ctx.lineTo(x2 + pH * 0.5, y2 + pH);
+            ctx.lineTo(x2 + pH * 2, y2 + pH + spillH);
+            ctx.lineTo(x1 - pH * 2, y1 + pH + spillH);
+            ctx.closePath();
+            ctx.fillStyle = spillGrad;
+            ctx.fill();
+            
+            ctx.restore();
+        }
+        
+        function drawCalendarLayer(layer, intensity, x1, y1, x2, y2, pH) {
+            const segmentCount = 365;
+            const layerWidth = x2 - x1;
+            const segmentWidth = layerWidth / segmentCount;
+            const today = 24;
+            
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            
+            for (let i = 0; i < segmentCount; i++) {
+                const hue = (i / segmentCount) * 360;
+                const sx = x1 + i * segmentWidth;
+                const progress = i / segmentCount;
+                const sy = y1 + (y2 - y1) * progress;
+                
+                const isToday = i === today - 1;
+                const isPast = i < today - 1;
+                let segIntensity = intensity * (isPast ? 0.5 : 0.7);
+                
+                if (isToday) {
+                    segIntensity = intensity * (1.2 + Math.sin(pulsePhase * 2) * 0.3);
+                    ctx.shadowColor = `hsl(${hue}, 90%, 60%)`;
+                    ctx.shadowBlur = 25;
+                }
+                
+                ctx.fillStyle = `hsla(${hue}, 85%, ${isToday ? 65 : 50}%, ${0.7 * segIntensity})`;
+                ctx.fillRect(sx, sy, segmentWidth + 0.5, pH);
+                ctx.shadowBlur = 0;
+            }
+            
+            // White center line
+            ctx.beginPath();
+            ctx.moveTo(x1, y1 + pH * 0.45);
+            ctx.lineTo(x2, y2 + pH * 0.45);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${0.3 * intensity})`;
+            ctx.lineWidth = pH * 0.1;
+            ctx.stroke();
+            
+            ctx.restore();
+        }
+        
+        function drawFoundationLayer(layer, intensity, x1, y1, x2, y2, pH) {
+            const color = layer.color;
+            const rgb = hexToRgb(color);
+            
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            
+            // Bloom
+            for (let pass = 0; pass < 5; pass++) {
+                ctx.shadowColor = color;
+                ctx.shadowBlur = (60 - pass * 10) * intensity;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.lineTo(x2, y2 + pH);
+                ctx.lineTo(x1, y1 + pH);
+                ctx.closePath();
+                ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.025 * intensity})`;
+                ctx.fill();
+            }
+            
+            // Pixelated "people" pattern
+            ctx.shadowBlur = 0;
+            const pixelSize = 5;
+            const cols = Math.floor((x2 - x1) / pixelSize);
+            const rows = Math.floor(pH / pixelSize);
+            
+            for (let row = 0; row < rows; row++) {
+                for (let col = 0; col < cols; col++) {
+                    const px = x1 + col * pixelSize;
+                    const progress = col / cols;
+                    const py = y1 + (y2 - y1) * progress + row * pixelSize;
+                    
+                    // Animated shimmer
+                    const shimmer = Math.sin((col * 0.1 + row * 0.15 + animFrame * 0.02)) * 0.3 + 0.7;
+                    const brightness = shimmer * intensity * 0.85;
+                    
+                    ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${brightness})`;
+                    ctx.fillRect(px, py, pixelSize - 1, pixelSize - 1);
+                }
+            }
+            
+            // White center
+            ctx.beginPath();
+            ctx.moveTo(x1, y1 + pH * 0.45);
+            ctx.lineTo(x2, y2 + pH * 0.45);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${0.5 * intensity})`;
+            ctx.lineWidth = pH * 0.15;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+            
+            // Spill
+            const spillH = pH * 4;
+            const spillGrad = ctx.createLinearGradient(x1, y1 + pH, x1, y1 + pH + spillH);
+            spillGrad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.15 * intensity})`);
+            spillGrad.addColorStop(0.2, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.05 * intensity})`);
+            spillGrad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.beginPath();
+            ctx.moveTo(x1 - pH, y1 + pH);
+            ctx.lineTo(x2 + pH, y2 + pH);
+            ctx.lineTo(x2 + pH * 2, y2 + pH + spillH);
+            ctx.lineTo(x1 - pH * 2, y1 + pH + spillH);
+            ctx.closePath();
+            ctx.fillStyle = spillGrad;
+            ctx.fill();
+            
+            ctx.restore();
+        }
+        
+        function drawPulseLayer(layer, intensity, x1, y1, x2, y2, pH) {
+            const color = layer.color;
+            const rgb = hexToRgb(color);
+            
+            // Pulsing intensity
+            const pulse = Math.sin(pulsePhase) * 0.25 + 0.85;
+            intensity *= pulse;
+            
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            
+            // Bloom
+            for (let pass = 0; pass < 6; pass++) {
+                ctx.shadowColor = color;
+                ctx.shadowBlur = (70 - pass * 10) * intensity;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.lineTo(x2, y2 + pH);
+                ctx.lineTo(x1, y1 + pH);
+                ctx.closePath();
+                ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.03 * intensity})`;
+                ctx.fill();
+            }
+            
+            // Core with animated "heartbeat" segments
+            ctx.shadowBlur = 0;
+            const segments = 60;
+            const segWidth = (x2 - x1) / segments;
+            
+            for (let i = 0; i < segments; i++) {
+                const sx = x1 + i * segWidth;
+                const progress = i / segments;
+                const sy = y1 + (y2 - y1) * progress;
+                
+                // Wave pattern
+                const wave = Math.sin((i * 0.3 + animFrame * 0.08)) * 0.3 + 0.7;
+                const segAlpha = wave * intensity;
+                
+                ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${segAlpha})`;
+                ctx.fillRect(sx, sy, segWidth + 0.5, pH);
+            }
+            
+            // White center
+            ctx.beginPath();
+            ctx.moveTo(x1, y1 + pH * 0.45);
+            ctx.lineTo(x2, y2 + pH * 0.45);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${0.6 * intensity})`;
+            ctx.lineWidth = pH * 0.2;
+            ctx.stroke();
+            
+            // Spill
+            const spillH = pH * 3.5;
+            const spillGrad = ctx.createLinearGradient(x1, y1 + pH, x1, y1 + pH + spillH);
+            spillGrad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.15 * intensity})`);
+            spillGrad.addColorStop(0.2, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.06 * intensity})`);
+            spillGrad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.beginPath();
+            ctx.moveTo(x1 - pH, y1 + pH);
+            ctx.lineTo(x2 + pH, y2 + pH);
+            ctx.lineTo(x2 + pH * 1.5, y2 + pH + spillH);
+            ctx.lineTo(x1 - pH * 1.5, y1 + pH + spillH);
+            ctx.closePath();
+            ctx.fillStyle = spillGrad;
+            ctx.fill();
+            
+            ctx.restore();
+        }
+        
+        function drawAchievementsLayer(layer, intensity, x1, y1, x2, y2, pH) {
+            const color = layer.color;
+            const rgb = hexToRgb(color);
+            
+            // Celebratory sparkle
+            const sparkle = Math.sin(pulsePhase * 1.5) * 0.15 + 0.9;
+            intensity *= sparkle;
+            
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            
+            // Bloom
+            for (let pass = 0; pass < 6; pass++) {
+                ctx.shadowColor = color;
+                ctx.shadowBlur = (65 - pass * 10) * intensity;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.lineTo(x2, y2 + pH);
+                ctx.lineTo(x1, y1 + pH);
+                ctx.closePath();
+                ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.028 * intensity})`;
+                ctx.fill();
+            }
+            
+            // Core with scrolling "stars"
+            ctx.shadowBlur = 0;
+            const coreGrad = ctx.createLinearGradient(x1, y1, x1, y1 + pH);
+            coreGrad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.8 * intensity})`);
+            coreGrad.addColorStop(0.5, `rgba(${Math.min(255, rgb.r + 50)}, ${Math.min(255, rgb.g + 50)}, ${Math.min(255, rgb.b + 50)}, ${intensity})`);
+            coreGrad.addColorStop(1, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.75 * intensity})`);
+            
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.lineTo(x2, y2 + pH);
+            ctx.lineTo(x1, y1 + pH);
+            ctx.closePath();
+            ctx.fillStyle = coreGrad;
+            ctx.fill();
+            
+            // Animated star points
+            const starCount = 12;
+            for (let i = 0; i < starCount; i++) {
+                const offset = (achievementScroll + i * (x2 - x1) / starCount) % (x2 - x1);
+                const sx = x1 + offset;
+                const progress = offset / (x2 - x1);
+                const sy = y1 + (y2 - y1) * progress + pH * 0.4;
+                
+                ctx.fillStyle = `rgba(255, 255, 255, ${0.8 * intensity})`;
+                ctx.beginPath();
+                ctx.arc(sx, sy, pH * 0.12, 0, Math.PI * 2);
+                ctx.fill();
+            }
+            
+            // White center
+            ctx.beginPath();
+            ctx.moveTo(x1, y1 + pH * 0.45);
+            ctx.lineTo(x2, y2 + pH * 0.45);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${0.65 * intensity})`;
+            ctx.lineWidth = pH * 0.2;
+            ctx.stroke();
+            
+            // Spill
+            const spillH = pH * 3.5;
+            const spillGrad = ctx.createLinearGradient(x1, y1 + pH, x1, y1 + pH + spillH);
+            spillGrad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.16 * intensity})`);
+            spillGrad.addColorStop(0.2, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.06 * intensity})`);
+            spillGrad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.beginPath();
+            ctx.moveTo(x1 - pH, y1 + pH);
+            ctx.lineTo(x2 + pH, y2 + pH);
+            ctx.lineTo(x2 + pH * 1.5, y2 + pH + spillH);
+            ctx.lineTo(x1 - pH * 1.5, y1 + pH + spillH);
+            ctx.closePath();
+            ctx.fillStyle = spillGrad;
+            ctx.fill();
+            
+            ctx.restore();
+        }
+        
+        function drawProgressLayer(layer, intensity, x1, y1, x2, y2, pH) {
+            const color = layer.color;
+            const rgb = hexToRgb(color);
+            
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            
+            // Bloom
+            for (let pass = 0; pass < 6; pass++) {
+                ctx.shadowColor = color;
+                ctx.shadowBlur = (70 - pass * 10) * intensity;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.lineTo(x2, y2 + pH);
+                ctx.lineTo(x1, y1 + pH);
+                ctx.closePath();
+                ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.025 * intensity})`;
+                ctx.fill();
+            }
+            
+            // Wave animation
+            ctx.shadowBlur = 0;
+            const segments = 80;
+            const segWidth = (x2 - x1) / segments;
+            
+            for (let i = 0; i < segments; i++) {
+                const sx = x1 + i * segWidth;
+                const progress = i / segments;
+                const sy = y1 + (y2 - y1) * progress;
+                
+                // Traveling wave
+                const wave = Math.sin((i * 0.15 - animFrame * 0.04)) * 0.5 + 0.5;
+                const alpha = (0.5 + wave * 0.5) * intensity;
+                
+                ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+                ctx.fillRect(sx, sy, segWidth + 0.5, pH);
+            }
+            
+            // White center
+            ctx.beginPath();
+            ctx.moveTo(x1, y1 + pH * 0.45);
+            ctx.lineTo(x2, y2 + pH * 0.45);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${0.55 * intensity})`;
+            ctx.lineWidth = pH * 0.18;
+            ctx.stroke();
+            
+            // Spill
+            const spillH = pH * 3.5;
+            const spillGrad = ctx.createLinearGradient(x1, y1 + pH, x1, y1 + pH + spillH);
+            spillGrad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.14 * intensity})`);
+            spillGrad.addColorStop(0.2, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.05 * intensity})`);
+            spillGrad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.beginPath();
+            ctx.moveTo(x1 - pH, y1 + pH);
+            ctx.lineTo(x2 + pH, y2 + pH);
+            ctx.lineTo(x2 + pH * 1.5, y2 + pH + spillH);
+            ctx.lineTo(x1 - pH * 1.5, y1 + pH + spillH);
+            ctx.closePath();
+            ctx.fillStyle = spillGrad;
+            ctx.fill();
+            
+            ctx.restore();
+        }
+        
+        function hexToRgb(hex) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return { r, g, b };
+        }
+        
+        // UI Controls
+        const panel = document.getElementById('layerPanel');
+        const togglePanelBtn = document.getElementById('togglePanel');
+        const toggleBeforeBtn = document.getElementById('toggleBefore');
+        const toggleAfterBtn = document.getElementById('toggleAfter');
+        const exportBtn = document.getElementById('exportBtn');
+        const exportModal = document.getElementById('exportModal');
+        const closeExportBtn = document.getElementById('closeExport');
+        const downloadExportBtn = document.getElementById('downloadExport');
+        const namesScroll = document.getElementById('namesScroll');
+        const modeName = document.getElementById('modeName');
+        
+        togglePanelBtn.onclick = () => {
+            panel.classList.toggle('visible');
+            togglePanelBtn.classList.toggle('active');
+        };
+        
+        toggleBeforeBtn.onclick = () => {
+            showBefore = true;
+            toggleBeforeBtn.classList.add('active');
+            toggleAfterBtn.classList.remove('active');
+            modeName.textContent = 'Before (No LEDs)';
+            modeName.style.color = '#888';
+        };
+        
+        toggleAfterBtn.onclick = () => {
+            showBefore = false;
+            toggleAfterBtn.classList.add('active');
+            toggleBeforeBtn.classList.remove('active');
+            modeName.textContent = 'All Layers Active';
+            modeName.style.color = '#22c55e';
+        };
+        
+        // Layer selection
+        document.querySelectorAll('.layer-card').forEach(card => {
+            card.onclick = () => {
+                document.querySelectorAll('.layer-card').forEach(c => c.classList.remove('active'));
+                card.classList.add('active');
+                highlightedLayer = parseInt(card.dataset.layer);
+                
+                // Show names scroll for Layer 1
+                if (highlightedLayer === 1) {
+                    namesScroll.classList.add('visible');
+                } else {
+                    namesScroll.classList.remove('visible');
+                }
+            };
+        });
+        
+        // Populate names track
+        const namesTrack = document.getElementById('namesTrack');
+        const allNames = [...sampleNames, ...sampleNames, ...sampleNames, ...sampleNames];
+        namesTrack.innerHTML = allNames.map(n => `<span>${n}</span>`).join('');
+        
+        // Live count animation
+        setInterval(() => {
+            document.getElementById('liveCount').textContent = (4700 + Math.floor(Math.random() * 100)).toLocaleString();
+            document.getElementById('completedCount').textContent = (840 + Math.floor(Math.random() * 20)).toLocaleString();
+            document.getElementById('streakCount').textContent = (20 + Math.floor(Math.random() * 8)).toLocaleString();
+        }, 3000);
+        
+        // Export functionality
+        exportBtn.onclick = () => {
+            exportModal.classList.add('visible');
+            renderExportPreview();
+        };
+        
+        closeExportBtn.onclick = () => {
+            exportModal.classList.remove('visible');
+        };
+        
+        function renderExportPreview() {
+            const exportCanvas = document.getElementById('exportCanvas');
+            const previewCtx = exportCanvas.getContext('2d');
+            const scale = 400 / canvas.width;
+            exportCanvas.width = 400;
+            exportCanvas.height = canvas.height * scale;
+            previewCtx.drawImage(canvas, 0, 0, exportCanvas.width, exportCanvas.height);
+        }
+        
+        downloadExportBtn.onclick = () => {
+            // Create high-res export
+            const exportCanvas = document.createElement('canvas');
+            exportCanvas.width = 3840;
+            exportCanvas.height = Math.round(3840 * (canvas.height / canvas.width));
+            const expCtx = exportCanvas.getContext('2d');
+            
+            // Scale up
+            const scale = exportCanvas.width / canvas.width;
+            expCtx.scale(scale, scale);
+            
+            // Draw current frame
+            expCtx.drawImage(canvas, 0, 0);
+            
+            // Download
+            const link = document.createElement('a');
+            link.download = `ziggurat-7layers-${showBefore ? 'before' : 'after'}-4k.png`;
+            link.href = exportCanvas.toDataURL('image/png');
+            link.click();
+            
+            exportModal.classList.remove('visible');
+        };
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', e => {
+            if (e.code === 'Space') {
+                showBefore = !showBefore;
+                toggleBeforeBtn.classList.toggle('active', showBefore);
+                toggleAfterBtn.classList.toggle('active', !showBefore);
+                modeName.textContent = showBefore ? 'Before (No LEDs)' : 'All Layers Active';
+                modeName.style.color = showBefore ? '#888' : '#22c55e';
+            }
+            if (e.code === 'KeyL') {
+                panel.classList.toggle('visible');
+                togglePanelBtn.classList.toggle('active');
+            }
+            if (e.code === 'KeyE') {
+                exportModal.classList.add('visible');
+                renderExportPreview();
+            }
+            if (e.code === 'Escape') {
+                exportModal.classList.remove('visible');
+            }
+            // Number keys to select layers
+            if (e.key >= '1' && e.key <= '7') {
+                const layerNum = parseInt(e.key);
+                highlightedLayer = layerNum;
+                document.querySelectorAll('.layer-card').forEach(c => {
+                    c.classList.toggle('active', parseInt(c.dataset.layer) === layerNum);
+                });
+                namesScroll.classList.toggle('visible', layerNum === 1);
+            }
+        });
+        
+        // Show panel on load
+        setTimeout(() => {
+            panel.classList.add('visible');
+            togglePanelBtn.classList.add('active');
+        }, 800);
+    </script>
+</body>
+</html>

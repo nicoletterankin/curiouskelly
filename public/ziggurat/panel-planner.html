@@ -1,0 +1,732 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ziggurat LED Panel Planner</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #1a1a1a;
+            color: #fff;
+            overflow: hidden;
+        }
+        
+        .app {
+            display: flex;
+            height: 100vh;
+        }
+        
+        /* 3D Viewport */
+        .viewport {
+            flex: 1;
+            position: relative;
+            background: #111;
+            cursor: grab;
+        }
+        
+        .viewport:active { cursor: grabbing; }
+        
+        #canvas3d {
+            width: 100%;
+            height: 100%;
+        }
+        
+        /* Compass */
+        .compass {
+            position: absolute;
+            top: 20px;
+            left: 20px;
+            width: 80px;
+            height: 80px;
+            background: rgba(0,0,0,0.7);
+            border-radius: 50%;
+            border: 2px solid #333;
+        }
+        
+        .compass-arrow {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 4px;
+            height: 30px;
+            background: linear-gradient(to top, #666 0%, #ff6b35 50%, #ff6b35 100%);
+            transform-origin: center bottom;
+            transform: translate(-50%, -100%);
+            border-radius: 2px;
+        }
+        
+        .compass-label {
+            position: absolute;
+            font-size: 10px;
+            font-weight: bold;
+            color: #888;
+        }
+        
+        .compass-n { top: 4px; left: 50%; transform: translateX(-50%); color: #ff6b35; }
+        .compass-s { bottom: 4px; left: 50%; transform: translateX(-50%); }
+        .compass-e { right: 4px; top: 50%; transform: translateY(-50%); }
+        .compass-w { left: 4px; top: 50%; transform: translateY(-50%); }
+        
+        /* View Controls */
+        .view-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 20px;
+            display: flex;
+            gap: 8px;
+        }
+        
+        .view-btn {
+            padding: 10px 16px;
+            background: rgba(0,0,0,0.8);
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #888;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .view-btn:hover, .view-btn.active {
+            background: #ff6b35;
+            border-color: #ff6b35;
+            color: #fff;
+        }
+        
+        /* Info Display */
+        .info-display {
+            position: absolute;
+            top: 20px;
+            right: 320px;
+            background: rgba(0,0,0,0.8);
+            padding: 16px;
+            border-radius: 8px;
+            font-size: 12px;
+            min-width: 200px;
+        }
+        
+        .info-display h3 {
+            color: #ff6b35;
+            margin-bottom: 12px;
+            font-size: 14px;
+        }
+        
+        .info-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 4px 0;
+            border-bottom: 1px solid #333;
+        }
+        
+        .info-value {
+            color: #ff6b35;
+            font-weight: bold;
+        }
+        
+        /* Sidebar Panel */
+        .sidebar {
+            width: 300px;
+            background: #0a0a0a;
+            border-left: 1px solid #222;
+            padding: 20px;
+            overflow-y: auto;
+        }
+        
+        .sidebar h2 {
+            font-size: 14px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 16px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #222;
+        }
+        
+        /* Terrace Controls */
+        .terrace-item {
+            background: #151515;
+            border: 1px solid #222;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .terrace-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 8px;
+        }
+        
+        .terrace-name {
+            font-weight: 600;
+            font-size: 14px;
+        }
+        
+        .terrace-sf {
+            font-size: 11px;
+            color: #666;
+        }
+        
+        .terrace-dims {
+            font-size: 11px;
+            color: #888;
+            margin-bottom: 10px;
+        }
+        
+        /* Side toggles */
+        .side-toggles {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 6px;
+        }
+        
+        .side-toggle {
+            padding: 8px 4px;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 4px;
+            color: #666;
+            font-size: 10px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .side-toggle:hover {
+            border-color: #ff6b35;
+        }
+        
+        .side-toggle.active {
+            background: #ff6b35;
+            border-color: #ff6b35;
+            color: #fff;
+        }
+        
+        .side-toggle .linear-ft {
+            display: block;
+            font-size: 9px;
+            opacity: 0.7;
+            margin-top: 2px;
+        }
+        
+        /* Summary */
+        .summary {
+            background: #151515;
+            border: 1px solid #ff6b35;
+            border-radius: 8px;
+            padding: 16px;
+            margin-top: 20px;
+        }
+        
+        .summary h3 {
+            color: #ff6b35;
+            font-size: 12px;
+            margin-bottom: 12px;
+        }
+        
+        .summary-row {
+            display: flex;
+            justify-content: space-between;
+            padding: 6px 0;
+            font-size: 12px;
+        }
+        
+        .summary-row.total {
+            border-top: 1px solid #333;
+            margin-top: 8px;
+            padding-top: 12px;
+            font-weight: bold;
+        }
+        
+        .summary-value {
+            color: #ff6b35;
+        }
+        
+        /* Panel specs */
+        .panel-specs {
+            margin-top: 20px;
+        }
+        
+        .spec-input {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+        
+        .spec-input label {
+            font-size: 11px;
+            color: #888;
+            width: 100px;
+        }
+        
+        .spec-input input {
+            flex: 1;
+            padding: 8px;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 4px;
+            color: #fff;
+            font-size: 12px;
+        }
+        
+        .spec-input input:focus {
+            outline: none;
+            border-color: #ff6b35;
+        }
+        
+        .spec-input span {
+            font-size: 11px;
+            color: #666;
+            width: 30px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="viewport">
+            <canvas id="canvas3d"></canvas>
+            
+            <div class="compass">
+                <div class="compass-arrow" id="compassArrow"></div>
+                <span class="compass-label compass-n">N</span>
+                <span class="compass-label compass-s">S</span>
+                <span class="compass-label compass-e">E</span>
+                <span class="compass-label compass-w">W</span>
+            </div>
+            
+            <div class="view-controls">
+                <button class="view-btn" onclick="setView('north')">North</button>
+                <button class="view-btn" onclick="setView('south')">South</button>
+                <button class="view-btn" onclick="setView('east')">East</button>
+                <button class="view-btn" onclick="setView('west')">West</button>
+                <button class="view-btn" onclick="setView('aerial')">Aerial</button>
+                <button class="view-btn active" onclick="setView('quarter')">3/4 View</button>
+            </div>
+            
+            <div class="info-display">
+                <h3>Current View: <span id="viewName">3/4 View</span></h3>
+                <div class="info-row">
+                    <span>Visible Panels</span>
+                    <span class="info-value" id="visiblePanels">0</span>
+                </div>
+                <div class="info-row">
+                    <span>Linear Feet</span>
+                    <span class="info-value" id="visibleLinear">0 ft</span>
+                </div>
+                <div class="info-row">
+                    <span>Panel Area</span>
+                    <span class="info-value" id="visibleArea">0 SF</span>
+                </div>
+            </div>
+        </div>
+        
+        <aside class="sidebar">
+            <h2>Terrace Panels</h2>
+            
+            <div id="terraceControls"></div>
+            
+            <div class="summary">
+                <h3>SELECTED TOTALS</h3>
+                <div class="summary-row">
+                    <span>Linear Feet</span>
+                    <span class="summary-value" id="totalLinear">0 ft</span>
+                </div>
+                <div class="summary-row">
+                    <span>Panel Area</span>
+                    <span class="summary-value" id="totalArea">0 SF</span>
+                </div>
+                <div class="summary-row">
+                    <span>Panel Count</span>
+                    <span class="summary-value" id="totalPanels">0</span>
+                </div>
+                <div class="summary-row total">
+                    <span>Est. LED Pixels</span>
+                    <span class="summary-value" id="totalPixels">0</span>
+                </div>
+            </div>
+            
+            <div class="panel-specs">
+                <h2>Panel Specifications</h2>
+                <div class="spec-input">
+                    <label>Panel Height</label>
+                    <input type="number" id="panelHeight" value="4" min="1" max="10" onchange="recalculate()">
+                    <span>ft</span>
+                </div>
+                <div class="spec-input">
+                    <label>Pixel Pitch</label>
+                    <input type="number" id="pixelPitch" value="16" min="4" max="50" onchange="recalculate()">
+                    <span>mm</span>
+                </div>
+            </div>
+        </aside>
+    </div>
+    
+    <script>
+        // Building data from reference document
+        // Dimensions are approximate based on floor SF and aspect ratios
+        const terraces = [
+            {
+                level: 2,
+                name: "F2 Terrace",
+                desc: "Roof of F1 (largest)",
+                width: 900,   // feet (east-west)
+                depth: 280,   // feet (north-south)
+                height: 0,    // relative height in visualization
+                sf: 126000
+            },
+            {
+                level: 3,
+                name: "F3 Terrace", 
+                desc: "Roof of F2",
+                width: 780,
+                depth: 223,
+                height: 50,
+                sf: 78100
+            },
+            {
+                level: 4,
+                name: "F4 Terrace",
+                desc: "Roof of F3 (Lobby level roof)",
+                width: 600,
+                depth: 200,
+                height: 100,
+                sf: 11500
+            },
+            {
+                level: 5,
+                name: "F5 Terrace",
+                desc: "Roof of F4",
+                width: 500,
+                depth: 140,
+                height: 150,
+                sf: 9600
+            },
+            {
+                level: 6,
+                name: "F6 Terrace",
+                desc: "Roof of F5 (top visible)",
+                width: 400,
+                depth: 100,
+                height: 200,
+                sf: 12600
+            }
+        ];
+        
+        // Track which sides are selected for each terrace
+        const selections = {};
+        terraces.forEach(t => {
+            selections[t.level] = { north: true, south: true, east: true, west: true };
+        });
+        
+        // Canvas setup
+        const canvas = document.getElementById('canvas3d');
+        const ctx = canvas.getContext('2d');
+        
+        let viewAngle = { x: -20, y: -30 }; // degrees
+        let isDragging = false;
+        let lastMouse = { x: 0, y: 0 };
+        
+        function resize() {
+            canvas.width = canvas.offsetWidth * window.devicePixelRatio;
+            canvas.height = canvas.offsetHeight * window.devicePixelRatio;
+            ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
+            render();
+        }
+        
+        // 3D projection
+        function project(x, y, z) {
+            const scale = 0.4;
+            const radX = viewAngle.x * Math.PI / 180;
+            const radY = viewAngle.y * Math.PI / 180;
+            
+            // Rotate around Y axis
+            const x1 = x * Math.cos(radY) - z * Math.sin(radY);
+            const z1 = x * Math.sin(radY) + z * Math.cos(radY);
+            
+            // Rotate around X axis
+            const y1 = y * Math.cos(radX) - z1 * Math.sin(radX);
+            const z2 = y * Math.sin(radX) + z1 * Math.cos(radX);
+            
+            // Project to 2D
+            const centerX = canvas.offsetWidth / 2;
+            const centerY = canvas.offsetHeight / 2;
+            
+            return {
+                x: centerX + x1 * scale,
+                y: centerY - y1 * scale,
+                z: z2
+            };
+        }
+        
+        function render() {
+            ctx.clearRect(0, 0, canvas.offsetWidth, canvas.offsetHeight);
+            
+            // Sort terraces by depth for painter's algorithm
+            const sortedTerraces = [...terraces].sort((a, b) => {
+                const pa = project(0, a.height, 0);
+                const pb = project(0, b.height, 0);
+                return pa.z - pb.z;
+            });
+            
+            // Draw each terrace
+            sortedTerraces.forEach(terrace => {
+                drawTerrace(terrace);
+            });
+            
+            // Update compass
+            document.getElementById('compassArrow').style.transform = 
+                `translate(-50%, -100%) rotate(${-viewAngle.y}deg)`;
+            
+            updateVisibleInfo();
+        }
+        
+        function drawTerrace(terrace) {
+            const hw = terrace.width / 2;
+            const hd = terrace.depth / 2;
+            const h = terrace.height;
+            const floorH = 40; // floor thickness
+            
+            // Floor corners
+            const corners = [
+                project(-hw, h, -hd),  // 0: back-left
+                project(hw, h, -hd),   // 1: back-right
+                project(hw, h, hd),    // 2: front-right
+                project(-hw, h, hd),   // 3: front-left
+            ];
+            
+            // Parapet corners (top of parapet wall)
+            const parapetH = 4 * 12; // 4 feet in inches... wait, we're using feet
+            const pH = 8; // parapet height in our scale
+            const parapetCorners = [
+                project(-hw, h + pH, -hd),
+                project(hw, h + pH, -hd),
+                project(hw, h + pH, hd),
+                project(-hw, h + pH, hd),
+            ];
+            
+            const sel = selections[terrace.level];
+            
+            // Draw floor top
+            ctx.beginPath();
+            ctx.moveTo(corners[0].x, corners[0].y);
+            corners.forEach(c => ctx.lineTo(c.x, c.y));
+            ctx.closePath();
+            ctx.fillStyle = '#8a7352';
+            ctx.fill();
+            ctx.strokeStyle = '#5a4a32';
+            ctx.stroke();
+            
+            // Draw sides based on view angle (only draw visible sides)
+            const sides = [
+                { name: 'north', points: [0, 1], corners: corners, parapets: parapetCorners },
+                { name: 'south', points: [2, 3], corners: corners, parapets: parapetCorners },
+                { name: 'east', points: [1, 2], corners: corners, parapets: parapetCorners },
+                { name: 'west', points: [3, 0], corners: corners, parapets: parapetCorners },
+            ];
+            
+            sides.forEach(side => {
+                const i1 = side.points[0];
+                const i2 = side.points[1];
+                
+                // Check if this side faces the camera
+                const midX = (corners[i1].x + corners[i2].x) / 2;
+                const midY = (corners[i1].y + corners[i2].y) / 2;
+                const centerX = canvas.offsetWidth / 2;
+                const centerY = canvas.offsetHeight / 2;
+                
+                // Draw parapet wall
+                ctx.beginPath();
+                ctx.moveTo(corners[i1].x, corners[i1].y);
+                ctx.lineTo(corners[i2].x, corners[i2].y);
+                ctx.lineTo(parapetCorners[i2].x, parapetCorners[i2].y);
+                ctx.lineTo(parapetCorners[i1].x, parapetCorners[i1].y);
+                ctx.closePath();
+                
+                if (sel[side.name]) {
+                    // LED panel active
+                    ctx.fillStyle = '#ff6b35';
+                    ctx.fill();
+                    
+                    // Glow effect
+                    ctx.shadowColor = '#ff6b35';
+                    ctx.shadowBlur = 20;
+                    ctx.fill();
+                    ctx.shadowBlur = 0;
+                } else {
+                    ctx.fillStyle = '#6a5a42';
+                    ctx.fill();
+                }
+                
+                ctx.strokeStyle = '#3a3020';
+                ctx.stroke();
+            });
+            
+            // Label
+            const labelPos = project(0, h + 20, 0);
+            ctx.fillStyle = '#fff';
+            ctx.font = '11px system-ui';
+            ctx.textAlign = 'center';
+            ctx.fillText(`F${terrace.level}`, labelPos.x, labelPos.y);
+        }
+        
+        // Mouse controls
+        canvas.addEventListener('mousedown', (e) => {
+            isDragging = true;
+            lastMouse = { x: e.clientX, y: e.clientY };
+            canvas.style.cursor = 'grabbing';
+        });
+        
+        canvas.addEventListener('mousemove', (e) => {
+            if (!isDragging) return;
+            
+            const dx = e.clientX - lastMouse.x;
+            const dy = e.clientY - lastMouse.y;
+            
+            viewAngle.y += dx * 0.5;
+            viewAngle.x += dy * 0.5;
+            viewAngle.x = Math.max(-60, Math.min(60, viewAngle.x));
+            
+            lastMouse = { x: e.clientX, y: e.clientY };
+            render();
+        });
+        
+        canvas.addEventListener('mouseup', () => {
+            isDragging = false;
+            canvas.style.cursor = 'grab';
+        });
+        
+        canvas.addEventListener('mouseleave', () => {
+            isDragging = false;
+            canvas.style.cursor = 'grab';
+        });
+        
+        // View presets
+        function setView(view) {
+            document.querySelectorAll('.view-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            document.getElementById('viewName').textContent = event.target.textContent;
+            
+            switch(view) {
+                case 'north': viewAngle = { x: 0, y: 0 }; break;
+                case 'south': viewAngle = { x: 0, y: 180 }; break;
+                case 'east': viewAngle = { x: 0, y: -90 }; break;
+                case 'west': viewAngle = { x: 0, y: 90 }; break;
+                case 'aerial': viewAngle = { x: -80, y: -30 }; break;
+                case 'quarter': viewAngle = { x: -20, y: -30 }; break;
+            }
+            render();
+        }
+        
+        // Build terrace controls
+        function buildControls() {
+            const container = document.getElementById('terraceControls');
+            container.innerHTML = terraces.map(t => {
+                const sel = selections[t.level];
+                return `
+                    <div class="terrace-item">
+                        <div class="terrace-header">
+                            <span class="terrace-name">${t.name}</span>
+                            <span class="terrace-sf">${t.sf.toLocaleString()} SF</span>
+                        </div>
+                        <div class="terrace-dims">${t.width}' × ${t.depth}' — ${t.desc}</div>
+                        <div class="side-toggles">
+                            <div class="side-toggle ${sel.north ? 'active' : ''}" onclick="toggleSide(${t.level}, 'north')">
+                                N
+                                <span class="linear-ft">${t.width}'</span>
+                            </div>
+                            <div class="side-toggle ${sel.south ? 'active' : ''}" onclick="toggleSide(${t.level}, 'south')">
+                                S
+                                <span class="linear-ft">${t.width}'</span>
+                            </div>
+                            <div class="side-toggle ${sel.east ? 'active' : ''}" onclick="toggleSide(${t.level}, 'east')">
+                                E
+                                <span class="linear-ft">${t.depth}'</span>
+                            </div>
+                            <div class="side-toggle ${sel.west ? 'active' : ''}" onclick="toggleSide(${t.level}, 'west')">
+                                W
+                                <span class="linear-ft">${t.depth}'</span>
+                            </div>
+                        </div>
+                    </div>
+                `;
+            }).join('');
+        }
+        
+        function toggleSide(level, side) {
+            selections[level][side] = !selections[level][side];
+            buildControls();
+            recalculate();
+            render();
+        }
+        
+        function recalculate() {
+            const panelHeight = parseFloat(document.getElementById('panelHeight').value) || 4;
+            const pixelPitch = parseFloat(document.getElementById('pixelPitch').value) || 16;
+            
+            let totalLinear = 0;
+            let totalArea = 0;
+            let panelCount = 0;
+            
+            terraces.forEach(t => {
+                const sel = selections[t.level];
+                if (sel.north) { totalLinear += t.width; panelCount++; }
+                if (sel.south) { totalLinear += t.width; panelCount++; }
+                if (sel.east) { totalLinear += t.depth; panelCount++; }
+                if (sel.west) { totalLinear += t.depth; panelCount++; }
+            });
+            
+            totalArea = totalLinear * panelHeight;
+            
+            // Pixels: (linear feet * 12 inches * 25.4mm) / pixel pitch * (height in mm / pixel pitch)
+            const linearMM = totalLinear * 12 * 25.4;
+            const heightMM = panelHeight * 12 * 25.4;
+            const totalPixels = Math.round((linearMM / pixelPitch) * (heightMM / pixelPitch));
+            
+            document.getElementById('totalLinear').textContent = totalLinear.toLocaleString() + ' ft';
+            document.getElementById('totalArea').textContent = totalArea.toLocaleString() + ' SF';
+            document.getElementById('totalPanels').textContent = panelCount;
+            document.getElementById('totalPixels').textContent = totalPixels.toLocaleString();
+        }
+        
+        function updateVisibleInfo() {
+            // Calculate what's visible from current angle
+            // Simplified: assume viewer sees 2 sides based on Y angle
+            const y = ((viewAngle.y % 360) + 360) % 360;
+            
+            let visibleSides = [];
+            if (y >= 270 || y < 90) visibleSides.push('north');
+            if (y >= 90 && y < 270) visibleSides.push('south');
+            if (y >= 0 && y < 180) visibleSides.push('east');
+            if (y >= 180 && y < 360) visibleSides.push('west');
+            
+            const panelHeight = parseFloat(document.getElementById('panelHeight').value) || 4;
+            let visibleLinear = 0;
+            let visiblePanels = 0;
+            
+            terraces.forEach(t => {
+                const sel = selections[t.level];
+                visibleSides.forEach(side => {
+                    if (sel[side]) {
+                        visiblePanels++;
+                        visibleLinear += (side === 'north' || side === 'south') ? t.width : t.depth;
+                    }
+                });
+            });
+            
+            document.getElementById('visiblePanels').textContent = visiblePanels;
+            document.getElementById('visibleLinear').textContent = visibleLinear.toLocaleString() + ' ft';
+            document.getElementById('visibleArea').textContent = (visibleLinear * panelHeight).toLocaleString() + ' SF';
+        }
+        
+        // Initialize
+        window.addEventListener('resize', resize);
+        resize();
+        buildControls();
+        recalculate();
+    </script>
+</body>
+</html>

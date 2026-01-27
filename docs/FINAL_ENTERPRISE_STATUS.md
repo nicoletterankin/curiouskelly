@@ -215,3 +215,6 @@ curl https://curiouskelly.com/api/health-check
 **No wishful thinking. Hard-coded verification only.**
 
 
+
+
+

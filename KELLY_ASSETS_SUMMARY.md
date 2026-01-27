@@ -149,3 +149,6 @@ See `kelly_assets_manifest.json` for the complete catalog of all Kelly images wi
 - **Phase Images**: 36
 - **Other**: Hero images, chair images, infographics, social media assets
 
+
+
+

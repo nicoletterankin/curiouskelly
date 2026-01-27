@@ -1,0 +1,818 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Chet Holifield Federal Building - Historical Visual Gallery</title>
+    <style>
+        :root {
+            --primary: #1a1a2e;
+            --secondary: #16213e;
+            --accent: #e94560;
+            --text: #eaeaea;
+            --text-muted: #a0a0a0;
+            --card-bg: #0f0f23;
+            --border: #333;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', system-ui, -apple-system, sans-serif;
+            background: linear-gradient(135deg, var(--primary) 0%, var(--secondary) 100%);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        .hero {
+            background: linear-gradient(rgba(0,0,0,0.7), rgba(0,0,0,0.7)),
+                        url('https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Chet_Holifield_Federal_Building_2020.jpg/1920px-Chet_Holifield_Federal_Building_2020.jpg');
+            background-size: cover;
+            background-position: center;
+            background-attachment: fixed;
+            padding: 100px 20px;
+            text-align: center;
+        }
+        
+        .hero h1 {
+            font-size: clamp(2rem, 5vw, 3.5rem);
+            font-weight: 700;
+            margin-bottom: 20px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.5);
+        }
+        
+        .hero .subtitle {
+            font-size: clamp(1rem, 2.5vw, 1.4rem);
+            color: var(--text-muted);
+            max-width: 800px;
+            margin: 0 auto 30px;
+        }
+        
+        .hero .tagline {
+            display: inline-block;
+            background: var(--accent);
+            color: white;
+            padding: 8px 20px;
+            border-radius: 30px;
+            font-size: 0.9rem;
+            font-weight: 600;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+        
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 40px 20px;
+        }
+        
+        .section-title {
+            font-size: 2rem;
+            margin-bottom: 10px;
+            color: var(--text);
+            border-left: 4px solid var(--accent);
+            padding-left: 15px;
+        }
+        
+        .section-subtitle {
+            color: var(--text-muted);
+            margin-bottom: 30px;
+            padding-left: 19px;
+        }
+        
+        .info-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            gap: 25px;
+            margin-bottom: 60px;
+        }
+        
+        .info-card {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 25px;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .info-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 30px rgba(0,0,0,0.3);
+        }
+        
+        .info-card h3 {
+            color: var(--accent);
+            margin-bottom: 10px;
+            font-size: 1.1rem;
+        }
+        
+        .info-card p {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+        }
+        
+        .timeline {
+            position: relative;
+            padding-left: 30px;
+            margin-bottom: 60px;
+        }
+        
+        .timeline::before {
+            content: '';
+            position: absolute;
+            left: 0;
+            top: 0;
+            bottom: 0;
+            width: 3px;
+            background: linear-gradient(to bottom, var(--accent), transparent);
+        }
+        
+        .timeline-item {
+            position: relative;
+            padding-bottom: 30px;
+        }
+        
+        .timeline-item::before {
+            content: '';
+            position: absolute;
+            left: -34px;
+            top: 5px;
+            width: 12px;
+            height: 12px;
+            background: var(--accent);
+            border-radius: 50%;
+            border: 3px solid var(--primary);
+        }
+        
+        .timeline-year {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        
+        .timeline-desc {
+            color: var(--text-muted);
+        }
+        
+        .gallery-section {
+            margin-bottom: 60px;
+        }
+        
+        .gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+        }
+        
+        .gallery-item {
+            background: var(--card-bg);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            overflow: hidden;
+            transition: transform 0.3s, box-shadow 0.3s;
+        }
+        
+        .gallery-item:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 15px 40px rgba(0,0,0,0.4);
+        }
+        
+        .gallery-item img {
+            width: 100%;
+            height: 250px;
+            object-fit: cover;
+            display: block;
+            background: #1a1a1a;
+        }
+        
+        .gallery-item .info {
+            padding: 20px;
+        }
+        
+        .gallery-item h4 {
+            font-size: 1rem;
+            margin-bottom: 8px;
+            color: var(--text);
+        }
+        
+        .gallery-item .date {
+            font-size: 0.85rem;
+            color: var(--accent);
+            margin-bottom: 8px;
+        }
+        
+        .gallery-item .description {
+            font-size: 0.9rem;
+            color: var(--text-muted);
+            margin-bottom: 12px;
+        }
+        
+        .gallery-item .source {
+            font-size: 0.8rem;
+            padding: 6px 12px;
+            background: rgba(233, 69, 96, 0.1);
+            border: 1px solid var(--accent);
+            border-radius: 20px;
+            display: inline-block;
+        }
+        
+        .gallery-item .source a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        
+        .gallery-item .source a:hover {
+            text-decoration: underline;
+        }
+        
+        .films-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 40px;
+            margin-bottom: 60px;
+        }
+        
+        .films-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        
+        .film-card {
+            background: rgba(255,255,255,0.05);
+            border-radius: 8px;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        .film-card .year {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--accent);
+        }
+        
+        .film-card .title {
+            font-size: 1.1rem;
+            margin-top: 5px;
+        }
+        
+        .film-card .role {
+            font-size: 0.85rem;
+            color: var(--text-muted);
+            margin-top: 5px;
+        }
+        
+        .sources-section {
+            background: var(--card-bg);
+            border-radius: 12px;
+            padding: 40px;
+            margin-bottom: 40px;
+        }
+        
+        .sources-list {
+            list-style: none;
+        }
+        
+        .sources-list li {
+            padding: 15px 0;
+            border-bottom: 1px solid var(--border);
+        }
+        
+        .sources-list li:last-child {
+            border-bottom: none;
+        }
+        
+        .sources-list a {
+            color: var(--accent);
+            text-decoration: none;
+            font-weight: 500;
+        }
+        
+        .sources-list a:hover {
+            text-decoration: underline;
+        }
+        
+        .sources-list .source-desc {
+            color: var(--text-muted);
+            font-size: 0.9rem;
+            margin-top: 5px;
+        }
+        
+        footer {
+            text-align: center;
+            padding: 40px 20px;
+            color: var(--text-muted);
+            font-size: 0.9rem;
+        }
+        
+        footer a {
+            color: var(--accent);
+            text-decoration: none;
+        }
+        
+        @media (max-width: 768px) {
+            .gallery-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .hero {
+                padding: 60px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header class="hero">
+        <h1>The Chet Holifield Federal Building</h1>
+        <p class="subtitle">A Historical Visual Record of California's Iconic Ziggurat — From Construction (1968-1971) to Present Day</p>
+        <span class="tagline">Laguna Niguel, California</span>
+    </header>
+
+    <main class="container">
+        <!-- Building Information -->
+        <section>
+            <h2 class="section-title">Building Overview</h2>
+            <p class="section-subtitle">One of America's most distinctive federal buildings, designed by William L. Pereira & Associates</p>
+            
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>Architect</h3>
+                    <p>William L. Pereira & Associates — known for San Francisco's Transamerica Pyramid and LAX Theme Building</p>
+                </div>
+                <div class="info-card">
+                    <h3>Construction</h3>
+                    <p>1968–1971 — Originally built for Rockwell International's Autonetics headquarters</p>
+                </div>
+                <div class="info-card">
+                    <h3>Size</h3>
+                    <p>Over 1,000,000 sq ft on 92 acres — with 6,200 parking spaces radiating diagonally</p>
+                </div>
+                <div class="info-card">
+                    <h3>Style</h3>
+                    <p>Late Modern / Brutalist — Seven-tiered stepped pyramid resembling ancient Mesopotamian ziggurats</p>
+                </div>
+                <div class="info-card">
+                    <h3>Materials</h3>
+                    <p>Angled pre-cast concrete panels with reticulation (textured curvilinear finish)</p>
+                </div>
+                <div class="info-card">
+                    <h3>Location</h3>
+                    <p>24000 Avila Road, Laguna Niguel, CA 92677 — 4 miles from Pacific coastline</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Timeline -->
+        <section>
+            <h2 class="section-title">Historical Timeline</h2>
+            <p class="section-subtitle">Key moments in the building's history</p>
+            
+            <div class="timeline">
+                <div class="timeline-item">
+                    <div class="timeline-year">1968</div>
+                    <div class="timeline-desc">Construction begins for North American Rockwell's Autonetics division headquarters</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">1971</div>
+                    <div class="timeline-desc">Construction completed — Rockwell never occupies after defense contract falls through</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">1974</div>
+                    <div class="timeline-desc">GSA assumes ownership — traded for three surplus government facilities</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">1978</div>
+                    <div class="timeline-desc">Rededicated as Chet Holifield Federal Building (honoring CA-19 Congressman)</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">2003</div>
+                    <div class="timeline-desc">Energy-efficient roofing upgrade saves $650,000/year in utility costs</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">2020</div>
+                    <div class="timeline-desc">GSA begins planning to transfer building out of federal ownership</div>
+                </div>
+                <div class="timeline-item">
+                    <div class="timeline-year">2024-2025</div>
+                    <div class="timeline-desc">Property auctioned — winning bid of $177 million, sale contested</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Library of Congress Gallery -->
+        <section class="gallery-section">
+            <h2 class="section-title">Library of Congress Collection</h2>
+            <p class="section-subtitle">Carol M. Highsmith Archive — 9 photographs from July 3, 2006 (GSA Assignment)</p>
+            
+            <div class="gallery-grid">
+                <div class="gallery-item">
+                    <img src="https://tile.loc.gov/storage-services/service/pnp/pplot/13800/13819/01700_150px.jpg" 
+                         alt="Full view of front facade"
+                         loading="lazy">
+                    <div class="info">
+                        <h4>Full View of Front Facade #1</h4>
+                        <div class="date">July 3, 2006</div>
+                        <p class="description">Complete front elevation showing the seven-tiered ziggurat form and landscaped plaza</p>
+                        <span class="source"><a href="https://www.loc.gov/resource/pplot.13819/?sp=1" target="_blank">Library of Congress</a></span>
+                    </div>
+                </div>
+                
+                <div class="gallery-item">
+                    <img src="https://tile.loc.gov/storage-services/service/pnp/pplot/13800/13819/01701_150px.jpg" 
+                         alt="Detail view of front facade"
+                         loading="lazy">
+                    <div class="info">
+                        <h4>Detail View of Front Facade #1</h4>
+                        <div class="date">July 3, 2006</div>
+                        <p class="description">Close-up of pre-cast concrete panels with textured reticulation finish</p>
+                        <span class="source"><a href="https://www.loc.gov/resource/pplot.13819/?sp=2" target="_blank">Library of Congress</a></span>
+                    </div>
+                </div>
+                
+                <div class="gallery-item">
+                    <img src="https://tile.loc.gov/storage-services/service/pnp/pplot/13800/13819/01702_150px.jpg" 
+                         alt="Detail view of front facade"
+                         loading="lazy">
+                    <div class="info">
+                        <h4>Detail View of Front Facade #2</h4>
+                        <div class="date">July 3, 2006</div>
+                        <p class="description">Architectural details showing stepped tiers and recessed windows</p>
+                        <span class="source"><a href="https://www.loc.gov/resource/pplot.13819/?sp=3" target="_blank">Library of Congress</a></span>
+                    </div>
+                </div>
+                
+                <div class="gallery-item">
+                    <img src="https://tile.loc.gov/storage-services/service/pnp/pplot/13800/13819/01703_150px.jpg" 
+                         alt="Full view of front facade"
+                         loading="lazy">
+                    <div class="info">
+                        <h4>Full View of Front Facade #2</h4>
+                        <div class="date">July 3, 2006</div>
+                        <p class="description">Wide-angle view emphasizing the building's massive horizontal scale</p>
+                        <span class="source"><a href="https://www.loc.gov/resource/pplot.13819/?sp=4" target="_blank">Library of Congress</a></span>
+                    </div>
+                </div>
+                
+                <div class="gallery-item">
+                    <img src="https://tile.loc.gov/storage-services/service/pnp/pplot/13800/13819/01704_150px.jpg" 
+                         alt="Detail view of front facade"
+                         loading="lazy">
+                    <div class="info">
+                        <h4>Detail View of Front Facade #3</h4>
+                        <div class="date">July 3, 2006</div>
+                        <p class="description">Angular perspective showing cascading concrete forms</p>
+                        <span class="source"><a href="https://www.loc.gov/resource/pplot.13819/?sp=5" target="_blank">Library of Congress</a></span>
+                    </div>
+                </div>
+                
+                <div class="gallery-item">
+                    <img src="https://tile.loc.gov/storage-services/service/pnp/pplot/13800/13819/01705_150px.jpg" 
+                         alt="Interior Lobby"
+                         loading="lazy">
+                    <div class="info">
+                        <h4>Interior Lobby View #1</h4>
+                        <div class="date">July 3, 2006</div>
+                        <p class="description">Original Pereira-designed lobby with wood paneling and slat ceilings</p>
+                        <span class="source"><a href="https://www.loc.gov/resource/pplot.13819/?sp=6" target="_blank">Library of Congress</a></span>
+                    </div>
+                </div>
+                
+                <div class="gallery-item">
+                    <img src="https://tile.loc.gov/storage-services/service/pnp/pplot/13800/13819/01706_150px.jpg" 
+                         alt="Interior office area"
+                         loading="lazy">
+                    <div class="info">
+                        <h4>Interior Office Area</h4>
+                        <div class="date">July 3, 2006</div>
+                        <p class="description">Office space showing Pereira's efficient 5-minute circulation design</p>
+                        <span class="source"><a href="https://www.loc.gov/resource/pplot.13819/?sp=7" target="_blank">Library of Congress</a></span>
+                    </div>
+                </div>
+                
+                <div class="gallery-item">
+                    <img src="https://tile.loc.gov/storage-services/service/pnp/pplot/13800/13819/01707_150px.jpg" 
+                         alt="Interior Lobby"
+                         loading="lazy">
+                    <div class="info">
+                        <h4>Interior Lobby View #2</h4>
+                        <div class="date">July 3, 2006</div>
+                        <p class="description">Lobby with escalators and high-speed elevator access</p>
+                        <span class="source"><a href="https://www.loc.gov/resource/pplot.13819/?sp=8" target="_blank">Library of Congress</a></span>
+                    </div>
+                </div>
+                
+                <div class="gallery-item">
+                    <img src="https://tile.loc.gov/storage-services/service/pnp/pplot/13800/13819/01708_150px.jpg" 
+                         alt="Detail view of rooftop"
+                         loading="lazy">
+                    <div class="info">
+                        <h4>Detail View of Rooftop</h4>
+                        <div class="date">July 3, 2006</div>
+                        <p class="description">Top tier with protruding vertical elements and flat roof</p>
+                        <span class="source"><a href="https://www.loc.gov/resource/pplot.13819/?sp=9" target="_blank">Library of Congress</a></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Orange County Archives Gallery -->
+        <section class="gallery-section">
+            <h2 class="section-title">Orange County Archives Collection</h2>
+            <p class="section-subtitle">Historical photographs from 1975, 1985, and 1989</p>
+            
+            <div class="gallery-grid">
+                <div class="gallery-item">
+                    <img src="https://live.staticflickr.com/3233/2882120279_b01a4ff374_h.jpg" 
+                         alt="Laguna Niguel Regional Park, circa 1975"
+                         loading="lazy">
+                    <div class="info">
+                        <h4>Building with Regional Park</h4>
+                        <div class="date">circa 1975</div>
+                        <p class="description">Aerial view showing the building shortly after federal acquisition</p>
+                        <span class="source"><a href="https://www.flickr.com/photos/ocarchives/2882120279/in/album-72177720311669392" target="_blank">OC Archives / Flickr</a></span>
+                    </div>
+                </div>
+                
+                <div class="gallery-item">
+                    <img src="https://live.staticflickr.com/65535/53233116910_585eeeee43_h.jpg" 
+                         alt="Building with Sulphur Creek Reservoir"
+                         loading="lazy">
+                    <div class="info">
+                        <h4>With Sulphur Creek Reservoir</h4>
+                        <div class="date">circa 1980s</div>
+                        <p class="description">Aerial showing building relationship to surrounding landscape</p>
+                        <span class="source"><a href="https://www.flickr.com/photos/ocarchives/53233116910/in/album-72177720311669392" target="_blank">OC Archives / Flickr</a></span>
+                    </div>
+                </div>
+                
+                <div class="gallery-item">
+                    <img src="https://live.staticflickr.com/65535/53232976214_f4f589821e_z.jpg" 
+                         alt="Building exterior May 1985"
+                         loading="lazy">
+                    <div class="info">
+                        <h4>Exterior View</h4>
+                        <div class="date">May 31, 1985</div>
+                        <p class="description">Ground-level perspective of the ziggurat form</p>
+                        <span class="source"><a href="https://www.flickr.com/photos/ocarchives/53232976214/in/album-72177720311669392" target="_blank">OC Archives / Flickr</a></span>
+                    </div>
+                </div>
+                
+                <div class="gallery-item">
+                    <img src="https://live.staticflickr.com/65535/53232976364_f151a818ef_z.jpg" 
+                         alt="Building exterior May 1985"
+                         loading="lazy">
+                    <div class="info">
+                        <h4>Facade Detail</h4>
+                        <div class="date">May 31, 1985</div>
+                        <p class="description">Detailed view of stepped concrete tiers</p>
+                        <span class="source"><a href="https://www.flickr.com/photos/ocarchives/53232976364/in/album-72177720311669392" target="_blank">OC Archives / Flickr</a></span>
+                    </div>
+                </div>
+                
+                <div class="gallery-item">
+                    <img src="https://live.staticflickr.com/65535/53232976499_63f44a2cec_z.jpg" 
+                         alt="Building exterior May 1985"
+                         loading="lazy">
+                    <div class="info">
+                        <h4>Wide Angle View</h4>
+                        <div class="date">May 31, 1985</div>
+                        <p class="description">Full building in context with parking areas</p>
+                        <span class="source"><a href="https://www.flickr.com/photos/ocarchives/53232976499/in/album-72177720311669392" target="_blank">OC Archives / Flickr</a></span>
+                    </div>
+                </div>
+                
+                <div class="gallery-item">
+                    <img src="https://live.staticflickr.com/65535/53232897243_2ff5d823bf_z.jpg" 
+                         alt="Building exterior May 1985"
+                         loading="lazy">
+                    <div class="info">
+                        <h4>Approach View</h4>
+                        <div class="date">May 31, 1985</div>
+                        <p class="description">View from approach road showing landscaping</p>
+                        <span class="source"><a href="https://www.flickr.com/photos/ocarchives/53232897243/in/album-72177720311669392" target="_blank">OC Archives / Flickr</a></span>
+                    </div>
+                </div>
+                
+                <div class="gallery-item">
+                    <img src="https://live.staticflickr.com/65535/53231730252_59c3492c29_z.jpg" 
+                         alt="Building exterior May 1985"
+                         loading="lazy">
+                    <div class="info">
+                        <h4>Side Elevation</h4>
+                        <div class="date">May 31, 1985</div>
+                        <p class="description">Side view showing building's horizontal emphasis</p>
+                        <span class="source"><a href="https://www.flickr.com/photos/ocarchives/53231730252/in/album-72177720311669392" target="_blank">OC Archives / Flickr</a></span>
+                    </div>
+                </div>
+                
+                <div class="gallery-item">
+                    <img src="https://live.staticflickr.com/65535/53233099255_178e00fa10_z.jpg" 
+                         alt="Building exterior May 1985"
+                         loading="lazy">
+                    <div class="info">
+                        <h4>Panoramic View</h4>
+                        <div class="date">May 31, 1985</div>
+                        <p class="description">Wide panorama of the federal building complex</p>
+                        <span class="source"><a href="https://www.flickr.com/photos/ocarchives/53233099255/in/album-72177720311669392" target="_blank">OC Archives / Flickr</a></span>
+                    </div>
+                </div>
+                
+                <div class="gallery-item">
+                    <img src="https://live.staticflickr.com/65535/53232976169_aa2904a408_z.jpg" 
+                         alt="Building exterior November 1989"
+                         loading="lazy">
+                    <div class="info">
+                        <h4>Late 1980s View #1</h4>
+                        <div class="date">November 17, 1989</div>
+                        <p class="description">Building after over a decade of federal use</p>
+                        <span class="source"><a href="https://www.flickr.com/photos/ocarchives/53232976169/in/album-72177720311669392" target="_blank">OC Archives / Flickr</a></span>
+                    </div>
+                </div>
+                
+                <div class="gallery-item">
+                    <img src="https://live.staticflickr.com/65535/53232598311_92dfd94421_z.jpg" 
+                         alt="Building exterior November 1989"
+                         loading="lazy">
+                    <div class="info">
+                        <h4>Late 1980s View #2</h4>
+                        <div class="date">November 17, 1989</div>
+                        <p class="description">Another perspective from the 1989 documentation</p>
+                        <span class="source"><a href="https://www.flickr.com/photos/ocarchives/53232598311/in/album-72177720311669392" target="_blank">OC Archives / Flickr</a></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Modern Photography -->
+        <section class="gallery-section">
+            <h2 class="section-title">Modern Photography (2020+)</h2>
+            <p class="section-subtitle">Recent documentation of the building's current state</p>
+            
+            <div class="gallery-grid">
+                <div class="gallery-item">
+                    <img src="https://upload.wikimedia.org/wikipedia/commons/thumb/7/7b/Chet_Holifield_Federal_Building_2020.jpg/1280px-Chet_Holifield_Federal_Building_2020.jpg" 
+                         alt="Building in 2020"
+                         loading="lazy">
+                    <div class="info">
+                        <h4>Contemporary View</h4>
+                        <div class="date">October 22, 2020</div>
+                        <p class="description">Current state of the building, taken with iPhone 11. Shows the distinctive ziggurat form still intact after 50 years.</p>
+                        <span class="source"><a href="https://commons.wikimedia.org/wiki/File:Chet_Holifield_Federal_Building_2020.jpg" target="_blank">Wikimedia Commons (CC BY-SA 4.0)</a></span>
+                    </div>
+                </div>
+                
+                <div class="gallery-item">
+                    <img src="https://origin-www.gsa.gov/system/files/holifield_new.jpg" 
+                         alt="GSA Official Photo"
+                         loading="lazy">
+                    <div class="info">
+                        <h4>GSA Official Documentation</h4>
+                        <div class="date">2020s</div>
+                        <p class="description">Official General Services Administration photograph used for historic preservation documentation</p>
+                        <span class="source"><a href="https://www.gsa.gov/real-estate/historic-preservation/explore-historic-buildings/find-a-building/chet-holifield-federal-building-laguna-niguel-ca" target="_blank">GSA.gov</a></span>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Films Section -->
+        <section class="films-section">
+            <h2 class="section-title">Hollywood Film Appearances</h2>
+            <p class="section-subtitle">The building's futuristic design made it a popular filming location</p>
+            
+            <div class="films-grid">
+                <div class="film-card">
+                    <div class="year">1975</div>
+                    <div class="title">Death Race 2000</div>
+                    <div class="role">Futuristic government facility</div>
+                </div>
+                <div class="film-card">
+                    <div class="year">1978</div>
+                    <div class="title">Coma</div>
+                    <div class="role">Featured location in medical thriller</div>
+                </div>
+                <div class="film-card">
+                    <div class="year">1983</div>
+                    <div class="title">Deal of the Century</div>
+                    <div class="role">Corporate/government building</div>
+                </div>
+                <div class="film-card">
+                    <div class="year">1995</div>
+                    <div class="title">Outbreak</div>
+                    <div class="role">CDC Headquarters exterior</div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Architectural Significance -->
+        <section class="gallery-section">
+            <h2 class="section-title">Architectural Significance</h2>
+            <p class="section-subtitle">Character-defining features as documented by GSA</p>
+            
+            <div class="info-grid">
+                <div class="info-card">
+                    <h3>Stepped Pyramidal Form</h3>
+                    <p>Seven tiers referencing ancient Mesopotamian ziggurats — one of only two modern ziggurat buildings on the National Register</p>
+                </div>
+                <div class="info-card">
+                    <h3>Below-Grade Construction</h3>
+                    <p>Majority of the 1M+ sq ft is built below grade, diminishing visual mass while maximizing usable space</p>
+                </div>
+                <div class="info-card">
+                    <h3>Pre-Cast Concrete Panels</h3>
+                    <p>Angled panels with reticulated (textured curvilinear) finish that captures light and shadow</p>
+                </div>
+                <div class="info-card">
+                    <h3>Decorative Moat</h3>
+                    <p>Smooth rock moat surrounding three sides, creating a "modern fortress" effect</p>
+                </div>
+                <div class="info-card">
+                    <h3>Efficient Circulation</h3>
+                    <p>Pereira's design allows maximum 5-minute travel between any two points in the building</p>
+                </div>
+                <div class="info-card">
+                    <h3>Symmetrical Plaza</h3>
+                    <p>Classical-inspired formal entrance with grass panels, trees, and 2,500+ original landscaping trees</p>
+                </div>
+            </div>
+        </section>
+
+        <!-- Sources -->
+        <section class="sources-section">
+            <h2 class="section-title">Image Sources & Further Reading</h2>
+            <p class="section-subtitle">All images used with attribution — click to visit original sources</p>
+            
+            <ul class="sources-list">
+                <li>
+                    <a href="https://www.loc.gov/resource/pplot.13819/?st=list" target="_blank">Library of Congress — Carol M. Highsmith Archive</a>
+                    <p class="source-desc">9 high-resolution digital photographs from 2006 (LOT 13819). No known restrictions on publication. Original digital files available.</p>
+                </li>
+                <li>
+                    <a href="https://www.flickr.com/photos/ocarchives/albums/72177720311669392/" target="_blank">Orange County Archives — Flickr Album</a>
+                    <p class="source-desc">10 historical photographs from 1975, 1985, and 1989 documenting the building during its early federal years.</p>
+                </li>
+                <li>
+                    <a href="https://commons.wikimedia.org/wiki/Category:Chet_Holifield_Federal_Building" target="_blank">Wikimedia Commons — Building Category</a>
+                    <p class="source-desc">Community-contributed photographs including 2020 contemporary documentation. Various Creative Commons licenses.</p>
+                </li>
+                <li>
+                    <a href="https://www.gsa.gov/real-estate/historic-preservation/explore-historic-buildings/find-a-building/chet-holifield-federal-building-laguna-niguel-ca" target="_blank">GSA — Historic Buildings Database</a>
+                    <p class="source-desc">Official government documentation including architectural description, history, and preservation information.</p>
+                </li>
+                <li>
+                    <a href="https://www.preserveorangecounty.org/endangered-places/2020/6/30/chet-holifield-federal-building-laguna-niguel" target="_blank">Preserve Orange County</a>
+                    <p class="source-desc">Advocacy organization with historical context, aerial photos from c.1971, and current preservation status updates.</p>
+                </li>
+                <li>
+                    <a href="https://www.preserveorangecounty.org/deeper-dive/holifield-virtual-tour" target="_blank">CyArk Virtual 3D Tour</a>
+                    <p class="source-desc">Interactive LIDAR-scanned virtual tour created as mitigation under the National Historic Preservation Act (2025).</p>
+                </li>
+                <li>
+                    <a href="https://www.gsa.gov/system/files/CHFB%20Community%20Design%20Charrette.pdf" target="_blank">GSA Design Charrette Report (PDF)</a>
+                    <p class="source-desc">2022 community design proposals for adaptive reuse of the building and site.</p>
+                </li>
+                <li>
+                    <a href="https://www.gsa.gov/cdnstatic/CHFB%20Determination%20of%20Eligibility.pdf" target="_blank">Determination of Eligibility (PDF)</a>
+                    <p class="source-desc">January 2016 GSA report establishing National Register eligibility with detailed architectural analysis.</p>
+                </li>
+            </ul>
+        </section>
+    </main>
+
+    <footer>
+        <p>Historical Visual Gallery compiled January 2026</p>
+        <p>Images remain property of their respective copyright holders. Used under fair use for educational/archival purposes.</p>
+        <p>Building Status: Listed as "Most Endangered" by <a href="https://www.preserveorangecounty.org" target="_blank">Preserve Orange County</a></p>
+    </footer>
+
+    <script>
+        // Lazy loading for older browsers
+        document.addEventListener('DOMContentLoaded', function() {
+            const images = document.querySelectorAll('img[loading="lazy"]');
+            
+            if ('loading' in HTMLImageElement.prototype) {
+                // Browser supports lazy loading
+            } else {
+                // Fallback for older browsers
+                const imageObserver = new IntersectionObserver((entries, observer) => {
+                    entries.forEach(entry => {
+                        if (entry.isIntersecting) {
+                            const img = entry.target;
+                            img.src = img.dataset.src || img.src;
+                            observer.unobserve(img);
+                        }
+                    });
+                });
+                
+                images.forEach(img => imageObserver.observe(img));
+            }
+        });
+    </script>
+</body>
+</html>

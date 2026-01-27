@@ -1,0 +1,140 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ziggurat LED Vision</title>
+    <style>
+        :root { --bg:#050507; --surface:#0c0c0f; --border:#222228; --text:#fff; --muted:#888; --primary:#8b5cf6; }
+        * { margin:0; padding:0; box-sizing:border-box; }
+        body { font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif; background:var(--bg); color:var(--text); min-height:100vh; }
+        
+        header { padding:32px 40px; text-align:center; background:linear-gradient(180deg,rgba(139,92,246,0.08)0%,transparent 100%); }
+        h1 { font-size:clamp(1.8rem,4vw,2.8rem); font-weight:200; background:linear-gradient(135deg,#8b5cf6,#06b6d4,#22c55e); -webkit-background-clip:text; -webkit-text-fill-color:transparent; }
+        .subtitle { color:var(--muted); margin-top:8px; }
+        
+        .controls { display:flex; flex-wrap:wrap; gap:16px; justify-content:center; padding:20px 40px; background:var(--surface); border-bottom:1px solid var(--border); position:sticky; top:0; z-index:100; }
+        .control-group { display:flex; flex-direction:column; gap:6px; }
+        .control-group label { font-size:10px; text-transform:uppercase; letter-spacing:0.1em; color:var(--muted); }
+        .control-group select { padding:10px 32px 10px 14px; background:var(--bg); border:1px solid var(--border); border-radius:8px; color:var(--text); font-size:14px; min-width:140px; cursor:pointer; appearance:none; background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%23888' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E"); background-repeat:no-repeat; background-position:right 10px center; }
+        .control-group select:hover { border-color:var(--primary); }
+        
+        .player { max-width:1400px; margin:40px auto; padding:0 40px; }
+        .comparison { position:relative; border-radius:20px; overflow:hidden; box-shadow:0 40px 100px rgba(0,0,0,0.6); cursor:ew-resize; user-select:none; }
+        .comparison img { width:100%; display:block; }
+        .comparison .before { position:absolute; top:0; left:0; width:100%; height:100%; object-fit:cover; }
+        .slider-line { position:absolute; top:0; width:3px; height:100%; background:#fff; box-shadow:0 0 20px rgba(255,255,255,0.3); pointer-events:none; z-index:10; }
+        .slider-handle { position:absolute; top:50%; left:50%; transform:translate(-50%,-50%); background:#fff; color:#000; padding:12px 18px; border-radius:30px; font-size:14px; font-weight:600; box-shadow:0 8px 32px rgba(0,0,0,0.4); }
+        .label { position:absolute; top:20px; padding:10px 18px; background:rgba(0,0,0,0.75); backdrop-filter:blur(10px); border-radius:10px; font-size:13px; font-weight:600; z-index:5; }
+        .label.l { left:20px; } .label.r { right:20px; }
+        
+        .info { display:flex; justify-content:space-between; align-items:center; margin-top:24px; padding:20px 24px; background:var(--surface); border-radius:14px; border:1px solid var(--border); }
+        .info h3 { font-size:1.1rem; font-weight:500; }
+        .info p { color:var(--muted); font-size:0.85rem; margin-top:4px; }
+        .btns { display:flex; gap:10px; }
+        .btn { padding:12px 20px; border-radius:10px; font-weight:500; font-size:14px; cursor:pointer; text-decoration:none; display:inline-flex; align-items:center; gap:8px; transition:all 0.2s; }
+        .btn-p { background:var(--primary); color:#fff; border:none; }
+        .btn-p:hover { background:#7c3aed; }
+        .btn-s { background:#141418; color:var(--text); border:1px solid var(--border); }
+        .btn-s:hover { border-color:var(--primary); }
+        
+        .thumbs { display:grid; grid-template-columns:repeat(auto-fill,minmax(160px,1fr)); gap:12px; margin-top:40px; }
+        .thumb { border-radius:10px; overflow:hidden; cursor:pointer; border:2px solid transparent; transition:all 0.2s; background:var(--surface); }
+        .thumb:hover { border-color:var(--primary); transform:translateY(-2px); }
+        .thumb.active { border-color:var(--primary); box-shadow:0 0 20px rgba(139,92,246,0.3); }
+        .thumb img { width:100%; aspect-ratio:16/9; object-fit:cover; }
+        .thumb-label { padding:8px; font-size:11px; color:var(--muted); text-align:center; border-top:1px solid var(--border); }
+        
+        .stats { text-align:center; padding:40px; color:var(--muted); font-size:0.85rem; }
+        
+        @media(max-width:768px) { .controls{padding:16px;gap:12px;} .player{padding:0 16px;margin:24px auto;} .info{flex-direction:column;gap:16px;text-align:center;} .btns{width:100%;justify-content:center;} }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Ziggurat LED Vision</h1>
+        <p class="subtitle">Chet Holifield Federal Building — Architectural Lighting Concept</p>
+    </header>
+    
+    <div class="controls">
+        <div class="control-group"><label>Palette</label><select id="pal"></select></div>
+        <div class="control-group"><label>Time</label><select id="time"></select></div>
+        <div class="control-group"><label>Resolution</label><select id="res"><option value="1080p">1080p</option><option value="4k">4K</option><option value="full">Full</option></select></div>
+    </div>
+    
+    <div class="player">
+        <div class="comparison" id="cmp">
+            <img id="after" src="rainbow-night-1080p.jpg" alt="After">
+            <img id="before" class="before" src="before-1080p.jpg" alt="Before">
+            <div class="slider-line" id="line"><div class="slider-handle">◀ ▶</div></div>
+            <span class="label l">BEFORE</span>
+            <span class="label r" id="lbl">RAINBOW · NIGHT</span>
+        </div>
+        
+        <div class="info">
+            <div><h3 id="title">Rainbow Night</h3><p>8-tier calibrated LED visualization</p></div>
+            <div class="btns">
+                <a class="btn btn-s" id="d1" href="rainbow-night-1080p.jpg" download>↓ 1080p</a>
+                <a class="btn btn-s" id="d4" href="rainbow-night-4k.jpg" download>↓ 4K</a>
+                <a class="btn btn-p" id="df" href="rainbow-night-full.jpg" download>↓ Full</a>
+            </div>
+        </div>
+        
+        <div class="thumbs" id="thumbs"></div>
+    </div>
+    
+    <div class="stats">
+        <p>6 Palettes × 4 Times × 4 Resolutions | Calibrated to actual building geometry</p>
+        <p>8 tiers • 62% base width • Polygon-constrained rendering</p>
+    </div>
+    
+    <script>
+        const P={rainbow:'Rainbow',cool:'Cool',warm:'Warm',white:'White',gold:'Gold',usa:'USA'};
+        const T={night:'Night','late-night':'Late Night',twilight:'Twilight',dusk:'Dusk'};
+        let pal='rainbow',time='night',res='1080p',pos=50;
+        
+        const cmp=document.getElementById('cmp'),bef=document.getElementById('before'),aft=document.getElementById('after'),
+              line=document.getElementById('line'),lbl=document.getElementById('lbl'),title=document.getElementById('title'),
+              thumbs=document.getElementById('thumbs'),palS=document.getElementById('pal'),timeS=document.getElementById('time'),resS=document.getElementById('res');
+        
+        for(const[k,v]of Object.entries(P))palS.innerHTML+=`<option value="${k}">${v}</option>`;
+        for(const[k,v]of Object.entries(T))timeS.innerHTML+=`<option value="${k}">${v}</option>`;
+        
+        function update(){
+            const v=`${pal}-${time}`,f=`${v}-${res}.jpg`;
+            aft.src=f; bef.src=`before-${res}.jpg`;
+            lbl.textContent=`${P[pal].toUpperCase()} · ${T[time].toUpperCase()}`;
+            title.textContent=`${P[pal]} ${T[time]}`;
+            document.getElementById('d1').href=`${v}-1080p.jpg`;
+            document.getElementById('d4').href=`${v}-4k.jpg`;
+            document.getElementById('df').href=`${v}-full.jpg`;
+            document.querySelectorAll('.thumb').forEach(t=>t.classList.remove('active'));
+            const a=document.querySelector(`[data-v="${v}"]`);if(a)a.classList.add('active');
+        }
+        
+        function slide(x){const r=cmp.getBoundingClientRect();pos=Math.max(0,Math.min(100,(x-r.left)/r.width*100));bef.style.clipPath=`inset(0 ${100-pos}% 0 0)`;line.style.left=`${pos}%`;line.style.transform='translateX(-50%)';}
+        slide(window.innerWidth/2);
+        
+        let drag=false;
+        cmp.addEventListener('mousedown',e=>{drag=true;slide(e.clientX);});
+        document.addEventListener('mousemove',e=>{if(drag)slide(e.clientX);});
+        document.addEventListener('mouseup',()=>drag=false);
+        cmp.addEventListener('touchstart',e=>{drag=true;slide(e.touches[0].clientX);});
+        document.addEventListener('touchmove',e=>{if(drag)slide(e.touches[0].clientX);});
+        document.addEventListener('touchend',()=>drag=false);
+        
+        palS.addEventListener('change',e=>{pal=e.target.value;update();});
+        timeS.addEventListener('change',e=>{time=e.target.value;update();});
+        resS.addEventListener('change',e=>{res=e.target.value;update();});
+        
+        for(const p of Object.keys(P)){for(const t of Object.keys(T)){
+            const v=`${p}-${t}`,th=document.createElement('div');
+            th.className='thumb';th.dataset.v=v;
+            th.innerHTML=`<img src="${v}-thumb.jpg" alt="${v}" loading="lazy"><div class="thumb-label">${P[p]}·${T[t]}</div>`;
+            th.onclick=()=>{pal=p;time=t;palS.value=p;timeS.value=t;update();cmp.scrollIntoView({behavior:'smooth',block:'center'});};
+            thumbs.appendChild(th);
+        }}
+        update();
+    </script>
+</body>
+</html>

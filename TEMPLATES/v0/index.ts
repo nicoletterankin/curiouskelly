@@ -22,6 +22,17 @@ export {
   ArchetypeBadge 
 } from './ArchetypeCard';
 export { default as LessonPreviewCard } from './LessonPreviewCard';
+export { 
+  default as ZigguratVision,
+  ZigguratButton,
+  getZigguratUrl,
+  getBeforeUrl,
+  PALETTES as ZIGGURAT_PALETTES,
+  TIMES as ZIGGURAT_TIMES,
+  type ZigguratPalette,
+  type ZigguratTime,
+  type ZigguratResolution,
+} from './ZigguratVision';
 
 // =============================================================================
 // LIB - Personas
@@ -80,6 +91,9 @@ export {
   // Subscriptions
   subscribeToVideoUpdates,
 } from './lib/supabase';
+
+
+
 
 
 

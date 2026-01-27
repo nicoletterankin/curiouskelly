@@ -1,0 +1,413 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ziggurat LED Vision — All Variants</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --bg: #0a0a0c;
+            --surface: #111114;
+            --surface-hover: #1a1a1e;
+            --border: #27272a;
+            --text: #ffffff;
+            --text-muted: #888;
+            --primary: #8b5cf6;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            line-height: 1.6;
+        }
+        
+        header {
+            padding: 40px;
+            text-align: center;
+            background: linear-gradient(180deg, #111 0%, var(--bg) 100%);
+        }
+        
+        h1 {
+            font-size: 2.5rem;
+            font-weight: 200;
+            background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 50%, #22c55e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            margin-bottom: 10px;
+        }
+        
+        .subtitle { color: var(--text-muted); }
+        
+        .controls {
+            padding: 20px 40px;
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            display: flex;
+            flex-wrap: wrap;
+            gap: 20px;
+            justify-content: center;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .control-group {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+        
+        .control-group label {
+            font-size: 12px;
+            color: var(--text-muted);
+            text-transform: uppercase;
+            letter-spacing: 0.1em;
+        }
+        
+        .control-group select {
+            padding: 10px 16px;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            font-size: 14px;
+            min-width: 150px;
+            cursor: pointer;
+        }
+        
+        .control-group select:hover {
+            border-color: var(--primary);
+        }
+        
+        .slider-section {
+            max-width: 1400px;
+            margin: 40px auto;
+            padding: 0 40px;
+        }
+        
+        .comparison {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+            cursor: ew-resize;
+        }
+        
+        .comparison img {
+            width: 100%;
+            display: block;
+        }
+        
+        .comparison .before {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .slider-handle {
+            position: absolute;
+            top: 0;
+            width: 4px;
+            height: 100%;
+            background: #fff;
+            transform: translateX(-50%);
+            z-index: 10;
+            pointer-events: none;
+        }
+        
+        .slider-handle::after {
+            content: '◀ ▶';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            color: #000;
+            padding: 12px 16px;
+            border-radius: 24px;
+            font-size: 14px;
+            font-weight: 600;
+            white-space: nowrap;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        .label {
+            position: absolute;
+            top: 20px;
+            padding: 10px 20px;
+            background: rgba(0,0,0,0.8);
+            backdrop-filter: blur(8px);
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            z-index: 5;
+        }
+        
+        .label.left { left: 20px; }
+        .label.right { right: 20px; }
+        
+        .info-bar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 20px;
+            padding: 16px 20px;
+            background: var(--surface);
+            border-radius: 12px;
+        }
+        
+        .variant-name {
+            font-size: 1.2rem;
+            font-weight: 500;
+        }
+        
+        .download-btn {
+            padding: 10px 20px;
+            background: var(--primary);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            font-weight: 500;
+            cursor: pointer;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .download-btn:hover {
+            background: #7c3aed;
+        }
+        
+        .thumbnails {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 16px;
+            margin-top: 40px;
+        }
+        
+        .thumb {
+            border-radius: 8px;
+            overflow: hidden;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .thumb:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        
+        .thumb.active {
+            border-color: var(--primary);
+            box-shadow: 0 0 20px rgba(139, 92, 246, 0.3);
+        }
+        
+        .thumb img {
+            width: 100%;
+            display: block;
+        }
+        
+        .thumb-label {
+            padding: 8px 12px;
+            background: var(--surface);
+            font-size: 12px;
+            color: var(--text-muted);
+        }
+        
+        .stats {
+            text-align: center;
+            padding: 40px;
+            color: var(--text-muted);
+        }
+        
+        .palette-preview {
+            display: flex;
+            gap: 4px;
+            margin-top: 8px;
+        }
+        
+        .palette-preview span {
+            width: 20px;
+            height: 20px;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Ziggurat LED Vision</h1>
+        <p class="subtitle">60 Variants × 6 Resolutions = 366 Static Assets</p>
+    </header>
+    
+    <div class="controls">
+        <div class="control-group">
+            <label>Color Palette</label>
+            <select id="paletteSelect">
+                <option value="rainbow">Rainbow</option>
+                <option value="cool">Cool Tones</option>
+                <option value="warm">Warm Tones</option>
+                <option value="mono-white">Mono White</option>
+                <option value="mono-gold">Mono Gold</option>
+                <option value="mono-cyan">Mono Cyan</option>
+                <option value="mono-purple">Mono Purple</option>
+                <option value="usa">USA</option>
+                <option value="sunset">Sunset</option>
+                <option value="ocean">Ocean</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label>Time of Day</label>
+            <select id="timeSelect">
+                <option value="night">Night</option>
+                <option value="late-night">Late Night</option>
+                <option value="dusk">Dusk</option>
+                <option value="golden">Golden Hour</option>
+                <option value="day">Day</option>
+                <option value="overcast">Overcast</option>
+            </select>
+        </div>
+        
+        <div class="control-group">
+            <label>Resolution</label>
+            <select id="resSelect">
+                <option value="1080p">1080p (Web)</option>
+                <option value="2k">2K</option>
+                <option value="4k">4K</option>
+                <option value="full">Full (4032×2217)</option>
+            </select>
+        </div>
+    </div>
+    
+    <div class="slider-section">
+        <div class="comparison" id="comparison">
+            <img id="afterImg" src="rainbow-night-1080p.jpg" alt="After">
+            <img id="beforeImg" class="before" src="before-1080p.jpg" alt="Before">
+            <div class="slider-handle" id="handle"></div>
+            <span class="label left">BEFORE</span>
+            <span class="label right" id="afterLabel">RAINBOW · NIGHT</span>
+        </div>
+        
+        <div class="info-bar">
+            <span class="variant-name" id="variantName">rainbow-night</span>
+            <a class="download-btn" id="downloadBtn" href="rainbow-night-1080p.jpg" download>
+                ↓ Download
+            </a>
+        </div>
+        
+        <div class="thumbnails" id="thumbnails"></div>
+    </div>
+    
+    <div class="stats">
+        <p>10 Palettes × 6 Time Settings × 6 Resolutions</p>
+        <p>Total: 366 pre-rendered static images</p>
+    </div>
+    
+    <script>
+        const palettes = ['rainbow', 'cool', 'warm', 'mono-white', 'mono-gold', 'mono-cyan', 'mono-purple', 'usa', 'sunset', 'ocean'];
+        const times = ['night', 'late-night', 'dusk', 'golden', 'day', 'overcast'];
+        const resolutions = ['thumb', '720p', '1080p', '2k', '4k', 'full'];
+        
+        let currentPalette = 'rainbow';
+        let currentTime = 'night';
+        let currentRes = '1080p';
+        let sliderPos = 50;
+        
+        const comparison = document.getElementById('comparison');
+        const beforeImg = document.getElementById('beforeImg');
+        const afterImg = document.getElementById('afterImg');
+        const handle = document.getElementById('handle');
+        const afterLabel = document.getElementById('afterLabel');
+        const variantName = document.getElementById('variantName');
+        const downloadBtn = document.getElementById('downloadBtn');
+        const thumbnails = document.getElementById('thumbnails');
+        
+        function updateVariant() {
+            const variant = `${currentPalette}-${currentTime}`;
+            const filename = `${variant}-${currentRes}.jpg`;
+            const beforeFile = `before-${currentRes}.jpg`;
+            
+            afterImg.src = filename;
+            beforeImg.src = beforeFile;
+            afterLabel.textContent = `${currentPalette.toUpperCase()} · ${currentTime.toUpperCase()}`;
+            variantName.textContent = variant;
+            downloadBtn.href = filename;
+            
+            // Update active thumbnail
+            document.querySelectorAll('.thumb').forEach(t => t.classList.remove('active'));
+            const activeThumb = document.querySelector(`[data-variant="${variant}"]`);
+            if (activeThumb) activeThumb.classList.add('active');
+        }
+        
+        function updateSlider(clientX) {
+            const rect = comparison.getBoundingClientRect();
+            let pct = (clientX - rect.left) / rect.width * 100;
+            pct = Math.max(0, Math.min(100, pct));
+            sliderPos = pct;
+            beforeImg.style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
+            handle.style.left = pct + '%';
+        }
+        
+        // Initialize slider
+        updateSlider(comparison.getBoundingClientRect().left + comparison.getBoundingClientRect().width / 2);
+        
+        // Slider interaction
+        let isDragging = false;
+        comparison.addEventListener('mousedown', e => { isDragging = true; updateSlider(e.clientX); });
+        document.addEventListener('mousemove', e => { if (isDragging) updateSlider(e.clientX); });
+        document.addEventListener('mouseup', () => isDragging = false);
+        comparison.addEventListener('touchstart', e => { isDragging = true; updateSlider(e.touches[0].clientX); });
+        document.addEventListener('touchmove', e => { if (isDragging) updateSlider(e.touches[0].clientX); });
+        document.addEventListener('touchend', () => isDragging = false);
+        
+        // Controls
+        document.getElementById('paletteSelect').addEventListener('change', e => {
+            currentPalette = e.target.value;
+            updateVariant();
+        });
+        
+        document.getElementById('timeSelect').addEventListener('change', e => {
+            currentTime = e.target.value;
+            updateVariant();
+        });
+        
+        document.getElementById('resSelect').addEventListener('change', e => {
+            currentRes = e.target.value;
+            updateVariant();
+        });
+        
+        // Generate thumbnails
+        palettes.forEach(palette => {
+            times.forEach(time => {
+                const variant = `${palette}-${time}`;
+                const thumb = document.createElement('div');
+                thumb.className = 'thumb';
+                thumb.dataset.variant = variant;
+                thumb.innerHTML = `
+                    <img src="${variant}-thumb.jpg" alt="${variant}">
+                    <div class="thumb-label">${palette} · ${time}</div>
+                `;
+                thumb.addEventListener('click', () => {
+                    currentPalette = palette;
+                    currentTime = time;
+                    document.getElementById('paletteSelect').value = palette;
+                    document.getElementById('timeSelect').value = time;
+                    updateVariant();
+                });
+                thumbnails.appendChild(thumb);
+            });
+        });
+        
+        // Mark initial active
+        updateVariant();
+    </script>
+</body>
+</html>

@@ -1,0 +1,556 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ziggurat LED Mockup</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #000;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+            font-family: -apple-system, sans-serif;
+        }
+        
+        .canvas-wrap {
+            flex: 1;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 20px;
+        }
+        
+        #canvas {
+            max-width: 100%;
+            max-height: calc(100vh - 100px);
+            border-radius: 4px;
+        }
+        
+        .controls {
+            background: #111;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            gap: 20px;
+            border-top: 1px solid #222;
+        }
+        
+        .btn {
+            padding: 12px 24px;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 13px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover { background: #333; }
+        .btn.active { background: #ff6b35; border-color: #ff6b35; }
+        .btn.export { background: #ff6b35; border-color: #ff6b35; }
+        .btn.export:hover { background: #e55a2a; }
+        
+        .color-row {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .color-dot {
+            width: 28px;
+            height: 28px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .color-dot:hover { transform: scale(1.1); }
+        .color-dot.active { border-color: #fff; }
+        
+        .spacer { flex: 1; }
+        
+        .label {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+    </style>
+</head>
+<body>
+    <div class="canvas-wrap">
+        <canvas id="canvas"></canvas>
+    </div>
+    
+    <div class="controls">
+        <span class="label">View</span>
+        <button class="btn" id="btnBefore">Before</button>
+        <button class="btn active" id="btnAfter">After</button>
+        <button class="btn" id="btnCalibrate">Calibrate</button>
+        
+        <span class="label" style="margin-left: 20px;">Time</span>
+        <button class="btn" id="btnDay">Day</button>
+        <button class="btn" id="btnDusk">Dusk</button>
+        <button class="btn active" id="btnNight">Night</button>
+        
+        <span class="label" style="margin-left: 20px;">Color</span>
+        <div class="color-row">
+            <div class="color-dot active" style="background: #ff6b35" data-color="#ff6b35"></div>
+            <div class="color-dot" style="background: #00d4ff" data-color="#00d4ff"></div>
+            <div class="color-dot" style="background: #ff00aa" data-color="#ff00aa"></div>
+            <div class="color-dot" style="background: #ffd700" data-color="#ffd700"></div>
+            <div class="color-dot" style="background: #fff" data-color="#ffffff"></div>
+        </div>
+        
+        <span class="label" style="margin-left: 20px;">Glow</span>
+        <input type="range" id="glowSlider" min="30" max="150" value="100" style="width: 100px; accent-color: #ff6b35;">
+        
+        <div class="spacer"></div>
+        
+        <button class="btn export" id="btnExport">Export High-Res PNG</button>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        let img = new Image();
+        let showAfter = true;
+        let calibrateMode = false;
+        let timeMode = 'night'; // day, dusk, night
+        let ledColor = '#ff6b35';
+        let glowIntensity = 1.0;
+        let clickedPoints = [];
+        
+        // PRECISE panel coordinates - manually traced from aerial.jpg
+        // Each terrace edge has slight perspective angle (right side higher)
+        // Panel height ~1.2% of image
+        const panels = [
+            // F7 top castellation (smallest)
+            { level: 7, points: [[0.365, 0.363], [0.545, 0.358], [0.545, 0.375], [0.365, 0.380]] },
+            // F6 terrace
+            { level: 6, points: [[0.318, 0.393], [0.595, 0.385], [0.595, 0.403], [0.318, 0.411]] },
+            // F5 terrace
+            { level: 5, points: [[0.265, 0.428], [0.655, 0.417], [0.655, 0.437], [0.265, 0.448]] },
+            // F4 terrace
+            { level: 4, points: [[0.208, 0.463], [0.715, 0.450], [0.715, 0.472], [0.208, 0.485]] },
+            // F3 terrace
+            { level: 3, points: [[0.148, 0.503], [0.775, 0.485], [0.775, 0.510], [0.148, 0.528]] },
+            // F2 terrace (largest)
+            { level: 2, points: [[0.088, 0.548], [0.835, 0.525], [0.835, 0.553], [0.088, 0.576]] },
+        ];
+        
+        img.onload = () => {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            render();
+        };
+        img.src = 'aerial.jpg';
+        
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw base image
+            ctx.drawImage(img, 0, 0);
+            
+            // CALIBRATE MODE - show grid and clicked points
+            if (calibrateMode) {
+                // Draw grid lines every 5%
+                ctx.strokeStyle = 'rgba(255,255,0,0.3)';
+                ctx.lineWidth = 1;
+                for (let i = 0; i <= 20; i++) {
+                    const x = (i / 20) * canvas.width;
+                    const y = (i / 20) * canvas.height;
+                    ctx.beginPath();
+                    ctx.moveTo(x, 0);
+                    ctx.lineTo(x, canvas.height);
+                    ctx.stroke();
+                    ctx.beginPath();
+                    ctx.moveTo(0, y);
+                    ctx.lineTo(canvas.width, y);
+                    ctx.stroke();
+                    
+                    // Labels
+                    ctx.fillStyle = 'yellow';
+                    ctx.font = '12px monospace';
+                    ctx.fillText((i * 5) + '%', x + 2, 12);
+                    ctx.fillText((i * 5) + '%', 2, y - 2);
+                }
+                
+                // Draw current panel outlines in cyan
+                ctx.strokeStyle = 'cyan';
+                ctx.lineWidth = 2;
+                panels.forEach((panel, idx) => {
+                    ctx.beginPath();
+                    const pts = panel.points;
+                    ctx.moveTo(pts[0][0] * canvas.width, pts[0][1] * canvas.height);
+                    pts.forEach(pt => ctx.lineTo(pt[0] * canvas.width, pt[1] * canvas.height));
+                    ctx.closePath();
+                    ctx.stroke();
+                    
+                    // Label
+                    ctx.fillStyle = 'cyan';
+                    ctx.fillText(`F${panel.level}`, pts[0][0] * canvas.width - 25, pts[0][1] * canvas.height + 5);
+                });
+                
+                // Draw clicked points in red
+                ctx.fillStyle = 'red';
+                clickedPoints.forEach((pt, i) => {
+                    ctx.beginPath();
+                    ctx.arc(pt.x * canvas.width, pt.y * canvas.height, 5, 0, Math.PI * 2);
+                    ctx.fill();
+                    ctx.fillText(`${i}: (${pt.x.toFixed(3)}, ${pt.y.toFixed(3)})`, pt.x * canvas.width + 8, pt.y * canvas.height);
+                });
+                
+                // Instructions
+                ctx.fillStyle = 'white';
+                ctx.font = '14px sans-serif';
+                ctx.fillText('CALIBRATE MODE - Click to mark points. Arrow keys to nudge panels.', 10, canvas.height - 10);
+                return;
+            }
+            
+            if (!showAfter) return;
+            
+            // Apply time-of-day color grading (photorealistic)
+            if (timeMode === 'dusk') {
+                // Golden hour - warm tones, reduced contrast
+                ctx.save();
+                ctx.globalCompositeOperation = 'multiply';
+                const duskGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                duskGrad.addColorStop(0, 'rgba(180, 140, 200, 0.3)');
+                duskGrad.addColorStop(0.4, 'rgba(200, 160, 140, 0.25)');
+                duskGrad.addColorStop(1, 'rgba(100, 80, 120, 0.35)');
+                ctx.fillStyle = duskGrad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.restore();
+                
+                // Slight desaturation
+                ctx.fillStyle = 'rgba(40, 30, 50, 0.15)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            } else if (timeMode === 'night') {
+                // Photorealistic night - blue hour tones
+                // First pass: darken
+                ctx.save();
+                ctx.globalCompositeOperation = 'multiply';
+                ctx.fillStyle = 'rgba(30, 35, 60, 0.75)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.restore();
+                
+                // Second pass: blue tint (color dodge for city lights feel)
+                ctx.save();
+                ctx.globalCompositeOperation = 'overlay';
+                ctx.fillStyle = 'rgba(20, 30, 80, 0.25)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.restore();
+                
+                // Third pass: contrast boost in shadows
+                ctx.save();
+                ctx.globalCompositeOperation = 'multiply';
+                const nightGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                nightGrad.addColorStop(0, 'rgba(15, 20, 40, 0.4)');
+                nightGrad.addColorStop(0.5, 'rgba(10, 15, 35, 0.35)');
+                nightGrad.addColorStop(1, 'rgba(5, 8, 25, 0.45)');
+                ctx.fillStyle = nightGrad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                ctx.restore();
+            }
+            
+            // Draw LED panels with glow
+            panels.forEach((panel, i) => {
+                const pts = panel.points.map(([px, py]) => ({
+                    x: px * canvas.width,
+                    y: py * canvas.height
+                }));
+                
+                drawGlowingPanel(pts, i);
+            });
+            
+            // Add photographic vignette
+            if (timeMode === 'night' || timeMode === 'dusk') {
+                const vignetteGrad = ctx.createRadialGradient(
+                    canvas.width / 2, canvas.height / 2, canvas.height * 0.3,
+                    canvas.width / 2, canvas.height / 2, canvas.height * 0.9
+                );
+                vignetteGrad.addColorStop(0, 'rgba(0,0,0,0)');
+                vignetteGrad.addColorStop(0.7, 'rgba(0,0,0,0.1)');
+                vignetteGrad.addColorStop(1, 'rgba(0,0,0,0.35)');
+                ctx.fillStyle = vignetteGrad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+            }
+            
+            // Add subtle film grain (only at night for high-ISO look)
+            if (timeMode === 'night') {
+                addFilmGrain(0.03);
+            }
+        }
+        
+        function addFilmGrain(amount) {
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const pixels = imageData.data;
+            
+            for (let i = 0; i < pixels.length; i += 4) {
+                const noise = (Math.random() - 0.5) * amount * 255;
+                pixels[i] += noise;     // R
+                pixels[i + 1] += noise; // G
+                pixels[i + 2] += noise; // B
+            }
+            
+            ctx.putImageData(imageData, 0, 0);
+        }
+        
+        function drawGlowingPanel(points, index) {
+            const panelWidth = points[1].x - points[0].x;
+            const panelHeight = points[3].y - points[0].y;
+            const intensity = glowIntensity * (timeMode === 'night' ? 1.0 : timeMode === 'dusk' ? 0.7 : 0.3);
+            
+            // Parse LED color to RGB
+            const rgb = {
+                r: parseInt(ledColor.slice(1, 3), 16),
+                g: parseInt(ledColor.slice(3, 5), 16),
+                b: parseInt(ledColor.slice(5, 7), 16)
+            };
+            
+            // ============ PHOTOREALISTIC RENDERING ============
+            
+            // 1. VERY subtle atmospheric scatter (barely visible)
+            if (timeMode === 'night') {
+                ctx.save();
+                ctx.globalCompositeOperation = 'screen';
+                const atmosGrad = ctx.createRadialGradient(
+                    (points[0].x + points[1].x) / 2, (points[0].y + points[2].y) / 2, 0,
+                    (points[0].x + points[1].x) / 2, (points[0].y + points[2].y) / 2, panelWidth * 0.8
+                );
+                atmosGrad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.03 * intensity})`);
+                atmosGrad.addColorStop(0.5, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.01 * intensity})`);
+                atmosGrad.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.fillStyle = atmosGrad;
+                ctx.fillRect(points[0].x - panelWidth * 0.3, points[0].y - panelHeight * 10, 
+                             panelWidth * 1.6, panelHeight * 25);
+                ctx.restore();
+            }
+            
+            // 2. Soft bloom around the strip (camera lens bloom - VISIBLE)
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            for (let i = 0; i < 4; i++) {
+                const bloomSize = (40 - i * 8) * intensity;
+                ctx.shadowColor = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 1)`;
+                ctx.shadowBlur = bloomSize;
+                ctx.beginPath();
+                ctx.moveTo(points[0].x, points[0].y);
+                points.forEach(p => ctx.lineTo(p.x, p.y));
+                ctx.closePath();
+                ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.15 * intensity})`;
+                ctx.fill();
+            }
+            ctx.restore();
+            
+            // 3. The actual LED strip - bright but with realistic gradient
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            const stripGrad = ctx.createLinearGradient(points[0].x, points[0].y, points[1].x, points[1].y);
+            stripGrad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.9 * intensity})`);
+            stripGrad.addColorStop(0.25, `rgba(${Math.min(255, rgb.r + 30)}, ${Math.min(255, rgb.g + 30)}, ${Math.min(255, rgb.b + 30)}, ${1.0 * intensity})`);
+            stripGrad.addColorStop(0.5, `rgba(${Math.min(255, rgb.r + 40)}, ${Math.min(255, rgb.g + 40)}, ${Math.min(255, rgb.b + 40)}, ${1.0 * intensity})`);
+            stripGrad.addColorStop(0.75, `rgba(${Math.min(255, rgb.r + 30)}, ${Math.min(255, rgb.g + 30)}, ${Math.min(255, rgb.b + 30)}, ${1.0 * intensity})`);
+            stripGrad.addColorStop(1, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.85 * intensity})`);
+            
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, points[0].y);
+            points.forEach(p => ctx.lineTo(p.x, p.y));
+            ctx.closePath();
+            ctx.fillStyle = stripGrad;
+            ctx.fill();
+            ctx.restore();
+            
+            // 4. Bright white-hot core line (the actual LEDs)
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            const coreY1 = (points[0].y + points[3].y) / 2;
+            const coreY2 = (points[1].y + points[2].y) / 2;
+            
+            // White-hot center
+            ctx.beginPath();
+            ctx.moveTo(points[0].x + 2, coreY1);
+            ctx.lineTo(points[1].x - 2, coreY2);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${0.7 * intensity})`;
+            ctx.lineWidth = Math.max(1, panelHeight * 0.2);
+            ctx.stroke();
+            
+            // Bright colored halo
+            ctx.beginPath();
+            ctx.moveTo(points[0].x, coreY1);
+            ctx.lineTo(points[1].x, coreY2);
+            ctx.strokeStyle = `rgba(${Math.min(255, rgb.r + 80)}, ${Math.min(255, rgb.g + 80)}, ${Math.min(255, rgb.b + 80)}, ${0.8 * intensity})`;
+            ctx.lineWidth = Math.max(3, panelHeight * 0.5);
+            ctx.stroke();
+            ctx.restore();
+            
+            // 5. Light spill on building surface below (visible wash)
+            if (timeMode === 'night' || timeMode === 'dusk') {
+                ctx.save();
+                ctx.globalCompositeOperation = 'screen';
+                const spillHeight = canvas.height * 0.035;
+                const spillGradient = ctx.createLinearGradient(
+                    points[3].x, points[3].y,
+                    points[3].x, points[3].y + spillHeight
+                );
+                spillGradient.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.25 * intensity})`);
+                spillGradient.addColorStop(0.4, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.10 * intensity})`);
+                spillGradient.addColorStop(1, 'rgba(0,0,0,0)');
+                
+                ctx.beginPath();
+                ctx.moveTo(points[3].x, points[3].y);
+                ctx.lineTo(points[2].x, points[2].y);
+                ctx.lineTo(points[2].x, points[2].y + spillHeight);
+                ctx.lineTo(points[3].x, points[3].y + spillHeight);
+                ctx.closePath();
+                ctx.fillStyle = spillGradient;
+                ctx.fill();
+                ctx.restore();
+            }
+            
+            // 6. Upward bounce light (very subtle)
+            if (timeMode === 'night') {
+                ctx.save();
+                ctx.globalCompositeOperation = 'screen';
+                const bounceHeight = canvas.height * 0.008;
+                const bounceGrad = ctx.createLinearGradient(
+                    points[0].x, points[0].y,
+                    points[0].x, points[0].y - bounceHeight
+                );
+                bounceGrad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.03 * intensity})`);
+                bounceGrad.addColorStop(1, 'rgba(0,0,0,0)');
+                
+                ctx.beginPath();
+                ctx.moveTo(points[0].x, points[0].y);
+                ctx.lineTo(points[1].x, points[1].y);
+                ctx.lineTo(points[1].x, points[1].y - bounceHeight);
+                ctx.lineTo(points[0].x, points[0].y - bounceHeight);
+                ctx.closePath();
+                ctx.fillStyle = bounceGrad;
+                ctx.fill();
+                ctx.restore();
+            }
+        }
+        
+        function hexToRgba(hex, alpha) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+        
+        // Canvas click handler for calibration
+        canvas.addEventListener('click', (e) => {
+            if (!calibrateMode) return;
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = ((e.clientX - rect.left) * scaleX) / canvas.width;
+            const y = ((e.clientY - rect.top) * scaleY) / canvas.height;
+            clickedPoints.push({ x, y });
+            console.log(`Point ${clickedPoints.length - 1}: [${x.toFixed(3)}, ${y.toFixed(3)}]`);
+            render();
+        });
+        
+        // Controls
+        document.getElementById('btnBefore').onclick = () => {
+            showAfter = false;
+            calibrateMode = false;
+            document.getElementById('btnBefore').classList.add('active');
+            document.getElementById('btnAfter').classList.remove('active');
+            document.getElementById('btnCalibrate').classList.remove('active');
+            render();
+        };
+        
+        document.getElementById('btnAfter').onclick = () => {
+            showAfter = true;
+            calibrateMode = false;
+            document.getElementById('btnAfter').classList.add('active');
+            document.getElementById('btnBefore').classList.remove('active');
+            document.getElementById('btnCalibrate').classList.remove('active');
+            render();
+        };
+        
+        document.getElementById('btnCalibrate').onclick = () => {
+            calibrateMode = true;
+            showAfter = false;
+            clickedPoints = [];
+            document.getElementById('btnCalibrate').classList.add('active');
+            document.getElementById('btnBefore').classList.remove('active');
+            document.getElementById('btnAfter').classList.remove('active');
+            render();
+        };
+        
+        ['Day', 'Dusk', 'Night'].forEach(t => {
+            document.getElementById('btn' + t).onclick = () => {
+                timeMode = t.toLowerCase();
+                document.querySelectorAll('.controls .btn').forEach(b => {
+                    if (['btnDay', 'btnDusk', 'btnNight'].includes(b.id)) {
+                        b.classList.toggle('active', b.id === 'btn' + t);
+                    }
+                });
+                render();
+            };
+        });
+        
+        document.querySelectorAll('.color-dot').forEach(dot => {
+            dot.onclick = () => {
+                ledColor = dot.dataset.color;
+                document.querySelectorAll('.color-dot').forEach(d => d.classList.remove('active'));
+                dot.classList.add('active');
+                render();
+            };
+        });
+        
+        document.getElementById('glowSlider').oninput = (e) => {
+            glowIntensity = e.target.value / 100;
+            render();
+        };
+        
+        document.getElementById('btnExport').onclick = () => {
+            const link = document.createElement('a');
+            link.download = `ziggurat-mockup-${timeMode}-${Date.now()}.png`;
+            link.href = canvas.toDataURL('image/png');
+            link.click();
+        };
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                showAfter = !showAfter;
+                document.getElementById('btnBefore').classList.toggle('active', !showAfter);
+                document.getElementById('btnAfter').classList.toggle('active', showAfter);
+                render();
+            }
+            // Arrow keys to nudge all panels
+            const step = 0.005;
+            if (e.code === 'ArrowUp') {
+                panels.forEach(p => p.points.forEach(pt => pt[1] -= step));
+                render();
+                console.log('Nudged UP. Top panel Y:', panels[0].points[0][1].toFixed(3));
+            }
+            if (e.code === 'ArrowDown') {
+                panels.forEach(p => p.points.forEach(pt => pt[1] += step));
+                render();
+                console.log('Nudged DOWN. Top panel Y:', panels[0].points[0][1].toFixed(3));
+            }
+            if (e.code === 'ArrowLeft') {
+                panels.forEach(p => p.points.forEach(pt => pt[0] -= step));
+                render();
+                console.log('Nudged LEFT. Top panel X:', panels[0].points[0][0].toFixed(3));
+            }
+            if (e.code === 'ArrowRight') {
+                panels.forEach(p => p.points.forEach(pt => pt[0] += step));
+                render();
+                console.log('Nudged RIGHT. Top panel X:', panels[0].points[0][0].toFixed(3));
+            }
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,94 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test LED Positioning</title>
+    <style>
+        body { margin: 0; background: #111; display: flex; gap: 20px; padding: 20px; }
+        .card { flex: 1; }
+        .card h2 { color: #fff; font-family: sans-serif; margin-bottom: 10px; }
+        canvas { width: 100%; border: 1px solid #333; }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <h2>BEFORE</h2>
+        <canvas id="before"></canvas>
+    </div>
+    <div class="card">
+        <h2>AFTER</h2>
+        <canvas id="after"></canvas>
+    </div>
+    
+    <script>
+        // PRECISELY TRACED from aerial.jpg (4032×2217)
+        const layers = [
+            { level: 1, left: [0.169, 0.496], right: [0.699, 0.480], height: 0.018, color: '#ef4444' },
+            { level: 2, left: [0.203, 0.465], right: [0.661, 0.453], height: 0.016, color: '#f97316' },
+            { level: 3, left: [0.238, 0.437], right: [0.625, 0.428], height: 0.014, color: '#eab308' },
+            { level: 4, left: [0.273, 0.410], right: [0.589, 0.403], height: 0.012, color: '#22c55e' },
+            { level: 5, left: [0.306, 0.386], right: [0.556, 0.380], height: 0.010, color: '#06b6d4' },
+            { level: 6, left: [0.339, 0.363], right: [0.523, 0.359], height: 0.009, color: '#3b82f6' },
+            { level: 7, left: [0.369, 0.344], right: [0.494, 0.340], height: 0.008, color: '#8b5cf6' },
+        ];
+        
+        const img = new Image();
+        img.onload = () => {
+            // Before
+            const c1 = document.getElementById('before');
+            c1.width = img.width;
+            c1.height = img.height;
+            c1.getContext('2d').drawImage(img, 0, 0);
+            
+            // After
+            const c2 = document.getElementById('after');
+            c2.width = img.width;
+            c2.height = img.height;
+            const ctx = c2.getContext('2d');
+            
+            // Draw base
+            ctx.drawImage(img, 0, 0);
+            
+            // Night grade
+            ctx.globalCompositeOperation = 'multiply';
+            ctx.fillStyle = 'rgba(8, 12, 28, 0.85)';
+            ctx.fillRect(0, 0, img.width, img.height);
+            ctx.globalCompositeOperation = 'source-over';
+            
+            // Draw LEDs
+            layers.forEach(layer => {
+                const x1 = layer.left[0] * img.width;
+                const y1 = layer.left[1] * img.height;
+                const x2 = layer.right[0] * img.width;
+                const y2 = layer.right[1] * img.height;
+                const h = layer.height * img.height;
+                
+                // Glow
+                ctx.shadowColor = layer.color;
+                ctx.shadowBlur = 60;
+                ctx.fillStyle = layer.color;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.lineTo(x2, y2 + h);
+                ctx.lineTo(x1, y1 + h);
+                ctx.closePath();
+                ctx.fill();
+                
+                // Bright center
+                ctx.shadowBlur = 0;
+                ctx.fillStyle = 'rgba(255,255,255,0.8)';
+                ctx.beginPath();
+                ctx.moveTo(x1, y1 + h*0.3);
+                ctx.lineTo(x2, y2 + h*0.3);
+                ctx.lineTo(x2, y2 + h*0.7);
+                ctx.lineTo(x1, y1 + h*0.7);
+                ctx.closePath();
+                ctx.fill();
+            });
+            
+            console.log('Rendered. Check if LEDs are on the building terraces.');
+        };
+        img.src = 'aerial.jpg';
+    </script>
+</body>
+</html>

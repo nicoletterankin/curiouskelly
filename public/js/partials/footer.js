@@ -105,7 +105,7 @@
                         <li><a href="/privacy.html">Privacy Policy</a></li>
                         <li><a href="/terms.html">Terms of Service</a></li>
                         <li><a href="/trust.html#coppa">COPPA Policy</a></li>
-                        <li><a href="/api.html">API</a></li>
+                        <li><a href="/accessibility.html">Accessibility</a></li>
                     </ul>
                 </div>
                 
@@ -114,7 +114,7 @@
             <!-- Bottom bar -->
             <div class="footer-bottom">
                 <div class="footer-bottom-left">
-                    <span>&copy; 2025 Lesson of the Day PBC</span>
+                    <span>&copy; 2026 Lesson of the Day PBC</span>
                     <a href="mailto:hello@curiouskelly.com">hello@curiouskelly.com</a>
                 </div>
                 <div class="footer-bottom-right">

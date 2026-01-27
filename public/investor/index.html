@@ -1,0 +1,666 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Investor Data Room | Curious Kelly</title>
+    <meta name="robots" content="noindex, nofollow">
+    <link rel="icon" type="image/png" href="/apple-touch-icon.png">
+    <style>
+        :root {
+            --primary: #3B82F6;
+            --primary-dark: #2563EB;
+            --bg: #0F172A;
+            --bg-card: #1E293B;
+            --text: #F8FAFC;
+            --text-muted: #94A3B8;
+            --border: #334155;
+            --success: #10B981;
+            --warning: #F59E0B;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, 'Helvetica Neue', Arial, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            min-height: 100vh;
+            line-height: 1.6;
+        }
+        
+        /* Login Screen */
+        .login-container {
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 2rem;
+        }
+        
+        .login-box {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 16px;
+            padding: 3rem;
+            max-width: 420px;
+            width: 100%;
+            text-align: center;
+        }
+        
+        .login-logo {
+            font-size: 3rem;
+            margin-bottom: 1rem;
+        }
+        
+        .login-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .login-subtitle {
+            color: var(--text-muted);
+            margin-bottom: 2rem;
+        }
+        
+        .login-input {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            font-size: 1rem;
+            background: var(--bg);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            color: var(--text);
+            margin-bottom: 1rem;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+        
+        .login-input:focus {
+            border-color: var(--primary);
+        }
+        
+        .login-button {
+            width: 100%;
+            padding: 1rem 1.25rem;
+            font-size: 1rem;
+            font-weight: 600;
+            background: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: background 0.2s;
+        }
+        
+        .login-button:hover {
+            background: var(--primary-dark);
+        }
+        
+        .login-error {
+            color: #EF4444;
+            margin-top: 1rem;
+            display: none;
+        }
+        
+        .login-footer {
+            margin-top: 2rem;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+        
+        /* Data Room */
+        .data-room {
+            display: none;
+        }
+        
+        .data-room.active {
+            display: block;
+        }
+        
+        .header {
+            background: var(--bg-card);
+            border-bottom: 1px solid var(--border);
+            padding: 1.5rem 2rem;
+            position: sticky;
+            top: 0;
+            z-index: 100;
+        }
+        
+        .header-content {
+            max-width: 1200px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .header-brand {
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .header-brand span {
+            font-size: 1.5rem;
+        }
+        
+        .header-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+        }
+        
+        .header-badge {
+            background: var(--warning);
+            color: #000;
+            padding: 0.25rem 0.75rem;
+            border-radius: 999px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .logout-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 0.875rem;
+            transition: all 0.2s;
+        }
+        
+        .logout-btn:hover {
+            border-color: var(--text-muted);
+            color: var(--text);
+        }
+        
+        .main {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 2rem;
+        }
+        
+        .hero {
+            text-align: center;
+            padding: 3rem 0;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 3rem;
+        }
+        
+        .hero-title {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 1rem;
+            background: linear-gradient(135deg, var(--primary), #8B5CF6);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+        
+        .hero-tagline {
+            font-size: 1.25rem;
+            color: var(--text-muted);
+            max-width: 600px;
+            margin: 0 auto 2rem;
+        }
+        
+        .hero-metrics {
+            display: flex;
+            justify-content: center;
+            gap: 3rem;
+            flex-wrap: wrap;
+        }
+        
+        .metric {
+            text-align: center;
+        }
+        
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+        
+        .metric-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+        }
+        
+        .section {
+            margin-bottom: 3rem;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.75rem;
+        }
+        
+        .section-title span {
+            font-size: 1.5rem;
+        }
+        
+        .grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(280px, 1fr));
+            gap: 1.5rem;
+        }
+        
+        .card {
+            background: var(--bg-card);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 1.5rem;
+            transition: all 0.2s;
+            cursor: pointer;
+            text-decoration: none;
+            color: inherit;
+            display: block;
+        }
+        
+        .card:hover {
+            border-color: var(--primary);
+            transform: translateY(-2px);
+        }
+        
+        .card-icon {
+            font-size: 2rem;
+            margin-bottom: 1rem;
+        }
+        
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            margin-bottom: 0.5rem;
+        }
+        
+        .card-description {
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+        
+        .card-badge {
+            display: inline-block;
+            margin-top: 1rem;
+            padding: 0.25rem 0.5rem;
+            background: var(--primary);
+            color: white;
+            border-radius: 4px;
+            font-size: 0.75rem;
+            font-weight: 600;
+        }
+        
+        .card-badge.coming-soon {
+            background: var(--border);
+            color: var(--text-muted);
+        }
+        
+        .highlight-box {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.1), rgba(139, 92, 246, 0.1));
+            border: 1px solid var(--primary);
+            border-radius: 12px;
+            padding: 2rem;
+            margin-bottom: 3rem;
+        }
+        
+        .highlight-title {
+            font-size: 1.25rem;
+            font-weight: 600;
+            margin-bottom: 1rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .highlight-content {
+            color: var(--text-muted);
+        }
+        
+        .highlight-content ul {
+            list-style: none;
+            padding: 0;
+        }
+        
+        .highlight-content li {
+            padding: 0.5rem 0;
+            padding-left: 1.5rem;
+            position: relative;
+        }
+        
+        .highlight-content li::before {
+            content: "✓";
+            position: absolute;
+            left: 0;
+            color: var(--success);
+        }
+        
+        .footer {
+            text-align: center;
+            padding: 3rem 2rem;
+            border-top: 1px solid var(--border);
+            color: var(--text-muted);
+        }
+        
+        .footer-contact {
+            margin-bottom: 1rem;
+        }
+        
+        .footer-contact a {
+            color: var(--primary);
+            text-decoration: none;
+        }
+        
+        .footer-contact a:hover {
+            text-decoration: underline;
+        }
+        
+        .footer-legal {
+            font-size: 0.75rem;
+        }
+        
+        @media (max-width: 768px) {
+            .hero-title {
+                font-size: 1.75rem;
+            }
+            
+            .hero-metrics {
+                gap: 1.5rem;
+            }
+            
+            .metric-value {
+                font-size: 1.5rem;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <!-- Login Screen -->
+    <div id="login-screen" class="login-container">
+        <div class="login-box">
+            <div class="login-logo">🔐</div>
+            <h1 class="login-title">Investor Data Room</h1>
+            <p class="login-subtitle">Curious Kelly / The Daily Lesson</p>
+            
+            <form id="login-form">
+                <input 
+                    type="password" 
+                    id="password-input" 
+                    class="login-input" 
+                    placeholder="Enter access password"
+                    autocomplete="off"
+                    autofocus
+                >
+                <button type="submit" class="login-button">Access Data Room</button>
+            </form>
+            
+            <p id="login-error" class="login-error">Incorrect password. Please try again.</p>
+            
+            <p class="login-footer">
+                For access credentials, contact<br>
+                <strong>hello@curiouskelly.com</strong>
+            </p>
+        </div>
+    </div>
+    
+    <!-- Data Room (Hidden until login) -->
+    <div id="data-room" class="data-room">
+        <header class="header">
+            <div class="header-content">
+                <div class="header-brand">
+                    <span>✨</span>
+                    <h1 class="header-title">Curious Kelly</h1>
+                    <span class="header-badge">CONFIDENTIAL</span>
+                </div>
+                <button id="logout-btn" class="logout-btn">Sign Out</button>
+            </div>
+        </header>
+        
+        <main class="main">
+            <section class="hero">
+                <h2 class="hero-title">The World's First AI Teacher</h2>
+                <p class="hero-tagline">
+                    Building daily learning habits for lifelong learners through 
+                    AI-powered character teaching.
+                </p>
+                <div class="hero-metrics">
+                    <div class="metric">
+                        <div class="metric-value">$89B</div>
+                        <div class="metric-label">Consumer EdTech TAM</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">52%</div>
+                        <div class="metric-label">Day 7 Retention</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">+62</div>
+                        <div class="metric-label">NPS Score</div>
+                    </div>
+                    <div class="metric">
+                        <div class="metric-value">$1M</div>
+                        <div class="metric-label">Seed Target</div>
+                    </div>
+                </div>
+            </section>
+            
+            <div class="highlight-box">
+                <h3 class="highlight-title">💡 Investment Thesis</h3>
+                <div class="highlight-content">
+                    <ul>
+                        <li>First-mover in AI character teaching (not chatbots, not games)</li>
+                        <li>Proven retention 2.5x industry average</li>
+                        <li>Capital-efficient: $233/mo infrastructure serves thousands</li>
+                        <li>Clear acquisition path: Apple Education initiative alignment</li>
+                        <li>Experienced founder: 20 years EdTech, Open English success</li>
+                    </ul>
+                </div>
+            </div>
+            
+            <section class="section">
+                <h3 class="section-title"><span>📊</span> Key Documents</h3>
+                <div class="grid">
+                    <a href="#" class="card" onclick="alert('PDF will be available for download'); return false;">
+                        <div class="card-icon">📑</div>
+                        <div class="card-title">Pitch Deck</div>
+                        <div class="card-description">Executive summary, market opportunity, and ask</div>
+                        <span class="card-badge coming-soon">Coming Soon</span>
+                    </a>
+                    
+                    <a href="#" class="card" onclick="alert('Excel model will be available for download'); return false;">
+                        <div class="card-icon">📈</div>
+                        <div class="card-title">Financial Model</div>
+                        <div class="card-description">5-year projections, unit economics, scenarios</div>
+                        <span class="card-badge coming-soon">Coming Soon</span>
+                    </a>
+                    
+                    <a href="#" class="card" onclick="alert('One-pager PDF will be available for download'); return false;">
+                        <div class="card-icon">📄</div>
+                        <div class="card-title">One-Pager</div>
+                        <div class="card-description">Single-page company overview</div>
+                        <span class="card-badge coming-soon">Coming Soon</span>
+                    </a>
+                    
+                    <a href="https://curiouskelly.com" target="_blank" class="card">
+                        <div class="card-icon">🎬</div>
+                        <div class="card-title">Product Demo</div>
+                        <div class="card-description">See Kelly teaching Day 1 lesson live</div>
+                        <span class="card-badge">Live Demo</span>
+                    </a>
+                </div>
+            </section>
+            
+            <section class="section">
+                <h3 class="section-title"><span>👥</span> Team</h3>
+                <div class="grid">
+                    <a href="team/nicolette-bio.md" class="card">
+                        <div class="card-icon">👩‍💼</div>
+                        <div class="card-title">Founder Bio</div>
+                        <div class="card-description">Nicolette Kefaya - 20 years EdTech experience</div>
+                    </a>
+                    
+                    <a href="team/org-chart.md" class="card">
+                        <div class="card-icon">🏢</div>
+                        <div class="card-title">Organization</div>
+                        <div class="card-description">Current team and hiring plan</div>
+                    </a>
+                </div>
+            </section>
+            
+            <section class="section">
+                <h3 class="section-title"><span>🌍</span> Market</h3>
+                <div class="grid">
+                    <a href="market/market-size.md" class="card">
+                        <div class="card-icon">📊</div>
+                        <div class="card-title">Market Size</div>
+                        <div class="card-description">TAM/SAM/SOM analysis, $89B opportunity</div>
+                    </a>
+                    
+                    <a href="market/competitive-landscape.md" class="card">
+                        <div class="card-icon">🎯</div>
+                        <div class="card-title">Competitive Landscape</div>
+                        <div class="card-description">vs. Duolingo, Khan Academy, ChatGPT</div>
+                    </a>
+                    
+                    <a href="market/customer-research.md" class="card">
+                        <div class="card-icon">🔬</div>
+                        <div class="card-title">Customer Research</div>
+                        <div class="card-description">User interviews, personas, insights</div>
+                    </a>
+                </div>
+            </section>
+            
+            <section class="section">
+                <h3 class="section-title"><span>🚀</span> Product</h3>
+                <div class="grid">
+                    <a href="product/product-overview.md" class="card">
+                        <div class="card-icon">✨</div>
+                        <div class="card-title">Product Overview</div>
+                        <div class="card-description">What Kelly is and how it works</div>
+                    </a>
+                    
+                    <a href="product/technology-stack.md" class="card">
+                        <div class="card-icon">⚙️</div>
+                        <div class="card-title">Technology Stack</div>
+                        <div class="card-description">Architecture, AI pipeline, infrastructure</div>
+                    </a>
+                    
+                    <a href="product/roadmap.md" class="card">
+                        <div class="card-icon">🗺️</div>
+                        <div class="card-title">Product Roadmap</div>
+                        <div class="card-description">MVP → Scale → Apple acquisition path</div>
+                    </a>
+                </div>
+            </section>
+            
+            <section class="section">
+                <h3 class="section-title"><span>⚖️</span> Legal</h3>
+                <div class="grid">
+                    <a href="legal/incorporation-docs.md" class="card">
+                        <div class="card-icon">📋</div>
+                        <div class="card-title">Incorporation</div>
+                        <div class="card-description">Delaware PBC structure, governance</div>
+                    </a>
+                    
+                    <a href="legal/cap-table.md" class="card">
+                        <div class="card-icon">📊</div>
+                        <div class="card-title">Cap Table</div>
+                        <div class="card-description">Current ownership, post-funding scenarios</div>
+                    </a>
+                    
+                    <a href="legal/patents-trademarks.md" class="card">
+                        <div class="card-icon">🔒</div>
+                        <div class="card-title">IP Portfolio</div>
+                        <div class="card-description">Patents, trademarks, trade secrets</div>
+                    </a>
+                </div>
+            </section>
+            
+            <section class="section">
+                <h3 class="section-title"><span>📈</span> Metrics</h3>
+                <div class="grid">
+                    <a href="metrics/current-metrics.md" class="card">
+                        <div class="card-icon">📉</div>
+                        <div class="card-title">Current Metrics</div>
+                        <div class="card-description">Live dashboard: users, revenue, retention</div>
+                    </a>
+                    
+                    <a href="metrics/projections.md" class="card">
+                        <div class="card-icon">🔮</div>
+                        <div class="card-title">Financial Projections</div>
+                        <div class="card-description">5-year forecast, unit economics</div>
+                    </a>
+                </div>
+            </section>
+        </main>
+        
+        <footer class="footer">
+            <p class="footer-contact">
+                Questions? Contact <a href="mailto:hello@curiouskelly.com">hello@curiouskelly.com</a>
+            </p>
+            <p class="footer-legal">
+                CONFIDENTIAL — For intended recipients only. Do not distribute.<br>
+                © 2026 Lesson of the Day PBC. All rights reserved.
+            </p>
+        </footer>
+    </div>
+    
+    <script>
+        // Simple client-side password protection
+        // Password: investor2026
+        const CORRECT_HASH = '8a9bcf3d5e7a1b2c4d6e8f0a2b4c6d8e0f1a3b5c7d9e1f3a5b7c9d1e3f5a7b9c';
+        const CORRECT_PASSWORD = 'investor2026';
+        
+        const loginScreen = document.getElementById('login-screen');
+        const dataRoom = document.getElementById('data-room');
+        const loginForm = document.getElementById('login-form');
+        const passwordInput = document.getElementById('password-input');
+        const loginError = document.getElementById('login-error');
+        const logoutBtn = document.getElementById('logout-btn');
+        
+        // Check if already authenticated
+        if (sessionStorage.getItem('authenticated') === 'true') {
+            showDataRoom();
+        }
+        
+        loginForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            const password = passwordInput.value;
+            
+            if (password === CORRECT_PASSWORD) {
+                sessionStorage.setItem('authenticated', 'true');
+                showDataRoom();
+            } else {
+                loginError.style.display = 'block';
+                passwordInput.value = '';
+                passwordInput.focus();
+            }
+        });
+        
+        logoutBtn.addEventListener('click', function() {
+            sessionStorage.removeItem('authenticated');
+            loginScreen.style.display = 'flex';
+            dataRoom.classList.remove('active');
+            passwordInput.value = '';
+            loginError.style.display = 'none';
+        });
+        
+        function showDataRoom() {
+            loginScreen.style.display = 'none';
+            dataRoom.classList.add('active');
+        }
+    </script>
+</body>
+</html>

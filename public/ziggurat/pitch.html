@@ -1,0 +1,768 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Ziggurat — Pitch Deck</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        html {
+            scroll-behavior: smooth;
+        }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: #000;
+            color: #fff;
+            line-height: 1.6;
+        }
+        
+        /* Navigation */
+        .nav {
+            position: fixed;
+            top: 0;
+            left: 0;
+            right: 0;
+            z-index: 100;
+            padding: 20px 40px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: linear-gradient(180deg, rgba(0,0,0,0.8) 0%, rgba(0,0,0,0) 100%);
+        }
+        
+        .nav-logo {
+            font-size: 14px;
+            font-weight: 700;
+            letter-spacing: 2px;
+            text-transform: uppercase;
+            color: rgba(255,255,255,0.7);
+        }
+        
+        .nav-links {
+            display: flex;
+            gap: 30px;
+        }
+        
+        .nav-links a {
+            color: rgba(255,255,255,0.5);
+            text-decoration: none;
+            font-size: 13px;
+            font-weight: 500;
+            transition: color 0.2s;
+        }
+        
+        .nav-links a:hover {
+            color: #fff;
+        }
+        
+        /* Sections */
+        section {
+            min-height: 100vh;
+            padding: 120px 60px;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+        }
+        
+        /* Hero */
+        .hero {
+            position: relative;
+            overflow: hidden;
+            text-align: center;
+            background: radial-gradient(ellipse at 50% 30%, #0a1628 0%, #000 70%);
+        }
+        
+        .hero-content {
+            position: relative;
+            z-index: 2;
+            max-width: 900px;
+            margin: 0 auto;
+        }
+        
+        .hero h1 {
+            font-size: 80px;
+            font-weight: 900;
+            letter-spacing: -3px;
+            line-height: 1;
+            margin-bottom: 24px;
+            background: linear-gradient(135deg, #fff 0%, rgba(255,255,255,0.8) 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero .tagline {
+            font-size: 24px;
+            color: rgba(255,255,255,0.5);
+            margin-bottom: 48px;
+            font-weight: 300;
+        }
+        
+        .hero .cta-row {
+            display: flex;
+            gap: 16px;
+            justify-content: center;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-size: 15px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background: linear-gradient(135deg, #e85d04 0%, #f97316 100%);
+            color: #fff;
+        }
+        
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 40px rgba(232, 93, 4, 0.3);
+        }
+        
+        .btn-secondary {
+            background: rgba(255,255,255,0.1);
+            color: #fff;
+            border: 1px solid rgba(255,255,255,0.2);
+        }
+        
+        .btn-secondary:hover {
+            background: rgba(255,255,255,0.15);
+        }
+        
+        /* Before/After Section */
+        .before-after {
+            background: #050a14;
+            padding: 80px 60px;
+        }
+        
+        .section-label {
+            font-size: 11px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: rgba(255,255,255,0.3);
+            margin-bottom: 16px;
+        }
+        
+        .section-title {
+            font-size: 48px;
+            font-weight: 800;
+            letter-spacing: -2px;
+            margin-bottom: 48px;
+        }
+        
+        .comparison-container {
+            position: relative;
+            max-width: 1400px;
+            margin: 0 auto;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+        }
+        
+        .comparison-canvas-wrap {
+            position: relative;
+            width: 100%;
+        }
+        
+        #beforeCanvas, #afterCanvas {
+            width: 100%;
+            display: block;
+        }
+        
+        #afterCanvas {
+            position: absolute;
+            top: 0;
+            left: 0;
+            clip-path: inset(0 50% 0 0);
+        }
+        
+        .slider-line {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            left: 50%;
+            width: 4px;
+            background: #fff;
+            transform: translateX(-50%);
+            cursor: ew-resize;
+            z-index: 10;
+        }
+        
+        .slider-handle {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 48px;
+            height: 48px;
+            background: #fff;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+        }
+        
+        .slider-handle svg {
+            width: 20px;
+            height: 20px;
+        }
+        
+        .comparison-labels {
+            position: absolute;
+            bottom: 30px;
+            left: 30px;
+            right: 30px;
+            display: flex;
+            justify-content: space-between;
+            pointer-events: none;
+        }
+        
+        .comparison-label {
+            background: rgba(0,0,0,0.7);
+            padding: 10px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            font-weight: 600;
+            backdrop-filter: blur(10px);
+        }
+        
+        /* 7 Layers Section */
+        .layers-section {
+            background: linear-gradient(180deg, #050a14 0%, #0a1020 100%);
+        }
+        
+        .layers-grid {
+            display: grid;
+            grid-template-columns: repeat(7, 1fr);
+            gap: 12px;
+            max-width: 1400px;
+            margin: 60px auto 0;
+        }
+        
+        .layer-block {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.06);
+            border-radius: 16px;
+            padding: 24px 20px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .layer-block:hover {
+            background: rgba(255,255,255,0.06);
+            transform: translateY(-4px);
+        }
+        
+        .layer-block .layer-num {
+            font-size: 36px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+        
+        .layer-block .layer-name {
+            font-size: 14px;
+            font-weight: 700;
+            margin-bottom: 4px;
+        }
+        
+        .layer-block .layer-purpose {
+            font-size: 11px;
+            color: rgba(255,255,255,0.4);
+        }
+        
+        .layer-1 { border-color: rgba(232, 93, 4, 0.3); }
+        .layer-1 .layer-num { color: #e85d04; }
+        .layer-2 { border-color: rgba(0, 212, 255, 0.3); }
+        .layer-2 .layer-num { color: #00d4ff; }
+        .layer-3 { border-color: rgba(34, 197, 94, 0.3); }
+        .layer-3 .layer-num { color: #22c55e; }
+        .layer-4 { border-color: rgba(251, 191, 36, 0.3); }
+        .layer-4 .layer-num { color: #fbbf24; }
+        .layer-5 { border-color: rgba(192, 38, 211, 0.3); }
+        .layer-5 .layer-num { color: #c026d3; }
+        .layer-6 { border-color: rgba(129, 140, 248, 0.3); }
+        .layer-6 .layer-num { color: #818cf8; }
+        .layer-7 .layer-num { color: #fff; }
+        
+        /* Stats Section */
+        .stats-section {
+            background: #0a1020;
+            text-align: center;
+        }
+        
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 40px;
+            max-width: 1000px;
+            margin: 60px auto 0;
+        }
+        
+        .stat-block .stat-value {
+            font-size: 56px;
+            font-weight: 800;
+            background: linear-gradient(135deg, #e85d04 0%, #fbbf24 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            letter-spacing: -2px;
+        }
+        
+        .stat-block .stat-label {
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+            margin-top: 8px;
+        }
+        
+        /* Promise Section */
+        .promise-section {
+            background: linear-gradient(180deg, #0a1020 0%, #050a14 100%);
+            text-align: center;
+        }
+        
+        .promise-quote {
+            font-size: 32px;
+            font-weight: 300;
+            max-width: 800px;
+            margin: 0 auto;
+            line-height: 1.6;
+            color: rgba(255,255,255,0.8);
+        }
+        
+        .promise-quote em {
+            color: #e85d04;
+            font-style: normal;
+        }
+        
+        /* Footer */
+        .footer {
+            padding: 60px;
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.06);
+        }
+        
+        .footer-logo {
+            font-size: 18px;
+            font-weight: 800;
+            margin-bottom: 8px;
+        }
+        
+        .footer-tagline {
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 24px;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: 30px;
+        }
+        
+        .footer-links a {
+            color: rgba(255,255,255,0.4);
+            text-decoration: none;
+            font-size: 13px;
+        }
+        
+        .footer-links a:hover {
+            color: #fff;
+        }
+    </style>
+</head>
+<body>
+    <nav class="nav">
+        <div class="nav-logo">Lesson of the Day</div>
+        <div class="nav-links">
+            <a href="#vision">Vision</a>
+            <a href="#comparison">Before/After</a>
+            <a href="#layers">7 Layers</a>
+            <a href="#promise">Promise</a>
+            <a href="7-layers.html">Interactive Demo</a>
+        </div>
+    </nav>
+    
+    <section class="hero" id="vision">
+        <div class="hero-content">
+            <h1>The Ziggurat</h1>
+            <p class="tagline">A Permanent Monument to Human Curiosity</p>
+            <div class="cta-row">
+                <a href="#comparison" class="btn btn-primary">See the Vision</a>
+                <a href="7-layers.html" class="btn btn-secondary">Interactive Demo</a>
+            </div>
+        </div>
+    </section>
+    
+    <section class="before-after" id="comparison">
+        <div class="section-label">Transformation</div>
+        <h2 class="section-title">Before & After</h2>
+        
+        <div class="comparison-container" id="comparisonContainer">
+            <div class="comparison-canvas-wrap">
+                <canvas id="beforeCanvas"></canvas>
+                <canvas id="afterCanvas"></canvas>
+            </div>
+            <div class="slider-line" id="sliderLine">
+                <div class="slider-handle">
+                    <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+                        <path d="M18 8L22 12L18 16M6 8L2 12L6 16"/>
+                    </svg>
+                </div>
+            </div>
+            <div class="comparison-labels">
+                <span class="comparison-label">Before</span>
+                <span class="comparison-label">After — Day 24: Why Humans Tell Stories</span>
+            </div>
+        </div>
+    </section>
+    
+    <section class="layers-section" id="layers">
+        <div class="section-label">Architecture</div>
+        <h2 class="section-title">7 Layers of Wonder</h2>
+        
+        <div class="layers-grid">
+            <div class="layer-block layer-1">
+                <div class="layer-num">1</div>
+                <div class="layer-name">Foundation</div>
+                <div class="layer-purpose">8 Billion Learners</div>
+            </div>
+            <div class="layer-block layer-2">
+                <div class="layer-num">2</div>
+                <div class="layer-name">Journey</div>
+                <div class="layer-purpose">Learning Progress</div>
+            </div>
+            <div class="layer-block layer-3">
+                <div class="layer-num">3</div>
+                <div class="layer-name">Pulse</div>
+                <div class="layer-purpose">Live Activity</div>
+            </div>
+            <div class="layer-block layer-4">
+                <div class="layer-num">4</div>
+                <div class="layer-name">Wonder Hall</div>
+                <div class="layer-purpose">Achievements</div>
+            </div>
+            <div class="layer-block layer-5">
+                <div class="layer-num">5</div>
+                <div class="layer-name">Today</div>
+                <div class="layer-purpose">Daily Lesson</div>
+            </div>
+            <div class="layer-block layer-6">
+                <div class="layer-num">6</div>
+                <div class="layer-name">Calendar</div>
+                <div class="layer-purpose">365 Days</div>
+            </div>
+            <div class="layer-block layer-7">
+                <div class="layer-num">7</div>
+                <div class="layer-name">Crown</div>
+                <div class="layer-purpose">Eternal Beacon</div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="stats-section">
+        <div class="section-label">Scale</div>
+        <h2 class="section-title">By the Numbers</h2>
+        
+        <div class="stats-grid">
+            <div class="stat-block">
+                <div class="stat-value">6,360</div>
+                <div class="stat-label">Linear Feet of LEDs</div>
+            </div>
+            <div class="stat-block">
+                <div class="stat-value">11.6M</div>
+                <div class="stat-label">Total Pixels</div>
+            </div>
+            <div class="stat-block">
+                <div class="stat-value">365</div>
+                <div class="stat-label">Daily Lessons</div>
+            </div>
+            <div class="stat-block">
+                <div class="stat-value">8B</div>
+                <div class="stat-label">Learner Capacity</div>
+            </div>
+        </div>
+    </section>
+    
+    <section class="promise-section" id="promise">
+        <div class="section-label">The Promise</div>
+        <p class="promise-quote">
+            "This building holds a place for <em>every person</em> who ever lived, lives now, or will live. Your space is permanent. Your curiosity is celebrated. Your learning matters. <em>Welcome home.</em>"
+        </p>
+    </section>
+    
+    <footer class="footer">
+        <div class="footer-logo">Lesson of the Day PBC</div>
+        <div class="footer-tagline">One lesson. Every day. Forever.</div>
+        <div class="footer-links">
+            <a href="ZIGGURAT_SPECIFICATION.md">Technical Spec</a>
+            <a href="7-layers.html">Interactive Demo</a>
+            <a href="content-simulator.html">365 Lessons</a>
+            <a href="mailto:hello@curiouskelly.com">Contact</a>
+        </div>
+    </footer>
+    
+    <script>
+        // Before/After comparison
+        const beforeCanvas = document.getElementById('beforeCanvas');
+        const afterCanvas = document.getElementById('afterCanvas');
+        const sliderLine = document.getElementById('sliderLine');
+        const container = document.getElementById('comparisonContainer');
+        
+        const beforeCtx = beforeCanvas.getContext('2d');
+        const afterCtx = afterCanvas.getContext('2d');
+        
+        // Precise traced coordinates from aerial.jpg (4032×2217)
+        // Rainbow colors: Red→Purple (bottom→top) = Bloom's Taxonomy ascent
+        // CORRECTED coordinates - building spans x: 0.21-0.68, y: 0.34-0.50
+        const layers = [
+            { level: 7, left: [0.358, 0.343], right: [0.492, 0.340], height: 0.010, color: '#8b5cf6' }, // Purple (Mastery)
+            { level: 6, left: [0.335, 0.365], right: [0.518, 0.361], height: 0.012, color: '#3b82f6' }, // Blue (Synthesis)
+            { level: 5, left: [0.310, 0.388], right: [0.548, 0.383], height: 0.014, color: '#06b6d4' }, // Cyan (Application)
+            { level: 4, left: [0.285, 0.412], right: [0.580, 0.407], height: 0.016, color: '#22c55e' }, // Green (Analysis)
+            { level: 3, left: [0.260, 0.438], right: [0.615, 0.432], height: 0.018, color: '#eab308' }, // Yellow (Understanding)
+            { level: 2, left: [0.235, 0.465], right: [0.650, 0.458], height: 0.020, color: '#f97316' }, // Orange (Remembering)
+            { level: 1, left: [0.210, 0.495], right: [0.680, 0.485], height: 0.022, color: '#ef4444' }, // Red (Entry/Commons)
+        ];
+        
+        let img = new Image();
+        let sliderPos = 0.5;
+        let todayLesson = null;
+        
+        // Load today's lesson from curriculum
+        async function loadTodayLesson() {
+            const today = new Date();
+            const startOfYear = new Date(today.getFullYear(), 0, 0);
+            const dayOfYear = Math.floor((today - startOfYear) / (1000 * 60 * 60 * 24));
+            
+            try {
+                const response = await fetch(`../lessons/day-${dayOfYear}.json`);
+                if (response.ok) {
+                    todayLesson = await response.json();
+                    
+                    // Update the comparison label
+                    const afterLabel = document.querySelector('.comparison-labels span:last-child');
+                    if (afterLabel) {
+                        afterLabel.textContent = `After — Day ${dayOfYear}: ${todayLesson.meta.topic.en}`;
+                    }
+                    
+                    // Update layer 5 color based on category
+                    const categoryColors = {
+                        "Wonder": "#e85d04", "Physics": "#00d4ff", "Nature": "#22c55e",
+                        "Mind": "#a855f7", "Art": "#f472b6", "Weather": "#60a5fa",
+                        "Biology": "#34d399", "Chemistry": "#fbbf24", "Cosmos": "#818cf8",
+                        "Wisdom": "#f59e0b", "Math": "#06b6d4", "Earth": "#78716c",
+                        "Milestone": "#f43f5e", "Tech": "#10b981", "Reflection": "#8b5cf6",
+                        "Culture": "#c026d3", "Beginnings": "#f97316", "History": "#f43f5e"
+                    };
+                    
+                    const lessonColor = categoryColors[todayLesson.meta.category] || '#c026d3';
+                    layers[2].color = lessonColor; // Layer 5 is index 2
+                    
+                    console.log(`Pitch deck loaded Day ${dayOfYear}: ${todayLesson.meta.topic.en}`);
+                }
+            } catch (e) {
+                console.log('Could not load lesson, using defaults');
+            }
+        }
+        
+        // Initialize
+        async function init() {
+            await loadTodayLesson();
+            
+            img.onload = () => {
+                beforeCanvas.width = afterCanvas.width = img.width;
+                beforeCanvas.height = afterCanvas.height = img.height;
+                renderBefore();
+                renderAfter();
+                updateSlider();
+            };
+            img.src = 'aerial.jpg';
+        }
+        
+        init();
+        
+        function renderBefore() {
+            beforeCtx.drawImage(img, 0, 0);
+            beforeCtx.save();
+            beforeCtx.globalCompositeOperation = 'multiply';
+            beforeCtx.fillStyle = 'rgba(40, 50, 70, 0.25)';
+            beforeCtx.fillRect(0, 0, beforeCanvas.width, beforeCanvas.height);
+            beforeCtx.restore();
+        }
+        
+        function renderAfter() {
+            const ctx = afterCtx;
+            const w = afterCanvas.width;
+            const h = afterCanvas.height;
+            
+            ctx.drawImage(img, 0, 0);
+            
+            // Night grading
+            ctx.save();
+            ctx.globalCompositeOperation = 'multiply';
+            ctx.fillStyle = 'rgba(12, 18, 35, 0.92)';
+            ctx.fillRect(0, 0, w, h);
+            ctx.globalCompositeOperation = 'overlay';
+            ctx.fillStyle = 'rgba(20, 35, 70, 0.35)';
+            ctx.fillRect(0, 0, w, h);
+            ctx.restore();
+            
+            // Draw layers
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            
+            layers.forEach(layer => {
+                const x1 = layer.left[0] * w;
+                const y1 = layer.left[1] * h;
+                const x2 = layer.right[0] * w;
+                const y2 = layer.right[1] * h;
+                const pH = layer.height * h;
+                
+                if (layer.level === 6) {
+                    // Rainbow calendar
+                    const segments = 365;
+                    const segWidth = (x2 - x1) / segments;
+                    for (let i = 0; i < segments; i++) {
+                        const hue = (i / segments) * 360;
+                        const sx = x1 + i * segWidth;
+                        const progress = i / segments;
+                        const sy = y1 + (y2 - y1) * progress;
+                        const isToday = i === 23;
+                        
+                        ctx.shadowColor = `hsl(${hue}, 85%, 55%)`;
+                        ctx.shadowBlur = isToday ? 25 : 8;
+                        ctx.fillStyle = `hsla(${hue}, 85%, ${isToday ? 65 : 50}%, ${isToday ? 0.95 : 0.65})`;
+                        ctx.fillRect(sx, sy, segWidth + 0.5, pH);
+                    }
+                    ctx.shadowBlur = 0;
+                    return;
+                }
+                
+                const color = layer.color;
+                const rgb = hexToRgb(color);
+                
+                // Bloom
+                for (let pass = 0; pass < 5; pass++) {
+                    ctx.shadowColor = color;
+                    ctx.shadowBlur = (60 - pass * 10);
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.lineTo(x2, y2 + pH);
+                    ctx.lineTo(x1, y1 + pH);
+                    ctx.closePath();
+                    ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.03)`;
+                    ctx.fill();
+                }
+                
+                // Core
+                ctx.shadowBlur = 0;
+                const grad = ctx.createLinearGradient(x1, y1, x1, y1 + pH);
+                grad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.85)`);
+                grad.addColorStop(0.45, `rgba(${Math.min(255, rgb.r + 50)}, ${Math.min(255, rgb.g + 50)}, ${Math.min(255, rgb.b + 50)}, 1)`);
+                grad.addColorStop(0.55, `rgba(${Math.min(255, rgb.r + 50)}, ${Math.min(255, rgb.g + 50)}, ${Math.min(255, rgb.b + 50)}, 1)`);
+                grad.addColorStop(1, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.8)`);
+                
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.lineTo(x2, y2 + pH);
+                ctx.lineTo(x1, y1 + pH);
+                ctx.closePath();
+                ctx.fillStyle = grad;
+                ctx.fill();
+                
+                // White center
+                ctx.beginPath();
+                ctx.moveTo(x1, y1 + pH * 0.45);
+                ctx.lineTo(x2, y2 + pH * 0.45);
+                ctx.strokeStyle = `rgba(255, 255, 255, 0.6)`;
+                ctx.lineWidth = pH * 0.2;
+                ctx.lineCap = 'round';
+                ctx.stroke();
+                
+                // Spill
+                const spillH = pH * 3.5;
+                const spillGrad = ctx.createLinearGradient(x1, y1 + pH, x1, y1 + pH + spillH);
+                spillGrad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.15)`);
+                spillGrad.addColorStop(0.2, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.05)`);
+                spillGrad.addColorStop(1, 'rgba(0,0,0,0)');
+                ctx.beginPath();
+                ctx.moveTo(x1 - pH, y1 + pH);
+                ctx.lineTo(x2 + pH, y2 + pH);
+                ctx.lineTo(x2 + pH * 1.5, y2 + pH + spillH);
+                ctx.lineTo(x1 - pH * 1.5, y1 + pH + spillH);
+                ctx.closePath();
+                ctx.fillStyle = spillGrad;
+                ctx.fill();
+            });
+            
+            ctx.restore();
+            
+            // Sky glow
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            const glow = ctx.createRadialGradient(w * 0.46, h * 0.35, 0, w * 0.46, h * 0.2, h * 0.5);
+            glow.addColorStop(0, 'rgba(192, 38, 211, 0.04)');
+            glow.addColorStop(0.5, 'rgba(192, 38, 211, 0.015)');
+            glow.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = glow;
+            ctx.fillRect(0, 0, w, h * 0.5);
+            ctx.restore();
+            
+            // Vignette
+            const vignette = ctx.createRadialGradient(w * 0.5, h * 0.42, h * 0.25, w * 0.5, h * 0.42, h * 1.1);
+            vignette.addColorStop(0, 'rgba(0,0,0,0)');
+            vignette.addColorStop(0.5, 'rgba(0,0,0,0.05)');
+            vignette.addColorStop(0.75, 'rgba(0,0,0,0.25)');
+            vignette.addColorStop(1, 'rgba(0,0,0,0.55)');
+            ctx.fillStyle = vignette;
+            ctx.fillRect(0, 0, w, h);
+        }
+        
+        function hexToRgb(hex) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return { r, g, b };
+        }
+        
+        function updateSlider() {
+            const pct = sliderPos * 100;
+            sliderLine.style.left = pct + '%';
+            afterCanvas.style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
+        }
+        
+        // Slider interaction
+        let isDragging = false;
+        
+        sliderLine.addEventListener('mousedown', () => isDragging = true);
+        document.addEventListener('mouseup', () => isDragging = false);
+        document.addEventListener('mousemove', e => {
+            if (!isDragging) return;
+            const rect = container.getBoundingClientRect();
+            sliderPos = Math.max(0.05, Math.min(0.95, (e.clientX - rect.left) / rect.width));
+            updateSlider();
+        });
+        
+        // Touch support
+        sliderLine.addEventListener('touchstart', () => isDragging = true);
+        document.addEventListener('touchend', () => isDragging = false);
+        document.addEventListener('touchmove', e => {
+            if (!isDragging) return;
+            const touch = e.touches[0];
+            const rect = container.getBoundingClientRect();
+            sliderPos = Math.max(0.05, Math.min(0.95, (touch.clientX - rect.left) / rect.width));
+            updateSlider();
+        });
+    </script>
+</body>
+</html>

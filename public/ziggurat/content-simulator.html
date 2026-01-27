@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ziggurat — 365 Days of Wonder</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            background: #000;
+            font-family: 'SF Pro Display', -apple-system, BlinkMacSystemFont, sans-serif;
+            color: #fff;
+            overflow: hidden;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 320px;
+            height: 100vh;
+        }
+        
+        .viewer {
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #0a0a0a;
+        }
+        
+        #canvas {
+            max-width: 100%;
+            max-height: 100%;
+        }
+        
+        /* Day counter overlay */
+        .day-counter {
+            position: absolute;
+            top: 30px;
+            left: 30px;
+            font-size: 64px;
+            font-weight: 700;
+            color: rgba(255,255,255,0.9);
+            text-shadow: 0 4px 30px rgba(0,0,0,0.8);
+            line-height: 1;
+        }
+        
+        .day-counter span {
+            font-size: 18px;
+            font-weight: 400;
+            display: block;
+            color: rgba(255,255,255,0.6);
+            margin-top: 8px;
+        }
+        
+        /* Sidebar */
+        .sidebar {
+            background: #111;
+            border-left: 1px solid #222;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+        
+        .sidebar-header {
+            padding: 24px;
+            border-bottom: 1px solid #222;
+        }
+        
+        .sidebar-header h1 {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .sidebar-header p {
+            font-size: 12px;
+            color: rgba(255,255,255,0.5);
+        }
+        
+        .section {
+            padding: 20px 24px;
+            border-bottom: 1px solid #222;
+        }
+        
+        .section-title {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 12px;
+        }
+        
+        /* Content modes */
+        .mode-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 8px;
+        }
+        
+        .mode-btn {
+            aspect-ratio: 1;
+            border: 1px solid #333;
+            border-radius: 8px;
+            background: #1a1a1a;
+            cursor: pointer;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            gap: 4px;
+            transition: all 0.2s;
+            font-size: 20px;
+        }
+        
+        .mode-btn span {
+            font-size: 9px;
+            color: rgba(255,255,255,0.5);
+        }
+        
+        .mode-btn:hover { background: #252525; }
+        .mode-btn.active { border-color: #e85d04; background: rgba(232, 93, 4, 0.15); }
+        
+        /* Lesson list */
+        .lesson-list {
+            flex: 1;
+            overflow-y: auto;
+            padding: 0 24px 24px;
+        }
+        
+        .lesson-item {
+            padding: 12px;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s;
+            margin-bottom: 4px;
+        }
+        
+        .lesson-item:hover { background: rgba(255,255,255,0.05); }
+        .lesson-item.active { background: rgba(232, 93, 4, 0.2); }
+        
+        .lesson-day {
+            font-size: 10px;
+            color: rgba(255,255,255,0.4);
+            margin-bottom: 2px;
+        }
+        
+        .lesson-title {
+            font-size: 13px;
+            font-weight: 500;
+        }
+        
+        /* Color presets */
+        .color-presets {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+        
+        .color-preset {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .color-preset:hover { transform: scale(1.1); }
+        .color-preset.active { border-color: #fff; }
+        
+        /* Animation controls */
+        .anim-controls {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .anim-btn {
+            flex: 1;
+            padding: 10px;
+            border: 1px solid #333;
+            border-radius: 6px;
+            background: #1a1a1a;
+            color: #fff;
+            cursor: pointer;
+            font-size: 12px;
+            transition: all 0.2s;
+        }
+        
+        .anim-btn:hover { background: #252525; }
+        .anim-btn.active { background: #e85d04; border-color: #e85d04; }
+        
+        /* Export section */
+        .export-section {
+            padding: 20px 24px;
+            background: #0a0a0a;
+        }
+        
+        .export-btn {
+            width: 100%;
+            padding: 14px;
+            background: #e85d04;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .export-btn:hover { background: #ff6b1a; }
+        
+        /* Scrollbar */
+        .lesson-list::-webkit-scrollbar { width: 6px; }
+        .lesson-list::-webkit-scrollbar-track { background: transparent; }
+        .lesson-list::-webkit-scrollbar-thumb { background: #333; border-radius: 3px; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="viewer">
+            <canvas id="canvas"></canvas>
+            <div class="day-counter">
+                <div id="dayNum">Day 1</div>
+                <span id="dayDate">January 1, 2026</span>
+            </div>
+        </div>
+        
+        <div class="sidebar">
+            <div class="sidebar-header">
+                <h1>365 Days of Wonder</h1>
+                <p>The Ziggurat Learning Display</p>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Display Mode</div>
+                <div class="mode-grid">
+                    <div class="mode-btn active" data-mode="lesson">📚<span>Lesson</span></div>
+                    <div class="mode-btn" data-mode="gradient">🌈<span>Gradient</span></div>
+                    <div class="mode-btn" data-mode="pulse">💫<span>Pulse</span></div>
+                    <div class="mode-btn" data-mode="wave">🌊<span>Wave</span></div>
+                    <div class="mode-btn" data-mode="chase">⚡<span>Chase</span></div>
+                    <div class="mode-btn" data-mode="civic">🏛️<span>Civic</span></div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Color Theme</div>
+                <div class="color-presets">
+                    <div class="color-preset active" style="background: #e85d04" data-color="#e85d04"></div>
+                    <div class="color-preset" style="background: #00d4ff" data-color="#00d4ff"></div>
+                    <div class="color-preset" style="background: #a855f7" data-color="#a855f7"></div>
+                    <div class="color-preset" style="background: #22c55e" data-color="#22c55e"></div>
+                    <div class="color-preset" style="background: #fbbf24" data-color="#fbbf24"></div>
+                    <div class="color-preset" style="background: #ef4444" data-color="#ef4444"></div>
+                    <div class="color-preset" style="background: #ffffff" data-color="#ffffff"></div>
+                    <div class="color-preset" style="background: linear-gradient(90deg, #e85d04, #fbbf24)" data-color="warm"></div>
+                    <div class="color-preset" style="background: linear-gradient(90deg, #00d4ff, #a855f7)" data-color="cool"></div>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">Animation</div>
+                <div class="anim-controls">
+                    <button class="anim-btn" id="btnPlay">▶ Play</button>
+                    <button class="anim-btn" id="btnPause">⏸ Pause</button>
+                </div>
+            </div>
+            
+            <div class="section">
+                <div class="section-title">365 Lessons</div>
+            </div>
+            
+            <div class="lesson-list" id="lessonList">
+                <!-- Populated by JS -->
+            </div>
+            
+            <div class="export-section">
+                <button class="export-btn" id="btnExport">Export Mockup</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // State
+        let img = new Image();
+        let mode = 'lesson';
+        let primaryColor = '#e85d04';
+        let colorMode = 'solid'; // solid, warm, cool
+        // Auto-detect today's day of year
+        const today = new Date();
+        const startOfYear = new Date(today.getFullYear(), 0, 0);
+        const diff = today - startOfYear;
+        const oneDay = 1000 * 60 * 60 * 24;
+        let currentDay = Math.floor(diff / oneDay); // Day 24 on Jan 24
+        let animationFrame = 0;
+        let isPlaying = false;
+        let animId = null;
+        
+        // Will be populated from real lesson files
+        let lessons = [];
+        
+        // Load real lessons from curriculum
+        async function loadLessons() {
+            const lessonPromises = [];
+            // Load days 1-286 (what exists in the filesystem)
+            for (let day = 1; day <= 286; day++) {
+                lessonPromises.push(
+                    fetch(`../lessons/day-${day}.json`)
+                        .then(r => r.ok ? r.json() : null)
+                        .catch(() => null)
+                );
+            }
+            
+            const results = await Promise.all(lessonPromises);
+            lessons = results
+                .filter(r => r !== null)
+                .map(lesson => ({
+                    day: lesson.meta.day,
+                    title: lesson.meta.topic.en,
+                    category: lesson.meta.category,
+                    emoji: lesson.meta.emoji,
+                    headline: lesson.headline?.en || '',
+                    universal_truth: lesson.universal_truth?.en || ''
+                }))
+                .sort((a, b) => a.day - b.day);
+            
+            console.log(`Loaded ${lessons.length} lessons from curriculum`);
+            return lessons;
+        }
+        
+        // Precise traced coordinates from aerial.jpg (4032×2217)
+        // CORRECTED coordinates - building spans x: 0.21-0.68, y: 0.34-0.50
+        const terraces = [
+            { level: 7, left: [0.358, 0.343], right: [0.492, 0.340], height: 0.010 },
+            { level: 6, left: [0.335, 0.365], right: [0.518, 0.361], height: 0.012 },
+            { level: 5, left: [0.310, 0.388], right: [0.548, 0.383], height: 0.014 },
+            { level: 4, left: [0.285, 0.412], right: [0.580, 0.407], height: 0.016 },
+            { level: 3, left: [0.260, 0.438], right: [0.615, 0.432], height: 0.018 },
+            { level: 2, left: [0.235, 0.465], right: [0.650, 0.458], height: 0.020 },
+            { level: 1, left: [0.210, 0.495], right: [0.680, 0.485], height: 0.022 },
+        ];
+        
+        // Category colors
+        const categoryColors = {
+            "Wonder": "#e85d04",
+            "Physics": "#00d4ff",
+            "Nature": "#22c55e",
+            "Mind": "#a855f7",
+            "Art": "#f472b6",
+            "Weather": "#60a5fa",
+            "Biology": "#34d399",
+            "Chemistry": "#fbbf24",
+            "Cosmos": "#818cf8",
+            "Wisdom": "#f59e0b",
+            "Math": "#06b6d4",
+            "Earth": "#78716c",
+            "Milestone": "#f43f5e",
+            "Tech": "#10b981",
+            "Reflection": "#8b5cf6",
+            "Culture": "#c026d3",  // Magenta for storytelling/culture
+        };
+        
+        // Initialize: load lessons then image
+        async function init() {
+            await loadLessons();
+            
+            img.onload = () => {
+                canvas.width = img.width;
+                canvas.height = img.height;
+                populateLessonList();
+                // Set initial color from today's lesson
+                const todayLesson = lessons.find(l => l.day === currentDay);
+                if (todayLesson) {
+                    primaryColor = categoryColors[todayLesson.category] || '#e85d04';
+                }
+                render();
+            };
+            img.src = 'aerial.jpg';
+        }
+        
+        init();
+        
+        function populateLessonList() {
+            const list = document.getElementById('lessonList');
+            lessons.forEach(lesson => {
+                const el = document.createElement('div');
+                el.className = 'lesson-item' + (lesson.day === currentDay ? ' active' : '');
+                el.innerHTML = `
+                    <div class="lesson-day">Day ${lesson.day} — ${lesson.category}</div>
+                    <div class="lesson-title">${lesson.title}</div>
+                `;
+                el.onclick = () => selectDay(lesson.day);
+                list.appendChild(el);
+            });
+        }
+        
+        function selectDay(day) {
+            currentDay = day;
+            const lesson = lessons.find(l => l.day === day);
+            if (lesson) {
+                primaryColor = categoryColors[lesson.category] || '#e85d04';
+            }
+            
+            // Update UI
+            document.querySelectorAll('.lesson-item').forEach((el, i) => {
+                el.classList.toggle('active', lessons[i]?.day === day);
+            });
+            
+            const date = new Date(2026, 0, day);
+            document.getElementById('dayNum').textContent = `Day ${day}`;
+            document.getElementById('dayDate').textContent = date.toLocaleDateString('en-US', { 
+                month: 'long', day: 'numeric', year: 'numeric' 
+            });
+            
+            render();
+        }
+        
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Base image
+            ctx.drawImage(img, 0, 0);
+            
+            // Night grading
+            applyNightGrading();
+            
+            // LED content based on mode
+            switch (mode) {
+                case 'lesson': renderLesson(); break;
+                case 'gradient': renderGradient(); break;
+                case 'pulse': renderPulse(); break;
+                case 'wave': renderWave(); break;
+                case 'chase': renderChase(); break;
+                case 'civic': renderCivic(); break;
+            }
+            
+            // Atmosphere
+            applyAtmosphere();
+        }
+        
+        function applyNightGrading() {
+            ctx.save();
+            // Deep blue night sky
+            ctx.globalCompositeOperation = 'multiply';
+            ctx.fillStyle = 'rgba(18, 25, 45, 0.88)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Cool overlay
+            ctx.globalCompositeOperation = 'overlay';
+            ctx.fillStyle = 'rgba(25, 40, 80, 0.4)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.restore();
+        }
+        
+        function applyAtmosphere() {
+            // Cinematic vignette
+            const grad = ctx.createRadialGradient(
+                canvas.width * 0.5, canvas.height * 0.42, canvas.height * 0.2,
+                canvas.width * 0.5, canvas.height * 0.42, canvas.height * 1.1
+            );
+            grad.addColorStop(0, 'rgba(0,0,0,0)');
+            grad.addColorStop(0.5, 'rgba(0,0,0,0.1)');
+            grad.addColorStop(0.75, 'rgba(0,0,0,0.35)');
+            grad.addColorStop(1, 'rgba(0,0,0,0.65)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+        }
+        
+        function applySkyGlow(color) {
+            const rgb = hexToRgb(color);
+            const buildingCenterX = canvas.width * 0.46;
+            const buildingTopY = canvas.height * 0.35;
+            
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            
+            const skyGlow = ctx.createRadialGradient(
+                buildingCenterX, buildingTopY, 0,
+                buildingCenterX, buildingTopY - canvas.height * 0.2, canvas.height * 0.5
+            );
+            skyGlow.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.08)`);
+            skyGlow.addColorStop(0.3, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.04)`);
+            skyGlow.addColorStop(0.6, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.015)`);
+            skyGlow.addColorStop(1, 'rgba(0,0,0,0)');
+            
+            ctx.fillStyle = skyGlow;
+            ctx.fillRect(0, 0, canvas.width, buildingTopY + canvas.height * 0.2);
+            ctx.restore();
+        }
+        
+        function getColor(terraceIndex, position = 0) {
+            if (colorMode === 'warm') {
+                const hue = 20 + (terraceIndex / terraces.length) * 30;
+                return `hsl(${hue}, 90%, 55%)`;
+            } else if (colorMode === 'cool') {
+                const hue = 180 + (terraceIndex / terraces.length) * 60;
+                return `hsl(${hue}, 80%, 55%)`;
+            }
+            return primaryColor;
+        }
+        
+        function drawPanel(terrace, index, color, intensity = 1) {
+            const w = canvas.width;
+            const h = canvas.height;
+            const x1 = terrace.left[0] * w;
+            const y1 = terrace.left[1] * h;
+            const x2 = terrace.right[0] * w;
+            const y2 = terrace.right[1] * h;
+            const pH = terrace.height * h;
+            
+            const rgb = hexToRgb(color);
+            const cx = (x1 + x2) / 2;
+            const cy = (y1 + y2) / 2 + pH / 2;
+            
+            ctx.save();
+            
+            // === LAYER 1: Atmospheric scatter ===
+            ctx.globalCompositeOperation = 'screen';
+            const scatterRadius = Math.abs(x2 - x1) * 0.8;
+            const scatter = ctx.createRadialGradient(cx, cy, 0, cx, cy, scatterRadius);
+            scatter.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.06 * intensity})`);
+            scatter.addColorStop(0.4, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.03 * intensity})`);
+            scatter.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = scatter;
+            ctx.fillRect(x1 - scatterRadius, y1 - scatterRadius, (x2 - x1) + scatterRadius * 2, scatterRadius * 2.5);
+            
+            // === LAYER 2: Wide bloom ===
+            for (let pass = 0; pass < 6; pass++) {
+                const blur = (80 - pass * 12) * intensity;
+                const alpha = 0.04 + pass * 0.01;
+                ctx.shadowColor = color;
+                ctx.shadowBlur = blur;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.lineTo(x2, y2 + pH);
+                ctx.lineTo(x1, y1 + pH);
+                ctx.closePath();
+                ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha * intensity})`;
+                ctx.fill();
+            }
+            
+            // === LAYER 3: Core LED strip ===
+            ctx.shadowBlur = 0;
+            const coreGrad = ctx.createLinearGradient(x1, y1, x1, y1 + pH);
+            coreGrad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.95 * intensity})`);
+            coreGrad.addColorStop(0.5, `rgba(${Math.min(255, rgb.r + 60)}, ${Math.min(255, rgb.g + 60)}, ${Math.min(255, rgb.b + 60)}, ${1 * intensity})`);
+            coreGrad.addColorStop(1, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.9 * intensity})`);
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.lineTo(x2, y2 + pH);
+            ctx.lineTo(x1, y1 + pH);
+            ctx.closePath();
+            ctx.fillStyle = coreGrad;
+            ctx.fill();
+            
+            // === LAYER 4: White-hot center ===
+            const hotY1 = y1 + pH * 0.4;
+            const hotY2 = y2 + pH * 0.4;
+            ctx.beginPath();
+            ctx.moveTo(x1, hotY1);
+            ctx.lineTo(x2, hotY2);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${0.7 * intensity})`;
+            ctx.lineWidth = pH * 0.25;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+            
+            ctx.beginPath();
+            ctx.moveTo(x1, hotY1);
+            ctx.lineTo(x2, hotY2);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${0.9 * intensity})`;
+            ctx.lineWidth = pH * 0.1;
+            ctx.stroke();
+            
+            // === LAYER 5: Downward spill ===
+            const spillH = pH * 4;
+            const spillGrad = ctx.createLinearGradient(x1, y1 + pH, x1, y1 + pH + spillH);
+            spillGrad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.2 * intensity})`);
+            spillGrad.addColorStop(0.15, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.1 * intensity})`);
+            spillGrad.addColorStop(0.5, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.03 * intensity})`);
+            spillGrad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.globalCompositeOperation = 'screen';
+            ctx.beginPath();
+            ctx.moveTo(x1 - pH, y1 + pH);
+            ctx.lineTo(x2 + pH, y2 + pH);
+            ctx.lineTo(x2 + pH * 2, y2 + pH + spillH);
+            ctx.lineTo(x1 - pH * 2, y1 + pH + spillH);
+            ctx.closePath();
+            ctx.fillStyle = spillGrad;
+            ctx.fill();
+            
+            // === LAYER 6: Upward bounce ===
+            const bounceH = pH * 2.5;
+            const bounceGrad = ctx.createLinearGradient(x1, y1, x1, y1 - bounceH);
+            bounceGrad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.12 * intensity})`);
+            bounceGrad.addColorStop(0.3, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.04 * intensity})`);
+            bounceGrad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.lineTo(x2 + pH, y2 - bounceH);
+            ctx.lineTo(x1 - pH, y1 - bounceH);
+            ctx.closePath();
+            ctx.fillStyle = bounceGrad;
+            ctx.fill();
+            
+            ctx.restore();
+        }
+        
+        function renderLesson() {
+            const lesson = lessons.find(l => l.day === currentDay) || lessons[0];
+            const color = categoryColors[lesson.category] || primaryColor;
+            
+            terraces.forEach((t, i) => {
+                // Stagger intensity by level for visual interest
+                const intensity = 0.7 + Math.sin(i * 0.5 + animationFrame * 0.02) * 0.3;
+                drawPanel(t, i, color, intensity);
+            });
+            applySkyGlow(color);
+        }
+        
+        function renderGradient() {
+            terraces.forEach((t, i) => {
+                const hue = (i / terraces.length) * 360 + animationFrame;
+                const color = `hsl(${hue % 360}, 85%, 55%)`;
+                drawPanel(t, i, color, 1);
+            });
+            applySkyGlow('#ff6600');
+        }
+        
+        function renderPulse() {
+            const pulse = Math.sin(animationFrame * 0.08) * 0.4 + 0.6;
+            terraces.forEach((t, i) => {
+                drawPanel(t, i, primaryColor, pulse);
+            });
+            applySkyGlow(primaryColor);
+        }
+        
+        function renderWave() {
+            terraces.forEach((t, i) => {
+                const wave = Math.sin(animationFrame * 0.05 + i * 0.8) * 0.4 + 0.6;
+                drawPanel(t, i, primaryColor, wave);
+            });
+            applySkyGlow(primaryColor);
+        }
+        
+        function renderChase() {
+            const activeLevel = Math.floor(animationFrame * 0.15) % terraces.length;
+            terraces.forEach((t, i) => {
+                const dist = Math.abs(i - activeLevel);
+                const intensity = dist === 0 ? 1 : dist === 1 ? 0.5 : 0.2;
+                drawPanel(t, i, primaryColor, intensity);
+            });
+            applySkyGlow(primaryColor);
+        }
+        
+        function renderCivic() {
+            // Red, white, blue for civic events
+            const colors = ['#ef4444', '#ffffff', '#3b82f6'];
+            terraces.forEach((t, i) => {
+                const color = colors[i % 3];
+                drawPanel(t, i, color, 1);
+            });
+            applySkyGlow('#ef4444');
+        }
+        
+        function hexToRgb(hex) {
+            if (hex.startsWith('hsl')) {
+                // Parse HSL
+                const match = hex.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
+                if (match) {
+                    return hslToRgb(parseInt(match[1]) / 360, parseInt(match[2]) / 100, parseInt(match[3]) / 100);
+                }
+            }
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return { r, g, b };
+        }
+        
+        function hslToRgb(h, s, l) {
+            let r, g, b;
+            if (s === 0) {
+                r = g = b = l;
+            } else {
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1/6) return p + (q - p) * 6 * t;
+                    if (t < 1/2) return q;
+                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                    return p;
+                };
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1/3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1/3);
+            }
+            return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
+        }
+        
+        function animate() {
+            animationFrame++;
+            render();
+            if (isPlaying) {
+                animId = requestAnimationFrame(animate);
+            }
+        }
+        
+        // Controls
+        document.querySelectorAll('.mode-btn').forEach(btn => {
+            btn.onclick = () => {
+                mode = btn.dataset.mode;
+                document.querySelectorAll('.mode-btn').forEach(b => b.classList.remove('active'));
+                btn.classList.add('active');
+                render();
+            };
+        });
+        
+        document.querySelectorAll('.color-preset').forEach(preset => {
+            preset.onclick = () => {
+                const color = preset.dataset.color;
+                if (color === 'warm') {
+                    colorMode = 'warm';
+                } else if (color === 'cool') {
+                    colorMode = 'cool';
+                } else {
+                    colorMode = 'solid';
+                    primaryColor = color;
+                }
+                document.querySelectorAll('.color-preset').forEach(p => p.classList.remove('active'));
+                preset.classList.add('active');
+                render();
+            };
+        });
+        
+        document.getElementById('btnPlay').onclick = () => {
+            if (!isPlaying) {
+                isPlaying = true;
+                animate();
+            }
+        };
+        
+        document.getElementById('btnPause').onclick = () => {
+            isPlaying = false;
+            if (animId) cancelAnimationFrame(animId);
+        };
+        
+        document.getElementById('btnExport').onclick = () => {
+            const link = document.createElement('a');
+            const lesson = lessons.find(l => l.day === currentDay) || lessons[0];
+            link.download = `ziggurat-day-${currentDay}-${lesson.title.replace(/\s+/g, '-').toLowerCase()}.png`;
+            link.href = canvas.toDataURL('image/png', 1.0);
+            link.click();
+        };
+        
+        // Keyboard
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                isPlaying = !isPlaying;
+                if (isPlaying) animate();
+            }
+            if (e.code === 'ArrowRight') {
+                const idx = lessons.findIndex(l => l.day === currentDay);
+                if (idx < lessons.length - 1) selectDay(lessons[idx + 1].day);
+            }
+            if (e.code === 'ArrowLeft') {
+                const idx = lessons.findIndex(l => l.day === currentDay);
+                if (idx > 0) selectDay(lessons[idx - 1].day);
+            }
+        });
+    </script>
+</body>
+</html>

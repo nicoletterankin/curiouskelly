@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Check</title>
+    <style>
+        body { margin: 0; background: #000; padding: 10px; }
+        canvas { max-width: 100%; height: auto; display: block; margin: 0 auto; }
+        h1 { color: #fff; text-align: center; font-family: sans-serif; font-size: 16px; margin: 10px 0; }
+    </style>
+</head>
+<body>
+    <h1>AFTER (LEDs should be on building terraces)</h1>
+    <canvas id="c" width="1008" height="554"></canvas>
+    
+    <script>
+        const layers = [
+            { left: [0.169, 0.496], right: [0.699, 0.480], h: 0.018, color: '#ef4444' },
+            { left: [0.203, 0.465], right: [0.661, 0.453], h: 0.016, color: '#f97316' },
+            { left: [0.238, 0.437], right: [0.625, 0.428], h: 0.014, color: '#eab308' },
+            { left: [0.273, 0.410], right: [0.589, 0.403], h: 0.012, color: '#22c55e' },
+            { left: [0.306, 0.386], right: [0.556, 0.380], h: 0.010, color: '#06b6d4' },
+            { left: [0.339, 0.363], right: [0.523, 0.359], h: 0.009, color: '#3b82f6' },
+            { left: [0.369, 0.344], right: [0.494, 0.340], h: 0.008, color: '#8b5cf6' },
+        ];
+        
+        const canvas = document.getElementById('c');
+        const ctx = canvas.getContext('2d');
+        const W = 1008, H = 554;
+        
+        const img = new Image();
+        img.onload = () => {
+            ctx.drawImage(img, 0, 0, W, H);
+            ctx.globalCompositeOperation = 'multiply';
+            ctx.fillStyle = 'rgba(10,15,30,0.85)';
+            ctx.fillRect(0, 0, W, H);
+            ctx.globalCompositeOperation = 'source-over';
+            
+            layers.forEach(l => {
+                const x1 = l.left[0] * W, y1 = l.left[1] * H;
+                const x2 = l.right[0] * W, y2 = l.right[1] * H;
+                const ph = l.h * H;
+                
+                ctx.shadowColor = l.color;
+                ctx.shadowBlur = 20;
+                ctx.fillStyle = l.color;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1); ctx.lineTo(x2, y2);
+                ctx.lineTo(x2, y2 + ph); ctx.lineTo(x1, y1 + ph);
+                ctx.closePath();
+                ctx.fill();
+                
+                ctx.shadowBlur = 0;
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1 + ph/2);
+                ctx.lineTo(x2, y2 + ph/2);
+                ctx.stroke();
+            });
+        };
+        img.src = 'aerial.jpg';
+    </script>
+</body>
+</html>

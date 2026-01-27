@@ -5576,6 +5576,12 @@
           goldenVideoElement.id = 'golden-video-player';
           goldenVideoElement.playsInline = true;
           goldenVideoElement.muted = state.isMuted;
+          
+          // Check if elder/senior age category needs zoom scaling for proper framing
+          const dbAgeBucket = mapAgeBucketToDb(state.variants.age);
+          const isElderCategory = dbAgeBucket === 'elder' || dbAgeBucket === 'super_elder';
+          const scaleTransform = isElderCategory ? 'transform: scale(1.15);' : '';
+          
           goldenVideoElement.style.cssText = `
             position: absolute;
             top: 0;
@@ -5583,11 +5589,16 @@
             width: 100%;
             height: 100%;
             object-fit: cover;
+            object-position: center top;
             z-index: 50;
             opacity: 0;
             transition: opacity 0.3s ease;
             pointer-events: none;
+            ${scaleTransform}
           `;
+          
+          // Store age data attribute for debugging
+          goldenVideoElement.dataset.ageCategory = dbAgeBucket;
 
           // Insert into Kelly container
           const kellyContainer =
@@ -5596,6 +5607,7 @@
             document.querySelector('.lesson-container');
           if (kellyContainer) {
             kellyContainer.style.position = 'relative';
+            kellyContainer.style.overflow = 'hidden'; // Ensure scaled video doesn't overflow
             kellyContainer.appendChild(goldenVideoElement);
           }
         }

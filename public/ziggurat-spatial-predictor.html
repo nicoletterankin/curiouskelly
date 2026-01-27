@@ -1,0 +1,706 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ziggurat Floor-by-Floor Spatial Predictions</title>
+    <style>
+        :root {
+            --navy: #1a365d;
+            --blue: #2c5282;
+            --light-blue: #3182ce;
+        }
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #0f172a 0%, #1e293b 100%);
+            min-height: 100vh;
+            color: white;
+        }
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        header {
+            text-align: center;
+            padding: 20px 0;
+            border-bottom: 1px solid rgba(255,255,255,0.1);
+            margin-bottom: 20px;
+        }
+        header h1 { font-size: 2rem; margin-bottom: 5px; }
+        header p { color: #94a3b8; }
+        
+        .floor-selector {
+            display: flex;
+            justify-content: center;
+            gap: 10px;
+            margin-bottom: 20px;
+            flex-wrap: wrap;
+        }
+        .floor-btn {
+            padding: 12px 24px;
+            border: 2px solid #475569;
+            background: transparent;
+            color: white;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 0.9rem;
+        }
+        .floor-btn:hover { border-color: #3b82f6; background: rgba(59,130,246,0.1); }
+        .floor-btn.active { 
+            border-color: #3b82f6; 
+            background: #3b82f6; 
+            font-weight: bold;
+        }
+        .floor-btn.lobby { border-color: #f59e0b; }
+        .floor-btn.lobby.active { background: #f59e0b; border-color: #f59e0b; }
+        
+        .main-content {
+            display: grid;
+            grid-template-columns: 1fr 350px;
+            gap: 20px;
+        }
+        @media (max-width: 1000px) {
+            .main-content { grid-template-columns: 1fr; }
+        }
+        
+        .floor-plan-container {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+            position: relative;
+        }
+        .floor-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 15px;
+            border-bottom: 1px solid #334155;
+        }
+        .floor-title { font-size: 1.3rem; }
+        .floor-stats {
+            display: flex;
+            gap: 20px;
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+        .floor-stats span { color: #60a5fa; font-weight: bold; }
+        
+        .plan-svg {
+            width: 100%;
+            height: 400px;
+            background: #0f172a;
+            border-radius: 8px;
+        }
+        
+        .zone {
+            cursor: pointer;
+            transition: all 0.3s;
+        }
+        .zone:hover {
+            filter: brightness(1.3);
+        }
+        .zone-label {
+            font-size: 11px;
+            fill: white;
+            pointer-events: none;
+            font-weight: 500;
+        }
+        
+        .info-panel {
+            background: #1e293b;
+            border-radius: 12px;
+            padding: 20px;
+        }
+        .info-panel h3 {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: #60a5fa;
+            border-bottom: 1px solid #334155;
+            padding-bottom: 10px;
+        }
+        .zone-info {
+            display: none;
+        }
+        .zone-info.active {
+            display: block;
+        }
+        .zone-info h4 {
+            font-size: 1rem;
+            margin-bottom: 10px;
+            color: #fbbf24;
+        }
+        .zone-info p {
+            font-size: 0.9rem;
+            line-height: 1.6;
+            color: #cbd5e1;
+            margin-bottom: 15px;
+        }
+        .zone-detail {
+            background: #0f172a;
+            padding: 12px;
+            border-radius: 6px;
+            margin-bottom: 10px;
+        }
+        .zone-detail label {
+            font-size: 0.75rem;
+            color: #64748b;
+            text-transform: uppercase;
+        }
+        .zone-detail .value {
+            font-size: 1.1rem;
+            color: white;
+            font-weight: bold;
+        }
+        .confidence {
+            display: inline-block;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 0.75rem;
+            font-weight: bold;
+        }
+        .conf-high { background: #166534; color: #86efac; }
+        .conf-med { background: #92400e; color: #fcd34d; }
+        .conf-low { background: #7f1d1d; color: #fca5a5; }
+        
+        .legend {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 15px;
+            padding-top: 15px;
+            border-top: 1px solid #334155;
+        }
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            font-size: 0.8rem;
+            color: #94a3b8;
+        }
+        .legend-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+        
+        .floor-notes {
+            margin-top: 20px;
+            padding: 15px;
+            background: rgba(251, 191, 36, 0.1);
+            border-left: 3px solid #f59e0b;
+            border-radius: 0 8px 8px 0;
+            font-size: 0.85rem;
+            color: #fcd34d;
+        }
+        
+        .key-features {
+            margin-top: 15px;
+        }
+        .key-features h4 {
+            font-size: 0.9rem;
+            color: #60a5fa;
+            margin-bottom: 10px;
+        }
+        .key-features ul {
+            list-style: none;
+            font-size: 0.85rem;
+            color: #94a3b8;
+        }
+        .key-features li {
+            padding: 5px 0;
+            border-bottom: 1px solid #1e293b;
+        }
+        .key-features li:before {
+            content: "→ ";
+            color: #3b82f6;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🏛️ ZIGGURAT — Floor-by-Floor Spatial Predictions</h1>
+            <p>Predicted room placement based on Pereira design principles, aerospace requirements, and documented evidence</p>
+        </header>
+        
+        <div class="floor-selector">
+            <button class="floor-btn" onclick="showFloor(1)">F1 - Manufacturing</button>
+            <button class="floor-btn" onclick="showFloor(2)">F2 - Manufacturing</button>
+            <button class="floor-btn" onclick="showFloor(3)">F3 - Transition</button>
+            <button class="floor-btn lobby active" onclick="showFloor(4)">★ F4 - MAIN LOBBY</button>
+            <button class="floor-btn" onclick="showFloor(5)">F5 - Office</button>
+            <button class="floor-btn" onclick="showFloor(6)">F6 - Executive</button>
+            <button class="floor-btn" onclick="showFloor(7)">F7 - Heliport</button>
+        </div>
+        
+        <div class="main-content">
+            <div class="floor-plan-container">
+                <div class="floor-header">
+                    <div class="floor-title" id="floor-title">Floor 4 — Main Lobby Level</div>
+                    <div class="floor-stats">
+                        <div>Area: <span id="floor-area">~120,000 SF</span></div>
+                        <div>Dims: <span id="floor-dims">~600' × 200'</span></div>
+                    </div>
+                </div>
+                
+                <svg class="plan-svg" id="floor-svg" viewBox="0 0 600 400">
+                    <!-- Floor 4 default - will be replaced by JS -->
+                </svg>
+                
+                <div class="legend">
+                    <div class="legend-item"><div class="legend-color" style="background: #f59e0b;"></div>Core/Circulation</div>
+                    <div class="legend-item"><div class="legend-color" style="background: #3b82f6;"></div>Office/Admin</div>
+                    <div class="legend-item"><div class="legend-color" style="background: #10b981;"></div>Public/Lobby</div>
+                    <div class="legend-item"><div class="legend-color" style="background: #8b5cf6;"></div>Executive</div>
+                    <div class="legend-item"><div class="legend-color" style="background: #6366f1;"></div>Manufacturing</div>
+                    <div class="legend-item"><div class="legend-color" style="background: #ef4444;"></div>Mechanical</div>
+                </div>
+                
+                <div class="floor-notes" id="floor-notes">
+                    <strong>Floor 4 Note:</strong> This is the primary public entrance level. The original Pereira lobby with wood paneling and coffered ceiling is documented and preserved here.
+                </div>
+            </div>
+            
+            <div class="info-panel">
+                <h3>Zone Details</h3>
+                <div id="zone-default">
+                    <p style="color: #64748b; font-style: italic;">Click on any zone in the floor plan to see predicted details.</p>
+                </div>
+                
+                <div class="zone-info" id="zone-core">
+                    <h4>Central Core</h4>
+                    <div class="zone-detail">
+                        <label>Estimated Area</label>
+                        <div class="value" id="core-area">~14,400 SF</div>
+                    </div>
+                    <div class="zone-detail">
+                        <label>Confidence</label>
+                        <div><span class="confidence conf-high">HIGH</span></div>
+                    </div>
+                    <p id="core-desc">Continuous vertical core through all 7 floors. Contains elevator shafts (6-8 passenger + 2-4 freight), escalator banks (F3-F6), fire stairs, restrooms, and mechanical/electrical risers.</p>
+                </div>
+                
+                <div class="zone-info" id="zone-lobby">
+                    <h4>Main Lobby</h4>
+                    <div class="zone-detail">
+                        <label>Estimated Area</label>
+                        <div class="value">~15,000 SF</div>
+                    </div>
+                    <div class="zone-detail">
+                        <label>Confidence</label>
+                        <div><span class="confidence conf-high">HIGH</span></div>
+                    </div>
+                    <p><strong>DOCUMENTED:</strong> Original Pereira design preserved. Wood paneled walls, decorative wood slat coffered ceiling. Double-height space. Escalators visible from this space. North side facing Avila Road entry.</p>
+                </div>
+                
+                <div class="zone-info" id="zone-office">
+                    <h4>Office Space</h4>
+                    <div class="zone-detail">
+                        <label>Estimated Area</label>
+                        <div class="value" id="office-area">~35,000 SF</div>
+                    </div>
+                    <div class="zone-detail">
+                        <label>Confidence</label>
+                        <div><span class="confidence conf-med">MEDIUM</span></div>
+                    </div>
+                    <p id="office-desc">Open office areas with modular furniture. Perimeter private offices along windows. Currently: IRS and DHS administrative functions.</p>
+                </div>
+                
+                <div class="zone-info" id="zone-exec">
+                    <h4>Executive Offices</h4>
+                    <div class="zone-detail">
+                        <label>Estimated Area</label>
+                        <div class="value">~25,000 SF</div>
+                    </div>
+                    <div class="zone-detail">
+                        <label>Confidence</label>
+                        <div><span class="confidence conf-med">MEDIUM</span></div>
+                    </div>
+                    <p>Corner locations with best views. Original: C-suite, VP offices. Currently: Agency leadership, GSA building management.</p>
+                </div>
+                
+                <div class="zone-info" id="zone-mfg">
+                    <h4>Manufacturing Zone</h4>
+                    <div class="zone-detail">
+                        <label>Estimated Area</label>
+                        <div class="value" id="mfg-area">~180,000 SF</div>
+                    </div>
+                    <div class="zone-detail">
+                        <label>Confidence</label>
+                        <div><span class="confidence conf-high">HIGH</span></div>
+                    </div>
+                    <p id="mfg-desc">Open-span manufacturing floor. Original: Electronics assembly for Autonetics guidance systems. High ceilings (18-20'), heavy floor loads. Currently: Storage/warehouse.</p>
+                </div>
+                
+                <div class="zone-info" id="zone-cleanroom">
+                    <h4>Cleanroom Zone</h4>
+                    <div class="zone-detail">
+                        <label>Estimated Area</label>
+                        <div class="value">~40,000 SF</div>
+                    </div>
+                    <div class="zone-detail">
+                        <label>Confidence</label>
+                        <div><span class="confidence conf-med">MEDIUM</span></div>
+                    </div>
+                    <p>Original: Class 100-1000 cleanrooms for guidance system assembly. Laminar flow HVAC, gowning rooms. Windowless for contamination control. Position: Interior zone away from loading areas.</p>
+                </div>
+                
+                <div class="zone-info" id="zone-loading">
+                    <h4>Loading/Receiving</h4>
+                    <div class="zone-detail">
+                        <label>Estimated Area</label>
+                        <div class="value">~25,000 SF</div>
+                    </div>
+                    <div class="zone-detail">
+                        <label>Confidence</label>
+                        <div><span class="confidence conf-med">MEDIUM</span></div>
+                    </div>
+                    <p>Multiple truck-height loading docks. Position: East and/or West ends for service road access. Staging areas, pallet storage, receiving inspection.</p>
+                </div>
+                
+                <div class="zone-info" id="zone-mech">
+                    <h4>Mechanical Zone</h4>
+                    <div class="zone-detail">
+                        <label>Estimated Area</label>
+                        <div class="value" id="mech-area">~25,000 SF</div>
+                    </div>
+                    <div class="zone-detail">
+                        <label>Confidence</label>
+                        <div><span class="confidence conf-med">MEDIUM</span></div>
+                    </div>
+                    <p id="mech-desc">Main HVAC air handlers, chilled water distribution, electrical substations, emergency generators. Connects to external energy plant via underground tunnel.</p>
+                </div>
+                
+                <div class="zone-info" id="zone-heliport">
+                    <h4>Heliport / Mechanical</h4>
+                    <div class="zone-detail">
+                        <label>Estimated Area</label>
+                        <div class="value">~8,500 SF</div>
+                    </div>
+                    <div class="zone-detail">
+                        <label>Confidence</label>
+                        <div><span class="confidence conf-high">HIGH</span></div>
+                    </div>
+                    <p><strong>DOCUMENTED:</strong> Helistop confirmed. Mechanical penthouses house rooftop HVAC. Solar array produces 1M+ kWh/year. "Protruding vertical elements" are mechanical housings.</p>
+                </div>
+                
+                <div class="key-features" id="key-features">
+                    <h4>Key Floor Features</h4>
+                    <ul id="features-list">
+                        <li>Main public entrance from Avila Road (north)</li>
+                        <li>Original Pereira lobby preserved</li>
+                        <li>Escalators visible from lobby</li>
+                        <li>Wide-angle corridors (Pereira signature)</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const floorData = {
+            1: {
+                title: "Floor 1 — Ground Level (Below Grade)",
+                area: "~331,200 SF",
+                dims: "~1,020' × 325'",
+                notes: "<strong>Floor 1 Note:</strong> Largest floor, entirely below grade. Windowless manufacturing. Original: Autonetics electronics production. Asbestos fireproofing documented on ceiling structure.",
+                features: [
+                    "Windowless (contamination control)",
+                    "18-20 ft ceiling height",
+                    "Asbestos spray-on fireproofing",
+                    "Multiple loading docks",
+                    "Original cleanroom infrastructure"
+                ],
+                svg: `
+                    <rect x="50" y="50" width="500" height="300" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+                    <text x="300" y="30" fill="#64748b" text-anchor="middle" font-size="12">NORTH (Buried in hillside)</text>
+                    <text x="300" y="380" fill="#64748b" text-anchor="middle" font-size="12">SOUTH</text>
+                    <text x="30" y="200" fill="#64748b" text-anchor="middle" font-size="10" transform="rotate(-90, 30, 200)">WEST</text>
+                    <text x="570" y="200" fill="#64748b" text-anchor="middle" font-size="10" transform="rotate(90, 570, 200)">EAST</text>
+                    
+                    <!-- Core -->
+                    <rect class="zone" x="250" y="100" width="100" height="100" fill="#f59e0b" opacity="0.8" onclick="showZone('core')" data-zone="core"/>
+                    <text class="zone-label" x="300" y="155" text-anchor="middle">CORE</text>
+                    
+                    <!-- Manufacturing -->
+                    <rect class="zone" x="100" y="100" width="140" height="150" fill="#6366f1" opacity="0.7" onclick="showZone('mfg')" data-zone="mfg"/>
+                    <text class="zone-label" x="170" y="180" text-anchor="middle">MANUFACTURING</text>
+                    
+                    <rect class="zone" x="360" y="100" width="140" height="150" fill="#6366f1" opacity="0.7" onclick="showZone('mfg')" data-zone="mfg"/>
+                    <text class="zone-label" x="430" y="180" text-anchor="middle">MANUFACTURING</text>
+                    
+                    <!-- Cleanrooms -->
+                    <rect class="zone" x="200" y="210" width="200" height="80" fill="#8b5cf6" opacity="0.7" onclick="showZone('cleanroom')" data-zone="cleanroom"/>
+                    <text class="zone-label" x="300" y="255" text-anchor="middle">CLEANROOM ZONE</text>
+                    
+                    <!-- Loading -->
+                    <rect class="zone" x="55" y="260" width="80" height="80" fill="#ef4444" opacity="0.7" onclick="showZone('loading')" data-zone="loading"/>
+                    <text class="zone-label" x="95" y="305" text-anchor="middle">LOADING</text>
+                    
+                    <rect class="zone" x="465" y="260" width="80" height="80" fill="#ef4444" opacity="0.7" onclick="showZone('loading')" data-zone="loading"/>
+                    <text class="zone-label" x="505" y="305" text-anchor="middle">LOADING</text>
+                    
+                    <!-- Mechanical -->
+                    <rect class="zone" x="410" y="260" width="50" height="80" fill="#dc2626" opacity="0.7" onclick="showZone('mech')" data-zone="mech"/>
+                    <text class="zone-label" x="435" y="305" text-anchor="middle" font-size="9">MECH</text>
+                `
+            },
+            2: {
+                title: "Floor 2 — Level B (Partial Below Grade)",
+                area: "~252,000 SF",
+                dims: "~900' × 280'",
+                notes: "<strong>Floor 2 Note:</strong> First floor with perimeter windows. Manufacturing with natural light. Asbestos pipe insulation documented. Secondary entries possible from east/west.",
+                features: [
+                    "First level with windows",
+                    "Manufacturing + testing labs",
+                    "Secondary employee entries",
+                    "14-16 ft ceilings",
+                    "Asbestos pipe insulation"
+                ],
+                svg: `
+                    <rect x="75" y="75" width="450" height="250" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+                    <text x="300" y="55" fill="#64748b" text-anchor="middle" font-size="12">NORTH</text>
+                    
+                    <!-- Core -->
+                    <rect class="zone" x="250" y="125" width="100" height="100" fill="#f59e0b" opacity="0.8" onclick="showZone('core')" data-zone="core"/>
+                    <text class="zone-label" x="300" y="180" text-anchor="middle">CORE</text>
+                    
+                    <!-- Manufacturing -->
+                    <rect class="zone" x="85" y="85" width="155" height="180" fill="#6366f1" opacity="0.7" onclick="showZone('mfg')" data-zone="mfg"/>
+                    <text class="zone-label" x="162" y="180" text-anchor="middle">MANUFACTURING</text>
+                    
+                    <rect class="zone" x="360" y="85" width="155" height="180" fill="#6366f1" opacity="0.7" onclick="showZone('mfg')" data-zone="mfg"/>
+                    <text class="zone-label" x="437" y="180" text-anchor="middle">MANUFACTURING</text>
+                    
+                    <!-- Testing Labs -->
+                    <rect class="zone" x="85" y="270" width="120" height="50" fill="#8b5cf6" opacity="0.7" onclick="showZone('cleanroom')" data-zone="cleanroom"/>
+                    <text class="zone-label" x="145" y="300" text-anchor="middle" font-size="10">TESTING LABS</text>
+                    
+                    <rect class="zone" x="395" y="270" width="120" height="50" fill="#8b5cf6" opacity="0.7" onclick="showZone('cleanroom')" data-zone="cleanroom"/>
+                    <text class="zone-label" x="455" y="300" text-anchor="middle" font-size="10">TESTING LABS</text>
+                    
+                    <!-- Entry points -->
+                    <rect x="75" y="180" width="10" height="40" fill="#10b981"/>
+                    <text x="60" y="205" fill="#10b981" font-size="8" text-anchor="end">ENTRY</text>
+                    
+                    <rect x="515" y="180" width="10" height="40" fill="#10b981"/>
+                    <text x="540" y="205" fill="#10b981" font-size="8">ENTRY</text>
+                `
+            },
+            3: {
+                title: "Floor 3 — Level C (Transition Floor)",
+                area: "~174,000 SF",
+                dims: "~780' × 223'",
+                notes: "<strong>Floor 3 Note:</strong> Last manufacturing level. South entry documented with wood slat ceiling. Transition zone between industrial and administrative functions.",
+                features: [
+                    "Last manufacturing floor",
+                    "South entry (documented wood ceiling)",
+                    "Engineering offices begin",
+                    "Asbestos pipe insulation (last floor)",
+                    "Escalator connection to F4"
+                ],
+                svg: `
+                    <rect x="100" y="100" width="400" height="200" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+                    <text x="300" y="80" fill="#64748b" text-anchor="middle" font-size="12">NORTH</text>
+                    
+                    <!-- Core -->
+                    <rect class="zone" x="250" y="140" width="100" height="100" fill="#f59e0b" opacity="0.8" onclick="showZone('core')" data-zone="core"/>
+                    <text class="zone-label" x="300" y="195" text-anchor="middle">CORE</text>
+                    
+                    <!-- Light Manufacturing -->
+                    <rect class="zone" x="110" y="110" width="130" height="130" fill="#6366f1" opacity="0.6" onclick="showZone('mfg')" data-zone="mfg"/>
+                    <text class="zone-label" x="175" y="175" text-anchor="middle" font-size="10">LIGHT MFG</text>
+                    
+                    <!-- Engineering Offices -->
+                    <rect class="zone" x="360" y="110" width="130" height="130" fill="#3b82f6" opacity="0.7" onclick="showZone('office')" data-zone="office"/>
+                    <text class="zone-label" x="425" y="175" text-anchor="middle" font-size="10">ENGINEERING</text>
+                    
+                    <!-- South Entry -->
+                    <rect class="zone" x="260" y="250" width="80" height="40" fill="#10b981" opacity="0.8" onclick="showZone('lobby')" data-zone="lobby"/>
+                    <text class="zone-label" x="300" y="275" text-anchor="middle" font-size="10">SOUTH ENTRY</text>
+                    <text x="300" y="310" fill="#10b981" font-size="9" text-anchor="middle">↓ Wood slat ceiling (documented)</text>
+                `
+            },
+            4: {
+                title: "Floor 4 — Main Lobby Level ★",
+                area: "~120,000 SF",
+                dims: "~600' × 200'",
+                notes: "<strong>Floor 4 Note:</strong> PRIMARY PUBLIC ENTRANCE. Original Pereira lobby with wood paneling and coffered ceiling is DOCUMENTED and preserved. Escalators visible from this space.",
+                features: [
+                    "Main public entrance from Avila Road (north)",
+                    "Original Pereira lobby preserved",
+                    "Escalators visible from lobby",
+                    "Wide-angle corridors (Pereira signature)",
+                    "Wood paneling + coffered ceiling"
+                ],
+                svg: `
+                    <rect x="125" y="100" width="350" height="200" fill="#1e293b" stroke="#f59e0b" stroke-width="3"/>
+                    <text x="300" y="80" fill="#f59e0b" text-anchor="middle" font-size="12" font-weight="bold">★ MAIN ENTRY (Avila Road)</text>
+                    
+                    <!-- Main Lobby -->
+                    <rect class="zone" x="220" y="105" width="160" height="70" fill="#10b981" opacity="0.8" onclick="showZone('lobby')" data-zone="lobby"/>
+                    <text class="zone-label" x="300" y="145" text-anchor="middle">★ MAIN LOBBY</text>
+                    <text class="zone-label" x="300" y="160" text-anchor="middle" font-size="9">(Wood paneling)</text>
+                    
+                    <!-- Core/Escalators -->
+                    <rect class="zone" x="250" y="180" width="100" height="80" fill="#f59e0b" opacity="0.8" onclick="showZone('core')" data-zone="core"/>
+                    <text class="zone-label" x="300" y="215" text-anchor="middle">CORE</text>
+                    <text class="zone-label" x="300" y="230" text-anchor="middle" font-size="9">Escalators</text>
+                    
+                    <!-- Executive Offices -->
+                    <rect class="zone" x="135" y="110" width="75" height="80" fill="#8b5cf6" opacity="0.7" onclick="showZone('exec')" data-zone="exec"/>
+                    <text class="zone-label" x="172" y="155" text-anchor="middle" font-size="10">EXEC</text>
+                    
+                    <rect class="zone" x="390" y="110" width="75" height="80" fill="#8b5cf6" opacity="0.7" onclick="showZone('exec')" data-zone="exec"/>
+                    <text class="zone-label" x="427" y="155" text-anchor="middle" font-size="10">EXEC</text>
+                    
+                    <!-- Administrative -->
+                    <rect class="zone" x="135" y="200" width="105" height="90" fill="#3b82f6" opacity="0.7" onclick="showZone('office')" data-zone="office"/>
+                    <text class="zone-label" x="187" y="250" text-anchor="middle" font-size="10">ADMIN</text>
+                    
+                    <rect class="zone" x="360" y="200" width="105" height="90" fill="#3b82f6" opacity="0.7" onclick="showZone('office')" data-zone="office"/>
+                    <text class="zone-label" x="412" y="250" text-anchor="middle" font-size="10">ADMIN</text>
+                    
+                    <!-- Security -->
+                    <rect class="zone" x="390" y="105" width="70" height="30" fill="#ef4444" opacity="0.6"/>
+                    <text class="zone-label" x="425" y="125" text-anchor="middle" font-size="8">SECURITY</text>
+                `
+            },
+            5: {
+                title: "Floor 5 — Upper Office Level 1",
+                area: "~70,000 SF",
+                dims: "~500' × 140'",
+                notes: "<strong>Floor 5 Note:</strong> First floor entirely within the pyramid form. Standard office layout. Escalator arrival from F4. Wood slat ceiling in escalator lobby documented.",
+                features: [
+                    "Escalator arrival from F4",
+                    "Wood slat ceiling in lobby (documented)",
+                    "Terrace access (F4 roof)",
+                    "Perimeter offices with views",
+                    "Open office interior"
+                ],
+                svg: `
+                    <rect x="150" y="130" width="300" height="140" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+                    
+                    <!-- Core -->
+                    <rect class="zone" x="250" y="160" width="100" height="80" fill="#f59e0b" opacity="0.8" onclick="showZone('core')" data-zone="core"/>
+                    <text class="zone-label" x="300" y="205" text-anchor="middle">CORE</text>
+                    
+                    <!-- Open Office -->
+                    <rect class="zone" x="160" y="140" width="80" height="120" fill="#3b82f6" opacity="0.7" onclick="showZone('office')" data-zone="office"/>
+                    <text class="zone-label" x="200" y="205" text-anchor="middle" font-size="10">OPEN</text>
+                    
+                    <rect class="zone" x="360" y="140" width="80" height="120" fill="#3b82f6" opacity="0.7" onclick="showZone('office')" data-zone="office"/>
+                    <text class="zone-label" x="400" y="205" text-anchor="middle" font-size="10">OFFICE</text>
+                    
+                    <!-- Terrace indicators -->
+                    <rect x="130" y="280" width="340" height="20" fill="#10b981" opacity="0.3"/>
+                    <text x="300" y="295" fill="#10b981" font-size="9" text-anchor="middle">↓ Terrace (F4 roof) - 11,500 SF</text>
+                `
+            },
+            6: {
+                title: "Floor 6 — Executive Level",
+                area: "~40,000 SF",
+                dims: "~400' × 100'",
+                notes: "<strong>Floor 6 Note:</strong> Smaller floor plate indicates specialized executive use. Top of escalator system. Panoramic views from corner offices.",
+                features: [
+                    "Top of escalator system",
+                    "Executive corner offices",
+                    "Premium conference suite",
+                    "Panoramic valley views",
+                    "Terrace access (F5 roof)"
+                ],
+                svg: `
+                    <rect x="175" y="150" width="250" height="100" fill="#1e293b" stroke="#475569" stroke-width="2"/>
+                    
+                    <!-- Core -->
+                    <rect class="zone" x="260" y="170" width="80" height="60" fill="#f59e0b" opacity="0.8" onclick="showZone('core')" data-zone="core"/>
+                    <text class="zone-label" x="300" y="205" text-anchor="middle">CORE</text>
+                    
+                    <!-- Executive -->
+                    <rect class="zone" x="185" y="160" width="65" height="80" fill="#8b5cf6" opacity="0.8" onclick="showZone('exec')" data-zone="exec"/>
+                    <text class="zone-label" x="217" y="205" text-anchor="middle" font-size="10">EXEC</text>
+                    
+                    <rect class="zone" x="350" y="160" width="65" height="80" fill="#8b5cf6" opacity="0.8" onclick="showZone('exec')" data-zone="exec"/>
+                    <text class="zone-label" x="382" y="205" text-anchor="middle" font-size="10">EXEC</text>
+                    
+                    <!-- Terrace -->
+                    <rect x="150" y="260" width="300" height="20" fill="#10b981" opacity="0.3"/>
+                    <text x="300" y="275" fill="#10b981" font-size="9" text-anchor="middle">↓ Terrace (F5 roof) - 9,600 SF</text>
+                `
+            },
+            7: {
+                title: "Floor 7 — Top Level / Heliport",
+                area: "~15,841 SF",
+                dims: "~200' × 80'",
+                notes: "<strong>Floor 7 Note:</strong> Apex of pyramid. HELIPORT DOCUMENTED. Mechanical penthouses house rooftop equipment. Solar array (1M+ kWh/year). 360° views.",
+                features: [
+                    "Heliport/helistop (documented)",
+                    "Mechanical penthouses",
+                    "Solar array (1M+ kWh/year)",
+                    "360° panoramic views",
+                    "\"Protruding vertical elements\""
+                ],
+                svg: `
+                    <rect x="225" y="175" width="150" height="50" fill="#1e293b" stroke="#ef4444" stroke-width="2"/>
+                    
+                    <!-- Core top -->
+                    <rect class="zone" x="270" y="185" width="60" height="30" fill="#f59e0b" opacity="0.8" onclick="showZone('core')" data-zone="core"/>
+                    <text class="zone-label" x="300" y="205" text-anchor="middle" font-size="9">CORE</text>
+                    
+                    <!-- Mechanical -->
+                    <rect class="zone" x="235" y="185" width="30" height="30" fill="#ef4444" opacity="0.8" onclick="showZone('mech')" data-zone="mech"/>
+                    <text class="zone-label" x="250" y="205" text-anchor="middle" font-size="7">MECH</text>
+                    
+                    <rect class="zone" x="335" y="185" width="30" height="30" fill="#ef4444" opacity="0.8" onclick="showZone('heliport')" data-zone="heliport"/>
+                    <text class="zone-label" x="350" y="205" text-anchor="middle" font-size="7">HELI</text>
+                    
+                    <!-- Heliport indicator -->
+                    <circle cx="300" cy="130" r="40" fill="none" stroke="#ef4444" stroke-width="2" stroke-dasharray="5,5"/>
+                    <text x="300" y="135" fill="#ef4444" font-size="12" text-anchor="middle">🚁</text>
+                    <text x="300" y="90" fill="#ef4444" font-size="10" text-anchor="middle">HELIPORT</text>
+                    
+                    <!-- Solar array -->
+                    <rect x="200" y="240" width="200" height="30" fill="#fbbf24" opacity="0.3"/>
+                    <text x="300" y="260" fill="#fbbf24" font-size="9" text-anchor="middle">☀️ SOLAR ARRAY (1M+ kWh/yr)</text>
+                `
+            }
+        };
+        
+        function showFloor(num) {
+            const data = floorData[num];
+            document.getElementById('floor-title').textContent = data.title;
+            document.getElementById('floor-area').textContent = data.area;
+            document.getElementById('floor-dims').textContent = data.dims;
+            document.getElementById('floor-notes').innerHTML = data.notes;
+            document.getElementById('floor-svg').innerHTML = data.svg;
+            
+            const featuresList = document.getElementById('features-list');
+            featuresList.innerHTML = data.features.map(f => `<li>${f}</li>`).join('');
+            
+            // Update button states
+            document.querySelectorAll('.floor-btn').forEach((btn, i) => {
+                btn.classList.remove('active');
+                if (i + 1 === num) btn.classList.add('active');
+            });
+            
+            // Reset zone info
+            document.querySelectorAll('.zone-info').forEach(z => z.classList.remove('active'));
+            document.getElementById('zone-default').style.display = 'block';
+        }
+        
+        function showZone(zoneName) {
+            document.querySelectorAll('.zone-info').forEach(z => z.classList.remove('active'));
+            document.getElementById('zone-default').style.display = 'none';
+            const zoneEl = document.getElementById('zone-' + zoneName);
+            if (zoneEl) zoneEl.classList.add('active');
+        }
+        
+        // Initialize with Floor 4
+        showFloor(4);
+    </script>
+</body>
+</html>

@@ -1,0 +1,684 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Daily Lesson</title>
+    <meta name="description" content="California's first AI-powered teaching campus. Every learner. Every day. Every language.">
+    
+    <!-- OG -->
+    <meta property="og:title" content="The Daily Lesson">
+    <meta property="og:description" content="California's first AI-powered teaching campus">
+    <meta property="og:type" content="website">
+    
+    <!-- Fonts -->
+    <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&family=Inter:wght@300;400&display=swap" rel="stylesheet">
+    
+    <style>
+        *, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        :root {
+            --black: #000;
+            --white: #fff;
+            --cream: #F8F8F5;
+            --gray-200: #e5e5e5;
+            --gray-400: #a3a3a3;
+            --gray-500: #737373;
+            --gray-600: #525252;
+            --gray-800: #262626;
+            --blue: #3B82F6;
+        }
+        
+        html { scroll-behavior: smooth; }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: var(--black);
+            color: var(--white);
+            line-height: 1.6;
+            -webkit-font-smoothing: antialiased;
+        }
+        
+        .font-display { font-family: 'Cormorant Garamond', Georgia, serif; }
+        
+        /* ═══════════════════════════════════════════════════════════════════ */
+        /* HERO */
+        /* ═══════════════════════════════════════════════════════════════════ */
+        
+        .hero {
+            position: relative;
+            height: 100vh;
+            min-height: 700px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .hero video {
+            position: absolute;
+            inset: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            opacity: 0.7;
+        }
+        
+        .hero-overlay {
+            position: absolute;
+            inset: 0;
+            background: linear-gradient(
+                180deg,
+                rgba(0,0,0,0.4) 0%,
+                rgba(0,0,0,0.1) 40%,
+                rgba(0,0,0,0.1) 60%,
+                rgba(0,0,0,0.95) 100%
+            );
+            transition: opacity 0.6s ease;
+        }
+        
+        .hero-overlay.dim { opacity: 0.4; }
+        
+        .hero-content {
+            position: relative;
+            z-index: 10;
+            text-align: center;
+            padding: 2rem;
+            transition: opacity 0.5s ease;
+        }
+        
+        .hero-content.hidden {
+            opacity: 0;
+            pointer-events: none;
+        }
+        
+        .hero-eyebrow {
+            font-size: 0.75rem;
+            letter-spacing: 0.5em;
+            text-transform: uppercase;
+            color: var(--gray-500);
+            margin-bottom: 2rem;
+        }
+        
+        .hero-title {
+            font-size: clamp(3rem, 12vw, 8rem);
+            font-weight: 300;
+            letter-spacing: 0.12em;
+            line-height: 1.1;
+            margin-bottom: 1.5rem;
+        }
+        
+        .hero-subtitle {
+            font-size: 1.25rem;
+            font-weight: 300;
+            letter-spacing: 0.08em;
+            color: var(--gray-400);
+        }
+        
+        /* Play button */
+        .hero-play {
+            margin: 4rem auto 2rem;
+            width: 120px;
+            height: 120px;
+            border-radius: 50%;
+            background: transparent;
+            border: 1px solid rgba(255,255,255,0.15);
+            cursor: pointer;
+            position: relative;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+        
+        .hero-play:hover {
+            border-color: rgba(255,255,255,0.4);
+            transform: scale(1.03);
+        }
+        
+        .hero-play svg {
+            width: 44px;
+            height: 44px;
+            fill: rgba(255,255,255,0.7);
+            margin-left: 6px;
+            transition: fill 0.3s;
+        }
+        
+        .hero-play:hover svg {
+            fill: rgba(255,255,255,0.95);
+        }
+        
+        .hero-play::before {
+            content: '';
+            position: absolute;
+            inset: -8px;
+            border-radius: 50%;
+            border: 1px solid rgba(255,255,255,0.08);
+            animation: breathe 4s ease-in-out infinite;
+        }
+        
+        @keyframes breathe {
+            0%, 100% { transform: scale(1); opacity: 1; }
+            50% { transform: scale(1.15); opacity: 0.3; }
+        }
+        
+        .hero-tagline {
+            font-size: 1rem;
+            letter-spacing: 0.15em;
+            color: var(--gray-600);
+        }
+        
+        /* Video controls */
+        .hero-controls {
+            position: absolute;
+            bottom: 3rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 1rem;
+            z-index: 20;
+            opacity: 0;
+            transition: opacity 0.4s;
+        }
+        
+        .hero-controls.visible { opacity: 1; }
+        
+        .control-btn {
+            width: 52px;
+            height: 52px;
+            border-radius: 50%;
+            background: rgba(0,0,0,0.6);
+            backdrop-filter: blur(20px);
+            border: 1px solid rgba(255,255,255,0.1);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            transition: all 0.3s;
+        }
+        
+        .control-btn:hover {
+            background: rgba(255,255,255,0.1);
+        }
+        
+        .control-btn svg {
+            width: 22px;
+            height: 22px;
+            stroke: var(--white);
+            fill: none;
+            stroke-width: 1.5;
+        }
+        
+        /* Scroll cue */
+        .scroll-cue {
+            position: absolute;
+            bottom: 3rem;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 0.75rem;
+            animation: float 3s ease-in-out infinite;
+        }
+        
+        .scroll-cue span {
+            font-size: 0.65rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--gray-600);
+        }
+        
+        .scroll-cue svg {
+            width: 20px;
+            height: 20px;
+            stroke: var(--gray-600);
+            fill: none;
+            stroke-width: 1.5;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(8px); }
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════════ */
+        /* SECTION: THE BUILDING */
+        /* ═══════════════════════════════════════════════════════════════════ */
+        
+        .section {
+            padding: 10rem 2rem;
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        .section-eyebrow {
+            font-size: 0.7rem;
+            letter-spacing: 0.4em;
+            text-transform: uppercase;
+            color: var(--gray-600);
+            margin-bottom: 2rem;
+        }
+        
+        .section-title {
+            font-size: clamp(2.5rem, 6vw, 4rem);
+            font-weight: 300;
+            letter-spacing: 0.05em;
+            line-height: 1.2;
+            margin-bottom: 3rem;
+        }
+        
+        .section-body {
+            font-size: 1.15rem;
+            line-height: 2;
+            color: var(--gray-400);
+        }
+        
+        .section-body p {
+            margin-bottom: 1.5rem;
+        }
+        
+        .section-body strong {
+            color: var(--white);
+            font-weight: 400;
+        }
+        
+        /* Stats row */
+        .stats {
+            display: flex;
+            gap: 5rem;
+            margin: 5rem 0;
+            padding: 4rem 0;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        
+        .stat {
+            text-align: center;
+        }
+        
+        .stat-value {
+            font-size: 4rem;
+            font-weight: 300;
+            letter-spacing: -0.02em;
+            line-height: 1;
+        }
+        
+        .stat-label {
+            font-size: 0.7rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--gray-600);
+            margin-top: 1rem;
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════════ */
+        /* SECTION: THE VISION */
+        /* ═══════════════════════════════════════════════════════════════════ */
+        
+        .vision-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 3rem;
+            margin-top: 4rem;
+        }
+        
+        .vision-item {
+            padding: 2.5rem;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.06);
+            transition: all 0.4s ease;
+        }
+        
+        .vision-item:hover {
+            background: rgba(255,255,255,0.04);
+            border-color: rgba(255,255,255,0.12);
+        }
+        
+        .vision-icon {
+            width: 48px;
+            height: 48px;
+            margin-bottom: 1.5rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        
+        .vision-icon svg {
+            width: 32px;
+            height: 32px;
+            stroke: var(--gray-500);
+            fill: none;
+            stroke-width: 1;
+        }
+        
+        .vision-title {
+            font-size: 0.75rem;
+            letter-spacing: 0.3em;
+            text-transform: uppercase;
+            color: var(--gray-500);
+            margin-bottom: 1rem;
+        }
+        
+        .vision-text {
+            font-size: 1rem;
+            line-height: 1.8;
+            color: var(--gray-400);
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════════ */
+        /* SECTION: CONTACT */
+        /* ═══════════════════════════════════════════════════════════════════ */
+        
+        .contact {
+            text-align: center;
+            padding: 8rem 2rem;
+            border-top: 1px solid rgba(255,255,255,0.05);
+        }
+        
+        .contact-title {
+            font-size: 2rem;
+            font-weight: 300;
+            letter-spacing: 0.1em;
+            margin-bottom: 3rem;
+        }
+        
+        .contact-card {
+            display: inline-block;
+            padding: 3rem 4rem;
+            background: rgba(255,255,255,0.02);
+            border: 1px solid rgba(255,255,255,0.08);
+            text-align: left;
+        }
+        
+        .contact-name {
+            font-size: 1.5rem;
+            font-weight: 400;
+            letter-spacing: 0.08em;
+            margin-bottom: 0.25rem;
+        }
+        
+        .contact-role {
+            font-size: 0.9rem;
+            font-style: italic;
+            color: var(--gray-500);
+            margin-bottom: 1.5rem;
+        }
+        
+        .contact-company {
+            font-size: 0.8rem;
+            letter-spacing: 0.15em;
+            color: var(--gray-600);
+            margin-bottom: 2rem;
+            padding-bottom: 2rem;
+            border-bottom: 1px solid rgba(255,255,255,0.08);
+        }
+        
+        .contact-details {
+            font-size: 0.9rem;
+            color: var(--gray-400);
+        }
+        
+        .contact-details a {
+            color: var(--gray-400);
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .contact-details a:hover {
+            color: var(--white);
+        }
+        
+        .contact-details p {
+            margin-bottom: 0.5rem;
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════════ */
+        /* FOOTER */
+        /* ═══════════════════════════════════════════════════════════════════ */
+        
+        footer {
+            padding: 4rem 2rem;
+            text-align: center;
+            border-top: 1px solid rgba(255,255,255,0.03);
+        }
+        
+        footer p {
+            font-size: 0.8rem;
+            letter-spacing: 0.1em;
+            color: var(--gray-600);
+        }
+        
+        /* ═══════════════════════════════════════════════════════════════════ */
+        /* RESPONSIVE */
+        /* ═══════════════════════════════════════════════════════════════════ */
+        
+        @media (max-width: 768px) {
+            .section { padding: 6rem 1.5rem; }
+            .stats { flex-direction: column; gap: 3rem; }
+            .vision-grid { grid-template-columns: 1fr; gap: 1.5rem; }
+            .hero-play { width: 100px; height: 100px; }
+            .hero-play svg { width: 36px; height: 36px; }
+        }
+    </style>
+</head>
+<body>
+
+    <!-- HERO -->
+    <section class="hero">
+        <video id="video" poster="videos/HOMEPAGE_HERO_POSTER.jpg" playsinline muted loop preload="auto">
+            <source src="videos/HOMEPAGE_HERO_WEB.mp4" type="video/mp4">
+        </video>
+        
+        <div class="hero-overlay" id="overlay"></div>
+        
+        <div class="hero-content" id="heroContent">
+            <p class="hero-eyebrow">Lesson of the Day, PBC</p>
+            <h1 class="hero-title font-display">THE DAILY LESSON</h1>
+            <p class="hero-subtitle font-display">California's First AI-Powered Teaching Campus</p>
+            
+            <button class="hero-play" id="playBtn" aria-label="Play video">
+                <svg viewBox="0 0 24 24"><path d="M8 5v14l11-7z"/></svg>
+            </button>
+            
+            <p class="hero-tagline">92 acres · Seven levels · One mission</p>
+        </div>
+        
+        <div class="hero-controls" id="controls">
+            <button class="control-btn" id="muteBtn">
+                <svg id="soundIcon" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>
+                </svg>
+            </button>
+            <button class="control-btn" id="infoBtn">
+                <svg viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"/>
+                </svg>
+            </button>
+        </div>
+        
+        <div class="scroll-cue" id="scrollCue">
+            <span>Scroll</span>
+            <svg viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" d="M19 14l-7 7m0 0l-7-7m7 7V3"/>
+            </svg>
+        </div>
+    </section>
+
+    <!-- THE BUILDING -->
+    <section class="section font-display">
+        <p class="section-eyebrow">The Building</p>
+        <h2 class="section-title">The Chet Holifield<br>Federal Building</h2>
+        
+        <div class="section-body">
+            <p>
+                Ninety-two acres in Laguna Niguel, California. One million square feet 
+                designed by <strong>William Pereira</strong> — the architect of the 
+                Transamerica Pyramid and LACMA.
+            </p>
+            <p>
+                For fifty years, it processed paperwork. Then it went dark. 
+                Three failed auctions. No one could see what it was built for.
+            </p>
+            <p>
+                <strong>We see it.</strong>
+            </p>
+        </div>
+        
+        <div class="stats">
+            <div class="stat">
+                <div class="stat-value">92</div>
+                <div class="stat-label">Acres</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">1M</div>
+                <div class="stat-label">Square Feet</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">7</div>
+                <div class="stat-label">Levels</div>
+            </div>
+            <div class="stat">
+                <div class="stat-value">1971</div>
+                <div class="stat-label">Built</div>
+            </div>
+        </div>
+    </section>
+
+    <!-- THE VISION -->
+    <section class="section font-display">
+        <p class="section-eyebrow">The Vision</p>
+        <h2 class="section-title">Not a platform.<br>Infrastructure.</h2>
+        
+        <div class="section-body">
+            <p>
+                A physical foundation for education that reaches <strong>every learner, 
+                every day, in every language</strong>. Built to last a century.
+            </p>
+        </div>
+        
+        <div class="vision-grid">
+            <div class="vision-item">
+                <div class="vision-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M9 3v2m6-2v2M9 19v2m6-2v2M5 9H3m2 6H3m18-6h-2m2 6h-2M7 19h10a2 2 0 002-2V7a2 2 0 00-2-2H7a2 2 0 00-2 2v10a2 2 0 002 2zM9 9h6v6H9V9z"/>
+                    </svg>
+                </div>
+                <h3 class="vision-title">Hardware</h3>
+                <p class="vision-text">
+                    Learning devices manufactured on-site. 
+                    A device in every hand, built to work offline.
+                </p>
+            </div>
+            
+            <div class="vision-item">
+                <div class="vision-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M5.636 18.364a9 9 0 010-12.728m12.728 0a9 9 0 010 12.728m-9.9-2.829a5 5 0 010-7.07m7.072 0a5 5 0 010 7.07M13 12a1 1 0 11-2 0 1 1 0 012 0z"/>
+                    </svg>
+                </div>
+                <h3 class="vision-title">Broadcast</h3>
+                <p class="vision-text">
+                    24/7 educational programming. 
+                    Kelly reaches every screen, every channel, every timezone.
+                </p>
+            </div>
+            
+            <div class="vision-item">
+                <div class="vision-icon">
+                    <svg viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" d="M12 6.253v13m0-13C10.832 5.477 9.246 5 7.5 5S4.168 5.477 3 6.253v13C4.168 18.477 5.754 18 7.5 18s3.332.477 4.5 1.253m0-13C13.168 5.477 14.754 5 16.5 5c1.747 0 3.332.477 4.5 1.253v13C19.832 18.477 18.247 18 16.5 18c-1.746 0-3.332.477-4.5 1.253"/>
+                    </svg>
+                </div>
+                <h3 class="vision-title">Print</h3>
+                <p class="vision-text">
+                    Physical presence in every home. 
+                    Daily lessons delivered to doorsteps worldwide.
+                </p>
+            </div>
+        </div>
+    </section>
+
+    <!-- CONTACT -->
+    <section class="contact font-display">
+        <h2 class="contact-title">Contact</h2>
+        
+        <div class="contact-card">
+            <h3 class="contact-name">Nicolette Rankin</h3>
+            <p class="contact-role">Founder & Chief Executive Officer</p>
+            <p class="contact-company">LESSON OF THE DAY, PBC</p>
+            
+            <div class="contact-details">
+                <p>805-233-5084</p>
+                <p><a href="mailto:hello@curiouskelly.com">hello@curiouskelly.com</a></p>
+                <p>24000 Avila Road</p>
+                <p>Laguna Niguel, California 92677</p>
+            </div>
+        </div>
+    </section>
+
+    <!-- FOOTER -->
+    <footer>
+        <p>Lesson of the Day, PBC · California Public Benefit Corporation</p>
+    </footer>
+
+    <script>
+        const video = document.getElementById('video');
+        const overlay = document.getElementById('overlay');
+        const heroContent = document.getElementById('heroContent');
+        const controls = document.getElementById('controls');
+        const scrollCue = document.getElementById('scrollCue');
+        const playBtn = document.getElementById('playBtn');
+        const muteBtn = document.getElementById('muteBtn');
+        const infoBtn = document.getElementById('infoBtn');
+        const soundIcon = document.getElementById('soundIcon');
+        
+        let isMuted = true;
+        let isPlaying = false;
+        
+        // Auto-play muted on load
+        video.play().catch(() => {});
+        
+        playBtn.addEventListener('click', () => {
+            video.muted = false;
+            isMuted = false;
+            isPlaying = true;
+            heroContent.classList.add('hidden');
+            overlay.classList.add('dim');
+            controls.classList.add('visible');
+            scrollCue.style.display = 'none';
+            updateSoundIcon();
+        });
+        
+        muteBtn.addEventListener('click', () => {
+            isMuted = !isMuted;
+            video.muted = isMuted;
+            updateSoundIcon();
+        });
+        
+        infoBtn.addEventListener('click', () => {
+            heroContent.classList.remove('hidden');
+            overlay.classList.remove('dim');
+            scrollCue.style.display = 'flex';
+        });
+        
+        function updateSoundIcon() {
+            if (isMuted) {
+                soundIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z M17 14l2-2m0 0l2-2m-2 2l-2-2m2 2l2 2"/>';
+            } else {
+                soundIcon.innerHTML = '<path stroke-linecap="round" stroke-linejoin="round" d="M15.536 8.464a5 5 0 010 7.072m2.828-9.9a9 9 0 010 12.728M5.586 15H4a1 1 0 01-1-1v-4a1 1 0 011-1h1.586l4.707-4.707C10.923 3.663 12 4.109 12 5v14c0 .891-1.077 1.337-1.707.707L5.586 15z"/>';
+            }
+        }
+        
+        video.addEventListener('click', () => {
+            if (isPlaying && !video.paused) {
+                heroContent.classList.remove('hidden');
+                overlay.classList.remove('dim');
+                controls.classList.remove('visible');
+                scrollCue.style.display = 'flex';
+            }
+        });
+    </script>
+
+</body>
+</html>

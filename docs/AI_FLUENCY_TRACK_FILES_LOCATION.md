@@ -178,3 +178,6 @@ const lesson = await day1Detailed.json();
 **Detailed Lessons:** 1/365 complete
 
 
+
+
+

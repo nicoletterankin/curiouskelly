@@ -1,0 +1,553 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ziggurat LED Vision</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0a;
+            color: #fff;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Simple Header */
+        header {
+            background: #151515;
+            padding: 16px 24px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid #252525;
+        }
+        
+        .title {
+            font-size: 18px;
+            font-weight: 600;
+        }
+        
+        .title span { color: #ff6b35; }
+        
+        /* Main Content */
+        main {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            padding: 40px 20px;
+            gap: 32px;
+        }
+        
+        /* Canvas */
+        .canvas-wrap {
+            position: relative;
+            border-radius: 8px;
+            overflow: hidden;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.5);
+        }
+        
+        #canvas {
+            display: block;
+            max-width: 100%;
+            max-height: 60vh;
+        }
+        
+        /* Controls */
+        .controls {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 16px;
+            justify-content: center;
+            align-items: center;
+            max-width: 800px;
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            background: #151515;
+            padding: 12px 20px;
+            border-radius: 8px;
+            border: 1px solid #252525;
+        }
+        
+        .control-group label {
+            font-size: 13px;
+            color: #888;
+            white-space: nowrap;
+        }
+        
+        /* Toggle Button */
+        .toggle-btn {
+            position: relative;
+            width: 120px;
+            height: 40px;
+            background: #252525;
+            border-radius: 20px;
+            cursor: pointer;
+            border: none;
+            overflow: hidden;
+        }
+        
+        .toggle-btn::before {
+            content: 'BEFORE';
+            position: absolute;
+            left: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 11px;
+            font-weight: 600;
+            color: #fff;
+            z-index: 2;
+        }
+        
+        .toggle-btn::after {
+            content: 'AFTER';
+            position: absolute;
+            right: 12px;
+            top: 50%;
+            transform: translateY(-50%);
+            font-size: 11px;
+            font-weight: 600;
+            color: #666;
+            z-index: 2;
+        }
+        
+        .toggle-btn .slider {
+            position: absolute;
+            left: 4px;
+            top: 4px;
+            width: 56px;
+            height: 32px;
+            background: #ff6b35;
+            border-radius: 16px;
+            transition: transform 0.2s;
+        }
+        
+        .toggle-btn.after .slider {
+            transform: translateX(56px);
+        }
+        
+        .toggle-btn.after::before { color: #666; }
+        .toggle-btn.after::after { color: #fff; }
+        
+        /* Time Buttons */
+        .time-btns {
+            display: flex;
+            gap: 4px;
+        }
+        
+        .time-btn {
+            padding: 8px 16px;
+            background: #252525;
+            border: none;
+            color: #888;
+            font-size: 12px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        
+        .time-btn:first-child { border-radius: 6px 0 0 6px; }
+        .time-btn:last-child { border-radius: 0 6px 6px 0; }
+        
+        .time-btn:hover { background: #333; color: #fff; }
+        .time-btn.active { background: #ff6b35; color: #fff; }
+        
+        /* Color Swatches */
+        .colors {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .color-btn {
+            width: 28px;
+            height: 28px;
+            border-radius: 6px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            transition: transform 0.1s;
+        }
+        
+        .color-btn:hover { transform: scale(1.1); }
+        .color-btn.active { border-color: #fff; }
+        
+        /* Export Button */
+        .export-btn {
+            padding: 14px 32px;
+            background: linear-gradient(135deg, #ff6b35 0%, #ff8c5a 100%);
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            font-size: 15px;
+            font-weight: 600;
+            cursor: pointer;
+            transition: transform 0.1s, box-shadow 0.1s;
+        }
+        
+        .export-btn:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 20px rgba(255, 107, 53, 0.3);
+        }
+        
+        /* Image Selector */
+        .image-btns {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .image-btn {
+            padding: 8px 14px;
+            background: #252525;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #888;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.15s;
+        }
+        
+        .image-btn:hover { background: #333; color: #fff; }
+        .image-btn.active { background: #ff6b35; border-color: #ff6b35; color: #fff; }
+        
+        /* Footer hint */
+        .hint {
+            text-align: center;
+            color: #555;
+            font-size: 12px;
+        }
+        
+        .hint kbd {
+            background: #252525;
+            padding: 3px 8px;
+            border-radius: 4px;
+            font-family: inherit;
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="title">The <span>Ziggurat</span> — LED Vision</div>
+    </header>
+    
+    <main>
+        <div class="canvas-wrap">
+            <canvas id="canvas"></canvas>
+        </div>
+        
+        <div class="controls">
+            <div class="control-group">
+                <label>View:</label>
+                <button class="toggle-btn" id="toggleBtn" onclick="toggleView()">
+                    <div class="slider"></div>
+                </button>
+            </div>
+            
+            <div class="control-group">
+                <label>Image:</label>
+                <div class="image-btns">
+                    <button class="image-btn active" data-img="1" onclick="loadHero(1)">Hero 1</button>
+                    <button class="image-btn" data-img="2" onclick="loadHero(2)">Hero 2</button>
+                    <button class="image-btn" data-img="3" onclick="loadHero(3)">Hero 3</button>
+                    <button class="image-btn" data-img="4" onclick="loadHero(4)">Hero 4</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label>Time:</label>
+                <div class="time-btns">
+                    <button class="time-btn" data-time="day" onclick="setTime('day')">Day</button>
+                    <button class="time-btn active" data-time="twilight" onclick="setTime('twilight')">Twilight</button>
+                    <button class="time-btn" data-time="night" onclick="setTime('night')">Night</button>
+                </div>
+            </div>
+            
+            <div class="control-group">
+                <label>Color:</label>
+                <div class="colors">
+                    <button class="color-btn active" style="background:#ff6b35" onclick="setColor('#ff6b35')"></button>
+                    <button class="color-btn" style="background:#ffa500" onclick="setColor('#ffa500')"></button>
+                    <button class="color-btn" style="background:#00d4ff" onclick="setColor('#00d4ff')"></button>
+                    <button class="color-btn" style="background:#ff00ff" onclick="setColor('#ff00ff')"></button>
+                    <button class="color-btn" style="background:#ffffff" onclick="setColor('#ffffff')"></button>
+                </div>
+            </div>
+            
+            <button class="export-btn" onclick="exportImage()">Download After Image</button>
+        </div>
+        
+        <p class="hint">Press <kbd>Space</kbd> to toggle &nbsp;|&nbsp; <kbd>↑↓←→</kbd> to nudge panels</p>
+    </main>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // State
+        let currentImage = null;
+        let showAfter = false;
+        let timeMode = 'twilight';
+        let ledColor = '#ff6b35';
+        let currentHero = 1;
+        
+        // Pre-defined LED panel coordinates for each hero image
+        // Coordinates are percentages (0-1) of image width/height
+        // Each panel is a thin strip on the horizontal parapet edge
+        const heroConfigs = {
+            1: { // Hero 1 - Quarter View (perspective from lower-left)
+                file: 'before/hero-01-quarter-view.jpg',
+                panels: [
+                    // Terrace 1 - just below the zigzag roof fins
+                    { points: [{x:0.17,y:0.270},{x:0.78,y:0.220},{x:0.78,y:0.230},{x:0.17,y:0.280}] },
+                    // Terrace 2
+                    { points: [{x:0.09,y:0.360},{x:0.86,y:0.300},{x:0.86,y:0.310},{x:0.09,y:0.370}] },
+                    // Terrace 3
+                    { points: [{x:0.03,y:0.450},{x:0.92,y:0.380},{x:0.92,y:0.390},{x:0.03,y:0.460}] },
+                    // Terrace 4 - lowest visible
+                    { points: [{x:0.00,y:0.540},{x:0.97,y:0.460},{x:0.97,y:0.470},{x:0.00,y:0.550}] },
+                ]
+            },
+            2: { // Hero 2 - Frontal symmetric view
+                file: 'before/hero-02-frontal.jpg',
+                panels: [
+                    // Terrace 1 - just below zigzag roof (narrow)
+                    { points: [{x:0.27,y:0.300},{x:0.73,y:0.300},{x:0.73,y:0.310},{x:0.27,y:0.310}] },
+                    // Terrace 2 
+                    { points: [{x:0.19,y:0.385},{x:0.81,y:0.385},{x:0.81,y:0.395},{x:0.19,y:0.395}] },
+                    // Terrace 3
+                    { points: [{x:0.12,y:0.470},{x:0.88,y:0.470},{x:0.88,y:0.480},{x:0.12,y:0.480}] },
+                    // Terrace 4 - ground level (widest)
+                    { points: [{x:0.05,y:0.555},{x:0.95,y:0.555},{x:0.95,y:0.565},{x:0.05,y:0.565}] },
+                ]
+            },
+            3: { // Hero 3 - Corner view (steep perspective to right)
+                file: 'before/hero-03-corner.jpg',
+                panels: [
+                    // Terrace 1 - top level
+                    { points: [{x:0.30,y:0.220},{x:0.96,y:0.150},{x:0.96,y:0.162},{x:0.30,y:0.232}] },
+                    // Terrace 2
+                    { points: [{x:0.20,y:0.330},{x:0.98,y:0.248},{x:0.98,y:0.260},{x:0.20,y:0.342}] },
+                    // Terrace 3
+                    { points: [{x:0.10,y:0.440},{x:0.99,y:0.345},{x:0.99,y:0.357},{x:0.10,y:0.452}] },
+                    // Terrace 4 - bottom
+                    { points: [{x:0.02,y:0.550},{x:1.00,y:0.443},{x:1.00,y:0.455},{x:0.02,y:0.562}] },
+                ]
+            },
+            4: { // Hero 4 - Detail close-up (3 terraces visible)
+                file: 'before/hero-04-detail.jpg',
+                panels: [
+                    // Terrace 1 - top (has angle break in middle)
+                    { points: [{x:0.00,y:0.160},{x:0.47,y:0.105},{x:0.47,y:0.118},{x:0.00,y:0.173}] },
+                    { points: [{x:0.47,y:0.105},{x:0.99,y:0.070},{x:0.99,y:0.083},{x:0.47,y:0.118}] },
+                    // Terrace 2
+                    { points: [{x:0.00,y:0.400},{x:0.50,y:0.330},{x:0.50,y:0.343},{x:0.00,y:0.413}] },
+                    { points: [{x:0.50,y:0.330},{x:1.00,y:0.295},{x:1.00,y:0.308},{x:0.50,y:0.343}] },
+                    // Terrace 3 - bottom
+                    { points: [{x:0.00,y:0.640},{x:0.50,y:0.555},{x:0.50,y:0.568},{x:0.00,y:0.653}] },
+                    { points: [{x:0.50,y:0.555},{x:1.00,y:0.510},{x:1.00,y:0.523},{x:0.50,y:0.568}] },
+                ]
+            }
+        };
+        
+        const timePresets = {
+            day: { darken: 0, glow: 0.4 },
+            twilight: { darken: 0.35, glow: 0.7 },
+            night: { darken: 0.55, glow: 0.9 }
+        };
+        
+        // Load hero image
+        function loadHero(num) {
+            currentHero = num;
+            const config = heroConfigs[num];
+            
+            // Update UI
+            document.querySelectorAll('.image-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`[data-img="${num}"]`).classList.add('active');
+            
+            const img = new Image();
+            img.onload = () => {
+                currentImage = img;
+                
+                // Fit to viewport
+                const maxW = window.innerWidth - 40;
+                const maxH = window.innerHeight * 0.6;
+                let w = img.width, h = img.height;
+                
+                if (w > maxW) { h *= maxW / w; w = maxW; }
+                if (h > maxH) { w *= maxH / h; h = maxH; }
+                
+                canvas.width = w;
+                canvas.height = h;
+                render();
+            };
+            img.src = config.file;
+        }
+        
+        // Render
+        function render() {
+            if (!currentImage) return;
+            
+            const w = canvas.width, h = canvas.height;
+            ctx.clearRect(0, 0, w, h);
+            
+            // Draw image
+            ctx.drawImage(currentImage, 0, 0, w, h);
+            
+            if (showAfter) {
+                const preset = timePresets[timeMode];
+                
+                // Darken for time of day
+                if (preset.darken > 0) {
+                    ctx.fillStyle = `rgba(0,0,0,${preset.darken})`;
+                    ctx.fillRect(0, 0, w, h);
+                }
+                
+                // Draw LED panels
+                const config = heroConfigs[currentHero];
+                config.panels.forEach(panel => {
+                    const pts = panel.points.map(p => ({ x: p.x * w, y: p.y * h }));
+                    
+                    ctx.beginPath();
+                    ctx.moveTo(pts[0].x, pts[0].y);
+                    pts.forEach(p => ctx.lineTo(p.x, p.y));
+                    ctx.closePath();
+                    
+                    // Glow
+                    ctx.save();
+                    ctx.shadowColor = ledColor;
+                    ctx.shadowBlur = 30 * preset.glow;
+                    ctx.fillStyle = hexToRgba(ledColor, 0.4 * preset.glow);
+                    ctx.fill();
+                    ctx.restore();
+                    
+                    // Core
+                    ctx.fillStyle = hexToRgba(ledColor, 0.7 * preset.glow);
+                    ctx.fill();
+                });
+            }
+        }
+        
+        // Toggle view
+        function toggleView() {
+            showAfter = !showAfter;
+            document.getElementById('toggleBtn').classList.toggle('after', showAfter);
+            render();
+        }
+        
+        // Set time
+        function setTime(mode) {
+            timeMode = mode;
+            document.querySelectorAll('.time-btn').forEach(b => b.classList.remove('active'));
+            document.querySelector(`[data-time="${mode}"]`).classList.add('active');
+            render();
+        }
+        
+        // Set color
+        function setColor(color) {
+            ledColor = color;
+            document.querySelectorAll('.color-btn').forEach(b => b.classList.remove('active'));
+            event.target.classList.add('active');
+            render();
+        }
+        
+        // Export
+        function exportImage() {
+            if (!currentImage) return;
+            
+            // Force after view
+            const wasAfter = showAfter;
+            showAfter = true;
+            
+            // Create full-res export
+            const exp = document.createElement('canvas');
+            exp.width = currentImage.width;
+            exp.height = currentImage.height;
+            const expCtx = exp.getContext('2d');
+            
+            expCtx.drawImage(currentImage, 0, 0);
+            
+            const preset = timePresets[timeMode];
+            if (preset.darken > 0) {
+                expCtx.fillStyle = `rgba(0,0,0,${preset.darken})`;
+                expCtx.fillRect(0, 0, exp.width, exp.height);
+            }
+            
+            const config = heroConfigs[currentHero];
+            const scaleX = currentImage.width / canvas.width;
+            const scaleY = currentImage.height / canvas.height;
+            
+            config.panels.forEach(panel => {
+                const pts = panel.points.map(p => ({ 
+                    x: p.x * currentImage.width, 
+                    y: p.y * currentImage.height 
+                }));
+                
+                expCtx.beginPath();
+                expCtx.moveTo(pts[0].x, pts[0].y);
+                pts.forEach(p => expCtx.lineTo(p.x, p.y));
+                expCtx.closePath();
+                
+                expCtx.save();
+                expCtx.shadowColor = ledColor;
+                expCtx.shadowBlur = 60 * preset.glow;
+                expCtx.fillStyle = hexToRgba(ledColor, 0.4 * preset.glow);
+                expCtx.fill();
+                expCtx.restore();
+                
+                expCtx.fillStyle = hexToRgba(ledColor, 0.7 * preset.glow);
+                expCtx.fill();
+            });
+            
+            // Download
+            const link = document.createElement('a');
+            link.download = `ziggurat-hero${currentHero}-${timeMode}.jpg`;
+            link.href = exp.toDataURL('image/jpeg', 0.95);
+            link.click();
+            
+            showAfter = wasAfter;
+            render();
+        }
+        
+        function hexToRgba(hex, alpha) {
+            const r = parseInt(hex.slice(1,3), 16);
+            const g = parseInt(hex.slice(3,5), 16);
+            const b = parseInt(hex.slice(5,7), 16);
+            return `rgba(${r},${g},${b},${alpha})`;
+        }
+        
+        // Keyboard
+        document.addEventListener('keydown', e => {
+            if (e.key === ' ') { e.preventDefault(); toggleView(); }
+            if (e.key === '1') loadHero(1);
+            if (e.key === '2') loadHero(2);
+            if (e.key === '3') loadHero(3);
+            if (e.key === '4') loadHero(4);
+            if (e.key === 'ArrowUp') nudgePanels(0, -0.005);
+            if (e.key === 'ArrowDown') nudgePanels(0, 0.005);
+            if (e.key === 'ArrowLeft') nudgePanels(-0.005, 0);
+            if (e.key === 'ArrowRight') nudgePanels(0.005, 0);
+        });
+        
+        // Nudge all panels with arrow keys
+        function nudgePanels(dx, dy) {
+            const config = heroConfigs[currentHero];
+            config.panels.forEach(panel => {
+                panel.points.forEach(p => {
+                    p.x = Math.max(0, Math.min(1, p.x + dx));
+                    p.y = Math.max(0, Math.min(1, p.y + dy));
+                });
+            });
+            render();
+        }
+        
+        // Init - auto-load hero 1
+        loadHero(1);
+    </script>
+</body>
+</html>

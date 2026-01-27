@@ -374,3 +374,6 @@ LessonAuditPanel = {
 - Completeness calculation (reuse from `lesson-preview-popup.js`)
 
 
+
+
+

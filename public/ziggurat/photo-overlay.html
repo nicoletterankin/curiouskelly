@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ziggurat Photo Overlay</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            font-family: -apple-system, sans-serif;
+            background: #111;
+            color: #fff;
+        }
+        
+        .app {
+            display: flex;
+            height: 100vh;
+        }
+        
+        .canvas-area {
+            flex: 1;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .toolbar {
+            display: flex;
+            gap: 8px;
+            padding: 12px 20px;
+            background: #0a0a0a;
+            border-bottom: 1px solid #222;
+            align-items: center;
+        }
+        
+        .toolbar-group {
+            display: flex;
+            gap: 4px;
+            padding-right: 16px;
+            border-right: 1px solid #333;
+            margin-right: 8px;
+        }
+        
+        .toolbar-group:last-child {
+            border: none;
+        }
+        
+        .tool-btn {
+            padding: 8px 14px;
+            background: #222;
+            border: 1px solid #333;
+            border-radius: 4px;
+            color: #888;
+            font-size: 11px;
+            cursor: pointer;
+        }
+        
+        .tool-btn:hover { background: #333; color: #fff; }
+        .tool-btn.active { background: #ff6b35; border-color: #ff6b35; color: #fff; }
+        
+        .canvas-container {
+            flex: 1;
+            position: relative;
+            overflow: hidden;
+            background: #000;
+        }
+        
+        #photoCanvas {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            max-width: 100%;
+            max-height: 100%;
+        }
+        
+        .sidebar {
+            width: 280px;
+            background: #0a0a0a;
+            border-left: 1px solid #222;
+            padding: 16px;
+            overflow-y: auto;
+        }
+        
+        .sidebar h3 {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        
+        .photo-select {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+            margin-bottom: 20px;
+        }
+        
+        .photo-thumb {
+            aspect-ratio: 4/3;
+            background-size: cover;
+            background-position: center;
+            border-radius: 6px;
+            border: 2px solid transparent;
+            cursor: pointer;
+            opacity: 0.6;
+            transition: all 0.2s;
+        }
+        
+        .photo-thumb:hover { opacity: 0.9; }
+        .photo-thumb.active { border-color: #ff6b35; opacity: 1; }
+        
+        .panel-list {
+            margin-bottom: 20px;
+        }
+        
+        .panel-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 10px;
+            background: #151515;
+            border-radius: 6px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            border: 1px solid #222;
+        }
+        
+        .panel-item:hover { border-color: #444; }
+        .panel-item.selected { border-color: #ff6b35; background: #1a1510; }
+        
+        .panel-color {
+            width: 16px;
+            height: 16px;
+            border-radius: 3px;
+        }
+        
+        .panel-info {
+            flex: 1;
+            font-size: 11px;
+        }
+        
+        .panel-info strong {
+            display: block;
+            margin-bottom: 2px;
+        }
+        
+        .panel-info span {
+            color: #666;
+        }
+        
+        .panel-toggle {
+            width: 24px;
+            height: 24px;
+            background: #333;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 12px;
+        }
+        
+        .panel-toggle.on { background: #ff6b35; }
+        
+        .color-picker {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 20px;
+        }
+        
+        .color-swatch {
+            width: 28px;
+            height: 28px;
+            border-radius: 4px;
+            cursor: pointer;
+            border: 2px solid transparent;
+        }
+        
+        .color-swatch.active { border-color: #fff; }
+        
+        .slider-group {
+            margin-bottom: 16px;
+        }
+        
+        .slider-group label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 11px;
+            margin-bottom: 6px;
+            color: #888;
+        }
+        
+        .slider-group input[type="range"] {
+            width: 100%;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+            -webkit-appearance: none;
+        }
+        
+        .slider-group input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 14px;
+            height: 14px;
+            background: #ff6b35;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+        
+        .export-btn {
+            width: 100%;
+            padding: 14px;
+            background: #ff6b35;
+            border: none;
+            border-radius: 6px;
+            color: #fff;
+            font-size: 13px;
+            font-weight: 600;
+            cursor: pointer;
+            margin-top: 10px;
+        }
+        
+        .export-btn:hover { background: #e55a2a; }
+        
+        .instructions {
+            font-size: 10px;
+            color: #555;
+            line-height: 1.5;
+            padding: 12px;
+            background: #0f0f0f;
+            border-radius: 6px;
+            margin-top: 16px;
+        }
+    </style>
+</head>
+<body>
+    <div class="app">
+        <div class="canvas-area">
+            <div class="toolbar">
+                <div class="toolbar-group">
+                    <button class="tool-btn active" onclick="setMode('view')">View</button>
+                    <button class="tool-btn" onclick="setMode('draw')">Draw Panel</button>
+                    <button class="tool-btn" onclick="setMode('edit')">Edit</button>
+                </div>
+                <div class="toolbar-group">
+                    <button class="tool-btn" onclick="setTime('day')">Day</button>
+                    <button class="tool-btn active" onclick="setTime('twilight')">Twilight</button>
+                    <button class="tool-btn" onclick="setTime('night')">Night</button>
+                </div>
+                <div class="toolbar-group">
+                    <button class="tool-btn" onclick="toggleBefore()">Toggle Before/After</button>
+                </div>
+            </div>
+            
+            <div class="canvas-container">
+                <canvas id="photoCanvas"></canvas>
+            </div>
+        </div>
+        
+        <aside class="sidebar">
+            <h3>Select Photo</h3>
+            <div class="photo-select">
+                <div class="photo-thumb active" style="background-image: url('before/hero-01-quarter-view.jpg')" onclick="loadPhoto(0)"></div>
+                <div class="photo-thumb" style="background-image: url('before/hero-02-frontal.jpg')" onclick="loadPhoto(1)"></div>
+                <div class="photo-thumb" style="background-image: url('before/hero-03-corner.jpg')" onclick="loadPhoto(2)"></div>
+                <div class="photo-thumb" style="background-image: url('before/hero-04-detail.jpg')" onclick="loadPhoto(3)"></div>
+            </div>
+            
+            <h3>Panel Color</h3>
+            <div class="color-picker">
+                <div class="color-swatch active" style="background: #ff6b35" onclick="setColor('#ff6b35')"></div>
+                <div class="color-swatch" style="background: #00d4ff" onclick="setColor('#00d4ff')"></div>
+                <div class="color-swatch" style="background: #ff00aa" onclick="setColor('#ff00aa')"></div>
+                <div class="color-swatch" style="background: #00ff88" onclick="setColor('#00ff88')"></div>
+                <div class="color-swatch" style="background: #ffd700" onclick="setColor('#ffd700')"></div>
+                <div class="color-swatch" style="background: #fff" onclick="setColor('#ffffff')"></div>
+            </div>
+            
+            <h3>Glow Settings</h3>
+            <div class="slider-group">
+                <label>Intensity <span id="intensityVal">80%</span></label>
+                <input type="range" id="intensity" min="0" max="100" value="80" oninput="updateGlow()">
+            </div>
+            <div class="slider-group">
+                <label>Spread <span id="spreadVal">30px</span></label>
+                <input type="range" id="spread" min="5" max="80" value="30" oninput="updateGlow()">
+            </div>
+            
+            <h3>Panels on Photo</h3>
+            <div class="panel-list" id="panelList">
+                <div class="panel-item" onclick="selectPanel(0)">
+                    <div class="panel-color" style="background: #ff6b35"></div>
+                    <div class="panel-info">
+                        <strong>Terrace 2 - North</strong>
+                        <span>900 linear ft</span>
+                    </div>
+                    <div class="panel-toggle on">✓</div>
+                </div>
+            </div>
+            
+            <button class="export-btn" onclick="exportImage()">Export High-Res Image</button>
+            
+            <div class="instructions">
+                <strong>How to use:</strong><br>
+                1. Select a photo<br>
+                2. Use "Draw Panel" to click corners of a parapet<br>
+                3. Adjust color and glow<br>
+                4. Toggle time of day<br>
+                5. Export for presentations
+            </div>
+        </aside>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('photoCanvas');
+        const ctx = canvas.getContext('2d');
+        
+        const photos = [
+            { 
+                src: 'before/hero-01-quarter-view.jpg', 
+                name: 'Quarter View',
+                // Pre-defined panels for this view (coordinates as % of image)
+                panels: [
+                    { name: 'F2 North', points: [{x:0.17,y:0.270},{x:0.78,y:0.220},{x:0.78,y:0.235},{x:0.17,y:0.285}], visible: true },
+                    { name: 'F3 North', points: [{x:0.20,y:0.320},{x:0.75,y:0.275},{x:0.75,y:0.290},{x:0.20,y:0.335}], visible: true },
+                    { name: 'F4 North', points: [{x:0.24,y:0.365},{x:0.72,y:0.325},{x:0.72,y:0.340},{x:0.24,y:0.380}], visible: true },
+                    { name: 'F5 North', points: [{x:0.28,y:0.405},{x:0.68,y:0.370},{x:0.68,y:0.385},{x:0.28,y:0.420}], visible: true },
+                ]
+            },
+            { 
+                src: 'before/hero-02-frontal.jpg',
+                name: 'Frontal',
+                panels: [
+                    { name: 'F2 Front', points: [{x:0.15,y:0.55},{x:0.85,y:0.55},{x:0.85,y:0.57},{x:0.15,y:0.57}], visible: true },
+                    { name: 'F3 Front', points: [{x:0.22,y:0.47},{x:0.78,y:0.47},{x:0.78,y:0.49},{x:0.22,y:0.49}], visible: true },
+                    { name: 'F4 Front', points: [{x:0.28,y:0.40},{x:0.72,y:0.40},{x:0.72,y:0.42},{x:0.28,y:0.42}], visible: true },
+                    { name: 'F5 Front', points: [{x:0.34,y:0.34},{x:0.66,y:0.34},{x:0.66,y:0.36},{x:0.34,y:0.36}], visible: true },
+                ]
+            },
+            { 
+                src: 'before/hero-03-corner.jpg',
+                name: 'Corner View',
+                panels: [
+                    { name: 'F2 Corner', points: [{x:0.10,y:0.58},{x:0.90,y:0.52},{x:0.90,y:0.54},{x:0.10,y:0.60}], visible: true },
+                    { name: 'F3 Corner', points: [{x:0.18,y:0.50},{x:0.82,y:0.45},{x:0.82,y:0.47},{x:0.18,y:0.52}], visible: true },
+                    { name: 'F4 Corner', points: [{x:0.25,y:0.43},{x:0.75,y:0.39},{x:0.75,y:0.41},{x:0.25,y:0.45}], visible: true },
+                ]
+            },
+            { 
+                src: 'before/hero-04-detail.jpg',
+                name: 'Detail View',
+                panels: [
+                    { name: 'F3 Detail L', points: [{x:0.05,y:0.42},{x:0.45,y:0.38},{x:0.45,y:0.41},{x:0.05,y:0.45}], visible: true },
+                    { name: 'F3 Detail R', points: [{x:0.50,y:0.38},{x:0.95,y:0.35},{x:0.95,y:0.38},{x:0.50,y:0.41}], visible: true },
+                ]
+            },
+        ];
+        
+        let currentPhoto = 0;
+        let currentImage = null;
+        let currentColor = '#ff6b35';
+        let currentTime = 'twilight';
+        let showBefore = false;
+        let mode = 'view';
+        let drawingPoints = [];
+        
+        function loadPhoto(index) {
+            currentPhoto = index;
+            document.querySelectorAll('.photo-thumb').forEach((t, i) => {
+                t.classList.toggle('active', i === index);
+            });
+            
+            const img = new Image();
+            img.onload = () => {
+                currentImage = img;
+                canvas.width = img.width;
+                canvas.height = img.height;
+                render();
+                updatePanelList();
+            };
+            img.src = photos[index].src;
+        }
+        
+        function render() {
+            if (!currentImage) return;
+            
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Draw base image
+            ctx.drawImage(currentImage, 0, 0);
+            
+            // Apply time of day overlay
+            if (!showBefore) {
+                if (currentTime === 'twilight') {
+                    ctx.fillStyle = 'rgba(20, 10, 40, 0.3)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                } else if (currentTime === 'night') {
+                    ctx.fillStyle = 'rgba(0, 0, 20, 0.6)';
+                    ctx.fillRect(0, 0, canvas.width, canvas.height);
+                }
+                
+                // Draw panels
+                const intensity = document.getElementById('intensity').value / 100;
+                const spread = parseInt(document.getElementById('spread').value);
+                
+                photos[currentPhoto].panels.forEach(panel => {
+                    if (!panel.visible) return;
+                    
+                    const points = panel.points.map(p => ({
+                        x: p.x * canvas.width,
+                        y: p.y * canvas.height
+                    }));
+                    
+                    // Glow layers
+                    for (let i = 3; i >= 0; i--) {
+                        ctx.beginPath();
+                        ctx.moveTo(points[0].x, points[0].y);
+                        points.forEach(p => ctx.lineTo(p.x, p.y));
+                        ctx.closePath();
+                        
+                        ctx.shadowColor = currentColor;
+                        ctx.shadowBlur = spread * (i + 1) * 0.5;
+                        ctx.fillStyle = hexToRgba(currentColor, intensity * 0.2 * (4 - i));
+                        ctx.fill();
+                    }
+                    
+                    // Core panel
+                    ctx.shadowBlur = 0;
+                    ctx.beginPath();
+                    ctx.moveTo(points[0].x, points[0].y);
+                    points.forEach(p => ctx.lineTo(p.x, p.y));
+                    ctx.closePath();
+                    ctx.fillStyle = hexToRgba(currentColor, intensity);
+                    ctx.fill();
+                });
+            }
+            
+            // Draw current drawing points
+            if (mode === 'draw' && drawingPoints.length > 0) {
+                ctx.beginPath();
+                ctx.moveTo(drawingPoints[0].x, drawingPoints[0].y);
+                drawingPoints.forEach(p => ctx.lineTo(p.x, p.y));
+                ctx.strokeStyle = '#fff';
+                ctx.lineWidth = 2;
+                ctx.stroke();
+                
+                drawingPoints.forEach(p => {
+                    ctx.beginPath();
+                    ctx.arc(p.x, p.y, 5, 0, Math.PI * 2);
+                    ctx.fillStyle = '#ff6b35';
+                    ctx.fill();
+                });
+            }
+        }
+        
+        function hexToRgba(hex, alpha) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+        }
+        
+        function setMode(m) {
+            mode = m;
+            document.querySelectorAll('.toolbar-group:first-child .tool-btn').forEach(b => {
+                b.classList.toggle('active', b.textContent.toLowerCase().includes(m));
+            });
+            drawingPoints = [];
+            render();
+        }
+        
+        function setTime(t) {
+            currentTime = t;
+            document.querySelectorAll('.toolbar-group:nth-child(2) .tool-btn').forEach(b => {
+                b.classList.toggle('active', b.textContent.toLowerCase() === t);
+            });
+            render();
+        }
+        
+        function setColor(color) {
+            currentColor = color;
+            document.querySelectorAll('.color-swatch').forEach(s => {
+                s.classList.toggle('active', s.style.background === color);
+            });
+            render();
+        }
+        
+        function updateGlow() {
+            document.getElementById('intensityVal').textContent = document.getElementById('intensity').value + '%';
+            document.getElementById('spreadVal').textContent = document.getElementById('spread').value + 'px';
+            render();
+        }
+        
+        function toggleBefore() {
+            showBefore = !showBefore;
+            render();
+        }
+        
+        function updatePanelList() {
+            const list = document.getElementById('panelList');
+            list.innerHTML = photos[currentPhoto].panels.map((panel, i) => `
+                <div class="panel-item ${panel.visible ? 'selected' : ''}" onclick="togglePanel(${i})">
+                    <div class="panel-color" style="background: ${currentColor}"></div>
+                    <div class="panel-info">
+                        <strong>${panel.name}</strong>
+                        <span>Click to toggle</span>
+                    </div>
+                    <div class="panel-toggle ${panel.visible ? 'on' : ''}">${panel.visible ? '✓' : ''}</div>
+                </div>
+            `).join('');
+        }
+        
+        function togglePanel(index) {
+            photos[currentPhoto].panels[index].visible = !photos[currentPhoto].panels[index].visible;
+            updatePanelList();
+            render();
+        }
+        
+        function selectPanel(index) {
+            // For editing later
+        }
+        
+        // Drawing mode
+        canvas.addEventListener('click', (e) => {
+            if (mode !== 'draw') return;
+            
+            const rect = canvas.getBoundingClientRect();
+            const scaleX = canvas.width / rect.width;
+            const scaleY = canvas.height / rect.height;
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
+            
+            drawingPoints.push({ x, y });
+            
+            if (drawingPoints.length === 4) {
+                // Convert to percentages and add panel
+                const points = drawingPoints.map(p => ({
+                    x: p.x / canvas.width,
+                    y: p.y / canvas.height
+                }));
+                
+                photos[currentPhoto].panels.push({
+                    name: `Custom Panel ${photos[currentPhoto].panels.length + 1}`,
+                    points: points,
+                    visible: true
+                });
+                
+                drawingPoints = [];
+                updatePanelList();
+            }
+            
+            render();
+        });
+        
+        function exportImage() {
+            const link = document.createElement('a');
+            link.download = `ziggurat-${photos[currentPhoto].name.toLowerCase().replace(' ', '-')}-${currentTime}.jpg`;
+            link.href = canvas.toDataURL('image/jpeg', 0.95);
+            link.click();
+        }
+        
+        // Initialize
+        loadPhoto(0);
+    </script>
+</body>
+</html>

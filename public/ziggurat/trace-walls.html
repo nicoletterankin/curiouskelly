@@ -1,0 +1,588 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ziggurat Wall Tracer — Precision Calibration</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'SF Mono', Monaco, monospace;
+            background: #111;
+            color: #fff;
+            overflow: hidden;
+        }
+        
+        .container {
+            display: grid;
+            grid-template-columns: 1fr 400px;
+            height: 100vh;
+        }
+        
+        .viewer {
+            position: relative;
+            overflow: auto;
+            background: #000;
+        }
+        
+        #mainCanvas {
+            cursor: crosshair;
+        }
+        
+        .sidebar {
+            background: #1a1a1a;
+            border-left: 1px solid #333;
+            padding: 20px;
+            overflow-y: auto;
+            font-size: 12px;
+        }
+        
+        h1 {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+        
+        .subtitle {
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 11px;
+        }
+        
+        .zoom-preview {
+            background: #000;
+            border: 1px solid #333;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            overflow: hidden;
+        }
+        
+        .zoom-preview canvas {
+            display: block;
+            width: 100%;
+        }
+        
+        .zoom-label {
+            padding: 8px 12px;
+            background: #222;
+            font-size: 10px;
+            color: #888;
+        }
+        
+        .coords {
+            background: #222;
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 20px;
+        }
+        
+        .coords h2 {
+            font-size: 11px;
+            color: #666;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            margin-bottom: 12px;
+        }
+        
+        .coord-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+        
+        .coord-label { color: #888; }
+        .coord-value { color: #e85d04; font-weight: 600; }
+        
+        .terrace-section {
+            margin-bottom: 20px;
+        }
+        
+        .terrace-section h3 {
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 12px;
+            padding-bottom: 8px;
+            border-bottom: 1px solid #333;
+        }
+        
+        .terrace-btn {
+            display: block;
+            width: 100%;
+            padding: 10px 12px;
+            margin-bottom: 6px;
+            background: #252525;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #fff;
+            cursor: pointer;
+            text-align: left;
+            font-size: 11px;
+            transition: all 0.15s;
+        }
+        
+        .terrace-btn:hover {
+            background: #2a2a2a;
+            border-color: #444;
+        }
+        
+        .terrace-btn.active {
+            background: rgba(232, 93, 4, 0.2);
+            border-color: #e85d04;
+        }
+        
+        .terrace-btn.complete {
+            background: rgba(34, 197, 94, 0.15);
+            border-color: #22c55e;
+        }
+        
+        .terrace-btn .status {
+            float: right;
+            color: #666;
+        }
+        
+        .terrace-btn.complete .status {
+            color: #22c55e;
+        }
+        
+        .point-type {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 16px;
+        }
+        
+        .point-btn {
+            flex: 1;
+            padding: 8px;
+            background: #252525;
+            border: 1px solid #333;
+            border-radius: 6px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.15s;
+        }
+        
+        .point-btn:hover { background: #2a2a2a; }
+        .point-btn.active { background: #e85d04; border-color: #e85d04; }
+        
+        .output {
+            background: #0a0a0a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 12px;
+            font-size: 10px;
+            max-height: 200px;
+            overflow-y: auto;
+            white-space: pre;
+            color: #22c55e;
+        }
+        
+        .actions {
+            display: flex;
+            gap: 8px;
+            margin-top: 16px;
+        }
+        
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            background: #e85d04;
+            border: none;
+            border-radius: 8px;
+            color: #fff;
+            cursor: pointer;
+            font-size: 12px;
+            font-weight: 600;
+        }
+        
+        .action-btn:hover { background: #f97316; }
+        .action-btn.secondary {
+            background: #333;
+        }
+        .action-btn.secondary:hover { background: #444; }
+        
+        .instructions {
+            background: #1e1e1e;
+            border-radius: 8px;
+            padding: 12px;
+            margin-bottom: 20px;
+            font-size: 11px;
+            line-height: 1.6;
+            color: #999;
+        }
+        
+        .instructions strong {
+            color: #fff;
+        }
+        
+        /* Overlay markers on main canvas */
+        .marker {
+            position: absolute;
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: #e85d04;
+            border: 2px solid #fff;
+            transform: translate(-50%, -50%);
+            pointer-events: none;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.5);
+        }
+        
+        .marker.left { background: #22c55e; }
+        .marker.right { background: #00d4ff; }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="viewer" id="viewer">
+            <canvas id="mainCanvas"></canvas>
+        </div>
+        
+        <div class="sidebar">
+            <h1>Wall Tracer</h1>
+            <p class="subtitle">Precision calibration for LED panel placement</p>
+            
+            <div class="instructions">
+                <strong>Instructions:</strong><br>
+                1. Current coordinates are shown (orange dashed lines)<br>
+                2. Click to REFINE any point<br>
+                3. Look for the PARAPET EDGE (top of wall)<br>
+                4. Use 8x zoom for precision<br>
+                <br>
+                <strong>Tips:</strong> The building faces NW. Right side is slightly higher due to perspective.
+            </div>
+            
+            <div style="margin-bottom: 16px;">
+                <label style="display: flex; align-items: center; gap: 8px; cursor: pointer;">
+                    <input type="checkbox" id="showExisting" checked style="accent-color: #e85d04;">
+                    <span style="font-size: 11px; color: #888;">Show existing coordinates</span>
+                </label>
+            </div>
+            
+            <div class="zoom-preview">
+                <canvas id="zoomCanvas" width="358" height="200"></canvas>
+                <div class="zoom-label">8x Zoom at cursor</div>
+            </div>
+            
+            <div class="coords">
+                <h2>Current Position</h2>
+                <div class="coord-row">
+                    <span class="coord-label">Pixel X:</span>
+                    <span class="coord-value" id="pixelX">—</span>
+                </div>
+                <div class="coord-row">
+                    <span class="coord-label">Pixel Y:</span>
+                    <span class="coord-value" id="pixelY">—</span>
+                </div>
+                <div class="coord-row">
+                    <span class="coord-label">Normalized X:</span>
+                    <span class="coord-value" id="normX">—</span>
+                </div>
+                <div class="coord-row">
+                    <span class="coord-label">Normalized Y:</span>
+                    <span class="coord-value" id="normY">—</span>
+                </div>
+            </div>
+            
+            <div class="point-type">
+                <button class="point-btn active" data-point="left">Left Edge</button>
+                <button class="point-btn" data-point="right">Right Edge</button>
+            </div>
+            
+            <div class="terrace-section">
+                <h3>Terraces (Top to Bottom)</h3>
+                <button class="terrace-btn active" data-level="7">Level 7 — Crown <span class="status">○ ○</span></button>
+                <button class="terrace-btn" data-level="6">Level 6 <span class="status">○ ○</span></button>
+                <button class="terrace-btn" data-level="5">Level 5 <span class="status">○ ○</span></button>
+                <button class="terrace-btn" data-level="4">Level 4 <span class="status">○ ○</span></button>
+                <button class="terrace-btn" data-level="3">Level 3 <span class="status">○ ○</span></button>
+                <button class="terrace-btn" data-level="2">Level 2 <span class="status">○ ○</span></button>
+                <button class="terrace-btn" data-level="1">Level 1 — Base <span class="status">○ ○</span></button>
+            </div>
+            
+            <div class="terrace-section">
+                <h3>Traced Coordinates</h3>
+                <div class="output" id="output">// Click on image to trace walls...</div>
+            </div>
+            
+            <div class="actions">
+                <button class="action-btn secondary" id="clearBtn">Clear All</button>
+                <button class="action-btn" id="exportBtn">Copy JSON</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        const mainCanvas = document.getElementById('mainCanvas');
+        const mainCtx = mainCanvas.getContext('2d');
+        const zoomCanvas = document.getElementById('zoomCanvas');
+        const zoomCtx = zoomCanvas.getContext('2d');
+        const viewer = document.getElementById('viewer');
+        const output = document.getElementById('output');
+        
+        let img = new Image();
+        let currentLevel = 7;
+        let currentPoint = 'left';
+        let mouseX = 0, mouseY = 0;
+        
+        // Terrace data storage - pre-populated with existing estimates
+        // Image is 4032×2217 pixels
+        const terraces = {
+            7: { name: 'Crown', left: [0.3650, 0.3630], right: [0.5450, 0.3580], height: 0.017 },
+            6: { name: 'Level 6', left: [0.3180, 0.3930], right: [0.5950, 0.3850], height: 0.018 },
+            5: { name: 'Level 5', left: [0.2650, 0.4280], right: [0.6550, 0.4170], height: 0.020 },
+            4: { name: 'Level 4', left: [0.2080, 0.4630], right: [0.7150, 0.4500], height: 0.022 },
+            3: { name: 'Level 3', left: [0.1480, 0.5030], right: [0.7750, 0.4850], height: 0.025 },
+            2: { name: 'Level 2', left: [0.0880, 0.5480], right: [0.8350, 0.5250], height: 0.028 },
+            1: { name: 'Base', left: [0.0480, 0.5980], right: [0.8750, 0.5680], height: 0.032 },
+        };
+        
+        // Show existing coordinates on load
+        let showExisting = true;
+        
+        img.onload = () => {
+            mainCanvas.width = img.width;
+            mainCanvas.height = img.height;
+            updateButtonStatus();
+            updateOutput();
+            render();
+            
+            console.log(`Image loaded: ${img.width}×${img.height}`);
+            console.log('Existing terrace coordinates:');
+            Object.entries(terraces).forEach(([level, t]) => {
+                if (t.left && t.right) {
+                    const leftPx = [Math.round(t.left[0] * img.width), Math.round(t.left[1] * img.height)];
+                    const rightPx = [Math.round(t.right[0] * img.width), Math.round(t.right[1] * img.height)];
+                    console.log(`  Level ${level}: Left (${leftPx[0]}, ${leftPx[1]}) → Right (${rightPx[0]}, ${rightPx[1]})`);
+                }
+            });
+        };
+        img.src = 'aerial.jpg';
+        
+        function render() {
+            mainCtx.drawImage(img, 0, 0);
+            
+            // Draw traced points and lines
+            Object.entries(terraces).forEach(([level, data]) => {
+                if (data.left) {
+                    drawMarker(data.left[0] * img.width, data.left[1] * img.height, 'left');
+                }
+                if (data.right) {
+                    drawMarker(data.right[0] * img.width, data.right[1] * img.height, 'right');
+                }
+                if (data.left && data.right) {
+                    // Draw connecting line
+                    mainCtx.save();
+                    mainCtx.strokeStyle = `rgba(232, 93, 4, 0.8)`;
+                    mainCtx.lineWidth = 3;
+                    mainCtx.setLineDash([10, 5]);
+                    mainCtx.beginPath();
+                    mainCtx.moveTo(data.left[0] * img.width, data.left[1] * img.height);
+                    mainCtx.lineTo(data.right[0] * img.width, data.right[1] * img.height);
+                    mainCtx.stroke();
+                    mainCtx.restore();
+                }
+            });
+            
+            // Draw level labels
+            Object.entries(terraces).forEach(([level, data]) => {
+                if (data.left) {
+                    mainCtx.save();
+                    mainCtx.font = 'bold 24px SF Mono, monospace';
+                    mainCtx.fillStyle = '#fff';
+                    mainCtx.strokeStyle = '#000';
+                    mainCtx.lineWidth = 4;
+                    const x = data.left[0] * img.width - 60;
+                    const y = data.left[1] * img.height + 8;
+                    mainCtx.strokeText(`L${level}`, x, y);
+                    mainCtx.fillText(`L${level}`, x, y);
+                    mainCtx.restore();
+                }
+            });
+        }
+        
+        function drawMarker(x, y, type) {
+            mainCtx.save();
+            mainCtx.beginPath();
+            mainCtx.arc(x, y, 10, 0, Math.PI * 2);
+            mainCtx.fillStyle = type === 'left' ? '#22c55e' : '#00d4ff';
+            mainCtx.fill();
+            mainCtx.strokeStyle = '#fff';
+            mainCtx.lineWidth = 3;
+            mainCtx.stroke();
+            
+            // Crosshair
+            mainCtx.beginPath();
+            mainCtx.moveTo(x - 20, y);
+            mainCtx.lineTo(x + 20, y);
+            mainCtx.moveTo(x, y - 20);
+            mainCtx.lineTo(x, y + 20);
+            mainCtx.strokeStyle = 'rgba(255,255,255,0.5)';
+            mainCtx.lineWidth = 1;
+            mainCtx.stroke();
+            mainCtx.restore();
+        }
+        
+        function updateZoom(x, y) {
+            const zoomFactor = 8;
+            const sourceSize = zoomCanvas.width / zoomFactor;
+            
+            zoomCtx.imageSmoothingEnabled = false;
+            zoomCtx.clearRect(0, 0, zoomCanvas.width, zoomCanvas.height);
+            zoomCtx.drawImage(
+                img,
+                x - sourceSize / 2, y - sourceSize / 2, sourceSize, sourceSize * (zoomCanvas.height / zoomCanvas.width),
+                0, 0, zoomCanvas.width, zoomCanvas.height
+            );
+            
+            // Draw crosshair
+            zoomCtx.strokeStyle = 'rgba(255,255,255,0.8)';
+            zoomCtx.lineWidth = 1;
+            zoomCtx.beginPath();
+            zoomCtx.moveTo(zoomCanvas.width / 2, 0);
+            zoomCtx.lineTo(zoomCanvas.width / 2, zoomCanvas.height);
+            zoomCtx.moveTo(0, zoomCanvas.height / 2);
+            zoomCtx.lineTo(zoomCanvas.width, zoomCanvas.height / 2);
+            zoomCtx.stroke();
+            
+            // Center dot
+            zoomCtx.fillStyle = '#e85d04';
+            zoomCtx.beginPath();
+            zoomCtx.arc(zoomCanvas.width / 2, zoomCanvas.height / 2, 4, 0, Math.PI * 2);
+            zoomCtx.fill();
+        }
+        
+        function updateCoords(x, y) {
+            document.getElementById('pixelX').textContent = Math.round(x);
+            document.getElementById('pixelY').textContent = Math.round(y);
+            document.getElementById('normX').textContent = (x / img.width).toFixed(6);
+            document.getElementById('normY').textContent = (y / img.height).toFixed(6);
+        }
+        
+        function updateOutput() {
+            let code = 'const terraces = [\n';
+            
+            for (let level = 7; level >= 1; level--) {
+                const t = terraces[level];
+                if (t.left && t.right) {
+                    code += `  { level: ${level}, name: "${t.name}", `;
+                    code += `left: [${t.left[0].toFixed(4)}, ${t.left[1].toFixed(4)}], `;
+                    code += `right: [${t.right[0].toFixed(4)}, ${t.right[1].toFixed(4)}], `;
+                    code += `height: ${t.height} },\n`;
+                } else {
+                    code += `  // Level ${level}: incomplete\n`;
+                }
+            }
+            
+            code += '];';
+            output.textContent = code;
+        }
+        
+        function updateButtonStatus() {
+            document.querySelectorAll('.terrace-btn').forEach(btn => {
+                const level = parseInt(btn.dataset.level);
+                const t = terraces[level];
+                const leftDone = t.left !== null;
+                const rightDone = t.right !== null;
+                
+                btn.querySelector('.status').textContent = 
+                    `${leftDone ? '●' : '○'} ${rightDone ? '●' : '○'}`;
+                
+                btn.classList.toggle('complete', leftDone && rightDone);
+                btn.classList.toggle('active', level === currentLevel);
+            });
+        }
+        
+        // Event handlers
+        mainCanvas.addEventListener('mousemove', (e) => {
+            const rect = mainCanvas.getBoundingClientRect();
+            const scaleX = img.width / rect.width;
+            const scaleY = img.height / rect.height;
+            mouseX = (e.clientX - rect.left) * scaleX;
+            mouseY = (e.clientY - rect.top) * scaleY;
+            
+            updateZoom(mouseX, mouseY);
+            updateCoords(mouseX, mouseY);
+        });
+        
+        mainCanvas.addEventListener('click', (e) => {
+            const rect = mainCanvas.getBoundingClientRect();
+            const scaleX = img.width / rect.width;
+            const scaleY = img.height / rect.height;
+            const x = (e.clientX - rect.left) * scaleX;
+            const y = (e.clientY - rect.top) * scaleY;
+            
+            const normX = x / img.width;
+            const normY = y / img.height;
+            
+            terraces[currentLevel][currentPoint] = [normX, normY];
+            
+            console.log(`Level ${currentLevel} ${currentPoint}: [${normX.toFixed(4)}, ${normY.toFixed(4)}]`);
+            
+            updateButtonStatus();
+            updateOutput();
+            render();
+            
+            // Auto-advance to next point/level
+            if (currentPoint === 'left') {
+                currentPoint = 'right';
+            } else {
+                currentPoint = 'left';
+                if (currentLevel > 1) {
+                    currentLevel--;
+                }
+            }
+            
+            document.querySelectorAll('.point-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.point === currentPoint);
+            });
+            updateButtonStatus();
+        });
+        
+        // Terrace selection
+        document.querySelectorAll('.terrace-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentLevel = parseInt(btn.dataset.level);
+                updateButtonStatus();
+            });
+        });
+        
+        // Point type selection
+        document.querySelectorAll('.point-btn').forEach(btn => {
+            btn.addEventListener('click', () => {
+                currentPoint = btn.dataset.point;
+                document.querySelectorAll('.point-btn').forEach(b => {
+                    b.classList.toggle('active', b === btn);
+                });
+            });
+        });
+        
+        // Clear button
+        document.getElementById('clearBtn').addEventListener('click', () => {
+            Object.values(terraces).forEach(t => {
+                t.left = null;
+                t.right = null;
+            });
+            updateButtonStatus();
+            updateOutput();
+            render();
+        });
+        
+        // Export button
+        document.getElementById('exportBtn').addEventListener('click', () => {
+            navigator.clipboard.writeText(output.textContent);
+            alert('Copied to clipboard!');
+        });
+        
+        // Toggle existing coordinates
+        document.getElementById('showExisting').addEventListener('change', (e) => {
+            showExisting = e.target.checked;
+            render();
+        });
+        
+        // Initialize
+        updateButtonStatus();
+    </script>
+</body>
+</html>

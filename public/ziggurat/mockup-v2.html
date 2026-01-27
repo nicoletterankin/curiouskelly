@@ -1,0 +1,586 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ziggurat LED Vision — Photorealistic</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        body {
+            background: #0a0a0a;
+            min-height: 100vh;
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            color: #fff;
+            overflow-x: hidden;
+        }
+        
+        .viewer {
+            position: relative;
+            width: 100vw;
+            height: calc(100vh - 80px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            background: #000;
+        }
+        
+        #canvas {
+            max-width: 100%;
+            max-height: 100%;
+            cursor: crosshair;
+        }
+        
+        .controls {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            height: 80px;
+            background: linear-gradient(to top, rgba(0,0,0,0.95), rgba(0,0,0,0.8));
+            backdrop-filter: blur(20px);
+            display: flex;
+            align-items: center;
+            padding: 0 30px;
+            gap: 30px;
+            border-top: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .control-group {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .control-group label {
+            font-size: 10px;
+            text-transform: uppercase;
+            letter-spacing: 1.5px;
+            color: rgba(255,255,255,0.5);
+        }
+        
+        .btn {
+            padding: 10px 20px;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid rgba(255,255,255,0.2);
+            border-radius: 6px;
+            color: #fff;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+        
+        .btn:hover { background: rgba(255,255,255,0.2); }
+        .btn.active { background: #e85d04; border-color: #e85d04; }
+        
+        .color-picker {
+            display: flex;
+            gap: 6px;
+        }
+        
+        .color-swatch {
+            width: 24px;
+            height: 24px;
+            border-radius: 50%;
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all 0.2s;
+        }
+        
+        .color-swatch:hover { transform: scale(1.15); }
+        .color-swatch.active { border-color: #fff; box-shadow: 0 0 10px currentColor; }
+        
+        .slider-wrap {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .slider-wrap input[type="range"] {
+            width: 100px;
+            accent-color: #e85d04;
+        }
+        
+        .slider-wrap span {
+            font-size: 11px;
+            color: rgba(255,255,255,0.6);
+            min-width: 35px;
+        }
+        
+        .spacer { flex: 1; }
+        
+        .export-btn {
+            background: #e85d04;
+            border-color: #e85d04;
+            font-weight: 600;
+        }
+        
+        .export-btn:hover { background: #d4520a; }
+        
+        /* Stats overlay */
+        .stats {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(0,0,0,0.8);
+            padding: 15px 20px;
+            border-radius: 8px;
+            font-size: 11px;
+            line-height: 1.8;
+            color: rgba(255,255,255,0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(255,255,255,0.1);
+        }
+        
+        .stats strong {
+            color: #e85d04;
+        }
+        
+        /* Instructions */
+        .hint {
+            position: fixed;
+            bottom: 100px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(0,0,0,0.7);
+            padding: 8px 16px;
+            border-radius: 20px;
+            font-size: 11px;
+            color: rgba(255,255,255,0.6);
+            pointer-events: none;
+            transition: opacity 0.3s;
+        }
+    </style>
+</head>
+<body>
+    <div class="viewer">
+        <canvas id="canvas"></canvas>
+    </div>
+    
+    <div class="stats">
+        <strong>ZIGGURAT LED VISION</strong><br>
+        6 Terrace Levels<br>
+        ~6,360 Linear Feet<br>
+        ~25,440 SF Panel Area<br>
+        ~11.6M Pixels @ 16mm
+    </div>
+    
+    <div class="hint" id="hint">Press SPACE to toggle Before/After</div>
+    
+    <div class="controls">
+        <div class="control-group">
+            <label>View</label>
+            <button class="btn" id="btnBefore">Before</button>
+            <button class="btn active" id="btnAfter">After</button>
+        </div>
+        
+        <div class="control-group">
+            <label>Time</label>
+            <button class="btn" id="btnDusk">Dusk</button>
+            <button class="btn active" id="btnNight">Night</button>
+        </div>
+        
+        <div class="control-group">
+            <label>Color</label>
+            <div class="color-picker">
+                <div class="color-swatch active" style="background: #ff6b35" data-color="#ff6b35"></div>
+                <div class="color-swatch" style="background: #00d4ff" data-color="#00d4ff"></div>
+                <div class="color-swatch" style="background: #a855f7" data-color="#a855f7"></div>
+                <div class="color-swatch" style="background: #fbbf24" data-color="#fbbf24"></div>
+                <div class="color-swatch" style="background: #ffffff" data-color="#ffffff"></div>
+                <div class="color-swatch" style="background: linear-gradient(90deg, #ff6b35, #fbbf24, #22c55e, #00d4ff, #a855f7)" data-color="rainbow"></div>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <label>Intensity</label>
+            <div class="slider-wrap">
+                <input type="range" id="intensitySlider" min="20" max="150" value="100">
+                <span id="intensityValue">100%</span>
+            </div>
+        </div>
+        
+        <div class="control-group">
+            <label>Bloom</label>
+            <div class="slider-wrap">
+                <input type="range" id="bloomSlider" min="0" max="100" value="60">
+                <span id="bloomValue">60%</span>
+            </div>
+        </div>
+        
+        <div class="spacer"></div>
+        
+        <button class="btn export-btn" id="btnExport">Export 4K PNG</button>
+    </div>
+    
+    <script>
+        const canvas = document.getElementById('canvas');
+        const ctx = canvas.getContext('2d');
+        
+        // State
+        let img = new Image();
+        let showAfter = true;
+        let timeMode = 'night';
+        let ledColor = '#ff6b35';
+        let isRainbow = false;
+        let intensity = 1.0;
+        let bloomAmount = 0.6;
+        
+        // Building data - precisely traced from aerial.jpg
+        // Each panel: [leftX, leftY, rightX, rightY, height]
+        // Building spans x: 0.088-0.835, y: 0.36-0.58
+        // Precise traced coordinates from aerial.jpg (4032×2217)
+        // CORRECTED coordinates - building spans x: 0.21-0.68, y: 0.34-0.50
+        const terraces = [
+            { level: 7, name: "Crown", left: [0.358, 0.343], right: [0.492, 0.340], height: 0.010, linearFt: 380 },
+            { level: 6, name: "F6", left: [0.335, 0.365], right: [0.518, 0.361], height: 0.012, linearFt: 580 },
+            { level: 5, name: "F5", left: [0.310, 0.388], right: [0.548, 0.383], height: 0.014, linearFt: 820 },
+            { level: 4, name: "F4", left: [0.285, 0.412], right: [0.580, 0.407], height: 0.016, linearFt: 1060 },
+            { level: 3, name: "F3", left: [0.260, 0.438], right: [0.615, 0.432], height: 0.018, linearFt: 1310 },
+            { level: 2, name: "F2", left: [0.235, 0.465], right: [0.650, 0.458], height: 0.020, linearFt: 1580 },
+            { level: 1, name: "Base", left: [0.210, 0.495], right: [0.680, 0.485], height: 0.022, linearFt: 1580 },
+        ];
+        
+        img.onload = () => {
+            canvas.width = img.width;
+            canvas.height = img.height;
+            render();
+            
+            // Hide hint after 3s
+            setTimeout(() => {
+                document.getElementById('hint').style.opacity = '0';
+            }, 3000);
+        };
+        img.src = 'aerial.jpg';
+        
+        function render() {
+            ctx.clearRect(0, 0, canvas.width, canvas.height);
+            
+            // Layer 1: Base photograph
+            ctx.drawImage(img, 0, 0);
+            
+            if (!showAfter) return;
+            
+            // Layer 2: Time transformation
+            applyTimeGrading();
+            
+            // Layer 3-5: LED panels with full lighting simulation
+            terraces.forEach((terrace, i) => {
+                drawPanel(terrace, i);
+            });
+            
+            // Layer 6: Atmospheric effects
+            applyAtmosphere();
+        }
+        
+        function applyTimeGrading() {
+            if (timeMode === 'dusk') {
+                // Golden hour: warm highlights, purple shadows
+                ctx.save();
+                
+                // Darken overall
+                ctx.globalCompositeOperation = 'multiply';
+                const grad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                grad.addColorStop(0, 'rgba(120, 100, 140, 0.4)');
+                grad.addColorStop(0.4, 'rgba(180, 140, 120, 0.3)');
+                grad.addColorStop(1, 'rgba(80, 60, 100, 0.5)');
+                ctx.fillStyle = grad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.restore();
+            } else if (timeMode === 'night') {
+                // Blue hour into night
+                ctx.save();
+                
+                // Deep multiply for darkness
+                ctx.globalCompositeOperation = 'multiply';
+                ctx.fillStyle = 'rgba(25, 30, 50, 0.82)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Blue overlay
+                ctx.globalCompositeOperation = 'overlay';
+                ctx.fillStyle = 'rgba(30, 50, 100, 0.35)';
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                // Gradient for sky-to-ground
+                ctx.globalCompositeOperation = 'multiply';
+                const nightGrad = ctx.createLinearGradient(0, 0, 0, canvas.height);
+                nightGrad.addColorStop(0, 'rgba(10, 15, 35, 0.5)');
+                nightGrad.addColorStop(0.4, 'rgba(15, 20, 40, 0.4)');
+                nightGrad.addColorStop(1, 'rgba(5, 8, 20, 0.6)');
+                ctx.fillStyle = nightGrad;
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
+                
+                ctx.restore();
+            }
+        }
+        
+        function drawPanel(terrace, index) {
+            const w = canvas.width;
+            const h = canvas.height;
+            
+            // Panel corner coordinates
+            const x1 = terrace.left[0] * w;
+            const y1 = terrace.left[1] * h;
+            const x2 = terrace.right[0] * w;
+            const y2 = terrace.right[1] * h;
+            const panelH = terrace.height * h;
+            
+            // Get color (support rainbow gradient)
+            let color = ledColor;
+            let rgb;
+            if (isRainbow) {
+                // Rainbow: each terrace gets different hue
+                const hue = (index / terraces.length) * 360;
+                rgb = hslToRgb(hue / 360, 0.9, 0.55);
+                color = `rgb(${rgb.r}, ${rgb.g}, ${rgb.b})`;
+            } else {
+                rgb = hexToRgb(ledColor);
+            }
+            
+            const int = intensity * (timeMode === 'night' ? 1.0 : 0.6);
+            const bloom = bloomAmount;
+            
+            // === LAYER 3: LED CORE ===
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            
+            // Core fill with subtle gradient variation
+            const coreGrad = ctx.createLinearGradient(x1, y1, x2, y2);
+            coreGrad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.7 * int})`);
+            coreGrad.addColorStop(0.2, `rgba(${Math.min(255, rgb.r + 40)}, ${Math.min(255, rgb.g + 40)}, ${Math.min(255, rgb.b + 40)}, ${0.95 * int})`);
+            coreGrad.addColorStop(0.5, `rgba(${Math.min(255, rgb.r + 60)}, ${Math.min(255, rgb.g + 60)}, ${Math.min(255, rgb.b + 60)}, ${1.0 * int})`);
+            coreGrad.addColorStop(0.8, `rgba(${Math.min(255, rgb.r + 40)}, ${Math.min(255, rgb.g + 40)}, ${Math.min(255, rgb.b + 40)}, ${0.95 * int})`);
+            coreGrad.addColorStop(1, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.7 * int})`);
+            
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.lineTo(x2, y2 + panelH);
+            ctx.lineTo(x1, y1 + panelH);
+            ctx.closePath();
+            ctx.fillStyle = coreGrad;
+            ctx.fill();
+            
+            // White-hot center line
+            const centerY1 = y1 + panelH * 0.5;
+            const centerY2 = y2 + panelH * 0.5;
+            ctx.beginPath();
+            ctx.moveTo(x1 + 3, centerY1);
+            ctx.lineTo(x2 - 3, centerY2);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${0.6 * int})`;
+            ctx.lineWidth = Math.max(2, panelH * 0.25);
+            ctx.stroke();
+            
+            ctx.restore();
+            
+            // === LAYER 4: BLOOM ===
+            if (bloom > 0) {
+                ctx.save();
+                ctx.globalCompositeOperation = 'screen';
+                
+                // Multiple bloom passes for realistic falloff
+                const passes = [
+                    { blur: 60 * bloom, alpha: 0.08 },
+                    { blur: 35 * bloom, alpha: 0.12 },
+                    { blur: 18 * bloom, alpha: 0.18 },
+                    { blur: 8 * bloom, alpha: 0.25 },
+                ];
+                
+                passes.forEach(pass => {
+                    ctx.shadowColor = color;
+                    ctx.shadowBlur = pass.blur;
+                    ctx.beginPath();
+                    ctx.moveTo(x1, y1);
+                    ctx.lineTo(x2, y2);
+                    ctx.lineTo(x2, y2 + panelH);
+                    ctx.lineTo(x1, y1 + panelH);
+                    ctx.closePath();
+                    ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${pass.alpha * int})`;
+                    ctx.fill();
+                });
+                
+                ctx.restore();
+            }
+            
+            // === LAYER 5: SURFACE ILLUMINATION ===
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            
+            // Downward spill onto building wall
+            const spillH = panelH * 2.5;
+            const spillGrad = ctx.createLinearGradient(x1, y1 + panelH, x1, y1 + panelH + spillH);
+            spillGrad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.18 * int * bloom})`);
+            spillGrad.addColorStop(0.4, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.06 * int * bloom})`);
+            spillGrad.addColorStop(1, 'rgba(0,0,0,0)');
+            
+            ctx.beginPath();
+            ctx.moveTo(x1, y1 + panelH);
+            ctx.lineTo(x2, y2 + panelH);
+            ctx.lineTo(x2, y2 + panelH + spillH);
+            ctx.lineTo(x1, y1 + panelH + spillH);
+            ctx.closePath();
+            ctx.fillStyle = spillGrad;
+            ctx.fill();
+            
+            // Upward bounce (soffit illumination)
+            const bounceH = panelH * 0.8;
+            const bounceGrad = ctx.createLinearGradient(x1, y1, x1, y1 - bounceH);
+            bounceGrad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.06 * int * bloom})`);
+            bounceGrad.addColorStop(1, 'rgba(0,0,0,0)');
+            
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.lineTo(x2, y2 - bounceH);
+            ctx.lineTo(x1, y1 - bounceH);
+            ctx.closePath();
+            ctx.fillStyle = bounceGrad;
+            ctx.fill();
+            
+            ctx.restore();
+        }
+        
+        function applyAtmosphere() {
+            // Vignette
+            const vignetteGrad = ctx.createRadialGradient(
+                canvas.width * 0.5, canvas.height * 0.45, canvas.height * 0.25,
+                canvas.width * 0.5, canvas.height * 0.45, canvas.height * 0.95
+            );
+            vignetteGrad.addColorStop(0, 'rgba(0,0,0,0)');
+            vignetteGrad.addColorStop(0.6, 'rgba(0,0,0,0.15)');
+            vignetteGrad.addColorStop(1, 'rgba(0,0,0,0.5)');
+            ctx.fillStyle = vignetteGrad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Film grain (subtle)
+            if (timeMode === 'night') {
+                const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+                const pixels = imageData.data;
+                const grainAmount = 0.025;
+                
+                for (let i = 0; i < pixels.length; i += 4) {
+                    const noise = (Math.random() - 0.5) * grainAmount * 255;
+                    pixels[i] = Math.max(0, Math.min(255, pixels[i] + noise));
+                    pixels[i + 1] = Math.max(0, Math.min(255, pixels[i + 1] + noise));
+                    pixels[i + 2] = Math.max(0, Math.min(255, pixels[i + 2] + noise));
+                }
+                
+                ctx.putImageData(imageData, 0, 0);
+            }
+        }
+        
+        // Utility functions
+        function hexToRgb(hex) {
+            const r = parseInt(hex.slice(1, 3), 16);
+            const g = parseInt(hex.slice(3, 5), 16);
+            const b = parseInt(hex.slice(5, 7), 16);
+            return { r, g, b };
+        }
+        
+        function hslToRgb(h, s, l) {
+            let r, g, b;
+            if (s === 0) {
+                r = g = b = l;
+            } else {
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1/6) return p + (q - p) * 6 * t;
+                    if (t < 1/2) return q;
+                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                    return p;
+                };
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1/3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1/3);
+            }
+            return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
+        }
+        
+        // === CONTROLS ===
+        document.getElementById('btnBefore').onclick = () => {
+            showAfter = false;
+            document.getElementById('btnBefore').classList.add('active');
+            document.getElementById('btnAfter').classList.remove('active');
+            render();
+        };
+        
+        document.getElementById('btnAfter').onclick = () => {
+            showAfter = true;
+            document.getElementById('btnAfter').classList.add('active');
+            document.getElementById('btnBefore').classList.remove('active');
+            render();
+        };
+        
+        document.getElementById('btnDusk').onclick = () => {
+            timeMode = 'dusk';
+            document.getElementById('btnDusk').classList.add('active');
+            document.getElementById('btnNight').classList.remove('active');
+            render();
+        };
+        
+        document.getElementById('btnNight').onclick = () => {
+            timeMode = 'night';
+            document.getElementById('btnNight').classList.add('active');
+            document.getElementById('btnDusk').classList.remove('active');
+            render();
+        };
+        
+        document.querySelectorAll('.color-swatch').forEach(swatch => {
+            swatch.onclick = () => {
+                const color = swatch.dataset.color;
+                isRainbow = color === 'rainbow';
+                if (!isRainbow) ledColor = color;
+                document.querySelectorAll('.color-swatch').forEach(s => s.classList.remove('active'));
+                swatch.classList.add('active');
+                render();
+            };
+        });
+        
+        document.getElementById('intensitySlider').oninput = (e) => {
+            intensity = e.target.value / 100;
+            document.getElementById('intensityValue').textContent = e.target.value + '%';
+            render();
+        };
+        
+        document.getElementById('bloomSlider').oninput = (e) => {
+            bloomAmount = e.target.value / 100;
+            document.getElementById('bloomValue').textContent = e.target.value + '%';
+            render();
+        };
+        
+        document.getElementById('btnExport').onclick = () => {
+            // Create high-res export
+            const link = document.createElement('a');
+            const timestamp = new Date().toISOString().slice(0, 10);
+            link.download = `ziggurat-led-vision-${timeMode}-${timestamp}.png`;
+            link.href = canvas.toDataURL('image/png', 1.0);
+            link.click();
+        };
+        
+        // Keyboard shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space') {
+                e.preventDefault();
+                showAfter = !showAfter;
+                document.getElementById('btnBefore').classList.toggle('active', !showAfter);
+                document.getElementById('btnAfter').classList.toggle('active', showAfter);
+                render();
+            }
+            
+            // Arrow keys for fine adjustment
+            const step = e.shiftKey ? 0.002 : 0.005;
+            if (e.code === 'ArrowUp') {
+                terraces.forEach(t => { t.left[1] -= step; t.right[1] -= step; });
+                render();
+            }
+            if (e.code === 'ArrowDown') {
+                terraces.forEach(t => { t.left[1] += step; t.right[1] += step; });
+                render();
+            }
+        });
+    </script>
+</body>
+</html>

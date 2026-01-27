@@ -1,0 +1,816 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>The Ziggurat — LED Vision Presentation</title>
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+        
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: 'Inter', -apple-system, sans-serif;
+            background: #000;
+            color: #fff;
+            overflow-x: hidden;
+        }
+        
+        /* Hero Section */
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .hero-bg {
+            position: absolute;
+            inset: 0;
+            background: url('aerial.jpg') center/cover;
+            filter: brightness(0.3);
+        }
+        
+        .hero-content {
+            position: relative;
+            text-align: center;
+            z-index: 1;
+        }
+        
+        .hero h1 {
+            font-size: 72px;
+            font-weight: 700;
+            letter-spacing: -2px;
+            margin-bottom: 16px;
+            background: linear-gradient(135deg, #fff, #e85d04);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero p {
+            font-size: 24px;
+            font-weight: 300;
+            color: rgba(255,255,255,0.7);
+            max-width: 600px;
+        }
+        
+        .scroll-indicator {
+            position: absolute;
+            bottom: 40px;
+            left: 50%;
+            transform: translateX(-50%);
+            animation: bounce 2s infinite;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateX(-50%) translateY(0); }
+            50% { transform: translateX(-50%) translateY(10px); }
+        }
+        
+        /* Sections */
+        .section {
+            padding: 120px 60px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        .section-label {
+            font-size: 12px;
+            text-transform: uppercase;
+            letter-spacing: 3px;
+            color: #e85d04;
+            margin-bottom: 16px;
+        }
+        
+        .section-title {
+            font-size: 48px;
+            font-weight: 600;
+            letter-spacing: -1px;
+            margin-bottom: 24px;
+        }
+        
+        .section-desc {
+            font-size: 20px;
+            color: rgba(255,255,255,0.6);
+            max-width: 700px;
+            line-height: 1.6;
+        }
+        
+        /* Before/After Slider */
+        .compare-section {
+            padding: 80px 0;
+            background: #0a0a0a;
+        }
+        
+        .compare-container {
+            max-width: 1200px;
+            margin: 0 auto;
+            position: relative;
+        }
+        
+        .compare-wrap {
+            position: relative;
+            overflow: hidden;
+            border-radius: 12px;
+            cursor: ew-resize;
+        }
+        
+        .compare-img {
+            width: 100%;
+            display: block;
+        }
+        
+        .compare-after {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+        }
+        
+        .compare-after img {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .compare-slider {
+            position: absolute;
+            top: 0;
+            bottom: 0;
+            width: 4px;
+            background: #fff;
+            cursor: ew-resize;
+            z-index: 10;
+        }
+        
+        .compare-slider::before {
+            content: '◀ ▶';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            color: #000;
+            padding: 12px 8px;
+            border-radius: 20px;
+            font-size: 10px;
+            letter-spacing: 2px;
+            white-space: nowrap;
+        }
+        
+        .compare-labels {
+            display: flex;
+            justify-content: space-between;
+            padding: 20px 0;
+            font-size: 14px;
+            color: rgba(255,255,255,0.5);
+        }
+        
+        /* Stats Grid */
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(4, 1fr);
+            gap: 40px;
+            margin-top: 60px;
+        }
+        
+        .stat-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 32px;
+        }
+        
+        .stat-value {
+            font-size: 48px;
+            font-weight: 700;
+            color: #e85d04;
+            margin-bottom: 8px;
+        }
+        
+        .stat-label {
+            font-size: 14px;
+            color: rgba(255,255,255,0.5);
+        }
+        
+        /* Scenarios */
+        .scenarios-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 24px;
+            margin-top: 60px;
+        }
+        
+        .scenario-card {
+            position: relative;
+            border-radius: 12px;
+            overflow: hidden;
+            aspect-ratio: 16/10;
+        }
+        
+        .scenario-card canvas {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .scenario-label {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            padding: 20px;
+            background: linear-gradient(to top, rgba(0,0,0,0.9), transparent);
+            font-size: 14px;
+            font-weight: 500;
+        }
+        
+        /* Timeline */
+        .timeline-section {
+            background: linear-gradient(135deg, #0a0a0a, #111);
+        }
+        
+        .timeline {
+            display: flex;
+            gap: 40px;
+            margin-top: 60px;
+            overflow-x: auto;
+            padding: 20px 0;
+        }
+        
+        .timeline-item {
+            flex: 0 0 280px;
+            background: rgba(255,255,255,0.03);
+            border: 1px solid rgba(255,255,255,0.08);
+            border-radius: 12px;
+            padding: 24px;
+        }
+        
+        .timeline-month {
+            font-size: 12px;
+            color: #e85d04;
+            text-transform: uppercase;
+            letter-spacing: 2px;
+            margin-bottom: 12px;
+        }
+        
+        .timeline-title {
+            font-size: 18px;
+            font-weight: 600;
+            margin-bottom: 8px;
+        }
+        
+        .timeline-desc {
+            font-size: 14px;
+            color: rgba(255,255,255,0.5);
+            line-height: 1.5;
+        }
+        
+        /* CTA */
+        .cta-section {
+            text-align: center;
+            padding: 160px 60px;
+            background: linear-gradient(to bottom, #000, #0a0a0a);
+        }
+        
+        .cta-section h2 {
+            font-size: 56px;
+            font-weight: 600;
+            margin-bottom: 24px;
+        }
+        
+        .cta-section p {
+            font-size: 20px;
+            color: rgba(255,255,255,0.6);
+            max-width: 600px;
+            margin: 0 auto 40px;
+        }
+        
+        .cta-btn {
+            display: inline-block;
+            padding: 18px 48px;
+            background: #e85d04;
+            color: #fff;
+            text-decoration: none;
+            font-size: 16px;
+            font-weight: 600;
+            border-radius: 8px;
+            transition: all 0.3s;
+        }
+        
+        .cta-btn:hover {
+            background: #ff6b1a;
+            transform: translateY(-2px);
+        }
+        
+        /* Footer */
+        footer {
+            padding: 40px 60px;
+            border-top: 1px solid rgba(255,255,255,0.08);
+            text-align: center;
+            font-size: 14px;
+            color: rgba(255,255,255,0.4);
+        }
+    </style>
+</head>
+<body>
+    <!-- Hero -->
+    <section class="hero">
+        <div class="hero-bg"></div>
+        <div class="hero-content">
+            <h1>The Ziggurat</h1>
+            <p>Transforming a civic landmark into a beacon of daily learning for the community</p>
+        </div>
+        <div class="scroll-indicator">
+            <svg width="24" height="24" fill="none" stroke="currentColor" stroke-width="2">
+                <path d="M12 5v14M5 12l7 7 7-7"/>
+            </svg>
+        </div>
+    </section>
+    
+    <!-- Vision -->
+    <section class="section">
+        <div class="section-label">The Vision</div>
+        <h2 class="section-title">365 Days of Wonder</h2>
+        <p class="section-desc">
+            Each day, the Ziggurat displays a new lesson topic — transforming the building 
+            into a living educational monument. From "Why the Sky is Blue" to "The Mathematics 
+            of Music," every sunset brings a new opportunity for curiosity.
+        </p>
+        
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-value">6</div>
+                <div class="stat-label">Terrace Levels</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">6,360</div>
+                <div class="stat-label">Linear Feet of LED</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">11.6M</div>
+                <div class="stat-label">Pixels</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-value">365</div>
+                <div class="stat-label">Daily Lessons</div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Before/After -->
+    <section class="compare-section">
+        <div class="compare-container">
+            <div class="compare-wrap" id="compareWrap">
+                <img src="aerial.jpg" class="compare-img" id="beforeImg">
+                <div class="compare-after" id="afterWrap">
+                    <canvas id="afterCanvas"></canvas>
+                </div>
+                <div class="compare-slider" id="slider"></div>
+            </div>
+            <div class="compare-labels">
+                <span>Before</span>
+                <span>After — Night Vision</span>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Scenarios -->
+    <section class="section">
+        <div class="section-label">Possibilities</div>
+        <h2 class="section-title">Every Night, A New Story</h2>
+        <p class="section-desc">
+            The LED installation supports multiple display modes — from educational content 
+            to civic celebrations, seasonal themes, and community events.
+        </p>
+        
+        <div class="scenarios-grid">
+            <div class="scenario-card">
+                <canvas id="scenario1"></canvas>
+                <div class="scenario-label">Daily Lesson Mode</div>
+            </div>
+            <div class="scenario-card">
+                <canvas id="scenario2"></canvas>
+                <div class="scenario-label">Civic Celebration</div>
+            </div>
+            <div class="scenario-card">
+                <canvas id="scenario3"></canvas>
+                <div class="scenario-label">Rainbow Gradient</div>
+            </div>
+            <div class="scenario-card">
+                <canvas id="scenario4"></canvas>
+                <div class="scenario-label">Cool Tones</div>
+            </div>
+            <div class="scenario-card">
+                <canvas id="scenario5"></canvas>
+                <div class="scenario-label">Warm Evening</div>
+            </div>
+            <div class="scenario-card">
+                <canvas id="scenario6"></canvas>
+                <div class="scenario-label">White/Minimal</div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- Timeline -->
+    <section class="section timeline-section">
+        <div class="section-label">Implementation</div>
+        <h2 class="section-title">The Path Forward</h2>
+        
+        <div class="timeline">
+            <div class="timeline-item">
+                <div class="timeline-month">Phase 1</div>
+                <div class="timeline-title">Community Approval</div>
+                <div class="timeline-desc">Present vision to city council and gather neighbor feedback through town halls.</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-month">Phase 2</div>
+                <div class="timeline-title">Technical Design</div>
+                <div class="timeline-desc">Engineering assessment, electrical planning, and mounting system design.</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-month">Phase 3</div>
+                <div class="timeline-title">Pilot Installation</div>
+                <div class="timeline-desc">Install LEDs on one terrace level to demonstrate real-world appearance.</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-month">Phase 4</div>
+                <div class="timeline-title">Full Deployment</div>
+                <div class="timeline-desc">Complete installation across all six terrace levels.</div>
+            </div>
+            <div class="timeline-item">
+                <div class="timeline-month">Phase 5</div>
+                <div class="timeline-title">Launch</div>
+                <div class="timeline-desc">365 Days of Wonder begins — one lesson, every day, for the community.</div>
+            </div>
+        </div>
+    </section>
+    
+    <!-- CTA -->
+    <section class="cta-section">
+        <h2>Let's Build Wonder Together</h2>
+        <p>Join us in transforming a civic landmark into a beacon of daily learning that inspires curiosity across generations.</p>
+        <a href="content-simulator.html" class="cta-btn">Explore the Vision →</a>
+    </section>
+    
+    <footer>
+        <p>Curious Kelly — 365 Days of Wonder — The Ziggurat LED Vision</p>
+    </footer>
+    
+    <script>
+        // Shared building data
+        // Precise traced coordinates from aerial.jpg (4032×2217)
+        // CORRECTED coordinates - building spans x: 0.21-0.68, y: 0.34-0.50
+        const terraces = [
+            { left: [0.358, 0.343], right: [0.492, 0.340], height: 0.010 },
+            { left: [0.335, 0.365], right: [0.518, 0.361], height: 0.012 },
+            { left: [0.310, 0.388], right: [0.548, 0.383], height: 0.014 },
+            { left: [0.285, 0.412], right: [0.580, 0.407], height: 0.016 },
+            { left: [0.260, 0.438], right: [0.615, 0.432], height: 0.018 },
+            { left: [0.235, 0.465], right: [0.650, 0.458], height: 0.020 },
+            { left: [0.210, 0.495], right: [0.680, 0.485], height: 0.022 },
+        ];
+        
+        const img = new Image();
+        img.src = 'aerial.jpg';
+        
+        img.onload = () => {
+            // Render after canvas for comparison slider
+            renderAfterCanvas();
+            
+            // Render scenario previews
+            renderScenarios();
+            
+            // Setup comparison slider
+            setupSlider();
+        };
+        
+        function renderAfterCanvas() {
+            const canvas = document.getElementById('afterCanvas');
+            const ctx = canvas.getContext('2d');
+            canvas.width = img.width;
+            canvas.height = img.height;
+            
+            ctx.drawImage(img, 0, 0);
+            applyNightGrading(ctx, canvas);
+            terraces.forEach((t, i) => {
+                drawPanel(ctx, canvas, t, '#e85d04', 1);
+            });
+            applySkyGlow(ctx, canvas, '#e85d04');
+            applyAtmosphere(ctx, canvas);
+        }
+        
+        function applySkyGlow(ctx, canvas, color) {
+            const rgb = parseColor(color);
+            const w = canvas.width;
+            const h = canvas.height;
+            
+            // Calculate building center from terraces
+            const buildingCenterX = w * 0.46;
+            const buildingTopY = h * 0.35;
+            
+            ctx.save();
+            ctx.globalCompositeOperation = 'screen';
+            
+            // Wide atmospheric glow above building
+            const skyGlow = ctx.createRadialGradient(
+                buildingCenterX, buildingTopY, 0,
+                buildingCenterX, buildingTopY - h * 0.2, h * 0.5
+            );
+            skyGlow.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.08)`);
+            skyGlow.addColorStop(0.3, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.04)`);
+            skyGlow.addColorStop(0.6, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, 0.015)`);
+            skyGlow.addColorStop(1, 'rgba(0,0,0,0)');
+            
+            ctx.fillStyle = skyGlow;
+            ctx.fillRect(0, 0, w, buildingTopY + h * 0.2);
+            
+            ctx.restore();
+        }
+        
+        function renderScenarios() {
+            const scenarios = [
+                { id: 'scenario1', color: '#e85d04' },
+                { id: 'scenario2', colors: ['#ef4444', '#ffffff', '#3b82f6'] },
+                { id: 'scenario3', rainbow: true },
+                { id: 'scenario4', color: '#00d4ff' },
+                { id: 'scenario5', color: '#fbbf24' },
+                { id: 'scenario6', color: '#ffffff' },
+            ];
+            
+            scenarios.forEach(s => {
+                const canvas = document.getElementById(s.id);
+                const ctx = canvas.getContext('2d');
+                canvas.width = img.width;
+                canvas.height = img.height;
+                
+                ctx.drawImage(img, 0, 0);
+                applyNightGrading(ctx, canvas);
+                
+                let primaryColor = s.color || '#e85d04';
+                terraces.forEach((t, i) => {
+                    let color;
+                    if (s.rainbow) {
+                        const hue = (i / terraces.length) * 360;
+                        color = `hsl(${hue}, 85%, 55%)`;
+                    } else if (s.colors) {
+                        color = s.colors[i % s.colors.length];
+                    } else {
+                        color = s.color;
+                    }
+                    if (i === 0) primaryColor = color;
+                    drawPanel(ctx, canvas, t, color, 1);
+                });
+                
+                // Add sky glow with dominant color
+                if (s.rainbow) {
+                    applySkyGlow(ctx, canvas, '#ff6600');
+                } else if (s.colors) {
+                    applySkyGlow(ctx, canvas, s.colors[0]);
+                } else {
+                    applySkyGlow(ctx, canvas, primaryColor);
+                }
+                
+                applyAtmosphere(ctx, canvas);
+            });
+        }
+        
+        function applyNightGrading(ctx, canvas) {
+            ctx.save();
+            // Deep blue night sky tone
+            ctx.globalCompositeOperation = 'multiply';
+            ctx.fillStyle = 'rgba(18, 25, 45, 0.88)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Cool overlay for night atmosphere
+            ctx.globalCompositeOperation = 'overlay';
+            ctx.fillStyle = 'rgba(25, 40, 80, 0.4)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Slight desaturation
+            ctx.globalCompositeOperation = 'saturation';
+            ctx.fillStyle = 'rgba(128, 128, 128, 0.15)';
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            ctx.restore();
+        }
+        
+        function applyAtmosphere(ctx, canvas) {
+            // Cinematic vignette - heavier at corners
+            const grad = ctx.createRadialGradient(
+                canvas.width * 0.5, canvas.height * 0.42, canvas.height * 0.2,
+                canvas.width * 0.5, canvas.height * 0.42, canvas.height * 1.1
+            );
+            grad.addColorStop(0, 'rgba(0,0,0,0)');
+            grad.addColorStop(0.5, 'rgba(0,0,0,0.1)');
+            grad.addColorStop(0.75, 'rgba(0,0,0,0.35)');
+            grad.addColorStop(1, 'rgba(0,0,0,0.65)');
+            ctx.fillStyle = grad;
+            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            
+            // Film grain for authenticity
+            const imageData = ctx.getImageData(0, 0, canvas.width, canvas.height);
+            const data = imageData.data;
+            for (let i = 0; i < data.length; i += 4) {
+                const noise = (Math.random() - 0.5) * 8;
+                data[i] = Math.max(0, Math.min(255, data[i] + noise));
+                data[i + 1] = Math.max(0, Math.min(255, data[i + 1] + noise));
+                data[i + 2] = Math.max(0, Math.min(255, data[i + 2] + noise));
+            }
+            ctx.putImageData(imageData, 0, 0);
+        }
+        
+        function drawPanel(ctx, canvas, terrace, color, intensity) {
+            const w = canvas.width;
+            const h = canvas.height;
+            const x1 = terrace.left[0] * w;
+            const y1 = terrace.left[1] * h;
+            const x2 = terrace.right[0] * w;
+            const y2 = terrace.right[1] * h;
+            const pH = terrace.height * h;
+            
+            const rgb = parseColor(color);
+            const cx = (x1 + x2) / 2;
+            const cy = (y1 + y2) / 2 + pH / 2;
+            
+            ctx.save();
+            
+            // === LAYER 1: Atmospheric scatter (very wide, very soft) ===
+            ctx.globalCompositeOperation = 'screen';
+            const scatterRadius = Math.abs(x2 - x1) * 0.8;
+            const scatter = ctx.createRadialGradient(cx, cy, 0, cx, cy, scatterRadius);
+            scatter.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.06 * intensity})`);
+            scatter.addColorStop(0.4, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.03 * intensity})`);
+            scatter.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.fillStyle = scatter;
+            ctx.fillRect(x1 - scatterRadius, y1 - scatterRadius, (x2 - x1) + scatterRadius * 2, scatterRadius * 2.5);
+            
+            // === LAYER 2: Wide bloom (medium soft) ===
+            for (let pass = 0; pass < 6; pass++) {
+                const blur = (80 - pass * 12) * intensity;
+                const alpha = 0.04 + pass * 0.01;
+                ctx.shadowColor = color;
+                ctx.shadowBlur = blur;
+                ctx.shadowOffsetX = 0;
+                ctx.shadowOffsetY = 0;
+                ctx.beginPath();
+                ctx.moveTo(x1, y1);
+                ctx.lineTo(x2, y2);
+                ctx.lineTo(x2, y2 + pH);
+                ctx.lineTo(x1, y1 + pH);
+                ctx.closePath();
+                ctx.fillStyle = `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha * intensity})`;
+                ctx.fill();
+            }
+            
+            // === LAYER 3: Core LED strip (sharp, bright) ===
+            ctx.shadowBlur = 0;
+            const coreGrad = ctx.createLinearGradient(x1, y1, x1, y1 + pH);
+            coreGrad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.95 * intensity})`);
+            coreGrad.addColorStop(0.5, `rgba(${Math.min(255, rgb.r + 60)}, ${Math.min(255, rgb.g + 60)}, ${Math.min(255, rgb.b + 60)}, ${1 * intensity})`);
+            coreGrad.addColorStop(1, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.9 * intensity})`);
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.lineTo(x2, y2 + pH);
+            ctx.lineTo(x1, y1 + pH);
+            ctx.closePath();
+            ctx.fillStyle = coreGrad;
+            ctx.fill();
+            
+            // === LAYER 4: White-hot center line ===
+            const hotY1 = y1 + pH * 0.4;
+            const hotY2 = y2 + pH * 0.4;
+            ctx.beginPath();
+            ctx.moveTo(x1, hotY1);
+            ctx.lineTo(x2, hotY2);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${0.7 * intensity})`;
+            ctx.lineWidth = pH * 0.25;
+            ctx.lineCap = 'round';
+            ctx.stroke();
+            
+            // Inner even hotter line
+            ctx.beginPath();
+            ctx.moveTo(x1, hotY1);
+            ctx.lineTo(x2, hotY2);
+            ctx.strokeStyle = `rgba(255, 255, 255, ${0.9 * intensity})`;
+            ctx.lineWidth = pH * 0.1;
+            ctx.stroke();
+            
+            // === LAYER 5: Downward spill onto building face ===
+            const spillH = pH * 4;
+            const spillGrad = ctx.createLinearGradient(x1, y1 + pH, x1, y1 + pH + spillH);
+            spillGrad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.2 * intensity})`);
+            spillGrad.addColorStop(0.15, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.1 * intensity})`);
+            spillGrad.addColorStop(0.5, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.03 * intensity})`);
+            spillGrad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.globalCompositeOperation = 'screen';
+            ctx.beginPath();
+            ctx.moveTo(x1 - pH, y1 + pH);
+            ctx.lineTo(x2 + pH, y2 + pH);
+            ctx.lineTo(x2 + pH * 2, y2 + pH + spillH);
+            ctx.lineTo(x1 - pH * 2, y1 + pH + spillH);
+            ctx.closePath();
+            ctx.fillStyle = spillGrad;
+            ctx.fill();
+            
+            // === LAYER 6: Upward bounce into sky ===
+            const bounceH = pH * 2.5;
+            const bounceGrad = ctx.createLinearGradient(x1, y1, x1, y1 - bounceH);
+            bounceGrad.addColorStop(0, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.12 * intensity})`);
+            bounceGrad.addColorStop(0.3, `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${0.04 * intensity})`);
+            bounceGrad.addColorStop(1, 'rgba(0,0,0,0)');
+            ctx.beginPath();
+            ctx.moveTo(x1, y1);
+            ctx.lineTo(x2, y2);
+            ctx.lineTo(x2 + pH, y2 - bounceH);
+            ctx.lineTo(x1 - pH, y1 - bounceH);
+            ctx.closePath();
+            ctx.fillStyle = bounceGrad;
+            ctx.fill();
+            
+            ctx.restore();
+        }
+        
+        function parseColor(color) {
+            if (color.startsWith('hsl')) {
+                const match = color.match(/hsl\((\d+),\s*(\d+)%,\s*(\d+)%\)/);
+                if (match) {
+                    return hslToRgb(parseInt(match[1]) / 360, parseInt(match[2]) / 100, parseInt(match[3]) / 100);
+                }
+            }
+            if (color.startsWith('#')) {
+                return {
+                    r: parseInt(color.slice(1, 3), 16),
+                    g: parseInt(color.slice(3, 5), 16),
+                    b: parseInt(color.slice(5, 7), 16)
+                };
+            }
+            return { r: 255, g: 255, b: 255 };
+        }
+        
+        function hslToRgb(h, s, l) {
+            let r, g, b;
+            if (s === 0) {
+                r = g = b = l;
+            } else {
+                const hue2rgb = (p, q, t) => {
+                    if (t < 0) t += 1;
+                    if (t > 1) t -= 1;
+                    if (t < 1/6) return p + (q - p) * 6 * t;
+                    if (t < 1/2) return q;
+                    if (t < 2/3) return p + (q - p) * (2/3 - t) * 6;
+                    return p;
+                };
+                const q = l < 0.5 ? l * (1 + s) : l + s - l * s;
+                const p = 2 * l - q;
+                r = hue2rgb(p, q, h + 1/3);
+                g = hue2rgb(p, q, h);
+                b = hue2rgb(p, q, h - 1/3);
+            }
+            return { r: Math.round(r * 255), g: Math.round(g * 255), b: Math.round(b * 255) };
+        }
+        
+        // Comparison slider
+        function setupSlider() {
+            const wrap = document.getElementById('compareWrap');
+            const afterWrap = document.getElementById('afterWrap');
+            const slider = document.getElementById('slider');
+            let isDragging = false;
+            
+            function updateSlider(x) {
+                const rect = wrap.getBoundingClientRect();
+                const pos = Math.max(0, Math.min(1, (x - rect.left) / rect.width));
+                slider.style.left = (pos * 100) + '%';
+                afterWrap.style.clipPath = `inset(0 ${(1 - pos) * 100}% 0 0)`;
+            }
+            
+            // Initialize at 50%
+            setTimeout(() => updateSlider(wrap.getBoundingClientRect().left + wrap.offsetWidth * 0.5), 100);
+            
+            wrap.addEventListener('mousedown', (e) => {
+                isDragging = true;
+                updateSlider(e.clientX);
+            });
+            
+            document.addEventListener('mousemove', (e) => {
+                if (isDragging) updateSlider(e.clientX);
+            });
+            
+            document.addEventListener('mouseup', () => isDragging = false);
+            
+            wrap.addEventListener('touchstart', (e) => {
+                updateSlider(e.touches[0].clientX);
+            });
+            
+            wrap.addEventListener('touchmove', (e) => {
+                updateSlider(e.touches[0].clientX);
+            });
+        }
+    </script>
+</body>
+</html>
