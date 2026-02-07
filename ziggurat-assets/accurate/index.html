@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ziggurat LED Vision — Accurate Trace</title>
+    <style>
+        :root{--bg:#040406;--surface:#0a0a0d;--border:#1a1a1f;--text:#fff;--muted:#777;--primary:#8b5cf6}
+        *{margin:0;padding:0;box-sizing:border-box}
+        body{font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',sans-serif;background:var(--bg);color:var(--text);min-height:100vh}
+        header{padding:28px 40px;text-align:center;background:linear-gradient(180deg,rgba(139,92,246,0.06)0%,transparent 100%)}
+        h1{font-size:clamp(1.6rem,3.5vw,2.4rem);font-weight:200;background:linear-gradient(135deg,#8b5cf6,#06b6d4,#22c55e);-webkit-background-clip:text;-webkit-text-fill-color:transparent}
+        .sub{color:var(--muted);margin-top:6px;font-size:0.9rem}
+        .ctrl{display:flex;flex-wrap:wrap;gap:14px;justify-content:center;padding:16px 40px;background:var(--surface);border-bottom:1px solid var(--border);position:sticky;top:0;z-index:100}
+        .grp{display:flex;flex-direction:column;gap:4px}
+        .grp label{font-size:9px;text-transform:uppercase;letter-spacing:0.12em;color:var(--muted)}
+        .grp select{padding:9px 28px 9px 12px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);font-size:13px;min-width:120px;cursor:pointer;appearance:none;background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='10' height='10' fill='%23666' viewBox='0 0 16 16'%3E%3Cpath d='M8 11L3 6h10l-5 5z'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 8px center}
+        .grp select:hover{border-color:var(--primary)}
+        .main{max-width:1300px;margin:36px auto;padding:0 36px}
+        .cmp{position:relative;border-radius:16px;overflow:hidden;box-shadow:0 30px 80px rgba(0,0,0,0.5);cursor:ew-resize;user-select:none}
+        .cmp img{width:100%;display:block}
+        .cmp .bef{position:absolute;top:0;left:0;width:100%;height:100%;object-fit:cover}
+        .line{position:absolute;top:0;width:2px;height:100%;background:#fff;box-shadow:0 0 16px rgba(255,255,255,0.25);pointer-events:none;z-index:10}
+        .handle{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);background:#fff;color:#000;padding:10px 14px;border-radius:24px;font-size:12px;font-weight:600;box-shadow:0 6px 24px rgba(0,0,0,0.35)}
+        .lbl{position:absolute;top:16px;padding:8px 14px;background:rgba(0,0,0,0.7);backdrop-filter:blur(8px);border-radius:8px;font-size:11px;font-weight:600;letter-spacing:0.04em;z-index:5}
+        .lbl.l{left:16px}.lbl.r{right:16px}
+        .bar{display:flex;justify-content:space-between;align-items:center;margin-top:20px;padding:16px 20px;background:var(--surface);border-radius:12px;border:1px solid var(--border)}
+        .bar h3{font-size:1rem;font-weight:500}
+        .bar p{color:var(--muted);font-size:0.8rem;margin-top:2px}
+        .btns{display:flex;gap:8px}
+        .btn{padding:10px 16px;border-radius:8px;font-weight:500;font-size:13px;cursor:pointer;text-decoration:none;display:inline-flex;align-items:center;gap:6px;transition:all 0.15s}
+        .btn-p{background:var(--primary);color:#fff;border:none}.btn-p:hover{background:#7c3aed}
+        .btn-s{background:#111114;color:var(--text);border:1px solid var(--border)}.btn-s:hover{border-color:var(--primary)}
+        .grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(140px,1fr));gap:10px;margin-top:32px}
+        .th{border-radius:8px;overflow:hidden;cursor:pointer;border:2px solid transparent;transition:all 0.15s;background:var(--surface)}
+        .th:hover{border-color:var(--primary);transform:translateY(-1px)}
+        .th.act{border-color:var(--primary);box-shadow:0 0 16px rgba(139,92,246,0.25)}
+        .th img{width:100%;aspect-ratio:16/9;object-fit:cover}
+        .th span{display:block;padding:6px;font-size:10px;color:var(--muted);text-align:center;border-top:1px solid var(--border)}
+        .ft{text-align:center;padding:32px;color:var(--muted);font-size:0.8rem}
+        @media(max-width:768px){.ctrl{padding:12px;gap:10px}.main{padding:0 12px;margin:20px auto}.bar{flex-direction:column;gap:12px;text-align:center}.btns{width:100%;justify-content:center}}
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Ziggurat LED Vision</h1>
+        <p class="sub">Accurate Building Trace — 8 Tiers, Pixel-Aligned</p>
+    </header>
+    <div class="ctrl">
+        <div class="grp"><label>Palette</label><select id="pal"></select></div>
+        <div class="grp"><label>Time</label><select id="time"></select></div>
+        <div class="grp"><label>Resolution</label><select id="res"><option value="1080p">1080p</option><option value="4k">4K</option><option value="full">Full</option></select></div>
+    </div>
+    <div class="main">
+        <div class="cmp" id="cmp">
+            <img id="aft" src="rainbow-night-1080p.jpg" alt="After">
+            <img id="bef" class="bef" src="before-1080p.jpg" alt="Before">
+            <div class="line" id="line"><div class="handle">◀▶</div></div>
+            <span class="lbl l">BEFORE</span>
+            <span class="lbl r" id="lbl">RAINBOW · NIGHT</span>
+        </div>
+        <div class="bar">
+            <div><h3 id="ttl">Rainbow Night</h3><p>8-tier pixel-traced rendering</p></div>
+            <div class="btns">
+                <a class="btn btn-s" id="d1" href="#" download>↓ 1080p</a>
+                <a class="btn btn-s" id="d4" href="#" download>↓ 4K</a>
+                <a class="btn btn-p" id="df" href="#" download>↓ Full</a>
+            </div>
+        </div>
+        <div class="grid" id="grid"></div>
+    </div>
+    <div class="ft">
+        <p>6 Palettes × 4 Times | Tier widths: 11% → 65% | Building center offset corrected</p>
+    </div>
+    <script>
+        const P={rainbow:'Rainbow',cool:'Cool',warm:'Warm',white:'White',gold:'Gold',usa:'USA'};
+        const T={night:'Night','late-night':'Late Night',twilight:'Twilight',dusk:'Dusk'};
+        let pal='rainbow',time='night',res='1080p',pos=50;
+        const cmp=document.getElementById('cmp'),bef=document.getElementById('bef'),aft=document.getElementById('aft'),
+              line=document.getElementById('line'),lbl=document.getElementById('lbl'),ttl=document.getElementById('ttl'),
+              grid=document.getElementById('grid'),palS=document.getElementById('pal'),timeS=document.getElementById('time'),resS=document.getElementById('res');
+        for(const[k,v]of Object.entries(P))palS.innerHTML+=`<option value="${k}">${v}</option>`;
+        for(const[k,v]of Object.entries(T))timeS.innerHTML+=`<option value="${k}">${v}</option>`;
+        function upd(){
+            const v=`${pal}-${time}`;
+            aft.src=`${v}-${res}.jpg`;bef.src=`before-${res}.jpg`;
+            lbl.textContent=`${P[pal].toUpperCase()} · ${T[time].toUpperCase()}`;
+            ttl.textContent=`${P[pal]} ${T[time]}`;
+            document.getElementById('d1').href=`${v}-1080p.jpg`;
+            document.getElementById('d4').href=`${v}-4k.jpg`;
+            document.getElementById('df').href=`${v}-full.jpg`;
+            document.querySelectorAll('.th').forEach(t=>t.classList.remove('act'));
+            const a=document.querySelector(`[data-v="${v}"]`);if(a)a.classList.add('act');
+        }
+        function slide(x){const r=cmp.getBoundingClientRect();pos=Math.max(0,Math.min(100,(x-r.left)/r.width*100));bef.style.clipPath=`inset(0 ${100-pos}% 0 0)`;line.style.left=`${pos}%`;line.style.transform='translateX(-50%)';}
+        slide(window.innerWidth/2);
+        let drag=false;
+        cmp.onmousedown=e=>{drag=true;slide(e.clientX)};
+        document.onmousemove=e=>{if(drag)slide(e.clientX)};
+        document.onmouseup=()=>drag=false;
+        cmp.ontouchstart=e=>{drag=true;slide(e.touches[0].clientX)};
+        document.ontouchmove=e=>{if(drag)slide(e.touches[0].clientX)};
+        document.ontouchend=()=>drag=false;
+        palS.onchange=e=>{pal=e.target.value;upd()};
+        timeS.onchange=e=>{time=e.target.value;upd()};
+        resS.onchange=e=>{res=e.target.value;upd()};
+        for(const p of Object.keys(P)){for(const t of Object.keys(T)){
+            const v=`${p}-${t}`,th=document.createElement('div');
+            th.className='th';th.dataset.v=v;
+            th.innerHTML=`<img src="${v}-thumb.jpg" alt="${v}" loading="lazy"><span>${P[p]}·${T[t]}</span>`;
+            th.onclick=()=>{pal=p;time=t;palS.value=p;timeS.value=t;upd();cmp.scrollIntoView({behavior:'smooth',block:'center'});};
+            grid.appendChild(th);
+        }}
+        upd();
+    </script>
+</body>
+</html>

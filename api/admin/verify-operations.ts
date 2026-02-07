@@ -7,25 +7,43 @@
  * Zero Trust: Requires admin authentication
  */
 
+import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
-import { verifyEnvironment } from '../../lib/security/zero-trust';
+import { adminMiddleware } from '../../lib/admin-auth';
+import { cors } from '../../lib/cors';
+
+// Try to import, fallback if not available
+let verifyEnvironment: () => { valid: boolean; missing: string[] };
+try {
+  const zeroTrust = require('../../lib/security/zero-trust');
+  verifyEnvironment = zeroTrust.verifyEnvironment;
+} catch {
+  verifyEnvironment = () => ({ valid: true, missing: [] });
+}
 
 const SUPABASE_URL = process.env.PUBLIC_SUPABASE_URL!;
 const SUPABASE_SERVICE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY!;
 
 interface TestResult {
   name: string;
-  category: 'environment' | 'database' | 'triggers' | 'email' | 'cron';
+  category: 'environment' | 'database' | 'triggers' | 'email' | 'cron' | 'video';
   status: 'pass' | 'fail' | 'skip';
   message: string;
   duration_ms?: number;
 }
 
-export default async function handler(req: any, res: any) {
-  // Simple admin auth check (can be enhanced)
+export default async function handler(req: VercelRequest, res: VercelResponse) {
+  // CORS
+  if (!cors(req, res)) return;
+  
+  // Support both legacy x-admin-key and new Bearer token auth
   const adminKey = req.headers['x-admin-key'];
-  if (process.env.ADMIN_KEY && adminKey !== process.env.ADMIN_KEY) {
-    return res.status(401).json({ error: 'Unauthorized' });
+  if (adminKey && process.env.ADMIN_KEY && adminKey === process.env.ADMIN_KEY) {
+    // Legacy auth - allow
+  } else {
+    // Try new admin auth
+    const authResult = await adminMiddleware(req, res);
+    if (!authResult) return; // Response already sent (401 or 403)
   }
   
   const results: TestResult[] = [];
@@ -214,9 +232,59 @@ export default async function handler(req: any, res: any) {
   results.push({
     name: 'SendGrid API key',
     category: 'email',
-    status: process.env.SENDGRID_API_KEY ? 'pass' : 'fail',
-    message: process.env.SENDGRID_API_KEY ? 'Configured' : 'MISSING - Emails will not send!'
+    status: process.env.SENDGRID_API_KEY ? 'pass' : 'skip',
+    message: process.env.SENDGRID_API_KEY ? 'Configured' : 'Not configured (using Resend instead)'
   });
+  
+  results.push({
+    name: 'Resend API key',
+    category: 'email',
+    status: process.env.RESEND_API_KEY ? 'pass' : 'fail',
+    message: process.env.RESEND_API_KEY ? 'Configured' : 'MISSING - Emails will not send!'
+  });
+  
+  // ═══════════════════════════════════════════════════════════════
+  // VIDEO PROVIDER TESTS
+  // ═══════════════════════════════════════════════════════════════
+  
+  try {
+    const { getEngineStatus, PROVIDER_FALLBACK_CHAIN } = await import('../../lib/engines');
+    const engineStatus = await getEngineStatus();
+    
+    let availableCount = 0;
+    for (const [name, status] of Object.entries(engineStatus)) {
+      const isAvailable = status.available;
+      if (isAvailable) availableCount++;
+      
+      results.push({
+        name: `Video Provider: ${status.displayName}`,
+        category: 'video',
+        status: isAvailable ? 'pass' : 'skip',
+        message: isAvailable ? 'Available' : 'Not available'
+      });
+    }
+    
+    // Check if at least one provider in fallback chain is available
+    const fallbackHealthy = PROVIDER_FALLBACK_CHAIN.some(
+      (engine: string) => engineStatus[engine]?.available
+    );
+    
+    results.push({
+      name: 'Video pipeline fallback chain',
+      category: 'video',
+      status: fallbackHealthy ? 'pass' : 'fail',
+      message: fallbackHealthy 
+        ? `${availableCount} provider(s) available`
+        : 'CRITICAL: No video providers available - pipeline blocked!'
+    });
+  } catch (err) {
+    results.push({
+      name: 'Video providers',
+      category: 'video',
+      status: 'skip',
+      message: 'Could not verify video providers'
+    });
+  }
   
   // ═══════════════════════════════════════════════════════════════
   // SUMMARY

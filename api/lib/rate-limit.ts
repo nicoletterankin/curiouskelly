@@ -130,6 +130,27 @@ export const RATE_LIMITS = {
   
   // Cancel: 5 attempts per user per hour
   cancel: { limit: 5, windowSecs: 60 * 60, prefix: 'cancel' } as RateLimitConfig,
+  
+  // Gift redeem: 3 attempts per IP per 15 minutes
+  giftRedeem: { limit: 3, windowSecs: 15 * 60, prefix: 'redeem' } as RateLimitConfig,
+  
+  // Referral tracking: 100 per IP per minute (high volume expected)
+  referralTrack: { limit: 100, windowSecs: 60, prefix: 'ref' } as RateLimitConfig,
+  
+  // Contact form: 3 per IP per hour
+  contact: { limit: 3, windowSecs: 60 * 60, prefix: 'contact' } as RateLimitConfig,
+  
+  // Feedback: 10 per user per minute
+  feedback: { limit: 10, windowSecs: 60, prefix: 'feedback' } as RateLimitConfig,
+  
+  // Lesson complete: 20 per user per minute
+  lessonComplete: { limit: 20, windowSecs: 60, prefix: 'lesson' } as RateLimitConfig,
+  
+  // Email subscribe: 5 per IP per hour
+  emailSubscribe: { limit: 5, windowSecs: 60 * 60, prefix: 'subscribe' } as RateLimitConfig,
+  
+  // API general: 100 per IP per minute
+  apiGeneral: { limit: 100, windowSecs: 60, prefix: 'api' } as RateLimitConfig,
 };
 
 /**

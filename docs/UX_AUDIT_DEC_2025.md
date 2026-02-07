@@ -123,7 +123,7 @@
 | Location | Current | Should Be |
 |----------|---------|-----------|
 | Pricing | "Daily lessons for ages 2-102" | "Designed for any learner" |
-| Various | "personalized to your age" | "adapts to how you learn" |
+| Various | "personalized to your age" | "universal education, adapted by age and language" |
 | Homepage | "Basic personalization" | Unclear what this means |
 
 ### Missing Elements

@@ -1,0 +1,2352 @@
+/* KellyOS v4 - Apple Keynote Precision Dark Glass Morphism
+ * Product: iLearn with Kelly
+ * Host: The Daily Lesson
+ * Company: Lesson of the Day
+ * Build: 2026-01-21-v4-CACHE-BUST-ABC123
+ *
+ * REFERENCE: /lib/kelly-ui-rules.ts for comprehensive documentation
+ *
+ * === TWO-PLANE ARCHITECTURE ===
+ * PLANE 1 (Kelly): Center of screen - ALWAYS VISIBLE, NEVER OBSCURED
+ * PLANE 2 (UI): Edges only - left/right/top/bottom rails, never center
+ * Overlays: RIGHT SIDE ONLY (420px max), Kelly stays visible
+ *
+ * === COLOR SYSTEM (MONOCHROME + SEMANTIC) ===
+ * BLUE  (#3b82f6) - Brand accent, CTAs, active states ONLY
+ * GREEN (#22c55e) - LIVE status ONLY (Kelly broadcasting)
+ * RED   (#ef4444) - OFFLINE status ONLY (Kelly not live)
+ * WHITE (rgba)    - EVERYTHING ELSE (text, borders, icons, backgrounds)
+ *
+ * === GLASS COMPONENT CLASSES ===
+ * glass-card           - Compact cards (p-3)
+ * glass-panel          - Large panels (p-4)
+ * glass-tabs           - Segmented controls
+ * glass-input          - Text inputs
+ * glass-button-primary - Blue CTA buttons
+ * glass-icon-button    - Circular action buttons
+ * glass-live-dot       - Status indicator (red default, green.live)
+ *
+ * === NEVER DO ===
+ * - Full-screen modals covering Kelly
+ * - Colored icons (purple, orange, yellow, teal)
+ * - Colored badges/checkmarks (use white)
+ * - Fake data displayed as real
+ * - Backdrop blur over Kelly
+ */
+@import 'tailwindcss';
+@import 'tw-animate-css';
+
+@custom-variant dark (&:is(.dark *));
+
+/* DARK LIQUID GLASS MORPHISM - Single unified visual language
+ * All UI elements: dark semi-transparent glass with subtle white borders
+ * Consistent backdrop-blur across all components
+ * No competing styles - everything feels like it floats */
+:root {
+  /* Base - Kelly's white canvas */
+  --background: #FFFFFF;
+  --foreground: #0a0a0a;
+  
+  /* === UNIFIED GLASS SYSTEM === */
+  /* Primary glass - used for ALL overlay elements */
+  --glass-bg: rgba(10, 10, 12, 0.75);
+  --glass-bg-hover: rgba(10, 10, 12, 0.85);
+  --glass-bg-solid: rgba(10, 10, 12, 0.92);
+  --glass-border: rgba(255, 255, 255, 0.08);
+  --glass-border-hover: rgba(255, 255, 255, 0.15);
+  --glass-text: rgba(255, 255, 255, 0.95);
+  --glass-text-muted: rgba(255, 255, 255, 0.6);
+  --glass-text-dim: rgba(255, 255, 255, 0.4);
+  
+  /* Glass blur intensity */
+  --glass-blur: blur(32px) saturate(160%);
+  --glass-blur-strong: blur(40px) saturate(180%);
+  
+  /* Unified glass shadow - NO outer glow, just subtle inset highlight */
+  --glass-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.06);
+  
+  /* UNIFIED RADII - ALL pill shaped to match date picker */
+  --glass-radius-pill: 100px;
+  --glass-radius-lg: 24px;
+  --glass-radius-md: 20px;
+  --glass-radius-sm: 16px;
+  
+  /* Legacy compatibility */
+  --glass: var(--glass-bg);
+  --glass-light: rgba(255, 255, 255, 0.08);
+  --glass-foreground: var(--glass-text);
+  --glass-foreground-dark: var(--glass-text-muted);
+  
+  /* Card - Dark glass */
+  --card: var(--glass-bg);
+  --card-foreground: var(--glass-text);
+  
+  /* Popover - Solid dark glass */
+  --popover: var(--glass-bg-solid);
+  --popover-foreground: var(--glass-text);
+  
+  /* Primary - Subtle blue accent */
+  --primary: #3b82f6;
+  --primary-foreground: #ffffff;
+  
+  /* Secondary - Dim glass */
+  --secondary: rgba(255, 255, 255, 0.08);
+  --secondary-foreground: var(--glass-text);
+  
+  /* Muted */
+  --muted: rgba(255, 255, 255, 0.05);
+  --muted-foreground: var(--glass-text-muted);
+  
+  /* Accent - Blue glow */
+  --accent: rgba(59, 130, 246, 0.2);
+  --accent-foreground: #60a5fa;
+  
+  /* Destructive */
+  --destructive: #ef4444;
+  --destructive-foreground: #ffffff;
+  
+  /* Success - Green */
+  --success: #22c55e;
+  --success-foreground: #ffffff;
+  
+  /* Warning - Amber */
+  --warning: #f59e0b;
+  --warning-foreground: #0a0a0a;
+  
+  /* Borders */
+  --border: var(--glass-border);
+  --border-glass: var(--glass-border);
+  --input: var(--glass-bg);
+  --ring: var(--primary);
+  
+  /* Radius - Apple-style rounded */
+  --radius: 1rem;
+  
+  /* Kelly-specific */
+  --kelly-blue: #3b82f6;
+  --kelly-blue-hover: #2563eb;
+  --kelly-blue-light: #60a5fa;
+  --kelly-blue-dark: #2563eb;
+  --kelly-amber: #f59e0b;
+  --live-red: #ef4444;
+  --live-red-glow: rgba(239, 68, 68, 0.4);
+  
+  /* Action buttons - Glass with hover states */
+  --action-bg: var(--glass-bg);
+  --action-bg-hover: var(--glass-bg-hover);
+  
+  /* Phase progress */
+  --phase-active: var(--primary);
+  --phase-complete: var(--success);
+  --phase-inactive: var(--glass-text-dim);
+  
+  /* Charts */
+  --chart-1: #3b82f6;
+  --chart-2: #22c55e;
+  --chart-3: #f59e0b;
+  --chart-4: #ec4899;
+  --chart-5: #8b5cf6;
+  
+  /* Sidebar - Same glass treatment */
+  --sidebar: var(--glass-bg);
+  --sidebar-foreground: var(--glass-text);
+  --sidebar-primary: var(--primary);
+  --sidebar-primary-foreground: var(--primary-foreground);
+  --sidebar-accent: var(--accent);
+  --sidebar-accent-foreground: var(--accent-foreground);
+  --sidebar-border: var(--glass-border);
+  --sidebar-ring: var(--ring);
+}
+
+@theme inline {
+  --font-sans: 'Geist', 'Geist Fallback';
+  --font-mono: 'Geist Mono', 'Geist Mono Fallback';
+  
+  /* Strategic page - Old Money Aesthetic */
+  --strategic-dark: #1a1410;
+  --strategic-rust: #8b6f47;
+  --strategic-gold: #d4af37;
+  --strategic-black: #0f0c0a;
+  --strategic-white: #f5f1ea;
+  --strategic-accent: #a89968;
+  
+  --color-background: var(--background);
+  --color-foreground: var(--foreground);
+  --color-card: var(--card);
+  --color-card-foreground: var(--card-foreground);
+  --color-popover: var(--popover);
+  --color-popover-foreground: var(--popover-foreground);
+  --color-primary: var(--primary);
+  --color-primary-foreground: var(--primary-foreground);
+  --color-secondary: var(--secondary);
+  --color-secondary-foreground: var(--secondary-foreground);
+  --color-muted: var(--muted);
+  --color-muted-foreground: var(--muted-foreground);
+  --color-accent: var(--accent);
+  --color-accent-foreground: var(--accent-foreground);
+  --color-destructive: var(--destructive);
+  --color-destructive-foreground: var(--destructive-foreground);
+  --color-success: var(--success);
+  --color-success-foreground: var(--success-foreground);
+  --color-warning: var(--warning);
+  --color-warning-foreground: var(--warning-foreground);
+  --color-border: var(--border);
+  --color-input: var(--input);
+  --color-ring: var(--ring);
+  --color-chart-1: var(--chart-1);
+  --color-chart-2: var(--chart-2);
+  --color-chart-3: var(--chart-3);
+  --color-chart-4: var(--chart-4);
+  --color-chart-5: var(--chart-5);
+  --radius-sm: calc(var(--radius) - 4px);
+  --radius-md: calc(var(--radius) - 2px);
+  --radius-lg: var(--radius);
+  --radius-xl: calc(var(--radius) + 4px);
+  --color-sidebar: var(--sidebar);
+  --color-sidebar-foreground: var(--sidebar-foreground);
+  --color-sidebar-primary: var(--sidebar-primary);
+  --color-sidebar-primary-foreground: var(--sidebar-primary-foreground);
+  --color-sidebar-accent: var(--sidebar-accent);
+  --color-sidebar-accent-foreground: var(--sidebar-accent-foreground);
+  --color-sidebar-border: var(--sidebar-border);
+  --color-sidebar-ring: var(--sidebar-ring);
+  --color-kelly-blue: var(--kelly-blue);
+  --color-kelly-blue-light: var(--kelly-blue-light);
+  --color-kelly-blue-dark: var(--kelly-blue-dark);
+  --color-live-red: var(--live-red);
+  --color-glass: var(--glass);
+  --color-glass-light: var(--glass-light);
+  --color-glass-foreground: var(--glass-foreground);
+  --color-action-bg: var(--action-bg);
+}
+
+@layer base {
+  * {
+    @apply border-border outline-ring/50;
+  }
+  body {
+    @apply bg-background text-foreground;
+  }
+}
+
+/* Curious Kelly - TikTok/Reels Style Utilities */
+@layer utilities {
+  /* ========================================================================
+   * 2-LAYER ARCHITECTURE TOKENS
+   * Layer 1 (z-0 to z-10): Kelly video, backgrounds
+   * Layer 2 (z-20 to z-50): ALL UI chrome
+   * Modals (z-[100]+): Full-screen overlays
+   * ======================================================================== */
+  
+  /* LAYER 1 - Background/Video */
+  .layer-1 { @apply z-0; }
+  .layer-1-content { @apply z-5; }
+  .layer-1-overlay { @apply z-10; }
+  
+  /* LAYER 2 - UI Chrome */
+  .layer-2 { @apply z-20; }
+  .layer-2-content { @apply z-30; }
+  .layer-2-controls { @apply z-40; }
+  .layer-2-nav { @apply z-50; }
+  
+  /* MODAL LAYER */
+  .layer-modal-backdrop { z-index: 100; }
+  .layer-modal-content { z-index: 101; }
+  
+  /* ========================================================================
+   * STANDARDIZED GLASS TOKENS - USE THESE, NOT RAW VALUES
+   * ======================================================================== */
+  
+  /* Glass backgrounds - ONE standard */
+  .glass-bg { @apply bg-white/15 backdrop-blur-sm; }
+  .glass-bg-solid { @apply bg-black/80 backdrop-blur-xl; }
+  .glass-bg-light { @apply bg-white/10 backdrop-blur-sm; }
+  
+  /* Glass borders - ONE standard */
+  .glass-border { @apply border border-white/10; }
+  .glass-border-hover { @apply border border-white/20; }
+  
+  /* Text hierarchy - ONLY these 4 levels */
+  .text-primary { @apply text-white; }
+  .text-secondary { @apply text-white/60; }
+  .text-tertiary { @apply text-white/40; }
+  .text-muted { @apply text-white/30; }
+  
+  /* Radius tokens */
+  .radius-full { @apply rounded-full; }    /* pills, circles */
+  .radius-2xl { @apply rounded-2xl; }      /* cards, panels */
+  .radius-xl { @apply rounded-xl; }        /* buttons, inputs */
+  .radius-lg { @apply rounded-lg; }        /* small elements */
+  
+  /* Combined glass element styles */
+  .glass-element {
+    @apply bg-white/15 backdrop-blur-sm border border-white/10 rounded-xl;
+  }
+  
+  .glass-element-panel {
+    @apply bg-black/80 backdrop-blur-xl border border-white/10 rounded-2xl;
+  }
+  
+  .glass-element-circle {
+    @apply bg-white/15 backdrop-blur-sm border border-white/10 rounded-full;
+  }
+  
+
+  /* ========================================================================
+   * APPLE LIQUID GLASS DESIGN SYSTEM
+   * Inspired by Apple's visionOS, iOS 18, and macOS Sonoma
+   * Deep blacks, subtle transparency, refined blur effects
+   * ======================================================================== */
+  
+  /* PRIMARY GLASS SURFACE - SOLID dark, no gradient */
+  .glass-panel {
+    position: relative;
+    background: var(--glass-bg) !important;
+    backdrop-filter: var(--glass-blur) !important;
+    -webkit-backdrop-filter: var(--glass-blur) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 20px;
+    box-shadow: var(--glass-shadow) !important;
+    color: rgba(255, 255, 255, 0.94) !important;
+    overflow: hidden;
+    isolation: isolate;
+  }
+  
+  /* SECONDARY GLASS - Lighter, for nested elements */
+  .glass-panel-light {
+    background: rgba(255, 255, 255, 0.06) !important;
+    backdrop-filter: blur(20px);
+    -webkit-backdrop-filter: blur(20px);
+    border: 1px solid rgba(255, 255, 255, 0.06);
+    border-radius: 16px;
+    color: rgba(255, 255, 255, 0.9);
+  }
+  
+  /* ============================================================
+     UNIFIED GLASS SURFACE - ONE LAYER, ONE LOOK
+     All UI elements share the SAME visual treatment:
+     - Same gradient background
+     - Same blur/saturation
+     - Same border color
+     - Only SIZE differs (radius varies by element type)
+     ============================================================ */
+  
+  /* NOTE: Glass variables are defined in :root above (lines 50-70)
+   * --glass-bg, --glass-blur, --glass-border, etc.
+   * UNIFIED RADII defined inline below */
+  
+  /* PILL ELEMENT - Full pill shape for day picker */
+  .glass-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: var(--glass-bg) !important;
+    backdrop-filter: var(--glass-blur) !important;
+    -webkit-backdrop-filter: var(--glass-blur) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: 100px;
+    box-shadow: var(--glass-shadow) !important;
+    color: rgba(255, 255, 255, 0.92) !important;
+    font-size: 12px;
+    font-weight: 500;
+  }
+  
+  /* BUTTON - Same glass surface, PILL shape */
+  .glass-button {
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    padding: 12px 20px;
+    background: var(--glass-bg) !important;
+    backdrop-filter: var(--glass-blur) !important;
+    -webkit-backdrop-filter: var(--glass-blur) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: var(--glass-radius-pill);
+    box-shadow: var(--glass-shadow) !important;
+    color: rgba(255, 255, 255, 0.95) !important;
+    font-size: 14px;
+    font-weight: 500;
+    letter-spacing: 0.01em;
+    transition: all 0.25s cubic-bezier(0.32, 0.72, 0, 1);
+    cursor: pointer;
+  }
+  
+  .glass-button:hover {
+    border-color: var(--glass-border-hover) !important;
+    transform: translateY(-1px);
+  }
+  
+  .glass-button:active {
+    transform: translateY(0);
+  }
+  
+  /* ICON BUTTON - Same glass surface, PILL shape to match date picker */
+  .glass-icon-button {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 44px;
+    height: 44px;
+    background: var(--glass-bg) !important;
+    backdrop-filter: var(--glass-blur) !important;
+    -webkit-backdrop-filter: var(--glass-blur) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: var(--glass-radius-pill);
+    box-shadow: var(--glass-shadow) !important;
+    color: rgba(255, 255, 255, 0.9) !important;
+    transition: all 0.2s cubic-bezier(0.32, 0.72, 0, 1);
+    cursor: pointer;
+  }
+  
+  .glass-icon-button:hover {
+    border-color: var(--glass-border-hover) !important;
+    color: rgba(255, 255, 255, 1) !important;
+    transform: scale(1.05);
+  }
+  
+  .glass-icon-button.active {
+    background: linear-gradient(145deg, rgba(59, 130, 246, 0.7) 0%, rgba(37, 99, 235, 0.65) 100%) !important;
+    border-color: rgba(96, 165, 250, 0.30) !important;
+    color: white !important;
+  }
+  
+/* CARD - Same glass surface, unified large radius */
+  .glass-card {
+    background: var(--glass-bg) !important;
+    backdrop-filter: var(--glass-blur) !important;
+    -webkit-backdrop-filter: var(--glass-blur) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: var(--glass-radius-md);
+    box-shadow: var(--glass-shadow) !important;
+    overflow: hidden;
+    color: rgba(255, 255, 255, 1) !important;
+    transition: all 0.2s ease;
+  }
+  
+  .glass-card:hover {
+    border-color: var(--glass-border-hover) !important;
+  }
+  
+  /* TABS - Same glass surface, PILL shape */
+  .glass-tabs {
+    display: flex;
+    gap: 4px;
+    padding: 4px;
+    background: var(--glass-bg) !important;
+    backdrop-filter: var(--glass-blur) !important;
+    -webkit-backdrop-filter: var(--glass-blur) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: var(--glass-radius-pill);
+    box-shadow: var(--glass-shadow) !important;
+  }
+  
+  .glass-tab {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 6px;
+    padding: 8px 12px;
+    background: transparent;
+    border: none;
+    border-radius: var(--glass-radius-pill);
+    color: rgba(255, 255, 255, 0.55);
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: 0.01em;
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  
+  .glass-tab:hover {
+    color: rgba(255, 255, 255, 0.80);
+    background: rgba(255, 255, 255, 0.06);
+  }
+  
+  .glass-tab.active {
+    background: rgba(255, 255, 255, 0.12);
+    color: white;
+  }
+  
+  /* INPUT - Same glass surface, inset appearance */
+  .glass-input {
+    width: 100%;
+    padding: 10px 14px;
+    background: rgba(0, 0, 0, 0.3);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--glass-radius-md);
+    color: rgba(255, 255, 255, 0.95);
+    font-size: 13px;
+    outline: none;
+    transition: all 0.2s ease;
+  }
+  
+  .glass-input::placeholder {
+    color: rgba(255, 255, 255, 0.40);
+  }
+  
+  .glass-input:focus {
+    border-color: var(--glass-border-hover);
+  }
+  
+  /* PRESENCE INDICATOR - Avatar stack styling */
+  .glass-presence {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+  
+  .glass-presence-avatars {
+    display: flex;
+    align-items: center;
+  }
+  
+  .glass-presence-avatar {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    border: 2px solid rgba(20, 20, 25, 0.9);
+    margin-left: -8px;
+  }
+  
+  .glass-presence-avatar:first-child {
+    margin-left: 0;
+  }
+  
+  /* LIVE INDICATOR - Color coding: green=live, red=offline */
+  .glass-live-dot {
+    position: relative;
+    width: 6px;
+    height: 6px;
+  }
+  
+  /* Default: RED (offline) */
+  .glass-live-dot::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(239, 68, 68, 0.5);
+    border-radius: 50%;
+    animation: live-pulse 3s ease-in-out infinite;
+  }
+  
+  .glass-live-dot::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: rgba(239, 68, 68, 0.7);
+    border-radius: 50%;
+  }
+  
+  /* GREEN when live */
+  .glass-live-dot.live::before {
+    background: rgba(34, 197, 94, 0.5);
+  }
+  
+  .glass-live-dot.live::after {
+    background: rgba(34, 197, 94, 0.8);
+  }
+  
+  @keyframes live-pulse {
+    0%, 100% { transform: scale(1); opacity: 0.6; }
+    50% { transform: scale(2); opacity: 0; }
+  }
+  
+/* PRIMARY BUTTON - Kelly Blue branded CTA, PILL shape */
+  .glass-button-primary {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: linear-gradient(
+      145deg,
+      rgba(59, 130, 246, 0.9) 0%,
+      rgba(37, 99, 235, 0.85) 100%
+    );
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    border: 1px solid rgba(255, 255, 255, 0.15);
+    border-radius: var(--glass-radius-pill);
+    color: white;
+    font-weight: 600;
+    transition: all 0.2s cubic-bezier(0.32, 0.72, 0, 1);
+    box-shadow: 
+      inset 0 1px 1px rgba(255, 255, 255, 0.2),
+      0 4px 12px -4px rgba(59, 130, 246, 0.4);
+  }
+  
+  .glass-button-primary:hover {
+    background: linear-gradient(
+      145deg,
+      rgba(59, 130, 246, 1) 0%,
+      rgba(37, 99, 235, 0.95) 100%
+    );
+    box-shadow: 
+      inset 0 1px 1px rgba(255, 255, 255, 0.25),
+      0 6px 16px -4px rgba(59, 130, 246, 0.5);
+  }
+  
+  .glass-button-primary:active {
+    transform: scale(0.98);
+  }
+
+  /* Simple border helper - just adds visible border */
+  .gradient-border {
+    border: 1px solid rgba(255, 255, 255, 0.2);
+  }
+  
+  /* Screen container */
+  .screen-border-gradient {
+    /* vignettes handle visibility, no extra effects needed */
+  }
+  
+  .glass-panel-light {
+    background: linear-gradient(
+      135deg,
+      rgba(255, 255, 255, 0.9) 0%,
+      rgba(255, 255, 255, 0.8) 100%
+    );
+    backdrop-filter: blur(24px) saturate(150%);
+    -webkit-backdrop-filter: blur(24px) saturate(150%);
+    border: 1px solid rgba(255, 255, 255, 0.5);
+    box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08);
+  }
+  
+  /* Action buttons are now inline Tailwind in RightRail component */
+  
+  /* Live indicator */
+  .live-indicator {
+    @apply inline-flex items-center px-2 py-0.5 rounded text-xs font-bold uppercase;
+    gap: 6px;
+    background: var(--live-red);
+    color: white;
+    animation: live-pulse 2s ease-in-out infinite;
+  }
+  
+  @keyframes live-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.8; }
+  }
+  
+  /* Phase tab styling - SOLID for visibility */
+  .phase-tab {
+    @apply flex items-center px-4 py-2 rounded-full text-sm font-semibold;
+    @apply transition-all duration-200;
+    gap: 6px;
+  }
+  
+  .phase-tab-active {
+    background: var(--phase-active);
+    color: white;
+    box-shadow: 0 2px 8px rgba(59, 130, 246, 0.4);
+  }
+  
+  .phase-tab-complete {
+    background: rgba(34, 197, 94, 0.9);
+    color: white;
+  }
+  
+  .phase-tab-inactive {
+    background: rgba(0, 0, 0, 0.6);
+    color: white;
+  }
+  
+  .phase-tab-inactive:hover {
+    background: rgba(0, 0, 0, 0.8);
+  }
+  
+  /* Phase progress bar - subtle, clean */
+  .phase-progress {
+    @apply rounded-full;
+    height: 2px;
+    background: oklch(0.50 0.02 250 / 0.25);
+  }
+  
+  .phase-progress-fill {
+    @apply rounded-full transition-all duration-300;
+    height: 100%;
+  }
+  
+  .phase-progress-active {
+    background: var(--phase-active);
+  }
+  
+  .phase-progress-complete {
+    background: var(--phase-complete);
+  }
+  
+/* =================================================================
+     LAYOUT GRID SYSTEM - Components CANNOT overlap
+     Uses CSS Grid to define exclusive zones that are mutually aware.
+     Zone sizes come from CSS custom properties set by LayoutGrid.
+     ================================================================= */
+  
+  .layout-grid {
+    position: fixed;
+    inset: 0;
+    display: grid;
+    pointer-events: none;
+    z-index: 10;
+    
+    /* Grid template with CSS custom properties (set by React) */
+    grid-template-columns: var(--zone-left-width, 200px) 1fr var(--zone-right-width, 52px);
+    grid-template-rows: var(--zone-top-height, 180px) 1fr var(--zone-bottom-height, 320px);
+    grid-template-areas:
+      "top-left  .       top-right"
+      "left      .       right"
+      "bottom    bottom  bottom";
+  }
+  
+  /* All zones allow pointer events on their children */
+  .layout-grid .zone {
+    pointer-events: auto;
+    min-width: 0;
+    min-height: 0;
+  }
+  
+  /* Zone: top-left - Presence badge, mode toggle */
+  .zone-top-left {
+    grid-area: top-left;
+    align-self: start;
+    padding: 8px;
+    padding-top: 70px; /* Below progress bar */
+  }
+  
+  /* Zone: left - Share, live class, comments */
+  .zone-left {
+    grid-area: left;
+    display: flex;
+    flex-direction: column;
+    padding: 4px 8px;
+    overflow-y: auto;
+    overflow-x: hidden;
+    scrollbar-width: none;
+  }
+  
+  .zone-left::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* Zone: top-right - Video engine thumbnails */
+  .zone-top-right {
+    grid-area: top-right;
+    align-self: start;
+    padding: 8px;
+    padding-top: 70px; /* Below progress bar */
+  }
+  
+  /* Zone: right - Action buttons - COMPACT for mobile */
+  .zone-right {
+    grid-area: right;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 2px;
+    padding-right: max(2px, env(safe-area-inset-right, 2px));
+    overflow: visible;
+  }
+  
+  /* Zone: bottom - Caption, voting, CTA, day picker, title
+     CRITICAL: This zone uses flex with overflow control
+     - Content scrolls if too tall
+     - Day picker is ALWAYS visible at bottom (flex-shrink-0) */
+  .zone-bottom {
+    grid-area: bottom;
+    display: flex;
+    flex-direction: column;
+    justify-content: flex-end;
+    padding: 0 8px;
+    padding-bottom: max(8px, env(safe-area-inset-bottom, 4px));
+    /* Gradient background for readability */
+    background: linear-gradient(
+      0deg,
+      rgba(0, 0, 0, 0.9) 0%,
+      rgba(0, 0, 0, 0.7) 30%,
+      rgba(0, 0, 0, 0.3) 60%,
+      transparent 100%
+    );
+    /* Allow internal scrolling but clip at zone boundary */
+    overflow: hidden;
+  }
+  
+  /* Zone: center (background) - Kelly video */
+  .zone-background {
+    position: fixed !important;
+    inset: 0;
+    z-index: -1;
+    pointer-events: none;
+  }
+  
+  /* TABLET (640px+) */
+  @media (min-width: 640px) {
+    .zone-top-left,
+    .zone-left {
+      padding: 12px;
+      padding-top: 80px;
+    }
+    
+    .zone-top-right {
+      padding-top: 80px;
+    }
+    
+    .zone-bottom {
+      padding: 0 24px;
+      padding-bottom: max(20px, env(safe-area-inset-bottom, 16px));
+    }
+  }
+  
+  /* DESKTOP (1024px+) */
+  @media (min-width: 1024px) {
+    .zone-top-left,
+    .zone-left {
+      padding: 16px;
+      padding-top: 90px;
+    }
+    
+    .zone-top-right {
+      padding-top: 90px;
+      padding-right: 16px;
+    }
+    
+    .zone-right {
+      padding: 12px 8px;
+    }
+    
+    .zone-bottom {
+      padding: 0 32px;
+      padding-bottom: max(24px, env(safe-area-inset-bottom, 20px));
+    }
+  }
+  
+  /* Scrollbar hide utility */
+  .scrollbar-hide {
+    scrollbar-width: none;
+    -ms-overflow-style: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* OLD RAIL/BAR CLASSES - Now render INSIDE zones (no fixed positioning)
+     These are simple flex containers - zones handle all positioning */
+  .left-rail {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .right-rail {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 4px;
+  }
+  
+  .bottom-bar {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    width: 100%;
+  }
+  
+  .floating-day-pill {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    padding-bottom: 4px;
+  }
+  
+  /* Center stage - Kelly lives here - FULL SCREEN (pill floats over) */
+  .center-stage {
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    z-index: 0;
+    background: #FFFFFF;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    overflow: hidden;
+  }
+  
+  /* Kelly image container - ANCHORED TOP & BOTTOM, only sides can expand */
+  .kelly-container {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+    transform: translateX(-50%);
+    height: 100%;
+    display: flex;
+    align-items: stretch;
+    justify-content: center;
+  }
+  
+  .kelly-container img,
+  .kelly-container video {
+    height: 100%;
+    width: auto;
+    max-width: none;
+    object-fit: cover;
+    /* DESKTOP: Eyes near top works fine - overlays don't block */
+    object-position: center 15%;
+    box-shadow: none !important;
+    border-radius: 0 !important;
+    border: none !important;
+    filter: none !important;
+    outline: none !important;
+    /* High quality rendering */
+    image-rendering: high-quality;
+    image-rendering: -webkit-optimize-contrast;
+    filter: contrast(1.03) saturate(1.08) brightness(1.01);
+    transform: translateZ(0);
+    will-change: transform, filter;
+  }
+  
+  /* MOBILE: Kelly's EYES must be in the SAFE ZONE (middle of screen)
+   * Top ~25%: Covered by tabs, share button, live class card
+   * Bottom ~40%: Covered by caption bar, age/lang selectors, title, date
+   * Safe zone: ~25%-60% from top - Kelly's EYES and NOSE must be here
+   * - Solution: object-position pushes face DOWN so eyes land in safe zone
+   * - Lower % = face higher in viewport, Higher % = face lower in viewport */
+  @media (max-width: 768px) {
+  .kelly-container img,
+  .kelly-container video {
+  /* Position face so EYES are at ~40-45% from top (safe zone center)
+   * Using 38% pushes face down enough that eyes are visible between overlays */
+  object-position: center 38%;
+  }
+  
+  /* Age-specific adjustments for mobile */
+  .kelly-container.kelly-senior img,
+  .kelly-container.kelly-senior video {
+  /* Seniors: face is positioned differently in the source image */
+  object-position: center 42%;
+  }
+  
+  .kelly-container.kelly-child img,
+  .kelly-container.kelly-child video {
+  /* Kids: slightly different face position */
+  object-position: center 35%;
+  }
+  
+  .kelly-container.kelly-adult img,
+  .kelly-container.kelly-adult video {
+  object-position: center 38%;
+  }
+  }
+  
+  /* DESKTOP: Age-specific Kelly avatar framing */
+  @media (min-width: 769px) {
+    .kelly-container.kelly-senior img,
+    .kelly-container.kelly-senior video {
+      transform: scale(1.15) translateZ(0);
+      transform-origin: center 20%;
+      object-position: center 15%;
+    }
+    
+    .kelly-container.kelly-child img,
+    .kelly-container.kelly-child video {
+      object-position: center 10%;
+    }
+    
+    .kelly-container.kelly-teen img,
+    .kelly-container.kelly-teen video {
+      object-position: center 12%;
+    }
+    
+    .kelly-container.kelly-middleAge img,
+    .kelly-container.kelly-middleAge video {
+      object-position: center 8%;
+    }
+  }
+  
+  /* Kelly speaking indicator - now handled by KELLY PRESENCE SYSTEM below */
+  
+/* Old bottom-bar and floating-day-pill removed - now in zone-bottom */
+  
+/* Top bar - full-width progress bar navigation */
+  .top-bar {
+    @apply fixed top-0 left-0 right-0;
+    @apply z-30;
+    pointer-events: none;
+    /* Subtle gradient at top for readability */
+    background: linear-gradient(
+      180deg,
+      rgba(0, 0, 0, 0.7) 0%,
+      rgba(0, 0, 0, 0.4) 40%,
+      rgba(0, 0, 0, 0.1) 70%,
+      transparent 100%
+    );
+    padding-top: 12px;
+    padding-bottom: 48px;
+  }
+  
+  .top-bar button {
+    pointer-events: auto;
+  }
+  
+  .top-bar > * {
+    pointer-events: auto;
+  }
+  
+  /* Live class banner at very top */
+  .live-class-banner {
+    @apply w-full px-4;
+    @apply flex items-center justify-center;
+    @apply text-sm font-medium;
+    padding-top: 10px;
+    padding-bottom: 10px;
+    gap: 12px;
+    background: oklch(0.22 0.05 250 / 0.90);
+    backdrop-filter: blur(16px);
+    -webkit-backdrop-filter: blur(16px);
+    color: white;
+  }
+  
+  .live-class-banner.is-live {
+    background: var(--live-red);
+    animation: live-banner-pulse 2s ease-in-out infinite;
+  }
+  
+  @keyframes live-banner-pulse {
+    0%, 100% { background: var(--live-red); }
+    50% { background: oklch(0.55 0.28 25); }
+  }
+  
+  .live-class-banner.is-starting-soon {
+    background: oklch(0.45 0.18 50 / 0.95);
+    animation: starting-soon-pulse 1.5s ease-in-out infinite;
+  }
+  
+  @keyframes starting-soon-pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.85; }
+  }
+  
+  /* MOBILE: Compact overlays to maximize Kelly face visibility */
+  @media (max-width: 768px) {
+    /* Hide left rail content */
+    .left-rail {
+      display: none;
+    }
+    
+    /* MOBILE: HIDE top corners - Kelly's EYES/NOSE must be visible */
+    .zone-top-left {
+      display: none;
+    }
+    
+    .zone-left {
+      display: none;
+    }
+    
+    .zone-top-right {
+      display: none;
+    }
+    
+    .zone-bottom {
+      padding-bottom: max(12px, env(safe-area-inset-bottom, 8px));
+    }
+    
+    .right-rail {
+      width: 56px;
+    }
+    
+    .action-button {
+      width: 40px;
+      padding-top: 6px;
+      padding-bottom: 6px;
+    }
+    
+    .action-button-icon {
+      width: 20px;
+      height: 20px;
+    }
+    
+    .action-button-label {
+      font-size: 10px;
+    }
+  }
+  
+  /* Countdown styling */
+  .countdown-digit {
+    font-variant-numeric: tabular-nums;
+    font-feature-settings: "tnum";
+  }
+  
+  /* Caption bar - SAME unified glass surface */
+  .caption-bar {
+    @apply mx-auto;
+    max-width: 680px;
+    padding: 16px 20px;
+    background: var(--glass-bg) !important;
+    backdrop-filter: var(--glass-blur) !important;
+    -webkit-backdrop-filter: var(--glass-blur) !important;
+    border: 1px solid var(--glass-border) !important;
+    border-radius: var(--glass-radius-lg);
+    box-shadow: var(--glass-shadow) !important;
+  }
+  
+  /* Select dropdown - Same unified glass surface */
+  .glass-select {
+    @apply w-full;
+    @apply text-sm font-medium;
+    @apply transition-all duration-150;
+    padding: 10px 12px;
+    background: var(--glass-bg);
+    backdrop-filter: var(--glass-blur);
+    -webkit-backdrop-filter: var(--glass-blur);
+    border: 1px solid var(--glass-border);
+    border-radius: var(--glass-radius-md);
+    color: rgba(255, 255, 255, 0.95);
+  }
+  
+  .glass-select:hover {
+    border-color: var(--glass-border-hover);
+  }
+  
+  /* Comment bubble - Same unified radius */
+  .comment-bubble {
+    border-radius: var(--glass-radius-md);
+    font-size: 13px;
+    line-height: 1.6;
+    padding: 10px 12px;
+    background: rgba(255, 255, 255, 0.06);
+    color: rgba(255, 255, 255, 0.90);
+    border: none;
+    transition: background 0.2s ease;
+  }
+  
+  .comment-bubble:hover {
+    background: rgba(255, 255, 255, 0.10);
+  }
+  
+  .comment-bubble-highlight {
+    background: rgba(59, 130, 246, 0.12);
+    border-left: 2px solid rgba(59, 130, 246, 0.50);
+    padding-left: 10px;
+  }
+  
+  /* Scrollbar for comments */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+    scrollbar-color: oklch(0.50 0.02 240 / 0.3) transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar {
+    width: 4px;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-track {
+    background: transparent;
+  }
+  
+  .scrollbar-thin::-webkit-scrollbar-thumb {
+    background: oklch(0.50 0.02 240 / 0.3);
+    border-radius: 2px;
+  }
+  
+  /* ========== KellyOS OVERLAY SYSTEM - Apple Education Quality ========== */
+  
+  /**
+   * THE KELLY RULE - SACRED AND UNBREAKABLE
+   * 
+   * Kelly is ALWAYS visible in the center of the screen.
+   * NO overlay may:
+   * - Cover the center of the screen
+   * - Blur or darken Kelly
+   * - Use a full-screen backdrop that obscures her
+   * 
+   * All overlays MUST:
+   * - Slide in from the RIGHT edge
+   * - Or float in the BOTTOM-RIGHT corner
+   * - Use only a subtle RIGHT-SIDE vignette (no center darkening)
+   * - Keep Kelly fully visible and sharp at all times
+   */
+  
+  /* Vignette backdrop - RIGHT SIDE ONLY, Kelly stays visible */
+  .overlay-vignette {
+    position: fixed;
+    inset: 0;
+    z-index: 50;
+    background: linear-gradient(
+      to left,
+      oklch(0.10 0.02 250 / 0.7) 0%,
+      oklch(0.10 0.02 250 / 0.3) 30%,
+      transparent 50%
+    );
+    /* NO blur - Kelly must stay sharp */
+  }
+  
+  /* Overlay panel - frosted glass with subtle shadow */
+  .overlay-panel {
+    background: oklch(0.99 0.005 250);
+    border-radius: 24px;
+    box-shadow: 
+      0 0 0 1px oklch(0.90 0.01 250 / 0.6),
+      0 32px 64px -16px oklch(0.10 0.03 250 / 0.35),
+      0 16px 32px -8px oklch(0.10 0.03 250 / 0.20),
+      inset 0 1px 0 oklch(1 0 0 / 0.8);
+  }
+  
+  /* Bottom sheet overlay - slides up from bottom */
+  .overlay-sheet {
+    background: oklch(0.99 0.005 250);
+    border-radius: 24px 24px 0 0;
+    box-shadow: 
+      0 -16px 48px -8px oklch(0.10 0.03 250 / 0.20),
+      inset 0 1px 0 oklch(1 0 0 / 0.8);
+  }
+  
+  /* Overlay header with drag handle */
+  .overlay-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 16px 20px;
+    border-bottom: 1px solid oklch(0.92 0.01 250);
+  }
+  
+  .overlay-drag-handle {
+    width: 36px;
+    height: 5px;
+    background: oklch(0.85 0.01 250);
+    border-radius: 3px;
+    margin: 0 auto 8px;
+  }
+  
+  /* Overlay close button - subtle X */
+  .overlay-close {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 32px;
+    height: 32px;
+    border-radius: 16px;
+    background: oklch(0.94 0.01 250);
+    color: oklch(0.40 0.02 250);
+    transition: all 0.15s ease;
+  }
+  
+  .overlay-close:hover {
+    background: oklch(0.90 0.01 250);
+    color: oklch(0.25 0.02 250);
+  }
+  
+  .overlay-close:active {
+    transform: scale(0.95);
+  }
+  
+  /* Section dividers */
+  .overlay-section {
+    padding: 16px 20px;
+    border-bottom: 1px solid oklch(0.94 0.01 250);
+  }
+  
+  .overlay-section:last-child {
+    border-bottom: none;
+  }
+  
+  .overlay-section-title {
+    font-size: 12px;
+    font-weight: 600;
+    color: oklch(0.55 0.02 250);
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    margin-bottom: 12px;
+  }
+  
+  /* List items - iOS-style rows */
+  .overlay-list-item {
+    display: flex;
+    align-items: center;
+    gap: 14px;
+    padding: 14px 0;
+    border-bottom: 1px solid oklch(0.94 0.01 250 / 0.6);
+    cursor: pointer;
+    transition: background 0.1s ease;
+  }
+  
+  .overlay-list-item:last-child {
+    border-bottom: none;
+  }
+  
+  .overlay-list-item:hover {
+    background: oklch(0.97 0.005 250);
+    margin: 0 -20px;
+    padding-left: 20px;
+    padding-right: 20px;
+  }
+  
+  .overlay-list-item:active {
+    background: oklch(0.95 0.01 250);
+  }
+  
+  .overlay-list-icon {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: oklch(0.94 0.01 250);
+    color: var(--primary);
+    flex-shrink: 0;
+  }
+  
+  .overlay-list-content {
+    flex: 1;
+    min-width: 0;
+  }
+  
+  .overlay-list-title {
+    font-size: 15px;
+    font-weight: 500;
+    color: oklch(0.15 0.02 250);
+  }
+  
+  .overlay-list-subtitle {
+    font-size: 13px;
+    color: oklch(0.50 0.02 250);
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  
+  .overlay-list-value {
+    font-size: 14px;
+    color: oklch(0.50 0.02 250);
+    flex-shrink: 0;
+  }
+  
+  .overlay-list-chevron {
+    width: 18px;
+    height: 18px;
+    color: oklch(0.70 0.02 250);
+    flex-shrink: 0;
+  }
+  
+  /* Toggle switch - iOS style */
+  .overlay-toggle {
+    position: relative;
+    width: 51px;
+    height: 31px;
+    background: oklch(0.90 0.01 250);
+    border-radius: 16px;
+    padding: 2px;
+    cursor: pointer;
+    transition: background 0.2s ease;
+    flex-shrink: 0;
+  }
+  
+  .overlay-toggle.active {
+    background: var(--success);
+  }
+  
+  .overlay-toggle-knob {
+    width: 27px;
+    height: 27px;
+    background: white;
+    border-radius: 14px;
+    box-shadow: 
+      0 3px 8px oklch(0.10 0.03 250 / 0.15),
+      0 1px 2px oklch(0.10 0.03 250 / 0.10);
+    transition: transform 0.2s ease;
+  }
+  
+  .overlay-toggle.active .overlay-toggle-knob {
+    transform: translateX(20px);
+  }
+  
+  /* Premium badge */
+  .premium-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 4px 10px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.03em;
+    background: linear-gradient(135deg, oklch(0.70 0.20 50) 0%, oklch(0.60 0.25 35) 100%);
+    color: white;
+    border-radius: 8px;
+  }
+  
+  /* Price card */
+  .price-card {
+    padding: 20px;
+    border-radius: 16px;
+    background: oklch(0.98 0.005 250);
+    border: 2px solid oklch(0.92 0.01 250);
+    transition: all 0.2s ease;
+    cursor: pointer;
+  }
+  
+  .price-card:hover {
+    border-color: oklch(0.85 0.02 250);
+    box-shadow: 0 8px 24px -4px oklch(0.10 0.03 250 / 0.10);
+  }
+  
+  .price-card.selected {
+    border-color: var(--primary);
+    background: oklch(0.97 0.02 240 / 0.3);
+    box-shadow: 0 0 0 4px oklch(0.55 0.20 240 / 0.12);
+  }
+  
+  .price-card.popular {
+    position: relative;
+    border-color: var(--primary);
+  }
+  
+  .price-card.popular::before {
+    content: 'Most Popular';
+    position: absolute;
+    top: -10px;
+    left: 50%;
+    transform: translateX(-50%);
+    padding: 4px 12px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    background: var(--primary);
+    color: white;
+    border-radius: 6px;
+    white-space: nowrap;
+  }
+  
+  /* ========== APPLE-PRECISION VISUAL AID PANEL ========== */
+  /* Floating bottom panel - like iOS Picture-in-Picture */
+  .visual-aid-floating {
+    position: fixed;
+    bottom: 88px; /* Above the caption/metadata bar */
+    left: 50%;
+    transform: translateX(-50%);
+    width: calc(100% - 160px); /* Clear the rails */
+    max-width: 480px;
+    background: oklch(0.99 0.005 250 / 0.98);
+    border-radius: 16px;
+    box-shadow: 
+      0 0 0 0.5px oklch(0.20 0.02 250 / 0.08),
+      0 8px 32px -4px oklch(0.10 0.03 250 / 0.25),
+      0 2px 8px oklch(0.10 0.03 250 / 0.08);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    z-index: 35;
+    overflow: hidden;
+    transition: all 0.3s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  
+  .visual-aid-floating:hover {
+    box-shadow: 
+      0 0 0 0.5px oklch(0.20 0.02 250 / 0.12),
+      0 12px 40px -4px oklch(0.10 0.03 250 / 0.30),
+      0 4px 12px oklch(0.10 0.03 250 / 0.10);
+  }
+  
+  .visual-aid-floating-header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 10px 12px;
+    background: oklch(0.97 0.005 250 / 0.95);
+    border-bottom: 0.5px solid oklch(0.88 0.01 250);
+    cursor: grab;
+    user-select: none;
+  }
+  
+  .visual-aid-floating-header:active {
+    cursor: grabbing;
+  }
+  
+  .visual-aid-floating-title {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    font-size: 13px;
+    font-weight: 600;
+    color: oklch(0.25 0.02 250);
+    letter-spacing: -0.01em;
+  }
+  
+  .visual-aid-floating-title-icon {
+    width: 16px;
+    height: 16px;
+    color: var(--primary);
+  }
+  
+  .visual-aid-floating-controls {
+    display: flex;
+    align-items: center;
+    gap: 2px;
+  }
+  
+  .visual-aid-floating-btn {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 28px;
+    height: 28px;
+    border-radius: 8px;
+    background: transparent;
+    color: oklch(0.45 0.02 250);
+    transition: all 0.15s ease;
+  }
+  
+  .visual-aid-floating-btn:hover {
+    background: oklch(0.92 0.01 250);
+    color: oklch(0.25 0.02 250);
+  }
+  
+  .visual-aid-floating-btn:active {
+    transform: scale(0.92);
+    background: oklch(0.88 0.01 250);
+  }
+  
+  .visual-aid-floating-btn svg {
+    width: 16px;
+    height: 16px;
+  }
+  
+  .visual-aid-floating-content {
+    padding: 8px;
+    max-height: 220px;
+    overflow: hidden;
+    background: oklch(0.99 0.005 250);
+  }
+  
+  .visual-aid-floating-image {
+    width: 100%;
+    height: auto;
+    max-height: 200px;
+    border-radius: 10px;
+    object-fit: contain;
+    background: oklch(0.96 0.005 250);
+  }
+  
+  /* Minimized state - compact pill */
+  .visual-aid-floating.minimized {
+    width: auto;
+    max-width: none;
+    bottom: 88px;
+    padding: 8px 14px;
+    border-radius: 24px;
+  }
+  
+  .visual-aid-floating.minimized .visual-aid-floating-header {
+    padding: 0;
+    background: transparent;
+    border: none;
+  }
+  
+  .visual-aid-floating.minimized .visual-aid-floating-content {
+    display: none;
+  }
+  
+  /* Mobile adjustments */
+  @media (max-width: 768px) {
+    .visual-aid-floating {
+      width: calc(100% - 80px);
+      bottom: 72px;
+      max-width: 360px;
+    }
+  }
+  
+  /* Animation keyframes for overlays */
+  @keyframes overlay-fade-in {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes overlay-slide-up {
+    from { 
+      opacity: 0;
+      transform: translateY(20px);
+    }
+    to { 
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes overlay-sheet-up {
+    from {
+      transform: translateY(100%);
+    }
+    to {
+      transform: translateY(0);
+    }
+  }
+  
+  @keyframes overlay-scale-in {
+    from {
+      opacity: 0;
+      transform: scale(0.95);
+    }
+    to {
+      opacity: 1;
+      transform: scale(1);
+    }
+  }
+  
+  .animate-overlay-fade {
+    animation: overlay-fade-in 0.2s ease-out;
+  }
+  
+  .animate-overlay-slide {
+    animation: overlay-slide-up 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+  
+  .animate-overlay-sheet {
+    animation: overlay-sheet-up 0.35s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  
+  .animate-overlay-scale {
+    animation: overlay-scale-in 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  /* Hide scrollbar but allow scrolling */
+  .scrollbar-hide {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .scrollbar-hide::-webkit-scrollbar {
+    display: none;
+  }
+  
+  /* ========================================================================
+   * PREMIUM MICRO-INTERACTIONS - Apple-Quality Polish
+   * High-end hover states, focus rings, and loading effects
+   * ======================================================================== */
+  
+  /* Spring-based hover lift for interactive elements */
+  .hover-lift {
+    transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.25s ease;
+  }
+  
+  .hover-lift:hover {
+    transform: translateY(-2px);
+  }
+  
+  .hover-lift:active {
+    transform: translateY(0) scale(0.98);
+    transition-duration: 0.1s;
+  }
+  
+  /* Premium glass button hover - subtle inner glow */
+  .glass-icon-button {
+    position: relative;
+    overflow: hidden;
+  }
+  
+  .glass-icon-button::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(
+      circle at 50% 0%,
+      rgba(255, 255, 255, 0.15) 0%,
+      transparent 60%
+    );
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .glass-icon-button:hover::before {
+    opacity: 1;
+  }
+  
+  /* Premium focus ring - subtle blue glow */
+  .focus-ring:focus-visible {
+    outline: none;
+    box-shadow: 
+      0 0 0 2px var(--background),
+      0 0 0 4px var(--kelly-blue),
+      0 0 16px rgba(59, 130, 246, 0.3);
+  }
+  
+  /* Shimmer loading effect - elegant skeleton states */
+  @keyframes shimmer {
+    0% {
+      background-position: -200% 0;
+    }
+    100% {
+      background-position: 200% 0;
+    }
+  }
+  
+  .shimmer {
+    background: linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.03) 0%,
+      rgba(255, 255, 255, 0.08) 20%,
+      rgba(255, 255, 255, 0.15) 50%,
+      rgba(255, 255, 255, 0.08) 80%,
+      rgba(255, 255, 255, 0.03) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s ease-in-out infinite;
+  }
+  
+  .shimmer-light {
+    background: linear-gradient(
+      90deg,
+      rgba(0, 0, 0, 0.03) 0%,
+      rgba(0, 0, 0, 0.06) 20%,
+      rgba(0, 0, 0, 0.10) 50%,
+      rgba(0, 0, 0, 0.06) 80%,
+      rgba(0, 0, 0, 0.03) 100%
+    );
+    background-size: 200% 100%;
+    animation: shimmer 2s ease-in-out infinite;
+  }
+  
+  /* Pulse glow for active/live states */
+  @keyframes pulse-glow {
+    0%, 100% {
+      box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.4);
+    }
+    50% {
+      box-shadow: 0 0 0 8px rgba(59, 130, 246, 0);
+    }
+  }
+  
+  .pulse-glow {
+    animation: pulse-glow 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+  
+  /* Subtle bounce for success states */
+  @keyframes micro-bounce {
+    0%, 100% {
+      transform: translateY(0) scale(1);
+    }
+    25% {
+      transform: translateY(-4px) scale(1.02);
+    }
+    50% {
+      transform: translateY(-2px) scale(1.01);
+    }
+  }
+  
+  .micro-bounce {
+    animation: micro-bounce 0.5s cubic-bezier(0.34, 1.56, 0.64, 1);
+  }
+  
+  /* Stagger children animation helper - Apple Motion quality */
+  .stagger-children > * {
+    opacity: 0;
+    transform: translateY(12px);
+    animation: stagger-in 0.5s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+  
+  /* Tighter timing for premium feel - 40ms between items */
+  .stagger-children > *:nth-child(1) { animation-delay: 80ms; }
+  .stagger-children > *:nth-child(2) { animation-delay: 120ms; }
+  .stagger-children > *:nth-child(3) { animation-delay: 160ms; }
+  .stagger-children > *:nth-child(4) { animation-delay: 200ms; }
+  .stagger-children > *:nth-child(5) { animation-delay: 240ms; }
+  .stagger-children > *:nth-child(6) { animation-delay: 280ms; }
+  .stagger-children > *:nth-child(7) { animation-delay: 320ms; }
+  .stagger-children > *:nth-child(8) { animation-delay: 360ms; }
+  .stagger-children > *:nth-child(9) { animation-delay: 400ms; }
+  .stagger-children > *:nth-child(10) { animation-delay: 440ms; }
+  .stagger-children > *:nth-child(n+11) { animation-delay: 480ms; }
+  
+  @keyframes stagger-in {
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* Fast stagger variant for lists */
+  .stagger-fast > * {
+    opacity: 0;
+    transform: translateY(6px);
+    animation: stagger-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  
+  .stagger-fast > *:nth-child(1) { animation-delay: 0ms; }
+  .stagger-fast > *:nth-child(2) { animation-delay: 25ms; }
+  .stagger-fast > *:nth-child(3) { animation-delay: 50ms; }
+  .stagger-fast > *:nth-child(4) { animation-delay: 75ms; }
+  .stagger-fast > *:nth-child(5) { animation-delay: 100ms; }
+  .stagger-fast > *:nth-child(n+6) { animation-delay: 125ms; }
+  
+  /* Premium card hover - subtle depth shift */
+  .card-hover {
+    transition: transform 0.3s cubic-bezier(0.34, 1.56, 0.64, 1),
+                box-shadow 0.3s ease,
+                border-color 0.2s ease;
+  }
+  
+  .card-hover:hover {
+    transform: translateY(-1px);
+    border-color: var(--glass-border-hover) !important;
+    box-shadow: 
+      var(--glass-shadow),
+      0 8px 24px -8px rgba(0, 0, 0, 0.3);
+  }
+  
+  /* Text reveal animation */
+  @keyframes text-reveal {
+    from {
+      opacity: 0;
+      transform: translateY(8px);
+      filter: blur(4px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+      filter: blur(0);
+    }
+  }
+  
+  .text-reveal {
+    animation: text-reveal 0.6s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  
+  /* Icon pop animation */
+  @keyframes icon-pop {
+    0% {
+      transform: scale(0.8);
+      opacity: 0;
+    }
+    50% {
+      transform: scale(1.1);
+    }
+    100% {
+      transform: scale(1);
+      opacity: 1;
+    }
+  }
+  
+  .icon-pop {
+    animation: icon-pop 0.4s cubic-bezier(0.34, 1.56, 0.64, 1) forwards;
+  }
+
+  /* Float animations for product visuals */
+  @keyframes float {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-20px); }
+  }
+  
+  @keyframes float-subtle {
+    0%, 100% { transform: translateY(0px); }
+    50% { transform: translateY(-10px); }
+  }
+  
+  .animate-float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  .animate-float-delayed {
+    animation: float 6s ease-in-out 2s infinite;
+  }
+  
+  .animate-float-subtle {
+    animation: float-subtle 4s ease-in-out infinite;
+  }
+  
+  .animate-pulse-slow {
+    animation: pulse 4s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+  }
+
+  /* Counter animation for financials */
+  @keyframes count-up {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  .count-up {
+    animation: count-up 0.5s ease-out forwards;
+  }
+  
+  /* Premium spinner - smooth and subtle */
+  @keyframes premium-spin {
+    from {
+      transform: rotate(0deg);
+    }
+    to {
+      transform: rotate(360deg);
+    }
+  }
+  
+  .spinner-premium {
+    width: 20px;
+    height: 20px;
+    border: 2px solid rgba(255, 255, 255, 0.15);
+    border-top-color: var(--kelly-blue);
+    border-radius: 50%;
+    animation: premium-spin 0.8s linear infinite;
+  }
+  
+  .spinner-premium-light {
+    border-color: rgba(0, 0, 0, 0.1);
+    border-top-color: var(--kelly-blue);
+  }
+  
+  /* Blur in/out for modals */
+  @keyframes blur-in {
+    from {
+      opacity: 0;
+      filter: blur(8px);
+    }
+    to {
+      opacity: 1;
+      filter: blur(0);
+    }
+  }
+  
+  .blur-in {
+    animation: blur-in 0.3s cubic-bezier(0.16, 1, 0.3, 1) forwards;
+  }
+  
+  /* Floating animation for decorative elements */
+  @keyframes float {
+    0%, 100% {
+      transform: translateY(0) rotate(0deg);
+    }
+    33% {
+      transform: translateY(-6px) rotate(1deg);
+    }
+    66% {
+      transform: translateY(-3px) rotate(-1deg);
+    }
+  }
+  
+  .float {
+    animation: float 6s ease-in-out infinite;
+  }
+  
+  /* Subtle gradient shift for premium backgrounds */
+  @keyframes gradient-shift {
+    0%, 100% {
+      background-position: 0% 50%;
+    }
+    50% {
+      background-position: 100% 50%;
+    }
+  }
+  
+  .gradient-animate {
+    background-size: 200% 200%;
+    animation: gradient-shift 8s ease infinite;
+  }
+  
+  /* ============================================================================
+   * ANIMATE-IN UTILITIES - Tailwind-style animation classes
+   * For header transitions and micro-interactions
+   * ============================================================================ */
+  
+  .animate-in {
+    animation-duration: 150ms;
+    animation-timing-function: cubic-bezier(0.16, 1, 0.3, 1);
+    animation-fill-mode: both;
+  }
+  
+  .fade-in {
+    animation-name: fade-in-keyframes;
+  }
+  
+  .slide-in-from-right-2 {
+    --tw-enter-translate-x: 0.5rem;
+    animation-name: slide-in-from-right;
+  }
+  
+  .slide-in-from-left-2 {
+    --tw-enter-translate-x: -0.5rem;
+    animation-name: slide-in-from-left;
+  }
+  
+  .slide-in-from-bottom-2 {
+    --tw-enter-translate-y: 0.5rem;
+    animation-name: slide-in-from-bottom;
+  }
+  
+  .duration-200 {
+    animation-duration: 200ms;
+  }
+  
+  .duration-300 {
+    animation-duration: 300ms;
+  }
+  
+  .delay-75 {
+    animation-delay: 75ms;
+  }
+  
+  .delay-150 {
+    animation-delay: 150ms;
+  }
+  
+  @keyframes fade-in-keyframes {
+    from { opacity: 0; }
+    to { opacity: 1; }
+  }
+  
+  @keyframes slide-in-from-right {
+    from {
+      opacity: 0;
+      transform: translateX(var(--tw-enter-translate-x, 0.5rem));
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  @keyframes slide-in-from-left {
+    from {
+      opacity: 0;
+      transform: translateX(var(--tw-enter-translate-x, -0.5rem));
+    }
+    to {
+      opacity: 1;
+      transform: translateX(0);
+    }
+  }
+  
+  @keyframes slide-in-from-bottom {
+    from {
+      opacity: 0;
+      transform: translateY(var(--tw-enter-translate-y, 0.5rem));
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
+  
+  /* ============================================================================
+   * 3D LESSON CUBE - Six-sided navigation
+   * Faces: Today, Tomorrow, Yesterday, Zig, Calendar, Personalized
+   * ============================================================================ */
+  
+  .lesson-cube-scene {
+    width: 100%;
+    height: 100%;
+    perspective: 1500px;
+    perspective-origin: center center;
+  }
+  
+  .lesson-cube {
+    width: 100%;
+    height: 100%;
+    position: relative;
+    transform-style: preserve-3d;
+    transition: transform 0.6s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  
+  .lesson-cube-face {
+    position: absolute;
+    inset: 0;
+    backface-visibility: hidden;
+    -webkit-backface-visibility: hidden;
+  }
+  
+  /* Face positions - translateZ uses viewport height for depth */
+  .lesson-cube-face-front { transform: translateZ(50vh); }
+  .lesson-cube-face-back { transform: rotateY(180deg) translateZ(50vh); }
+  .lesson-cube-face-right { transform: rotateY(90deg) translateZ(50vh); }
+  .lesson-cube-face-left { transform: rotateY(-90deg) translateZ(50vh); }
+  .lesson-cube-face-top { transform: rotateX(90deg) translateZ(50vh); }
+  .lesson-cube-face-bottom { transform: rotateX(-90deg) translateZ(50vh); }
+  
+  /* Cube rotations based on active face */
+  .lesson-cube[data-face="front"] { transform: rotateY(0deg) rotateX(0deg); }
+  .lesson-cube[data-face="back"] { transform: rotateY(-180deg) rotateX(0deg); }
+  .lesson-cube[data-face="right"] { transform: rotateY(-90deg) rotateX(0deg); }
+  .lesson-cube[data-face="left"] { transform: rotateY(90deg) rotateX(0deg); }
+  .lesson-cube[data-face="top"] { transform: rotateY(0deg) rotateX(90deg); }
+  .lesson-cube[data-face="bottom"] { transform: rotateY(0deg) rotateX(-90deg); }
+  
+  /* Day transition hint - subtle edge glow */
+  .lesson-cube-hint {
+    position: absolute;
+    background: linear-gradient(
+      to right,
+      transparent 0%,
+      rgba(255, 255, 255, 0.1) 50%,
+      transparent 100%
+    );
+    pointer-events: none;
+    opacity: 0;
+    transition: opacity 0.3s ease;
+  }
+  
+  .lesson-cube-hint-left {
+    left: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 120px;
+  }
+  
+  .lesson-cube-hint-right {
+    right: 0;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 40px;
+    height: 120px;
+  }
+  
+  .lesson-cube:hover .lesson-cube-hint {
+    opacity: 1;
+  }
+
+  /* ========================================================================
+   * KELLY PRESENCE SYSTEM - She breathes, she lives
+   * Layered animation system: breathing + luminance + warmth + eye light
+   * ======================================================================== */
+  
+  /* Gentle breathing - subtle scale + vertical drift feels organic */
+  @keyframes kelly-breathe {
+    0%, 100% {
+      transform: translateX(-50%) scale(1) translateY(0);
+    }
+    35% {
+      transform: translateX(-50%) scale(1.004) translateY(-1px);
+    }
+    65% {
+      transform: translateX(-50%) scale(1.002) translateY(0.5px);
+    }
+  }
+  
+  .kelly-container:not(.kelly-speaking) {
+    animation: kelly-breathe 5s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+  }
+  
+  /* Luminance breathing - brightness/saturation cycle makes her feel warm & alive */
+  @keyframes kelly-luminance {
+    0%, 100% {
+      filter: contrast(1.03) saturate(1.08) brightness(1.01);
+    }
+    40% {
+      filter: contrast(1.04) saturate(1.12) brightness(1.025);
+    }
+    70% {
+      filter: contrast(1.03) saturate(1.06) brightness(1.005);
+    }
+  }
+  
+  .kelly-container img,
+  .kelly-container video {
+    animation: kelly-luminance 6s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+  }
+  
+  /* When Kelly is speaking - more alive, rhythmic micro-sway */
+  @keyframes kelly-speaking-rhythm {
+    0%, 100% {
+      transform: translateX(-50%) scale(1) translateY(0);
+    }
+    20% {
+      transform: translateX(-50%) scale(1.005) translateY(-1px);
+    }
+    50% {
+      transform: translateX(-50%) scale(1.003) translateY(0.5px);
+    }
+    80% {
+      transform: translateX(-50%) scale(1.004) translateY(-0.5px);
+    }
+  }
+  
+  .kelly-container.kelly-speaking {
+    animation: kelly-speaking-rhythm 2s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+  }
+  
+  /* Speaking luminance - slightly warmer, more saturated when talking */
+  .kelly-container.kelly-speaking img,
+  .kelly-container.kelly-speaking video {
+    animation: kelly-luminance-speaking 2.5s cubic-bezier(0.37, 0, 0.63, 1) infinite;
+  }
+  
+  @keyframes kelly-luminance-speaking {
+    0%, 100% {
+      filter: contrast(1.04) saturate(1.12) brightness(1.02);
+    }
+    50% {
+      filter: contrast(1.05) saturate(1.15) brightness(1.04);
+    }
+  }
+  
+  /* Warm ambient halo - subtle radial glow behind Kelly */
+  .kelly-container::before {
+    content: '';
+    position: absolute;
+    inset: -4%;
+    background: radial-gradient(
+      ellipse 55% 65% at 50% 35%,
+      rgba(245, 200, 140, 0.05) 0%,
+      rgba(245, 158, 11, 0.02) 40%,
+      transparent 75%
+    );
+    pointer-events: none;
+    z-index: 1;
+    animation: kelly-warmth 7s ease-in-out infinite;
+  }
+  
+  @keyframes kelly-warmth {
+    0%, 100% { opacity: 0.4; }
+    50% { opacity: 1; }
+  }
+  
+  /* Eye-level catchlight - the specular that makes eyes feel alive */
+  .kelly-container::after {
+    content: '';
+    position: absolute;
+    top: 18%;
+    left: 32%;
+    width: 36%;
+    height: 10%;
+    background: radial-gradient(
+      ellipse at 50% 50%,
+      rgba(255, 255, 255, 0.04) 0%,
+      rgba(255, 255, 255, 0.01) 40%,
+      transparent 70%
+    );
+    pointer-events: none;
+    z-index: 2;
+    animation: kelly-eye-shimmer 8s ease-in-out 1s infinite;
+  }
+  
+  @keyframes kelly-eye-shimmer {
+    0%, 100% { opacity: 0; transform: scale(1); }
+    30% { opacity: 1; transform: scale(1.02); }
+    70% { opacity: 0.6; transform: scale(1.04); }
+  }
+  
+  /* Speaking glow - warm inner radiance when Kelly speaks */
+  .kelly-speaking::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    pointer-events: none;
+    border-radius: inherit;
+    box-shadow: inset 0 0 120px 40px rgba(245, 200, 140, 0.04);
+    animation: kelly-speak-glow 3s ease-in-out infinite;
+    z-index: 3;
+  }
+  
+  @keyframes kelly-speak-glow {
+    0%, 100% { opacity: 0.15; }
+    50% { opacity: 0.6; }
+  }
+  
+  /* ========================================================================
+   * REFINED GLASS SURFACES - Tighter, more premium feel
+   * ======================================================================== */
+  
+  /* Ultra-refined glass pill for control bars */
+  .glass-pill-refined {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 6px 10px;
+    background: rgba(0, 0, 0, 0.55);
+    backdrop-filter: blur(40px) saturate(180%);
+    -webkit-backdrop-filter: blur(40px) saturate(180%);
+    border: 0.5px solid rgba(255, 255, 255, 0.12);
+    border-radius: 100px;
+    box-shadow: 
+      0 2px 8px rgba(0, 0, 0, 0.15),
+      inset 0 0.5px 0 rgba(255, 255, 255, 0.08);
+    color: rgba(255, 255, 255, 0.92);
+    font-size: 12px;
+    font-weight: 500;
+    transition: all 0.2s cubic-bezier(0.32, 0.72, 0, 1);
+  }
+  
+  .glass-pill-refined:hover {
+    background: rgba(0, 0, 0, 0.65);
+    border-color: rgba(255, 255, 255, 0.18);
+  }
+  
+  /* Quiz/Vote card - premium frosted treatment */
+  .glass-quiz-card {
+    background: rgba(0, 0, 0, 0.45);
+    backdrop-filter: blur(48px) saturate(180%);
+    -webkit-backdrop-filter: blur(48px) saturate(180%);
+    border: 0.5px solid rgba(255, 255, 255, 0.1);
+    border-radius: 20px;
+    box-shadow: 
+      0 8px 32px rgba(0, 0, 0, 0.2),
+      inset 0 0.5px 0 rgba(255, 255, 255, 0.06);
+    overflow: hidden;
+  }
+  
+  /* Action button refined - crisp, light, not heavy */
+  .action-btn-refined {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.35);
+    backdrop-filter: blur(24px) saturate(160%);
+    -webkit-backdrop-filter: blur(24px) saturate(160%);
+    border: 0.5px solid rgba(255, 255, 255, 0.1);
+    box-shadow: 
+      0 2px 8px rgba(0, 0, 0, 0.12),
+      inset 0 0.5px 0 rgba(255, 255, 255, 0.1);
+    color: rgba(255, 255, 255, 0.85);
+    transition: all 0.15s cubic-bezier(0.32, 0.72, 0, 1);
+    cursor: pointer;
+  }
+  
+  .action-btn-refined:hover {
+    background: rgba(0, 0, 0, 0.5);
+    border-color: rgba(255, 255, 255, 0.2);
+    color: white;
+    transform: scale(1.06);
+  }
+  
+  .action-btn-refined:active {
+    transform: scale(0.95);
+  }
+  
+  /* Selector pill for age/language/archetype - inline, tight */
+  .selector-pill {
+    display: inline-flex;
+    align-items: center;
+    gap: 2px;
+    padding: 5px 8px;
+    background: rgba(0, 0, 0, 0.4);
+    backdrop-filter: blur(32px) saturate(160%);
+    -webkit-backdrop-filter: blur(32px) saturate(160%);
+    border: 0.5px solid rgba(255, 255, 255, 0.08);
+    border-radius: 100px;
+    box-shadow: inset 0 0.5px 0 rgba(255, 255, 255, 0.06);
+  }
+  
+  /* Smooth selector item */
+  .selector-item {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 50%;
+    transition: all 0.2s cubic-bezier(0.32, 0.72, 0, 1);
+    cursor: pointer;
+  }
+  
+  .selector-item.active {
+    background: rgba(255, 255, 255, 0.18);
+    box-shadow: 0 0 0 1.5px rgba(255, 255, 255, 0.3);
+  }
+  
+  .selector-item:not(.active):hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: scale(1.08);
+  }
+}
+/* EOF v4-PREMIUM-HERO */

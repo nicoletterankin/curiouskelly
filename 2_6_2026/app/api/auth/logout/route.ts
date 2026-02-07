@@ -1,0 +1,15 @@
+import { NextResponse } from 'next/server'
+import { logoutUser } from '@/lib/auth'
+
+export async function POST() {
+  try {
+    await logoutUser()
+    return NextResponse.json({ success: true })
+  } catch (error) {
+    console.error('[auth/logout] Error:', error)
+    return NextResponse.json(
+      { error: 'Logout failed' },
+      { status: 500 }
+    )
+  }
+}

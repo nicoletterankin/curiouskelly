@@ -3,11 +3,13 @@
  * GET /api/cfo/metrics
  * 
  * Returns real-time financial metrics for the CFO dashboard
- * Requires admin authentication (TODO: implement auth check)
+ * Requires admin authentication
  */
 
 import type { VercelRequest, VercelResponse } from '@vercel/node';
 import { createClient } from '@supabase/supabase-js';
+import { adminMiddleware } from '../../lib/admin-auth';
+import { cors } from '../../lib/cors';
 
 const supabaseUrl = process.env.PUBLIC_SUPABASE_URL!;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_ROLE_KEY!;
@@ -60,14 +62,17 @@ export default async function handler(
   req: VercelRequest,
   res: VercelResponse
 ) {
+  // CORS
+  if (!cors(req, res)) return;
+  
   // Only allow GET
   if (req.method !== 'GET') {
     return res.status(405).json({ error: 'Method not allowed' });
   }
 
-  // TODO: Add admin auth check here
-  // const authHeader = req.headers.authorization;
-  // if (!isAdmin(authHeader)) return res.status(401).json({ error: 'Unauthorized' });
+  // Admin authentication required
+  const authResult = await adminMiddleware(req, res);
+  if (!authResult) return; // Response already sent (401 or 403)
 
   try {
     const supabase = createClient(supabaseUrl, supabaseServiceKey);

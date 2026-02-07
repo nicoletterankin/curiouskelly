@@ -161,6 +161,7 @@ The project uses a "Unified Aquarium" architecture where `index.astro` serves as
 - Re‑render loops and duplicate API calls; missing asset cache keys.
 - Any dataset degradation (compression, trimming, or filtering down) without explicit approval.
 - **Using the word "free" in any marketing copy** (see `docs/brand/FORBIDDEN_WORD_FREE.md`). Use "yours," "included," "7 days to explore" instead. Education is priceless, not worthless.
+- **Using "personalized" language in marketing copy.** The product is UNIVERSAL, not personalized. Say "universal education, adapted by age and language" instead of "personalized to how you learn." We do NOT do interest-driven selection or learning-style classification. Everyone gets the same excellent curriculum.
 
 ### Change management and precedence
 - This document governs assistant behavior. If it conflicts with `CURIOUS_KELLLY_*`, `BUILD_PLAN.md`, or deployment guides, defer to those and flag the discrepancy.

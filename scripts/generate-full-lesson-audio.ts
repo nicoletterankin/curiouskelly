@@ -30,7 +30,7 @@ const CONFIG = {
   ELEVENLABS_API_KEY: process.env.ELEVENLABS_API_KEY!,
   
   // Kelly's voice ID in ElevenLabs
-  KELLY_VOICE_ID: process.env.KELLY_VOICE_ID || 'pFZP5JQG7iQjIQuC4Bku', // Default Kelly voice
+  KELLY_VOICE_ID: process.env.ELEVENLABS_VOICE_ID || process.env.KELLY_VOICE_ID || 'wAdymQH5YucAkXwmrdL0', // Kelly voice
   
   // Output directory
   OUTPUT_DIR: path.join(process.cwd(), 'generated-audio', 'full-lessons'),

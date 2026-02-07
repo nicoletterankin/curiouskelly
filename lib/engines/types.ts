@@ -9,6 +9,7 @@ export type EngineType =
   | 'fal_latentsync' 
   | 'fal_sadtalker' 
   | 'sync_so' 
+  | 'replicate'
   | 'musetalk_local';
 
 export type JobStatus = 
@@ -17,7 +18,8 @@ export type JobStatus =
   | 'processing' 
   | 'completed' 
   | 'failed' 
-  | 'blocked';
+  | 'blocked'
+  | 'eval_failed';
 
 export type AgeCategory = 
   | 'toddler' 
@@ -45,16 +47,35 @@ export interface VideoJob {
   is_approved?: boolean;
   error_message?: string;
   priority: number;
+  retry_count?: number;
+  fallback_chain?: EngineType[];
+  eval_results?: EvalResults;
   created_at: string;
   updated_at: string;
   submitted_at?: string;
   completed_at?: string;
 }
 
+export interface EvalResults {
+  content_eval?: EvalGateResult;
+  audio_eval?: EvalGateResult;
+  video_eval?: EvalGateResult;
+  deploy_eval?: EvalGateResult;
+}
+
+export interface EvalGateResult {
+  passed: boolean;
+  score?: number;
+  issues: string[];
+  retries: number;
+  timestamp: string;
+}
+
 export interface EngineInputPayload {
   // Common fields
   audio_url?: string;
   source_image_url?: string;
+  text?: string;
   
   // HeyGen specific
   talking_photo_id?: string;
@@ -89,7 +110,7 @@ export interface EngineStatusResult {
 }
 
 export interface EngineAdapter {
-  name: EngineType;
+  name: EngineType | string;
   displayName: string;
   
   /**
@@ -166,3 +187,11 @@ export interface VideoUrlResponse {
   fallback: boolean;
   available_engines: EngineType[];
 }
+
+// Provider fallback chain configuration
+export const PROVIDER_FALLBACK_CHAIN: EngineType[] = [
+  'heygen',      // Best quality, try first
+  'sync_so',     // High quality backup
+  'fal_latentsync', // Volume processing
+  'replicate',   // Overflow
+];

@@ -264,11 +264,12 @@ async function main() {
   // 1. Fetch Lesson Atoms for the Day
   console.log(`\n🔍 Fetching Day ${day} atoms...`);
   
-  // First get the core lesson ID
+  // First get the core lesson ID (prefer 'learn' track which has full content)
   const { data: lesson, error: lessonError } = await supabase
     .from('core_lessons')
-    .select('id, day_number')
+    .select('id, day_number, track')
     .eq('day_number', day)
+    .eq('track', 'learn')
     .single();
 
   if (lessonError || !lesson) {

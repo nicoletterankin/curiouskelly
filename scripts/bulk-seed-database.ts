@@ -27,12 +27,13 @@ interface LessonFile {
 }
 
 async function getCoreLesson(dayNumber: number) {
+  // Use limit(1) instead of single() to handle days with multiple tracks
   const { data } = await supabase
     .from('core_lessons')
     .select('id')
     .eq('day_number', dayNumber)
-    .single();
-  return data?.id;
+    .limit(1);
+  return data?.[0]?.id;
 }
 
 async function seedDay(dayNumber: number): Promise<boolean> {

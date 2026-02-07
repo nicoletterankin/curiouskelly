@@ -141,12 +141,12 @@ Critical thinking, AI fluency, metacognition. The skills that compound over a li
 The Details:
 • 5 minutes daily
 • Ages 2 to 102
-• Personalized to your age and pace
+• Universal curriculum, adapted by age and language
 • No ads, no data selling
 • Public Benefit Corporation structure
 
 Why now?
-AI makes it possible to have a teacher who knows every learner's name, adapts to their pace, and never burns out. We're building that teacher.
+AI makes it possible to have a teacher who's available to every learner, in their language, at their level, and never burns out. We're building that teacher.
 
 Kelly isn't replacing human teachers — she's giving every learner access to the kind of individual attention that used to be reserved for the privileged few.
 

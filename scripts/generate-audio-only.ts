@@ -92,29 +92,27 @@ async function uploadAudio(buffer: Buffer, day: number, phase: string): Promise<
 }
 
 async function getAtoms(day: number): Promise<Array<{phase: string; script: string}>> {
-  // Get core lesson
-  const { data: lesson, error: lessonErr } = await supabase
-    .from('core_lessons')
-    .select('id')
-    .eq('day_number', day)
-    .single();
-    
-  if (lessonErr || !lesson) {
-    throw new Error(`No core_lesson for day ${day}`);
-  }
-  
-  // Get atoms for this lesson and archetype
+  // Get atoms directly with join - picks the core_lesson that actually has atoms
   const { data: atoms, error: atomErr } = await supabase
     .from('lesson_atoms')
-    .select('phase, content')
-    .eq('core_lesson_id', lesson.id)
+    .select(`
+      phase, 
+      content,
+      core_lessons!inner(day_number)
+    `)
+    .eq('core_lessons.day_number', day)
     .eq('archetype', TARGET_ARCHETYPE);
   
   if (atomErr) {
-    throw new Error(`Error fetching atoms: ${atomErr.message}`);
+    throw new Error(`Error fetching atoms for day ${day}: ${atomErr.message}`);
   }
   
-  return (atoms || [])
+  if (!atoms || atoms.length === 0) {
+    console.log(`  ⚠️  No atoms found for day ${day} with archetype "${TARGET_ARCHETYPE}"`);
+    return [];
+  }
+  
+  return atoms
     .filter(a => a.content?.script && PHASE_MAP[a.phase])
     .map(a => ({
       phase: PHASE_MAP[a.phase],

@@ -9,6 +9,7 @@ import { heygenAdapter } from './heygen';
 import { falLatentsyncAdapter } from './fal-latentsync';
 import { falSadtalkerAdapter } from './fal-sadtalker';
 import { syncSoAdapter } from './sync-so';
+import { replicateAdapter } from './replicate';
 import { musetalkLocalAdapter } from './musetalk-local';
 
 export * from './types';
@@ -18,6 +19,7 @@ export const engines: Record<EngineType, EngineAdapter> = {
   fal_latentsync: falLatentsyncAdapter,
   fal_sadtalker: falSadtalkerAdapter,
   sync_so: syncSoAdapter,
+  replicate: replicateAdapter,
   musetalk_local: musetalkLocalAdapter,
 };
 
@@ -46,9 +48,10 @@ export async function getEngineStatus(): Promise<Record<EngineType, { available:
 
 export const ENGINE_TYPES: EngineType[] = [
   'heygen',
+  'sync_so',
   'fal_latentsync',
   'fal_sadtalker',
-  'sync_so',
+  'replicate',
   'musetalk_local',
 ];
 
@@ -57,5 +60,9 @@ export {
   falLatentsyncAdapter,
   falSadtalkerAdapter,
   syncSoAdapter,
+  replicateAdapter,
   musetalkLocalAdapter,
 };
+
+// Re-export fallback chain from types
+export { PROVIDER_FALLBACK_CHAIN } from './types';

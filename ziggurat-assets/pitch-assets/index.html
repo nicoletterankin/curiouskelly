@@ -1,0 +1,343 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ziggurat LED Vision — Pitch Presentation</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+        
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: #0a0a0c;
+            color: #fff;
+            line-height: 1.6;
+        }
+        
+        .hero {
+            height: 100vh;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            text-align: center;
+            background: linear-gradient(180deg, #0f0f14 0%, #0a0a0c 100%);
+            padding: 40px;
+        }
+        
+        .hero h1 {
+            font-size: clamp(2.5rem, 6vw, 5rem);
+            font-weight: 200;
+            letter-spacing: -0.02em;
+            margin-bottom: 20px;
+            background: linear-gradient(135deg, #8b5cf6 0%, #06b6d4 50%, #22c55e 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
+        
+        .hero p {
+            font-size: 1.4rem;
+            color: #888;
+            max-width: 600px;
+        }
+        
+        .scroll-hint {
+            position: absolute;
+            bottom: 40px;
+            animation: bounce 2s infinite;
+            color: #555;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(10px); }
+        }
+        
+        section {
+            padding: 80px 40px;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+        
+        h2 {
+            font-size: 2rem;
+            font-weight: 300;
+            margin-bottom: 40px;
+            color: #fff;
+        }
+        
+        .comparison {
+            position: relative;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 40px 80px rgba(0,0,0,0.5);
+            margin-bottom: 60px;
+        }
+        
+        .comparison img {
+            width: 100%;
+            display: block;
+        }
+        
+        .comparison .before {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+            clip-path: inset(0 50% 0 0);
+        }
+        
+        .slider {
+            position: absolute;
+            top: 0;
+            left: 50%;
+            width: 4px;
+            height: 100%;
+            background: #fff;
+            cursor: ew-resize;
+            transform: translateX(-50%);
+            z-index: 10;
+        }
+        
+        .slider::after {
+            content: '◀ ▶';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: #fff;
+            color: #000;
+            padding: 12px 16px;
+            border-radius: 24px;
+            font-size: 14px;
+            white-space: nowrap;
+            font-weight: 600;
+        }
+        
+        .label {
+            position: absolute;
+            top: 24px;
+            padding: 12px 24px;
+            background: rgba(0,0,0,0.8);
+            border-radius: 8px;
+            font-weight: 600;
+            font-size: 14px;
+            letter-spacing: 0.05em;
+            z-index: 5;
+        }
+        
+        .label.left { left: 24px; }
+        .label.right { right: 24px; }
+        
+        .variants {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 24px;
+            margin-top: 40px;
+        }
+        
+        .variant {
+            border-radius: 12px;
+            overflow: hidden;
+            background: #111;
+            transition: transform 0.3s;
+        }
+        
+        .variant:hover {
+            transform: translateY(-4px);
+        }
+        
+        .variant img {
+            width: 100%;
+            display: block;
+        }
+        
+        .variant h3 {
+            padding: 16px 20px;
+            font-size: 1rem;
+            font-weight: 500;
+            color: #ccc;
+        }
+        
+        .specs {
+            background: #111;
+            border-radius: 16px;
+            padding: 40px;
+            margin-top: 60px;
+        }
+        
+        .specs h3 {
+            font-size: 1.2rem;
+            color: #8b5cf6;
+            margin-bottom: 20px;
+        }
+        
+        .specs-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 24px;
+        }
+        
+        .spec-item {
+            padding: 20px;
+            background: #1a1a1e;
+            border-radius: 12px;
+        }
+        
+        .spec-item .value {
+            font-size: 1.8rem;
+            font-weight: 600;
+            color: #fff;
+            margin-bottom: 4px;
+        }
+        
+        .spec-item .label {
+            position: static;
+            padding: 0;
+            background: none;
+            font-size: 0.9rem;
+            color: #888;
+        }
+        
+        .downloads {
+            text-align: center;
+            padding: 80px 40px;
+            background: #0f0f14;
+        }
+        
+        .downloads h2 {
+            margin-bottom: 30px;
+        }
+        
+        .btn-group {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 12px;
+            justify-content: center;
+        }
+        
+        .btn {
+            display: inline-block;
+            padding: 14px 28px;
+            background: #8b5cf6;
+            color: #fff;
+            text-decoration: none;
+            border-radius: 10px;
+            font-weight: 500;
+            transition: background 0.2s;
+        }
+        
+        .btn:hover { background: #7c3aed; }
+        .btn.secondary { background: #333; }
+        .btn.secondary:hover { background: #444; }
+        
+        footer {
+            text-align: center;
+            padding: 40px;
+            color: #555;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="hero">
+        <h1>Ziggurat LED Vision</h1>
+        <p>Transforming the Chet Holifield Federal Building into a beacon of civic innovation</p>
+        <div class="scroll-hint">↓ Scroll to explore</div>
+    </div>
+    
+    <section>
+        <h2>Before & After — Night Vision</h2>
+        <div class="comparison" id="comp1">
+            <img src="after-night-1080p.jpg" alt="After - Night" class="after">
+            <img src="before-1080p.jpg" alt="Before" class="before" id="before1">
+            <div class="slider" id="slider1"></div>
+            <span class="label left">BEFORE</span>
+            <span class="label right">AFTER</span>
+        </div>
+        
+        <h2>Time of Day Variants</h2>
+        <div class="variants">
+            <div class="variant">
+                <img src="after-night-1080p.jpg" alt="Night">
+                <h3>Night — Full Rainbow Spectrum</h3>
+            </div>
+            <div class="variant">
+                <img src="after-dusk-1080p.jpg" alt="Dusk">
+                <h3>Dusk — Warm Transition</h3>
+            </div>
+            <div class="variant">
+                <img src="after-day-1080p.jpg" alt="Day">
+                <h3>Day — Subtle Presence</h3>
+            </div>
+        </div>
+        
+        <div class="specs">
+            <h3>Technical Specifications</h3>
+            <div class="specs-grid">
+                <div class="spec-item">
+                    <div class="value">7</div>
+                    <div class="label">Terrace Levels</div>
+                </div>
+                <div class="spec-item">
+                    <div class="value">~2,100</div>
+                    <div class="label">Linear Feet of LED</div>
+                </div>
+                <div class="spec-item">
+                    <div class="value">Rainbow</div>
+                    <div class="label">Color Spectrum</div>
+                </div>
+                <div class="spec-item">
+                    <div class="value">Edge-Aligned</div>
+                    <div class="label">Placement Method</div>
+                </div>
+            </div>
+        </div>
+    </section>
+    
+    <div class="downloads">
+        <h2>Download Assets</h2>
+        <div class="btn-group">
+            <a href="HERO-night-full.png" download class="btn">Hero Night (Full Res)</a>
+            <a href="HERO-before-full.png" download class="btn secondary">Before (Full Res)</a>
+            <a href="comparison-night.jpg" download class="btn secondary">Side-by-Side</a>
+            <a href="after-night-4k.jpg" download class="btn secondary">Night 4K</a>
+        </div>
+    </div>
+    
+    <footer>
+        Ziggurat LED Vision — Concept Visualization<br>
+        Chet Holifield Federal Building, Laguna Niguel, CA
+    </footer>
+    
+    <script>
+        // Comparison slider
+        function setupSlider(compId, beforeId, sliderId) {
+            const comp = document.getElementById(compId);
+            const before = document.getElementById(beforeId);
+            const slider = document.getElementById(sliderId);
+            let dragging = false;
+            
+            function update(x) {
+                const rect = comp.getBoundingClientRect();
+                let pct = (x - rect.left) / rect.width * 100;
+                pct = Math.max(0, Math.min(100, pct));
+                before.style.clipPath = `inset(0 ${100 - pct}% 0 0)`;
+                slider.style.left = pct + '%';
+            }
+            
+            comp.addEventListener('mousedown', e => { dragging = true; update(e.clientX); });
+            document.addEventListener('mousemove', e => { if (dragging) update(e.clientX); });
+            document.addEventListener('mouseup', () => dragging = false);
+            
+            comp.addEventListener('touchstart', e => { dragging = true; update(e.touches[0].clientX); });
+            document.addEventListener('touchmove', e => { if (dragging) update(e.touches[0].clientX); });
+            document.addEventListener('touchend', () => dragging = false);
+        }
+        
+        setupSlider('comp1', 'before1', 'slider1');
+    </script>
+</body>
+</html>

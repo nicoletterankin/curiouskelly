@@ -21,7 +21,7 @@ import { getSupabaseAdmin } from '../lib/supabase';
  */
 
 const ELEVENLABS_API_URL = 'https://api.elevenlabs.io/v1/text-to-speech';
-const DEFAULT_VOICE_ID = 'pFZP5JQG7iQjIQuC4Bku'; // Rachel voice
+const DEFAULT_VOICE_ID = 'wAdymQH5YucAkXwmrdL0'; // Kelly voice
 const STORAGE_BUCKET = 'lesson-audio';
 const RATE_LIMIT_MS = 334; // ~3 requests per second
 const MAX_BATCH_SIZE = 50; // Safety limit
