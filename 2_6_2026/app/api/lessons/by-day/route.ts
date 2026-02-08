@@ -95,17 +95,79 @@ export async function GET(request: NextRequest) {
       }
     }
 
-    // Fetch base lesson by day_of_year
+    // Fetch base lesson from core_lessons (soft-block), NOT legacy `lessons` table (wispy-resonance)
+    // core_lessons uses day_number (INTEGER), NOT day_of_year
     let lessons: Record<string, unknown>[] = []
     try {
-      lessons = await sql`SELECT * FROM lessons WHERE day_of_year = ${dayOfYear} LIMIT 1`
-      if (lessons.length > 0) {
-        console.log(`[v0] Day ${dayOfYear}: "${(lessons[0] as {title?: string}).title}" loaded OK`)
+      const coreRows = await sql`
+        SELECT day_number, title, subject as topic, theme, universal_truth as hook_fact, 
+               icon_emoji, marketing_headline
+        FROM core_lessons 
+        WHERE day_number = ${dayOfYear} 
+        LIMIT 1
+      `
+      if (coreRows.length > 0) {
+        // Map core_lessons columns to the shape downstream code expects
+        const core = coreRows[0] as Record<string, unknown>
+        const mapped: Record<string, unknown> = {
+          id: core.day_number,
+          day_of_year: core.day_number,
+          day_number: core.day_number,
+          title: core.title,
+          topic: core.topic,
+          theme: core.theme,
+          hook_fact: core.hook_fact,
+          hook_correct_answer: true,
+          icon_emoji: core.icon_emoji,
+          summary: core.marketing_headline || '',
+          // Phase scripts: pull from kellyos_lessons below
+          hook_script: '',
+          story_script: '',
+          wonder_script: '',
+          action_script: '',
+          wisdom_script: '',
+        }
+        
+        // Get kellyos_lessons content to fill phase scripts (use day_number)
+        const phaseRows = await sql`
+          SELECT phase, content_text
+          FROM kellyos_lessons
+          WHERE day_number = ${dayOfYear}
+            AND language = ${language}
+            AND tone = 'mentor'
+          ORDER BY phase
+        `.catch(() => [])
+        
+        const phaseNames: Record<number, string> = { 1: 'hook', 2: 'story', 3: 'wonder', 4: 'action', 5: 'wisdom' }
+        for (const row of phaseRows as Array<{ phase: number; content_text: string }>) {
+          const name = phaseNames[row.phase]
+          if (name) mapped[`${name}_script`] = row.content_text
+        }
+        
+        // Get kellyos_facts for hook_fact (use day_number)
+        const factRows = await sql`
+          SELECT statement, is_true, explanation
+          FROM kellyos_facts
+          WHERE day_number = ${dayOfYear}
+          ORDER BY RANDOM()
+          LIMIT 1
+        `.catch(() => [])
+        
+        if ((factRows as Array<Record<string, unknown>>).length > 0) {
+          const f = (factRows as Array<{ statement: string; is_true: boolean; explanation: string }>)[0]
+          mapped.hook_fact = f.statement
+          mapped.hook_correct_answer = f.is_true
+          mapped.teaching_moment = f.explanation
+          mapped.wonder_script = f.explanation // Used as teaching moment in hook flow
+        }
+        
+        lessons = [mapped]
+        console.log(`[v0] Day ${dayOfYear}: "${core.title}" loaded from core_lessons`)
       } else {
-        console.log(`[v0] Day ${dayOfYear}: No lesson found in DB`)
+        console.log(`[v0] Day ${dayOfYear}: No lesson found in core_lessons`)
       }
     } catch (dbError) {
-      console.warn('[lessons/by-day] DB error, using fallback')
+      console.warn('[lessons/by-day] DB error, using fallback:', dbError instanceof Error ? dbError.message : dbError)
       return NextResponse.json({
         lesson: {
           id: 0,
@@ -130,7 +192,7 @@ export async function GET(request: NextRequest) {
 
     if (lessons.length === 0) {
       return NextResponse.json(
-        { error: 'Lesson not found for this day' },
+        { error: 'Lesson not found for this day', source: 'core_lessons' },
         { status: 404 }
       )
     }

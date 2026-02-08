@@ -8,9 +8,10 @@ let pool: Pool | null = null;
 
 export function getPool(): Pool {
   if (!pool) {
-    const connectionString = process.env.DATABASE_URL;
+    // PRIORITY ORDER: soft-block (NEON_DATABASE_URL) first, then POSTGRES_URL, then wispy-resonance (DATABASE_URL) last
+    const connectionString = process.env.NEON_DATABASE_URL || process.env.POSTGRES_URL || process.env.DATABASE_URL;
     if (!connectionString) {
-      throw new Error('DATABASE_URL environment variable is required');
+      throw new Error('NEON_DATABASE_URL, POSTGRES_URL, or DATABASE_URL environment variable is required');
     }
     pool = new Pool({ connectionString });
   }
@@ -18,9 +19,10 @@ export function getPool(): Pool {
 }
 
 export function getSQL() {
-  const connectionString = process.env.DATABASE_URL;
+  // PRIORITY ORDER: soft-block (NEON_DATABASE_URL) first, then POSTGRES_URL, then wispy-resonance (DATABASE_URL) last
+  const connectionString = process.env.NEON_DATABASE_URL || process.env.POSTGRES_URL || process.env.DATABASE_URL;
   if (!connectionString) {
-    throw new Error('DATABASE_URL environment variable is required');
+    throw new Error('NEON_DATABASE_URL, POSTGRES_URL, or DATABASE_URL environment variable is required');
   }
   return neon(connectionString);
 }

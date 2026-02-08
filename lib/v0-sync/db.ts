@@ -3,8 +3,8 @@ import { neon, neonConfig, NeonQueryFunction } from '@neondatabase/serverless'
 // Disable browser warning since we're using API routes (server-side)
 neonConfig.disableWarningInBrowsers = true
 
-// Create base Neon client
-const baseSql = neon(process.env.DATABASE_URL!)
+// Create base Neon client — soft-block (NEON_DATABASE_URL) first, wispy-resonance (DATABASE_URL) last
+const baseSql = neon(process.env.NEON_DATABASE_URL || process.env.POSTGRES_URL || process.env.DATABASE_URL!)
 
 // Create a wrapped sql function that handles rate limiting
 // This returns empty array on rate limit instead of throwing

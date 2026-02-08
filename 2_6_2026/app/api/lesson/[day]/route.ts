@@ -6,7 +6,9 @@ import { sql } from '@/lib/db'
  * 
  * Returns complete lesson data for a specific day.
  * Supports numeric day (1-365) or "today" for current day.
- * Source: Neon database (master_curriculum verified)
+ * Source: Neon soft-block database (core_lessons + kellyos_* tables)
+ * 
+ * DO NOT query the legacy `lessons` table — that's wispy-resonance data.
  */
 
 const MONTHS = [
@@ -55,54 +57,126 @@ export async function GET(
     )
   }
   
-  const rows = await sql`
-    SELECT day_of_year, title, topic, theme, 
-           hook_fact, hook_correct_answer,
-           hook_script, story_script, wonder_script, action_script, wisdom_script
-    FROM lessons 
-    WHERE day_of_year = ${dayNumber}
-    LIMIT 1
-  `
-  
-  if (!rows || rows.length === 0) {
+  try {
+    // 1. CORE LESSON — from core_lessons (soft-block), NOT legacy `lessons`
+    const coreRows = await sql`
+      SELECT day_number, title, subject, theme, universal_truth, icon_emoji, marketing_headline
+      FROM core_lessons
+      WHERE day_number = ${dayNumber}
+      LIMIT 1
+    `
+    
+    if (!coreRows || coreRows.length === 0) {
+      return NextResponse.json(
+        { error: `Lesson not found for day ${dayNumber}`, source: 'core_lessons' },
+        { status: 404 }
+      )
+    }
+    
+    const lesson = coreRows[0] as Record<string, unknown>
+    
+    // 2. KELLYOS_LESSONS — phased content (use day_number)
+    const phaseRows = await sql`
+      SELECT phase, content_text
+      FROM kellyos_lessons
+      WHERE day_number = ${dayNumber}
+        AND language = 'en'
+        AND tone = 'mentor'
+      ORDER BY phase
+    `.catch(() => [])
+    
+    // Build content map from kellyos_lessons phases
+    const phaseNames: Record<number, string> = { 1: 'hook', 2: 'story', 3: 'wonder', 4: 'action', 5: 'wisdom' }
+    const content: Record<string, string> = {}
+    for (const row of phaseRows as Array<{ phase: number; content_text: string }>) {
+      const name = phaseNames[row.phase]
+      if (name) content[name] = row.content_text
+    }
+    
+    // 3. KELLYOS_AUDIO — audio URLs (use day_number)
+    const audioRows = await sql`
+      SELECT phase, audio_url, duration_seconds
+      FROM kellyos_audio
+      WHERE day_number = ${dayNumber}
+        AND language = 'en'
+      ORDER BY phase
+    `.catch(() => [])
+    
+    const audioByPhase: Record<string, { audio_url: string; duration_seconds: number }> = {}
+    for (const row of audioRows as Array<{ phase: number; audio_url: string; duration_seconds: number }>) {
+      const name = phaseNames[row.phase]
+      if (name) audioByPhase[name] = { audio_url: row.audio_url, duration_seconds: row.duration_seconds }
+    }
+    
+    // 4. KELLYOS_FACTS — hook fact for True/False (use day_number)
+    const factRows = await sql`
+      SELECT statement, is_true, explanation
+      FROM kellyos_facts
+      WHERE day_number = ${dayNumber}
+      ORDER BY RANDOM()
+      LIMIT 1
+    `.catch(() => [])
+    
+    const fact = (factRows as Array<{ statement: string; is_true: boolean; explanation: string }>)[0] || null
+    
+    // 5. HEYGEN_VIDEOS — video URLs (uses day_of_year, NOT day_number)
+    const videoRows = await sql`
+      SELECT phase, video_url, audio_url as heygen_audio_url
+      FROM heygen_videos
+      WHERE day_of_year = ${dayNumber}
+      ORDER BY phase
+    `.catch(() => [])
+    
+    const videoByPhase: Record<string, string> = {}
+    for (const row of videoRows as Array<{ phase: string; video_url: string }>) {
+      if (row.video_url) videoByPhase[row.phase] = row.video_url
+    }
+    
+    const response = {
+      day: dayNumber,
+      date: getDayDate(dayNumber),
+      title: lesson.title,
+      subject: lesson.subject || '',
+      theme: lesson.theme || 'General',
+      universal_truth: lesson.universal_truth || '',
+      icon_emoji: lesson.icon_emoji || '📚',
+      ages: ["kid", "adult", "elder"],
+      languages: ["en", "es", "fr", "de", "pt", "zh"],
+      phases: ["hook", "story", "wonder", "action", "wisdom"],
+      content: {
+        hook: content.hook || '',
+        story: content.story || '',
+        wonder: content.wonder || '',
+        action: content.action || '',
+        wisdom: content.wisdom || '',
+      },
+      audio: audioByPhase,
+      videos: videoByPhase,
+      hook_fact: fact?.statement || null,
+      hook_correct_answer: fact?.is_true ?? true,
+      teaching_moment: fact?.explanation || null,
+      canonical_url: `https://www.thedailylesson.com/lesson/${dayNumber}`,
+      provider: {
+        name: "Lesson of the Day, PBC",
+        url: "https://www.thedailylesson.com"
+      },
+      license: "CC BY-NC-SA 4.0",
+      _source: 'core_lessons',
+      _generated: new Date().toISOString(),
+    }
+
+    return NextResponse.json(response, {
+      headers: {
+        'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800',
+        'Access-Control-Allow-Origin': '*',
+        'Access-Control-Allow-Methods': 'GET',
+      }
+    })
+  } catch (error) {
+    console.error('[lesson/day] Unexpected error:', error)
     return NextResponse.json(
-      { error: `Lesson not found for day ${dayNumber}` },
-      { status: 404 }
+      { error: 'Failed to load lesson', day: dayNumber },
+      { status: 500 }
     )
   }
-  
-  const lesson = rows[0]
-  
-  const response = {
-    day: lesson.day_of_year,
-    date: getDayDate(lesson.day_of_year as number),
-    title: lesson.title,
-    theme: lesson.theme || 'General',
-    universal_truth: lesson.hook_fact || '',
-    ages: ["kid", "adult", "elder"],
-    languages: ["en", "es", "fr", "de", "pt", "zh"],
-    phases: ["hook", "story", "wonder", "action", "wisdom"],
-    content: {
-      hook: lesson.hook_script || '',
-      story: lesson.story_script || '',
-      wonder: lesson.wonder_script || '',
-      action: lesson.action_script || '',
-      wisdom: lesson.wisdom_script || '',
-    },
-    canonical_url: `https://www.thedailylesson.com/lesson/${lesson.day_of_year}`,
-    provider: {
-      name: "Lesson of the Day, PBC",
-      url: "https://www.thedailylesson.com"
-    },
-    license: "CC BY-NC-SA 4.0",
-    _generated: new Date().toISOString(),
-  }
-
-  return NextResponse.json(response, {
-    headers: {
-      'Cache-Control': 'public, s-maxage=86400, stale-while-revalidate=604800',
-      'Access-Control-Allow-Origin': '*',
-      'Access-Control-Allow-Methods': 'GET',
-    }
-  })
 }

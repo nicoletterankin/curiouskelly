@@ -8,9 +8,10 @@ let _baseSql: NeonQueryFunction<false, false> | null = null
 
 function getBaseSql(): NeonQueryFunction<false, false> {
   if (!_baseSql) {
-    const connectionString = process.env.DATABASE_URL || process.env.NEON_DATABASE_URL
+    // PRIORITY ORDER: soft-block (NEON_DATABASE_URL) first, then POSTGRES_URL, then wispy-resonance (DATABASE_URL) last
+    const connectionString = process.env.NEON_DATABASE_URL || process.env.POSTGRES_URL || process.env.DATABASE_URL
     if (!connectionString) {
-      throw new Error('[db] Missing DATABASE_URL or NEON_DATABASE_URL environment variable')
+      throw new Error('[db] Missing NEON_DATABASE_URL, POSTGRES_URL, or DATABASE_URL environment variable')
     }
     _baseSql = neon(connectionString)
   }

@@ -46,52 +46,64 @@ export async function GET(request: NextRequest) {
   const actualEnd = Math.min(end, start + maxLessons - 1)
 
   try {
-    // Get all lessons in range
+    // Get all lessons in range from core_lessons (soft-block), NOT legacy `lessons`
     const lessonsData = await sql`
       SELECT 
-        day_of_year,
+        day_number,
         title,
-        topic,
-        hook_script,
-        story_script,
-        wonder_script,
-        action_script,
-        wisdom_script,
-        hook_visual_url,
-        wonder_visual_url,
-        content_version
-      FROM lessons
-      WHERE day_of_year >= ${start} AND day_of_year <= ${actualEnd}
-      ORDER BY day_of_year
+        subject as topic,
+        theme,
+        icon_emoji
+      FROM core_lessons
+      WHERE day_number >= ${start} AND day_number <= ${actualEnd}
+      ORDER BY day_number
     `
 
     if (!lessonsData || lessonsData.length === 0) {
       return NextResponse.json({ error: 'No lessons found' }, { status: 404 })
     }
 
-    // Map age group to database variants
-    const ageVariants = getAgeVariants(ageGroup)
-    const dayNumbers = (lessonsData as Array<{ day_of_year: number }>).map(l => l.day_of_year)
+    const dayNumbers = (lessonsData as Array<{ day_number: number }>).map(l => l.day_number)
 
-    // Get all audio URLs for these lessons in one query
-    const audioAssets = await sql`
-      SELECT day_number, phase, audio_url
-      FROM kelly_lesson_assets
+    // Get kellyos_lessons content for all days in range
+    const kellyosContent = await sql`
+      SELECT day_number, phase, content_text
+      FROM kellyos_lessons
       WHERE day_number = ANY(${dayNumbers})
         AND language = ${language}
-        AND audio_url IS NOT NULL
-        AND (age_group = ${ageVariants[0]} OR age_group = ${ageVariants[1]} OR age_group = ${ageVariants[2] || ageVariants[1]})
+        AND tone = 'mentor'
+      ORDER BY day_number, phase
     `.catch(() => [])
 
-    // Build audio map: day -> phase -> audioUrl
+    // Build content map: day -> phase_num -> content_text
+    const phaseNames: Record<number, string> = { 1: 'hook', 2: 'story', 3: 'wonder', 4: 'action', 5: 'wisdom' }
+    const contentMap = new Map<number, Map<string, string>>()
+    for (const row of kellyosContent as Array<{ day_number: number; phase: number; content_text: string }>) {
+      if (!contentMap.has(row.day_number)) {
+        contentMap.set(row.day_number, new Map())
+      }
+      const name = phaseNames[row.phase]
+      if (name) contentMap.get(row.day_number)!.set(name, row.content_text)
+    }
+
+    // Get kellyos_audio for all days in range
+    const audioAssets = await sql`
+      SELECT day_number, phase, audio_url, duration_seconds
+      FROM kellyos_audio
+      WHERE day_number = ANY(${dayNumbers})
+        AND language = ${language}
+      ORDER BY day_number, phase
+    `.catch(() => [])
+
+    // Build audio map: day -> phase_name -> audioUrl
     const audioMap = new Map<number, Map<string, string>>()
-    for (const asset of audioAssets as Array<{ day_number: number; phase: string; audio_url: string }>) {
+    for (const asset of audioAssets as Array<{ day_number: number; phase: number; audio_url: string }>) {
       if (!audioMap.has(asset.day_number)) {
         audioMap.set(asset.day_number, new Map())
       }
-      const dayMap = audioMap.get(asset.day_number)!
-      if (!dayMap.has(asset.phase)) {
-        dayMap.set(asset.phase, asset.audio_url)
+      const name = phaseNames[asset.phase]
+      if (name && !audioMap.get(asset.day_number)!.has(name)) {
+        audioMap.get(asset.day_number)!.set(name, asset.audio_url)
       }
     }
 
@@ -100,23 +112,22 @@ export async function GET(request: NextRequest) {
     let totalWithAudio = 0
 
     for (const lesson of lessonsData as Array<Record<string, unknown>>) {
-      const dayNum = lesson.day_of_year as number
+      const dayNum = lesson.day_number as number
+      const dayContent = contentMap.get(dayNum)
       const dayAudio = audioMap.get(dayNum)
 
       const phases: Record<string, PhaseContent> = {}
       let hasAnyAudio = false
 
       for (const phase of PHASES) {
-        const scriptCol = `${phase}_script`
-        const visualCol = `${phase}_visual_url`
         const audioUrl = dayAudio?.get(phase) || null
         
         if (audioUrl) hasAnyAudio = true
 
         phases[phase] = {
-          script: (lesson[scriptCol] as string) || getDefaultScript(phase),
+          script: dayContent?.get(phase) || getDefaultScript(phase),
           audioUrl,
-          visualUrl: (lesson[visualCol] as string) || null,
+          visualUrl: null,
         }
       }
 
@@ -127,7 +138,7 @@ export async function GET(request: NextRequest) {
         title: lesson.title as string,
         topic: lesson.topic as string | undefined,
         phases,
-        version: (lesson.content_version as number) || 1,
+        version: 1,
       })
     }
 

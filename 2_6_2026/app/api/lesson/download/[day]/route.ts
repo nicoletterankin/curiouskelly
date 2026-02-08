@@ -26,8 +26,6 @@ interface OfflineLesson {
   title: string
   topic?: string
   theme?: string
-  quote?: string
-  quoteAuthor?: string
   phases: Record<string, PhaseContent>
   downloadedAt: string
   version: number
@@ -50,92 +48,72 @@ export async function GET(
   const archetype = searchParams.get('archetype') || 'explorer'
 
   try {
-    // Get base lesson data
-    // NOTE: Only query columns that are VERIFIED to exist in the lessons table
-    // subtitle, *_visual_url, content_version may not exist - use defensive querying
+    // Get base lesson data from core_lessons (soft-block), NOT legacy `lessons`
     const lessonData = await sql`
       SELECT 
-        day_of_year,
+        day_number,
         title,
-        topic,
+        subject as topic,
         theme,
-        quote,
-        quote_author,
-        hook_script,
-        story_script,
-        wonder_script,
-        action_script,
-        wisdom_script
-      FROM lessons
-      WHERE day_of_year = ${dayNumber}
+        universal_truth,
+        icon_emoji
+      FROM core_lessons
+      WHERE day_number = ${dayNumber}
       LIMIT 1
     `
 
     if (!lessonData || lessonData.length === 0) {
-      return NextResponse.json({ error: 'Lesson not found' }, { status: 404 })
+      return NextResponse.json({ error: 'Lesson not found', source: 'core_lessons' }, { status: 404 })
     }
 
     const lesson = lessonData[0] as Record<string, unknown>
 
-    // Map age group to database variants
-    const ageVariants = getAgeVariants(ageGroup)
-
-    // Get all audio URLs for this lesson
-    const audioAssets = await sql`
-      SELECT phase, audio_url, script_text
-      FROM kelly_lesson_assets
+    // Get kellyos_lessons content (use day_number)
+    const kellyosContent = await sql`
+      SELECT phase, content_text
+      FROM kellyos_lessons
       WHERE day_number = ${dayNumber}
         AND language = ${language}
-        AND audio_url IS NOT NULL
-        AND (age_group = ${ageVariants[0]} OR age_group = ${ageVariants[1]} OR age_group = ${ageVariants[2] || ageVariants[1]})
-      ORDER BY 
-        CASE WHEN age_group = ${ageVariants[0]} THEN 0 
-             WHEN age_group = ${ageVariants[1]} THEN 1 
-             ELSE 2 END
+        AND tone = 'mentor'
+      ORDER BY phase
     `.catch(() => [])
 
-    // Build audio map
-    const audioMap = new Map<string, { audioUrl: string; scriptText?: string }>()
-    for (const asset of audioAssets as Array<{ phase: string; audio_url: string; script_text?: string }>) {
-      if (!audioMap.has(asset.phase)) {
-        audioMap.set(asset.phase, { 
-          audioUrl: asset.audio_url, 
-          scriptText: asset.script_text 
-        })
-      }
+    const phaseNames: Record<number, string> = { 1: 'hook', 2: 'story', 3: 'wonder', 4: 'action', 5: 'wisdom' }
+    const contentByPhase = new Map<string, string>()
+    for (const row of kellyosContent as Array<{ phase: number; content_text: string }>) {
+      const name = phaseNames[row.phase]
+      if (name) contentByPhase.set(name, row.content_text)
     }
 
-    // Try to get personalized scripts from lesson_perspectives
-    const perspectiveAge = ['child', 'teen'].includes(ageGroup) ? 'kid' : 
-                           ageGroup === 'middleAge' ? 'adult' : ageGroup
-    
-    const perspectiveData = await sql`
-      SELECT hook_script, story_script, wonder_script, action_script, wisdom_script
-      FROM lesson_perspectives
+    // Get kellyos_audio for this lesson (use day_number)
+    const audioAssets = await sql`
+      SELECT phase, audio_url, duration_seconds
+      FROM kellyos_audio
       WHERE day_number = ${dayNumber}
-        AND age_group = ${perspectiveAge}
-        AND archetype = ${archetype}
         AND language = ${language}
-      LIMIT 1
+      ORDER BY phase
     `.catch(() => [])
 
-    const perspective = perspectiveData?.[0] as Record<string, unknown> | undefined
+    // Build audio map by phase name
+    const audioMap = new Map<string, { audioUrl: string; duration: number }>()
+    for (const asset of audioAssets as Array<{ phase: number; audio_url: string; duration_seconds: number }>) {
+      const name = phaseNames[asset.phase]
+      if (name && !audioMap.has(name)) {
+        audioMap.set(name, { audioUrl: asset.audio_url, duration: asset.duration_seconds })
+      }
+    }
 
     // Build phase content
     const phases: Record<string, PhaseContent> = {}
     
     for (const phase of PHASES) {
-      const scriptCol = `${phase}_script`
       const audioInfo = audioMap.get(phase)
 
       phases[phase] = {
-        // Priority: perspective script > audio script > base lesson script
-        script: (perspective?.[scriptCol] as string) || 
-                audioInfo?.scriptText || 
-                (lesson[scriptCol] as string) || 
-                getDefaultScript(phase),
+        script: contentByPhase.get(phase) || getDefaultScript(phase),
         audioUrl: audioInfo?.audioUrl || null,
-        visualUrl: null, // visual_url columns don't exist in lessons table
+        visualUrl: null,
+        duration: audioInfo?.duration,
       }
     }
 
@@ -144,8 +122,6 @@ export async function GET(
       title: lesson.title as string,
       topic: lesson.topic as string | undefined,
       theme: lesson.theme as string | undefined,
-      quote: lesson.quote as string | undefined,
-      quoteAuthor: lesson.quote_author as string | undefined,
       phases,
       downloadedAt: new Date().toISOString(),
       version: 1,
