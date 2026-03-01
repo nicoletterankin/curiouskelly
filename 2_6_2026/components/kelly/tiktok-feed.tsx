@@ -39,6 +39,12 @@ const PHASES: { id: LessonPhase; label: string; color: string; gradient: string 
   { id: 'wisdom', label: 'Wisdom', color: 'rgba(255,255,255,0.8)', gradient: 'from-white/10 to-white/5' },
 ]
 
+// Phase audio data from /api/lesson/today
+export interface PhaseAudioData {
+  audio_url: string | null
+  duration_seconds: number
+}
+
 interface TikTokFeedProps {
   // Content
   lessonTitle: string
@@ -96,6 +102,10 @@ interface TikTokFeedProps {
   onAgeChange: (age: number) => void
   onArchetypeChange: (archetype: KellyArchetype) => void
   onLanguageChange: (lang: string) => void
+  // Phase audio from /api/lesson/today (for auto-advance and per-phase audio)
+  getPhaseAudio?: (phase: LessonPhase) => PhaseAudioData | null
+  // Subtitle text from kellyos_lessons content_text
+  subtitleText?: string | null
 }
 
 export function TikTokFeed({
@@ -148,6 +158,8 @@ export function TikTokFeed({
   wonderScript,
   actionScript,
   wisdomScript,
+  getPhaseAudio,
+  subtitleText,
 }: TikTokFeedProps) {
   // Refs
   const videoRef = useRef<HTMLVideoElement>(null)
@@ -190,6 +202,19 @@ export function TikTokFeed({
   const [showSettings, setShowSettings] = useState(false); // Declaration of setShowSettings
   const [teleprompterExpanded, setTeleprompterExpanded] = useState(true);
   
+  // Lip-sync mouth animation state (0-1 amplitude, driven by audio analyser)
+  const [mouthOpenness, setMouthOpenness] = useState(0)
+  const analyserRef = useRef<AnalyserNode | null>(null)
+  const audioContextRef = useRef<AudioContext | null>(null)
+  const animFrameRef = useRef<number>(0)
+  const sourceNodeRef = useRef<MediaElementAudioSourceNode | null>(null)
+  
+  // Phase auto-advance timer
+  const autoAdvanceTimerRef = useRef<NodeJS.Timeout | null>(null)
+  
+  // Subtitle display state (current phase content_text)
+  const [currentSubtitle, setCurrentSubtitle] = useState<string | null>(null);
+  
   // Get the current phase script for the teleprompter
   const currentScript = useMemo(() => {
     switch (currentPhase) {
@@ -222,6 +247,154 @@ export function TikTokFeed({
     return () => clearInterval(interval);
   }, [isLoading, loadingMessages.length]);
   
+  // ═══════════════════════════════════════════════════════════════════
+  // PHASE AUDIO: When phase changes, load phase-specific audio
+  // ═══════════════════════════════════════════════════════════════════
+  useEffect(() => {
+    if (!getPhaseAudio) return
+    const phaseAudio = getPhaseAudio(currentPhase)
+    if (phaseAudio?.audio_url && audioRef.current) {
+      // Only update if URL actually changed
+      const currentSrc = audioRef.current.src
+      const newSrc = phaseAudio.audio_url
+      if (currentSrc !== newSrc) {
+        audioRef.current.src = newSrc
+        audioRef.current.load()
+      }
+    }
+  }, [currentPhase, getPhaseAudio])
+
+  // ═══════════════════════════════════════════════════════════════════
+  // AUTO-ADVANCE: After audio ends, auto-advance to next phase
+  // ═══════════════════════════════════════════════════════════════════
+  useEffect(() => {
+    const audio = audioRef.current
+    if (!audio || !getPhaseAudio) return
+    
+    const handleAudioEnded = () => {
+      const phases: LessonPhase[] = ['hook', 'story', 'wonder', 'action', 'wisdom']
+      const currentIndex = phases.indexOf(currentPhase)
+      
+      if (currentIndex < phases.length - 1) {
+        const nextPhase = phases[currentIndex + 1]
+        // Short delay before auto-advance for breathing room
+        autoAdvanceTimerRef.current = setTimeout(() => {
+          setPhaseTransition({ active: true, direction: 'up', toPhase: nextPhase })
+          setTimeout(() => {
+            onPhaseChange(nextPhase)
+            setTimeout(() => setPhaseTransition({ active: false, direction: 'up', toPhase: null }), 400)
+          }, 300)
+        }, 1500) // 1.5s pause between phases
+      } else {
+        // Final phase completed
+        setIsPlaying(false)
+      }
+    }
+    
+    audio.addEventListener('ended', handleAudioEnded)
+    return () => {
+      audio.removeEventListener('ended', handleAudioEnded)
+      if (autoAdvanceTimerRef.current) {
+        clearTimeout(autoAdvanceTimerRef.current)
+      }
+    }
+  }, [currentPhase, getPhaseAudio, onPhaseChange])
+
+  // ═══════════════════════════════════════════════════════════════════
+  // SUBTITLE DISPLAY: Show current phase content_text 
+  // ═══════════════════════════════════════════════════════════════════
+  useEffect(() => {
+    // Use subtitleText prop if provided, otherwise derive from scripts
+    if (subtitleText !== undefined && subtitleText !== null) {
+      setCurrentSubtitle(subtitleText)
+    } else {
+      setCurrentSubtitle(currentScript || null)
+    }
+  }, [subtitleText, currentScript])
+
+  // ═══════════════════════════════════════════════════════════════════
+  // LIP-SYNC: Analyze audio amplitude for mouth animation
+  // ═══════════════════════════════════════════════════════════════════
+  useEffect(() => {
+    if (!isPlaying || !audioRef.current) {
+      setMouthOpenness(0)
+      if (animFrameRef.current) cancelAnimationFrame(animFrameRef.current)
+      return
+    }
+    
+    const audio = audioRef.current
+    
+    try {
+      // Create AudioContext and AnalyserNode only once per audio element
+      if (!audioContextRef.current) {
+        audioContextRef.current = new AudioContext()
+      }
+      const ctx = audioContextRef.current
+      
+      if (!analyserRef.current) {
+        analyserRef.current = ctx.createAnalyser()
+        analyserRef.current.fftSize = 256
+        analyserRef.current.smoothingTimeConstant = 0.8
+      }
+      const analyser = analyserRef.current
+      
+      // Connect audio element to analyser (only once)
+      if (!sourceNodeRef.current) {
+        try {
+          sourceNodeRef.current = ctx.createMediaElementSource(audio)
+          sourceNodeRef.current.connect(analyser)
+          analyser.connect(ctx.destination)
+        } catch {
+          // Source already connected - ignore
+        }
+      }
+      
+      // Resume context if suspended
+      if (ctx.state === 'suspended') {
+        ctx.resume()
+      }
+      
+      const dataArray = new Uint8Array(analyser.frequencyBinCount)
+      
+      const updateMouth = () => {
+        analyser.getByteFrequencyData(dataArray)
+        
+        // Calculate average amplitude from lower frequency bins (voice range)
+        const voiceBins = dataArray.slice(2, 20) // ~80Hz - 800Hz voice range
+        let sum = 0
+        for (let i = 0; i < voiceBins.length; i++) {
+          sum += voiceBins[i]
+        }
+        const avg = sum / voiceBins.length / 255 // Normalize to 0-1
+        
+        // Apply smoothing and threshold
+        const openness = Math.min(1, Math.max(0, (avg - 0.05) * 2.5))
+        setMouthOpenness(openness)
+        
+        animFrameRef.current = requestAnimationFrame(updateMouth)
+      }
+      
+      animFrameRef.current = requestAnimationFrame(updateMouth)
+    } catch (e) {
+      console.warn('[TikTokFeed] Audio analyser setup failed:', e)
+    }
+    
+    return () => {
+      if (animFrameRef.current) {
+        cancelAnimationFrame(animFrameRef.current)
+      }
+    }
+  }, [isPlaying])
+
+  // Cleanup audio context on unmount
+  useEffect(() => {
+    return () => {
+      if (audioContextRef.current && audioContextRef.current.state !== 'closed') {
+        audioContextRef.current.close()
+      }
+    }
+  }, [])
+
   // Fluid motion values for water droplet effects
   const mouseX = useMotionValue(0)
   const mouseY = useMotionValue(0)
@@ -530,8 +703,27 @@ export function TikTokFeed({
             }}
           />
         )}
-{audioUrl && !videoUrl && audioUrl.startsWith('http') && (
-    <audio ref={audioRef} src={audioUrl} loop />
+        {/* Lip-sync mouth overlay — basic open/close synced to audio amplitude */}
+        {isPlaying && mouthOpenness > 0.05 && !videoUrl && (
+          <motion.div
+            className="absolute bottom-[38%] left-1/2 -translate-x-1/2 z-10 pointer-events-none"
+            style={{
+              width: `${28 + mouthOpenness * 12}px`,
+              height: `${4 + mouthOpenness * 16}px`,
+              borderRadius: '50%',
+              background: `radial-gradient(ellipse, rgba(0,0,0,${0.15 + mouthOpenness * 0.25}) 0%, transparent 70%)`,
+              filter: 'blur(1px)',
+            }}
+            animate={{
+              scaleY: 0.5 + mouthOpenness * 1.5,
+              scaleX: 1 + mouthOpenness * 0.3,
+            }}
+            transition={{ duration: 0.05 }}
+          />
+        )}
+        
+  {audioUrl && !videoUrl && audioUrl.startsWith('http') && (
+    <audio ref={audioRef} src={audioUrl} />
   )}
       </motion.div>
       
@@ -1038,7 +1230,9 @@ export function TikTokFeed({
             { code: 'fr', flag: '🇫🇷', label: 'Français' }, 
             { code: 'de', flag: '🇩🇪', label: 'Deutsch' }, 
             { code: 'pt', flag: '🇧🇷', label: 'Português' }, 
-            { code: 'zh', flag: '🇨🇳', label: '中文' }
+            { code: 'zh', flag: '🇨🇳', label: '中文' },
+            { code: 'ja', flag: '🇯🇵', label: '日本語' },
+            { code: 'ko', flag: '🇰🇷', label: '한국어' },
           ].map(({ code, flag, label }) => (
             <button 
               key={code} 
@@ -1112,6 +1306,36 @@ export function TikTokFeed({
             {lessonTitle}
           </motion.h2>
           
+          {/* SUBTITLE BAR — Shows current phase content_text from kellyos_lessons */}
+          {isPlaying && currentSubtitle && currentPhase !== 'hook' && (
+            <motion.div
+              className="w-full px-2"
+              initial={{ opacity: 0, y: 8 }}
+              animate={{ opacity: 1, y: 0 }}
+              exit={{ opacity: 0, y: -4 }}
+              transition={{ duration: 0.3 }}
+            >
+              <div 
+                className="py-2.5 px-4 rounded-2xl text-center max-h-[80px] overflow-y-auto"
+                style={{
+                  background: 'rgba(0, 0, 0, 0.55)',
+                  backdropFilter: 'blur(24px)',
+                  WebkitBackdropFilter: 'blur(24px)',
+                  border: '0.5px solid rgba(255,255,255,0.08)',
+                }}
+              >
+                <p 
+                  className="text-white/90 text-[13px] leading-relaxed font-normal"
+                  style={{ textShadow: '0 1px 4px rgba(0,0,0,0.5)' }}
+                >
+                  {currentSubtitle.length > 200 
+                    ? currentSubtitle.slice(0, 200) + '...' 
+                    : currentSubtitle}
+                </p>
+              </div>
+            </motion.div>
+          )}
+
           {/* Wisdom phase: show quote above teleprompter */}
           {currentPhase === 'wisdom' && quote && (
             <p 

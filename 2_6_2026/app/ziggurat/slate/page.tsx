@@ -73,7 +73,7 @@ export default function SlateVisionPage() {
                 Investor One-Pager
               </Button>
             </Link>
-            <Link href="https://pub-ae8248f6a4f44c61a5de0d2f19b8dcd1.r2.dev/ziggurat/LAGUNA_RIDGE.mp4" target="_blank">
+            <Link href="https://pub-ae8248f6a4f44c61a5de0d2f19b8dcd1.r2.dev/ziggurat/THE_ZIGGURAT_FINAL.mp4" target="_blank">
               <Button size="sm" className="gap-2 bg-white text-black hover:bg-zinc-200">
                 <Play className="w-4 h-4" />
                 Video

@@ -21,6 +21,7 @@ import { LearnerContextProvider, useLearner } from '@/hooks/use-learner-context'
 import { LayoutProvider, useLayout } from '@/lib/layout-context'
 import { LayoutGrid, Zone } from '@/components/layout/layout-grid'
 import { useLesson, useVideoUrl, getPhaseScript, VIDEO_SOURCES, type VideoSource } from '@/hooks/use-lesson'
+import { useTodayLesson } from '@/hooks/use-today-lesson'
 import { useLiveClassCountdown } from '@/hooks/use-live-class-countdown'
 import { useComments } from '@/hooks/use-comments'
 import { useVote } from '@/hooks/use-vote'
@@ -3032,12 +3033,19 @@ function CuriousKellyAppInner() {
   }
   }, [learner.isLoading, learner.preferredAge, learner.preferredLanguage, learner.preferredArchetype, hasInitialized])
   
-  // Lesson data
+  // Lesson data (legacy hook for backward compat)
   const { lesson, perspective, kellyScripts, isLoading: lessonLoading } = useLesson(
     learner.dayOfYear,
     learner.timezone,
     { age: kellyAge, archetype, language }
   )
+  
+  // NEW: Cinematic Kelly lesson data from populated kellyos_lessons + kellyos_audio tables
+  const todayLesson = useTodayLesson(learner.dayOfYear, {
+    age: kellyAge,
+    archetype,
+    language,
+  })
   
   // Live class countdown - uses legacy age categories (kid/adult/senior) for live_class_rooms table
   const liveClassAgeCategory = getLiveClassAgeCategory(kellyAge)
@@ -3066,10 +3074,13 @@ function CuriousKellyAppInner() {
   )
   
   // Lesson title - MUST be declared before useEffect that uses it
-  // Show loading state, then actual title, fallback only if truly no data
-  const lessonTitle = lessonLoading 
+  // Prefer todayLesson (from kellyos tables) > perspective > base lesson
+  const lessonTitle = (lessonLoading && todayLesson.isLoading)
     ? 'Loading...' 
-    : (perspective?.title || lesson?.title || "Today's Lesson")
+    : (todayLesson.title !== 'Loading...' ? todayLesson.title : null) 
+      || perspective?.title 
+      || lesson?.title 
+      || "Today's Lesson"
   
   // Calculate visual URL for current phase from /public/visuals/[phase]/day-NNN.jpg
   const phaseVisualUrl = useMemo(() => {
@@ -3223,11 +3234,11 @@ function CuriousKellyAppInner() {
       >
       <TikTokFeed
         lessonTitle={lessonTitle}
-        caption={getPhaseScript(lesson, currentPhase) || ''}
-        hookFact={lesson?.hook_fact || null}
-        hookText={lesson?.hook_question || null}
-        explanation={lesson?.teaching_moment || null}
-        hookCorrectAnswer={lesson?.hook_correct_answer ?? null}
+        caption={todayLesson.getPhaseContent(currentPhase) || getPhaseScript(lesson, currentPhase) || ''}
+        hookFact={todayLesson.hookFact || lesson?.hook_fact || null}
+        hookText={todayLesson.hookQuestion || lesson?.hook_question || null}
+        explanation={todayLesson.teachingMoment || lesson?.teaching_moment || null}
+        hookCorrectAnswer={todayLesson.hookCorrectAnswer ?? lesson?.hook_correct_answer ?? null}
         quote={lesson?.quote || null}
         quoteAuthor={lesson?.quote_author || null}
         visualUrl={
@@ -3270,12 +3281,15 @@ function CuriousKellyAppInner() {
         onPrevDay={() => learner.dayOfYear > 1 && learner.setDayOverride?.(learner.dayOfYear - 1)}
         onNextDay={() => learner.dayOfYear < 365 && learner.setDayOverride?.(learner.dayOfYear + 1)}
         // Word-by-word Kelly scripts per variant
-        // Fallback chain: kellyScripts (most specific per age/archetype/lang) -> perspective -> base lesson
-        hookScript={kellyScripts?.hook || (perspective as Record<string, unknown>)?.hook_script as string || lesson?.hook_script || null}
-        storyScript={kellyScripts?.story || (perspective as Record<string, unknown>)?.story_script as string || lesson?.story_script || null}
-        wonderScript={kellyScripts?.wonder || (perspective as Record<string, unknown>)?.wonder_script as string || lesson?.wonder_script || null}
-        actionScript={kellyScripts?.action || (perspective as Record<string, unknown>)?.action_script as string || lesson?.action_script || null}
-        wisdomScript={kellyScripts?.wisdom || (perspective as Record<string, unknown>)?.wisdom_script as string || lesson?.wisdom_script || null}
+        // Fallback chain: todayLesson (kellyos_lessons) -> kellyScripts -> perspective -> base lesson
+        hookScript={todayLesson.phaseScripts?.hook || kellyScripts?.hook || (perspective as Record<string, unknown>)?.hook_script as string || lesson?.hook_script || null}
+        storyScript={todayLesson.phaseScripts?.story || kellyScripts?.story || (perspective as Record<string, unknown>)?.story_script as string || lesson?.story_script || null}
+        wonderScript={todayLesson.phaseScripts?.wonder || kellyScripts?.wonder || (perspective as Record<string, unknown>)?.wonder_script as string || lesson?.wonder_script || null}
+        actionScript={todayLesson.phaseScripts?.action || kellyScripts?.action || (perspective as Record<string, unknown>)?.action_script as string || lesson?.action_script || null}
+        wisdomScript={todayLesson.phaseScripts?.wisdom || kellyScripts?.wisdom || (perspective as Record<string, unknown>)?.wisdom_script as string || lesson?.wisdom_script || null}
+        // Cinematic Kelly: phase audio + subtitle from kellyos tables
+        getPhaseAudio={todayLesson.getPhaseAudio}
+        subtitleText={todayLesson.getPhaseContent(currentPhase) || null}
       />
       
       {/* ========== LAYER 2: UI CHROME (Overlays) ========== */}
