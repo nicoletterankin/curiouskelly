@@ -108,7 +108,7 @@ export default function BrenPage() {
 
             {/* Video CTA */}
             <div className="mt-8 flex gap-4">
-              <Link href="https://pub-ae8248f6a4f44c61a5de0d2f19b8dcd1.r2.dev/ziggurat/THE_ZIGGURAT_FINAL.mp4" target="_blank">
+              <Link href="https://pub-29446fb0037f47e49993ebd6b4ed714e.r2.dev/ziggurat/LAGUNA_RIDGE.mp4" target="_blank">
                 <Button className="bg-white text-black hover:bg-zinc-200 gap-2">
                   <Play className="w-4 h-4" />
                   Watch Video (80s)
@@ -217,10 +217,10 @@ export default function BrenPage() {
                 Every day at sunrise from The Observatory, Kelly broadcasts the day's lesson
                 to the world. The Ziggurat becomes not just headquarters, but origin point.
               </p>
-              <Link href="/">
+              <Link href="https://pub-29446fb0037f47e49993ebd6b4ed714e.r2.dev/ziggurat/kelly/KELLY_DEMO.mp4" target="_blank">
                 <Button className="gap-2 bg-blue-600 hover:bg-blue-700">
                   <Play className="w-4 h-4" />
-                  Try Kelly Live
+                  Kelly Demo (56s)
                 </Button>
               </Link>
             </div>
