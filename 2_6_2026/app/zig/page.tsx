@@ -1,6 +1,6 @@
 import { redirect } from 'next/navigation'
 
-// Redirect /zig to /ziggurat - single source of truth for the LED vision project
+// Redirect /zig to the slate vision page (LED concepts deprecated Feb 2026)
 export default function ZigRedirect() {
-  redirect('/ziggurat')
+  redirect('/ziggurat/slate')
 }
